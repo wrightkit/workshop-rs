@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ["main", "feat/**", "docs/**"]
+    branches: ["main"]
   pull_request:
 
 env:
@@ -25,7 +25,9 @@ jobs:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.toolchain }}
+          shared-key: quality
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          cache-on-failure: false
       - name: Format check
         run: cargo fmt --all --check
       - name: Clippy (deny warnings)
