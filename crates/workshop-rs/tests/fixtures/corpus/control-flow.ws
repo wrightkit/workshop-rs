@@ -1,0 +1,33 @@
+variables {
+    global:
+        0: index
+}
+
+rule ("control flow") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        For Global Variable(index, 0, 3, 1);
+            If(Compare(Global.index, ==, 0));
+                Create HUD Text(All Players(All Teams), Null, Custom String("іṇḍẹҳ = {0}                                                                                                                  {1}", Mapped Array(Mapped Array(Array(Mapped Array(Global.index, If-Then-Else(Or(Compare(Count Of(Current Array Element), ==, 1), And(Compare(Current Array Element, ==, Empty Array), Compare(Current Array Element, !=, Null))), Custom String("[{0}]", Current Array Element), If-Then-Else(Count Of(Current Array Element), Custom String("[{0}, …+{1}]", Current Array Element, Subtract(Count Of(Current Array Element), 1)), Current Array Element)))), Append To Array(Append To Array(Or(Count Of(Current Array Element), And(Compare(Current Array Element, ==, Empty Array), Compare(Current Array Element, !=, Null))), If-Then-Else(And(Not(Count Of(Current Array Element)), Compare(Current Array Element, !=, Empty Array)), 3, Multiply(Count Of(Current Array Element), 3))), Current Array Element)), If-Then-Else(First Of(Current Array Element), Custom String("[{0}{1}]", String Replace(Custom String("{0}, {1}, {2}", Value In Array(Current Array Element, 2), Value In Array(Current Array Element, 3), Custom String("{0}, {1}, {2}", Value In Array(Current Array Element, 4), Value In Array(Current Array Element, 5), Custom String("{0}, {1}, …", Value In Array(Current Array Element, 6), Value In Array(Current Array Element, 7)))), String Slice(Custom String("0, 0, 0, 0, 0, 0, …"), Add(-2, Value In Array(Current Array Element, 1)), Subtract(22, Value In Array(Current Array Element, 1))), Empty Array), If-Then-Else(Compare(Value In Array(Current Array Element, 1), >, 18), Custom String("+{0}", Subtract(Divide(Value In Array(Current Array Element, 1), 3), 6)), Empty Array)), String Split(Value In Array(Current Array Element, 2), Empty Array))), Custom String("                                                        ")), Null, Left, -9999, Null, Color(White), Null, Visible To Sort Order String and Color, Default Visibility);
+            Else If(Compare(Global.index, ==, 1));
+                Create HUD Text(All Players(All Teams), Null, Custom String("іṇḍẹҳ = {0}                                                                                                                  {1}", Mapped Array(Mapped Array(Array(Mapped Array(Global.index, If-Then-Else(Or(Compare(Count Of(Current Array Element), ==, 1), And(Compare(Current Array Element, ==, Empty Array), Compare(Current Array Element, !=, Null))), Custom String("[{0}]", Current Array Element), If-Then-Else(Count Of(Current Array Element), Custom String("[{0}, …+{1}]", Current Array Element, Subtract(Count Of(Current Array Element), 1)), Current Array Element)))), Append To Array(Append To Array(Or(Count Of(Current Array Element), And(Compare(Current Array Element, ==, Empty Array), Compare(Current Array Element, !=, Null))), If-Then-Else(And(Not(Count Of(Current Array Element)), Compare(Current Array Element, !=, Empty Array)), 3, Multiply(Count Of(Current Array Element), 3))), Current Array Element)), If-Then-Else(First Of(Current Array Element), Custom String("[{0}{1}]", String Replace(Custom String("{0}, {1}, {2}", Value In Array(Current Array Element, 2), Value In Array(Current Array Element, 3), Custom String("{0}, {1}, {2}", Value In Array(Current Array Element, 4), Value In Array(Current Array Element, 5), Custom String("{0}, {1}, …", Value In Array(Current Array Element, 6), Value In Array(Current Array Element, 7)))), String Slice(Custom String("0, 0, 0, 0, 0, 0, …"), Add(-2, Value In Array(Current Array Element, 1)), Subtract(22, Value In Array(Current Array Element, 1))), Empty Array), If-Then-Else(Compare(Value In Array(Current Array Element, 1), >, 18), Custom String("+{0}", Subtract(Divide(Value In Array(Current Array Element, 1), 3), 6)), Empty Array)), String Split(Value In Array(Current Array Element, 2), Empty Array))), Custom String("                                                        ")), Null, Left, -9999, Null, Color(White), Null, Visible To Sort Order String and Color, Default Visibility);
+            Else;
+                Create HUD Text(All Players(All Teams), Null, Custom String("іṇḍẹҳ = {0}                                                                                                                  {1}", Mapped Array(Mapped Array(Array(Mapped Array(Global.index, If-Then-Else(Or(Compare(Count Of(Current Array Element), ==, 1), And(Compare(Current Array Element, ==, Empty Array), Compare(Current Array Element, !=, Null))), Custom String("[{0}]", Current Array Element), If-Then-Else(Count Of(Current Array Element), Custom String("[{0}, …+{1}]", Current Array Element, Subtract(Count Of(Current Array Element), 1)), Current Array Element)))), Append To Array(Append To Array(Or(Count Of(Current Array Element), And(Compare(Current Array Element, ==, Empty Array), Compare(Current Array Element, !=, Null))), If-Then-Else(And(Not(Count Of(Current Array Element)), Compare(Current Array Element, !=, Empty Array)), 3, Multiply(Count Of(Current Array Element), 3))), Current Array Element)), If-Then-Else(First Of(Current Array Element), Custom String("[{0}{1}]", String Replace(Custom String("{0}, {1}, {2}", Value In Array(Current Array Element, 2), Value In Array(Current Array Element, 3), Custom String("{0}, {1}, {2}", Value In Array(Current Array Element, 4), Value In Array(Current Array Element, 5), Custom String("{0}, {1}, …", Value In Array(Current Array Element, 6), Value In Array(Current Array Element, 7)))), String Slice(Custom String("0, 0, 0, 0, 0, 0, …"), Add(-2, Value In Array(Current Array Element, 1)), Subtract(22, Value In Array(Current Array Element, 1))), Empty Array), If-Then-Else(Compare(Value In Array(Current Array Element, 1), >, 18), Custom String("+{0}", Subtract(Divide(Value In Array(Current Array Element, 1), 3), 6)), Empty Array)), String Split(Value In Array(Current Array Element, 2), Empty Array))), Custom String("                                                        ")), Null, Left, -9999, Null, Color(White), Null, Visible To Sort Order String and Color, Default Visibility);
+            End;
+        End;
+    }
+}
+
+rule ("bounded while") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        While(Compare(Global.index, <, 3));
+            Modify Global Variable(index, Add, 1);
+            Wait(0.016, Ignore Condition);
+        End;
+    }
+}
