@@ -1,0 +1,18 @@
+[package]
+name = "workshop-rs-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Standalone CLI for the canonical Workshop core: parse, emit, convert, locales, and catalog identity."
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+workshop-rs = { path = "../workshop-rs" }
+serde_json = "1"
+
+[dev-dependencies]
+serde_json = "1"
