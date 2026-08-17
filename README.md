@@ -144,6 +144,15 @@ cargo run -p workshop-rs --bin workshop-catalog-gen -- check
 
 CI runs the same checks on stable and the pinned toolchain (1.85.0).
 
+## Releases
+
+Maintainers publish a versioned library and CLI release from the manually
+triggered `Release` GitHub Actions workflow. Select the `patch`, `minor`, or
+`major` bump while dispatching from `main`; the workflow runs the quality and
+catalog gates, publishes the library before the CLI, and attaches checksummed
+cross-platform CLI artifacts. Repository setup and retry behavior are
+documented in [docs/release.md](docs/release.md).
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Committed mapping data carries recorded

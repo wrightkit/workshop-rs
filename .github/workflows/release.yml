@@ -1,0 +1,404 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: SemVer bump for the next release
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workshop-rs-release
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  plan:
+    name: Plan release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      mode: ${{ steps.plan.outputs.mode }}
+      ref: ${{ steps.plan.outputs.ref }}
+      commit: ${{ steps.plan.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Detect a completed release
+        id: state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          current="$(sed -nE 's/^version = "([0-9]+\.[0-9]+\.[0-9]+)"$/\1/p' Cargo.toml | head -n1)"
+          tag="v${current}"
+          complete=false
+
+          if git rev-parse --verify --quiet "refs/tags/${tag}" >/dev/null; then
+            if gh release view "${tag}" --json isDraft,publishedAt,assets >/tmp/release.json 2>/dev/null \
+              && jq -e '.isDraft == false and .publishedAt != null' /tmp/release.json >/dev/null \
+              && curl --fail --silent --show-error -A "workshop-rs-release/${current}" "https://crates.io/api/v1/crates/workshop-rs/${current}" >/dev/null \
+              && curl --fail --silent --show-error -A "workshop-rs-release/${current}" "https://crates.io/api/v1/crates/workshop-rs-cli/${current}" >/dev/null; then
+              complete=true
+              assets="$(jq -r '.assets[].name' /tmp/release.json)"
+              for asset in \
+                "workshop-rs-cli-${current}-x86_64-unknown-linux-gnu.tar.gz" \
+                "workshop-rs-cli-${current}-aarch64-unknown-linux-gnu.tar.gz" \
+                "workshop-rs-cli-${current}-x86_64-apple-darwin.tar.gz" \
+                "workshop-rs-cli-${current}-aarch64-apple-darwin.tar.gz" \
+                "workshop-rs-cli-${current}-x86_64-pc-windows-msvc.zip" \
+                SHA256SUMS.txt; do
+                grep --fixed-strings --line-regexp "${asset}" <<<"${assets}" >/dev/null || complete=false
+              done
+            fi
+          fi
+
+          echo "release-complete=${complete}" >>"${GITHUB_OUTPUT}"
+
+      - name: Compute release plan
+        id: plan
+        env:
+          BUMP: ${{ inputs.bump }}
+          RELEASE_COMPLETE: ${{ steps.state.outputs.release-complete }}
+        run: |
+          set -euo pipefail
+          args=(plan --bump "${BUMP}")
+          if [[ "${RELEASE_COMPLETE}" == "true" ]]; then
+            args+=(--release-complete)
+          fi
+          python3 scripts/release.py "${args[@]}" | tee /tmp/release-plan.env
+          while IFS='=' read -r key value; do
+            echo "${key}=${value}" >>"${GITHUB_OUTPUT}"
+          done </tmp/release-plan.env
+
+      - name: Require the canonical release branch
+        if: github.ref != 'refs/heads/main'
+        run: |
+          echo 'Release workflow must be dispatched from main.' >&2
+          exit 1
+
+  prepare:
+    name: Prepare and verify release
+    needs: plan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+      commit: ${{ steps.release.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+          fetch-depth: 0
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release
+          cache-targets: true
+          cache-all-crates: false
+          cache-workspace-crates: false
+          cache-bin: false
+          save-if: false
+
+      - name: Apply the deterministic version bump
+        if: needs.plan.outputs.mode == 'new'
+        env:
+          VERSION: ${{ needs.plan.outputs.version }}
+        run: python3 scripts/release.py bump --version "${VERSION}"
+
+      - name: Refresh the lockfile after version mutation
+        if: needs.plan.outputs.mode == 'new'
+        run: cargo check --workspace
+
+      - name: Run release gates
+        run: |
+          set -euo pipefail
+          python3 scripts/test_release.py
+          cargo fmt --all --check
+          cargo clippy --locked --workspace --all-targets -- -D warnings
+          cargo test --locked --workspace --all-targets
+          cargo run --locked -p workshop-rs --bin workshop-catalog-gen -- check
+
+      - name: Verify publishable packages
+        run: |
+          set -euo pipefail
+          cargo package --locked --allow-dirty -p workshop-rs
+          cargo publish --locked --allow-dirty --dry-run -p workshop-rs --no-verify
+
+      - name: Commit and tag the release revision
+        id: release
+        env:
+          MODE: ${{ needs.plan.outputs.mode }}
+          VERSION: ${{ needs.plan.outputs.version }}
+          PLAN_COMMIT: ${{ needs.plan.outputs.commit }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v${VERSION}"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          if [[ "${MODE}" == "new" ]]; then
+            git add Cargo.toml crates/workshop-rs-cli/Cargo.toml Cargo.lock
+            git diff --cached --check
+            git commit -m "chore(release): prepare ${tag}"
+            git push origin HEAD:main
+          elif [[ -n "${PLAN_COMMIT}" ]]; then
+            git checkout --detach "${PLAN_COMMIT}"
+          fi
+
+          commit="$(git rev-parse HEAD)"
+          if git rev-parse --verify --quiet "refs/tags/${tag}" >/dev/null; then
+            tagged="$(git rev-list -n1 "${tag}")"
+            [[ "${tagged}" == "${commit}" ]] || {
+              echo "${tag} already points to ${tagged}, expected ${commit}" >&2
+              exit 1
+            }
+          else
+            git tag -a "${tag}" -m "Release ${tag}" "${commit}"
+            git push origin "${tag}"
+          fi
+
+          echo "version=${VERSION}" >>"${GITHUB_OUTPUT}"
+          echo "tag=${tag}" >>"${GITHUB_OUTPUT}"
+          echo "commit=${commit}" >>"${GITHUB_OUTPUT}"
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            runner: ubuntu-latest
+          - target: x86_64-apple-darwin
+            runner: macos-13
+          - target: aarch64-apple-darwin
+            runner: macos-14
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.commit }}
+
+      - name: Install Linux cross linker
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes gcc-aarch64-linux-gnu
+
+      - name: Install Rust target
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release-${{ matrix.target }}
+          cache-targets: true
+          cache-all-crates: false
+          cache-workspace-crates: false
+          cache-bin: false
+          save-if: false
+
+      - name: Build CLI
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        run: cargo build --locked --release -p workshop-rs-cli --target ${{ matrix.target }}
+
+      - name: Package Unix artifact
+        if: runner.os != 'Windows'
+        env:
+          VERSION: ${{ needs.prepare.version }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist/workshop-rs-cli-${VERSION}-${TARGET}
+          cp "target/${TARGET}/release/workshop-rs-cli" "dist/workshop-rs-cli-${VERSION}-${TARGET}/"
+          tar -C dist -czf "workshop-rs-cli-${VERSION}-${TARGET}.tar.gz" "workshop-rs-cli-${VERSION}-${TARGET}"
+
+      - name: Package Windows artifact
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.prepare.version }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          $directory = "workshop-rs-cli-$env:VERSION-$env:TARGET"
+          New-Item -ItemType Directory -Path "dist/$directory" | Out-Null
+          Copy-Item "target/$env:TARGET/release/workshop-rs-cli.exe" "dist/$directory/"
+          Compress-Archive -Path "dist/$directory" -DestinationPath "workshop-rs-cli-$env:VERSION-$env:TARGET.zip"
+
+      - name: Upload platform artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: |
+            *.tar.gz
+            *.zip
+          if-no-files-found: error
+
+  publish:
+    name: Publish crates
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.commit }}
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Publish library then CLI
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          VERSION: ${{ needs.prepare.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -n "${CARGO_REGISTRY_TOKEN}" ]] || {
+            echo 'CARGO_REGISTRY_TOKEN is not configured in the release environment.' >&2
+            exit 1
+          }
+
+          published() {
+            curl --fail --silent --show-error -A "workshop-rs-release/${VERSION}" "https://crates.io/api/v1/crates/$1/${VERSION}" >/dev/null
+          }
+
+          publish_if_needed() {
+            if published "$1"; then
+              echo "$1 ${VERSION} is already published; resuming."
+            else
+              cargo publish --locked --token "${CARGO_REGISTRY_TOKEN}" -p "$1"
+            fi
+          }
+
+          publish_if_needed workshop-rs
+          for attempt in $(seq 1 30); do
+            if published workshop-rs; then
+              break
+            fi
+            [[ "${attempt}" -eq 30 ]] && {
+              echo 'workshop-rs did not become visible in the registry.' >&2
+              exit 1
+            }
+            sleep 10
+          done
+
+          cargo package --locked --allow-dirty -p workshop-rs-cli
+          cargo publish --locked --allow-dirty --dry-run -p workshop-rs-cli --no-verify
+          publish_if_needed workshop-rs-cli
+
+  release:
+    name: Assemble GitHub Release
+    needs: [prepare, build, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.commit }}
+          fetch-depth: 0
+
+      - name: Install stable toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Download platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Generate checksums and catalog notes
+        env:
+          VERSION: ${{ needs.prepare.version }}
+          COMMIT: ${{ needs.prepare.commit }}
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum *.tar.gz *.zip > SHA256SUMS.txt
+          cd ..
+          {
+            echo '<!-- workshop-rs-catalog-identity -->'
+            echo
+            echo '## Release identity'
+            echo
+            echo "- Version: `${VERSION}`"
+            echo "- Revision: `${COMMIT}`"
+            echo
+            echo '### Catalog identity'
+            echo
+            echo '```json'
+            cargo run --locked -p workshop-rs-cli -- version --json
+            echo '```'
+          } >/tmp/catalog-notes.md
+
+      - name: Create or resume a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ needs.prepare.version }}
+          COMMIT: ${{ needs.prepare.commit }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release create "${TAG}" --target "${COMMIT}" --draft --generate-notes --title "workshop-rs ${TAG}"
+          fi
+
+          body="$(gh release view "${TAG}" --json body --jq .body)"
+          if [[ "${body}" != *'<!-- workshop-rs-catalog-identity -->'* ]]; then
+            printf '%s\n\n%s\n' "${body}" "$(cat /tmp/catalog-notes.md)" >/tmp/release-notes.md
+            gh release edit "${TAG}" --notes-file /tmp/release-notes.md
+          fi
+
+      - name: Upload artifacts and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ needs.prepare.version }}
+        run: gh release upload "${TAG}" dist/* --clobber
+
+      - name: Publish the completed GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ needs.prepare.version }}
+        run: |
+          set -euo pipefail
+          if [[ "$(gh release view "${TAG}" --json isDraft --jq .isDraft)" == "true" ]]; then
+            gh release edit "${TAG}" --draft=false
+          fi
