@@ -188,7 +188,7 @@ jobs:
 
   build:
     name: Build ${{ matrix.target }}
-    needs: prepare
+    needs: [plan, prepare]
     strategy:
       fail-fast: false
       matrix:
@@ -207,7 +207,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.prepare.commit }}
+          ref: ${{ needs.prepare.outputs.commit }}
 
       - name: Install Linux cross linker
         if: matrix.target == 'aarch64-unknown-linux-gnu'
@@ -238,10 +238,14 @@ jobs:
       - name: Package Unix artifact
         if: runner.os != 'Windows'
         env:
-          VERSION: ${{ needs.prepare.version }}
+          VERSION: ${{ needs.plan.outputs.version }}
           TARGET: ${{ matrix.target }}
         run: |
           set -euo pipefail
+          [[ -n "${VERSION}" ]] || {
+            echo 'release version is empty; refusing to create an unversioned artifact.' >&2
+            exit 1
+          }
           mkdir -p dist/workshop-rs-cli-${VERSION}-${TARGET}
           cp "target/${TARGET}/release/workshop-rs-cli" "dist/workshop-rs-cli-${VERSION}-${TARGET}/"
           tar -C dist -czf "workshop-rs-cli-${VERSION}-${TARGET}.tar.gz" "workshop-rs-cli-${VERSION}-${TARGET}"
@@ -250,9 +254,12 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          VERSION: ${{ needs.prepare.version }}
+          VERSION: ${{ needs.plan.outputs.version }}
           TARGET: ${{ matrix.target }}
         run: |
+          if ([string]::IsNullOrWhiteSpace($env:VERSION)) {
+            throw 'release version is empty; refusing to create an unversioned artifact.'
+          }
           $directory = "workshop-rs-cli-$env:VERSION-$env:TARGET"
           New-Item -ItemType Directory -Path "dist/$directory" | Out-Null
           Copy-Item "target/$env:TARGET/release/workshop-rs-cli.exe" "dist/$directory/"
@@ -269,13 +276,13 @@ jobs:
 
   publish:
     name: Publish crates
-    needs: prepare
+    needs: [plan, prepare]
     runs-on: ubuntu-latest
     environment: release
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.prepare.commit }}
+          ref: ${{ needs.prepare.outputs.commit }}
 
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@master
@@ -285,12 +292,16 @@ jobs:
       - name: Publish library then CLI
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-          VERSION: ${{ needs.prepare.version }}
+          VERSION: ${{ needs.plan.outputs.version }}
         shell: bash
         run: |
           set -euo pipefail
           [[ -n "${CARGO_REGISTRY_TOKEN}" ]] || {
             echo 'CARGO_REGISTRY_TOKEN is not configured in the release environment.' >&2
+            exit 1
+          }
+          [[ -n "${VERSION}" ]] || {
+            echo 'release version is empty; refusing to publish.' >&2
             exit 1
           }
 
@@ -324,14 +335,14 @@ jobs:
 
   release:
     name: Assemble GitHub Release
-    needs: [prepare, build, publish]
+    needs: [plan, prepare, build, publish]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.prepare.commit }}
+          ref: ${{ needs.prepare.outputs.commit }}
           fetch-depth: 0
 
       - name: Install stable toolchain
@@ -348,10 +359,14 @@ jobs:
 
       - name: Generate checksums and catalog notes
         env:
-          VERSION: ${{ needs.prepare.version }}
-          COMMIT: ${{ needs.prepare.commit }}
+          VERSION: ${{ needs.plan.outputs.version }}
+          COMMIT: ${{ needs.prepare.outputs.commit }}
         run: |
           set -euo pipefail
+          [[ -n "${VERSION}" ]] || {
+            echo 'release version is empty; refusing to assemble a release.' >&2
+            exit 1
+          }
           cd dist
           sha256sum *.tar.gz *.zip > SHA256SUMS.txt
           cd ..
@@ -373,8 +388,8 @@ jobs:
       - name: Create or resume a draft release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: v${{ needs.prepare.version }}
-          COMMIT: ${{ needs.prepare.commit }}
+          TAG: v${{ needs.plan.outputs.version }}
+          COMMIT: ${{ needs.prepare.outputs.commit }}
         run: |
           set -euo pipefail
           if ! gh release view "${TAG}" >/dev/null 2>&1; then
@@ -390,13 +405,13 @@ jobs:
       - name: Upload artifacts and checksums
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: v${{ needs.prepare.version }}
+          TAG: v${{ needs.plan.outputs.version }}
         run: gh release upload "${TAG}" dist/* --clobber
 
       - name: Publish the completed GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: v${{ needs.prepare.version }}
+          TAG: v${{ needs.plan.outputs.version }}
         run: |
           set -euo pipefail
           if [[ "$(gh release view "${TAG}" --json isDraft --jq .isDraft)" == "true" ]]; then
