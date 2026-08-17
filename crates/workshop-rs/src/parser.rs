@@ -12,7 +12,9 @@ use crate::settings::table::{self, KeyKind, PathPart};
 use crate::settings::{Settings, SettingsListElement, SettingsNode};
 use crate::signatures::{ExpectedDomain, NoExpectedDomain};
 use crate::source::{Position, SourceFile, Span};
-use crate::wir::{self, Action, Event, ModifyOp, Value, ValueNode};
+use crate::wir::{
+    self, Action, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Value, ValueNode,
+};
 
 use crate::catalog::{Catalog, Kind, Locale};
 use crate::error::{Result, WorkshopError};
@@ -665,20 +667,39 @@ impl Parser<'_> {
                 span: None,
             })?;
         match entry.id.as_str() {
-            "global" => Ok(Event::Global),
-            "eachPlayer" => {
-                for sub in &lines[1..] {
-                    let sub = sub.trim();
-                    if !sub.is_empty() && sub != "All" {
-                        return Err(WorkshopError::Unsupported {
-                            message: format!("unsupported 'eachPlayer' event parameter '{sub}'"),
-                            span: None,
-                        });
-                    }
+            "global" => {
+                if lines[1..].iter().any(|line| !line.trim().is_empty()) {
+                    return Err(self.unsupported_event_parameters("global"));
                 }
-                Ok(Event::EachPlayer)
+                Ok(Event::Global)
             }
+            "eachPlayer" => {
+                if lines[1..].iter().all(|line| line.trim().is_empty()) {
+                    return Ok(Event::EachPlayer);
+                }
+                let (team, target) = self.event_filters(&lines, "eachPlayer")?;
+                Ok(Event::EachPlayerWithFilters { team, target })
+            }
+            "playerDealtDamage" => self.player_event(&lines, PlayerEventKind::DealtDamage),
+            "playerDealtFinalBlow" => self.player_event(&lines, PlayerEventKind::DealtFinalBlow),
+            "playerDealtHealing" => self.player_event(&lines, PlayerEventKind::DealtHealing),
+            "playerDied" => self.player_event(&lines, PlayerEventKind::Died),
+            "playerEarnedElimination" => {
+                self.player_event(&lines, PlayerEventKind::EarnedElimination)
+            }
+            "playerJoined" => self.player_event(&lines, PlayerEventKind::Joined),
+            "playerLeft" => self.player_event(&lines, PlayerEventKind::Left),
+            "playerReceivedHealing" => self.player_event(&lines, PlayerEventKind::ReceivedHealing),
+            "playerTookDamage" => self.player_event(&lines, PlayerEventKind::TookDamage),
             "subroutine" => {
+                if lines
+                    .get(2..)
+                    .unwrap_or(&[])
+                    .iter()
+                    .any(|line| !line.trim().is_empty())
+                {
+                    return Err(self.unsupported_event_parameters("subroutine"));
+                }
                 let Some(sub_name) = lines.get(1).map(|s| s.trim()) else {
                     return Err(self.malformed(
                         "subroutine event requires a subroutine name",
@@ -692,6 +713,77 @@ impl Parser<'_> {
                 message: format!("unsupported event '{other}'"),
                 span: None,
             }),
+        }
+    }
+
+    fn player_event(&self, lines: &[String], kind: PlayerEventKind) -> Result<Event> {
+        let (team, target) = self.event_filters(lines, kind.catalog_id())?;
+        Ok(Event::Player { kind, team, target })
+    }
+
+    fn event_filters(&self, lines: &[String], event_id: &str) -> Result<(EventTeam, EventTarget)> {
+        let parameters: Vec<&str> = lines[1..]
+            .iter()
+            .map(String::as_str)
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .collect();
+        if parameters.is_empty() {
+            return Ok((EventTeam::All, EventTarget::All));
+        }
+        if parameters.len() != 2 {
+            if event_id == "eachPlayer" {
+                return Err(WorkshopError::Unsupported {
+                    message: format!("event '{event_id}' requires both team and player parameters"),
+                    span: None,
+                });
+            }
+            return Err(WorkshopError::Malformed {
+                message: format!("event '{event_id}' requires team and player parameters"),
+                span: None,
+            });
+        }
+        let team_member = self
+            .catalog
+            .resolve_enum_member("EventTeam", &self.locale, parameters[0])
+            .map(|(_, member)| member);
+        let team = match team_member.as_deref() {
+            Some("ALL") => EventTeam::All,
+            Some("TEAM_1") => EventTeam::Team1,
+            Some("TEAM_2") => EventTeam::Team2,
+            _ => return Err(self.unknown("event team", parameters[0])),
+        };
+        let target = if let Some((_, member)) =
+            self.catalog
+                .resolve_enum_member("EventPlayer", &self.locale, parameters[1])
+        {
+            if member == "ALL" {
+                EventTarget::All
+            } else if let Some(slot) = member.strip_prefix("SLOT_") {
+                let slot = slot
+                    .parse::<u8>()
+                    .map_err(|_| self.unknown("event player", parameters[1]))?;
+                EventTarget::Slot(slot)
+            } else {
+                return Err(self.unknown("event player", parameters[1]));
+            }
+        } else if let Some((_, hero)) = self
+            .catalog
+            .bare_member_matches(&self.locale, parameters[1])
+            .into_iter()
+            .find(|(domain, _)| domain == "Hero")
+        {
+            EventTarget::Hero(hero)
+        } else {
+            return Err(self.unknown("event player", parameters[1]));
+        };
+        Ok((team, target))
+    }
+
+    fn unsupported_event_parameters(&self, event_id: &str) -> WorkshopError {
+        WorkshopError::Unsupported {
+            message: format!("event '{event_id}' does not accept parameters"),
+            span: None,
         }
     }
 

@@ -382,10 +382,16 @@ impl Emitter<'_> {
             wir::Event::EachPlayer => {
                 let spelling = self.spelling(Kind::Event, "eachPlayer")?;
                 self.line(2, &format!("{spelling};"))?;
-                // The default eachPlayer parameter ("All", corpus-evidenced)
-                // is a locale-invariant keyword in the declared surface.
-                self.line(2, "All;")?;
-                self.line(2, "All;")?;
+            }
+            wir::Event::EachPlayerWithFilters { team, target } => {
+                let spelling = self.spelling(Kind::Event, "eachPlayer")?;
+                self.line(2, &format!("{spelling};"))?;
+                self.event_filters(*team, target)?;
+            }
+            wir::Event::Player { kind, team, target } => {
+                let spelling = self.spelling(Kind::Event, kind.catalog_id())?;
+                self.line(2, &format!("{spelling};"))?;
+                self.event_filters(*team, target)?;
             }
             wir::Event::Subroutine(subroutine) => {
                 let spelling = self.spelling(Kind::Event, "subroutine")?;
@@ -434,6 +440,25 @@ impl Emitter<'_> {
             self.line(1, "}")?;
         }
         self.line(0, "}")?;
+        Ok(())
+    }
+
+    fn event_filters(&mut self, team: wir::EventTeam, target: &wir::EventTarget) -> Result<()> {
+        let team = match team {
+            wir::EventTeam::All => "ALL",
+            wir::EventTeam::Team1 => "TEAM_1",
+            wir::EventTeam::Team2 => "TEAM_2",
+        };
+        let team = self.enum_spelling("EventTeam", team)?;
+        self.line(2, &format!("{team};"))?;
+        let target = match target {
+            wir::EventTarget::All => self.enum_spelling("EventPlayer", "ALL")?,
+            wir::EventTarget::Slot(slot) => {
+                self.enum_spelling("EventPlayer", &format!("SLOT_{slot}"))?
+            }
+            wir::EventTarget::Hero(hero) => self.enum_spelling("Hero", hero)?,
+        };
+        self.line(2, &format!("{target};"))?;
         Ok(())
     }
 

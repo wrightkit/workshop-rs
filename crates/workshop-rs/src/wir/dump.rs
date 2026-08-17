@@ -2,7 +2,7 @@
 
 use crate::source::Span;
 
-use super::{Action, Event, Program, Value};
+use super::{Action, Event, EventTarget, EventTeam, PlayerEventKind, Program, Value};
 
 /// Render a deterministic, human-readable dump of the workshop program.
 pub(crate) fn dump(program: &Program) -> String {
@@ -63,6 +63,19 @@ fn render_event(program: &Program, event: &Event, out: &mut String, level: usize
     match event {
         Event::Global => out.push_str(&format!("{}event Global\n", indent(level))),
         Event::EachPlayer => out.push_str(&format!("{}event EachPlayer\n", indent(level))),
+        Event::EachPlayerWithFilters { team, target } => out.push_str(&format!(
+            "{}event EachPlayer team={} target={}\n",
+            indent(level),
+            event_team_name(*team),
+            event_target_name(target)
+        )),
+        Event::Player { kind, team, target } => out.push_str(&format!(
+            "{}event {} team={} target={}\n",
+            indent(level),
+            player_event_name(*kind),
+            event_team_name(*team),
+            event_target_name(target)
+        )),
         Event::Subroutine(subroutine) => {
             let name = program
                 .subroutines
@@ -75,6 +88,36 @@ fn render_event(program: &Program, event: &Event, out: &mut String, level: usize
                 subroutine
             ));
         }
+    }
+}
+
+fn event_team_name(team: EventTeam) -> &'static str {
+    match team {
+        EventTeam::All => "All",
+        EventTeam::Team1 => "Team1",
+        EventTeam::Team2 => "Team2",
+    }
+}
+
+fn event_target_name(target: &EventTarget) -> String {
+    match target {
+        EventTarget::All => "All".to_string(),
+        EventTarget::Slot(slot) => format!("Slot{slot}"),
+        EventTarget::Hero(hero) => format!("Hero({hero})"),
+    }
+}
+
+fn player_event_name(kind: PlayerEventKind) -> &'static str {
+    match kind {
+        PlayerEventKind::DealtDamage => "PlayerDealtDamage",
+        PlayerEventKind::DealtFinalBlow => "PlayerDealtFinalBlow",
+        PlayerEventKind::DealtHealing => "PlayerDealtHealing",
+        PlayerEventKind::Died => "PlayerDied",
+        PlayerEventKind::EarnedElimination => "PlayerEarnedElimination",
+        PlayerEventKind::Joined => "PlayerJoined",
+        PlayerEventKind::Left => "PlayerLeft",
+        PlayerEventKind::ReceivedHealing => "PlayerReceivedHealing",
+        PlayerEventKind::TookDamage => "PlayerTookDamage",
     }
 }
 

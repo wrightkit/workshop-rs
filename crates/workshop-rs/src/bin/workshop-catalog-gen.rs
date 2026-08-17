@@ -221,7 +221,7 @@ mod corpus {
     }
 
     /// An exact-en-US-spelling index over a slice of the export.
-    #[derive(Debug, Default)]
+    #[derive(Debug, Clone, Default)]
     struct Index {
         by_en: HashMap<String, Vec<Candidate>>,
     }
@@ -298,6 +298,28 @@ mod corpus {
             let zh = entry.get("zh-CN").and_then(Value::as_str);
             if let (Some(en), Some(zh)) = (en, zh) {
                 index.add(&format!("data.{section}.{id}"), en, zh);
+            }
+        }
+        index
+    }
+
+    /// Build an index from a nested `data.<parent>.<section>` table with
+    /// direct en-US/zh-CN fields.
+    fn nested_data_index(export: &Value, parent: &str, section: &str) -> Index {
+        let mut index = Index::default();
+        let Some(entries) = export
+            .get("data")
+            .and_then(|data| data.get(parent))
+            .and_then(|parent| parent.get(section))
+            .and_then(Value::as_object)
+        else {
+            return index;
+        };
+        for (id, entry) in entries {
+            let en = entry.get("en-US").and_then(Value::as_str);
+            let zh = entry.get("zh-CN").and_then(Value::as_str);
+            if let (Some(en), Some(zh)) = (en, zh) {
+                index.add(&format!("data.{parent}.{section}.{id}"), en, zh);
             }
         }
         index
@@ -565,6 +587,26 @@ mod corpus {
         let actions = localized_index(&export, &["actions."]);
         let values = localized_index(&export, &["values."]);
         let events = localized_index(&export, &["other.events."]);
+        let event_teams = {
+            let mut index = localized_index(&export, &["other.eventTeams."]);
+            merge_index(
+                &mut index,
+                nested_data_index(&export, "other", "eventTeams"),
+            );
+            index
+        };
+        let event_players = {
+            let mut index = localized_index(&export, &["other.eventPlayers.", "other.eventSlots."]);
+            merge_index(
+                &mut index,
+                nested_data_index(&export, "other", "eventPlayers"),
+            );
+            merge_index(
+                &mut index,
+                nested_data_index(&export, "other", "eventSlots"),
+            );
+            index
+        };
         let operators = localized_index(&export, &["values.", "constants.__Operation__."]);
         let maps = {
             let mut index = localized_index(&export, &["maps."]);
@@ -582,6 +624,8 @@ mod corpus {
         let mut constants_by_domain: HashMap<String, Index> = HashMap::new();
         for domain in enum_domains(&catalog)? {
             let export_domain = match domain.as_str() {
+                "EventTeam" => "__event_team__",
+                "EventPlayer" => "__event_player__",
                 "Color" => "ColorLiteral",
                 "Team" => "TeamLiteral",
                 "Button" => "ButtonLiteral",
@@ -592,7 +636,12 @@ mod corpus {
                 other => other,
             };
             let prefix = format!("constants.{export_domain}.");
-            constants_by_domain.insert(domain.to_string(), localized_index(&export, &[&prefix]));
+            let index = match domain.as_str() {
+                "EventTeam" => event_teams.clone(),
+                "EventPlayer" => event_players.clone(),
+                _ => localized_index(&export, &[&prefix]),
+            };
+            constants_by_domain.insert(domain.to_string(), index);
         }
 
         let mut matches: Vec<Match> = Vec::new();
@@ -951,7 +1000,7 @@ mod corpus {
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
             },
-            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/event filters/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
             "sourceReview": "reviewed: workshop-rs commits its own mapping data; the user-provided JSON is build input only and is not redistributed",
             "coverage": Value::Object(coverage_all),
             "matches": matches_json,

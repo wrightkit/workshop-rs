@@ -105,11 +105,11 @@ the canonical form with a fresh digest (byte-idempotent). See
 
 ## Locale status
 
-* `en-US`: complete declared surface (341/341 canonical entries), corpus
+* `en-US`: complete declared surface (366/366 canonical entries), corpus
   round-trips and settings emission tested.
-* `zh-CN`: the reviewed export-backed corpus covers **341/341** canonical
-  entries (structural 11/11, actions 60/60, values 77/77, events 3/3,
-  operators 14/14, enum members 176/176). The declared surface is complete;
+* `zh-CN`: the reviewed export-backed corpus covers **366/366** canonical
+  entries (structural 11/11, actions 60/60, values 77/77, events 12/12,
+  operators 14/14, enum members 192/192). The declared surface is complete;
   settings data covers labels 19/19 and all other declared settings sections.
 
 The corpus is reproducible with the user-provided export (not committed):

@@ -12,7 +12,7 @@ use workshop_rs::catalog::{Catalog, Locale};
 /// (`workshop-catalog-gen build`) recomputes it and the pin is updated
 /// deliberately together with the data.
 const PINNED_CATALOG_DIGEST: &str =
-    "1f84204bfd6bfd0dcaabc275185d907764e03fae0fbde54f28e162aed9935961";
+    "48b3a07188f7137a8a81e51fc33c06681da5ca5d30b79ee636b0147eb14dfc6d";
 
 #[test]
 fn committed_catalog_digest_is_pinned() {
@@ -71,11 +71,11 @@ fn locale_coverage_is_exact_and_primary_is_complete() {
     let en = catalog.locale_coverage(&Locale::new("en-US"));
     assert_eq!(en.mapped, en.total, "the primary locale is complete");
     assert_eq!(
-        en.mapped, 341,
-        "declared en-US surface (165 entries + 176 members)"
+        en.mapped, 366,
+        "declared en-US surface (174 entries + 192 members)"
     );
     let zh = catalog.locale_coverage(&Locale::new("zh-CN"));
-    assert_eq!(zh.mapped, 341, "zh-CN corpus coverage is pinned");
+    assert_eq!(zh.mapped, 366, "zh-CN corpus coverage is pinned");
     assert_eq!(zh.total, en.total);
     let all = catalog.locale_coverage_all();
     assert_eq!(all.len(), 2);

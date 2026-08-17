@@ -4,7 +4,7 @@ use crate::settings::{Settings as IrSettings, SettingsNode as IrSettingsNode};
 use crate::source::Span;
 use crate::wir::error::IrError;
 
-use super::{Action, Event, Program, Rule, Value};
+use super::{Action, Event, EventTarget, Program, Rule, Value};
 
 /// Validate every ID resolves and every span is valid, returning the first
 /// violation.
@@ -32,6 +32,19 @@ fn check_rule(program: &Program, rule: &Rule) -> Result<(), IrError> {
     if let Event::Subroutine(subroutine) = &rule.event {
         if !program.subroutines.contains(*subroutine) {
             return Err(dangling("subroutine", subroutine.index()));
+        }
+    }
+    let target = match &rule.event {
+        Event::EachPlayerWithFilters { target, .. } | Event::Player { target, .. } => Some(target),
+        _ => None,
+    };
+    if let Some(EventTarget::Slot(slot)) = target {
+        if *slot > 11 {
+            return Err(IrError::Invalid {
+                code: "invalid-event-slot",
+                message: format!("event slot {slot} is outside the canonical 0..=11 range"),
+                span: rule.span,
+            });
         }
     }
     for condition in &rule.conditions {

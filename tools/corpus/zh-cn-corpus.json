@@ -5,12 +5,12 @@
       "total": 60
     },
     "enums": {
-      "matched": 176,
-      "total": 176
+      "matched": 192,
+      "total": 192
     },
     "events": {
-      "matched": 3,
-      "total": 3
+      "matched": 12,
+      "total": 12
     },
     "operators": {
       "matched": 14,
@@ -21,8 +21,8 @@
       "total": 11
     },
     "total": {
-      "matched": 341,
-      "total": 341
+      "matched": 366,
+      "total": 366
     },
     "values": {
       "matched": 77,
@@ -987,6 +987,154 @@
         "constants.EffectReeval.VISIBILITY_POSITION_AND_RADIUS"
       ],
       "zh-CN": "可见，位置和半径"
+    },
+    {
+      "en-US": "All",
+      "id": "EventPlayer.ALL",
+      "kind": "enum member",
+      "sources": [
+        "other.eventPlayers.all",
+        "data.other.eventPlayers.all"
+      ],
+      "zh-CN": "全部"
+    },
+    {
+      "en-US": "Slot 0",
+      "id": "EventPlayer.SLOT_0",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.0"
+      ],
+      "zh-CN": "栏位 0"
+    },
+    {
+      "en-US": "Slot 1",
+      "id": "EventPlayer.SLOT_1",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.1"
+      ],
+      "zh-CN": "栏位 1"
+    },
+    {
+      "en-US": "Slot 10",
+      "id": "EventPlayer.SLOT_10",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.10"
+      ],
+      "zh-CN": "栏位 10"
+    },
+    {
+      "en-US": "Slot 11",
+      "id": "EventPlayer.SLOT_11",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.11"
+      ],
+      "zh-CN": "栏位 11"
+    },
+    {
+      "en-US": "Slot 2",
+      "id": "EventPlayer.SLOT_2",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.2"
+      ],
+      "zh-CN": "栏位 2"
+    },
+    {
+      "en-US": "Slot 3",
+      "id": "EventPlayer.SLOT_3",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.3"
+      ],
+      "zh-CN": "栏位 3"
+    },
+    {
+      "en-US": "Slot 4",
+      "id": "EventPlayer.SLOT_4",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.4"
+      ],
+      "zh-CN": "栏位 4"
+    },
+    {
+      "en-US": "Slot 5",
+      "id": "EventPlayer.SLOT_5",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.5"
+      ],
+      "zh-CN": "栏位 5"
+    },
+    {
+      "en-US": "Slot 6",
+      "id": "EventPlayer.SLOT_6",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.6"
+      ],
+      "zh-CN": "栏位 6"
+    },
+    {
+      "en-US": "Slot 7",
+      "id": "EventPlayer.SLOT_7",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.7"
+      ],
+      "zh-CN": "栏位 7"
+    },
+    {
+      "en-US": "Slot 8",
+      "id": "EventPlayer.SLOT_8",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.8"
+      ],
+      "zh-CN": "栏位 8"
+    },
+    {
+      "en-US": "Slot 9",
+      "id": "EventPlayer.SLOT_9",
+      "kind": "enum member",
+      "sources": [
+        "data.other.eventSlots.9"
+      ],
+      "zh-CN": "栏位 9"
+    },
+    {
+      "en-US": "All",
+      "id": "EventTeam.ALL",
+      "kind": "enum member",
+      "sources": [
+        "other.eventTeams.all",
+        "data.other.eventTeams.all"
+      ],
+      "zh-CN": "双方"
+    },
+    {
+      "en-US": "Team 1",
+      "id": "EventTeam.TEAM_1",
+      "kind": "enum member",
+      "sources": [
+        "other.eventTeams.1",
+        "data.other.eventTeams.1"
+      ],
+      "zh-CN": "队伍1"
+    },
+    {
+      "en-US": "Team 2",
+      "id": "EventTeam.TEAM_2",
+      "kind": "enum member",
+      "sources": [
+        "other.eventTeams.2",
+        "data.other.eventTeams.2"
+      ],
+      "zh-CN": "队伍2"
     },
     {
       "en-US": "Ana",
@@ -2250,6 +2398,87 @@
       "zh-CN": "持续 - 全局"
     },
     {
+      "en-US": "Player Dealt Damage",
+      "id": "playerDealtDamage",
+      "kind": "event",
+      "sources": [
+        "other.events.playerDealtDamage"
+      ],
+      "zh-CN": "玩家造成伤害"
+    },
+    {
+      "en-US": "Player Dealt Final Blow",
+      "id": "playerDealtFinalBlow",
+      "kind": "event",
+      "sources": [
+        "other.events.playerDealtFinalBlow"
+      ],
+      "zh-CN": "玩家造成最后一击"
+    },
+    {
+      "en-US": "Player Dealt Healing",
+      "id": "playerDealtHealing",
+      "kind": "event",
+      "sources": [
+        "other.events.playerDealtHealing"
+      ],
+      "zh-CN": "玩家造成治疗"
+    },
+    {
+      "en-US": "Player Died",
+      "id": "playerDied",
+      "kind": "event",
+      "sources": [
+        "other.events.playerDied"
+      ],
+      "zh-CN": "玩家阵亡"
+    },
+    {
+      "en-US": "Player Earned Elimination",
+      "id": "playerEarnedElimination",
+      "kind": "event",
+      "sources": [
+        "other.events.playerEarnedElimination"
+      ],
+      "zh-CN": "玩家参与消灭"
+    },
+    {
+      "en-US": "Player Joined Match",
+      "id": "playerJoined",
+      "kind": "event",
+      "sources": [
+        "other.events.playerJoined"
+      ],
+      "zh-CN": "玩家加入比赛"
+    },
+    {
+      "en-US": "Player Left Match",
+      "id": "playerLeft",
+      "kind": "event",
+      "sources": [
+        "other.events.playerLeft"
+      ],
+      "zh-CN": "玩家离开比赛"
+    },
+    {
+      "en-US": "Player Received Healing",
+      "id": "playerReceivedHealing",
+      "kind": "event",
+      "sources": [
+        "other.events.playerReceivedHealing"
+      ],
+      "zh-CN": "玩家受到治疗"
+    },
+    {
+      "en-US": "Player Took Damage",
+      "id": "playerTookDamage",
+      "kind": "event",
+      "sources": [
+        "other.events.playerTookDamage"
+      ],
+      "zh-CN": "玩家受到伤害"
+    },
+    {
       "en-US": "Subroutine",
       "id": "subroutine",
       "kind": "event",
@@ -3184,7 +3413,7 @@
       "zh-CN": "地图矢量"
     }
   ],
-  "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+  "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/event filters/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
   "schemaVersion": 1,
   "source": {
     "commit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",

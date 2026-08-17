@@ -828,7 +828,7 @@
       "params": []
     }
   ],
-  "digest": "1f84204bfd6bfd0dcaabc275185d907764e03fae0fbde54f28e162aed9935961",
+  "digest": "48b3a07188f7137a8a81e51fc33c06681da5ca5d30b79ee636b0147eb14dfc6d",
   "enums": [
     {
       "domain": "Color",
@@ -1197,6 +1197,128 @@
             "zh-CN": "队伍2"
           },
           "id": "TEAM_2"
+        }
+      ]
+    },
+    {
+      "domain": "EventTeam",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "All",
+            "zh-CN": "双方"
+          },
+          "id": "ALL"
+        },
+        {
+          "aliases": {
+            "en-US": "Team 1",
+            "zh-CN": "队伍1"
+          },
+          "id": "TEAM_1"
+        },
+        {
+          "aliases": {
+            "en-US": "Team 2",
+            "zh-CN": "队伍2"
+          },
+          "id": "TEAM_2"
+        }
+      ]
+    },
+    {
+      "domain": "EventPlayer",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "All",
+            "zh-CN": "全部"
+          },
+          "id": "ALL"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 0",
+            "zh-CN": "栏位 0"
+          },
+          "id": "SLOT_0"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 1",
+            "zh-CN": "栏位 1"
+          },
+          "id": "SLOT_1"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 2",
+            "zh-CN": "栏位 2"
+          },
+          "id": "SLOT_2"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 3",
+            "zh-CN": "栏位 3"
+          },
+          "id": "SLOT_3"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 4",
+            "zh-CN": "栏位 4"
+          },
+          "id": "SLOT_4"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 5",
+            "zh-CN": "栏位 5"
+          },
+          "id": "SLOT_5"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 6",
+            "zh-CN": "栏位 6"
+          },
+          "id": "SLOT_6"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 7",
+            "zh-CN": "栏位 7"
+          },
+          "id": "SLOT_7"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 8",
+            "zh-CN": "栏位 8"
+          },
+          "id": "SLOT_8"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 9",
+            "zh-CN": "栏位 9"
+          },
+          "id": "SLOT_9"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 10",
+            "zh-CN": "栏位 10"
+          },
+          "id": "SLOT_10"
+        },
+        {
+          "aliases": {
+            "en-US": "Slot 11",
+            "zh-CN": "栏位 11"
+          },
+          "id": "SLOT_11"
         }
       ]
     },
@@ -2206,7 +2328,150 @@
         "en-US": "Ongoing - Each Player",
         "zh-CN": "持续 - 每名玩家"
       },
-      "id": "eachPlayer"
+      "id": "eachPlayer",
+      "paramDomains": [
+        "EventTeam",
+        null
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Dealt Damage",
+        "zh-CN": "玩家造成伤害"
+      },
+      "id": "playerDealtDamage",
+      "paramDomains": [
+        "EventTeam",
+        null
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Dealt Final Blow",
+        "zh-CN": "玩家造成最后一击"
+      },
+      "id": "playerDealtFinalBlow",
+      "paramDomains": [
+        "EventTeam",
+        null
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Dealt Healing",
+        "zh-CN": "玩家造成治疗"
+      },
+      "id": "playerDealtHealing",
+      "paramDomains": [
+        "EventTeam",
+        null
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Died",
+        "zh-CN": "玩家阵亡"
+      },
+      "id": "playerDied",
+      "paramDomains": [
+        "EventTeam",
+        null
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Earned Elimination",
+        "zh-CN": "玩家参与消灭"
+      },
+      "id": "playerEarnedElimination",
+      "paramDomains": [
+        "EventTeam",
+        null
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Joined Match",
+        "zh-CN": "玩家加入比赛"
+      },
+      "id": "playerJoined",
+      "paramDomains": [
+        "EventTeam",
+        null
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Left Match",
+        "zh-CN": "玩家离开比赛"
+      },
+      "id": "playerLeft",
+      "paramDomains": [
+        "EventTeam",
+        null
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Received Healing",
+        "zh-CN": "玩家受到治疗"
+      },
+      "id": "playerReceivedHealing",
+      "paramDomains": [
+        "EventTeam",
+        null
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Took Damage",
+        "zh-CN": "玩家受到伤害"
+      },
+      "id": "playerTookDamage",
+      "paramDomains": [
+        "EventTeam",
+        null
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
     },
     {
       "aliases": {
@@ -2325,7 +2590,7 @@
     "generatorVersion": "0.1.0",
     "license": "MIT (WrightKit-authored data, ownership transfer to workshop-rs per wright#136 direction; see docs/provenance.md)",
     "reviewed": true,
-    "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; zh-CN aliases are generated from the user-provided workshop-data JSON; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; 341/341 canonical entries are covered with no exclusions"
+    "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); rule-event identities and EventTeam/EventPlayer filter aliases are transcribed from the user-provided workshop-data export and its Workshop event annotations, cross-checked against documented raw Workshop event forms; migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; zh-CN aliases are generated from the user-provided workshop-data JSON; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; 366/366 canonical entries are covered with no exclusions"
   },
   "schemaVersion": 1,
   "structural": [

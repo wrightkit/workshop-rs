@@ -283,6 +283,32 @@ fn event_equivalent(
     match (left, right) {
         (wir::Event::Global, wir::Event::Global) => true,
         (wir::Event::EachPlayer, wir::Event::EachPlayer) => true,
+        (wir::Event::EachPlayer, wir::Event::EachPlayerWithFilters { team, target })
+        | (wir::Event::EachPlayerWithFilters { team, target }, wir::Event::EachPlayer) => {
+            *team == wir::EventTeam::All && *target == wir::EventTarget::All
+        }
+        (
+            wir::Event::EachPlayerWithFilters {
+                team: team_a,
+                target: target_a,
+            },
+            wir::Event::EachPlayerWithFilters {
+                team: team_b,
+                target: target_b,
+            },
+        ) => team_a == team_b && target_a == target_b,
+        (
+            wir::Event::Player {
+                kind: kind_a,
+                team: team_a,
+                target: target_a,
+            },
+            wir::Event::Player {
+                kind: kind_b,
+                team: team_b,
+                target: target_b,
+            },
+        ) => kind_a == kind_b && team_a == team_b && target_a == target_b,
         (wir::Event::Subroutine(sa), wir::Event::Subroutine(sb)) => {
             let name_a = a.subroutines.get(*sa).map(|s| s.name.as_str());
             let name_b = b.subroutines.get(*sb).map(|s| s.name.as_str());
