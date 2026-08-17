@@ -46,8 +46,8 @@ license, reviewed) is embedded in the dataset itself and surfaced by
   `workshop-data/workshop-data.json` export at commit
   `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`, commit date 2026-08-12, fetched
   2026-08-17. The export is not committed to this repository.
-* The generated settings corpus covers labels 17/19, modes 6/7, maps 2/2,
-  heroes 10/10, enum values 2/2, tokens 3/3, and teams 0/1. Its exact-match
+* The generated settings corpus covers labels 17/19, modes 7/7, maps 2/2,
+  heroes 10/10, enum values 2/2, tokens 3/3, and teams 1/1. Its exact-match
   exclusions are recorded in
   `crates/workshop-rs/src/settings/data/zh-cn.json`; settings without a
   mapping continue to fail explicitly. The data's license review remains

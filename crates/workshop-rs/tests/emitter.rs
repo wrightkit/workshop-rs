@@ -416,16 +416,12 @@ fn settings_free_program_emits_no_settings_section() {
 }
 
 #[test]
-fn settings_emission_is_rejected_by_the_workshop_parser() {
-    // Roundtrip boundary: the ws parser never learns the settings section,
-    // so a settings-bearing emission cannot reparse.
+fn settings_emission_reparses_into_equivalent_wir() {
     let program = program_with_settings(pixelart_settings());
     let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
     assert!(emitted.starts_with("settings {"));
-    assert!(
-        parser::parse(&emitted, &catalog(), &en()).is_err(),
-        "settings-bearing emission must be rejected by the ws parser"
-    );
+    let reparsed = parser::parse(&emitted, &catalog(), &en()).expect("settings reparses");
+    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
 }
 
 #[test]

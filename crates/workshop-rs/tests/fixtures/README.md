@@ -18,6 +18,7 @@ core migration (Issue #2).
 | `corpus/overpy-cake.ws` | wright `compatibility/fixtures/real-world/overpy-cake/oracle.json` `compile.workshop` | OverPy 9.7.10, en-US emission |
 | `settings/pixelart.settings.ws` | wright `compatibility/fixtures/real-world/overpy-pixelart/oracle.json` `compile.workshop` settings section | OverPy 9.7.10, en-US emission |
 | `settings/santa.settings.ws` | wright `compatibility/fixtures/real-world/overpy-santa/oracle.json` `compile.workshop` settings section | OverPy 9.7.10, en-US emission |
+| `settings/pixelart.zh-CN.settings.ws` | deterministic conversion of `settings/pixelart.settings.ws` through the reviewed PR #9 locale corpus | reviewed `zh-CN` mappings, no fallback |
 
 The original oracle snapshots record: OverPy version 9.7.10 (npm
 `overpy@9.7.10`, git head `1e2688954302a402d076944b46db07efb14d7b61`,

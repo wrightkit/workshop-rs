@@ -186,7 +186,8 @@ impl Emitter<'_> {
                 )
             });
             let header = if disabled {
-                format!("disabled {display}")
+                let disabled_name = self.setting_name("tokens", "disabled", "token.disabled")?;
+                format!("{disabled_name} {display}")
             } else {
                 display
             };

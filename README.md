@@ -69,9 +69,9 @@ let out = convert(text, &catalog, &Locale::new("en-US"), &Locale::new("zh-CN"),
 let identity = catalog.identity();
 ```
 
-Note: settings-bearing programs cannot be parsed from raw text (a `.ws`
-decompiler is a non-goal); settings are carried in WIR and emitted by the
-library. Locale detection is available via `workshop_rs::detect`.
+Settings-bearing programs are parsed into the canonical WIR settings carrier
+and emitted by the library. Locale detection is available via
+`workshop_rs::detect`.
 
 ## CLI usage
 
