@@ -642,11 +642,7 @@ mod corpus {
                         kind: kind.to_string(),
                         id: id.to_string(),
                         en: en.to_string(),
-                        reason: match (kind, id) {
-                            ("action", "chaseVariableAtRate") => "confirmed export identity maps to the zh-CN spelling already owned by chaseAtRate; adding it would make the locale parser ambiguous".to_string(),
-                            ("value", "arrayElement") => "confirmed export identity maps to the zh-CN spelling already owned by currentArrayElement; adding it would make the locale parser ambiguous".to_string(),
-                            _ => reason,
-                        },
+                        reason,
                     }),
                 }
             }
@@ -955,7 +951,7 @@ mod corpus {
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
             },
-            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; the global chase and Array Element aliases are excluded when their exact zh-CN spellings would collide with canonical identities; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
             "sourceReview": "reviewed: workshop-rs commits its own mapping data; the user-provided JSON is build input only and is not redistributed",
             "coverage": Value::Object(coverage_all),
             "matches": matches_json,

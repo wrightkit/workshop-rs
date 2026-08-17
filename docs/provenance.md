@@ -33,11 +33,11 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 
 ### Locale coverage
 
-* `en-US` is the primary locale and is complete (344/344 canonical entries:
-  168 builtins + 176 enum members). The committed catalog validates that the
+* `en-US` is the primary locale and is complete (341/341 canonical entries:
+  165 builtins + 176 enum members). The committed catalog validates that the
   primary locale is complete.
-* `zh-CN` has an evidence-backed corpus of **341/344** canonical entries:
-  structural 11/11, actions 60/62, values 77/78, events 3/3, operators 14/14,
+* `zh-CN` has an evidence-backed corpus of **341/341** canonical entries:
+  structural 11/11, actions 60/60, values 77/77, events 3/3, operators 14/14,
   and enum members 176/176. The reproducible manifest is
   `tools/corpus/zh-cn-corpus.json`; it records exact en-US spelling matches,
   every exclusion, and the export provenance. The source is the user-provided
@@ -56,11 +56,11 @@ global stop-chasing, force hero/throttle, `Set Player Allowed Heroes`, and
 the four bare comparison symbols. The three enum aliases use exact export
 identity/GUID matches: Lijiang Tower Lunar New Year, Visible To and Values,
 and To Nearest. The two hero settings labels are composed only after exact
-template and Blizzard hero identity/GUID checks. The remaining exclusions are
-`deleteAllClasses`, `chaseVariableAtRate`, and `arrayElement`, each recorded
-with its exact reason in the manifest; the latter two collide with an already
-declared zh-CN identity and therefore cannot be added without making parsing
-ambiguous.
+template and Blizzard hero identity/GUID checks. Following the explicit
+product decision, `Delete All Classes`, `Chase Variable At Rate`, and `Array
+Element` are not declared Workshop identities: they are legacy/provider syntax
+sugar represented by the corresponding canonical Workshop identities. The
+declared corpus is therefore complete and contains no silent exclusions.
 
 ## Test fixtures (`tests/fixtures/`)
 

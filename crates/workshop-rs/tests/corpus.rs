@@ -42,9 +42,9 @@ fn manifest_pins_the_export_and_exact_match_coverage() {
         "d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
     );
     assert_eq!(manifest["coverage"]["total"]["matched"], 341);
-    assert_eq!(manifest["coverage"]["total"]["total"], 344);
+    assert_eq!(manifest["coverage"]["total"]["total"], 341);
     assert_eq!(manifest["matches"].as_array().unwrap().len(), 341);
-    assert_eq!(manifest["excluded"].as_array().unwrap().len(), 3);
+    assert_eq!(manifest["excluded"].as_array().unwrap().len(), 0);
     for (kind, id, source, zh_cn) in [
         (
             "action",

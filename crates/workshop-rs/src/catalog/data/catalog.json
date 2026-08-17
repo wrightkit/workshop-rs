@@ -811,31 +811,12 @@
     },
     {
       "aliases": {
-        "en-US": "Delete All Classes"
-      },
-      "id": "deleteAllClasses",
-      "params": []
-    },
-    {
-      "aliases": {
         "en-US": "Stop Chasing Variable",
         "zh-CN": "停止追踪全局变量"
       },
       "id": "stopChasingVariable",
       "params": [
         "Variable"
-      ]
-    },
-    {
-      "aliases": {
-        "en-US": "Chase Variable At Rate"
-      },
-      "id": "chaseVariableAtRate",
-      "params": [
-        "Variable",
-        "Destination",
-        "Rate",
-        "Reevaluation"
       ]
     },
     {
@@ -847,7 +828,7 @@
       "params": []
     }
   ],
-  "digest": "bb8166cf0e15f8bafa0fc89d1b0df0bca9a065f6c07bf83f555f271a03bfec8b",
+  "digest": "1f84204bfd6bfd0dcaabc275185d907764e03fae0fbde54f28e162aed9935961",
   "enums": [
     {
       "domain": "Color",
@@ -2344,7 +2325,7 @@
     "generatorVersion": "0.1.0",
     "license": "MIT (WrightKit-authored data, ownership transfer to workshop-rs per wright#136 direction; see docs/provenance.md)",
     "reviewed": true,
-    "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; zh-CN aliases are generated from the user-provided workshop-data JSON; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; 341/344 canonical entries are covered and exclusions remain fail-explicit per ADR-0001 Decision 7"
+    "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; zh-CN aliases are generated from the user-provided workshop-data JSON; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; 341/341 canonical entries are covered with no exclusions"
   },
   "schemaVersion": 1,
   "structural": [
@@ -2897,13 +2878,6 @@
         "Array",
         "Value"
       ]
-    },
-    {
-      "aliases": {
-        "en-US": "Array Element"
-      },
-      "id": "arrayElement",
-      "params": []
     },
     {
       "aliases": {

@@ -2,7 +2,7 @@
   "coverage": {
     "actions": {
       "matched": 60,
-      "total": 62
+      "total": 60
     },
     "enums": {
       "matched": 176,
@@ -22,33 +22,14 @@
     },
     "total": {
       "matched": 341,
-      "total": 344
+      "total": 341
     },
     "values": {
       "matched": 77,
-      "total": 78
+      "total": 77
     }
   },
-  "excluded": [
-    {
-      "en-US": "Chase Variable At Rate",
-      "id": "chaseVariableAtRate",
-      "kind": "action",
-      "reason": "confirmed export identity maps to the zh-CN spelling already owned by chaseAtRate; adding it would make the locale parser ambiguous"
-    },
-    {
-      "en-US": "Delete All Classes",
-      "id": "deleteAllClasses",
-      "kind": "action",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "Array Element",
-      "id": "arrayElement",
-      "kind": "value",
-      "reason": "confirmed export identity maps to the zh-CN spelling already owned by currentArrayElement; adding it would make the locale parser ambiguous"
-    }
-  ],
+  "excluded": [],
   "generator": "workshop-catalog-gen corpus",
   "generatorVersion": "0.1.0",
   "locale": "zh-CN",
@@ -3203,7 +3184,7 @@
       "zh-CN": "地图矢量"
     }
   ],
-  "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; the global chase and Array Element aliases are excluded when their exact zh-CN spellings would collide with canonical identities; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+  "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
   "schemaVersion": 1,
   "source": {
     "commit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",

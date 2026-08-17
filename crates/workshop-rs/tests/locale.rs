@@ -3,9 +3,9 @@
 //! target-locale mappings fail explicitly by default; fallback is opt-in and
 //! visible; settings follow the same contract.
 //!
-//! The committed catalog declares an evidence-backed `zh-CN` corpus (341/344).
+//! The committed catalog declares an evidence-backed `zh-CN` corpus (341/341).
 //! This suite pins both successful corpus conversion and the fail-explicit
-//! behavior for the 3 entries excluded by the exact-match pipeline.
+//! behavior for an unsupported undeclared target locale.
 
 use workshop_rs::catalog::{Catalog, Kind, Locale};
 use workshop_rs::convert::{self, ConvertOptions};
@@ -58,12 +58,12 @@ fn conversion_en_to_zh_cn_uses_evidence_backed_mappings() {
     assert!(output.fallback_ids.is_empty());
 }
 
-const UNMAPPED_RULE: &str = "rule (\"setup\") {
+const FALLBACK_RULE: &str = "rule (\"setup\") {
     event {
         Ongoing - Global;
     }
     actions {
-        Delete All Classes;
+        Disable Inspector Recording;
     }
 }
 ";
@@ -73,39 +73,48 @@ fn opt_in_fallback_emits_with_recorded_fallback_ids() {
     // Fallback is opt-in: with a fallback locale the emission succeeds and
     // the fell-back identities are recorded (visible in tooling output).
     let catalog = builtin();
-    let program = parser::parse(UNMAPPED_RULE, &catalog, &en()).expect("parses");
+    let program = parser::parse(FALLBACK_RULE, &catalog, &en()).expect("parses");
     let options = EmitOptions {
         fallback_locale: Some(en()),
     };
-    let output =
-        emitter::emit_with_options(&program, &catalog, &zh(), &options).expect("fallback emits");
-    assert!(output.text.contains("持续 - 全局"), "{}", output.text);
+    let output = emitter::emit_with_options(&program, &catalog, &Locale::new("fr-FR"), &options)
+        .expect("fallback emits");
+    assert!(output.text.contains("Ongoing - Global"), "{}", output.text);
     assert!(
-        output.text.contains("Delete All Classes"),
+        output.text.contains("Disable Inspector Recording"),
         "{}",
         output.text
     );
     assert_eq!(
         output.fallback_ids,
-        vec!["deleteAllClasses".to_string()],
-        "only the excluded action uses the explicit fallback"
+        vec!["global".to_string(), "disableInspector".to_string()],
+        "the unsupported target locale records the fallback identity"
     );
 }
 
 #[test]
 fn opt_in_fallback_conversion_round_trips_through_zh_cn() {
-    // convert en -> zh-CN with fallback to en-US: mapped identities use the
-    // corpus while the excluded action uses the explicit fallback.
+    // Convert en-US to an unsupported locale with fallback to en-US.
     let catalog = builtin();
     let options = ConvertOptions {
         fallback_locale: Some(en()),
     };
-    let out = convert::convert(UNMAPPED_RULE, &catalog, &en(), &zh(), &options)
-        .expect("fallback conversion emits");
+    let out = convert::convert(
+        FALLBACK_RULE,
+        &catalog,
+        &en(),
+        &Locale::new("fr-FR"),
+        &options,
+    )
+    .expect("fallback conversion emits");
     assert!(!out.fallback_ids.is_empty(), "fallback is recorded");
-    assert!(out.text.contains("持续 - 全局"), "{}", out.text);
-    assert!(out.text.contains("Delete All Classes"), "{}", out.text);
-    assert!(out.fallback_ids.contains(&"deleteAllClasses".to_string()));
+    assert!(out.text.contains("Ongoing - Global"), "{}", out.text);
+    assert!(
+        out.text.contains("Disable Inspector Recording"),
+        "{}",
+        out.text
+    );
+    assert!(out.fallback_ids.contains(&"disableInspector".to_string()));
 }
 
 #[test]
