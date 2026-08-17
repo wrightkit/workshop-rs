@@ -51,7 +51,7 @@ fn locales_lists_declared_locales_with_coverage() {
     let lines: Vec<&str> = stdout.lines().collect();
     assert_eq!(lines.len(), 2);
     assert!(lines[0].starts_with("en-us 344/344"), "{stdout}");
-    assert!(lines[1].starts_with("zh-cn 327/344"), "{stdout}");
+    assert!(lines[1].starts_with("zh-cn 328/344"), "{stdout}");
 }
 
 #[test]

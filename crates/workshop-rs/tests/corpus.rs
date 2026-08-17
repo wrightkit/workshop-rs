@@ -41,10 +41,21 @@ fn manifest_pins_the_export_and_exact_match_coverage() {
         manifest["source"]["commit"],
         "d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
     );
-    assert_eq!(manifest["coverage"]["total"]["matched"], 327);
+    assert_eq!(manifest["coverage"]["total"]["matched"], 328);
     assert_eq!(manifest["coverage"]["total"]["total"], 344);
-    assert_eq!(manifest["matches"].as_array().unwrap().len(), 327);
-    assert_eq!(manifest["excluded"].as_array().unwrap().len(), 17);
+    assert_eq!(manifest["matches"].as_array().unwrap().len(), 328);
+    assert_eq!(manifest["excluded"].as_array().unwrap().len(), 16);
+    let set_allowed = manifest["matches"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["id"] == "setAllowedHeroes")
+        .expect("confirmed setAllowedHeroes identity mapping is recorded");
+    assert_eq!(set_allowed["zh-CN"], "设置玩家可选的英雄");
+    assert_eq!(
+        set_allowed["sources"],
+        serde_json::json!(["actions..setAllowedHeroes"])
+    );
 }
 
 #[test]
@@ -91,4 +102,33 @@ fn representative_corpus_converts_in_both_directions() {
     .expect("zh-CN corpus converts back to en-US");
     assert_eq!(back_to_en.fallback_ids, Vec::<String>::new());
     assert_eq!(back_to_en.text.trim_end(), REPRESENTATIVE.trim_end());
+}
+
+#[test]
+fn confirmed_set_allowed_heroes_mapping_converts_in_both_directions() {
+    let source = "rule (\"set-allowed\") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        Set Allowed Heroes(All Players(Team(All Teams)), Ana);
+    }
+}
+";
+    let catalog = catalog();
+    let to_zh = convert::convert(source, &catalog, &en(), &zh(), &ConvertOptions::default())
+        .expect("setAllowedHeroes converts to zh-CN");
+    assert_eq!(to_zh.fallback_ids, Vec::<String>::new());
+    assert!(to_zh.text.contains("设置玩家可选的英雄"), "{}", to_zh.text);
+
+    let back_to_en = convert::convert(
+        &to_zh.text,
+        &catalog,
+        &zh(),
+        &en(),
+        &ConvertOptions::default(),
+    )
+    .expect("setAllowedHeroes converts back to en-US");
+    assert_eq!(back_to_en.fallback_ids, Vec::<String>::new());
+    assert_eq!(back_to_en.text.trim_end(), source.trim_end());
 }

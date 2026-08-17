@@ -338,9 +338,9 @@
     "fetchedAt": "2026-08-17T02:52:59Z",
     "generator": "workshop-catalog-gen corpus",
     "generatorVersion": "0.1.0",
-    "licenseReview": "pending: Blizzard game content (functional/interoperability data) transcribed from the user-provided workshop-data export; see docs/provenance.md",
     "method": "exact en-US spelling match between the declared settings surface (settings::table) and the export's customGameSettings/gamemodes/maps/heroes labels and other.customGameSettings tokens; entries without an exact match keep fail-explicit behavior (ADR-0001 Decision 7); the mode-header 'disabled' prefix maps the export's __disabled__ token and follows the fixture-evidenced en-US emission format",
-    "source": "user-provided workshop-data export (workshop-data.json)"
+    "source": "user-provided workshop-data export (workshop-data.json)",
+    "sourceReview": "reviewed: workshop-rs commits its own settings mapping data; the user-provided JSON is build input only and is not redistributed"
   },
   "schemaVersion": 1,
   "teams": {

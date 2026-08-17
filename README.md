@@ -107,9 +107,9 @@ the canonical form with a fresh digest (byte-idempotent). See
 
 * `en-US`: complete declared surface (344/344 canonical entries), corpus
   round-trips and settings emission tested.
-* `zh-CN`: the reviewed export-backed corpus covers **327/344** canonical
-  entries (structural 11/11, actions 55/62, values 77/78, events 3/3,
-  operators 8/14, enum members 173/176). The 17 exact-match exclusions remain
+* `zh-CN`: the reviewed export-backed corpus covers **328/344** canonical
+  entries (structural 11/11, actions 56/62, values 77/78, events 3/3,
+  operators 8/14, enum members 173/176). The 16 exact-match exclusions remain
   fail-explicit; settings data covers the matched declared surface and records
   its exclusions in `crates/workshop-rs/src/settings/data/zh-cn.json`.
 
@@ -134,6 +134,6 @@ CI runs the same checks on stable and the pinned toolchain (1.85.0).
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Committed data carries recorded provenance
-([docs/provenance.md](docs/provenance.md)); GPL reference data (e.g. OverPy
-translation tables) is not a permissible data source.
+MIT — see [LICENSE](LICENSE). Committed mapping data carries recorded
+provenance ([docs/provenance.md](docs/provenance.md)); the user-provided JSON
+is build input and is not redistributed.

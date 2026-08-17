@@ -3,9 +3,9 @@
 //! target-locale mappings fail explicitly by default; fallback is opt-in and
 //! visible; settings follow the same contract.
 //!
-//! The committed catalog declares an evidence-backed `zh-CN` corpus (327/344).
+//! The committed catalog declares an evidence-backed `zh-CN` corpus (328/344).
 //! This suite pins both successful corpus conversion and the fail-explicit
-//! behavior for the 17 entries excluded by the exact-match pipeline.
+//! behavior for the 16 entries excluded by the exact-match pipeline.
 
 use workshop_rs::catalog::{Catalog, Kind, Locale};
 use workshop_rs::convert::{self, ConvertOptions};

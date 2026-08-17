@@ -1,7 +1,7 @@
 {
   "coverage": {
     "actions": {
-      "matched": 55,
+      "matched": 56,
       "total": 62
     },
     "enums": {
@@ -21,7 +21,7 @@
       "total": 11
     },
     "total": {
-      "matched": 327,
+      "matched": 328,
       "total": 344
     },
     "values": {
@@ -51,12 +51,6 @@
     {
       "en-US": "Force Throttle",
       "id": "forceThrottle",
-      "kind": "action",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "Set Allowed Heroes",
-      "id": "setAllowedHeroes",
       "kind": "action",
       "reason": "no exact en-US match in the export"
     },
@@ -135,7 +129,6 @@
   ],
   "generator": "workshop-catalog-gen corpus",
   "generatorVersion": "0.1.0",
-  "licenseReview": "pending: Blizzard game content (functional/interoperability data) transcribed from the user-provided workshop-data export; see docs/provenance.md",
   "locale": "zh-CN",
   "matches": [
     {
@@ -470,6 +463,15 @@
         "actions..setAimSpeed"
       ],
       "zh-CN": "设置瞄准速度"
+    },
+    {
+      "en-US": "Set Allowed Heroes",
+      "id": "setAllowedHeroes",
+      "kind": "action",
+      "sources": [
+        "actions..setAllowedHeroes"
+      ],
+      "zh-CN": "设置玩家可选的英雄"
     },
     {
       "en-US": "Set Damage Dealt",
@@ -3162,12 +3164,13 @@
       "zh-CN": "地图矢量"
     }
   ],
-  "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), zh-CN taken from the same export entry; entries without an exact match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+  "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), with the user-confirmed setAllowedHeroes identity/GUID mapping for the export's 'Set Player Allowed Heroes' spelling; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
   "schemaVersion": 1,
   "source": {
     "commit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
     "commitDate": "2026-08-12T15:26:38Z",
     "export": "workshop-data.json",
     "fetchedAt": "2026-08-17T02:52:59Z"
-  }
+  },
+  "sourceReview": "reviewed: workshop-rs commits its own mapping data; the user-provided JSON is build input only and is not redistributed"
 }

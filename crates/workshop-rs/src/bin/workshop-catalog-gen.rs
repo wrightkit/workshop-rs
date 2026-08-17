@@ -303,6 +303,33 @@ mod corpus {
         index
     }
 
+    /// Resolve the one user-confirmed identity mapping whose export wording
+    /// differs from the canonical English spelling. The export entry is
+    /// accepted only when its category, identity, GUID, and zh-CN value all
+    /// match the confirmed action.
+    fn confirmed_identity_match(export: &Value, kind: &str, id: &str) -> Option<Vec<Candidate>> {
+        if kind != "action" || id != "setAllowedHeroes" {
+            return None;
+        }
+        let key = "actions..setAllowedHeroes";
+        let entry = export.get("localized")?.get(key)?;
+        if entry.get("category")?.as_str()? != "actions"
+            || entry.get("id")?.as_str()? != ".setAllowedHeroes"
+            || entry.get("guid")?.as_str()? != "00000000BA5B"
+        {
+            return None;
+        }
+        let translations = entry.get("translations")?;
+        let zh_cn = translations.get("zh-CN")?.as_str()?;
+        if translations.get("en-US")?.as_str()? != "Set Player Allowed Heroes" || zh_cn.is_empty() {
+            return None;
+        }
+        Some(vec![Candidate {
+            key: key.to_string(),
+            zh_cn: zh_cn.to_string(),
+        }])
+    }
+
     /// One matched corpus entry.
     #[derive(Debug, Clone)]
     struct Match {
@@ -491,7 +518,11 @@ mod corpus {
                     .and_then(Value::as_str)
                     .ok_or_else(|| "catalog entry without id".to_string())?;
                 let en = en_alias(entry)?;
-                match index.match_spelling(en) {
+                let candidates = match index.match_spelling(en) {
+                    Ok(candidates) => Ok(candidates),
+                    Err(reason) => confirmed_identity_match(&export, kind, id).ok_or(reason),
+                };
+                match candidates {
                     Ok(candidates) => {
                         matched += 1;
                         let zh = candidates[0].zh_cn.clone();
@@ -800,8 +831,8 @@ mod corpus {
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
             },
-            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), zh-CN taken from the same export entry; entries without an exact match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
-            "licenseReview": "pending: Blizzard game content (functional/interoperability data) transcribed from the user-provided workshop-data export; see docs/provenance.md",
+            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), with the user-confirmed setAllowedHeroes identity/GUID mapping for the export's 'Set Player Allowed Heroes' spelling; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+            "sourceReview": "reviewed: workshop-rs commits its own mapping data; the user-provided JSON is build input only and is not redistributed",
             "coverage": Value::Object(coverage_all),
             "matches": matches_json,
             "excluded": excluded_json,
@@ -926,7 +957,7 @@ mod corpus {
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "method": "exact en-US spelling match between the declared settings surface (settings::table) and the export's customGameSettings/gamemodes/maps/heroes labels and other.customGameSettings tokens; entries without an exact match keep fail-explicit behavior (ADR-0001 Decision 7); the mode-header 'disabled' prefix maps the export's __disabled__ token and follows the fixture-evidenced en-US emission format",
-                "licenseReview": "pending: Blizzard game content (functional/interoperability data) transcribed from the user-provided workshop-data export; see docs/provenance.md",
+                "sourceReview": "reviewed: workshop-rs commits its own settings mapping data; the user-provided JSON is build input only and is not redistributed",
             },
             "labels": labels,
             "modes": modes,
