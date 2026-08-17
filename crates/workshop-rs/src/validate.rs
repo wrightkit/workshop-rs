@@ -88,17 +88,18 @@ fn validate_event(
             None
         }
     };
-    if let Some(target_member) = target_member
-        && catalog
+    if let Some(target_member) = target_member {
+        if catalog
             .enum_spelling("EventPlayer", &en, &target_member)
             .is_none()
-    {
-        errors.push(WorkshopError::Unknown {
-            kind: "event player",
-            spelling: target_member,
-            locale: en,
-            span,
-        });
+        {
+            errors.push(WorkshopError::Unknown {
+                kind: "event player",
+                spelling: target_member,
+                locale: en,
+                span,
+            });
+        }
     }
 }
 
