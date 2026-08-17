@@ -1576,7 +1576,16 @@ impl Parser<'_> {
         start: Position,
         end: Position,
     ) -> Result<wir::ValueId> {
-        let matches: Vec<(String, String)> = self.catalog.bare_member_matches(&self.locale, phrase);
+        // Event filter domains are resolved by the event parser and are not
+        // value-argument domains. Excluding them here keeps their spellings
+        // from making unrelated bare value arguments ambiguous (for example,
+        // `All` in `Set Invisible(..., All)`).
+        let matches: Vec<(String, String)> = self
+            .catalog
+            .bare_member_matches(&self.locale, phrase)
+            .into_iter()
+            .filter(|(domain, _)| domain != "EventTeam" && domain != "EventPlayer")
+            .collect();
         if matches.len() == 1 {
             return Ok(self.target.values.push(ValueNode::new(
                 Value::Enum {

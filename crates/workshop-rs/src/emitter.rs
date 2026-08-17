@@ -382,6 +382,7 @@ impl Emitter<'_> {
             wir::Event::EachPlayer => {
                 let spelling = self.spelling(Kind::Event, "eachPlayer")?;
                 self.line(2, &format!("{spelling};"))?;
+                self.event_filters(wir::EventTeam::All, &wir::EventTarget::All)?;
             }
             wir::Event::EachPlayerWithFilters { team, target } => {
                 let spelling = self.spelling(Kind::Event, "eachPlayer")?;

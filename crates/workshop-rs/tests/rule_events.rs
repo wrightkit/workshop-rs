@@ -114,6 +114,30 @@ rule ("took damage") {
 }
 "#;
 
+const LEGACY_EACH_PLAYER: &str = r#"
+rule ("legacy each player") {
+    event {
+        Ongoing - Each Player;
+    }
+    actions {
+        Disable Inspector Recording;
+    }
+}
+"#;
+
+const EXPLICIT_EACH_PLAYER: &str = r#"
+rule ("legacy each player") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Disable Inspector Recording;
+    }
+}
+"#;
+
 fn catalog() -> Catalog {
     Catalog::builtin().expect("built-in catalog")
 }
@@ -177,6 +201,48 @@ fn all_player_events_parse_validate_emit_and_round_trip() {
     let reparsed_zh = parser::parse_with_context(&zh_text, &catalog, &zh(), &catalog)
         .expect("zh-CN event reparse");
     assert!(roundtrip::equivalent(&program, &reparsed_zh));
+}
+
+#[test]
+fn legacy_each_player_emits_all_filters_and_round_trips_in_supported_locales() {
+    let catalog = catalog();
+    let legacy = parser::parse_with_context(LEGACY_EACH_PLAYER, &catalog, &en(), &catalog)
+        .expect("legacy parameterless eachPlayer parses");
+    assert!(matches!(
+        legacy
+            .rules
+            .get(wir::RuleId::from_index(0))
+            .map(|rule| &rule.event),
+        Some(wir::Event::EachPlayer)
+    ));
+    legacy.validate().expect("legacy event validates");
+    validate::validate_canonical_ids(&legacy, &catalog).expect("legacy event catalog id validates");
+
+    let explicit = parser::parse_with_context(EXPLICIT_EACH_PLAYER, &catalog, &en(), &catalog)
+        .expect("explicit All/All eachPlayer parses");
+    assert!(matches!(
+        explicit
+            .rules
+            .get(wir::RuleId::from_index(0))
+            .map(|rule| &rule.event),
+        Some(wir::Event::EachPlayerWithFilters {
+            team: EventTeam::All,
+            target: EventTarget::All,
+        })
+    ));
+    assert!(roundtrip::equivalent(&legacy, &explicit));
+
+    let en_text = emitter::emit(&legacy, &catalog, &en()).expect("legacy event emits in en-US");
+    assert!(en_text.contains("Ongoing - Each Player;\n        All;\n        All;"));
+    let reparsed_en = parser::parse_with_context(&en_text, &catalog, &en(), &catalog)
+        .expect("legacy en-US emission reparses");
+    assert!(roundtrip::equivalent(&legacy, &reparsed_en));
+
+    let zh_text = emitter::emit(&legacy, &catalog, &zh()).expect("legacy event emits in zh-CN");
+    assert!(zh_text.contains("持续 - 每名玩家;\n        双方;\n        全部;"));
+    let reparsed_zh = parser::parse_with_context(&zh_text, &catalog, &zh(), &catalog)
+        .expect("legacy zh-CN emission reparses");
+    assert!(roundtrip::equivalent(&legacy, &reparsed_zh));
 }
 
 #[test]
