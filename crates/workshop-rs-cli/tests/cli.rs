@@ -50,8 +50,8 @@ fn locales_lists_declared_locales_with_coverage() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     let lines: Vec<&str> = stdout.lines().collect();
     assert_eq!(lines.len(), 2);
-    assert!(lines[0].starts_with("en-us 341/341"), "{stdout}");
-    assert!(lines[1].starts_with("zh-cn 341/341"), "{stdout}");
+    assert!(lines[0].starts_with("en-us 366/366"), "{stdout}");
+    assert!(lines[1].starts_with("zh-cn 366/366"), "{stdout}");
 }
 
 #[test]

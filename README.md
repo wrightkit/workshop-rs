@@ -73,6 +73,19 @@ Settings-bearing programs are parsed into the canonical WIR settings carrier
 and emitted by the library. Locale detection is available via
 `workshop_rs::detect`.
 
+### Rule event contract
+
+The public WIR event contract is locale- and provider-independent. It includes
+`Event::Global`, `Event::EachPlayer`, filtered `Event::EachPlayerWithFilters`,
+nine filtered `Event::Player` identities (`PlayerEventKind`), and
+`Event::Subroutine`. Filtered events carry a canonical `EventTeam` and an
+`EventTarget` (`All`, Workshop slot `0..=11`, or a canonical hero id).
+Raw Workshop player events require both their team and player filters;
+parameterless `Ongoing - Each Player` remains supported for existing programs.
+Event identities and filter members are checked against the catalog before a
+program is accepted for canonical emission, so source-language providers can
+consume this public model without defining a second event table.
+
 ## CLI usage
 
 ```sh
@@ -105,11 +118,11 @@ the canonical form with a fresh digest (byte-idempotent). See
 
 ## Locale status
 
-* `en-US`: complete declared surface (341/341 canonical entries), corpus
+* `en-US`: complete declared surface (366/366 canonical entries), corpus
   round-trips and settings emission tested.
-* `zh-CN`: the reviewed export-backed corpus covers **341/341** canonical
-  entries (structural 11/11, actions 60/60, values 77/77, events 3/3,
-  operators 14/14, enum members 176/176). The declared surface is complete;
+* `zh-CN`: the reviewed export-backed corpus covers **366/366** canonical
+  entries (structural 11/11, actions 60/60, values 77/77, events 12/12,
+  operators 14/14, enum members 192/192). The declared surface is complete;
   settings data covers labels 19/19 and all other declared settings sections.
 
 The corpus is reproducible with the user-provided export (not committed):

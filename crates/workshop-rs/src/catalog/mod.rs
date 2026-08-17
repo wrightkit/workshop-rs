@@ -94,7 +94,11 @@ pub struct CatalogEntry {
     pub params: Vec<String>,
     /// The canonical enum domain expected at each parameter position, when
     /// the parameter takes an enumerated value (parallel to `params`).
-    /// `None` for non-enum parameters and for undocumented parameters.
+    /// `None` for non-enum parameters and for parameters whose accepted
+    /// values span multiple canonical domains. In particular, a filtered
+    /// rule event's `Player` parameter accepts `EventPlayer` members or
+    /// canonical `Hero` members; the WIR [`crate::wir::EventTarget`] carries
+    /// that union explicitly.
     pub param_domains: Vec<Option<String>>,
     /// Default value per parameter position (parallel to `params`),
     /// resolved when a call omits the argument. See the catalog data
