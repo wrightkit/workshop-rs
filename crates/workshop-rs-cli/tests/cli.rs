@@ -51,7 +51,7 @@ fn locales_lists_declared_locales_with_coverage() {
     let lines: Vec<&str> = stdout.lines().collect();
     assert_eq!(lines.len(), 2);
     assert!(lines[0].starts_with("en-us 344/344"), "{stdout}");
-    assert!(lines[1].starts_with("zh-cn 328/344"), "{stdout}");
+    assert!(lines[1].starts_with("zh-cn 341/344"), "{stdout}");
 }
 
 #[test]
@@ -133,7 +133,7 @@ fn convert_to_zh_cn_with_fallback_reports_the_choice() {
     let file = dir.join("unmapped.ws");
     std::fs::write(
         &file,
-        "rule (\"setup\") { event { Ongoing - Global; } actions { Force Player Hero(Event Player, Ana); } }",
+        "rule (\"setup\") { event { Ongoing - Global; } actions { Delete All Classes; } }",
     )
     .unwrap();
     let output = run(&[
@@ -153,10 +153,10 @@ fn convert_to_zh_cn_with_fallback_reports_the_choice() {
     );
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains("持续 - 全局"), "{stdout}");
-    assert!(stdout.contains("Force Player Hero"), "{stdout}");
+    assert!(stdout.contains("Delete All Classes"), "{stdout}");
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("fallback-locale spelling") && stderr.contains("forcePlayerHero"),
+        stderr.contains("fallback-locale spelling") && stderr.contains("deleteAllClasses"),
         "the fallback choice is visible in tooling output: {stderr}"
     );
     let _ = std::fs::remove_dir_all(&dir);

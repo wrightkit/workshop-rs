@@ -1698,6 +1698,11 @@ impl Parser<'_> {
                     start,
                     end,
                 } => (".".to_string(), start, end),
+                Token {
+                    kind: TokenKind::Op(op),
+                    start,
+                    end,
+                } if op == "-" => ("-".to_string(), start, end),
                 _ => break,
             };
             if word_start.line != line {

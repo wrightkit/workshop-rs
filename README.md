@@ -107,9 +107,9 @@ the canonical form with a fresh digest (byte-idempotent). See
 
 * `en-US`: complete declared surface (344/344 canonical entries), corpus
   round-trips and settings emission tested.
-* `zh-CN`: the reviewed export-backed corpus covers **328/344** canonical
-  entries (structural 11/11, actions 56/62, values 77/78, events 3/3,
-  operators 8/14, enum members 173/176). The 16 exact-match exclusions remain
+* `zh-CN`: the reviewed export-backed corpus covers **341/344** canonical
+  entries (structural 11/11, actions 60/62, values 77/78, events 3/3,
+  operators 14/14, enum members 176/176). The 3 explicit exclusions remain
   fail-explicit; settings data covers the matched declared surface and records
   its exclusions in `crates/workshop-rs/src/settings/data/zh-cn.json`.
 

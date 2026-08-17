@@ -3,9 +3,9 @@
 //! target-locale mappings fail explicitly by default; fallback is opt-in and
 //! visible; settings follow the same contract.
 //!
-//! The committed catalog declares an evidence-backed `zh-CN` corpus (328/344).
+//! The committed catalog declares an evidence-backed `zh-CN` corpus (341/344).
 //! This suite pins both successful corpus conversion and the fail-explicit
-//! behavior for the 16 entries excluded by the exact-match pipeline.
+//! behavior for the 3 entries excluded by the exact-match pipeline.
 
 use workshop_rs::catalog::{Catalog, Kind, Locale};
 use workshop_rs::convert::{self, ConvertOptions};
@@ -63,7 +63,7 @@ const UNMAPPED_RULE: &str = "rule (\"setup\") {
         Ongoing - Global;
     }
     actions {
-        Force Player Hero(Event Player, Ana);
+        Delete All Classes;
     }
 }
 ";
@@ -80,10 +80,14 @@ fn opt_in_fallback_emits_with_recorded_fallback_ids() {
     let output =
         emitter::emit_with_options(&program, &catalog, &zh(), &options).expect("fallback emits");
     assert!(output.text.contains("持续 - 全局"), "{}", output.text);
-    assert!(output.text.contains("Force Player Hero"), "{}", output.text);
+    assert!(
+        output.text.contains("Delete All Classes"),
+        "{}",
+        output.text
+    );
     assert_eq!(
         output.fallback_ids,
-        vec!["forcePlayerHero".to_string()],
+        vec!["deleteAllClasses".to_string()],
         "only the excluded action uses the explicit fallback"
     );
 }
@@ -100,8 +104,8 @@ fn opt_in_fallback_conversion_round_trips_through_zh_cn() {
         .expect("fallback conversion emits");
     assert!(!out.fallback_ids.is_empty(), "fallback is recorded");
     assert!(out.text.contains("持续 - 全局"), "{}", out.text);
-    assert!(out.text.contains("Force Player Hero"), "{}", out.text);
-    assert!(out.fallback_ids.contains(&"forcePlayerHero".to_string()));
+    assert!(out.text.contains("Delete All Classes"), "{}", out.text);
+    assert!(out.fallback_ids.contains(&"deleteAllClasses".to_string()));
 }
 
 #[test]

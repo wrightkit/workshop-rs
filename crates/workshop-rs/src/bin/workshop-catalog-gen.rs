@@ -303,27 +303,131 @@ mod corpus {
         index
     }
 
-    /// Resolve the one user-confirmed identity mapping whose export wording
-    /// differs from the canonical English spelling. The export entry is
-    /// accepted only when its category, identity, GUID, and zh-CN value all
-    /// match the confirmed action.
+    /// Resolve a user-confirmed legacy identity whose export wording differs
+    /// from the canonical English spelling. The export entry is accepted only
+    /// when its category, identity, GUID, and both locale values match the
+    /// confirmed mapping.
     fn confirmed_identity_match(export: &Value, kind: &str, id: &str) -> Option<Vec<Candidate>> {
-        if kind != "action" || id != "setAllowedHeroes" {
-            return None;
-        }
-        let key = "actions..setAllowedHeroes";
+        let (key, category, export_id, guid, en_us) = match (kind, id) {
+            ("action", "setAllowedHeroes") => (
+                "actions..setAllowedHeroes",
+                "actions",
+                ".setAllowedHeroes",
+                "00000000BA5B",
+                "Set Player Allowed Heroes",
+            ),
+            ("action", "stopChasingVariable") => (
+                "actions.__stopChasingGlobalVariable__",
+                "actions",
+                "__stopChasingGlobalVariable__",
+                "00000000B83E",
+                "Stop Chasing Global Variable",
+            ),
+            ("action", "forcePlayerHero") => (
+                "actions..startForcingHero",
+                "actions",
+                ".startForcingHero",
+                "00000000ABFB",
+                "Start Forcing Player To Be Hero",
+            ),
+            ("action", "stopForcingHero") => (
+                "actions..stopForcingCurrentHero",
+                "actions",
+                ".stopForcingCurrentHero",
+                "00000000AC1B",
+                "Stop Forcing Player To Be Hero",
+            ),
+            ("action", "forceThrottle") => (
+                "actions..startForcingThrottle",
+                "actions",
+                ".startForcingThrottle",
+                "00000000BB0F",
+                "Start Forcing Throttle",
+            ),
+            ("operator", "==") => (
+                "localizedStrings.{0} == {1}",
+                "localizedStrings",
+                "{0} == {1}",
+                "00000000BFA3",
+                "{0} == {1}",
+            ),
+            ("operator", "!=") => (
+                "localizedStrings.{0} != {1}",
+                "localizedStrings",
+                "{0} != {1}",
+                "00000000BFA2",
+                "{0} != {1}",
+            ),
+            ("operator", "<=") => (
+                "localizedStrings.{0} <= {1}",
+                "localizedStrings",
+                "{0} <= {1}",
+                "00000000BFA1",
+                "{0} <= {1}",
+            ),
+            ("operator", ">=") => (
+                "localizedStrings.{0} >= {1}",
+                "localizedStrings",
+                "{0} >= {1}",
+                "00000000BF9F",
+                "{0} >= {1}",
+            ),
+            ("operator", "<") => (
+                "localizedStrings.{0} < {1}",
+                "localizedStrings",
+                "{0} < {1}",
+                "00000000BFA6",
+                "{0} < {1}",
+            ),
+            ("operator", ">") => (
+                "localizedStrings.{0} > {1}",
+                "localizedStrings",
+                "{0} > {1}",
+                "00000000BFA0",
+                "{0} > {1}",
+            ),
+            ("enum member", "Map.LIJIANG_TOWER_LUNAR") => (
+                "maps.lijiangTowerLny",
+                "maps",
+                "lijiangTowerLny",
+                "000000005A33",
+                "Lijiang Tower Lunar New Year",
+            ),
+            ("enum member", "ProgressBarWorldReeval.VISIBLE_TO_AND_VALUES") => (
+                "constants.ProgressHudReeval.VISIBILITY_AND_VALUES",
+                "constants",
+                "ProgressHudReeval.VISIBILITY_AND_VALUES",
+                "0000000122EF",
+                "Visible To and Values",
+            ),
+            ("enum member", "Rounding.NEAREST") => (
+                "constants.__Rounding__.__roundToNearest__",
+                "constants",
+                "__Rounding__.__roundToNearest__",
+                "00000000C34D",
+                "To Nearest",
+            ),
+            _ => return None,
+        };
         let entry = export.get("localized")?.get(key)?;
-        if entry.get("category")?.as_str()? != "actions"
-            || entry.get("id")?.as_str()? != ".setAllowedHeroes"
-            || entry.get("guid")?.as_str()? != "00000000BA5B"
+        if entry.get("category")?.as_str()? != category
+            || entry.get("id")?.as_str()? != export_id
+            || entry.get("guid")?.as_str()? != guid
         {
             return None;
         }
         let translations = entry.get("translations")?;
-        let zh_cn = translations.get("zh-CN")?.as_str()?;
-        if translations.get("en-US")?.as_str()? != "Set Player Allowed Heroes" || zh_cn.is_empty() {
+        let export_zh_cn = translations.get("zh-CN")?.as_str()?;
+        if translations.get("en-US")?.as_str()? != en_us || export_zh_cn.is_empty() {
             return None;
         }
+        let zh_cn = if kind == "operator" {
+            // The export's localized-string entry is a formatted display
+            // template; the catalog operator token is the bare symbol.
+            id
+        } else {
+            export_zh_cn
+        };
         Some(vec![Candidate {
             key: key.to_string(),
             zh_cn: zh_cn.to_string(),
@@ -538,7 +642,11 @@ mod corpus {
                         kind: kind.to_string(),
                         id: id.to_string(),
                         en: en.to_string(),
-                        reason,
+                        reason: match (kind, id) {
+                            ("action", "chaseVariableAtRate") => "confirmed export identity maps to the zh-CN spelling already owned by chaseAtRate; adding it would make the locale parser ambiguous".to_string(),
+                            ("value", "arrayElement") => "confirmed export identity maps to the zh-CN spelling already owned by currentArrayElement; adding it would make the locale parser ambiguous".to_string(),
+                            _ => reason,
+                        },
                     }),
                 }
             }
@@ -594,12 +702,28 @@ mod corpus {
                             sources: candidates.iter().map(|c| c.key.clone()).collect(),
                         });
                     }
-                    Err(reason) => excluded.push(Exclusion {
-                        kind: "enum member".to_string(),
-                        id: format!("{domain_name}.{id}"),
-                        en: en.to_string(),
-                        reason,
-                    }),
+                    Err(reason) => {
+                        let full_id = format!("{domain_name}.{id}");
+                        match confirmed_identity_match(&export, "enum member", &full_id) {
+                            Some(candidates) => {
+                                members_matched += 1;
+                                let zh = candidates[0].zh_cn.clone();
+                                matches.push(Match {
+                                    kind: "enum member".to_string(),
+                                    id: full_id,
+                                    en: en.to_string(),
+                                    zh,
+                                    sources: candidates.iter().map(|c| c.key.clone()).collect(),
+                                });
+                            }
+                            None => excluded.push(Exclusion {
+                                kind: "enum member".to_string(),
+                                id: full_id,
+                                en: en.to_string(),
+                                reason,
+                            }),
+                        }
+                    }
                 }
             }
         }
@@ -831,7 +955,7 @@ mod corpus {
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
             },
-            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), with the user-confirmed setAllowedHeroes identity/GUID mapping for the export's 'Set Player Allowed Heroes' spelling; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; the global chase and Array Element aliases are excluded when their exact zh-CN spellings would collide with canonical identities; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
             "sourceReview": "reviewed: workshop-rs commits its own mapping data; the user-provided JSON is build input only and is not redistributed",
             "coverage": Value::Object(coverage_all),
             "matches": matches_json,
@@ -905,11 +1029,26 @@ mod corpus {
                             }),
                         );
                     }
-                    Err(reason) => excluded.push(serde_json::json!({
-                        "surface": surface_id,
-                        "en-US": en,
-                        "reason": reason,
-                    })),
+                    Err(reason) => {
+                        match confirmed_settings_identity_match(export, surface_id, en) {
+                            Some(candidates) => {
+                                matched += 1;
+                                entries.insert(
+                                    en.clone(),
+                                    serde_json::json!({
+                                        "en-US": en,
+                                        "zh-CN": candidates[0].zh_cn,
+                                        "sources": candidates.iter().map(|c| c.key.clone()).collect::<Vec<_>>(),
+                                    }),
+                                );
+                            }
+                            None => excluded.push(serde_json::json!({
+                                "surface": surface_id,
+                                "en-US": en,
+                                "reason": reason,
+                            })),
+                        }
+                    }
                 }
             }
             coverage.insert(
@@ -956,7 +1095,7 @@ mod corpus {
                 "commit": meta.get("commit").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
-                "method": "exact en-US spelling match between the declared settings surface (settings::table) and the export's customGameSettings/gamemodes/maps/heroes labels and other.customGameSettings tokens; entries without an exact match keep fail-explicit behavior (ADR-0001 Decision 7); the mode-header 'disabled' prefix maps the export's __disabled__ token and follows the fixture-evidenced en-US emission format",
+                "method": "exact en-US spelling match between the declared settings surface (settings::table) and the export's customGameSettings/gamemodes/maps/heroes labels and other.customGameSettings tokens; the two hero Ultimate Generation labels are composed only from exact export template and Blizzard hero identity/GUID matches; entries without an accepted match keep fail-explicit behavior (ADR-0001 Decision 7); the mode-header 'disabled' prefix maps the export's __disabled__ token and follows the fixture-evidenced en-US emission format",
                 "sourceReview": "reviewed: workshop-rs commits its own settings mapping data; the user-provided JSON is build input only and is not redistributed",
             },
             "labels": labels,
@@ -969,6 +1108,79 @@ mod corpus {
             "excluded": excluded,
             "coverage": coverage,
         }))
+    }
+
+    /// Resolve the two hero settings labels whose English surface expands a
+    /// reviewed `%1$s` export template with the reviewed `Blizzard` hero
+    /// spelling. The template, hero identity, GUIDs, and both locale values
+    /// are checked before composing the locale label.
+    fn confirmed_settings_identity_match(
+        export: &Value,
+        surface: &str,
+        en: &str,
+    ) -> Option<Vec<Candidate>> {
+        let (template_key, template_id, template_guid, template_en, hero_key, hero_guid) =
+            match (surface, en) {
+                (
+                    "heroes.<team>.<hero>.passiveUltGen%",
+                    "Ultimate Generation - Passive Blizzard",
+                ) => (
+                    "customGameSettings.heroes.values.__eachHero__.passiveUltGen%",
+                    "heroes.values.__eachHero__.passiveUltGen%",
+                    "00000000765E",
+                    "Ultimate Generation - Passive %1$s",
+                    "heroes.mei.ultimate",
+                    "000000001789",
+                ),
+                ("heroes.<team>.<hero>.combatUltGen%", "Ultimate Generation - Combat Blizzard") => {
+                    (
+                        "customGameSettings.heroes.values.__eachHero__.combatUltGen%",
+                        "heroes.values.__eachHero__.combatUltGen%",
+                        "00000000765D",
+                        "Ultimate Generation - Combat %1$s",
+                        "heroes.mei.ultimate",
+                        "000000001789",
+                    )
+                }
+                _ => return None,
+            };
+        let template = export.get("localized")?.get(template_key)?;
+        if template.get("category")?.as_str()? != "customGameSettings"
+            || template.get("id")?.as_str()? != template_id
+            || template.get("guid")?.as_str()? != template_guid
+        {
+            return None;
+        }
+        let template_translations = template.get("translations")?;
+        let template_zh = template_translations.get("zh-CN")?.as_str()?;
+        if template_translations.get("en-US")?.as_str()? != template_en
+            || !template_zh.contains("%1$s")
+        {
+            return None;
+        }
+        let hero = export.get("localized")?.get(hero_key)?;
+        if hero.get("category")?.as_str()? != "heroes"
+            || hero.get("id")?.as_str()? != "mei.ultimate"
+            || hero.get("guid")?.as_str()? != hero_guid
+        {
+            return None;
+        }
+        let hero_translations = hero.get("translations")?;
+        if hero_translations.get("en-US")?.as_str()? != "Blizzard" {
+            return None;
+        }
+        let hero_zh = hero_translations.get("zh-CN")?.as_str()?;
+        let zh = template_zh.replace("%1$s", hero_zh);
+        Some(vec![
+            Candidate {
+                key: template_key.to_string(),
+                zh_cn: zh.clone(),
+            },
+            Candidate {
+                key: hero_key.to_string(),
+                zh_cn: hero_zh.to_string(),
+            },
+        ])
     }
 
     fn format_report(report: Report<'_>) -> Vec<String> {

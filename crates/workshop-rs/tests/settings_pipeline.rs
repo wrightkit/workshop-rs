@@ -62,6 +62,33 @@ fn reviewed_settings_conversion_round_trips_en_us_and_zh_cn() {
 }
 
 #[test]
+fn composed_blizzard_settings_labels_convert_in_both_directions() {
+    let source = "settings {
+    heroes {
+        General {
+            Mei {
+                Ultimate Generation - Passive Blizzard: 0%
+                Ultimate Generation - Combat Blizzard: 0%
+            }
+        }
+    }
+}";
+    let catalog = catalog();
+    let en = Locale::new("en-US");
+    let zh = Locale::new("zh-CN");
+    let to_zh = convert::convert(source, &catalog, &en, &zh, &Default::default())
+        .expect("composed settings labels convert to zh-CN");
+    assert!(to_zh.fallback_ids.is_empty());
+    assert!(to_zh.text.contains("终极技能自动充能速度 暴雪"));
+    assert!(to_zh.text.contains("战斗时终极技能充能速度 暴雪"));
+
+    let back_to_en = convert::convert(&to_zh.text, &catalog, &zh, &en, &Default::default())
+        .expect("composed settings labels convert back to en-US");
+    assert!(back_to_en.fallback_ids.is_empty());
+    assert_eq!(collapse(&back_to_en.text), collapse(source));
+}
+
+#[test]
 fn supported_apostrophe_map_name_parses() {
     let catalog = catalog();
     let source = "settings { modes { Deathmatch { enabled maps { King's Row Winter } } } }";

@@ -28,7 +28,7 @@ fn builtin_catalog_loads_and_declares_en_us_and_zh_cn() {
     // zh-CN is the evidence-backed corpus locale; its exclusions remain
     // explicitly unmapped and therefore still fail closed.
     assert!(catalog.supports(&Locale::new("zh-CN")));
-    assert_eq!(catalog.locale_coverage(&Locale::new("zh-CN")).mapped, 328);
+    assert_eq!(catalog.locale_coverage(&Locale::new("zh-CN")).mapped, 341);
     assert_eq!(
         catalog.locale_coverage(&Locale::new("zh-CN")).total,
         catalog.locale_coverage(&en()).total

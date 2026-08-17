@@ -1,11 +1,11 @@
 {
   "coverage": {
     "actions": {
-      "matched": 56,
+      "matched": 60,
       "total": 62
     },
     "enums": {
-      "matched": 173,
+      "matched": 176,
       "total": 176
     },
     "events": {
@@ -13,7 +13,7 @@
       "total": 3
     },
     "operators": {
-      "matched": 8,
+      "matched": 14,
       "total": 14
     },
     "structural": {
@@ -21,7 +21,7 @@
       "total": 11
     },
     "total": {
-      "matched": 328,
+      "matched": 341,
       "total": 344
     },
     "values": {
@@ -34,7 +34,7 @@
       "en-US": "Chase Variable At Rate",
       "id": "chaseVariableAtRate",
       "kind": "action",
-      "reason": "no exact en-US match in the export"
+      "reason": "confirmed export identity maps to the zh-CN spelling already owned by chaseAtRate; adding it would make the locale parser ambiguous"
     },
     {
       "en-US": "Delete All Classes",
@@ -43,88 +43,10 @@
       "reason": "no exact en-US match in the export"
     },
     {
-      "en-US": "Force Player Hero",
-      "id": "forcePlayerHero",
-      "kind": "action",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "Force Throttle",
-      "id": "forceThrottle",
-      "kind": "action",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "Stop Chasing Variable",
-      "id": "stopChasingVariable",
-      "kind": "action",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "Stop Forcing Hero",
-      "id": "stopForcingHero",
-      "kind": "action",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "Lijiang Tower Lunar",
-      "id": "Map.LIJIANG_TOWER_LUNAR",
-      "kind": "enum member",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "Visible To And Values",
-      "id": "ProgressBarWorldReeval.VISIBLE_TO_AND_VALUES",
-      "kind": "enum member",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "Nearest",
-      "id": "Rounding.NEAREST",
-      "kind": "enum member",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "!=",
-      "id": "!=",
-      "kind": "operator",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "<",
-      "id": "<",
-      "kind": "operator",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "<=",
-      "id": "<=",
-      "kind": "operator",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": "==",
-      "id": "==",
-      "kind": "operator",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": ">",
-      "id": ">",
-      "kind": "operator",
-      "reason": "no exact en-US match in the export"
-    },
-    {
-      "en-US": ">=",
-      "id": ">=",
-      "kind": "operator",
-      "reason": "no exact en-US match in the export"
-    },
-    {
       "en-US": "Array Element",
       "id": "arrayElement",
       "kind": "value",
-      "reason": "no exact en-US match in the export"
+      "reason": "confirmed export identity maps to the zh-CN spelling already owned by currentArrayElement; adding it would make the locale parser ambiguous"
     }
   ],
   "generator": "workshop-catalog-gen corpus",
@@ -429,6 +351,24 @@
       "zh-CN": "显示计分板"
     },
     {
+      "en-US": "Force Player Hero",
+      "id": "forcePlayerHero",
+      "kind": "action",
+      "sources": [
+        "actions..startForcingHero"
+      ],
+      "zh-CN": "开始强制玩家选择英雄"
+    },
+    {
+      "en-US": "Force Throttle",
+      "id": "forceThrottle",
+      "kind": "action",
+      "sources": [
+        "actions..startForcingThrottle"
+      ],
+      "zh-CN": "开始限制阈值"
+    },
+    {
       "en-US": "Loop If Condition Is True",
       "id": "loopIfConditionIsTrue",
       "kind": "action",
@@ -598,6 +538,24 @@
         "actions..stopCamera"
       ],
       "zh-CN": "停止镜头"
+    },
+    {
+      "en-US": "Stop Chasing Variable",
+      "id": "stopChasingVariable",
+      "kind": "action",
+      "sources": [
+        "actions.__stopChasingGlobalVariable__"
+      ],
+      "zh-CN": "停止追踪全局变量"
+    },
+    {
+      "en-US": "Stop Forcing Hero",
+      "id": "stopForcingHero",
+      "kind": "action",
+      "sources": [
+        "actions..stopForcingCurrentHero"
+      ],
+      "zh-CN": "停止强制玩家选择英雄"
     },
     {
       "en-US": "Stop Forcing Throttle",
@@ -1852,6 +1810,15 @@
       "zh-CN": "漓江塔"
     },
     {
+      "en-US": "Lijiang Tower Lunar",
+      "id": "Map.LIJIANG_TOWER_LUNAR",
+      "kind": "enum member",
+      "sources": [
+        "maps.lijiangTowerLny"
+      ],
+      "zh-CN": "春节漓江塔"
+    },
+    {
       "en-US": "Midtown",
       "id": "Map.MIDTOWN",
       "kind": "enum member",
@@ -2059,6 +2026,15 @@
       "zh-CN": "根据值从数组中移除"
     },
     {
+      "en-US": "Visible To And Values",
+      "id": "ProgressBarWorldReeval.VISIBLE_TO_AND_VALUES",
+      "kind": "enum member",
+      "sources": [
+        "constants.ProgressHudReeval.VISIBILITY_AND_VALUES"
+      ],
+      "zh-CN": "可见和值"
+    },
+    {
       "en-US": "Down",
       "id": "Rounding.DOWN",
       "kind": "enum member",
@@ -2066,6 +2042,15 @@
         "constants.__Rounding__.__roundDown__"
       ],
       "zh-CN": "下"
+    },
+    {
+      "en-US": "Nearest",
+      "id": "Rounding.NEAREST",
+      "kind": "enum member",
+      "sources": [
+        "constants.__Rounding__.__roundToNearest__"
+      ],
+      "zh-CN": "至最近"
     },
     {
       "en-US": "Up",
@@ -2291,6 +2276,60 @@
         "other.events.__subroutine__"
       ],
       "zh-CN": "子程序"
+    },
+    {
+      "en-US": "!=",
+      "id": "!=",
+      "kind": "operator",
+      "sources": [
+        "localizedStrings.{0} != {1}"
+      ],
+      "zh-CN": "!="
+    },
+    {
+      "en-US": "<",
+      "id": "<",
+      "kind": "operator",
+      "sources": [
+        "localizedStrings.{0} < {1}"
+      ],
+      "zh-CN": "<"
+    },
+    {
+      "en-US": "<=",
+      "id": "<=",
+      "kind": "operator",
+      "sources": [
+        "localizedStrings.{0} <= {1}"
+      ],
+      "zh-CN": "<="
+    },
+    {
+      "en-US": "==",
+      "id": "==",
+      "kind": "operator",
+      "sources": [
+        "localizedStrings.{0} == {1}"
+      ],
+      "zh-CN": "=="
+    },
+    {
+      "en-US": ">",
+      "id": ">",
+      "kind": "operator",
+      "sources": [
+        "localizedStrings.{0} > {1}"
+      ],
+      "zh-CN": ">"
+    },
+    {
+      "en-US": ">=",
+      "id": ">=",
+      "kind": "operator",
+      "sources": [
+        "localizedStrings.{0} >= {1}"
+      ],
+      "zh-CN": ">="
     },
     {
       "en-US": "Add",
@@ -3164,7 +3203,7 @@
       "zh-CN": "地图矢量"
     }
   ],
-  "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), with the user-confirmed setAllowedHeroes identity/GUID mapping for the export's 'Set Player Allowed Heroes' spelling; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+  "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; the global chase and Array Element aliases are excluded when their exact zh-CN spellings would collide with canonical identities; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
   "schemaVersion": 1,
   "source": {
     "commit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",

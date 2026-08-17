@@ -36,24 +36,31 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 * `en-US` is the primary locale and is complete (344/344 canonical entries:
   168 builtins + 176 enum members). The committed catalog validates that the
   primary locale is complete.
-* `zh-CN` has an evidence-backed corpus of **328/344** canonical entries:
-  structural 11/11, actions 56/62, values 77/78, events 3/3, operators 8/14,
-  and enum members 173/176. The reproducible manifest is
+* `zh-CN` has an evidence-backed corpus of **341/344** canonical entries:
+  structural 11/11, actions 60/62, values 77/78, events 3/3, operators 14/14,
+  and enum members 176/176. The reproducible manifest is
   `tools/corpus/zh-cn-corpus.json`; it records exact en-US spelling matches,
   every exclusion, and the export provenance. The source is the user-provided
   `workshop-data/workshop-data.json` export at commit
   `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`, commit date 2026-08-12, fetched
   2026-08-17. The export is not committed to this repository.
-* The generated settings corpus covers labels 17/19, modes 7/7, maps 2/2,
+* The generated settings corpus covers labels 19/19, modes 7/7, maps 2/2,
   heroes 10/10, enum values 2/2, tokens 3/3, and teams 1/1. Its exact-match
   exclusions are recorded in
   `crates/workshop-rs/src/settings/data/zh-cn.json`; settings without a
   mapping continue to fail explicitly.
 
 All committed zh-CN spellings come from the JSON evidence through the corpus
-pipeline. The `setAllowedHeroes` action uses the user-confirmed matching
-identity/GUID for the export's `Set Player Allowed Heroes` entry. The complete
-catalog coverage and settings gate remains open for the recorded exclusions.
+pipeline. The confirmed legacy mappings use the export identities/GUIDs for
+global stop-chasing, force hero/throttle, `Set Player Allowed Heroes`, and
+the four bare comparison symbols. The three enum aliases use exact export
+identity/GUID matches: Lijiang Tower Lunar New Year, Visible To and Values,
+and To Nearest. The two hero settings labels are composed only after exact
+template and Blizzard hero identity/GUID checks. The remaining exclusions are
+`deleteAllClasses`, `chaseVariableAtRate`, and `arrayElement`, each recorded
+with its exact reason in the manifest; the latter two collide with an already
+declared zh-CN identity and therefore cannot be added without making parsing
+ambiguous.
 
 ## Test fixtures (`tests/fixtures/`)
 

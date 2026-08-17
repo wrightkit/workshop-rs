@@ -41,10 +41,69 @@ fn manifest_pins_the_export_and_exact_match_coverage() {
         manifest["source"]["commit"],
         "d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
     );
-    assert_eq!(manifest["coverage"]["total"]["matched"], 328);
+    assert_eq!(manifest["coverage"]["total"]["matched"], 341);
     assert_eq!(manifest["coverage"]["total"]["total"], 344);
-    assert_eq!(manifest["matches"].as_array().unwrap().len(), 328);
-    assert_eq!(manifest["excluded"].as_array().unwrap().len(), 16);
+    assert_eq!(manifest["matches"].as_array().unwrap().len(), 341);
+    assert_eq!(manifest["excluded"].as_array().unwrap().len(), 3);
+    for (kind, id, source, zh_cn) in [
+        (
+            "action",
+            "stopChasingVariable",
+            "actions.__stopChasingGlobalVariable__",
+            "停止追踪全局变量",
+        ),
+        (
+            "action",
+            "forcePlayerHero",
+            "actions..startForcingHero",
+            "开始强制玩家选择英雄",
+        ),
+        (
+            "action",
+            "stopForcingHero",
+            "actions..stopForcingCurrentHero",
+            "停止强制玩家选择英雄",
+        ),
+        (
+            "action",
+            "forceThrottle",
+            "actions..startForcingThrottle",
+            "开始限制阈值",
+        ),
+        ("operator", "==", "localizedStrings.{0} == {1}", "=="),
+        ("operator", "!=", "localizedStrings.{0} != {1}", "!="),
+        ("operator", "<=", "localizedStrings.{0} <= {1}", "<="),
+        ("operator", ">=", "localizedStrings.{0} >= {1}", ">="),
+        ("operator", "<", "localizedStrings.{0} < {1}", "<"),
+        ("operator", ">", "localizedStrings.{0} > {1}", ">"),
+        (
+            "enum member",
+            "Map.LIJIANG_TOWER_LUNAR",
+            "maps.lijiangTowerLny",
+            "春节漓江塔",
+        ),
+        (
+            "enum member",
+            "ProgressBarWorldReeval.VISIBLE_TO_AND_VALUES",
+            "constants.ProgressHudReeval.VISIBILITY_AND_VALUES",
+            "可见和值",
+        ),
+        (
+            "enum member",
+            "Rounding.NEAREST",
+            "constants.__Rounding__.__roundToNearest__",
+            "至最近",
+        ),
+    ] {
+        let entry = manifest["matches"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|entry| entry["kind"] == kind && entry["id"] == id)
+            .unwrap_or_else(|| panic!("confirmed mapping is recorded: {kind} {id}"));
+        assert_eq!(entry["sources"], serde_json::json!([source]));
+        assert_eq!(entry["zh-CN"], zh_cn);
+    }
     let set_allowed = manifest["matches"]
         .as_array()
         .unwrap()
@@ -73,6 +132,18 @@ fn settings_corpus_includes_general_mode_and_team_labels() {
     );
     assert_eq!(settings["modes"]["General"]["zh-CN"], "综合");
     assert_eq!(settings["teams"]["General"]["zh-CN"], "综合");
+    assert_eq!(
+        settings["coverage"]["labels"],
+        serde_json::json!({"matched": 19, "total": 19})
+    );
+    assert_eq!(
+        settings["labels"]["Ultimate Generation - Passive Blizzard"]["zh-CN"],
+        "终极技能自动充能速度 暴雪"
+    );
+    assert_eq!(
+        settings["labels"]["Ultimate Generation - Combat Blizzard"]["zh-CN"],
+        "战斗时终极技能充能速度 暴雪"
+    );
 }
 
 #[test]
@@ -129,6 +200,54 @@ fn confirmed_set_allowed_heroes_mapping_converts_in_both_directions() {
         &ConvertOptions::default(),
     )
     .expect("setAllowedHeroes converts back to en-US");
+    assert_eq!(back_to_en.fallback_ids, Vec::<String>::new());
+    assert_eq!(back_to_en.text.trim_end(), source.trim_end());
+}
+
+#[test]
+fn confirmed_legacy_aliases_convert_in_both_directions() {
+    let source = "variables {
+    global:
+        0: value
+}
+
+rule (\"legacy-aliases\") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        Stop Chasing Variable(Global.value);
+        Force Player Hero(Event Player, Ana);
+        Stop Forcing Hero(Event Player);
+        Force Throttle(Event Player, 100, 100, 100, 100, 100, 100);
+    }
+}
+";
+    let catalog = catalog();
+    let to_zh = convert::convert(source, &catalog, &en(), &zh(), &ConvertOptions::default())
+        .expect("confirmed legacy aliases convert to zh-CN");
+    assert_eq!(to_zh.fallback_ids, Vec::<String>::new());
+    for spelling in [
+        "停止追踪全局变量",
+        "开始强制玩家选择英雄",
+        "停止强制玩家选择英雄",
+        "开始限制阈值",
+    ] {
+        assert!(
+            to_zh.text.contains(spelling),
+            "missing {spelling}: {}",
+            to_zh.text
+        );
+    }
+
+    let back_to_en = convert::convert(
+        &to_zh.text,
+        &catalog,
+        &zh(),
+        &en(),
+        &ConvertOptions::default(),
+    )
+    .expect("confirmed legacy aliases convert back to en-US");
     assert_eq!(back_to_en.fallback_ids, Vec::<String>::new());
     assert_eq!(back_to_en.text.trim_end(), source.trim_end());
 }
