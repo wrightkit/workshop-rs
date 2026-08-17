@@ -32,13 +32,17 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: quality
+          cache-targets: true
+          cache-all-crates: false
+          cache-workspace-crates: false
+          cache-bin: false
           save-if: ${{ github.ref == 'refs/heads/main' }}
           cache-on-failure: false
       - name: Format check
         run: cargo fmt --all --check
       - name: Clippy (deny warnings)
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
       - name: Tests
-        run: cargo test --workspace --all-targets
+        run: cargo test --locked --workspace --all-targets
       - name: Catalog check
-        run: cargo run -p workshop-rs --bin workshop-catalog-gen -- check
+        run: cargo run --locked -p workshop-rs --bin workshop-catalog-gen -- check
