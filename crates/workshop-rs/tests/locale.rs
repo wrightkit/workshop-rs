@@ -3,11 +3,9 @@
 //! target-locale mappings fail explicitly by default; fallback is opt-in and
 //! visible; settings follow the same contract.
 //!
-//! The committed catalog declares `zh-CN` with an empty mapping set (0/344)
-//! pending a reviewed, MIT-permissible reference source. This suite pins the
-//! honest behavior that follows: conversion into zh-CN fails explicitly for
-//! every entry, and the full conversion machinery is proven end-to-end with
-//! a synthetic declared locale carrying clearly synthetic test spellings.
+//! The committed catalog declares an evidence-backed `zh-CN` corpus (341/341).
+//! This suite pins both successful corpus conversion and the fail-explicit
+//! behavior for an unsupported undeclared target locale.
 
 use workshop_rs::catalog::{Catalog, Kind, Locale};
 use workshop_rs::convert::{self, ConvertOptions};
@@ -37,105 +35,99 @@ const BASIC_RULE: &str = "rule (\"setup\") {
 ";
 
 #[test]
-fn emission_into_zh_cn_fails_explicitly_on_missing_mappings() {
-    // The zh-CN locale is declared with zero mappings: emitting any builtin
-    // into zh-CN is a missing-mapping diagnostic, never a silent passthrough
-    // of the en-US spelling. The first missing mapping (the event line,
-    // emitted before the actions) surfaces first.
+fn emission_into_zh_cn_uses_evidence_backed_mappings() {
     let catalog = builtin();
     let program = parser::parse(BASIC_RULE, &catalog, &en()).expect("parses");
-    let error = emitter::emit(&program, &catalog, &zh()).expect_err("must fail explicitly");
-    assert!(
-        matches!(
-            error,
-            workshop_rs::WorkshopError::MissingMapping { kind: "event", .. }
-        ),
-        "expected a structured missing-mapping diagnostic: {error}"
-    );
-    assert!(
-        error.to_string().contains("zh-cn") && error.to_string().contains("global"),
-        "{error}"
-    );
+    let output = emitter::emit(&program, &catalog, &zh()).expect("corpus mappings emit");
+    assert!(output.contains("持续 - 全局"), "{output}");
+    assert!(output.contains("禁用查看器录制"), "{output}");
 }
 
 #[test]
-fn conversion_en_to_zh_cn_fails_explicitly_without_fallback() {
+fn conversion_en_to_zh_cn_uses_evidence_backed_mappings() {
     let catalog = builtin();
-    let error = convert::convert(
+    let output = convert::convert(
         BASIC_RULE,
         &catalog,
         &en(),
         &zh(),
         &ConvertOptions::default(),
     )
-    .expect_err("missing mappings must fail");
-    assert!(error.to_string().contains("missing"), "{error}");
+    .expect("corpus conversion succeeds");
+    assert!(output.text.contains("持续 - 全局"), "{}", output.text);
+    assert!(output.fallback_ids.is_empty());
 }
+
+const FALLBACK_RULE: &str = "rule (\"setup\") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        Disable Inspector Recording;
+    }
+}
+";
 
 #[test]
 fn opt_in_fallback_emits_with_recorded_fallback_ids() {
     // Fallback is opt-in: with a fallback locale the emission succeeds and
     // the fell-back identities are recorded (visible in tooling output).
     let catalog = builtin();
-    let program = parser::parse(BASIC_RULE, &catalog, &en()).expect("parses");
+    let program = parser::parse(FALLBACK_RULE, &catalog, &en()).expect("parses");
     let options = EmitOptions {
         fallback_locale: Some(en()),
     };
-    let output =
-        emitter::emit_with_options(&program, &catalog, &zh(), &options).expect("fallback emits");
-    assert_eq!(
-        output.text.trim_end(),
-        BASIC_RULE.trim_end(),
-        "fallback text is the en-US spelling"
+    let output = emitter::emit_with_options(&program, &catalog, &Locale::new("fr-FR"), &options)
+        .expect("fallback emits");
+    assert!(output.text.contains("Ongoing - Global"), "{}", output.text);
+    assert!(
+        output.text.contains("Disable Inspector Recording"),
+        "{}",
+        output.text
     );
     assert_eq!(
         output.fallback_ids,
         vec!["global".to_string(), "disableInspector".to_string()],
-        "every fell-back canonical id is recorded (event then action)"
+        "the unsupported target locale records the fallback identity"
     );
 }
 
 #[test]
 fn opt_in_fallback_conversion_round_trips_through_zh_cn() {
-    // convert en -> zh-CN with fallback to en-US: the output is the
-    // fallback-locale (en-US) spelling surface, the fallback choice is
-    // recorded, and the output parses and emits identically in en-US.
+    // Convert en-US to an unsupported locale with fallback to en-US.
     let catalog = builtin();
     let options = ConvertOptions {
         fallback_locale: Some(en()),
     };
-    let out = convert::convert(BASIC_RULE, &catalog, &en(), &zh(), &options)
-        .expect("fallback conversion emits");
+    let out = convert::convert(
+        FALLBACK_RULE,
+        &catalog,
+        &en(),
+        &Locale::new("fr-FR"),
+        &options,
+    )
+    .expect("fallback conversion emits");
     assert!(!out.fallback_ids.is_empty(), "fallback is recorded");
-    assert_eq!(
-        out.text.trim_end(),
-        BASIC_RULE.trim_end(),
-        "the fallback output is the en-US spelling surface"
+    assert!(out.text.contains("Ongoing - Global"), "{}", out.text);
+    assert!(
+        out.text.contains("Disable Inspector Recording"),
+        "{}",
+        out.text
     );
-    // The output is en-US text: it parses in en-US and re-emits identically.
-    let reparsed = parser::parse(&out.text, &catalog, &en()).expect("fallback output parses");
-    let reemitted = emitter::emit(&reparsed, &catalog, &en()).expect("re-emits");
-    assert_eq!(out.text, reemitted, "fallback output is a fixed point");
+    assert!(out.fallback_ids.contains(&"disableInspector".to_string()));
 }
 
 #[test]
-fn parsing_zh_cn_input_fails_explicitly_without_data() {
-    // With zero zh-CN aliases, zh-CN Workshop text cannot resolve any
-    // builtin: the parse fails with a structured Unknown diagnostic at the
-    // first spelling. No guessing, no fallback.
+fn parsing_zh_cn_input_uses_corpus_aliases() {
     let catalog = builtin();
-    let synthetic_zh = "rule (\"x\") { event { Ongoing - Global; } actions { Synthetic Action; } }";
-    let error = parser::parse(synthetic_zh, &catalog, &zh()).expect_err("no zh-CN data yet");
-    assert!(
-        matches!(error, workshop_rs::WorkshopError::Unknown { .. }),
-        "expected an Unknown diagnostic: {error}"
-    );
+    let localized = "rule (\"x\") { event { 持续 - 全局; } actions { 禁用查看器录制; } }";
+    parser::parse(localized, &catalog, &zh()).expect("corpus aliases parse");
 }
 
 #[test]
 fn explicit_zh_cn_override_passes_locale_support() {
     // The locale machinery accepts an explicit override to a declared
-    // locale; the parse then fails on data, not on locale support.
+    // locale, independently of the corpus coverage.
     use workshop_rs::detect;
     let catalog = builtin();
     let locale = detect::resolve_locale("garbage", &catalog, Some(&zh())).expect("override wins");
@@ -143,7 +135,7 @@ fn explicit_zh_cn_override_passes_locale_support() {
 }
 
 #[test]
-fn detection_is_unaffected_by_the_empty_zh_cn_locale() {
+fn detection_ranks_zh_cn_after_en_us_for_en_us_input() {
     use workshop_rs::detect;
     let catalog = builtin();
     let detection = detect::detect(BASIC_RULE, &catalog);
@@ -154,12 +146,12 @@ fn detection_is_unaffected_by_the_empty_zh_cn_locale() {
             .last()
             .map(|(locale, _)| locale.clone()),
         Some(zh()),
-        "zh-CN ranks last with zero matches"
+        "zh-CN remains behind en-US for en-US input"
     );
 }
 
 #[test]
-fn settings_emission_into_zh_cn_fails_without_fallback_and_works_with_it() {
+fn settings_emission_into_zh_cn_uses_the_generated_locale_corpus() {
     use workshop_rs::settings::{Settings, SettingsNode};
     let catalog = builtin();
     let program = workshop_rs::wir::Program {
@@ -177,28 +169,8 @@ fn settings_emission_into_zh_cn_fails_without_fallback_and_works_with_it() {
         }),
         ..workshop_rs::wir::Program::default()
     };
-    let error = emitter::emit(&program, &catalog, &zh()).expect_err("settings must fail");
-    assert!(
-        matches!(
-            error,
-            workshop_rs::WorkshopError::MissingMapping {
-                kind: "setting",
-                ..
-            }
-        ),
-        "settings emission into zh-CN fails explicitly: {error}"
-    );
-    let options = EmitOptions {
-        fallback_locale: Some(en()),
-    };
-    let output = emitter::emit_with_options(&program, &catalog, &zh(), &options)
-        .expect("settings fallback emits");
-    assert!(
-        output.text.contains("Max FFA Players: 6"),
-        "{}",
-        output.text
-    );
-    assert!(output.fallback_ids.contains(&"settings".to_string()));
+    let output = emitter::emit(&program, &catalog, &zh()).expect("settings corpus emits");
+    assert!(output.contains("自由混战人数上限: 6"), "{}", output);
 }
 
 /// A test-only catalog with a second declared locale carrying clearly
@@ -334,12 +306,11 @@ fn canonical_ids_are_locale_independent_in_wir() {
 }
 
 #[test]
-fn catalog_spelling_lookup_answers_none_for_unmapped_locales() {
+fn catalog_spelling_lookup_distinguishes_mapped_and_unmapped_locales() {
     let catalog = builtin();
     assert_eq!(
         catalog.spelling(Kind::Action, &zh(), "disableInspector"),
-        None,
-        "no zh-CN mapping exists"
+        Some("禁用查看器录制")
     );
     assert_eq!(
         catalog.spelling(Kind::Action, &en(), "disableInspector"),

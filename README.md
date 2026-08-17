@@ -69,9 +69,9 @@ let out = convert(text, &catalog, &Locale::new("en-US"), &Locale::new("zh-CN"),
 let identity = catalog.identity();
 ```
 
-Note: settings-bearing programs cannot be parsed from raw text (a `.ws`
-decompiler is a non-goal); settings are carried in WIR and emitted by the
-library. Locale detection is available via `workshop_rs::detect`.
+Settings-bearing programs are parsed into the canonical WIR settings carrier
+and emitted by the library. Locale detection is available via
+`workshop_rs::detect`.
 
 ## CLI usage
 
@@ -105,11 +105,20 @@ the canonical form with a fresh digest (byte-idempotent). See
 
 ## Locale status
 
-* `en-US`: complete declared surface (344/344 canonical entries), corpus
+* `en-US`: complete declared surface (341/341 canonical entries), corpus
   round-trips and settings emission tested.
-* `zh-CN`: declared as a locale with **zero mappings** pending a reviewed,
-  MIT-permissible reference source. Conversion into `zh-CN` fails explicitly
-  for every entry; no zh-CN compatibility claim is made.
+* `zh-CN`: the reviewed export-backed corpus covers **341/341** canonical
+  entries (structural 11/11, actions 60/60, values 77/77, events 3/3,
+  operators 14/14, enum members 176/176). The declared surface is complete;
+  settings data covers labels 19/19 and all other declared settings sections.
+
+The corpus is reproducible with the user-provided export (not committed):
+
+```sh
+cargo run -p workshop-rs --bin workshop-catalog-gen -- corpus \
+  --export /path/to/workshop-data.json
+cargo run -p workshop-rs --bin workshop-catalog-gen -- build
+```
 
 ## Validation
 
@@ -124,6 +133,6 @@ CI runs the same checks on stable and the pinned toolchain (1.85.0).
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Committed data carries recorded provenance
-([docs/provenance.md](docs/provenance.md)); GPL reference data (e.g. OverPy
-translation tables) is not a permissible data source.
+MIT — see [LICENSE](LICENSE). Committed mapping data carries recorded
+provenance ([docs/provenance.md](docs/provenance.md)); the user-provided JSON
+is build input and is not redistributed.

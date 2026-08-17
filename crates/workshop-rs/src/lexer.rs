@@ -303,7 +303,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                     let interior_dash = c == '-'
                         && index + 1 < chars.len()
                         && (chars[index + 1].is_alphanumeric() || chars[index + 1] == '_');
-                    if c.is_alphanumeric() || c == '_' || interior_dash {
+                    if c.is_alphanumeric() || c == '_' || c == '\'' || interior_dash {
                         word.push(c);
                         advance(&mut index, &mut line, &mut col, &chars);
                     } else {

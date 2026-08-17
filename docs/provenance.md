@@ -1,17 +1,15 @@
-# Provenance and licensing record
+# Provenance record
 
-This document records the source, evidence class, and license status of every
-committed dataset and fixture in `workshop-rs`, per the workspace evidence
+This document records the source and evidence class of every committed dataset
+and fixture in `workshop-rs`, per the workspace evidence
 hierarchy (reproducible behavior > accepted contracts > tests and fixtures >
 consumer projects > upstream references > documented community evidence >
 assumptions) and ADR-0001 Decision 6 (provenance and the reproducible
 catalog-update pipeline).
 
-The repository is MIT-licensed. Committed data must be MIT-compatible with
-recorded provenance. OverPy's translation tables are GPL-3.0 reference data
-and are **not** a permissible source for catalog or locale data (Wright
-ADR-0004, Wright `docs/licensing.md`). Observed reference behavior is an
-interoperability input, not permission to copy an implementation.
+The repository is MIT-licensed. Committed mapping data is workshop-rs-owned,
+with the source evidence and generation method recorded here. The input JSON
+is a build-time evidence artifact and is not redistributed by workshop-rs.
 
 ## Catalog data (`src/catalog/data/catalog.json`)
 
@@ -35,17 +33,34 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 
 ### Locale coverage
 
-* `en-US` is the primary locale and is complete (344/344 canonical entries:
-  168 builtins + 176 enum members). The committed catalog validates that the
+* `en-US` is the primary locale and is complete (341/341 canonical entries:
+  165 builtins + 176 enum members). The committed catalog validates that the
   primary locale is complete.
-* `zh-CN` is declared as a locale with an **empty mapping set (0/344)**. No
-  zh-CN compatibility claim is made. Adding zh-CN aliases requires a
-  reviewed, MIT-permissible reference source (ADR-0001 Decision 6, open
-  question: permissibility of candidate zh-CN reference sources). The
-  workspace evidence hierarchy permits *documented community evidence*
-  (level 6) for spellings, but every added alias must carry a provenance
-  note identifying its source; unverifiable spellings must not be added —
-  missing mappings fail explicitly by design.
+* `zh-CN` has an evidence-backed corpus of **341/341** canonical entries:
+  structural 11/11, actions 60/60, values 77/77, events 3/3, operators 14/14,
+  and enum members 176/176. The reproducible manifest is
+  `tools/corpus/zh-cn-corpus.json`; it records exact en-US spelling matches,
+  every exclusion, and the export provenance. The source is the user-provided
+  `workshop-data/workshop-data.json` export at commit
+  `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`, commit date 2026-08-12, fetched
+  2026-08-17. The export is not committed to this repository.
+* The generated settings corpus covers labels 19/19, modes 7/7, maps 2/2,
+  heroes 10/10, enum values 2/2, tokens 3/3, and teams 1/1. Its exact-match
+  exclusions are recorded in
+  `crates/workshop-rs/src/settings/data/zh-cn.json`; settings without a
+  mapping continue to fail explicitly.
+
+All committed zh-CN spellings come from the JSON evidence through the corpus
+pipeline. The confirmed legacy mappings use the export identities/GUIDs for
+global stop-chasing, force hero/throttle, `Set Player Allowed Heroes`, and
+the four bare comparison symbols. The three enum aliases use exact export
+identity/GUID matches: Lijiang Tower Lunar New Year, Visible To and Values,
+and To Nearest. The two hero settings labels are composed only after exact
+template and Blizzard hero identity/GUID checks. Following the explicit
+product decision, `Delete All Classes`, `Chase Variable At Rate`, and `Array
+Element` are not declared Workshop identities: they are legacy/provider syntax
+sugar represented by the corresponding canonical Workshop identities. The
+declared corpus is therefore complete and contains no silent exclusions.
 
 ## Test fixtures (`tests/fixtures/`)
 
@@ -55,8 +70,8 @@ reference emissions) on 2026-08-16. The spellings are Blizzard game content
 (functional/interoperability data); the texts are observed reference
 behavior, not OverPy source. Full provenance, extraction method, and
 per-file SHA-256 verification are recorded in `tests/fixtures/README.md`.
-Final redistribution review of the migrated corpus is tracked with the
-first-release gate.
+The committed fixtures are reference-emission inputs with per-file hashes;
+the JSON evidence used to generate locale mappings is not committed.
 
 ## Code provenance
 

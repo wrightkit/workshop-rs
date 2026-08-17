@@ -95,9 +95,12 @@ pub fn round_trip_with_context(
     record
 }
 
-/// Structural equivalence of two WIR programs: identical tables, rules,
-/// actions, and values, ignoring source spans and file paths.
+/// Structural equivalence of two WIR programs: identical settings, tables,
+/// rules, actions, and values, ignoring source spans and file paths.
 pub fn equivalent(a: &wir::Program, b: &wir::Program) -> bool {
+    if !settings_equivalent(a.settings.as_ref(), b.settings.as_ref()) {
+        return false;
+    }
     let globals_a: Vec<_> = a
         .global_variables
         .iter()
@@ -146,6 +149,97 @@ pub fn equivalent(a: &wir::Program, b: &wir::Program) -> bool {
         }
     }
     true
+}
+
+fn settings_equivalent(
+    left: Option<&crate::settings::Settings>,
+    right: Option<&crate::settings::Settings>,
+) -> bool {
+    match (left, right) {
+        (None, None) => true,
+        (Some(left), Some(right)) => nodes_equivalent(&left.children, &right.children),
+        _ => false,
+    }
+}
+
+fn nodes_equivalent(
+    left: &[crate::settings::SettingsNode],
+    right: &[crate::settings::SettingsNode],
+) -> bool {
+    left.len() == right.len()
+        && left
+            .iter()
+            .zip(right)
+            .all(|(left, right)| match (left, right) {
+                (
+                    crate::settings::SettingsNode::Group {
+                        name: left_name,
+                        children: left_children,
+                        ..
+                    },
+                    crate::settings::SettingsNode::Group {
+                        name: right_name,
+                        children: right_children,
+                        ..
+                    },
+                ) => left_name == right_name && nodes_equivalent(left_children, right_children),
+                (
+                    crate::settings::SettingsNode::Number {
+                        name: left_name,
+                        value: left_value,
+                        ..
+                    },
+                    crate::settings::SettingsNode::Number {
+                        name: right_name,
+                        value: right_value,
+                        ..
+                    },
+                ) => left_name == right_name && left_value == right_value,
+                (
+                    crate::settings::SettingsNode::Bool {
+                        name: left_name,
+                        value: left_value,
+                        ..
+                    },
+                    crate::settings::SettingsNode::Bool {
+                        name: right_name,
+                        value: right_value,
+                        ..
+                    },
+                ) => left_name == right_name && left_value == right_value,
+                (
+                    crate::settings::SettingsNode::String {
+                        name: left_name,
+                        value: left_value,
+                        ..
+                    },
+                    crate::settings::SettingsNode::String {
+                        name: right_name,
+                        value: right_value,
+                        ..
+                    },
+                ) => left_name == right_name && left_value == right_value,
+                (
+                    crate::settings::SettingsNode::List {
+                        name: left_name,
+                        elements: left_elements,
+                        ..
+                    },
+                    crate::settings::SettingsNode::List {
+                        name: right_name,
+                        elements: right_elements,
+                        ..
+                    },
+                ) => {
+                    left_name == right_name
+                        && left_elements.len() == right_elements.len()
+                        && left_elements
+                            .iter()
+                            .zip(right_elements)
+                            .all(|(left, right)| left.value == right.value)
+                }
+                _ => false,
+            })
 }
 
 fn rule_equivalent(

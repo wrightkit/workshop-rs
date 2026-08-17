@@ -25,10 +25,10 @@ fn builtin_catalog_loads_and_declares_en_us_and_zh_cn() {
         catalog.locale_coverage(&en()).mapped,
         catalog.locale_coverage(&en()).total
     );
-    // zh-CN is declared with an empty mapping set pending reviewed evidence:
-    // no compatibility claim is made, and conversion fails explicitly.
+    // zh-CN is the evidence-backed corpus locale; its exclusions remain
+    // explicitly unmapped and therefore still fail closed.
     assert!(catalog.supports(&Locale::new("zh-CN")));
-    assert_eq!(catalog.locale_coverage(&Locale::new("zh-CN")).mapped, 0);
+    assert_eq!(catalog.locale_coverage(&Locale::new("zh-CN")).mapped, 341);
     assert_eq!(
         catalog.locale_coverage(&Locale::new("zh-CN")).total,
         catalog.locale_coverage(&en()).total

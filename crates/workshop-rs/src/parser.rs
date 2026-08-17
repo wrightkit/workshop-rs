@@ -8,6 +8,8 @@
 
 use std::collections::HashMap;
 
+use crate::settings::table::{self, KeyKind, PathPart};
+use crate::settings::{Settings, SettingsListElement, SettingsNode};
 use crate::signatures::{ExpectedDomain, NoExpectedDomain};
 use crate::source::{Position, SourceFile, Span};
 use crate::wir::{self, Action, Event, ModifyOp, Value, ValueNode};
@@ -113,6 +115,7 @@ impl Parser<'_> {
                 None => break,
             };
             match phrase.as_str() {
+                "settings" => self.settings_section()?,
                 "variables" => self.variables_section()?,
                 "subroutines" => self.subroutines_section()?,
                 "rule" => self.rule()?,
@@ -122,6 +125,306 @@ impl Parser<'_> {
             }
         }
         Ok(self.target)
+    }
+
+    fn settings_section(&mut self) -> Result<()> {
+        let start = self.expect_word("settings")?;
+        self.expect(TokenKind::LBrace, "expected '{' after 'settings'")?;
+        let mut children = Vec::new();
+        while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+            let (name, child_start, _) = self.phrase()?;
+            self.expect(TokenKind::LBrace, "expected '{' after settings group")?;
+            let node = match name.as_str() {
+                "main" | "lobby" => SettingsNode::Group {
+                    name: name.clone(),
+                    children: self.settings_members(&[PathPart::Part(if name == "main" {
+                        "main"
+                    } else {
+                        "lobby"
+                    })])?,
+                    span: Some(self.settings_span(child_start)),
+                },
+                "modes" => self.settings_modes(child_start)?,
+                "heroes" => self.settings_heroes(child_start)?,
+                _ => return Err(self.unknown("settings group", &name)),
+            };
+            children.push(node);
+        }
+        let end = match self.next() {
+            Some(Token {
+                kind: TokenKind::RBrace,
+                end,
+                ..
+            }) => end,
+            _ => unreachable!("settings loop checks for closing brace"),
+        };
+        self.target.settings = Some(Settings {
+            span: Some(Span::new(self.file(), start, end)),
+            children,
+        });
+        Ok(())
+    }
+
+    fn settings_modes(&mut self, start: Position) -> Result<SettingsNode> {
+        let mut children = Vec::new();
+        while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+            let mut disabled = false;
+            if let Some(Token {
+                kind: TokenKind::Word(word),
+                ..
+            }) = self.peek()
+            {
+                if self.settings_name_matches("tokens", "disabled", &word) {
+                    self.pos += 1;
+                    disabled = true;
+                }
+            }
+            let (display, mode_start, _) = self.phrase_on_line()?;
+            let mode = self.resolve_settings_name(table::MODE_NAMES, "modes", &display)?;
+            self.expect(TokenKind::LBrace, "expected '{' after game mode")?;
+            let mut mode_children =
+                self.settings_members(&[PathPart::Part("gamemodes"), PathPart::Part(mode)])?;
+            if disabled {
+                mode_children.insert(
+                    0,
+                    SettingsNode::Bool {
+                        name: "enabled".to_string(),
+                        value: false,
+                        span: None,
+                    },
+                );
+            }
+            children.push(SettingsNode::Group {
+                name: mode.to_string(),
+                children: mode_children,
+                span: Some(self.settings_span(mode_start)),
+            });
+        }
+        self.expect(TokenKind::RBrace, "expected '}' after modes")?;
+        Ok(SettingsNode::Group {
+            name: "gamemodes".to_string(),
+            children,
+            span: Some(self.settings_span(start)),
+        })
+    }
+
+    fn settings_heroes(&mut self, start: Position) -> Result<SettingsNode> {
+        let mut teams = Vec::new();
+        while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+            let (team_display, team_start, _) = self.phrase_on_line()?;
+            let team = self.resolve_settings_name(table::TEAM_NAMES, "teams", &team_display)?;
+            self.expect(TokenKind::LBrace, "expected '{' after team settings group")?;
+            let mut team_children = Vec::new();
+            while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+                let (display, child_start, child_end) = self.phrase_on_line()?;
+                if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace))
+                    && self
+                        .resolve_settings_name(table::HERO_NAMES, "heroes", &display)
+                        .is_ok()
+                {
+                    let hero = self.resolve_settings_name(table::HERO_NAMES, "heroes", &display)?;
+                    self.expect(TokenKind::LBrace, "expected '{' after hero settings group")?;
+                    let children = self.settings_members(&[
+                        PathPart::Part("heroes"),
+                        PathPart::Team,
+                        PathPart::Hero,
+                    ])?;
+                    team_children.push(SettingsNode::Group {
+                        name: hero.to_string(),
+                        children,
+                        span: Some(self.settings_span(child_start)),
+                    });
+                } else {
+                    team_children.push(self.settings_member_named(
+                        display,
+                        child_start,
+                        child_end,
+                        &[PathPart::Part("heroes"), PathPart::Team],
+                    )?);
+                }
+            }
+            self.expect(TokenKind::RBrace, "expected '}' after team settings group")?;
+            teams.push(SettingsNode::Group {
+                name: team.to_string(),
+                children: team_children,
+                span: Some(self.settings_span(team_start)),
+            });
+        }
+        self.expect(TokenKind::RBrace, "expected '}' after heroes")?;
+        Ok(SettingsNode::Group {
+            name: "heroes".to_string(),
+            children: teams,
+            span: Some(self.settings_span(start)),
+        })
+    }
+
+    fn settings_members(&mut self, path: &[PathPart<'static>]) -> Result<Vec<SettingsNode>> {
+        let mut children = Vec::new();
+        while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+            let (display, start, end) = self.phrase_on_line()?;
+            children.push(self.settings_member_named(display, start, end, path)?);
+        }
+        self.expect(TokenKind::RBrace, "expected '}' after settings group")?;
+        Ok(children)
+    }
+
+    fn settings_member_named(
+        &mut self,
+        display: String,
+        start: Position,
+        _end: Position,
+        path: &[PathPart<'static>],
+    ) -> Result<SettingsNode> {
+        let entry = table::ENTRIES.iter().find(|candidate| {
+            candidate.path.len() == path.len() + 1
+                && candidate.path[..path.len()]
+                    .iter()
+                    .zip(path.iter())
+                    .all(|(left, right)| left == right)
+                && self.settings_name_matches("labels", candidate.workshop_name, &display)
+        });
+        let Some(entry) = entry else {
+            return Err(self.unknown("setting", &display));
+        };
+        let name = match entry.path.last() {
+            Some(PathPart::Part(name)) => *name,
+            _ => return Err(self.malformed("settings entry has no leaf key", self.previous())),
+        };
+        if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace)) {
+            self.expect(TokenKind::LBrace, "expected '{' after settings list")?;
+            let mut elements = Vec::new();
+            while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+                let (value, value_start, value_end) = self.phrase_on_line()?;
+                let canonical = match entry.kind {
+                    KeyKind::ListMap => {
+                        self.resolve_settings_name(table::MAP_NAMES, "maps", &value)?
+                    }
+                    KeyKind::ListHero => {
+                        self.resolve_settings_name(table::HERO_NAMES, "heroes", &value)?
+                    }
+                    _ => {
+                        return Err(
+                            self.malformed("only settings lists may use braces", self.previous())
+                        );
+                    }
+                };
+                elements.push(SettingsListElement {
+                    value: canonical.to_string(),
+                    span: Some(Span::new(self.file(), value_start, value_end)),
+                });
+            }
+            self.expect(TokenKind::RBrace, "expected '}' after settings list")?;
+            return Ok(SettingsNode::List {
+                name: name.to_string(),
+                elements,
+                span: Some(Span::new(self.file(), start, self.previous_span().1)),
+            });
+        }
+        self.expect(TokenKind::Colon, "expected ':' after settings key")?;
+        let end = self.previous_span().1;
+        let span = Some(Span::new(self.file(), start, end));
+        match entry.kind {
+            KeyKind::String => Ok(SettingsNode::String {
+                name: name.to_string(),
+                value: self.expect_string("expected a settings string")?,
+                span,
+            }),
+            KeyKind::Number => Ok(SettingsNode::Number {
+                name: name.to_string(),
+                value: self.settings_number(false)?,
+                span,
+            }),
+            KeyKind::Percent => Ok(SettingsNode::Number {
+                name: name.to_string(),
+                value: self.settings_number(true)?,
+                span,
+            }),
+            KeyKind::Bool => Ok(SettingsNode::Bool {
+                name: name.to_string(),
+                value: self.settings_bool()?,
+                span,
+            }),
+            KeyKind::Enum(domain) => Ok(SettingsNode::String {
+                name: name.to_string(),
+                value: self.resolve_enum_settings_name(domain)?,
+                span,
+            }),
+            KeyKind::ListMap | KeyKind::ListHero => {
+                Err(self.malformed("settings list requires a brace block", self.previous()))
+            }
+        }
+    }
+
+    fn settings_number(&mut self, percent: bool) -> Result<f64> {
+        let value = match self.next() {
+            Some(Token {
+                kind: TokenKind::Number { value, .. },
+                ..
+            }) => value,
+            Some(token) => return Err(self.malformed("expected a settings number", &token)),
+            None => return Err(self.malformed("expected a settings number", self.eof())),
+        };
+        if percent {
+            self.expect(
+                TokenKind::Op("%".to_string()),
+                "expected '%' after settings percentage",
+            )?;
+        }
+        Ok(value)
+    }
+
+    fn settings_bool(&mut self) -> Result<bool> {
+        let token = self
+            .next()
+            .ok_or_else(|| self.malformed("expected a settings boolean", self.eof()))?;
+        let TokenKind::Word(value) = token.kind else {
+            return Err(self.malformed("expected a settings boolean", &token));
+        };
+        if self.settings_name_matches("tokens", "On", &value) {
+            Ok(true)
+        } else if self.settings_name_matches("tokens", "Off", &value) {
+            Ok(false)
+        } else {
+            Err(self.unknown("setting boolean", &value))
+        }
+    }
+
+    fn resolve_enum_settings_name(&mut self, domain: &str) -> Result<String> {
+        let (display, _, _) = self.phrase_on_line()?;
+        table::ENUM_MEMBERS
+            .iter()
+            .find(|member| {
+                member.domain == domain
+                    && self.settings_name_matches("enums", member.name, &display)
+            })
+            .map(|member| member.member.to_string())
+            .ok_or_else(|| self.unknown("settings enum", &display))
+    }
+
+    fn resolve_settings_name(
+        &self,
+        names: &[table::NameMap],
+        section: &str,
+        display: &str,
+    ) -> Result<&'static str> {
+        names
+            .iter()
+            .find(|candidate| self.settings_name_matches(section, candidate.name, display))
+            .map(|candidate| candidate.key)
+            .ok_or_else(|| self.unknown("setting", display))
+    }
+
+    fn settings_name_matches(&self, section: &str, english: &str, display: &str) -> bool {
+        if self.locale == Locale::new("en-US") {
+            display == english
+        } else {
+            table::localized_name(self.locale.as_str(), section, english)
+                .is_some_and(|localized| localized == display)
+        }
+    }
+
+    fn settings_span(&self, start: Position) -> Span {
+        Span::new(self.file(), start, self.previous_span().1)
     }
 
     fn variables_section(&mut self) -> Result<()> {
@@ -1312,6 +1615,14 @@ impl Parser<'_> {
                 words.push(word.clone());
                 (start, end)
             }
+            Some(Token {
+                kind: TokenKind::Number { text, .. },
+                start,
+                end,
+            }) => {
+                words.push(text.clone());
+                (start, end)
+            }
             Some(token) => return Err(self.malformed("expected an identifier", &token)),
             None => return Err(self.malformed("expected an identifier", self.eof())),
         };
@@ -1358,24 +1669,54 @@ impl Parser<'_> {
                 words.push(word.clone());
                 (start, end, start.line)
             }
+            Some(Token {
+                kind: TokenKind::Number { text, .. },
+                start,
+                end,
+            }) => {
+                words.push(text.clone());
+                (start, end, start.line)
+            }
             Some(token) => return Err(self.malformed("expected an identifier", &token)),
             None => return Err(self.malformed("expected an identifier", self.eof())),
         };
         self.pos += 1;
-        while let Some(Token {
-            kind: TokenKind::Word(word),
-            start,
-            end: word_end,
-        }) = self.peek()
-        {
-            if start.line != line {
+        while let Some(token) = self.peek() {
+            let (word, word_start, word_end) = match token {
+                Token {
+                    kind: TokenKind::Word(word),
+                    start,
+                    end,
+                } => (word, start, end),
+                Token {
+                    kind: TokenKind::Number { text, .. },
+                    start,
+                    end,
+                } => (text, start, end),
+                Token {
+                    kind: TokenKind::Dot,
+                    start,
+                    end,
+                } => (".".to_string(), start, end),
+                Token {
+                    kind: TokenKind::Op(op),
+                    start,
+                    end,
+                } if op == "-" => ("-".to_string(), start, end),
+                _ => break,
+            };
+            if word_start.line != line {
                 break;
             }
             words.push(word);
             end = word_end;
             self.pos += 1;
         }
-        Ok((words.join(" "), start, end))
+        Ok((
+            words.join(" ").replace(" .", ".").replace(". ", "."),
+            start,
+            end,
+        ))
     }
 
     /// Read a text line (tokens until `;`), joining words and dashes into

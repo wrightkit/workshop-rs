@@ -10,9 +10,8 @@
 //! presentation-canonical, so the same WIR/config emits byte-stable text that
 //! reparses to equivalent WIR — except for the `settings` section:
 //! settings-bearing emissions are deliberately rejected by the Workshop
-//! parser (a `.ws` decompiler is a non-goal). The settings emission table is
-//! en-US fixture-evidenced data; emitting settings for another locale
-//! requires an explicit fallback to `en-US`.
+//! parser (a `.ws` decompiler is a non-goal). Settings names are resolved from
+//! the generated locale corpus, with an explicit `en-US` fallback when needed.
 
 use std::fmt::Write;
 
@@ -142,24 +141,6 @@ impl Emitter<'_> {
     /// carrier, table-driven (fixture-evidenced names). Only runs on
     /// validated programs, so unknown keys cannot reach this point.
     fn emit_settings(&mut self, settings: &SettingsTree) -> Result<()> {
-        // The settings emission table is en-US fixture-evidenced data; a
-        // target locale without settings spellings fails explicitly unless a
-        // fallback to en-US is opted into (missing mapping, ADR-0001).
-        let en_us = Locale::new("en-US");
-        if self.locale != en_us {
-            match &self.fallback {
-                Some(fallback) if *fallback == en_us => {
-                    self.fallback_ids.push("settings".to_string());
-                }
-                _ => {
-                    return Err(WorkshopError::MissingMapping {
-                        kind: "setting",
-                        id: "settings emission table".to_string(),
-                        locale: self.locale.clone(),
-                    });
-                }
-            }
-        }
         self.line(0, "settings {")?;
         for child in &settings.children {
             let SettingsNode::Group { name, children, .. } = child else {
@@ -193,8 +174,9 @@ impl Emitter<'_> {
             let SettingsNode::Group { name, children, .. } = mode else {
                 return Err(self.malformed("mode entries must be groups"));
             };
-            let display = table::mode_name(name)
+            let english = table::mode_name(name)
                 .ok_or_else(|| self.malformed(format!("unknown game mode '{name}'")))?;
+            let display = self.setting_name("modes", english, &format!("mode.{name}"))?;
             // `enabled: false` prefixes the mode header; true renders with no
             // prefix (only false is evidenced in the corpus, #86).
             let disabled = children.iter().any(|member| {
@@ -204,9 +186,10 @@ impl Emitter<'_> {
                 )
             });
             let header = if disabled {
-                format!("disabled {display}")
+                let disabled_name = self.setting_name("tokens", "disabled", "token.disabled")?;
+                format!("{disabled_name} {display}")
             } else {
-                display.to_string()
+                display
             };
             self.line(2, &format!("{header} {{"))?;
             for member in children {
@@ -232,14 +215,16 @@ impl Emitter<'_> {
             let SettingsNode::Group { name, children, .. } = team else {
                 return Err(self.malformed("team entries must be groups"));
             };
-            let display = table::team_name(name)
+            let english = table::team_name(name)
                 .ok_or_else(|| self.malformed(format!("unknown team '{name}'")))?;
+            let display = self.setting_name("teams", english, &format!("team.{name}"))?;
             self.line(2, &format!("{display} {{"))?;
             for member in children {
                 match member {
                     SettingsNode::Group { name, children, .. } => {
-                        let hero = table::hero_name(name)
+                        let english = table::hero_name(name)
                             .ok_or_else(|| self.malformed(format!("unknown hero '{name}'")))?;
+                        let hero = self.setting_name("heroes", english, &format!("hero.{name}"))?;
                         self.line(3, &format!("{hero} {{"))?;
                         for inner in children {
                             self.settings_member(
@@ -277,62 +262,70 @@ impl Emitter<'_> {
                 table::path_string(&full)
             ))
         })?;
+        let display_name =
+            self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?;
         match (node, &entry.kind) {
             (SettingsNode::String { value, .. }, KeyKind::String) => {
                 self.line(
                     level,
-                    &format!(
-                        "{}: \"{}\"",
-                        entry.workshop_name,
-                        escape_settings_string(value)
-                    ),
+                    &format!("{}: \"{}\"", display_name, escape_settings_string(value)),
                 )?;
             }
             (SettingsNode::String { value, .. }, KeyKind::Enum(domain)) => {
-                let display = table::enum_name(domain, value).ok_or_else(|| {
+                let english = table::enum_name(domain, value).ok_or_else(|| {
                     self.malformed(format!("unknown value '{value}' for settings key '{name}'"))
                 })?;
-                self.line(level, &format!("{}: {display}", entry.workshop_name))?;
+                let display =
+                    self.setting_name("enums", english, &format!("enum.{domain}.{value}"))?;
+                self.line(level, &format!("{display_name}: {display}"))?;
             }
             (SettingsNode::Number { value, .. }, KeyKind::Number) => {
-                self.line(
-                    level,
-                    &format!("{}: {}", entry.workshop_name, format_number(*value)),
-                )?;
+                self.line(level, &format!("{display_name}: {}", format_number(*value)))?;
             }
             (SettingsNode::Number { value, .. }, KeyKind::Percent) => {
                 self.line(
                     level,
-                    &format!("{}: {}%", entry.workshop_name, format_number(*value)),
+                    &format!("{display_name}: {}%", format_number(*value)),
                 )?;
             }
             (SettingsNode::Bool { value, .. }, KeyKind::Bool) => {
-                let rendered = if *value { "On" } else { "Off" };
-                self.line(level, &format!("{}: {rendered}", entry.workshop_name))?;
+                let rendered = self.setting_name(
+                    "tokens",
+                    if *value { "On" } else { "Off" },
+                    if *value { "token.on" } else { "token.off" },
+                )?;
+                self.line(level, &format!("{display_name}: {rendered}"))?;
             }
             (SettingsNode::List { elements, .. }, KeyKind::ListMap) => {
-                self.line(level, &format!("{} {{", entry.workshop_name))?;
+                self.line(level, &format!("{display_name} {{"))?;
                 for element in elements {
-                    let display = table::map_name(&element.value).ok_or_else(|| {
+                    let english = table::map_name(&element.value).ok_or_else(|| {
                         self.malformed(format!(
                             "unknown map '{}' in settings list '{name}'",
                             element.value
                         ))
                     })?;
-                    self.line(level + 1, display)?;
+                    let display =
+                        self.setting_name("maps", english, &format!("map.{}.name", element.value))?;
+                    self.line(level + 1, &display)?;
                 }
                 self.line(level, "}")?;
             }
             (SettingsNode::List { elements, .. }, KeyKind::ListHero) => {
-                self.line(level, &format!("{} {{", entry.workshop_name))?;
+                self.line(level, &format!("{display_name} {{"))?;
                 for element in elements {
-                    let display = table::hero_name(&element.value).ok_or_else(|| {
+                    let english = table::hero_name(&element.value).ok_or_else(|| {
                         self.malformed(format!(
                             "unknown hero '{}' in settings list '{name}'",
                             element.value
                         ))
                     })?;
-                    self.line(level + 1, display)?;
+                    let display = self.setting_name(
+                        "heroes",
+                        english,
+                        &format!("hero.{}.name", element.value),
+                    )?;
+                    self.line(level + 1, &display)?;
                 }
                 self.line(level, "}")?;
             }
@@ -343,6 +336,32 @@ impl Emitter<'_> {
             }
         }
         Ok(())
+    }
+
+    /// Resolve a settings spelling from the generated locale corpus. The
+    /// English table remains the explicit fallback only when the caller opts
+    /// into `en-US`, matching the catalog's missing-mapping contract.
+    fn setting_name(&mut self, section: &str, english: &str, id: &str) -> Result<String> {
+        let en_us = Locale::new("en-US");
+        if self.locale == en_us {
+            return Ok(english.to_string());
+        }
+        if let Some(spelling) = table::localized_name(self.locale.as_str(), section, english) {
+            return Ok(spelling.to_string());
+        }
+        if let Some(fallback) = &self.fallback {
+            if *fallback == en_us {
+                if !self.fallback_ids.iter().any(|value| value == "settings") {
+                    self.fallback_ids.push("settings".to_string());
+                }
+                return Ok(english.to_string());
+            }
+        }
+        Err(WorkshopError::MissingMapping {
+            kind: "setting",
+            id: id.to_string(),
+            locale: self.locale.clone(),
+        })
     }
 
     fn malformed(&self, message: impl Into<String>) -> WorkshopError {
@@ -435,10 +454,8 @@ impl Emitter<'_> {
                 let name = self.global_name(*variable)?;
                 let mut value_text = String::new();
                 self.value(*value, &mut value_text)?;
-                self.line(
-                    level,
-                    &format!("Set Global Variable({name}, {value_text});"),
-                )?;
+                let keyword = self.spelling(Kind::Structural, "setGlobalVariable")?;
+                self.line(level, &format!("{keyword}({name}, {value_text});"))?;
             }
             wir::Action::ModifyGlobalVariable {
                 variable,
@@ -450,10 +467,8 @@ impl Emitter<'_> {
                 let op = self.modify_op_spelling(*op)?;
                 let mut value_text = String::new();
                 self.value(*value, &mut value_text)?;
-                self.line(
-                    level,
-                    &format!("Modify Global Variable({name}, {op}, {value_text});"),
-                )?;
+                let keyword = self.spelling(Kind::Structural, "modifyGlobalVariable")?;
+                self.line(level, &format!("{keyword}({name}, {op}, {value_text});"))?;
             }
             wir::Action::SetPlayerVariable {
                 player,
@@ -466,9 +481,10 @@ impl Emitter<'_> {
                 let name = self.player_name(*variable)?;
                 let mut value_text = String::new();
                 self.value(*value, &mut value_text)?;
+                let keyword = self.spelling(Kind::Structural, "setPlayerVariable")?;
                 self.line(
                     level,
-                    &format!("Set Player Variable({player_text}, {name}, {value_text});"),
+                    &format!("{keyword}({player_text}, {name}, {value_text});"),
                 )?;
             }
             wir::Action::ModifyPlayerVariable {
@@ -484,9 +500,10 @@ impl Emitter<'_> {
                 let op = self.modify_op_spelling(*op)?;
                 let mut value_text = String::new();
                 self.value(*value, &mut value_text)?;
+                let keyword = self.spelling(Kind::Structural, "modifyPlayerVariable")?;
                 self.line(
                     level,
-                    &format!("Modify Player Variable({player_text}, {name}, {op}, {value_text});"),
+                    &format!("{keyword}({player_text}, {name}, {op}, {value_text});"),
                 )?;
             }
             wir::Action::CallSubroutine { subroutine, .. } => {
@@ -501,7 +518,8 @@ impl Emitter<'_> {
                         locale: self.locale.clone(),
                         span: None,
                     })?;
-                self.line(level, &format!("Call Subroutine({name});"))?;
+                let keyword = self.spelling(Kind::Structural, "callSubroutine")?;
+                self.line(level, &format!("{keyword}({name});"))?;
             }
             wir::Action::If {
                 branches,
@@ -511,14 +529,16 @@ impl Emitter<'_> {
                 for (index, branch) in branches.iter().enumerate() {
                     let mut condition = String::new();
                     self.value(branch.condition, &mut condition)?;
-                    let keyword = if index == 0 { "If" } else { "Else If" };
+                    let keyword =
+                        self.spelling(Kind::Structural, if index == 0 { "if" } else { "elseIf" })?;
                     self.line(level, &format!("{keyword}({condition});"))?;
                     for action in &branch.body {
                         self.action(*action, level + 1, false)?;
                     }
                 }
                 if let Some(else_body) = else_body {
-                    self.line(level, "Else;")?;
+                    let keyword = self.spelling(Kind::Structural, "else")?;
+                    self.line(level, &format!("{keyword};"))?;
                     for action in else_body {
                         self.action(*action, level + 1, false)?;
                     }
@@ -526,7 +546,8 @@ impl Emitter<'_> {
                 // A rule-final if closes the rule without `End;` (oracle
                 // spelling); nested and middle-of-rule ifs keep it.
                 if !rule_final {
-                    self.line(level, "End;")?;
+                    let keyword = self.spelling(Kind::Structural, "end")?;
+                    self.line(level, &format!("{keyword};"))?;
                 }
             }
             wir::Action::While {
@@ -534,11 +555,13 @@ impl Emitter<'_> {
             } => {
                 let mut text = String::new();
                 self.value(*condition, &mut text)?;
-                self.line(level, &format!("While({text});"))?;
+                let keyword = self.spelling(Kind::Structural, "while")?;
+                self.line(level, &format!("{keyword}({text});"))?;
                 for action in body {
                     self.action(*action, level + 1, false)?;
                 }
-                self.line(level, "End;")?;
+                let end = self.spelling(Kind::Structural, "end")?;
+                self.line(level, &format!("{end};"))?;
             }
             wir::Action::ForGlobalVariable {
                 variable,
@@ -555,16 +578,16 @@ impl Emitter<'_> {
                 self.value(*start, &mut start_text)?;
                 self.value(*stop, &mut stop_text)?;
                 self.value(*step, &mut step_text)?;
+                let keyword = self.spelling(Kind::Structural, "forGlobalVariable")?;
                 self.line(
                     level,
-                    &format!(
-                        "For Global Variable({name}, {start_text}, {stop_text}, {step_text});"
-                    ),
+                    &format!("{keyword}({name}, {start_text}, {stop_text}, {step_text});"),
                 )?;
                 for action in body {
                     self.action(*action, level + 1, false)?;
                 }
-                self.line(level, "End;")?;
+                let end = self.spelling(Kind::Structural, "end")?;
+                self.line(level, &format!("{end};"))?;
             }
             wir::Action::ForPlayerVariable {
                 player,
@@ -593,7 +616,8 @@ impl Emitter<'_> {
                 for action in body {
                     self.action(*action, level + 1, false)?;
                 }
-                self.line(level, "End;")?;
+                let end = self.spelling(Kind::Structural, "end")?;
+                self.line(level, &format!("{end};"))?;
             }
             wir::Action::Debug { value, .. } => {
                 // `debug(value)` displays the value as HUD text. The

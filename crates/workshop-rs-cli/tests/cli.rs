@@ -50,8 +50,8 @@ fn locales_lists_declared_locales_with_coverage() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     let lines: Vec<&str> = stdout.lines().collect();
     assert_eq!(lines.len(), 2);
-    assert!(lines[0].starts_with("en-us 344/344"), "{stdout}");
-    assert!(lines[1].starts_with("zh-cn 0/344"), "{stdout}");
+    assert!(lines[0].starts_with("en-us 341/341"), "{stdout}");
+    assert!(lines[1].starts_with("zh-cn 341/341"), "{stdout}");
 }
 
 #[test]
@@ -110,7 +110,7 @@ fn emit_emits_localized_text() {
 }
 
 #[test]
-fn convert_to_zh_cn_fails_explicitly_without_fallback() {
+fn convert_to_zh_cn_uses_the_corpus_without_fallback() {
     let file = fixture("basic-rule");
     let output = run(&[
         "convert",
@@ -120,22 +120,29 @@ fn convert_to_zh_cn_fails_explicitly_without_fallback() {
         "--to",
         "zh-CN",
     ]);
-    assert_eq!(output.status.code(), Some(1));
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("missing"), "{stderr}");
-    assert!(stderr.contains("zh-cn"), "{stderr}");
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("持续 - 全局"), "{stdout}");
+    assert!(stdout.contains("禁用查看器录制"), "{stdout}");
 }
 
 #[test]
 fn convert_to_zh_cn_with_fallback_reports_the_choice() {
-    let file = fixture("basic-rule");
+    let dir = std::env::temp_dir().join("workshop-rs-cli-convert-fallback");
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("unmapped.ws");
+    std::fs::write(
+        &file,
+        "rule (\"setup\") { event { Ongoing - Global; } actions { Disable Inspector Recording; } }",
+    )
+    .unwrap();
     let output = run(&[
         "convert",
         file.to_str().unwrap(),
         "--from",
         "en-US",
         "--to",
-        "zh-CN",
+        "fr-FR",
         "--fallback-locale",
         "en-US",
     ]);
@@ -145,12 +152,14 @@ fn convert_to_zh_cn_with_fallback_reports_the_choice() {
         String::from_utf8_lossy(&output.stderr)
     );
     let stdout = String::from_utf8(output.stdout).unwrap();
-    assert!(stdout.contains("Disable Inspector Recording;"), "{stdout}");
+    assert!(stdout.contains("Ongoing - Global"), "{stdout}");
+    assert!(stdout.contains("Disable Inspector Recording"), "{stdout}");
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("fallback-locale spelling") && stderr.contains("global"),
+        stderr.contains("fallback-locale spelling") && stderr.contains("disableInspector"),
         "the fallback choice is visible in tooling output: {stderr}"
     );
+    let _ = std::fs::remove_dir_all(&dir);
 }
 
 #[test]

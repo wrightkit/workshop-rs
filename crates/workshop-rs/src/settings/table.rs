@@ -8,6 +8,35 @@
 //! (LICENSE-BOUNDARY policy). Additions to the table (e.g. the acquired
 //! candidate snapshots) are data-only.
 
+use serde_json::Value;
+use std::sync::OnceLock;
+
+/// Locale-specific settings names generated from the reviewed Workshop data
+/// export. English remains the table's canonical spelling; additional locale
+/// spellings are data, not semantic branches.
+const LOCALE_DATA: &str = include_str!("data/zh-cn.json");
+
+fn locale_data() -> &'static Value {
+    static DATA: OnceLock<Value> = OnceLock::new();
+    DATA.get_or_init(|| {
+        serde_json::from_str(LOCALE_DATA).expect("generated settings locale data is valid JSON")
+    })
+}
+
+/// Resolve a settings display name from the generated locale corpus.
+///
+/// The English table names are intentionally not duplicated in the locale
+/// data. A missing entry means the target locale is not covered and callers
+/// must preserve the explicit missing-mapping contract.
+pub fn localized_name(locale: &str, section: &str, english: &str) -> Option<&'static str> {
+    let data = locale_data();
+    let data_locale = data.get("locale")?.as_str()?;
+    if !data_locale.eq_ignore_ascii_case(locale) {
+        return None;
+    }
+    data.get(section)?.get(english)?.get(data_locale)?.as_str()
+}
+
 /// A leaf key kind: how a settings leaf renders and validates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KeyKind {

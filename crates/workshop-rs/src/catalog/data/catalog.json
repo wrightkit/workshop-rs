@@ -2,14 +2,16 @@
   "actions": [
     {
       "aliases": {
-        "en-US": "Disable Inspector Recording"
+        "en-US": "Disable Inspector Recording",
+        "zh-CN": "禁用查看器录制"
       },
       "id": "disableInspector",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Wait"
+        "en-US": "Wait",
+        "zh-CN": "等待"
       },
       "id": "wait",
       "paramDefaults": [
@@ -27,7 +29,8 @@
     },
     {
       "aliases": {
-        "en-US": "Create Beam Effect"
+        "en-US": "Create Beam Effect",
+        "zh-CN": "创建光束效果"
       },
       "id": "createBeamEffect",
       "paramDomains": [
@@ -49,7 +52,8 @@
     },
     {
       "aliases": {
-        "en-US": "Create HUD Text"
+        "en-US": "Create HUD Text",
+        "zh-CN": "创建HUD文本"
       },
       "id": "createHudText",
       "paramDefaults": [
@@ -94,7 +98,8 @@
     },
     {
       "aliases": {
-        "en-US": "Play Effect"
+        "en-US": "Play Effect",
+        "zh-CN": "播放效果"
       },
       "id": "playEffect",
       "paramDomains": [
@@ -114,7 +119,8 @@
     },
     {
       "aliases": {
-        "en-US": "Set Aim Speed"
+        "en-US": "Set Aim Speed",
+        "zh-CN": "设置瞄准速度"
       },
       "id": "setAimSpeed",
       "params": [
@@ -124,7 +130,8 @@
     },
     {
       "aliases": {
-        "en-US": "Set Damage Dealt"
+        "en-US": "Set Damage Dealt",
+        "zh-CN": "设置造成伤害"
       },
       "id": "setDamageDealt",
       "params": [
@@ -134,7 +141,8 @@
     },
     {
       "aliases": {
-        "en-US": "Set Damage Received"
+        "en-US": "Set Damage Received",
+        "zh-CN": "设置受到伤害"
       },
       "id": "setDamageReceived",
       "params": [
@@ -144,7 +152,8 @@
     },
     {
       "aliases": {
-        "en-US": "Set Gravity"
+        "en-US": "Set Gravity",
+        "zh-CN": "设置引力"
       },
       "id": "setGravity",
       "params": [
@@ -154,7 +163,8 @@
     },
     {
       "aliases": {
-        "en-US": "Set Player Health"
+        "en-US": "Set Player Health",
+        "zh-CN": "设置玩家生命值"
       },
       "id": "setHealth",
       "params": [
@@ -164,7 +174,8 @@
     },
     {
       "aliases": {
-        "en-US": "Set Max Health"
+        "en-US": "Set Max Health",
+        "zh-CN": "设置最大生命值"
       },
       "id": "setMaxHealth",
       "params": [
@@ -174,7 +185,8 @@
     },
     {
       "aliases": {
-        "en-US": "Set Move Speed"
+        "en-US": "Set Move Speed",
+        "zh-CN": "设置移动速度"
       },
       "id": "setMoveSpeed",
       "params": [
@@ -184,7 +196,8 @@
     },
     {
       "aliases": {
-        "en-US": "Set Ultimate Charge"
+        "en-US": "Set Ultimate Charge",
+        "zh-CN": "设置终极技能充能"
       },
       "id": "setUltCharge",
       "params": [
@@ -194,7 +207,8 @@
     },
     {
       "aliases": {
-        "en-US": "Teleport"
+        "en-US": "Teleport",
+        "zh-CN": "传送"
       },
       "id": "teleport",
       "params": [
@@ -204,7 +218,8 @@
     },
     {
       "aliases": {
-        "en-US": "Chase Global Variable At Rate"
+        "en-US": "Chase Global Variable At Rate",
+        "zh-CN": "追踪全局变量频率"
       },
       "id": "chaseAtRate",
       "paramDomains": [
@@ -222,7 +237,8 @@
     },
     {
       "aliases": {
-        "en-US": "Chase Global Variable Over Time"
+        "en-US": "Chase Global Variable Over Time",
+        "zh-CN": "持续追踪全局变量"
       },
       "id": "chaseOverTime",
       "paramDomains": [
@@ -240,7 +256,8 @@
     },
     {
       "aliases": {
-        "en-US": "Chase Player Variable At Rate"
+        "en-US": "Chase Player Variable At Rate",
+        "zh-CN": "追踪玩家变量频率"
       },
       "id": "chasePlayerVariableAtRate",
       "paramDomains": [
@@ -260,7 +277,8 @@
     },
     {
       "aliases": {
-        "en-US": "Chase Player Variable Over Time"
+        "en-US": "Chase Player Variable Over Time",
+        "zh-CN": "持续追踪玩家变量"
       },
       "id": "chasePlayerVariableOverTime",
       "paramDomains": [
@@ -280,7 +298,8 @@
     },
     {
       "aliases": {
-        "en-US": "Set Invisible"
+        "en-US": "Set Invisible",
+        "zh-CN": "设置不可见"
       },
       "id": "setInvisibility",
       "paramDefaults": [
@@ -298,7 +317,8 @@
     },
     {
       "aliases": {
-        "en-US": "Set Status"
+        "en-US": "Set Status",
+        "zh-CN": "设置状态"
       },
       "id": "setStatusEffect",
       "params": [
@@ -310,7 +330,8 @@
     },
     {
       "aliases": {
-        "en-US": "Big Message"
+        "en-US": "Big Message",
+        "zh-CN": "大字体信息"
       },
       "id": "bigMessage",
       "paramDefaults": [
@@ -324,7 +345,8 @@
     },
     {
       "aliases": {
-        "en-US": "Small Message"
+        "en-US": "Small Message",
+        "zh-CN": "小字体信息"
       },
       "id": "smallMessage",
       "paramDefaults": [
@@ -338,7 +360,8 @@
     },
     {
       "aliases": {
-        "en-US": "Wait Until"
+        "en-US": "Wait Until",
+        "zh-CN": "等待直到 "
       },
       "id": "waitUntil",
       "params": [
@@ -348,7 +371,8 @@
     },
     {
       "aliases": {
-        "en-US": "Skip"
+        "en-US": "Skip",
+        "zh-CN": "跳过"
       },
       "id": "skip",
       "params": [
@@ -357,14 +381,16 @@
     },
     {
       "aliases": {
-        "en-US": "Loop If Condition Is True"
+        "en-US": "Loop If Condition Is True",
+        "zh-CN": "如条件为“真”则循环"
       },
       "id": "loopIfConditionIsTrue",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Abort If"
+        "en-US": "Abort If",
+        "zh-CN": "根据条件中止"
       },
       "id": "abortIf",
       "params": [
@@ -373,7 +399,8 @@
     },
     {
       "aliases": {
-        "en-US": "Modify Global Variable"
+        "en-US": "Modify Global Variable",
+        "zh-CN": "修改全局变量"
       },
       "id": "modifyGlobalVariable",
       "paramDomains": [
@@ -389,7 +416,8 @@
     },
     {
       "aliases": {
-        "en-US": "Create Effect"
+        "en-US": "Create Effect",
+        "zh-CN": "创建效果"
       },
       "id": "createEffect",
       "paramDomains": [
@@ -411,7 +439,8 @@
     },
     {
       "aliases": {
-        "en-US": "Create In-World Text"
+        "en-US": "Create In-World Text",
+        "zh-CN": "创建地图文本"
       },
       "id": "createInWorldText",
       "paramDefaults": [
@@ -447,7 +476,8 @@
     },
     {
       "aliases": {
-        "en-US": "Create Progress Bar In-World Text"
+        "en-US": "Create Progress Bar In-World Text",
+        "zh-CN": "创建进度条地图文本"
       },
       "id": "createProgressBarInWorldText",
       "paramDomains": [
@@ -477,7 +507,8 @@
     },
     {
       "aliases": {
-        "en-US": "Start Camera"
+        "en-US": "Start Camera",
+        "zh-CN": "开始镜头"
       },
       "id": "startCamera",
       "paramDefaults": [
@@ -495,7 +526,8 @@
     },
     {
       "aliases": {
-        "en-US": "Stop Camera"
+        "en-US": "Stop Camera",
+        "zh-CN": "停止镜头"
       },
       "id": "stopCamera",
       "params": [
@@ -504,14 +536,16 @@
     },
     {
       "aliases": {
-        "en-US": "Start Game Mode"
+        "en-US": "Start Game Mode",
+        "zh-CN": "开始游戏模式"
       },
       "id": "startGameMode",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Set Allowed Heroes"
+        "en-US": "Set Allowed Heroes",
+        "zh-CN": "设置玩家可选的英雄"
       },
       "id": "setAllowedHeroes",
       "params": [
@@ -521,7 +555,8 @@
     },
     {
       "aliases": {
-        "en-US": "Force Player Hero"
+        "en-US": "Force Player Hero",
+        "zh-CN": "开始强制玩家选择英雄"
       },
       "id": "forcePlayerHero",
       "paramDomains": [
@@ -535,7 +570,8 @@
     },
     {
       "aliases": {
-        "en-US": "Stop Forcing Hero"
+        "en-US": "Stop Forcing Hero",
+        "zh-CN": "停止强制玩家选择英雄"
       },
       "id": "stopForcingHero",
       "params": [
@@ -544,7 +580,8 @@
     },
     {
       "aliases": {
-        "en-US": "Force Throttle"
+        "en-US": "Force Throttle",
+        "zh-CN": "开始限制阈值"
       },
       "id": "forceThrottle",
       "params": [
@@ -559,7 +596,8 @@
     },
     {
       "aliases": {
-        "en-US": "Stop Forcing Throttle"
+        "en-US": "Stop Forcing Throttle",
+        "zh-CN": "停止限制阈值"
       },
       "id": "stopForcingThrottle",
       "params": [
@@ -568,7 +606,8 @@
     },
     {
       "aliases": {
-        "en-US": "Disable Game Mode HUD"
+        "en-US": "Disable Game Mode HUD",
+        "zh-CN": "隐藏游戏模式HUD"
       },
       "id": "disableGameModeHud",
       "params": [
@@ -577,7 +616,8 @@
     },
     {
       "aliases": {
-        "en-US": "Disable Game Mode In-World UI"
+        "en-US": "Disable Game Mode In-World UI",
+        "zh-CN": "隐藏游戏模式地图UI"
       },
       "id": "disableGameModeInworldUI",
       "params": [
@@ -586,7 +626,8 @@
     },
     {
       "aliases": {
-        "en-US": "Disable Hero HUD"
+        "en-US": "Disable Hero HUD",
+        "zh-CN": "隐藏英雄HUD"
       },
       "id": "disableHeroHud",
       "params": [
@@ -595,7 +636,8 @@
     },
     {
       "aliases": {
-        "en-US": "Disable Scoreboard"
+        "en-US": "Disable Scoreboard",
+        "zh-CN": "隐藏计分板"
       },
       "id": "disableScoreboard",
       "params": [
@@ -604,7 +646,8 @@
     },
     {
       "aliases": {
-        "en-US": "Enable Game Mode HUD"
+        "en-US": "Enable Game Mode HUD",
+        "zh-CN": "显示游戏模式HUD"
       },
       "id": "enableGameModeHud",
       "params": [
@@ -613,7 +656,8 @@
     },
     {
       "aliases": {
-        "en-US": "Enable Game Mode In-World UI"
+        "en-US": "Enable Game Mode In-World UI",
+        "zh-CN": "显示游戏模式地图UI"
       },
       "id": "enableGameModeInworldUI",
       "params": [
@@ -622,7 +666,8 @@
     },
     {
       "aliases": {
-        "en-US": "Enable Hero HUD"
+        "en-US": "Enable Hero HUD",
+        "zh-CN": "显示英雄HUD"
       },
       "id": "enableHeroHud",
       "params": [
@@ -631,7 +676,8 @@
     },
     {
       "aliases": {
-        "en-US": "Enable Scoreboard"
+        "en-US": "Enable Scoreboard",
+        "zh-CN": "显示计分板"
       },
       "id": "enableScoreboard",
       "params": [
@@ -640,14 +686,16 @@
     },
     {
       "aliases": {
-        "en-US": "Enable Inspector Recording"
+        "en-US": "Enable Inspector Recording",
+        "zh-CN": "启用查看器录制"
       },
       "id": "enableInspectorRecording",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Disable Movement Collision With Environment"
+        "en-US": "Disable Movement Collision With Environment",
+        "zh-CN": "取消与环境的移动碰撞"
       },
       "id": "disableMovementCollisionWithEnvironment",
       "params": [
@@ -657,7 +705,8 @@
     },
     {
       "aliases": {
-        "en-US": "Disable Movement Collision With Players"
+        "en-US": "Disable Movement Collision With Players",
+        "zh-CN": "取消与玩家的移动碰撞"
       },
       "id": "disableMovementCollisionWithPlayers",
       "params": [
@@ -666,7 +715,8 @@
     },
     {
       "aliases": {
-        "en-US": "Enable Movement Collision With Environment"
+        "en-US": "Enable Movement Collision With Environment",
+        "zh-CN": "开启与环境的移动碰撞"
       },
       "id": "enableMovementCollisionWithEnvironment",
       "params": [
@@ -675,7 +725,8 @@
     },
     {
       "aliases": {
-        "en-US": "Enable Movement Collision With Players"
+        "en-US": "Enable Movement Collision With Players",
+        "zh-CN": "开启与玩家的移动碰撞"
       },
       "id": "enableMovementCollisionWithPlayers",
       "params": [
@@ -684,7 +735,8 @@
     },
     {
       "aliases": {
-        "en-US": "Disallow Button"
+        "en-US": "Disallow Button",
+        "zh-CN": "禁用按钮"
       },
       "id": "disallowButton",
       "paramDomains": [
@@ -698,7 +750,8 @@
     },
     {
       "aliases": {
-        "en-US": "Allow Button"
+        "en-US": "Allow Button",
+        "zh-CN": "可用按钮"
       },
       "id": "allowButton",
       "paramDomains": [
@@ -712,7 +765,8 @@
     },
     {
       "aliases": {
-        "en-US": "Destroy HUD Text"
+        "en-US": "Destroy HUD Text",
+        "zh-CN": "消除HUD文本"
       },
       "id": "destroyHudText",
       "params": [
@@ -721,7 +775,8 @@
     },
     {
       "aliases": {
-        "en-US": "Destroy In-World Text"
+        "en-US": "Destroy In-World Text",
+        "zh-CN": "消除地图文本"
       },
       "id": "destroyInWorldText",
       "params": [
@@ -730,7 +785,8 @@
     },
     {
       "aliases": {
-        "en-US": "Destroy Effect"
+        "en-US": "Destroy Effect",
+        "zh-CN": "消除效果"
       },
       "id": "destroyEffect",
       "params": [
@@ -739,28 +795,24 @@
     },
     {
       "aliases": {
-        "en-US": "Destroy All Progress Bar HUD Text"
+        "en-US": "Destroy All Progress Bar HUD Text",
+        "zh-CN": "消除所有进度条HUD文本"
       },
       "id": "destroyAllProgressBarHudText",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Destroy All Progress Bar In-World Text"
+        "en-US": "Destroy All Progress Bar In-World Text",
+        "zh-CN": "消除所有进度条地图文本"
       },
       "id": "destroyAllProgressBarInWorldText",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Delete All Classes"
-      },
-      "id": "deleteAllClasses",
-      "params": []
-    },
-    {
-      "aliases": {
-        "en-US": "Stop Chasing Variable"
+        "en-US": "Stop Chasing Variable",
+        "zh-CN": "停止追踪全局变量"
       },
       "id": "stopChasingVariable",
       "params": [
@@ -769,128 +821,134 @@
     },
     {
       "aliases": {
-        "en-US": "Chase Variable At Rate"
-      },
-      "id": "chaseVariableAtRate",
-      "params": [
-        "Variable",
-        "Destination",
-        "Rate",
-        "Reevaluation"
-      ]
-    },
-    {
-      "aliases": {
-        "en-US": "Abort"
+        "en-US": "Abort",
+        "zh-CN": "中止"
       },
       "id": "abort",
       "params": []
     }
   ],
-  "digest": "75d8bb9c50e3ad0606656d58897b49e37934e04781fb2a510eefcd555dc2e29f",
+  "digest": "1f84204bfd6bfd0dcaabc275185d907764e03fae0fbde54f28e162aed9935961",
   "enums": [
     {
       "domain": "Color",
       "members": [
         {
           "aliases": {
-            "en-US": "Yellow"
+            "en-US": "Yellow",
+            "zh-CN": "黄色"
           },
           "id": "YELLOW"
         },
         {
           "aliases": {
-            "en-US": "White"
+            "en-US": "White",
+            "zh-CN": "白色"
           },
           "id": "WHITE"
         },
         {
           "aliases": {
-            "en-US": "Red"
+            "en-US": "Red",
+            "zh-CN": "红色"
           },
           "id": "RED"
         },
         {
           "aliases": {
-            "en-US": "Orange"
+            "en-US": "Orange",
+            "zh-CN": "橙色"
           },
           "id": "ORANGE"
         },
         {
           "aliases": {
-            "en-US": "Green"
+            "en-US": "Green",
+            "zh-CN": "绿色"
           },
           "id": "GREEN"
         },
         {
           "aliases": {
-            "en-US": "Purple"
+            "en-US": "Purple",
+            "zh-CN": "亮紫色"
           },
           "id": "PURPLE"
         },
         {
           "aliases": {
-            "en-US": "Blue"
+            "en-US": "Blue",
+            "zh-CN": "蓝色"
           },
           "id": "BLUE"
         },
         {
           "aliases": {
-            "en-US": "Aqua"
+            "en-US": "Aqua",
+            "zh-CN": "水绿色"
           },
           "id": "AQUA"
         },
         {
           "aliases": {
-            "en-US": "Sky Blue"
+            "en-US": "Sky Blue",
+            "zh-CN": "天蓝色"
           },
           "id": "SKY_BLUE"
         },
         {
           "aliases": {
-            "en-US": "Turquoise"
+            "en-US": "Turquoise",
+            "zh-CN": "青绿色"
           },
           "id": "TURQUOISE"
         },
         {
           "aliases": {
-            "en-US": "Lime Green"
+            "en-US": "Lime Green",
+            "zh-CN": "灰绿色"
           },
           "id": "LIME_GREEN"
         },
         {
           "aliases": {
-            "en-US": "Gray"
+            "en-US": "Gray",
+            "zh-CN": "灰色"
           },
           "id": "GRAY"
         },
         {
           "aliases": {
-            "en-US": "Violet"
+            "en-US": "Violet",
+            "zh-CN": "紫色"
           },
           "id": "VIOLET"
         },
         {
           "aliases": {
-            "en-US": "Rose"
+            "en-US": "Rose",
+            "zh-CN": "玫红"
           },
           "id": "ROSE"
         },
         {
           "aliases": {
-            "en-US": "Black"
+            "en-US": "Black",
+            "zh-CN": "黑色"
           },
           "id": "BLACK"
         },
         {
           "aliases": {
-            "en-US": "Team 1"
+            "en-US": "Team 1",
+            "zh-CN": "队伍1"
           },
           "id": "TEAM_1"
         },
         {
           "aliases": {
-            "en-US": "Team 2"
+            "en-US": "Team 2",
+            "zh-CN": "队伍2"
           },
           "id": "TEAM_2"
         }
@@ -901,13 +959,15 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Grapple Beam"
+            "en-US": "Grapple Beam",
+            "zh-CN": "抓钩光束"
           },
           "id": "GRAPPLE"
         },
         {
           "aliases": {
-            "en-US": "Good Beam"
+            "en-US": "Good Beam",
+            "zh-CN": "有益光束"
           },
           "id": "GOOD"
         }
@@ -918,37 +978,43 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Bad Explosion"
+            "en-US": "Bad Explosion",
+            "zh-CN": "有害爆炸"
           },
           "id": "BAD_EXPLOSION"
         },
         {
           "aliases": {
-            "en-US": "Buff Impact Sound"
+            "en-US": "Buff Impact Sound",
+            "zh-CN": "正面状态施加声音"
           },
           "id": "BUFF_IMPACT_SOUND"
         },
         {
           "aliases": {
-            "en-US": "Debuff Impact Sound"
+            "en-US": "Debuff Impact Sound",
+            "zh-CN": "负面状态施加声音"
           },
           "id": "DEBUFF_IMPACT_SOUND"
         },
         {
           "aliases": {
-            "en-US": "Buff Explosion Sound"
+            "en-US": "Buff Explosion Sound",
+            "zh-CN": "状态爆炸声音"
           },
           "id": "BUFF_EXPLOSION_SOUND"
         },
         {
           "aliases": {
-            "en-US": "Explosion Sound"
+            "en-US": "Explosion Sound",
+            "zh-CN": "爆炸声音"
           },
           "id": "EXPLOSION_SOUND"
         },
         {
           "aliases": {
-            "en-US": "Ring Explosion Sound"
+            "en-US": "Ring Explosion Sound",
+            "zh-CN": "环状爆炸声音"
           },
           "id": "RING_EXPLOSION"
         }
@@ -959,13 +1025,15 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Ignore Condition"
+            "en-US": "Ignore Condition",
+            "zh-CN": "无视条件"
           },
           "id": "IGNORE_CONDITION"
         },
         {
           "aliases": {
-            "en-US": "Abort When False"
+            "en-US": "Abort When False",
+            "zh-CN": "当为“假”时中止"
           },
           "id": "ABORT_WHEN_FALSE"
         }
@@ -976,7 +1044,8 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Up"
+            "en-US": "Up",
+            "zh-CN": "上"
           },
           "id": "UP"
         }
@@ -987,13 +1056,15 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Left"
+            "en-US": "Left",
+            "zh-CN": "左边"
           },
           "id": "LEFT"
         },
         {
           "aliases": {
-            "en-US": "Right"
+            "en-US": "Right",
+            "zh-CN": "右边"
           },
           "id": "RIGHT"
         }
@@ -1004,31 +1075,36 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Visible To Sort Order String and Color"
+            "en-US": "Visible To Sort Order String and Color",
+            "zh-CN": "可见，排序规则，字符串和颜色"
           },
           "id": "VISIBILITY_SORT_ORDER_STRING_AND_COLOR"
         },
         {
           "aliases": {
-            "en-US": "Visible To and String"
+            "en-US": "Visible To and String",
+            "zh-CN": "可见和字符串"
           },
           "id": "VISIBILITY_AND_STRING"
         },
         {
           "aliases": {
-            "en-US": "Visible To"
+            "en-US": "Visible To",
+            "zh-CN": "可见"
           },
           "id": "VISIBILITY"
         },
         {
           "aliases": {
-            "en-US": "Visible To String and Color"
+            "en-US": "Visible To String and Color",
+            "zh-CN": "可见，字符串和颜色"
           },
           "id": "VISIBLE_TO_STRING_AND_COLOR"
         },
         {
           "aliases": {
-            "en-US": "Visible To and Color"
+            "en-US": "Visible To and Color",
+            "zh-CN": "可见和颜色"
           },
           "id": "VISIBLE_TO_AND_COLOR"
         }
@@ -1039,13 +1115,15 @@
       "members": [
         {
           "aliases": {
-            "en-US": "None"
+            "en-US": "None",
+            "zh-CN": "全部禁用"
           },
           "id": "NONE"
         },
         {
           "aliases": {
-            "en-US": "Destination and Duration"
+            "en-US": "Destination and Duration",
+            "zh-CN": "终点及持续时间"
           },
           "id": "DESTINATION_AND_DURATION"
         }
@@ -1056,13 +1134,15 @@
       "members": [
         {
           "aliases": {
-            "en-US": "None"
+            "en-US": "None",
+            "zh-CN": "全部禁用"
           },
           "id": "NONE"
         },
         {
           "aliases": {
-            "en-US": "Destination and Rate"
+            "en-US": "Destination and Rate",
+            "zh-CN": "速率及最终值"
           },
           "id": "DESTINATION_AND_RATE"
         }
@@ -1073,19 +1153,22 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Default Visibility"
+            "en-US": "Default Visibility",
+            "zh-CN": "默认可见度"
           },
           "id": "DEFAULT"
         },
         {
           "aliases": {
-            "en-US": "Visible Always"
+            "en-US": "Visible Always",
+            "zh-CN": "始终可见"
           },
           "id": "VISIBLE_ALWAYS"
         },
         {
           "aliases": {
-            "en-US": "Visible Never"
+            "en-US": "Visible Never",
+            "zh-CN": "始终不可见"
           },
           "id": "VISIBLE_NEVER"
         }
@@ -1096,19 +1179,22 @@
       "members": [
         {
           "aliases": {
-            "en-US": "All Teams"
+            "en-US": "All Teams",
+            "zh-CN": "所有队伍"
           },
           "id": "ALL"
         },
         {
           "aliases": {
-            "en-US": "Team 1"
+            "en-US": "Team 1",
+            "zh-CN": "队伍1"
           },
           "id": "TEAM_1"
         },
         {
           "aliases": {
-            "en-US": "Team 2"
+            "en-US": "Team 2",
+            "zh-CN": "队伍2"
           },
           "id": "TEAM_2"
         }
@@ -1119,19 +1205,22 @@
       "members": [
         {
           "aliases": {
-            "en-US": "All"
+            "en-US": "All",
+            "zh-CN": "全部"
           },
           "id": "ALL"
         },
         {
           "aliases": {
-            "en-US": "Enemies"
+            "en-US": "Enemies",
+            "zh-CN": "敌人"
           },
           "id": "ENEMIES"
         },
         {
           "aliases": {
-            "en-US": "None"
+            "en-US": "None",
+            "zh-CN": "全部禁用"
           },
           "id": "NONE"
         }
@@ -1142,25 +1231,29 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Off"
+            "en-US": "Off",
+            "zh-CN": "关闭"
           },
           "id": "OFF"
         },
         {
           "aliases": {
-            "en-US": "Surfaces"
+            "en-US": "Surfaces",
+            "zh-CN": "表面"
           },
           "id": "SURFACES"
         },
         {
           "aliases": {
-            "en-US": "Surfaces And All Barriers"
+            "en-US": "Surfaces And All Barriers",
+            "zh-CN": "表面及全部屏障"
           },
           "id": "SURFACES_AND_ALL_BARRIERS"
         },
         {
           "aliases": {
-            "en-US": "Surfaces And Enemy Barriers"
+            "en-US": "Surfaces And Enemy Barriers",
+            "zh-CN": "表面及敌方屏障"
           },
           "id": "SURFACES_AND_ENEMY_BARRIERS"
         }
@@ -1171,61 +1264,71 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Asleep"
+            "en-US": "Asleep",
+            "zh-CN": "沉睡"
           },
           "id": "ASLEEP"
         },
         {
           "aliases": {
-            "en-US": "Burning"
+            "en-US": "Burning",
+            "zh-CN": "燃烧"
           },
           "id": "BURNING"
         },
         {
           "aliases": {
-            "en-US": "Frozen"
+            "en-US": "Frozen",
+            "zh-CN": "冰冻"
           },
           "id": "FROZEN"
         },
         {
           "aliases": {
-            "en-US": "Hacked"
+            "en-US": "Hacked",
+            "zh-CN": "被入侵"
           },
           "id": "HACKED"
         },
         {
           "aliases": {
-            "en-US": "Invincible"
+            "en-US": "Invincible",
+            "zh-CN": "无敌"
           },
           "id": "INVINCIBLE"
         },
         {
           "aliases": {
-            "en-US": "Knocked Down"
+            "en-US": "Knocked Down",
+            "zh-CN": "击倒"
           },
           "id": "KNOCKED_DOWN"
         },
         {
           "aliases": {
-            "en-US": "Phased Out"
+            "en-US": "Phased Out",
+            "zh-CN": "相移"
           },
           "id": "PHASED_OUT"
         },
         {
           "aliases": {
-            "en-US": "Rooted"
+            "en-US": "Rooted",
+            "zh-CN": "定身"
           },
           "id": "ROOTED"
         },
         {
           "aliases": {
-            "en-US": "Stunned"
+            "en-US": "Stunned",
+            "zh-CN": "击晕"
           },
           "id": "STUNNED"
         },
         {
           "aliases": {
-            "en-US": "Unkillable"
+            "en-US": "Unkillable",
+            "zh-CN": "无法杀死"
           },
           "id": "UNKILLABLE"
         }
@@ -1236,13 +1339,15 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Rotation"
+            "en-US": "Rotation",
+            "zh-CN": "旋转"
           },
           "id": "ROTATION"
         },
         {
           "aliases": {
-            "en-US": "Rotation And Translation"
+            "en-US": "Rotation And Translation",
+            "zh-CN": "旋转并转换"
           },
           "id": "ROTATION_AND_TRANSLATION"
         }
@@ -1253,61 +1358,71 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Primary Fire"
+            "en-US": "Primary Fire",
+            "zh-CN": "主要攻击模式"
           },
           "id": "PRIMARY_FIRE"
         },
         {
           "aliases": {
-            "en-US": "Secondary Fire"
+            "en-US": "Secondary Fire",
+            "zh-CN": "辅助攻击模式"
           },
           "id": "SECONDARY_FIRE"
         },
         {
           "aliases": {
-            "en-US": "Ability 1"
+            "en-US": "Ability 1",
+            "zh-CN": "技能1"
           },
           "id": "ABILITY_1"
         },
         {
           "aliases": {
-            "en-US": "Ability 2"
+            "en-US": "Ability 2",
+            "zh-CN": "技能2"
           },
           "id": "ABILITY_2"
         },
         {
           "aliases": {
-            "en-US": "Ultimate"
+            "en-US": "Ultimate",
+            "zh-CN": "终极技能"
           },
           "id": "ULTIMATE"
         },
         {
           "aliases": {
-            "en-US": "Crouch"
+            "en-US": "Crouch",
+            "zh-CN": "蹲下"
           },
           "id": "CROUCH"
         },
         {
           "aliases": {
-            "en-US": "Interact"
+            "en-US": "Interact",
+            "zh-CN": "互动"
           },
           "id": "INTERACT"
         },
         {
           "aliases": {
-            "en-US": "Jump"
+            "en-US": "Jump",
+            "zh-CN": "跳跃"
           },
           "id": "JUMP"
         },
         {
           "aliases": {
-            "en-US": "Melee"
+            "en-US": "Melee",
+            "zh-CN": "近身攻击"
           },
           "id": "MELEE"
         },
         {
           "aliases": {
-            "en-US": "Reload"
+            "en-US": "Reload",
+            "zh-CN": "装填"
           },
           "id": "RELOAD"
         }
@@ -1318,13 +1433,15 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Do Not Clip"
+            "en-US": "Do Not Clip",
+            "zh-CN": "不要截取"
           },
           "id": "DO_NOT_CLIP"
         },
         {
           "aliases": {
-            "en-US": "Clip Against Surfaces"
+            "en-US": "Clip Against Surfaces",
+            "zh-CN": "根据表面截取"
           },
           "id": "CLIP_AGAINST_SURFACES"
         }
@@ -1335,7 +1452,8 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Orb"
+            "en-US": "Orb",
+            "zh-CN": "球"
           },
           "id": "ORB"
         }
@@ -1346,25 +1464,29 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Visible To Position and Radius"
+            "en-US": "Visible To Position and Radius",
+            "zh-CN": "可见，位置和半径"
           },
           "id": "VISIBLE_TO_POSITION_AND_RADIUS"
         },
         {
           "aliases": {
-            "en-US": "Visible To"
+            "en-US": "Visible To",
+            "zh-CN": "可见"
           },
           "id": "VISIBILITY"
         },
         {
           "aliases": {
-            "en-US": "Color"
+            "en-US": "Color",
+            "zh-CN": "颜色"
           },
           "id": "COLOR"
         },
         {
           "aliases": {
-            "en-US": "Visible To and Color"
+            "en-US": "Visible To and Color",
+            "zh-CN": "可见和颜色"
           },
           "id": "VISIBILITY_AND_COLOR"
         }
@@ -1375,193 +1497,225 @@
       "members": [
         {
           "aliases": {
-            "en-US": "D.Va"
+            "en-US": "D.Va",
+            "zh-CN": "D.Va"
           },
           "id": "DVA"
         },
         {
           "aliases": {
-            "en-US": "Orisa"
+            "en-US": "Orisa",
+            "zh-CN": "奥丽莎"
           },
           "id": "ORISA"
         },
         {
           "aliases": {
-            "en-US": "Reinhardt"
+            "en-US": "Reinhardt",
+            "zh-CN": "莱因哈特"
           },
           "id": "REINHARDT"
         },
         {
           "aliases": {
-            "en-US": "Roadhog"
+            "en-US": "Roadhog",
+            "zh-CN": "路霸"
           },
           "id": "ROADHOG"
         },
         {
           "aliases": {
-            "en-US": "Sigma"
+            "en-US": "Sigma",
+            "zh-CN": "西格玛"
           },
           "id": "SIGMA"
         },
         {
           "aliases": {
-            "en-US": "Wrecking Ball"
+            "en-US": "Wrecking Ball",
+            "zh-CN": "破坏球"
           },
           "id": "WRECKING_BALL"
         },
         {
           "aliases": {
-            "en-US": "Winston"
+            "en-US": "Winston",
+            "zh-CN": "温斯顿"
           },
           "id": "WINSTON"
         },
         {
           "aliases": {
-            "en-US": "Zarya"
+            "en-US": "Zarya",
+            "zh-CN": "查莉娅"
           },
           "id": "ZARYA"
         },
         {
           "aliases": {
-            "en-US": "Ashe"
+            "en-US": "Ashe",
+            "zh-CN": "艾什"
           },
           "id": "ASHE"
         },
         {
           "aliases": {
-            "en-US": "Bastion"
+            "en-US": "Bastion",
+            "zh-CN": "堡垒"
           },
           "id": "BASTION"
         },
         {
           "aliases": {
-            "en-US": "Cassidy"
+            "en-US": "Cassidy",
+            "zh-CN": "卡西迪"
           },
           "id": "CASSIDY"
         },
         {
           "aliases": {
-            "en-US": "Doomfist"
+            "en-US": "Doomfist",
+            "zh-CN": "末日铁拳"
           },
           "id": "DOOMFIST"
         },
         {
           "aliases": {
-            "en-US": "Echo"
+            "en-US": "Echo",
+            "zh-CN": "回声"
           },
           "id": "ECHO"
         },
         {
           "aliases": {
-            "en-US": "Genji"
+            "en-US": "Genji",
+            "zh-CN": "源氏"
           },
           "id": "GENJI"
         },
         {
           "aliases": {
-            "en-US": "Hanzo"
+            "en-US": "Hanzo",
+            "zh-CN": "半藏"
           },
           "id": "HANZO"
         },
         {
           "aliases": {
-            "en-US": "Junkrat"
+            "en-US": "Junkrat",
+            "zh-CN": "狂鼠"
           },
           "id": "JUNKRAT"
         },
         {
           "aliases": {
-            "en-US": "Mei"
+            "en-US": "Mei",
+            "zh-CN": "美"
           },
           "id": "MEI"
         },
         {
           "aliases": {
-            "en-US": "Pharah"
+            "en-US": "Pharah",
+            "zh-CN": "法老之鹰"
           },
           "id": "PHARAH"
         },
         {
           "aliases": {
-            "en-US": "Reaper"
+            "en-US": "Reaper",
+            "zh-CN": "死神"
           },
           "id": "REAPER"
         },
         {
           "aliases": {
-            "en-US": "Soldier: 76"
+            "en-US": "Soldier: 76",
+            "zh-CN": "士兵：76"
           },
           "id": "SOLDIER_76"
         },
         {
           "aliases": {
-            "en-US": "Symmetra"
+            "en-US": "Symmetra",
+            "zh-CN": "秩序之光"
           },
           "id": "SYMMETRA"
         },
         {
           "aliases": {
-            "en-US": "Sombra"
+            "en-US": "Sombra",
+            "zh-CN": "黑影"
           },
           "id": "SOMBRA"
         },
         {
           "aliases": {
-            "en-US": "Tracer"
+            "en-US": "Tracer",
+            "zh-CN": "猎空"
           },
           "id": "TRACER"
         },
         {
           "aliases": {
-            "en-US": "Torbjörn"
+            "en-US": "Torbjörn",
+            "zh-CN": "托比昂"
           },
           "id": "TORBJORN"
         },
         {
           "aliases": {
-            "en-US": "Widowmaker"
+            "en-US": "Widowmaker",
+            "zh-CN": "黑百合"
           },
           "id": "WIDOWMAKER"
         },
         {
           "aliases": {
-            "en-US": "Ana"
+            "en-US": "Ana",
+            "zh-CN": "安娜"
           },
           "id": "ANA"
         },
         {
           "aliases": {
-            "en-US": "Brigitte"
+            "en-US": "Brigitte",
+            "zh-CN": "布丽吉塔"
           },
           "id": "BRIGITTE"
         },
         {
           "aliases": {
-            "en-US": "Baptiste"
+            "en-US": "Baptiste",
+            "zh-CN": "巴蒂斯特"
           },
           "id": "BAPTISTE"
         },
         {
           "aliases": {
-            "en-US": "Lúcio"
+            "en-US": "Lúcio",
+            "zh-CN": "卢西奥"
           },
           "id": "LUCIO"
         },
         {
           "aliases": {
-            "en-US": "Moira"
+            "en-US": "Moira",
+            "zh-CN": "莫伊拉"
           },
           "id": "MOIRA"
         },
         {
           "aliases": {
-            "en-US": "Mercy"
+            "en-US": "Mercy",
+            "zh-CN": "天使"
           },
           "id": "MERCY"
         },
         {
           "aliases": {
-            "en-US": "Zenyatta"
+            "en-US": "Zenyatta",
+            "zh-CN": "禅雅塔"
           },
           "id": "ZENYATTA"
         }
@@ -1572,31 +1726,36 @@
       "members": [
         {
           "aliases": {
-            "en-US": "No"
+            "en-US": "No",
+            "zh-CN": "拒绝"
           },
           "id": "NO"
         },
         {
           "aliases": {
-            "en-US": "Question Mark"
+            "en-US": "Question Mark",
+            "zh-CN": "问号"
           },
           "id": "QUESTION_MARK"
         },
         {
           "aliases": {
-            "en-US": "Skull"
+            "en-US": "Skull",
+            "zh-CN": "骷髅"
           },
           "id": "SKULL"
         },
         {
           "aliases": {
-            "en-US": "Checkmark"
+            "en-US": "Checkmark",
+            "zh-CN": "对号"
           },
           "id": "CHECKMARK"
         },
         {
           "aliases": {
-            "en-US": "Ring Thin"
+            "en-US": "Ring Thin",
+            "zh-CN": "细环"
           },
           "id": "RING_THIN"
         }
@@ -1607,253 +1766,295 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Hanamura"
+            "en-US": "Hanamura",
+            "zh-CN": "花村"
           },
           "id": "HANAMURA"
         },
         {
           "aliases": {
-            "en-US": "Hanamura Winter"
+            "en-US": "Hanamura Winter",
+            "zh-CN": "圣诞节花村"
           },
           "id": "HANAMURA_WINTER"
         },
         {
           "aliases": {
-            "en-US": "Horizon Lunar Colony"
+            "en-US": "Horizon Lunar Colony",
+            "zh-CN": "“地平线”月球基地"
           },
           "id": "HORIZON_LUNAR_COLONY"
         },
         {
           "aliases": {
-            "en-US": "Paris"
+            "en-US": "Paris",
+            "zh-CN": "巴黎"
           },
           "id": "PARIS"
         },
         {
           "aliases": {
-            "en-US": "Temple of Anubis"
+            "en-US": "Temple of Anubis",
+            "zh-CN": "阿努比斯神殿"
           },
           "id": "TEMPLE_OF_ANUBIS"
         },
         {
           "aliases": {
-            "en-US": "Volskaya Industries"
+            "en-US": "Volskaya Industries",
+            "zh-CN": "沃斯卡娅工业区"
           },
           "id": "VOLSKAYA_INDUSTRIES"
         },
         {
           "aliases": {
-            "en-US": "Hanaoka"
+            "en-US": "Hanaoka",
+            "zh-CN": "花冈"
           },
           "id": "HANAOKA"
         },
         {
           "aliases": {
-            "en-US": "Throne of Anubis"
+            "en-US": "Throne of Anubis",
+            "zh-CN": "阿努比斯王座"
           },
           "id": "THRONE_OF_ANUBIS"
         },
         {
           "aliases": {
-            "en-US": "Antarctic Peninsula"
+            "en-US": "Antarctic Peninsula",
+            "zh-CN": "南极半岛"
           },
           "id": "ANTARCTIC_PENINSULA"
         },
         {
           "aliases": {
-            "en-US": "Busan"
+            "en-US": "Busan",
+            "zh-CN": "釜山"
           },
           "id": "BUSAN"
         },
         {
           "aliases": {
-            "en-US": "Ilios"
+            "en-US": "Ilios",
+            "zh-CN": "伊利奥斯"
           },
           "id": "ILIOS"
         },
         {
           "aliases": {
-            "en-US": "Lijiang Tower"
+            "en-US": "Lijiang Tower",
+            "zh-CN": "漓江塔"
           },
           "id": "LIJIANG_TOWER"
         },
         {
           "aliases": {
-            "en-US": "Lijiang Tower Lunar"
+            "en-US": "Lijiang Tower Lunar",
+            "zh-CN": "春节漓江塔"
           },
           "id": "LIJIANG_TOWER_LUNAR"
         },
         {
           "aliases": {
-            "en-US": "Nepal"
+            "en-US": "Nepal",
+            "zh-CN": "尼泊尔"
           },
           "id": "NEPAL"
         },
         {
           "aliases": {
-            "en-US": "Oasis"
+            "en-US": "Oasis",
+            "zh-CN": "绿洲城"
           },
           "id": "OASIS"
         },
         {
           "aliases": {
-            "en-US": "Samoa"
+            "en-US": "Samoa",
+            "zh-CN": "萨摩亚"
           },
           "id": "SAMOA"
         },
         {
           "aliases": {
-            "en-US": "Circuit Royal"
+            "en-US": "Circuit Royal",
+            "zh-CN": "皇家赛道"
           },
           "id": "CIRCUIT_ROYAL"
         },
         {
           "aliases": {
-            "en-US": "Dorado"
+            "en-US": "Dorado",
+            "zh-CN": "多拉多"
           },
           "id": "DORADO"
         },
         {
           "aliases": {
-            "en-US": "Havana"
+            "en-US": "Havana",
+            "zh-CN": "哈瓦那"
           },
           "id": "HAVANA"
         },
         {
           "aliases": {
-            "en-US": "Junkertown"
+            "en-US": "Junkertown",
+            "zh-CN": "渣客镇"
           },
           "id": "JUNKERTOWN"
         },
         {
           "aliases": {
-            "en-US": "Rialto"
+            "en-US": "Rialto",
+            "zh-CN": "里阿尔托"
           },
           "id": "RIALTO"
         },
         {
           "aliases": {
-            "en-US": "Route 66"
+            "en-US": "Route 66",
+            "zh-CN": "66号公路"
           },
           "id": "ROUTE_66"
         },
         {
           "aliases": {
-            "en-US": "Shambali Monastery"
+            "en-US": "Shambali Monastery",
+            "zh-CN": "香巴里寺院"
           },
           "id": "SHAMBALI_MONASTERY"
         },
         {
           "aliases": {
-            "en-US": "Watchpoint: Gibraltar"
+            "en-US": "Watchpoint: Gibraltar",
+            "zh-CN": "监测站：直布罗陀"
           },
           "id": "WATCHPOINT_GIBRALTAR"
         },
         {
           "aliases": {
-            "en-US": "Aatlis"
+            "en-US": "Aatlis",
+            "zh-CN": "阿特利斯"
           },
           "id": "AATLIS"
         },
         {
           "aliases": {
-            "en-US": "New Junk City"
+            "en-US": "New Junk City",
+            "zh-CN": "新渣客城"
           },
           "id": "NEW_JUNK_CITY"
         },
         {
           "aliases": {
-            "en-US": "Suravasa"
+            "en-US": "Suravasa",
+            "zh-CN": "苏拉瓦萨"
           },
           "id": "SURAVASA"
         },
         {
           "aliases": {
-            "en-US": "Blizzard World"
+            "en-US": "Blizzard World",
+            "zh-CN": "暴雪世界"
           },
           "id": "BLIZZARD_WORLD"
         },
         {
           "aliases": {
-            "en-US": "Blizzard World Winter"
+            "en-US": "Blizzard World Winter",
+            "zh-CN": "圣诞节暴雪世界"
           },
           "id": "BLIZZARD_WORLD_WINTER"
         },
         {
           "aliases": {
-            "en-US": "Eichenwalde"
+            "en-US": "Eichenwalde",
+            "zh-CN": "艾兴瓦尔德"
           },
           "id": "EICHENWALDE"
         },
         {
           "aliases": {
-            "en-US": "Eichenwalde Halloween"
+            "en-US": "Eichenwalde Halloween",
+            "zh-CN": "万圣节艾兴瓦尔德"
           },
           "id": "EICHENWALDE_HALLOWEEN"
         },
         {
           "aliases": {
-            "en-US": "Hollywood"
+            "en-US": "Hollywood",
+            "zh-CN": "好莱坞"
           },
           "id": "HOLLYWOOD"
         },
         {
           "aliases": {
-            "en-US": "Hollywood Halloween"
+            "en-US": "Hollywood Halloween",
+            "zh-CN": "万圣节好莱坞"
           },
           "id": "HOLLYWOOD_HALLOWEEN"
         },
         {
           "aliases": {
-            "en-US": "King's Row"
+            "en-US": "King's Row",
+            "zh-CN": "国王大道"
           },
           "id": "KINGS_ROW"
         },
         {
           "aliases": {
-            "en-US": "King's Row Winter"
+            "en-US": "King's Row Winter",
+            "zh-CN": "圣诞节国王大道"
           },
           "id": "KINGS_ROW_WINTER"
         },
         {
           "aliases": {
-            "en-US": "Midtown"
+            "en-US": "Midtown",
+            "zh-CN": "中城"
           },
           "id": "MIDTOWN"
         },
         {
           "aliases": {
-            "en-US": "Numbani"
+            "en-US": "Numbani",
+            "zh-CN": "努巴尼"
           },
           "id": "NUMBANI"
         },
         {
           "aliases": {
-            "en-US": "Paraíso"
+            "en-US": "Paraíso",
+            "zh-CN": "帕拉伊苏"
           },
           "id": "PARAISO"
         },
         {
           "aliases": {
-            "en-US": "Colosseo"
+            "en-US": "Colosseo",
+            "zh-CN": "斗兽场"
           },
           "id": "COLOSSEO"
         },
         {
           "aliases": {
-            "en-US": "Esperança"
+            "en-US": "Esperança",
+            "zh-CN": "埃斯佩兰萨"
           },
           "id": "ESPERANCA"
         },
         {
           "aliases": {
-            "en-US": "New Queen Street"
+            "en-US": "New Queen Street",
+            "zh-CN": "新皇后街"
           },
           "id": "NEW_QUEEN_STREET"
         },
         {
           "aliases": {
-            "en-US": "Runasapi"
+            "en-US": "Runasapi",
+            "zh-CN": "鲁纳塞彼"
           },
           "id": "RUNASAPI"
         }
@@ -1864,55 +2065,64 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Visible To"
+            "en-US": "Visible To",
+            "zh-CN": "可见"
           },
           "id": "VISIBLE_TO"
         },
         {
           "aliases": {
-            "en-US": "Visible To and Color"
+            "en-US": "Visible To and Color",
+            "zh-CN": "可见和颜色"
           },
           "id": "VISIBLE_TO_AND_COLOR"
         },
         {
           "aliases": {
-            "en-US": "Visible To and Position"
+            "en-US": "Visible To and Position",
+            "zh-CN": "可见和位置"
           },
           "id": "VISIBLE_TO_AND_POSITION"
         },
         {
           "aliases": {
-            "en-US": "Visible To and String"
+            "en-US": "Visible To and String",
+            "zh-CN": "可见和字符串"
           },
           "id": "VISIBLE_TO_AND_STRING"
         },
         {
           "aliases": {
-            "en-US": "Visible To Position and Color"
+            "en-US": "Visible To Position and Color",
+            "zh-CN": "可见，位置和颜色"
           },
           "id": "VISIBLE_TO_POSITION_AND_COLOR"
         },
         {
           "aliases": {
-            "en-US": "Visible To Position and String"
+            "en-US": "Visible To Position and String",
+            "zh-CN": "可见，位置和字符串"
           },
           "id": "VISIBLE_TO_POSITION_AND_STRING"
         },
         {
           "aliases": {
-            "en-US": "Visible To Position String and Color"
+            "en-US": "Visible To Position String and Color",
+            "zh-CN": "可见，位置，字符串和颜色"
           },
           "id": "VISIBLE_TO_POSITION_STRING_AND_COLOR"
         },
         {
           "aliases": {
-            "en-US": "Visible To String and Color"
+            "en-US": "Visible To String and Color",
+            "zh-CN": "可见，字符串和颜色"
           },
           "id": "VISIBLE_TO_STRING_AND_COLOR"
         },
         {
           "aliases": {
-            "en-US": "String"
+            "en-US": "String",
+            "zh-CN": "字符串"
           },
           "id": "STRING"
         }
@@ -1923,19 +2133,22 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Append To Array"
+            "en-US": "Append To Array",
+            "zh-CN": "添加至数组"
           },
           "id": "APPEND_TO_ARRAY"
         },
         {
           "aliases": {
-            "en-US": "Remove From Array By Value"
+            "en-US": "Remove From Array By Value",
+            "zh-CN": "根据值从数组中移除"
           },
           "id": "REMOVE_FROM_ARRAY_BY_VALUE"
         },
         {
           "aliases": {
-            "en-US": "Remove From Array By Index"
+            "en-US": "Remove From Array By Index",
+            "zh-CN": "根据索引从数组中移除"
           },
           "id": "REMOVE_FROM_ARRAY_BY_INDEX"
         }
@@ -1946,7 +2159,8 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Visible To And Values"
+            "en-US": "Visible To And Values",
+            "zh-CN": "可见和值"
           },
           "id": "VISIBLE_TO_AND_VALUES"
         }
@@ -1957,19 +2171,22 @@
       "members": [
         {
           "aliases": {
-            "en-US": "Up"
+            "en-US": "Up",
+            "zh-CN": "上"
           },
           "id": "UP"
         },
         {
           "aliases": {
-            "en-US": "Down"
+            "en-US": "Down",
+            "zh-CN": "下"
           },
           "id": "DOWN"
         },
         {
           "aliases": {
-            "en-US": "Nearest"
+            "en-US": "Nearest",
+            "zh-CN": "至最近"
           },
           "id": "NEAREST"
         }
@@ -1979,19 +2196,22 @@
   "events": [
     {
       "aliases": {
-        "en-US": "Ongoing - Global"
+        "en-US": "Ongoing - Global",
+        "zh-CN": "持续 - 全局"
       },
       "id": "global"
     },
     {
       "aliases": {
-        "en-US": "Ongoing - Each Player"
+        "en-US": "Ongoing - Each Player",
+        "zh-CN": "持续 - 每名玩家"
       },
       "id": "eachPlayer"
     },
     {
       "aliases": {
-        "en-US": "Subroutine"
+        "en-US": "Subroutine",
+        "zh-CN": "子程序"
       },
       "id": "subroutine"
     }
@@ -2003,85 +2223,99 @@
   "operators": [
     {
       "aliases": {
-        "en-US": "=="
+        "en-US": "==",
+        "zh-CN": "=="
       },
       "id": "=="
     },
     {
       "aliases": {
-        "en-US": "!="
+        "en-US": "!=",
+        "zh-CN": "!="
       },
       "id": "!="
     },
     {
       "aliases": {
-        "en-US": "<"
+        "en-US": "<",
+        "zh-CN": "<"
       },
       "id": "<"
     },
     {
       "aliases": {
-        "en-US": "<="
+        "en-US": "<=",
+        "zh-CN": "<="
       },
       "id": "<="
     },
     {
       "aliases": {
-        "en-US": ">"
+        "en-US": ">",
+        "zh-CN": ">"
       },
       "id": ">"
     },
     {
       "aliases": {
-        "en-US": ">="
+        "en-US": ">=",
+        "zh-CN": ">="
       },
       "id": ">="
     },
     {
       "aliases": {
-        "en-US": "Add"
+        "en-US": "Add",
+        "zh-CN": "加"
       },
       "id": "add"
     },
     {
       "aliases": {
-        "en-US": "Subtract"
+        "en-US": "Subtract",
+        "zh-CN": "减"
       },
       "id": "subtract"
     },
     {
       "aliases": {
-        "en-US": "Multiply"
+        "en-US": "Multiply",
+        "zh-CN": "乘"
       },
       "id": "multiply"
     },
     {
       "aliases": {
-        "en-US": "Divide"
+        "en-US": "Divide",
+        "zh-CN": "除"
       },
       "id": "divide"
     },
     {
       "aliases": {
-        "en-US": "Modulo"
+        "en-US": "Modulo",
+        "zh-CN": "余数"
       },
       "id": "modulo"
     },
     {
       "aliases": {
-        "en-US": "Raise To Power"
+        "en-US": "Raise To Power",
+        "zh-CN": "乘方"
       },
       "id": "raiseToPower"
     },
     {
       "aliases": {
-        "en-US": "Append To Array"
+        "en-US": "Append To Array",
+        "zh-CN": "添加至数组"
       },
       "id": "appendToArray"
     },
     {
       "aliases": {
-        "en-US": "Remove From Array"
+        "en-US": "Remove From Array",
+        "zh-CN": "从数组中移除"
       },
       "id": "removeFromArray"
     }
@@ -2091,73 +2325,84 @@
     "generatorVersion": "0.1.0",
     "license": "MIT (WrightKit-authored data, ownership transfer to workshop-rs per wright#136 direction; see docs/provenance.md)",
     "reviewed": true,
-    "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the OverPy Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned OverPy 9.7.10 en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned OverPy 9.7.10 enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the pinned OverPy 9.7.10 en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the pinned OverPy 9.7.10 en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data (CreateEffect/CreateInWorldText/CreateProgressBarInWorldText/PlayEffect/DisableMovementCollisionWithEnvironment/EnableMovementCollisionWithEnvironment/WorkshopSetting*/IsButtonHeld/WaitBehavior/EffectRev/Clipping/Spectators/ProgressBarWorldEvaluation named-arg surfaces; Hero/Map/Button/Icon/Operation/Rounding/InworldTextRev domains) transcribed from the pinned OSTW v3.4.0 reference probe emissions (P4/P5/P6/P6b) and the protect-ban entry-point reachable closure (#118); OSTW source names map to these canonical identities through wright-ostw's OSTW-only binding module; OSTW exercised builtin params/spellings and enum domain/member data (CreateEffect/CreateInWorldText/CreateProgressBarInWorldText/PlayEffect/DisableMovementCollisionWithEnvironment/EnableMovementCollisionWithEnvironment/WorkshopSetting*/IsButtonHeld/WaitBehavior/EffectRev/Clipping/Spectators/ProgressBarWorldEvaluation named-arg surfaces; Hero/Map/Button/Icon/Operation/Rounding/InworldTextRev domains) transcribed from the pinned OSTW v3.4.0 reference probe emissions (P4/P5/P6/P6b) and the protect-ban entry-point reachable closure (#118); OSTW source names map to these canonical identities through wright-ostw's OSTW-only binding module; OSTW exercised builtin params/spellings and enum domain/member data (CreateEffect/CreateInWorldText/CreateProgressBarInWorldText/PlayEffect/DisableMovementCollisionWithEnvironment/EnableMovementCollisionWithEnvironment/WorkshopSetting*/IsButtonHeld/WaitBehavior/EffectRev/Clipping/Spectators/ProgressBarWorldEvaluation named-arg surfaces; Hero/Map/Button/Icon/Operation/Rounding/InworldTextRev domains) transcribed from the pinned OSTW v3.4.0 reference probe emissions (P4/P5/P6/P6b) and the protect-ban entry-point reachable closure (#118); OSTW source names map to these canonical identities through wright-ostw's OSTW-only binding module; migrated to workshop-rs from the Wright-authored wright-workshop catalog (crates/wright-workshop/src/catalog/data/catalog.json) on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains (chaseOverTime arg 3 ChaseTimeReeval, chaseAtRate arg 3 ChaseRateReeval, chasePlayerVariableOverTime arg 4 ChaseTimeReeval, chasePlayerVariableAtRate arg 4 ChaseRateReeval) migrate the Wright-authored OPY semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; zh-CN declared as a locale with an empty mapping set (0/344) pending a reviewed, MIT-permissible reference source per ADR-0001 Decision 6; no zh-CN compatibility claim is made and conversion into zh-CN fails explicitly until evidence-backed aliases are added"
+    "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; zh-CN aliases are generated from the user-provided workshop-data JSON; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; 341/341 canonical entries are covered with no exclusions"
   },
   "schemaVersion": 1,
   "structural": [
     {
       "aliases": {
-        "en-US": "If"
+        "en-US": "If",
+        "zh-CN": "If"
       },
       "id": "if"
     },
     {
       "aliases": {
-        "en-US": "Else If"
+        "en-US": "Else If",
+        "zh-CN": "Else If"
       },
       "id": "elseIf"
     },
     {
       "aliases": {
-        "en-US": "Else"
+        "en-US": "Else",
+        "zh-CN": "Else"
       },
       "id": "else"
     },
     {
       "aliases": {
-        "en-US": "End"
+        "en-US": "End",
+        "zh-CN": "End"
       },
       "id": "end"
     },
     {
       "aliases": {
-        "en-US": "For Global Variable"
+        "en-US": "For Global Variable",
+        "zh-CN": "For 全局变量"
       },
       "id": "forGlobalVariable"
     },
     {
       "aliases": {
-        "en-US": "While"
+        "en-US": "While",
+        "zh-CN": "While"
       },
       "id": "while"
     },
     {
       "aliases": {
-        "en-US": "Set Global Variable"
+        "en-US": "Set Global Variable",
+        "zh-CN": "设置全局变量"
       },
       "id": "setGlobalVariable"
     },
     {
       "aliases": {
-        "en-US": "Modify Global Variable"
+        "en-US": "Modify Global Variable",
+        "zh-CN": "修改全局变量"
       },
       "id": "modifyGlobalVariable"
     },
     {
       "aliases": {
-        "en-US": "Set Player Variable"
+        "en-US": "Set Player Variable",
+        "zh-CN": "设置玩家变量"
       },
       "id": "setPlayerVariable"
     },
     {
       "aliases": {
-        "en-US": "Modify Player Variable"
+        "en-US": "Modify Player Variable",
+        "zh-CN": "修改玩家变量"
       },
       "id": "modifyPlayerVariable"
     },
     {
       "aliases": {
-        "en-US": "Call Subroutine"
+        "en-US": "Call Subroutine",
+        "zh-CN": "调用子程序"
       },
       "id": "callSubroutine"
     }
@@ -2170,7 +2415,8 @@
   "values": [
     {
       "aliases": {
-        "en-US": "Add"
+        "en-US": "Add",
+        "zh-CN": "加"
       },
       "id": "add",
       "params": [
@@ -2180,7 +2426,8 @@
     },
     {
       "aliases": {
-        "en-US": "Subtract"
+        "en-US": "Subtract",
+        "zh-CN": "减"
       },
       "id": "subtract",
       "params": [
@@ -2190,7 +2437,8 @@
     },
     {
       "aliases": {
-        "en-US": "Multiply"
+        "en-US": "Multiply",
+        "zh-CN": "乘"
       },
       "id": "multiply",
       "params": [
@@ -2200,7 +2448,8 @@
     },
     {
       "aliases": {
-        "en-US": "Divide"
+        "en-US": "Divide",
+        "zh-CN": "除"
       },
       "id": "divide",
       "params": [
@@ -2210,7 +2459,8 @@
     },
     {
       "aliases": {
-        "en-US": "Compare"
+        "en-US": "Compare",
+        "zh-CN": "比较"
       },
       "id": "compare",
       "params": [
@@ -2221,25 +2471,29 @@
     },
     {
       "aliases": {
-        "en-US": "And"
+        "en-US": "And",
+        "zh-CN": "与"
       },
       "id": "and"
     },
     {
       "aliases": {
-        "en-US": "Or"
+        "en-US": "Or",
+        "zh-CN": "或"
       },
       "id": "or"
     },
     {
       "aliases": {
-        "en-US": "Not"
+        "en-US": "Not",
+        "zh-CN": "非"
       },
       "id": "not"
     },
     {
       "aliases": {
-        "en-US": "Count Of"
+        "en-US": "Count Of",
+        "zh-CN": "数量"
       },
       "id": "countOf",
       "params": [
@@ -2248,19 +2502,22 @@
     },
     {
       "aliases": {
-        "en-US": "Absolute Value"
+        "en-US": "Absolute Value",
+        "zh-CN": "绝对值"
       },
       "id": "absoluteValue"
     },
     {
       "aliases": {
-        "en-US": "Array"
+        "en-US": "Array",
+        "zh-CN": "数组"
       },
       "id": "array"
     },
     {
       "aliases": {
-        "en-US": "Vector"
+        "en-US": "Vector",
+        "zh-CN": "矢量"
       },
       "id": "vector",
       "params": [
@@ -2271,13 +2528,15 @@
     },
     {
       "aliases": {
-        "en-US": "Custom String"
+        "en-US": "Custom String",
+        "zh-CN": "自定义字符串"
       },
       "id": "customString"
     },
     {
       "aliases": {
-        "en-US": "Value In Array"
+        "en-US": "Value In Array",
+        "zh-CN": "数组中的值"
       },
       "id": "valueInArray",
       "params": [
@@ -2287,7 +2546,8 @@
     },
     {
       "aliases": {
-        "en-US": "Mapped Array"
+        "en-US": "Mapped Array",
+        "zh-CN": "映射的数组"
       },
       "id": "mappedArray",
       "params": [
@@ -2297,31 +2557,36 @@
     },
     {
       "aliases": {
-        "en-US": "First Of"
+        "en-US": "First Of",
+        "zh-CN": "首个"
       },
       "id": "firstOf"
     },
     {
       "aliases": {
-        "en-US": "String Replace"
+        "en-US": "String Replace",
+        "zh-CN": "字符串替换"
       },
       "id": "stringReplace"
     },
     {
       "aliases": {
-        "en-US": "String Slice"
+        "en-US": "String Slice",
+        "zh-CN": "截取字符串"
       },
       "id": "stringSlice"
     },
     {
       "aliases": {
-        "en-US": "String Split"
+        "en-US": "String Split",
+        "zh-CN": "字符串分割"
       },
       "id": "stringSplit"
     },
     {
       "aliases": {
-        "en-US": "All Players"
+        "en-US": "All Players",
+        "zh-CN": "所有玩家"
       },
       "id": "allPlayers",
       "paramDefaults": [
@@ -2333,13 +2598,15 @@
     },
     {
       "aliases": {
-        "en-US": "Random Real"
+        "en-US": "Random Real",
+        "zh-CN": "随机实数"
       },
       "id": "randomReal"
     },
     {
       "aliases": {
-        "en-US": "Random Value In Array"
+        "en-US": "Random Value In Array",
+        "zh-CN": "数组随机取值"
       },
       "id": "randomValueInArray",
       "params": [
@@ -2348,7 +2615,8 @@
     },
     {
       "aliases": {
-        "en-US": "Has Spawned"
+        "en-US": "Has Spawned",
+        "zh-CN": "已重生"
       },
       "id": "hasSpawned",
       "params": [
@@ -2357,26 +2625,30 @@
     },
     {
       "aliases": {
-        "en-US": "Empty Array"
+        "en-US": "Empty Array",
+        "zh-CN": "空数组"
       },
       "id": "emptyArray",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "If-Then-Else"
+        "en-US": "If-Then-Else",
+        "zh-CN": "If-Then-Else"
       },
       "id": "ifThenElse"
     },
     {
       "aliases": {
-        "en-US": "Current Array Element"
+        "en-US": "Current Array Element",
+        "zh-CN": "当前数组元素"
       },
       "id": "currentArrayElement"
     },
     {
       "aliases": {
-        "en-US": "Append To Array"
+        "en-US": "Append To Array",
+        "zh-CN": "添加至数组"
       },
       "id": "appendToArray",
       "params": [
@@ -2386,7 +2658,8 @@
     },
     {
       "aliases": {
-        "en-US": "Square Root"
+        "en-US": "Square Root",
+        "zh-CN": "平方根"
       },
       "id": "squareRoot",
       "params": [
@@ -2395,7 +2668,8 @@
     },
     {
       "aliases": {
-        "en-US": "Health"
+        "en-US": "Health",
+        "zh-CN": "生命值"
       },
       "id": "getHealth",
       "params": [
@@ -2404,7 +2678,8 @@
     },
     {
       "aliases": {
-        "en-US": "Position Of"
+        "en-US": "Position Of",
+        "zh-CN": "所选位置"
       },
       "id": "getPosition",
       "params": [
@@ -2413,7 +2688,8 @@
     },
     {
       "aliases": {
-        "en-US": "Is Alive"
+        "en-US": "Is Alive",
+        "zh-CN": "存活"
       },
       "id": "isAlive",
       "params": [
@@ -2422,7 +2698,8 @@
     },
     {
       "aliases": {
-        "en-US": "Throttle Of"
+        "en-US": "Throttle Of",
+        "zh-CN": "阈值"
       },
       "id": "getThrottle",
       "params": [
@@ -2431,7 +2708,8 @@
     },
     {
       "aliases": {
-        "en-US": "Players Within Radius"
+        "en-US": "Players Within Radius",
+        "zh-CN": "范围内玩家"
       },
       "id": "getPlayersInRadius",
       "params": [
@@ -2443,13 +2721,15 @@
     },
     {
       "aliases": {
-        "en-US": "Is Game In Progress"
+        "en-US": "Is Game In Progress",
+        "zh-CN": "游戏正在进行中"
       },
       "id": "isGameInProgress"
     },
     {
       "aliases": {
-        "en-US": "World Vector Of"
+        "en-US": "World Vector Of",
+        "zh-CN": "地图矢量"
       },
       "id": "worldVector",
       "params": [
@@ -2460,7 +2740,8 @@
     },
     {
       "aliases": {
-        "en-US": "Workshop Setting Integer"
+        "en-US": "Workshop Setting Integer",
+        "zh-CN": "地图工坊设置整数"
       },
       "id": "workshopSettingInteger",
       "params": [
@@ -2474,7 +2755,8 @@
     },
     {
       "aliases": {
-        "en-US": "Workshop Setting Toggle"
+        "en-US": "Workshop Setting Toggle",
+        "zh-CN": "地图工坊设置开关"
       },
       "id": "workshopSettingToggle",
       "params": [
@@ -2486,7 +2768,8 @@
     },
     {
       "aliases": {
-        "en-US": "Workshop Setting Combo"
+        "en-US": "Workshop Setting Combo",
+        "zh-CN": "地图工坊设置组合"
       },
       "id": "workshopSettingCombo",
       "params": [
@@ -2499,35 +2782,40 @@
     },
     {
       "aliases": {
-        "en-US": "All Heroes"
+        "en-US": "All Heroes",
+        "zh-CN": "全部英雄"
       },
       "id": "allHeroes",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "All Tank Heroes"
+        "en-US": "All Tank Heroes",
+        "zh-CN": "所有重装英雄"
       },
       "id": "allTankHeroes",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "All Damage Heroes"
+        "en-US": "All Damage Heroes",
+        "zh-CN": "所有输出英雄"
       },
       "id": "allDamageHeroes",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "All Support Heroes"
+        "en-US": "All Support Heroes",
+        "zh-CN": "所有支援英雄"
       },
       "id": "allSupportHeroes",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Allowed Heroes"
+        "en-US": "Allowed Heroes",
+        "zh-CN": "可用英雄"
       },
       "id": "allowedHeroes",
       "params": [
@@ -2536,21 +2824,24 @@
     },
     {
       "aliases": {
-        "en-US": "Event Player"
+        "en-US": "Event Player",
+        "zh-CN": "事件玩家"
       },
       "id": "eventPlayer",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Local Player"
+        "en-US": "Local Player",
+        "zh-CN": "本地玩家"
       },
       "id": "localPlayer",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Team Of"
+        "en-US": "Team Of",
+        "zh-CN": "所在队伍"
       },
       "id": "teamOf",
       "params": [
@@ -2559,7 +2850,8 @@
     },
     {
       "aliases": {
-        "en-US": "Opposite Team Of"
+        "en-US": "Opposite Team Of",
+        "zh-CN": "对方队伍"
       },
       "id": "oppositeTeamOf",
       "params": [
@@ -2568,7 +2860,8 @@
     },
     {
       "aliases": {
-        "en-US": "Number Of Players"
+        "en-US": "Number Of Players",
+        "zh-CN": "玩家数量"
       },
       "id": "numberOfPlayers",
       "params": [
@@ -2577,7 +2870,8 @@
     },
     {
       "aliases": {
-        "en-US": "Array Contains"
+        "en-US": "Array Contains",
+        "zh-CN": "数组包含"
       },
       "id": "arrayContains",
       "params": [
@@ -2587,21 +2881,16 @@
     },
     {
       "aliases": {
-        "en-US": "Array Element"
-      },
-      "id": "arrayElement",
-      "params": []
-    },
-    {
-      "aliases": {
-        "en-US": "Current Array Index"
+        "en-US": "Current Array Index",
+        "zh-CN": "当前数组索引"
       },
       "id": "currentArrayIndex",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Index Of Array Value"
+        "en-US": "Index Of Array Value",
+        "zh-CN": "数组值的索引"
       },
       "id": "indexOfArrayValue",
       "params": [
@@ -2611,7 +2900,8 @@
     },
     {
       "aliases": {
-        "en-US": "Filtered Array"
+        "en-US": "Filtered Array",
+        "zh-CN": "已过滤的数组"
       },
       "id": "filteredArray",
       "params": [
@@ -2621,7 +2911,8 @@
     },
     {
       "aliases": {
-        "en-US": "Sorted Array"
+        "en-US": "Sorted Array",
+        "zh-CN": "已排序的数组"
       },
       "id": "sortedArray",
       "params": [
@@ -2631,7 +2922,8 @@
     },
     {
       "aliases": {
-        "en-US": "Last Of"
+        "en-US": "Last Of",
+        "zh-CN": "最后"
       },
       "id": "lastOf",
       "params": [
@@ -2640,7 +2932,8 @@
     },
     {
       "aliases": {
-        "en-US": "Remove From Array"
+        "en-US": "Remove From Array",
+        "zh-CN": "从数组中移除"
       },
       "id": "removeFromArray",
       "params": [
@@ -2650,7 +2943,8 @@
     },
     {
       "aliases": {
-        "en-US": "Max"
+        "en-US": "Max",
+        "zh-CN": "较大"
       },
       "id": "max",
       "params": [
@@ -2660,7 +2954,8 @@
     },
     {
       "aliases": {
-        "en-US": "Min"
+        "en-US": "Min",
+        "zh-CN": "较小"
       },
       "id": "min",
       "params": [
@@ -2670,7 +2965,8 @@
     },
     {
       "aliases": {
-        "en-US": "Round To Integer"
+        "en-US": "Round To Integer",
+        "zh-CN": "取整"
       },
       "id": "roundToInteger",
       "paramDomains": [
@@ -2684,7 +2980,8 @@
     },
     {
       "aliases": {
-        "en-US": "Cross Product"
+        "en-US": "Cross Product",
+        "zh-CN": "矢量积"
       },
       "id": "crossProduct",
       "params": [
@@ -2694,7 +2991,8 @@
     },
     {
       "aliases": {
-        "en-US": "Direction From Angles"
+        "en-US": "Direction From Angles",
+        "zh-CN": "与此角度的相对方向"
       },
       "id": "directionFromAngles",
       "params": [
@@ -2704,7 +3002,8 @@
     },
     {
       "aliases": {
-        "en-US": "Horizontal Angle From Direction"
+        "en-US": "Horizontal Angle From Direction",
+        "zh-CN": "与此方向的水平角度"
       },
       "id": "horizontalAngleFromDirection",
       "params": [
@@ -2713,7 +3012,8 @@
     },
     {
       "aliases": {
-        "en-US": "Vertical Angle From Direction"
+        "en-US": "Vertical Angle From Direction",
+        "zh-CN": "与此方向的垂直角度"
       },
       "id": "verticalAngleFromDirection",
       "params": [
@@ -2722,14 +3022,16 @@
     },
     {
       "aliases": {
-        "en-US": "Forward"
+        "en-US": "Forward",
+        "zh-CN": "前"
       },
       "id": "forward",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Custom Color"
+        "en-US": "Custom Color",
+        "zh-CN": "自定义颜色"
       },
       "id": "customColor",
       "params": [
@@ -2741,7 +3043,8 @@
     },
     {
       "aliases": {
-        "en-US": "Is Button Held"
+        "en-US": "Is Button Held",
+        "zh-CN": "按钮被按下"
       },
       "id": "isButtonHeld",
       "paramDefaults": [
@@ -2759,7 +3062,8 @@
     },
     {
       "aliases": {
-        "en-US": "Is In Spawn Room"
+        "en-US": "Is In Spawn Room",
+        "zh-CN": "在重生室中"
       },
       "id": "isInSpawnRoom",
       "params": [
@@ -2768,7 +3072,8 @@
     },
     {
       "aliases": {
-        "en-US": "Is True For All"
+        "en-US": "Is True For All",
+        "zh-CN": "对全部为“真”"
       },
       "id": "isTrueForAll",
       "params": [
@@ -2778,21 +3083,24 @@
     },
     {
       "aliases": {
-        "en-US": "Is Waiting For Players"
+        "en-US": "Is Waiting For Players",
+        "zh-CN": "正在等待玩家"
       },
       "id": "isWaitingForPlayers",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Current Map"
+        "en-US": "Current Map",
+        "zh-CN": "当前地图"
       },
       "id": "currentMap",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Evaluate Once"
+        "en-US": "Evaluate Once",
+        "zh-CN": "单次赋值"
       },
       "id": "evaluateOnce",
       "params": [
@@ -2801,7 +3109,8 @@
     },
     {
       "aliases": {
-        "en-US": "Update Every Frame"
+        "en-US": "Update Every Frame",
+        "zh-CN": "逐帧更新"
       },
       "id": "updateEveryFrame",
       "params": [
@@ -2810,21 +3119,24 @@
     },
     {
       "aliases": {
-        "en-US": "Last Created Entity"
+        "en-US": "Last Created Entity",
+        "zh-CN": "最后创建的实体"
       },
       "id": "lastCreatedEntity",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Last Text ID"
+        "en-US": "Last Text ID",
+        "zh-CN": "上一个文本ID"
       },
       "id": "lastTextId",
       "params": []
     },
     {
       "aliases": {
-        "en-US": "Hero Icon String"
+        "en-US": "Hero Icon String",
+        "zh-CN": "英雄图标字符串"
       },
       "id": "heroIconString",
       "paramDomains": [
@@ -2836,7 +3148,8 @@
     },
     {
       "aliases": {
-        "en-US": "Ability Icon String"
+        "en-US": "Ability Icon String",
+        "zh-CN": "技能图标字符串"
       },
       "id": "abilityIconString",
       "paramDomains": [
@@ -2850,7 +3163,8 @@
     },
     {
       "aliases": {
-        "en-US": "Icon String"
+        "en-US": "Icon String",
+        "zh-CN": "图标字符串"
       },
       "id": "iconString",
       "paramDomains": [
@@ -2862,7 +3176,8 @@
     },
     {
       "aliases": {
-        "en-US": "Input Binding String"
+        "en-US": "Input Binding String",
+        "zh-CN": "输入绑定字符串"
       },
       "id": "inputBindingString",
       "paramDomains": [
