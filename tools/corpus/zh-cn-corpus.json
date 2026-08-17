@@ -1,0 +1,3173 @@
+{
+  "coverage": {
+    "actions": {
+      "matched": 55,
+      "total": 62
+    },
+    "enums": {
+      "matched": 173,
+      "total": 176
+    },
+    "events": {
+      "matched": 3,
+      "total": 3
+    },
+    "operators": {
+      "matched": 8,
+      "total": 14
+    },
+    "structural": {
+      "matched": 11,
+      "total": 11
+    },
+    "total": {
+      "matched": 327,
+      "total": 344
+    },
+    "values": {
+      "matched": 77,
+      "total": 78
+    }
+  },
+  "excluded": [
+    {
+      "en-US": "Chase Variable At Rate",
+      "id": "chaseVariableAtRate",
+      "kind": "action",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "Delete All Classes",
+      "id": "deleteAllClasses",
+      "kind": "action",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "Force Player Hero",
+      "id": "forcePlayerHero",
+      "kind": "action",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "Force Throttle",
+      "id": "forceThrottle",
+      "kind": "action",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "Set Allowed Heroes",
+      "id": "setAllowedHeroes",
+      "kind": "action",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "Stop Chasing Variable",
+      "id": "stopChasingVariable",
+      "kind": "action",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "Stop Forcing Hero",
+      "id": "stopForcingHero",
+      "kind": "action",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "Lijiang Tower Lunar",
+      "id": "Map.LIJIANG_TOWER_LUNAR",
+      "kind": "enum member",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "Visible To And Values",
+      "id": "ProgressBarWorldReeval.VISIBLE_TO_AND_VALUES",
+      "kind": "enum member",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "Nearest",
+      "id": "Rounding.NEAREST",
+      "kind": "enum member",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "!=",
+      "id": "!=",
+      "kind": "operator",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "<",
+      "id": "<",
+      "kind": "operator",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "<=",
+      "id": "<=",
+      "kind": "operator",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "==",
+      "id": "==",
+      "kind": "operator",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": ">",
+      "id": ">",
+      "kind": "operator",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": ">=",
+      "id": ">=",
+      "kind": "operator",
+      "reason": "no exact en-US match in the export"
+    },
+    {
+      "en-US": "Array Element",
+      "id": "arrayElement",
+      "kind": "value",
+      "reason": "no exact en-US match in the export"
+    }
+  ],
+  "generator": "workshop-catalog-gen corpus",
+  "generatorVersion": "0.1.0",
+  "licenseReview": "pending: Blizzard game content (functional/interoperability data) transcribed from the user-provided workshop-data export; see docs/provenance.md",
+  "locale": "zh-CN",
+  "matches": [
+    {
+      "en-US": "Abort",
+      "id": "abort",
+      "kind": "action",
+      "sources": [
+        "actions.return"
+      ],
+      "zh-CN": "中止"
+    },
+    {
+      "en-US": "Abort If",
+      "id": "abortIf",
+      "kind": "action",
+      "sources": [
+        "actions.__abortIf__"
+      ],
+      "zh-CN": "根据条件中止"
+    },
+    {
+      "en-US": "Allow Button",
+      "id": "allowButton",
+      "kind": "action",
+      "sources": [
+        "actions..allowButton"
+      ],
+      "zh-CN": "可用按钮"
+    },
+    {
+      "en-US": "Big Message",
+      "id": "bigMessage",
+      "kind": "action",
+      "sources": [
+        "actions.bigMessage"
+      ],
+      "zh-CN": "大字体信息"
+    },
+    {
+      "en-US": "Chase Global Variable At Rate",
+      "id": "chaseAtRate",
+      "kind": "action",
+      "sources": [
+        "actions.__chaseGlobalVariableAtRate__"
+      ],
+      "zh-CN": "追踪全局变量频率"
+    },
+    {
+      "en-US": "Chase Global Variable Over Time",
+      "id": "chaseOverTime",
+      "kind": "action",
+      "sources": [
+        "actions.__chaseGlobalVariableOverTime__"
+      ],
+      "zh-CN": "持续追踪全局变量"
+    },
+    {
+      "en-US": "Chase Player Variable At Rate",
+      "id": "chasePlayerVariableAtRate",
+      "kind": "action",
+      "sources": [
+        "actions.__chasePlayerVariableAtRate__"
+      ],
+      "zh-CN": "追踪玩家变量频率"
+    },
+    {
+      "en-US": "Chase Player Variable Over Time",
+      "id": "chasePlayerVariableOverTime",
+      "kind": "action",
+      "sources": [
+        "actions.__chasePlayerVariableOverTime__"
+      ],
+      "zh-CN": "持续追踪玩家变量"
+    },
+    {
+      "en-US": "Create Beam Effect",
+      "id": "createBeamEffect",
+      "kind": "action",
+      "sources": [
+        "actions.createBeam"
+      ],
+      "zh-CN": "创建光束效果"
+    },
+    {
+      "en-US": "Create Effect",
+      "id": "createEffect",
+      "kind": "action",
+      "sources": [
+        "actions.createEffect"
+      ],
+      "zh-CN": "创建效果"
+    },
+    {
+      "en-US": "Create HUD Text",
+      "id": "createHudText",
+      "kind": "action",
+      "sources": [
+        "actions.hudText"
+      ],
+      "zh-CN": "创建HUD文本"
+    },
+    {
+      "en-US": "Create In-World Text",
+      "id": "createInWorldText",
+      "kind": "action",
+      "sources": [
+        "actions.createInWorldText"
+      ],
+      "zh-CN": "创建地图文本"
+    },
+    {
+      "en-US": "Create Progress Bar In-World Text",
+      "id": "createProgressBarInWorldText",
+      "kind": "action",
+      "sources": [
+        "actions.createProgressBarInWorldText"
+      ],
+      "zh-CN": "创建进度条地图文本"
+    },
+    {
+      "en-US": "Destroy All Progress Bar HUD Text",
+      "id": "destroyAllProgressBarHudText",
+      "kind": "action",
+      "sources": [
+        "actions.destroyAllProgressBarHuds"
+      ],
+      "zh-CN": "消除所有进度条HUD文本"
+    },
+    {
+      "en-US": "Destroy All Progress Bar In-World Text",
+      "id": "destroyAllProgressBarInWorldText",
+      "kind": "action",
+      "sources": [
+        "actions.destroyAllProgressBarInWorldTexts"
+      ],
+      "zh-CN": "消除所有进度条地图文本"
+    },
+    {
+      "en-US": "Destroy Effect",
+      "id": "destroyEffect",
+      "kind": "action",
+      "sources": [
+        "actions.destroyEffect"
+      ],
+      "zh-CN": "消除效果"
+    },
+    {
+      "en-US": "Destroy HUD Text",
+      "id": "destroyHudText",
+      "kind": "action",
+      "sources": [
+        "actions.destroyHudText"
+      ],
+      "zh-CN": "消除HUD文本"
+    },
+    {
+      "en-US": "Destroy In-World Text",
+      "id": "destroyInWorldText",
+      "kind": "action",
+      "sources": [
+        "actions.destroyInWorldText"
+      ],
+      "zh-CN": "消除地图文本"
+    },
+    {
+      "en-US": "Disable Game Mode HUD",
+      "id": "disableGameModeHud",
+      "kind": "action",
+      "sources": [
+        "actions..disableGamemodeHud"
+      ],
+      "zh-CN": "隐藏游戏模式HUD"
+    },
+    {
+      "en-US": "Disable Game Mode In-World UI",
+      "id": "disableGameModeInworldUI",
+      "kind": "action",
+      "sources": [
+        "actions..disableGamemodeInWorldUi"
+      ],
+      "zh-CN": "隐藏游戏模式地图UI"
+    },
+    {
+      "en-US": "Disable Hero HUD",
+      "id": "disableHeroHud",
+      "kind": "action",
+      "sources": [
+        "actions..disableHeroHud"
+      ],
+      "zh-CN": "隐藏英雄HUD"
+    },
+    {
+      "en-US": "Disable Inspector Recording",
+      "id": "disableInspector",
+      "kind": "action",
+      "sources": [
+        "actions.disableInspector"
+      ],
+      "zh-CN": "禁用查看器录制"
+    },
+    {
+      "en-US": "Disable Movement Collision With Environment",
+      "id": "disableMovementCollisionWithEnvironment",
+      "kind": "action",
+      "sources": [
+        "actions..disableEnvironmentCollision"
+      ],
+      "zh-CN": "取消与环境的移动碰撞"
+    },
+    {
+      "en-US": "Disable Movement Collision With Players",
+      "id": "disableMovementCollisionWithPlayers",
+      "kind": "action",
+      "sources": [
+        "actions..disablePlayerCollision"
+      ],
+      "zh-CN": "取消与玩家的移动碰撞"
+    },
+    {
+      "en-US": "Disable Scoreboard",
+      "id": "disableScoreboard",
+      "kind": "action",
+      "sources": [
+        "actions..disableScoreboard"
+      ],
+      "zh-CN": "隐藏计分板"
+    },
+    {
+      "en-US": "Disallow Button",
+      "id": "disallowButton",
+      "kind": "action",
+      "sources": [
+        "actions..disallowButton"
+      ],
+      "zh-CN": "禁用按钮"
+    },
+    {
+      "en-US": "Enable Game Mode HUD",
+      "id": "enableGameModeHud",
+      "kind": "action",
+      "sources": [
+        "actions..enableGamemodeHud"
+      ],
+      "zh-CN": "显示游戏模式HUD"
+    },
+    {
+      "en-US": "Enable Game Mode In-World UI",
+      "id": "enableGameModeInworldUI",
+      "kind": "action",
+      "sources": [
+        "actions..enableGamemodeInWorldUi"
+      ],
+      "zh-CN": "显示游戏模式地图UI"
+    },
+    {
+      "en-US": "Enable Hero HUD",
+      "id": "enableHeroHud",
+      "kind": "action",
+      "sources": [
+        "actions..enableHeroHud"
+      ],
+      "zh-CN": "显示英雄HUD"
+    },
+    {
+      "en-US": "Enable Inspector Recording",
+      "id": "enableInspectorRecording",
+      "kind": "action",
+      "sources": [
+        "actions.enableInspector"
+      ],
+      "zh-CN": "启用查看器录制"
+    },
+    {
+      "en-US": "Enable Movement Collision With Environment",
+      "id": "enableMovementCollisionWithEnvironment",
+      "kind": "action",
+      "sources": [
+        "actions..enableEnvironmentCollision"
+      ],
+      "zh-CN": "开启与环境的移动碰撞"
+    },
+    {
+      "en-US": "Enable Movement Collision With Players",
+      "id": "enableMovementCollisionWithPlayers",
+      "kind": "action",
+      "sources": [
+        "actions..enablePlayerCollision"
+      ],
+      "zh-CN": "开启与玩家的移动碰撞"
+    },
+    {
+      "en-US": "Enable Scoreboard",
+      "id": "enableScoreboard",
+      "kind": "action",
+      "sources": [
+        "actions..enableScoreboard"
+      ],
+      "zh-CN": "显示计分板"
+    },
+    {
+      "en-US": "Loop If Condition Is True",
+      "id": "loopIfConditionIsTrue",
+      "kind": "action",
+      "sources": [
+        "actions.__loopIfConditionIsTrue__"
+      ],
+      "zh-CN": "如条件为“真”则循环"
+    },
+    {
+      "en-US": "Modify Global Variable",
+      "id": "modifyGlobalVariable",
+      "kind": "action",
+      "sources": [
+        "actions.__modifyGlobalVariable__"
+      ],
+      "zh-CN": "修改全局变量"
+    },
+    {
+      "en-US": "Play Effect",
+      "id": "playEffect",
+      "kind": "action",
+      "sources": [
+        "actions.playEffect"
+      ],
+      "zh-CN": "播放效果"
+    },
+    {
+      "en-US": "Set Aim Speed",
+      "id": "setAimSpeed",
+      "kind": "action",
+      "sources": [
+        "actions..setAimSpeed"
+      ],
+      "zh-CN": "设置瞄准速度"
+    },
+    {
+      "en-US": "Set Damage Dealt",
+      "id": "setDamageDealt",
+      "kind": "action",
+      "sources": [
+        "actions..setDamageDealt"
+      ],
+      "zh-CN": "设置造成伤害"
+    },
+    {
+      "en-US": "Set Damage Received",
+      "id": "setDamageReceived",
+      "kind": "action",
+      "sources": [
+        "actions..setDamageReceived"
+      ],
+      "zh-CN": "设置受到伤害"
+    },
+    {
+      "en-US": "Set Gravity",
+      "id": "setGravity",
+      "kind": "action",
+      "sources": [
+        "actions..setGravity"
+      ],
+      "zh-CN": "设置引力"
+    },
+    {
+      "en-US": "Set Player Health",
+      "id": "setHealth",
+      "kind": "action",
+      "sources": [
+        "actions..setHealth"
+      ],
+      "zh-CN": "设置玩家生命值"
+    },
+    {
+      "en-US": "Set Invisible",
+      "id": "setInvisibility",
+      "kind": "action",
+      "sources": [
+        "actions..setInvisibility"
+      ],
+      "zh-CN": "设置不可见"
+    },
+    {
+      "en-US": "Set Max Health",
+      "id": "setMaxHealth",
+      "kind": "action",
+      "sources": [
+        "actions..setMaxHealth"
+      ],
+      "zh-CN": "设置最大生命值"
+    },
+    {
+      "en-US": "Set Move Speed",
+      "id": "setMoveSpeed",
+      "kind": "action",
+      "sources": [
+        "actions..setMoveSpeed"
+      ],
+      "zh-CN": "设置移动速度"
+    },
+    {
+      "en-US": "Set Status",
+      "id": "setStatusEffect",
+      "kind": "action",
+      "sources": [
+        "actions..setStatusEffect"
+      ],
+      "zh-CN": "设置状态"
+    },
+    {
+      "en-US": "Set Ultimate Charge",
+      "id": "setUltCharge",
+      "kind": "action",
+      "sources": [
+        "actions..setUltCharge"
+      ],
+      "zh-CN": "设置终极技能充能"
+    },
+    {
+      "en-US": "Skip",
+      "id": "skip",
+      "kind": "action",
+      "sources": [
+        "actions.__skip__"
+      ],
+      "zh-CN": "跳过"
+    },
+    {
+      "en-US": "Small Message",
+      "id": "smallMessage",
+      "kind": "action",
+      "sources": [
+        "actions.smallMessage"
+      ],
+      "zh-CN": "小字体信息"
+    },
+    {
+      "en-US": "Start Camera",
+      "id": "startCamera",
+      "kind": "action",
+      "sources": [
+        "actions..startCamera"
+      ],
+      "zh-CN": "开始镜头"
+    },
+    {
+      "en-US": "Start Game Mode",
+      "id": "startGameMode",
+      "kind": "action",
+      "sources": [
+        "actions.startGamemode"
+      ],
+      "zh-CN": "开始游戏模式"
+    },
+    {
+      "en-US": "Stop Camera",
+      "id": "stopCamera",
+      "kind": "action",
+      "sources": [
+        "actions..stopCamera"
+      ],
+      "zh-CN": "停止镜头"
+    },
+    {
+      "en-US": "Stop Forcing Throttle",
+      "id": "stopForcingThrottle",
+      "kind": "action",
+      "sources": [
+        "actions..stopForcingThrottle"
+      ],
+      "zh-CN": "停止限制阈值"
+    },
+    {
+      "en-US": "Teleport",
+      "id": "teleport",
+      "kind": "action",
+      "sources": [
+        "actions..teleport"
+      ],
+      "zh-CN": "传送"
+    },
+    {
+      "en-US": "Wait",
+      "id": "wait",
+      "kind": "action",
+      "sources": [
+        "actions.wait"
+      ],
+      "zh-CN": "等待"
+    },
+    {
+      "en-US": "Wait Until",
+      "id": "waitUntil",
+      "kind": "action",
+      "sources": [
+        "actions.waitUntil"
+      ],
+      "zh-CN": "等待直到 "
+    },
+    {
+      "en-US": "Good Beam",
+      "id": "Beam.GOOD",
+      "kind": "enum member",
+      "sources": [
+        "constants.Beam.GOOD"
+      ],
+      "zh-CN": "有益光束"
+    },
+    {
+      "en-US": "Grapple Beam",
+      "id": "Beam.GRAPPLE",
+      "kind": "enum member",
+      "sources": [
+        "constants.Beam.GRAPPLE"
+      ],
+      "zh-CN": "抓钩光束"
+    },
+    {
+      "en-US": "Ability 1",
+      "id": "Button.ABILITY_1",
+      "kind": "enum member",
+      "sources": [
+        "constants.ButtonLiteral.ABILITY_1"
+      ],
+      "zh-CN": "技能1"
+    },
+    {
+      "en-US": "Ability 2",
+      "id": "Button.ABILITY_2",
+      "kind": "enum member",
+      "sources": [
+        "constants.ButtonLiteral.ABILITY_2"
+      ],
+      "zh-CN": "技能2"
+    },
+    {
+      "en-US": "Crouch",
+      "id": "Button.CROUCH",
+      "kind": "enum member",
+      "sources": [
+        "constants.ButtonLiteral.CROUCH"
+      ],
+      "zh-CN": "蹲下"
+    },
+    {
+      "en-US": "Interact",
+      "id": "Button.INTERACT",
+      "kind": "enum member",
+      "sources": [
+        "constants.ButtonLiteral.INTERACT"
+      ],
+      "zh-CN": "互动"
+    },
+    {
+      "en-US": "Jump",
+      "id": "Button.JUMP",
+      "kind": "enum member",
+      "sources": [
+        "constants.ButtonLiteral.JUMP"
+      ],
+      "zh-CN": "跳跃"
+    },
+    {
+      "en-US": "Melee",
+      "id": "Button.MELEE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ButtonLiteral.MELEE"
+      ],
+      "zh-CN": "近身攻击"
+    },
+    {
+      "en-US": "Primary Fire",
+      "id": "Button.PRIMARY_FIRE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ButtonLiteral.PRIMARY_FIRE"
+      ],
+      "zh-CN": "主要攻击模式"
+    },
+    {
+      "en-US": "Reload",
+      "id": "Button.RELOAD",
+      "kind": "enum member",
+      "sources": [
+        "constants.ButtonLiteral.RELOAD"
+      ],
+      "zh-CN": "装填"
+    },
+    {
+      "en-US": "Secondary Fire",
+      "id": "Button.SECONDARY_FIRE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ButtonLiteral.SECONDARY_FIRE"
+      ],
+      "zh-CN": "辅助攻击模式"
+    },
+    {
+      "en-US": "Ultimate",
+      "id": "Button.ULTIMATE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ButtonLiteral.ULTIMATE"
+      ],
+      "zh-CN": "终极技能"
+    },
+    {
+      "en-US": "Destination and Rate",
+      "id": "ChaseRateReeval.DESTINATION_AND_RATE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ChaseRateReeval.DESTINATION_AND_RATE"
+      ],
+      "zh-CN": "速率及最终值"
+    },
+    {
+      "en-US": "None",
+      "id": "ChaseRateReeval.NONE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ChaseRateReeval.NONE"
+      ],
+      "zh-CN": "全部禁用"
+    },
+    {
+      "en-US": "Destination and Duration",
+      "id": "ChaseTimeReeval.DESTINATION_AND_DURATION",
+      "kind": "enum member",
+      "sources": [
+        "constants.ChaseTimeReeval.DESTINATION_AND_DURATION"
+      ],
+      "zh-CN": "终点及持续时间"
+    },
+    {
+      "en-US": "None",
+      "id": "ChaseTimeReeval.NONE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ChaseTimeReeval.NONE"
+      ],
+      "zh-CN": "全部禁用"
+    },
+    {
+      "en-US": "Clip Against Surfaces",
+      "id": "Clipping.CLIP_AGAINST_SURFACES",
+      "kind": "enum member",
+      "sources": [
+        "constants.Clip.SURFACES"
+      ],
+      "zh-CN": "根据表面截取"
+    },
+    {
+      "en-US": "Do Not Clip",
+      "id": "Clipping.DO_NOT_CLIP",
+      "kind": "enum member",
+      "sources": [
+        "constants.Clip.NONE"
+      ],
+      "zh-CN": "不要截取"
+    },
+    {
+      "en-US": "Aqua",
+      "id": "Color.AQUA",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.AQUA"
+      ],
+      "zh-CN": "水绿色"
+    },
+    {
+      "en-US": "Black",
+      "id": "Color.BLACK",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.BLACK"
+      ],
+      "zh-CN": "黑色"
+    },
+    {
+      "en-US": "Blue",
+      "id": "Color.BLUE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.BLUE"
+      ],
+      "zh-CN": "蓝色"
+    },
+    {
+      "en-US": "Gray",
+      "id": "Color.GRAY",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.GRAY"
+      ],
+      "zh-CN": "灰色"
+    },
+    {
+      "en-US": "Green",
+      "id": "Color.GREEN",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.GREEN"
+      ],
+      "zh-CN": "绿色"
+    },
+    {
+      "en-US": "Lime Green",
+      "id": "Color.LIME_GREEN",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.LIME_GREEN"
+      ],
+      "zh-CN": "灰绿色"
+    },
+    {
+      "en-US": "Orange",
+      "id": "Color.ORANGE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.ORANGE"
+      ],
+      "zh-CN": "橙色"
+    },
+    {
+      "en-US": "Purple",
+      "id": "Color.PURPLE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.PURPLE"
+      ],
+      "zh-CN": "亮紫色"
+    },
+    {
+      "en-US": "Red",
+      "id": "Color.RED",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.RED"
+      ],
+      "zh-CN": "红色"
+    },
+    {
+      "en-US": "Rose",
+      "id": "Color.ROSE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.ROSE"
+      ],
+      "zh-CN": "玫红"
+    },
+    {
+      "en-US": "Sky Blue",
+      "id": "Color.SKY_BLUE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.SKY_BLUE"
+      ],
+      "zh-CN": "天蓝色"
+    },
+    {
+      "en-US": "Team 1",
+      "id": "Color.TEAM_1",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.TEAM_1"
+      ],
+      "zh-CN": "队伍1"
+    },
+    {
+      "en-US": "Team 2",
+      "id": "Color.TEAM_2",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.TEAM_2"
+      ],
+      "zh-CN": "队伍2"
+    },
+    {
+      "en-US": "Turquoise",
+      "id": "Color.TURQUOISE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.TURQUOISE"
+      ],
+      "zh-CN": "青绿色"
+    },
+    {
+      "en-US": "Violet",
+      "id": "Color.VIOLET",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.VIOLET"
+      ],
+      "zh-CN": "紫色"
+    },
+    {
+      "en-US": "White",
+      "id": "Color.WHITE",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.WHITE"
+      ],
+      "zh-CN": "白色"
+    },
+    {
+      "en-US": "Yellow",
+      "id": "Color.YELLOW",
+      "kind": "enum member",
+      "sources": [
+        "constants.ColorLiteral.YELLOW"
+      ],
+      "zh-CN": "黄色"
+    },
+    {
+      "en-US": "Bad Explosion",
+      "id": "DynamicEffect.BAD_EXPLOSION",
+      "kind": "enum member",
+      "sources": [
+        "constants.DynamicEffect.BAD_EXPLOSION"
+      ],
+      "zh-CN": "有害爆炸"
+    },
+    {
+      "en-US": "Buff Explosion Sound",
+      "id": "DynamicEffect.BUFF_EXPLOSION_SOUND",
+      "kind": "enum member",
+      "sources": [
+        "constants.DynamicEffect.BUFF_EXPLOSION_SOUND"
+      ],
+      "zh-CN": "状态爆炸声音"
+    },
+    {
+      "en-US": "Buff Impact Sound",
+      "id": "DynamicEffect.BUFF_IMPACT_SOUND",
+      "kind": "enum member",
+      "sources": [
+        "constants.DynamicEffect.BUFF_IMPACT_SOUND"
+      ],
+      "zh-CN": "正面状态施加声音"
+    },
+    {
+      "en-US": "Debuff Impact Sound",
+      "id": "DynamicEffect.DEBUFF_IMPACT_SOUND",
+      "kind": "enum member",
+      "sources": [
+        "constants.DynamicEffect.DEBUFF_IMPACT_SOUND"
+      ],
+      "zh-CN": "负面状态施加声音"
+    },
+    {
+      "en-US": "Explosion Sound",
+      "id": "DynamicEffect.EXPLOSION_SOUND",
+      "kind": "enum member",
+      "sources": [
+        "constants.DynamicEffect.EXPLOSION_SOUND"
+      ],
+      "zh-CN": "爆炸声音"
+    },
+    {
+      "en-US": "Ring Explosion Sound",
+      "id": "DynamicEffect.RING_EXPLOSION",
+      "kind": "enum member",
+      "sources": [
+        "constants.DynamicEffect.RING_EXPLOSION_SOUND"
+      ],
+      "zh-CN": "环状爆炸声音"
+    },
+    {
+      "en-US": "Orb",
+      "id": "Effect.ORB",
+      "kind": "enum member",
+      "sources": [
+        "constants.Effect.ORB"
+      ],
+      "zh-CN": "球"
+    },
+    {
+      "en-US": "Color",
+      "id": "EffectReeval.COLOR",
+      "kind": "enum member",
+      "sources": [
+        "constants.EffectReeval.COLOR"
+      ],
+      "zh-CN": "颜色"
+    },
+    {
+      "en-US": "Visible To",
+      "id": "EffectReeval.VISIBILITY",
+      "kind": "enum member",
+      "sources": [
+        "constants.EffectReeval.VISIBILITY"
+      ],
+      "zh-CN": "可见"
+    },
+    {
+      "en-US": "Visible To and Color",
+      "id": "EffectReeval.VISIBILITY_AND_COLOR",
+      "kind": "enum member",
+      "sources": [
+        "constants.EffectReeval.VISIBILITY_AND_COLOR"
+      ],
+      "zh-CN": "可见和颜色"
+    },
+    {
+      "en-US": "Visible To Position and Radius",
+      "id": "EffectReeval.VISIBLE_TO_POSITION_AND_RADIUS",
+      "kind": "enum member",
+      "sources": [
+        "constants.EffectReeval.VISIBILITY_POSITION_AND_RADIUS"
+      ],
+      "zh-CN": "可见，位置和半径"
+    },
+    {
+      "en-US": "Ana",
+      "id": "Hero.ANA",
+      "kind": "enum member",
+      "sources": [
+        "heroes.ana",
+        "data.heroes.ana"
+      ],
+      "zh-CN": "安娜"
+    },
+    {
+      "en-US": "Ashe",
+      "id": "Hero.ASHE",
+      "kind": "enum member",
+      "sources": [
+        "heroes.ashe",
+        "data.heroes.ashe"
+      ],
+      "zh-CN": "艾什"
+    },
+    {
+      "en-US": "Baptiste",
+      "id": "Hero.BAPTISTE",
+      "kind": "enum member",
+      "sources": [
+        "heroes.baptiste",
+        "data.heroes.baptiste"
+      ],
+      "zh-CN": "巴蒂斯特"
+    },
+    {
+      "en-US": "Bastion",
+      "id": "Hero.BASTION",
+      "kind": "enum member",
+      "sources": [
+        "heroes.bastion",
+        "data.heroes.bastion"
+      ],
+      "zh-CN": "堡垒"
+    },
+    {
+      "en-US": "Brigitte",
+      "id": "Hero.BRIGITTE",
+      "kind": "enum member",
+      "sources": [
+        "heroes.brigitte",
+        "data.heroes.brigitte"
+      ],
+      "zh-CN": "布丽吉塔"
+    },
+    {
+      "en-US": "Cassidy",
+      "id": "Hero.CASSIDY",
+      "kind": "enum member",
+      "sources": [
+        "heroes.cassidy",
+        "data.heroes.cassidy"
+      ],
+      "zh-CN": "卡西迪"
+    },
+    {
+      "en-US": "Doomfist",
+      "id": "Hero.DOOMFIST",
+      "kind": "enum member",
+      "sources": [
+        "heroes.doomfist",
+        "data.heroes.doomfist"
+      ],
+      "zh-CN": "末日铁拳"
+    },
+    {
+      "en-US": "D.Va",
+      "id": "Hero.DVA",
+      "kind": "enum member",
+      "sources": [
+        "heroes.dva",
+        "data.heroes.dva"
+      ],
+      "zh-CN": "D.Va"
+    },
+    {
+      "en-US": "Echo",
+      "id": "Hero.ECHO",
+      "kind": "enum member",
+      "sources": [
+        "heroes.echo",
+        "data.heroes.echo"
+      ],
+      "zh-CN": "回声"
+    },
+    {
+      "en-US": "Genji",
+      "id": "Hero.GENJI",
+      "kind": "enum member",
+      "sources": [
+        "heroes.genji",
+        "data.heroes.genji"
+      ],
+      "zh-CN": "源氏"
+    },
+    {
+      "en-US": "Hanzo",
+      "id": "Hero.HANZO",
+      "kind": "enum member",
+      "sources": [
+        "heroes.hanzo",
+        "data.heroes.hanzo"
+      ],
+      "zh-CN": "半藏"
+    },
+    {
+      "en-US": "Junkrat",
+      "id": "Hero.JUNKRAT",
+      "kind": "enum member",
+      "sources": [
+        "heroes.junkrat",
+        "data.heroes.junkrat"
+      ],
+      "zh-CN": "狂鼠"
+    },
+    {
+      "en-US": "Lúcio",
+      "id": "Hero.LUCIO",
+      "kind": "enum member",
+      "sources": [
+        "heroes.lucio",
+        "data.heroes.lucio"
+      ],
+      "zh-CN": "卢西奥"
+    },
+    {
+      "en-US": "Mei",
+      "id": "Hero.MEI",
+      "kind": "enum member",
+      "sources": [
+        "heroes.mei",
+        "data.heroes.mei"
+      ],
+      "zh-CN": "美"
+    },
+    {
+      "en-US": "Mercy",
+      "id": "Hero.MERCY",
+      "kind": "enum member",
+      "sources": [
+        "heroes.mercy",
+        "data.heroes.mercy"
+      ],
+      "zh-CN": "天使"
+    },
+    {
+      "en-US": "Moira",
+      "id": "Hero.MOIRA",
+      "kind": "enum member",
+      "sources": [
+        "heroes.moira",
+        "data.heroes.moira"
+      ],
+      "zh-CN": "莫伊拉"
+    },
+    {
+      "en-US": "Orisa",
+      "id": "Hero.ORISA",
+      "kind": "enum member",
+      "sources": [
+        "heroes.orisa",
+        "data.heroes.orisa"
+      ],
+      "zh-CN": "奥丽莎"
+    },
+    {
+      "en-US": "Pharah",
+      "id": "Hero.PHARAH",
+      "kind": "enum member",
+      "sources": [
+        "heroes.pharah",
+        "data.heroes.pharah"
+      ],
+      "zh-CN": "法老之鹰"
+    },
+    {
+      "en-US": "Reaper",
+      "id": "Hero.REAPER",
+      "kind": "enum member",
+      "sources": [
+        "heroes.reaper",
+        "data.heroes.reaper"
+      ],
+      "zh-CN": "死神"
+    },
+    {
+      "en-US": "Reinhardt",
+      "id": "Hero.REINHARDT",
+      "kind": "enum member",
+      "sources": [
+        "heroes.reinhardt",
+        "data.heroes.reinhardt"
+      ],
+      "zh-CN": "莱因哈特"
+    },
+    {
+      "en-US": "Roadhog",
+      "id": "Hero.ROADHOG",
+      "kind": "enum member",
+      "sources": [
+        "heroes.roadhog",
+        "data.heroes.roadhog"
+      ],
+      "zh-CN": "路霸"
+    },
+    {
+      "en-US": "Sigma",
+      "id": "Hero.SIGMA",
+      "kind": "enum member",
+      "sources": [
+        "heroes.sigma",
+        "data.heroes.sigma"
+      ],
+      "zh-CN": "西格玛"
+    },
+    {
+      "en-US": "Soldier: 76",
+      "id": "Hero.SOLDIER_76",
+      "kind": "enum member",
+      "sources": [
+        "heroes.soldier",
+        "data.heroes.soldier"
+      ],
+      "zh-CN": "士兵：76"
+    },
+    {
+      "en-US": "Sombra",
+      "id": "Hero.SOMBRA",
+      "kind": "enum member",
+      "sources": [
+        "heroes.sombra",
+        "data.heroes.sombra"
+      ],
+      "zh-CN": "黑影"
+    },
+    {
+      "en-US": "Symmetra",
+      "id": "Hero.SYMMETRA",
+      "kind": "enum member",
+      "sources": [
+        "heroes.symmetra",
+        "data.heroes.symmetra"
+      ],
+      "zh-CN": "秩序之光"
+    },
+    {
+      "en-US": "Torbjörn",
+      "id": "Hero.TORBJORN",
+      "kind": "enum member",
+      "sources": [
+        "heroes.torbjorn",
+        "data.heroes.torbjorn"
+      ],
+      "zh-CN": "托比昂"
+    },
+    {
+      "en-US": "Tracer",
+      "id": "Hero.TRACER",
+      "kind": "enum member",
+      "sources": [
+        "heroes.tracer",
+        "data.heroes.tracer"
+      ],
+      "zh-CN": "猎空"
+    },
+    {
+      "en-US": "Widowmaker",
+      "id": "Hero.WIDOWMAKER",
+      "kind": "enum member",
+      "sources": [
+        "heroes.widowmaker",
+        "data.heroes.widowmaker"
+      ],
+      "zh-CN": "黑百合"
+    },
+    {
+      "en-US": "Winston",
+      "id": "Hero.WINSTON",
+      "kind": "enum member",
+      "sources": [
+        "heroes.winston",
+        "data.heroes.winston"
+      ],
+      "zh-CN": "温斯顿"
+    },
+    {
+      "en-US": "Wrecking Ball",
+      "id": "Hero.WRECKING_BALL",
+      "kind": "enum member",
+      "sources": [
+        "heroes.wreckingBall",
+        "data.heroes.wreckingBall"
+      ],
+      "zh-CN": "破坏球"
+    },
+    {
+      "en-US": "Zarya",
+      "id": "Hero.ZARYA",
+      "kind": "enum member",
+      "sources": [
+        "heroes.zarya",
+        "data.heroes.zarya"
+      ],
+      "zh-CN": "查莉娅"
+    },
+    {
+      "en-US": "Zenyatta",
+      "id": "Hero.ZENYATTA",
+      "kind": "enum member",
+      "sources": [
+        "heroes.zenyatta",
+        "data.heroes.zenyatta"
+      ],
+      "zh-CN": "禅雅塔"
+    },
+    {
+      "en-US": "Left",
+      "id": "HudPosition.LEFT",
+      "kind": "enum member",
+      "sources": [
+        "constants.HudPosition.ACTUALLY_LEFT",
+        "constants.HudPosition.LEFT"
+      ],
+      "zh-CN": "左边"
+    },
+    {
+      "en-US": "Right",
+      "id": "HudPosition.RIGHT",
+      "kind": "enum member",
+      "sources": [
+        "constants.HudPosition.RIGHT"
+      ],
+      "zh-CN": "右边"
+    },
+    {
+      "en-US": "Visible To",
+      "id": "HudReeval.VISIBILITY",
+      "kind": "enum member",
+      "sources": [
+        "constants.HudReeval.VISIBILITY"
+      ],
+      "zh-CN": "可见"
+    },
+    {
+      "en-US": "Visible To and String",
+      "id": "HudReeval.VISIBILITY_AND_STRING",
+      "kind": "enum member",
+      "sources": [
+        "constants.HudReeval.VISIBILITY_AND_STRING"
+      ],
+      "zh-CN": "可见和字符串"
+    },
+    {
+      "en-US": "Visible To Sort Order String and Color",
+      "id": "HudReeval.VISIBILITY_SORT_ORDER_STRING_AND_COLOR",
+      "kind": "enum member",
+      "sources": [
+        "constants.HudReeval.VISIBILITY_SORT_ORDER_STRING_AND_COLOR"
+      ],
+      "zh-CN": "可见，排序规则，字符串和颜色"
+    },
+    {
+      "en-US": "Visible To and Color",
+      "id": "HudReeval.VISIBLE_TO_AND_COLOR",
+      "kind": "enum member",
+      "sources": [
+        "constants.HudReeval.VISIBILITY_AND_COLOR"
+      ],
+      "zh-CN": "可见和颜色"
+    },
+    {
+      "en-US": "Visible To String and Color",
+      "id": "HudReeval.VISIBLE_TO_STRING_AND_COLOR",
+      "kind": "enum member",
+      "sources": [
+        "constants.HudReeval.VISIBILITY_STRING_AND_COLOR"
+      ],
+      "zh-CN": "可见，字符串和颜色"
+    },
+    {
+      "en-US": "Checkmark",
+      "id": "Icon.CHECKMARK",
+      "kind": "enum member",
+      "sources": [
+        "constants.Icon.CHECKMARK"
+      ],
+      "zh-CN": "对号"
+    },
+    {
+      "en-US": "No",
+      "id": "Icon.NO",
+      "kind": "enum member",
+      "sources": [
+        "constants.Icon.NO"
+      ],
+      "zh-CN": "拒绝"
+    },
+    {
+      "en-US": "Question Mark",
+      "id": "Icon.QUESTION_MARK",
+      "kind": "enum member",
+      "sources": [
+        "constants.Icon.QUESTION_MARK"
+      ],
+      "zh-CN": "问号"
+    },
+    {
+      "en-US": "Ring Thin",
+      "id": "Icon.RING_THIN",
+      "kind": "enum member",
+      "sources": [
+        "constants.Icon.RING_THIN"
+      ],
+      "zh-CN": "细环"
+    },
+    {
+      "en-US": "Skull",
+      "id": "Icon.SKULL",
+      "kind": "enum member",
+      "sources": [
+        "constants.Icon.SKULL"
+      ],
+      "zh-CN": "骷髅"
+    },
+    {
+      "en-US": "All",
+      "id": "Invis.ALL",
+      "kind": "enum member",
+      "sources": [
+        "constants.Invis.ALL"
+      ],
+      "zh-CN": "全部"
+    },
+    {
+      "en-US": "Enemies",
+      "id": "Invis.ENEMIES",
+      "kind": "enum member",
+      "sources": [
+        "constants.Invis.ENEMIES"
+      ],
+      "zh-CN": "敌人"
+    },
+    {
+      "en-US": "None",
+      "id": "Invis.NONE",
+      "kind": "enum member",
+      "sources": [
+        "constants.Invis.NONE"
+      ],
+      "zh-CN": "全部禁用"
+    },
+    {
+      "en-US": "String",
+      "id": "InworldTextReeval.STRING",
+      "kind": "enum member",
+      "sources": [
+        "constants.WorldTextReeval.STRING"
+      ],
+      "zh-CN": "字符串"
+    },
+    {
+      "en-US": "Visible To",
+      "id": "InworldTextReeval.VISIBLE_TO",
+      "kind": "enum member",
+      "sources": [
+        "constants.WorldTextReeval.VISIBILITY"
+      ],
+      "zh-CN": "可见"
+    },
+    {
+      "en-US": "Visible To and Color",
+      "id": "InworldTextReeval.VISIBLE_TO_AND_COLOR",
+      "kind": "enum member",
+      "sources": [
+        "constants.WorldTextReeval.VISIBILITY_AND_COLOR"
+      ],
+      "zh-CN": "可见和颜色"
+    },
+    {
+      "en-US": "Visible To and Position",
+      "id": "InworldTextReeval.VISIBLE_TO_AND_POSITION",
+      "kind": "enum member",
+      "sources": [
+        "constants.WorldTextReeval.VISIBILITY_AND_POSITION"
+      ],
+      "zh-CN": "可见和位置"
+    },
+    {
+      "en-US": "Visible To and String",
+      "id": "InworldTextReeval.VISIBLE_TO_AND_STRING",
+      "kind": "enum member",
+      "sources": [
+        "constants.WorldTextReeval.VISIBILITY_AND_STRING"
+      ],
+      "zh-CN": "可见和字符串"
+    },
+    {
+      "en-US": "Visible To Position and Color",
+      "id": "InworldTextReeval.VISIBLE_TO_POSITION_AND_COLOR",
+      "kind": "enum member",
+      "sources": [
+        "constants.WorldTextReeval.VISIBILITY_POSITION_AND_COLOR"
+      ],
+      "zh-CN": "可见，位置和颜色"
+    },
+    {
+      "en-US": "Visible To Position and String",
+      "id": "InworldTextReeval.VISIBLE_TO_POSITION_AND_STRING",
+      "kind": "enum member",
+      "sources": [
+        "constants.WorldTextReeval.VISIBILITY_POSITION_AND_STRING"
+      ],
+      "zh-CN": "可见，位置和字符串"
+    },
+    {
+      "en-US": "Visible To Position String and Color",
+      "id": "InworldTextReeval.VISIBLE_TO_POSITION_STRING_AND_COLOR",
+      "kind": "enum member",
+      "sources": [
+        "constants.WorldTextReeval.VISIBILITY_POSITION_STRING_AND_COLOR"
+      ],
+      "zh-CN": "可见，位置，字符串和颜色"
+    },
+    {
+      "en-US": "Visible To String and Color",
+      "id": "InworldTextReeval.VISIBLE_TO_STRING_AND_COLOR",
+      "kind": "enum member",
+      "sources": [
+        "constants.WorldTextReeval.VISIBILITY_STRING_AND_COLOR"
+      ],
+      "zh-CN": "可见，字符串和颜色"
+    },
+    {
+      "en-US": "Off",
+      "id": "LosCheck.OFF",
+      "kind": "enum member",
+      "sources": [
+        "constants.LosCheck.OFF"
+      ],
+      "zh-CN": "关闭"
+    },
+    {
+      "en-US": "Surfaces",
+      "id": "LosCheck.SURFACES",
+      "kind": "enum member",
+      "sources": [
+        "constants.LosCheck.SURFACES"
+      ],
+      "zh-CN": "表面"
+    },
+    {
+      "en-US": "Surfaces And All Barriers",
+      "id": "LosCheck.SURFACES_AND_ALL_BARRIERS",
+      "kind": "enum member",
+      "sources": [
+        "constants.LosCheck.SURFACES_AND_ALL_BARRIERS"
+      ],
+      "zh-CN": "表面及全部屏障"
+    },
+    {
+      "en-US": "Surfaces And Enemy Barriers",
+      "id": "LosCheck.SURFACES_AND_ENEMY_BARRIERS",
+      "kind": "enum member",
+      "sources": [
+        "constants.LosCheck.SURFACES_AND_ENEMY_BARRIERS"
+      ],
+      "zh-CN": "表面及敌方屏障"
+    },
+    {
+      "en-US": "Aatlis",
+      "id": "Map.AATLIS",
+      "kind": "enum member",
+      "sources": [
+        "data.maps.aatlis"
+      ],
+      "zh-CN": "阿特利斯"
+    },
+    {
+      "en-US": "Antarctic Peninsula",
+      "id": "Map.ANTARCTIC_PENINSULA",
+      "kind": "enum member",
+      "sources": [
+        "maps.antarcticPeninsula",
+        "data.maps.antarcticPeninsula"
+      ],
+      "zh-CN": "南极半岛"
+    },
+    {
+      "en-US": "Blizzard World",
+      "id": "Map.BLIZZARD_WORLD",
+      "kind": "enum member",
+      "sources": [
+        "maps.blizzWorld",
+        "data.maps.blizzWorld"
+      ],
+      "zh-CN": "暴雪世界"
+    },
+    {
+      "en-US": "Blizzard World Winter",
+      "id": "Map.BLIZZARD_WORLD_WINTER",
+      "kind": "enum member",
+      "sources": [
+        "maps.blizzWorldWinter",
+        "data.maps.blizzWorldWinter"
+      ],
+      "zh-CN": "圣诞节暴雪世界"
+    },
+    {
+      "en-US": "Busan",
+      "id": "Map.BUSAN",
+      "kind": "enum member",
+      "sources": [
+        "maps.busan",
+        "data.maps.busan"
+      ],
+      "zh-CN": "釜山"
+    },
+    {
+      "en-US": "Circuit Royal",
+      "id": "Map.CIRCUIT_ROYAL",
+      "kind": "enum member",
+      "sources": [
+        "maps.circuitRoyal",
+        "data.maps.circuitRoyal"
+      ],
+      "zh-CN": "皇家赛道"
+    },
+    {
+      "en-US": "Colosseo",
+      "id": "Map.COLOSSEO",
+      "kind": "enum member",
+      "sources": [
+        "maps.colosseo",
+        "data.maps.colosseo"
+      ],
+      "zh-CN": "斗兽场"
+    },
+    {
+      "en-US": "Dorado",
+      "id": "Map.DORADO",
+      "kind": "enum member",
+      "sources": [
+        "maps.dorado",
+        "data.maps.dorado"
+      ],
+      "zh-CN": "多拉多"
+    },
+    {
+      "en-US": "Eichenwalde",
+      "id": "Map.EICHENWALDE",
+      "kind": "enum member",
+      "sources": [
+        "maps.eichenwalde",
+        "data.maps.eichenwalde"
+      ],
+      "zh-CN": "艾兴瓦尔德"
+    },
+    {
+      "en-US": "Eichenwalde Halloween",
+      "id": "Map.EICHENWALDE_HALLOWEEN",
+      "kind": "enum member",
+      "sources": [
+        "maps.eichenwaldeHalloween",
+        "data.maps.eichenwaldeHalloween"
+      ],
+      "zh-CN": "万圣节艾兴瓦尔德"
+    },
+    {
+      "en-US": "Esperança",
+      "id": "Map.ESPERANCA",
+      "kind": "enum member",
+      "sources": [
+        "maps.esperanca",
+        "data.maps.esperanca"
+      ],
+      "zh-CN": "埃斯佩兰萨"
+    },
+    {
+      "en-US": "Hanamura",
+      "id": "Map.HANAMURA",
+      "kind": "enum member",
+      "sources": [
+        "maps.hanamura",
+        "data.maps.hanamura"
+      ],
+      "zh-CN": "花村"
+    },
+    {
+      "en-US": "Hanamura Winter",
+      "id": "Map.HANAMURA_WINTER",
+      "kind": "enum member",
+      "sources": [
+        "maps.hanamuraWinter",
+        "data.maps.hanamuraWinter"
+      ],
+      "zh-CN": "圣诞节花村"
+    },
+    {
+      "en-US": "Hanaoka",
+      "id": "Map.HANAOKA",
+      "kind": "enum member",
+      "sources": [
+        "maps.hanaoka",
+        "data.maps.hanaoka"
+      ],
+      "zh-CN": "花冈"
+    },
+    {
+      "en-US": "Havana",
+      "id": "Map.HAVANA",
+      "kind": "enum member",
+      "sources": [
+        "maps.havana",
+        "data.maps.havana"
+      ],
+      "zh-CN": "哈瓦那"
+    },
+    {
+      "en-US": "Hollywood",
+      "id": "Map.HOLLYWOOD",
+      "kind": "enum member",
+      "sources": [
+        "maps.hollywood",
+        "data.maps.hollywood"
+      ],
+      "zh-CN": "好莱坞"
+    },
+    {
+      "en-US": "Hollywood Halloween",
+      "id": "Map.HOLLYWOOD_HALLOWEEN",
+      "kind": "enum member",
+      "sources": [
+        "maps.hollywoodHalloween",
+        "data.maps.hollywoodHalloween"
+      ],
+      "zh-CN": "万圣节好莱坞"
+    },
+    {
+      "en-US": "Horizon Lunar Colony",
+      "id": "Map.HORIZON_LUNAR_COLONY",
+      "kind": "enum member",
+      "sources": [
+        "maps.horizonLunarColony",
+        "data.maps.horizonLunarColony"
+      ],
+      "zh-CN": "“地平线”月球基地"
+    },
+    {
+      "en-US": "Ilios",
+      "id": "Map.ILIOS",
+      "kind": "enum member",
+      "sources": [
+        "maps.ilios",
+        "data.maps.ilios"
+      ],
+      "zh-CN": "伊利奥斯"
+    },
+    {
+      "en-US": "Junkertown",
+      "id": "Map.JUNKERTOWN",
+      "kind": "enum member",
+      "sources": [
+        "maps.junkertown",
+        "data.maps.junkertown"
+      ],
+      "zh-CN": "渣客镇"
+    },
+    {
+      "en-US": "King's Row",
+      "id": "Map.KINGS_ROW",
+      "kind": "enum member",
+      "sources": [
+        "maps.kingsRow",
+        "data.maps.kingsRow"
+      ],
+      "zh-CN": "国王大道"
+    },
+    {
+      "en-US": "King's Row Winter",
+      "id": "Map.KINGS_ROW_WINTER",
+      "kind": "enum member",
+      "sources": [
+        "maps.kingsRowWinter",
+        "data.maps.kingsRowWinter"
+      ],
+      "zh-CN": "圣诞节国王大道"
+    },
+    {
+      "en-US": "Lijiang Tower",
+      "id": "Map.LIJIANG_TOWER",
+      "kind": "enum member",
+      "sources": [
+        "maps.lijiangTower",
+        "data.maps.lijiangTower"
+      ],
+      "zh-CN": "漓江塔"
+    },
+    {
+      "en-US": "Midtown",
+      "id": "Map.MIDTOWN",
+      "kind": "enum member",
+      "sources": [
+        "maps.midtown",
+        "data.maps.midtown"
+      ],
+      "zh-CN": "中城"
+    },
+    {
+      "en-US": "Nepal",
+      "id": "Map.NEPAL",
+      "kind": "enum member",
+      "sources": [
+        "maps.nepal",
+        "data.maps.nepal"
+      ],
+      "zh-CN": "尼泊尔"
+    },
+    {
+      "en-US": "New Junk City",
+      "id": "Map.NEW_JUNK_CITY",
+      "kind": "enum member",
+      "sources": [
+        "maps.newJunkCity",
+        "data.maps.newJunkCity"
+      ],
+      "zh-CN": "新渣客城"
+    },
+    {
+      "en-US": "New Queen Street",
+      "id": "Map.NEW_QUEEN_STREET",
+      "kind": "enum member",
+      "sources": [
+        "maps.newQueenStreet",
+        "data.maps.newQueenStreet"
+      ],
+      "zh-CN": "新皇后街"
+    },
+    {
+      "en-US": "Numbani",
+      "id": "Map.NUMBANI",
+      "kind": "enum member",
+      "sources": [
+        "maps.numbani",
+        "data.maps.numbani"
+      ],
+      "zh-CN": "努巴尼"
+    },
+    {
+      "en-US": "Oasis",
+      "id": "Map.OASIS",
+      "kind": "enum member",
+      "sources": [
+        "maps.oasis",
+        "data.maps.oasis"
+      ],
+      "zh-CN": "绿洲城"
+    },
+    {
+      "en-US": "Paraíso",
+      "id": "Map.PARAISO",
+      "kind": "enum member",
+      "sources": [
+        "maps.paraiso",
+        "data.maps.paraiso"
+      ],
+      "zh-CN": "帕拉伊苏"
+    },
+    {
+      "en-US": "Paris",
+      "id": "Map.PARIS",
+      "kind": "enum member",
+      "sources": [
+        "maps.paris",
+        "data.maps.paris"
+      ],
+      "zh-CN": "巴黎"
+    },
+    {
+      "en-US": "Rialto",
+      "id": "Map.RIALTO",
+      "kind": "enum member",
+      "sources": [
+        "maps.rialto",
+        "data.maps.rialto"
+      ],
+      "zh-CN": "里阿尔托"
+    },
+    {
+      "en-US": "Route 66",
+      "id": "Map.ROUTE_66",
+      "kind": "enum member",
+      "sources": [
+        "maps.route66",
+        "data.maps.route66"
+      ],
+      "zh-CN": "66号公路"
+    },
+    {
+      "en-US": "Runasapi",
+      "id": "Map.RUNASAPI",
+      "kind": "enum member",
+      "sources": [
+        "maps.runasapi",
+        "data.maps.runasapi"
+      ],
+      "zh-CN": "鲁纳塞彼"
+    },
+    {
+      "en-US": "Samoa",
+      "id": "Map.SAMOA",
+      "kind": "enum member",
+      "sources": [
+        "maps.samoa",
+        "data.maps.samoa"
+      ],
+      "zh-CN": "萨摩亚"
+    },
+    {
+      "en-US": "Shambali Monastery",
+      "id": "Map.SHAMBALI_MONASTERY",
+      "kind": "enum member",
+      "sources": [
+        "maps.shambaliMonastery",
+        "data.maps.shambaliMonastery"
+      ],
+      "zh-CN": "香巴里寺院"
+    },
+    {
+      "en-US": "Suravasa",
+      "id": "Map.SURAVASA",
+      "kind": "enum member",
+      "sources": [
+        "maps.suravasa",
+        "data.maps.suravasa"
+      ],
+      "zh-CN": "苏拉瓦萨"
+    },
+    {
+      "en-US": "Temple of Anubis",
+      "id": "Map.TEMPLE_OF_ANUBIS",
+      "kind": "enum member",
+      "sources": [
+        "maps.templeOfAnubis",
+        "data.maps.templeOfAnubis"
+      ],
+      "zh-CN": "阿努比斯神殿"
+    },
+    {
+      "en-US": "Throne of Anubis",
+      "id": "Map.THRONE_OF_ANUBIS",
+      "kind": "enum member",
+      "sources": [
+        "maps.throneOfAnubis",
+        "data.maps.throneOfAnubis"
+      ],
+      "zh-CN": "阿努比斯王座"
+    },
+    {
+      "en-US": "Volskaya Industries",
+      "id": "Map.VOLSKAYA_INDUSTRIES",
+      "kind": "enum member",
+      "sources": [
+        "maps.volskaya",
+        "data.maps.volskaya"
+      ],
+      "zh-CN": "沃斯卡娅工业区"
+    },
+    {
+      "en-US": "Watchpoint: Gibraltar",
+      "id": "Map.WATCHPOINT_GIBRALTAR",
+      "kind": "enum member",
+      "sources": [
+        "maps.watchpointGibraltar",
+        "data.maps.watchpointGibraltar"
+      ],
+      "zh-CN": "监测站：直布罗陀"
+    },
+    {
+      "en-US": "Append To Array",
+      "id": "Operation.APPEND_TO_ARRAY",
+      "kind": "enum member",
+      "sources": [
+        "constants.__Operation__.__appendToArray__"
+      ],
+      "zh-CN": "添加至数组"
+    },
+    {
+      "en-US": "Remove From Array By Index",
+      "id": "Operation.REMOVE_FROM_ARRAY_BY_INDEX",
+      "kind": "enum member",
+      "sources": [
+        "constants.__Operation__.__removeFromArrayByIndex__"
+      ],
+      "zh-CN": "根据索引从数组中移除"
+    },
+    {
+      "en-US": "Remove From Array By Value",
+      "id": "Operation.REMOVE_FROM_ARRAY_BY_VALUE",
+      "kind": "enum member",
+      "sources": [
+        "constants.__Operation__.__removeFromArrayByValue__"
+      ],
+      "zh-CN": "根据值从数组中移除"
+    },
+    {
+      "en-US": "Down",
+      "id": "Rounding.DOWN",
+      "kind": "enum member",
+      "sources": [
+        "constants.__Rounding__.__roundDown__"
+      ],
+      "zh-CN": "下"
+    },
+    {
+      "en-US": "Up",
+      "id": "Rounding.UP",
+      "kind": "enum member",
+      "sources": [
+        "constants.__Rounding__.__roundUp__"
+      ],
+      "zh-CN": "上"
+    },
+    {
+      "en-US": "Default Visibility",
+      "id": "SpecVisibility.DEFAULT",
+      "kind": "enum member",
+      "sources": [
+        "constants.SpecVisibility.DEFAULT"
+      ],
+      "zh-CN": "默认可见度"
+    },
+    {
+      "en-US": "Visible Always",
+      "id": "SpecVisibility.VISIBLE_ALWAYS",
+      "kind": "enum member",
+      "sources": [
+        "constants.SpecVisibility.ALWAYS"
+      ],
+      "zh-CN": "始终可见"
+    },
+    {
+      "en-US": "Visible Never",
+      "id": "SpecVisibility.VISIBLE_NEVER",
+      "kind": "enum member",
+      "sources": [
+        "constants.SpecVisibility.NEVER"
+      ],
+      "zh-CN": "始终不可见"
+    },
+    {
+      "en-US": "Asleep",
+      "id": "Status.ASLEEP",
+      "kind": "enum member",
+      "sources": [
+        "constants.Status.ASLEEP"
+      ],
+      "zh-CN": "沉睡"
+    },
+    {
+      "en-US": "Burning",
+      "id": "Status.BURNING",
+      "kind": "enum member",
+      "sources": [
+        "constants.Status.BURNING"
+      ],
+      "zh-CN": "燃烧"
+    },
+    {
+      "en-US": "Frozen",
+      "id": "Status.FROZEN",
+      "kind": "enum member",
+      "sources": [
+        "constants.Status.FROZEN"
+      ],
+      "zh-CN": "冰冻"
+    },
+    {
+      "en-US": "Hacked",
+      "id": "Status.HACKED",
+      "kind": "enum member",
+      "sources": [
+        "constants.Status.HACKED"
+      ],
+      "zh-CN": "被入侵"
+    },
+    {
+      "en-US": "Invincible",
+      "id": "Status.INVINCIBLE",
+      "kind": "enum member",
+      "sources": [
+        "constants.Status.INVINCIBLE"
+      ],
+      "zh-CN": "无敌"
+    },
+    {
+      "en-US": "Knocked Down",
+      "id": "Status.KNOCKED_DOWN",
+      "kind": "enum member",
+      "sources": [
+        "constants.Status.KNOCKED_DOWN"
+      ],
+      "zh-CN": "击倒"
+    },
+    {
+      "en-US": "Phased Out",
+      "id": "Status.PHASED_OUT",
+      "kind": "enum member",
+      "sources": [
+        "constants.Status.PHASED_OUT"
+      ],
+      "zh-CN": "相移"
+    },
+    {
+      "en-US": "Rooted",
+      "id": "Status.ROOTED",
+      "kind": "enum member",
+      "sources": [
+        "constants.Status.ROOTED"
+      ],
+      "zh-CN": "定身"
+    },
+    {
+      "en-US": "Stunned",
+      "id": "Status.STUNNED",
+      "kind": "enum member",
+      "sources": [
+        "constants.Status.STUNNED"
+      ],
+      "zh-CN": "击晕"
+    },
+    {
+      "en-US": "Unkillable",
+      "id": "Status.UNKILLABLE",
+      "kind": "enum member",
+      "sources": [
+        "constants.Status.UNKILLABLE"
+      ],
+      "zh-CN": "无法杀死"
+    },
+    {
+      "en-US": "All Teams",
+      "id": "Team.ALL",
+      "kind": "enum member",
+      "sources": [
+        "constants.TeamLiteral.ALL"
+      ],
+      "zh-CN": "所有队伍"
+    },
+    {
+      "en-US": "Team 1",
+      "id": "Team.TEAM_1",
+      "kind": "enum member",
+      "sources": [
+        "constants.TeamLiteral.1"
+      ],
+      "zh-CN": "队伍1"
+    },
+    {
+      "en-US": "Team 2",
+      "id": "Team.TEAM_2",
+      "kind": "enum member",
+      "sources": [
+        "constants.TeamLiteral.2"
+      ],
+      "zh-CN": "队伍2"
+    },
+    {
+      "en-US": "Rotation",
+      "id": "Transform.ROTATION",
+      "kind": "enum member",
+      "sources": [
+        "constants.Transform.ROTATION"
+      ],
+      "zh-CN": "旋转"
+    },
+    {
+      "en-US": "Rotation And Translation",
+      "id": "Transform.ROTATION_AND_TRANSLATION",
+      "kind": "enum member",
+      "sources": [
+        "constants.Transform.ROTATION_AND_TRANSLATION"
+      ],
+      "zh-CN": "旋转并转换"
+    },
+    {
+      "en-US": "Up",
+      "id": "Vector.UP",
+      "kind": "enum member",
+      "sources": [
+        "values.Vector.UP"
+      ],
+      "zh-CN": "上"
+    },
+    {
+      "en-US": "Abort When False",
+      "id": "Wait.ABORT_WHEN_FALSE",
+      "kind": "enum member",
+      "sources": [
+        "constants.Wait.ABORT_WHEN_FALSE"
+      ],
+      "zh-CN": "当为“假”时中止"
+    },
+    {
+      "en-US": "Ignore Condition",
+      "id": "Wait.IGNORE_CONDITION",
+      "kind": "enum member",
+      "sources": [
+        "constants.Wait.IGNORE_CONDITION"
+      ],
+      "zh-CN": "无视条件"
+    },
+    {
+      "en-US": "Ongoing - Each Player",
+      "id": "eachPlayer",
+      "kind": "event",
+      "sources": [
+        "other.events.eachPlayer"
+      ],
+      "zh-CN": "持续 - 每名玩家"
+    },
+    {
+      "en-US": "Ongoing - Global",
+      "id": "global",
+      "kind": "event",
+      "sources": [
+        "other.events.global"
+      ],
+      "zh-CN": "持续 - 全局"
+    },
+    {
+      "en-US": "Subroutine",
+      "id": "subroutine",
+      "kind": "event",
+      "sources": [
+        "other.events.__subroutine__"
+      ],
+      "zh-CN": "子程序"
+    },
+    {
+      "en-US": "Add",
+      "id": "add",
+      "kind": "operator",
+      "sources": [
+        "constants.__Operation__.__add__",
+        "values.__add__"
+      ],
+      "zh-CN": "加"
+    },
+    {
+      "en-US": "Append To Array",
+      "id": "appendToArray",
+      "kind": "operator",
+      "sources": [
+        "constants.__Operation__.__appendToArray__",
+        "values..concat"
+      ],
+      "zh-CN": "添加至数组"
+    },
+    {
+      "en-US": "Divide",
+      "id": "divide",
+      "kind": "operator",
+      "sources": [
+        "constants.__Operation__.__divide__",
+        "values.__divide__"
+      ],
+      "zh-CN": "除"
+    },
+    {
+      "en-US": "Modulo",
+      "id": "modulo",
+      "kind": "operator",
+      "sources": [
+        "constants.__Operation__.__modulo__",
+        "values.__modulo__"
+      ],
+      "zh-CN": "余数"
+    },
+    {
+      "en-US": "Multiply",
+      "id": "multiply",
+      "kind": "operator",
+      "sources": [
+        "constants.__Operation__.__multiply__",
+        "values.__multiply__"
+      ],
+      "zh-CN": "乘"
+    },
+    {
+      "en-US": "Raise To Power",
+      "id": "raiseToPower",
+      "kind": "operator",
+      "sources": [
+        "constants.__Operation__.__raiseToPower__",
+        "values.__raiseToPower__"
+      ],
+      "zh-CN": "乘方"
+    },
+    {
+      "en-US": "Remove From Array",
+      "id": "removeFromArray",
+      "kind": "operator",
+      "sources": [
+        "values..exclude"
+      ],
+      "zh-CN": "从数组中移除"
+    },
+    {
+      "en-US": "Subtract",
+      "id": "subtract",
+      "kind": "operator",
+      "sources": [
+        "constants.__Operation__.__subtract__",
+        "values.__subtract__"
+      ],
+      "zh-CN": "减"
+    },
+    {
+      "en-US": "Call Subroutine",
+      "id": "callSubroutine",
+      "kind": "structural",
+      "sources": [
+        "actions.__callSubroutine__"
+      ],
+      "zh-CN": "调用子程序"
+    },
+    {
+      "en-US": "Else",
+      "id": "else",
+      "kind": "structural",
+      "sources": [
+        "actions.__else__"
+      ],
+      "zh-CN": "Else"
+    },
+    {
+      "en-US": "Else If",
+      "id": "elseIf",
+      "kind": "structural",
+      "sources": [
+        "actions.__elif__"
+      ],
+      "zh-CN": "Else If"
+    },
+    {
+      "en-US": "End",
+      "id": "end",
+      "kind": "structural",
+      "sources": [
+        "actions.__end__"
+      ],
+      "zh-CN": "End"
+    },
+    {
+      "en-US": "For Global Variable",
+      "id": "forGlobalVariable",
+      "kind": "structural",
+      "sources": [
+        "actions.__forGlobalVariable__"
+      ],
+      "zh-CN": "For 全局变量"
+    },
+    {
+      "en-US": "If",
+      "id": "if",
+      "kind": "structural",
+      "sources": [
+        "actions.__if__"
+      ],
+      "zh-CN": "If"
+    },
+    {
+      "en-US": "Modify Global Variable",
+      "id": "modifyGlobalVariable",
+      "kind": "structural",
+      "sources": [
+        "actions.__modifyGlobalVariable__"
+      ],
+      "zh-CN": "修改全局变量"
+    },
+    {
+      "en-US": "Modify Player Variable",
+      "id": "modifyPlayerVariable",
+      "kind": "structural",
+      "sources": [
+        "actions.__modifyPlayerVariable__"
+      ],
+      "zh-CN": "修改玩家变量"
+    },
+    {
+      "en-US": "Set Global Variable",
+      "id": "setGlobalVariable",
+      "kind": "structural",
+      "sources": [
+        "actions.__setGlobalVariable__"
+      ],
+      "zh-CN": "设置全局变量"
+    },
+    {
+      "en-US": "Set Player Variable",
+      "id": "setPlayerVariable",
+      "kind": "structural",
+      "sources": [
+        "actions.__setPlayerVariable__"
+      ],
+      "zh-CN": "设置玩家变量"
+    },
+    {
+      "en-US": "While",
+      "id": "while",
+      "kind": "structural",
+      "sources": [
+        "actions.__while__"
+      ],
+      "zh-CN": "While"
+    },
+    {
+      "en-US": "Ability Icon String",
+      "id": "abilityIconString",
+      "kind": "value",
+      "sources": [
+        "values.abilityIconString"
+      ],
+      "zh-CN": "技能图标字符串"
+    },
+    {
+      "en-US": "Absolute Value",
+      "id": "absoluteValue",
+      "kind": "value",
+      "sources": [
+        "values.abs"
+      ],
+      "zh-CN": "绝对值"
+    },
+    {
+      "en-US": "Add",
+      "id": "add",
+      "kind": "value",
+      "sources": [
+        "values.__add__"
+      ],
+      "zh-CN": "加"
+    },
+    {
+      "en-US": "All Damage Heroes",
+      "id": "allDamageHeroes",
+      "kind": "value",
+      "sources": [
+        "values.getDamageHeroes"
+      ],
+      "zh-CN": "所有输出英雄"
+    },
+    {
+      "en-US": "All Heroes",
+      "id": "allHeroes",
+      "kind": "value",
+      "sources": [
+        "values.getAllHeroes"
+      ],
+      "zh-CN": "全部英雄"
+    },
+    {
+      "en-US": "All Players",
+      "id": "allPlayers",
+      "kind": "value",
+      "sources": [
+        "values.getPlayers"
+      ],
+      "zh-CN": "所有玩家"
+    },
+    {
+      "en-US": "All Support Heroes",
+      "id": "allSupportHeroes",
+      "kind": "value",
+      "sources": [
+        "values.getSupportHeroes"
+      ],
+      "zh-CN": "所有支援英雄"
+    },
+    {
+      "en-US": "All Tank Heroes",
+      "id": "allTankHeroes",
+      "kind": "value",
+      "sources": [
+        "values.getTankHeroes"
+      ],
+      "zh-CN": "所有重装英雄"
+    },
+    {
+      "en-US": "Allowed Heroes",
+      "id": "allowedHeroes",
+      "kind": "value",
+      "sources": [
+        "values..getAllowedHeroes"
+      ],
+      "zh-CN": "可用英雄"
+    },
+    {
+      "en-US": "And",
+      "id": "and",
+      "kind": "value",
+      "sources": [
+        "values.__and__"
+      ],
+      "zh-CN": "与"
+    },
+    {
+      "en-US": "Append To Array",
+      "id": "appendToArray",
+      "kind": "value",
+      "sources": [
+        "values..concat"
+      ],
+      "zh-CN": "添加至数组"
+    },
+    {
+      "en-US": "Array",
+      "id": "array",
+      "kind": "value",
+      "sources": [
+        "values.__array__"
+      ],
+      "zh-CN": "数组"
+    },
+    {
+      "en-US": "Array Contains",
+      "id": "arrayContains",
+      "kind": "value",
+      "sources": [
+        "values.__arrayContains__"
+      ],
+      "zh-CN": "数组包含"
+    },
+    {
+      "en-US": "Compare",
+      "id": "compare",
+      "kind": "value",
+      "sources": [
+        "values.__compare__"
+      ],
+      "zh-CN": "比较"
+    },
+    {
+      "en-US": "Count Of",
+      "id": "countOf",
+      "kind": "value",
+      "sources": [
+        "values.len"
+      ],
+      "zh-CN": "数量"
+    },
+    {
+      "en-US": "Cross Product",
+      "id": "crossProduct",
+      "kind": "value",
+      "sources": [
+        "values.crossProduct"
+      ],
+      "zh-CN": "矢量积"
+    },
+    {
+      "en-US": "Current Array Element",
+      "id": "currentArrayElement",
+      "kind": "value",
+      "sources": [
+        "values.__currentArrayElement__"
+      ],
+      "zh-CN": "当前数组元素"
+    },
+    {
+      "en-US": "Current Array Index",
+      "id": "currentArrayIndex",
+      "kind": "value",
+      "sources": [
+        "values.__currentArrayIndex__"
+      ],
+      "zh-CN": "当前数组索引"
+    },
+    {
+      "en-US": "Current Map",
+      "id": "currentMap",
+      "kind": "value",
+      "sources": [
+        "values.__getCurrentMap__"
+      ],
+      "zh-CN": "当前地图"
+    },
+    {
+      "en-US": "Custom Color",
+      "id": "customColor",
+      "kind": "value",
+      "sources": [
+        "values.rgb"
+      ],
+      "zh-CN": "自定义颜色"
+    },
+    {
+      "en-US": "Custom String",
+      "id": "customString",
+      "kind": "value",
+      "sources": [
+        "values.__customString__"
+      ],
+      "zh-CN": "自定义字符串"
+    },
+    {
+      "en-US": "Direction From Angles",
+      "id": "directionFromAngles",
+      "kind": "value",
+      "sources": [
+        "values.directionFromAngles"
+      ],
+      "zh-CN": "与此角度的相对方向"
+    },
+    {
+      "en-US": "Divide",
+      "id": "divide",
+      "kind": "value",
+      "sources": [
+        "values.__divide__"
+      ],
+      "zh-CN": "除"
+    },
+    {
+      "en-US": "Empty Array",
+      "id": "emptyArray",
+      "kind": "value",
+      "sources": [
+        "values.__emptyArray__"
+      ],
+      "zh-CN": "空数组"
+    },
+    {
+      "en-US": "Evaluate Once",
+      "id": "evaluateOnce",
+      "kind": "value",
+      "sources": [
+        "values.evalOnce"
+      ],
+      "zh-CN": "单次赋值"
+    },
+    {
+      "en-US": "Event Player",
+      "id": "eventPlayer",
+      "kind": "value",
+      "sources": [
+        "values.eventPlayer"
+      ],
+      "zh-CN": "事件玩家"
+    },
+    {
+      "en-US": "Filtered Array",
+      "id": "filteredArray",
+      "kind": "value",
+      "sources": [
+        "values.__filteredArray__"
+      ],
+      "zh-CN": "已过滤的数组"
+    },
+    {
+      "en-US": "First Of",
+      "id": "firstOf",
+      "kind": "value",
+      "sources": [
+        "values.__firstOf__"
+      ],
+      "zh-CN": "首个"
+    },
+    {
+      "en-US": "Forward",
+      "id": "forward",
+      "kind": "value",
+      "sources": [
+        "values.Vector.FORWARD"
+      ],
+      "zh-CN": "前"
+    },
+    {
+      "en-US": "Health",
+      "id": "getHealth",
+      "kind": "value",
+      "sources": [
+        "values..getHealth"
+      ],
+      "zh-CN": "生命值"
+    },
+    {
+      "en-US": "Players Within Radius",
+      "id": "getPlayersInRadius",
+      "kind": "value",
+      "sources": [
+        "values.getPlayersInRadius"
+      ],
+      "zh-CN": "范围内玩家"
+    },
+    {
+      "en-US": "Position Of",
+      "id": "getPosition",
+      "kind": "value",
+      "sources": [
+        "values..getPosition"
+      ],
+      "zh-CN": "所选位置"
+    },
+    {
+      "en-US": "Throttle Of",
+      "id": "getThrottle",
+      "kind": "value",
+      "sources": [
+        "values..getThrottle"
+      ],
+      "zh-CN": "阈值"
+    },
+    {
+      "en-US": "Has Spawned",
+      "id": "hasSpawned",
+      "kind": "value",
+      "sources": [
+        "values..hasSpawned"
+      ],
+      "zh-CN": "已重生"
+    },
+    {
+      "en-US": "Hero Icon String",
+      "id": "heroIconString",
+      "kind": "value",
+      "sources": [
+        "values.heroIcon"
+      ],
+      "zh-CN": "英雄图标字符串"
+    },
+    {
+      "en-US": "Horizontal Angle From Direction",
+      "id": "horizontalAngleFromDirection",
+      "kind": "value",
+      "sources": [
+        "values.horizontalAngleOfDirection"
+      ],
+      "zh-CN": "与此方向的水平角度"
+    },
+    {
+      "en-US": "Icon String",
+      "id": "iconString",
+      "kind": "value",
+      "sources": [
+        "values.iconString"
+      ],
+      "zh-CN": "图标字符串"
+    },
+    {
+      "en-US": "If-Then-Else",
+      "id": "ifThenElse",
+      "kind": "value",
+      "sources": [
+        "values.__ifThenElse__"
+      ],
+      "zh-CN": "If-Then-Else"
+    },
+    {
+      "en-US": "Index Of Array Value",
+      "id": "indexOfArrayValue",
+      "kind": "value",
+      "sources": [
+        "values..index"
+      ],
+      "zh-CN": "数组值的索引"
+    },
+    {
+      "en-US": "Input Binding String",
+      "id": "inputBindingString",
+      "kind": "value",
+      "sources": [
+        "values.inputBindingString"
+      ],
+      "zh-CN": "输入绑定字符串"
+    },
+    {
+      "en-US": "Is Alive",
+      "id": "isAlive",
+      "kind": "value",
+      "sources": [
+        "values..isAlive"
+      ],
+      "zh-CN": "存活"
+    },
+    {
+      "en-US": "Is Button Held",
+      "id": "isButtonHeld",
+      "kind": "value",
+      "sources": [
+        "values..isHoldingButton"
+      ],
+      "zh-CN": "按钮被按下"
+    },
+    {
+      "en-US": "Is Game In Progress",
+      "id": "isGameInProgress",
+      "kind": "value",
+      "sources": [
+        "values.isGameInProgress"
+      ],
+      "zh-CN": "游戏正在进行中"
+    },
+    {
+      "en-US": "Is In Spawn Room",
+      "id": "isInSpawnRoom",
+      "kind": "value",
+      "sources": [
+        "values..isInSpawnRoom"
+      ],
+      "zh-CN": "在重生室中"
+    },
+    {
+      "en-US": "Is True For All",
+      "id": "isTrueForAll",
+      "kind": "value",
+      "sources": [
+        "values.__all__"
+      ],
+      "zh-CN": "对全部为“真”"
+    },
+    {
+      "en-US": "Is Waiting For Players",
+      "id": "isWaitingForPlayers",
+      "kind": "value",
+      "sources": [
+        "values.isWaitingForPlayers"
+      ],
+      "zh-CN": "正在等待玩家"
+    },
+    {
+      "en-US": "Last Created Entity",
+      "id": "lastCreatedEntity",
+      "kind": "value",
+      "sources": [
+        "values.getLastCreatedEntity"
+      ],
+      "zh-CN": "最后创建的实体"
+    },
+    {
+      "en-US": "Last Of",
+      "id": "lastOf",
+      "kind": "value",
+      "sources": [
+        "values..last"
+      ],
+      "zh-CN": "最后"
+    },
+    {
+      "en-US": "Last Text ID",
+      "id": "lastTextId",
+      "kind": "value",
+      "sources": [
+        "values.getLastCreatedText"
+      ],
+      "zh-CN": "上一个文本ID"
+    },
+    {
+      "en-US": "Local Player",
+      "id": "localPlayer",
+      "kind": "value",
+      "sources": [
+        "values.localPlayer"
+      ],
+      "zh-CN": "本地玩家"
+    },
+    {
+      "en-US": "Mapped Array",
+      "id": "mappedArray",
+      "kind": "value",
+      "sources": [
+        "values.__mappedArray__"
+      ],
+      "zh-CN": "映射的数组"
+    },
+    {
+      "en-US": "Max",
+      "id": "max",
+      "kind": "value",
+      "sources": [
+        "values.max"
+      ],
+      "zh-CN": "较大"
+    },
+    {
+      "en-US": "Min",
+      "id": "min",
+      "kind": "value",
+      "sources": [
+        "values.min"
+      ],
+      "zh-CN": "较小"
+    },
+    {
+      "en-US": "Multiply",
+      "id": "multiply",
+      "kind": "value",
+      "sources": [
+        "values.__multiply__"
+      ],
+      "zh-CN": "乘"
+    },
+    {
+      "en-US": "Not",
+      "id": "not",
+      "kind": "value",
+      "sources": [
+        "values.__not__"
+      ],
+      "zh-CN": "非"
+    },
+    {
+      "en-US": "Number Of Players",
+      "id": "numberOfPlayers",
+      "kind": "value",
+      "sources": [
+        "values.getNumberOfPlayers"
+      ],
+      "zh-CN": "玩家数量"
+    },
+    {
+      "en-US": "Opposite Team Of",
+      "id": "oppositeTeamOf",
+      "kind": "value",
+      "sources": [
+        "values.getOppositeTeam"
+      ],
+      "zh-CN": "对方队伍"
+    },
+    {
+      "en-US": "Or",
+      "id": "or",
+      "kind": "value",
+      "sources": [
+        "values.__or__"
+      ],
+      "zh-CN": "或"
+    },
+    {
+      "en-US": "Random Real",
+      "id": "randomReal",
+      "kind": "value",
+      "sources": [
+        "values.random.uniform"
+      ],
+      "zh-CN": "随机实数"
+    },
+    {
+      "en-US": "Random Value In Array",
+      "id": "randomValueInArray",
+      "kind": "value",
+      "sources": [
+        "values.random.choice"
+      ],
+      "zh-CN": "数组随机取值"
+    },
+    {
+      "en-US": "Remove From Array",
+      "id": "removeFromArray",
+      "kind": "value",
+      "sources": [
+        "values..exclude"
+      ],
+      "zh-CN": "从数组中移除"
+    },
+    {
+      "en-US": "Round To Integer",
+      "id": "roundToInteger",
+      "kind": "value",
+      "sources": [
+        "values.__round__"
+      ],
+      "zh-CN": "取整"
+    },
+    {
+      "en-US": "Sorted Array",
+      "id": "sortedArray",
+      "kind": "value",
+      "sources": [
+        "values.__sortedArray__"
+      ],
+      "zh-CN": "已排序的数组"
+    },
+    {
+      "en-US": "Square Root",
+      "id": "squareRoot",
+      "kind": "value",
+      "sources": [
+        "values.sqrt"
+      ],
+      "zh-CN": "平方根"
+    },
+    {
+      "en-US": "String Replace",
+      "id": "stringReplace",
+      "kind": "value",
+      "sources": [
+        "values..replace"
+      ],
+      "zh-CN": "字符串替换"
+    },
+    {
+      "en-US": "String Slice",
+      "id": "stringSlice",
+      "kind": "value",
+      "sources": [
+        "values..substring"
+      ],
+      "zh-CN": "截取字符串"
+    },
+    {
+      "en-US": "String Split",
+      "id": "stringSplit",
+      "kind": "value",
+      "sources": [
+        "values..split"
+      ],
+      "zh-CN": "字符串分割"
+    },
+    {
+      "en-US": "Subtract",
+      "id": "subtract",
+      "kind": "value",
+      "sources": [
+        "values.__subtract__"
+      ],
+      "zh-CN": "减"
+    },
+    {
+      "en-US": "Team Of",
+      "id": "teamOf",
+      "kind": "value",
+      "sources": [
+        "values..getTeam"
+      ],
+      "zh-CN": "所在队伍"
+    },
+    {
+      "en-US": "Update Every Frame",
+      "id": "updateEveryFrame",
+      "kind": "value",
+      "sources": [
+        "values.updateEveryFrame"
+      ],
+      "zh-CN": "逐帧更新"
+    },
+    {
+      "en-US": "Value In Array",
+      "id": "valueInArray",
+      "kind": "value",
+      "sources": [
+        "values.__valueInArray__"
+      ],
+      "zh-CN": "数组中的值"
+    },
+    {
+      "en-US": "Vector",
+      "id": "vector",
+      "kind": "value",
+      "sources": [
+        "values.vect"
+      ],
+      "zh-CN": "矢量"
+    },
+    {
+      "en-US": "Vertical Angle From Direction",
+      "id": "verticalAngleFromDirection",
+      "kind": "value",
+      "sources": [
+        "values.verticalAngleOfDirection"
+      ],
+      "zh-CN": "与此方向的垂直角度"
+    },
+    {
+      "en-US": "Workshop Setting Combo",
+      "id": "workshopSettingCombo",
+      "kind": "value",
+      "sources": [
+        "values.createWorkshopSettingEnum"
+      ],
+      "zh-CN": "地图工坊设置组合"
+    },
+    {
+      "en-US": "Workshop Setting Integer",
+      "id": "workshopSettingInteger",
+      "kind": "value",
+      "sources": [
+        "values.createWorkshopSettingInt"
+      ],
+      "zh-CN": "地图工坊设置整数"
+    },
+    {
+      "en-US": "Workshop Setting Toggle",
+      "id": "workshopSettingToggle",
+      "kind": "value",
+      "sources": [
+        "values.createWorkshopSettingBool"
+      ],
+      "zh-CN": "地图工坊设置开关"
+    },
+    {
+      "en-US": "World Vector Of",
+      "id": "worldVector",
+      "kind": "value",
+      "sources": [
+        "values.worldVector"
+      ],
+      "zh-CN": "地图矢量"
+    }
+  ],
+  "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/maps/heroes), zh-CN taken from the same export entry; entries without an exact match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+  "schemaVersion": 1,
+  "source": {
+    "commit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
+    "commitDate": "2026-08-12T15:26:38Z",
+    "export": "workshop-data.json",
+    "fetchedAt": "2026-08-17T02:52:59Z"
+  }
+}

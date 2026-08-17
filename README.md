@@ -107,9 +107,19 @@ the canonical form with a fresh digest (byte-idempotent). See
 
 * `en-US`: complete declared surface (344/344 canonical entries), corpus
   round-trips and settings emission tested.
-* `zh-CN`: declared as a locale with **zero mappings** pending a reviewed,
-  MIT-permissible reference source. Conversion into `zh-CN` fails explicitly
-  for every entry; no zh-CN compatibility claim is made.
+* `zh-CN`: the reviewed export-backed corpus covers **327/344** canonical
+  entries (structural 11/11, actions 55/62, values 77/78, events 3/3,
+  operators 8/14, enum members 173/176). The 17 exact-match exclusions remain
+  fail-explicit; settings data covers the matched declared surface and records
+  its exclusions in `crates/workshop-rs/src/settings/data/zh-cn.json`.
+
+The corpus is reproducible with the user-provided export (not committed):
+
+```sh
+cargo run -p workshop-rs --bin workshop-catalog-gen -- corpus \
+  --export /path/to/workshop-data.json
+cargo run -p workshop-rs --bin workshop-catalog-gen -- build
+```
 
 ## Validation
 

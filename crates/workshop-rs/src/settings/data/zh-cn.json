@@ -1,0 +1,373 @@
+{
+  "coverage": {
+    "enums": {
+      "matched": 2,
+      "total": 2
+    },
+    "heroes": {
+      "matched": 10,
+      "total": 10
+    },
+    "labels": {
+      "matched": 17,
+      "total": 19
+    },
+    "maps": {
+      "matched": 2,
+      "total": 2
+    },
+    "modes": {
+      "matched": 6,
+      "total": 7
+    },
+    "teams": {
+      "matched": 0,
+      "total": 1
+    },
+    "tokens": {
+      "matched": 3,
+      "total": 3
+    }
+  },
+  "enums": {
+    "2 Of Each Role Per Team": {
+      "en-US": "2 Of Each Role Per Team",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.roleLimit.values.2OfEachRolePerTeam"
+      ],
+      "zh-CN": "每队同一职责最多2名"
+    },
+    "Off": {
+      "en-US": "Off",
+      "sources": [
+        "other.customGameSettings.__off__"
+      ],
+      "zh-CN": "关闭"
+    }
+  },
+  "excluded": [
+    {
+      "en-US": "Ultimate Generation - Passive Blizzard",
+      "reason": "no exact en-US match in the export",
+      "surface": "heroes.<team>.<hero>.passiveUltGen%"
+    },
+    {
+      "en-US": "Ultimate Generation - Combat Blizzard",
+      "reason": "no exact en-US match in the export",
+      "surface": "heroes.<team>.<hero>.combatUltGen%"
+    },
+    {
+      "en-US": "General",
+      "reason": "no exact en-US match in the export",
+      "surface": "mode.general.name"
+    },
+    {
+      "en-US": "General",
+      "reason": "no exact en-US match in the export",
+      "surface": "team.allTeams.name"
+    }
+  ],
+  "heroes": {
+    "Ashe": {
+      "en-US": "Ashe",
+      "sources": [
+        "heroes.ashe"
+      ],
+      "zh-CN": "艾什"
+    },
+    "Bastion": {
+      "en-US": "Bastion",
+      "sources": [
+        "heroes.bastion"
+      ],
+      "zh-CN": "堡垒"
+    },
+    "D.Va": {
+      "en-US": "D.Va",
+      "sources": [
+        "heroes.dva"
+      ],
+      "zh-CN": "D.Va"
+    },
+    "Doomfist": {
+      "en-US": "Doomfist",
+      "sources": [
+        "heroes.doomfist"
+      ],
+      "zh-CN": "末日铁拳"
+    },
+    "Echo": {
+      "en-US": "Echo",
+      "sources": [
+        "heroes.echo"
+      ],
+      "zh-CN": "回声"
+    },
+    "Mei": {
+      "en-US": "Mei",
+      "sources": [
+        "heroes.mei"
+      ],
+      "zh-CN": "美"
+    },
+    "Moira": {
+      "en-US": "Moira",
+      "sources": [
+        "heroes.moira"
+      ],
+      "zh-CN": "莫伊拉"
+    },
+    "Reinhardt": {
+      "en-US": "Reinhardt",
+      "sources": [
+        "heroes.reinhardt"
+      ],
+      "zh-CN": "莱因哈特"
+    },
+    "Wrecking Ball": {
+      "en-US": "Wrecking Ball",
+      "sources": [
+        "heroes.wreckingBall"
+      ],
+      "zh-CN": "破坏球"
+    },
+    "Zenyatta": {
+      "en-US": "Zenyatta",
+      "sources": [
+        "heroes.zenyatta"
+      ],
+      "zh-CN": "禅雅塔"
+    }
+  },
+  "labels": {
+    "Allow Hero Switching": {
+      "en-US": "Allow Hero Switching",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.enableHeroSwitching"
+      ],
+      "zh-CN": "允许切换英雄"
+    },
+    "Competitive Rules": {
+      "en-US": "Competitive Rules",
+      "sources": [
+        "customGameSettings.gamemodes.values.assault.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.clash.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.control.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.controlAprilFools.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.escort.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.escortAprilFools.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.flashpoint.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.flashpointAprilFools.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.hybrid.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.hybridAprilFools.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.push.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.pushAprilFools.values.enableCompetitiveRules"
+      ],
+      "zh-CN": "竞技比赛规则"
+    },
+    "Cryo-Freeze": {
+      "en-US": "Cryo-Freeze",
+      "sources": [
+        "heroes.mei.ability1"
+      ],
+      "zh-CN": "急冻"
+    },
+    "Description": {
+      "en-US": "Description",
+      "sources": [
+        "customGameSettings.main.values.description"
+      ],
+      "zh-CN": "描述"
+    },
+    "Health": {
+      "en-US": "Health",
+      "sources": [
+        "constants.Health.NORMAL",
+        "customGameSettings.heroes.values.__generalAndEachHero__.health%"
+      ],
+      "zh-CN": "生命值"
+    },
+    "Hero Limit": {
+      "en-US": "Hero Limit",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.heroLimit"
+      ],
+      "zh-CN": "英雄限制"
+    },
+    "Ice Wall": {
+      "en-US": "Ice Wall",
+      "sources": [
+        "heroes.mei.ability2"
+      ],
+      "zh-CN": "冰墙"
+    },
+    "Limit Roles": {
+      "en-US": "Limit Roles",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.roleLimit"
+      ],
+      "zh-CN": "职责限制"
+    },
+    "Max FFA Players": {
+      "en-US": "Max FFA Players",
+      "sources": [
+        "customGameSettings.lobby.values.ffaSlots"
+      ],
+      "zh-CN": "自由混战人数上限"
+    },
+    "Mode Name": {
+      "en-US": "Mode Name",
+      "sources": [
+        "customGameSettings.main.values.modeName"
+      ],
+      "zh-CN": "模式名称"
+    },
+    "Primary Fire": {
+      "en-US": "Primary Fire",
+      "sources": [
+        "constants.ButtonLiteral.PRIMARY_FIRE",
+        "customGameSettings.heroes.values.__generalAndEachHero__.enablePrimaryFire"
+      ],
+      "zh-CN": "主要攻击模式"
+    },
+    "Respawn As Random Hero": {
+      "en-US": "Respawn As Random Hero",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.enableRandomHeroes"
+      ],
+      "zh-CN": "随机英雄复生"
+    },
+    "Respawn Time Scalar": {
+      "en-US": "Respawn Time Scalar",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.respawnTime%"
+      ],
+      "zh-CN": "复生时间"
+    },
+    "Secondary Fire": {
+      "en-US": "Secondary Fire",
+      "sources": [
+        "constants.ButtonLiteral.SECONDARY_FIRE",
+        "customGameSettings.heroes.values.__eachHero__.enableGenericSecondaryFire"
+      ],
+      "zh-CN": "辅助攻击模式"
+    },
+    "disabled heroes": {
+      "en-US": "disabled heroes",
+      "sources": [
+        "customGameSettings.heroes.values.disabledHeroes"
+      ],
+      "zh-CN": "禁用英雄"
+    },
+    "enabled heroes": {
+      "en-US": "enabled heroes",
+      "sources": [
+        "customGameSettings.heroes.values.enabledHeroes"
+      ],
+      "zh-CN": "启用英雄"
+    },
+    "enabled maps": {
+      "en-US": "enabled maps",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.enabledMaps"
+      ],
+      "zh-CN": "启用地图"
+    }
+  },
+  "locale": "zh-CN",
+  "maps": {
+    "King's Row Winter": {
+      "en-US": "King's Row Winter",
+      "sources": [
+        "maps.kingsRowWinter"
+      ],
+      "zh-CN": "圣诞节国王大道"
+    },
+    "Workshop Island": {
+      "en-US": "Workshop Island",
+      "sources": [
+        "maps.workshopIsland"
+      ],
+      "zh-CN": "地图工坊岛屿"
+    }
+  },
+  "modes": {
+    "Assault": {
+      "en-US": "Assault",
+      "sources": [
+        "gamemodes.assault"
+      ],
+      "zh-CN": "攻防作战"
+    },
+    "Control": {
+      "en-US": "Control",
+      "sources": [
+        "gamemodes.control"
+      ],
+      "zh-CN": "占领要点"
+    },
+    "Deathmatch": {
+      "en-US": "Deathmatch",
+      "sources": [
+        "gamemodes.ffa"
+      ],
+      "zh-CN": "死斗"
+    },
+    "Escort": {
+      "en-US": "Escort",
+      "sources": [
+        "gamemodes.escort"
+      ],
+      "zh-CN": "运载目标"
+    },
+    "Hybrid": {
+      "en-US": "Hybrid",
+      "sources": [
+        "gamemodes.hybrid"
+      ],
+      "zh-CN": "攻击护送"
+    },
+    "Skirmish": {
+      "en-US": "Skirmish",
+      "sources": [
+        "gamemodes.skirmish"
+      ],
+      "zh-CN": "突击模式"
+    }
+  },
+  "provenance": {
+    "commit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
+    "commitDate": "2026-08-12T15:26:38Z",
+    "fetchedAt": "2026-08-17T02:52:59Z",
+    "generator": "workshop-catalog-gen corpus",
+    "generatorVersion": "0.1.0",
+    "licenseReview": "pending: Blizzard game content (functional/interoperability data) transcribed from the user-provided workshop-data export; see docs/provenance.md",
+    "method": "exact en-US spelling match between the declared settings surface (settings::table) and the export's customGameSettings/gamemodes/maps/heroes labels and other.customGameSettings tokens; entries without an exact match keep fail-explicit behavior (ADR-0001 Decision 7); the mode-header 'disabled' prefix maps the export's __disabled__ token and follows the fixture-evidenced en-US emission format",
+    "source": "user-provided workshop-data export (workshop-data.json)"
+  },
+  "schemaVersion": 1,
+  "teams": {},
+  "tokens": {
+    "Off": {
+      "en-US": "Off",
+      "sources": [
+        "other.customGameSettings.__off__"
+      ],
+      "zh-CN": "关闭"
+    },
+    "On": {
+      "en-US": "On",
+      "sources": [
+        "other.customGameSettings.__on__"
+      ],
+      "zh-CN": "开启"
+    },
+    "disabled": {
+      "en-US": "disabled",
+      "sources": [
+        "other.customGameSettings.__disabled__"
+      ],
+      "zh-CN": "禁用"
+    }
+  }
+}

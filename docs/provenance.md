@@ -38,14 +38,24 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 * `en-US` is the primary locale and is complete (344/344 canonical entries:
   168 builtins + 176 enum members). The committed catalog validates that the
   primary locale is complete.
-* `zh-CN` is declared as a locale with an **empty mapping set (0/344)**. No
-  zh-CN compatibility claim is made. Adding zh-CN aliases requires a
-  reviewed, MIT-permissible reference source (ADR-0001 Decision 6, open
-  question: permissibility of candidate zh-CN reference sources). The
-  workspace evidence hierarchy permits *documented community evidence*
-  (level 6) for spellings, but every added alias must carry a provenance
-  note identifying its source; unverifiable spellings must not be added —
-  missing mappings fail explicitly by design.
+* `zh-CN` has an evidence-backed corpus of **327/344** canonical entries:
+  structural 11/11, actions 55/62, values 77/78, events 3/3, operators 8/14,
+  and enum members 173/176. The reproducible manifest is
+  `tools/corpus/zh-cn-corpus.json`; it records exact en-US spelling matches,
+  every exclusion, and the export provenance. The source is the user-provided
+  `workshop-data/workshop-data.json` export at commit
+  `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`, commit date 2026-08-12, fetched
+  2026-08-17. The export is not committed to this repository.
+* The generated settings corpus covers labels 17/19, modes 6/7, maps 2/2,
+  heroes 10/10, enum values 2/2, tokens 3/3, and teams 0/1. Its exact-match
+  exclusions are recorded in
+  `crates/workshop-rs/src/settings/data/zh-cn.json`; settings without a
+  mapping continue to fail explicitly. The data's license review remains
+  marked pending until the Blizzard-content redistribution review is recorded.
+
+All committed zh-CN spellings come from the export through the corpus
+pipeline; no OverPy translation table is used. The complete catalog coverage
+and settings gate remains open for the recorded exclusions.
 
 ## Test fixtures (`tests/fixtures/`)
 
