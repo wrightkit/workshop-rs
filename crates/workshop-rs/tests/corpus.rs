@@ -48,6 +48,23 @@ fn manifest_pins_the_export_and_exact_match_coverage() {
 }
 
 #[test]
+fn settings_corpus_includes_general_mode_and_team_labels() {
+    let settings: serde_json::Value =
+        serde_json::from_str(include_str!("../src/settings/data/zh-cn.json"))
+            .expect("generated settings corpus is valid JSON");
+    assert_eq!(
+        settings["coverage"]["modes"],
+        serde_json::json!({"matched": 7, "total": 7})
+    );
+    assert_eq!(
+        settings["coverage"]["teams"],
+        serde_json::json!({"matched": 1, "total": 1})
+    );
+    assert_eq!(settings["modes"]["General"]["zh-CN"], "综合");
+    assert_eq!(settings["teams"]["General"]["zh-CN"], "综合");
+}
+
+#[test]
 fn representative_corpus_converts_in_both_directions() {
     let catalog = catalog();
     let to_zh = convert::convert(

@@ -17,11 +17,11 @@
       "total": 2
     },
     "modes": {
-      "matched": 6,
+      "matched": 7,
       "total": 7
     },
     "teams": {
-      "matched": 0,
+      "matched": 1,
       "total": 1
     },
     "tokens": {
@@ -55,16 +55,6 @@
       "en-US": "Ultimate Generation - Combat Blizzard",
       "reason": "no exact en-US match in the export",
       "surface": "heroes.<team>.<hero>.combatUltGen%"
-    },
-    {
-      "en-US": "General",
-      "reason": "no exact en-US match in the export",
-      "surface": "mode.general.name"
-    },
-    {
-      "en-US": "General",
-      "reason": "no exact en-US match in the export",
-      "surface": "team.allTeams.name"
     }
   ],
   "heroes": {
@@ -320,6 +310,13 @@
       ],
       "zh-CN": "运载目标"
     },
+    "General": {
+      "en-US": "General",
+      "sources": [
+        "customGameSettings.heroes.teams.allTeams"
+      ],
+      "zh-CN": "综合"
+    },
     "Hybrid": {
       "en-US": "Hybrid",
       "sources": [
@@ -346,7 +343,15 @@
     "source": "user-provided workshop-data export (workshop-data.json)"
   },
   "schemaVersion": 1,
-  "teams": {},
+  "teams": {
+    "General": {
+      "en-US": "General",
+      "sources": [
+        "customGameSettings.heroes.teams.allTeams"
+      ],
+      "zh-CN": "综合"
+    }
+  },
   "tokens": {
     "Off": {
       "en-US": "Off",

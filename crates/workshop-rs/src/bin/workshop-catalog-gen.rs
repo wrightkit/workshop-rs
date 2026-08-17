@@ -827,10 +827,13 @@ mod corpus {
             );
             index
         };
-        let gamemodes = localized_index(export, &["gamemodes."]);
+        let gamemodes = localized_index(export, &["gamemodes.", "customGameSettings.gamemodes."]);
         let maps = localized_index(export, &["maps."]);
         let heroes = localized_index(export, &["heroes."]);
-        let teams = localized_index(export, &["heroes.teams."]);
+        let teams = localized_index(
+            export,
+            &["heroes.teams.", "customGameSettings.heroes.teams."],
+        );
         let tokens = localized_index(export, &["other.customGameSettings."]);
         let surface = settings_surface();
 
