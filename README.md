@@ -73,6 +73,19 @@ Settings-bearing programs are parsed into the canonical WIR settings carrier
 and emitted by the library. Locale detection is available via
 `workshop_rs::detect`.
 
+### Rule event contract
+
+The public WIR event contract is locale- and provider-independent. It includes
+`Event::Global`, `Event::EachPlayer`, filtered `Event::EachPlayerWithFilters`,
+nine filtered `Event::Player` identities (`PlayerEventKind`), and
+`Event::Subroutine`. Filtered events carry a canonical `EventTeam` and an
+`EventTarget` (`All`, Workshop slot `0..=11`, or a canonical hero id).
+Raw Workshop player events require both their team and player filters;
+parameterless `Ongoing - Each Player` remains supported for existing programs.
+Event identities and filter members are checked against the catalog before a
+program is accepted for canonical emission, so source-language providers can
+consume this public model without defining a second event table.
+
 ## CLI usage
 
 ```sh

@@ -182,14 +182,29 @@ fn all_player_events_parse_validate_emit_and_round_trip() {
 #[test]
 fn event_catalog_declares_parameter_and_filter_provenance_surface() {
     let catalog = catalog();
-    let event = catalog
-        .entry(Kind::Event, "playerDied")
-        .expect("playerDied catalog entry");
-    assert_eq!(event.params, vec!["Team", "Player"]);
-    assert_eq!(
-        event.param_domains,
-        vec![Some("EventTeam".to_string()), None]
-    );
+    for event_id in [
+        "eachPlayer",
+        "playerDealtDamage",
+        "playerDealtFinalBlow",
+        "playerDealtHealing",
+        "playerDied",
+        "playerEarnedElimination",
+        "playerJoined",
+        "playerLeft",
+        "playerReceivedHealing",
+        "playerTookDamage",
+    ] {
+        let event = catalog
+            .entry(Kind::Event, event_id)
+            .unwrap_or_else(|| panic!("{event_id} catalog entry"));
+        assert_eq!(event.params, vec!["Team", "Player"]);
+        assert_eq!(
+            event.param_domains,
+            vec![Some("EventTeam".to_string()), None]
+        );
+    }
+    assert!(catalog.enum_domain("EventPlayer").is_some());
+    assert!(catalog.enum_domain("Hero").is_some());
     assert_eq!(
         catalog.enum_spelling("EventTeam", &zh(), "ALL"),
         Some("双方")
@@ -229,4 +244,65 @@ fn invalid_event_filter_is_rejected_and_invalid_slot_fails_wir_validation() {
         .validate()
         .expect_err("slot 12 is outside Workshop range");
     assert_eq!(error.code(), "invalid-event-slot");
+}
+
+#[test]
+fn player_event_without_catalog_filters_is_rejected() {
+    let catalog = catalog();
+    let text = r#"
+rule ("missing filters") {
+    event {
+        Player Died;
+    }
+}
+"#;
+    let error = parser::parse_with_context(text, &catalog, &en(), &catalog)
+        .expect_err("player events require both canonical filters");
+    assert!(
+        error
+            .to_string()
+            .contains("requires team and player parameters")
+    );
+
+    let empty_parameter = r#"
+rule ("empty filter") {
+    event {
+        Player Died;
+        ;
+    }
+}
+"#;
+    parser::parse_with_context(empty_parameter, &catalog, &en(), &catalog)
+        .expect_err("an empty player filter must not be silently discarded");
+}
+
+#[test]
+fn canonical_validation_checks_rule_event_identities() {
+    let catalog = Catalog::load(
+        r#"{
+            "schemaVersion": 1,
+            "locales": ["en-US"],
+            "target": {"game": "Overwatch", "format": "Workshop", "surface": "test"},
+            "provenance": {"generator": "test", "generatorVersion": "1", "source": "test", "license": "MIT", "reviewed": true},
+            "events": [{"id": "global", "aliases": {"en-US": "Ongoing - Global"}}]
+        }"#,
+    )
+    .expect("minimal event catalog");
+    let mut program = wir::Program::default();
+    program.rules.push(wir::Rule {
+        name: "undeclared event".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: wir::Event::Player {
+            kind: PlayerEventKind::Died,
+            team: EventTeam::All,
+            target: EventTarget::All,
+        },
+        conditions: vec![],
+        actions: vec![],
+    });
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("event identities must be catalog-backed");
+    assert!(error.to_string().contains("playerDied"), "{error}");
 }

@@ -677,7 +677,7 @@ impl Parser<'_> {
                 if lines[1..].iter().all(|line| line.trim().is_empty()) {
                     return Ok(Event::EachPlayer);
                 }
-                let (team, target) = self.event_filters(&lines, "eachPlayer")?;
+                let (team, target) = self.event_filters(&lines, "eachPlayer", true)?;
                 Ok(Event::EachPlayerWithFilters { team, target })
             }
             "playerDealtDamage" => self.player_event(&lines, PlayerEventKind::DealtDamage),
@@ -717,11 +717,16 @@ impl Parser<'_> {
     }
 
     fn player_event(&self, lines: &[String], kind: PlayerEventKind) -> Result<Event> {
-        let (team, target) = self.event_filters(lines, kind.catalog_id())?;
+        let (team, target) = self.event_filters(lines, kind.catalog_id(), false)?;
         Ok(Event::Player { kind, team, target })
     }
 
-    fn event_filters(&self, lines: &[String], event_id: &str) -> Result<(EventTeam, EventTarget)> {
+    fn event_filters(
+        &self,
+        lines: &[String],
+        event_id: &str,
+        allow_empty: bool,
+    ) -> Result<(EventTeam, EventTarget)> {
         let parameters: Vec<&str> = lines[1..]
             .iter()
             .map(String::as_str)
@@ -729,7 +734,13 @@ impl Parser<'_> {
             .filter(|line| !line.is_empty())
             .collect();
         if parameters.is_empty() {
-            return Ok((EventTeam::All, EventTarget::All));
+            if allow_empty {
+                return Ok((EventTeam::All, EventTarget::All));
+            }
+            return Err(WorkshopError::Malformed {
+                message: format!("event '{event_id}' requires team and player parameters"),
+                span: None,
+            });
         }
         if parameters.len() != 2 {
             if event_id == "eachPlayer" {
