@@ -8,7 +8,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-use crate::catalog::{CatalogIdentity, Kind, Locale};
+use crate::catalog::{Catalog, CatalogIdentity, Kind, Locale};
 
 /// The current machine-readable conformance schema version.
 pub const CONFORMANCE_SCHEMA_VERSION: u32 = 1;
@@ -462,6 +462,72 @@ impl ConformanceResult {
         Ok(())
     }
 
+    /// Validate this result against the actual canonical catalog used for the
+    /// case. Plain [`Self::validate`] checks the serialized contract only; it
+    /// cannot prove that a catalog identity name exists without the catalog.
+    pub fn validate_against(&self, catalog: &Catalog) -> Result<(), ConformanceError> {
+        self.validate()?;
+        for (index, feature) in self.features.iter().enumerate() {
+            if feature.namespace != FeatureNamespace::Catalog {
+                continue;
+            }
+            match feature.kind {
+                FeatureKind::Enum => {
+                    if catalog.enum_domain(&feature.name).is_none() {
+                        return Err(ConformanceError::invalid(
+                            format!("features[{index}]"),
+                            format!("unknown canonical enum domain '{}'", feature.name),
+                        ));
+                    }
+                }
+                FeatureKind::EnumMember => {
+                    let (domain, member) = feature.name.split_once('/').ok_or_else(|| {
+                        ConformanceError::invalid(
+                            format!("features[{index}]"),
+                            "enum-member identity must contain domain/member",
+                        )
+                    })?;
+                    let known = catalog.enum_domain(domain).is_some_and(|candidate| {
+                        candidate.members.iter().any(|item| item.member == member)
+                    });
+                    if !known {
+                        return Err(ConformanceError::invalid(
+                            format!("features[{index}]"),
+                            format!("unknown canonical enum member '{domain}/{member}'"),
+                        ));
+                    }
+                }
+                kind => {
+                    let catalog_kind = match kind {
+                        FeatureKind::Event => Kind::Event,
+                        FeatureKind::Action => Kind::Action,
+                        FeatureKind::Value => Kind::Value,
+                        FeatureKind::Operator => Kind::Operator,
+                        FeatureKind::Setting => Kind::Setting,
+                        FeatureKind::Structural => Kind::Structural,
+                        _ => {
+                            return Err(ConformanceError::invalid(
+                                format!("features[{index}]"),
+                                "this feature kind cannot use the catalog namespace",
+                            ));
+                        }
+                    };
+                    if catalog.entry(catalog_kind, &feature.name).is_none() {
+                        return Err(ConformanceError::invalid(
+                            format!("features[{index}]"),
+                            format!(
+                                "unknown canonical {} '{}'",
+                                catalog_kind.as_str(),
+                                feature.name
+                            ),
+                        ));
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Deserialize and validate a JSON result in one operation.
     pub fn from_json(json: &str) -> Result<Self, ConformanceDecodeError> {
         let result: Self = serde_json::from_str(json).map_err(ConformanceDecodeError::Json)?;
@@ -611,10 +677,10 @@ fn validate_comparison(
         ));
     }
     if let Some(expected) = &comparison.expected {
-        validate_artifact("comparison.expected", expected, false, true)?;
+        validate_artifact("comparison.expected", expected, false, false)?;
     }
     if let Some(observed) = &comparison.observed {
-        validate_artifact("comparison.observed", observed, false, true)?;
+        validate_artifact("comparison.observed", observed, false, false)?;
     }
     if let (Some(expected), Some(observed)) = (&comparison.expected, &comparison.observed) {
         if expected == observed {
@@ -835,9 +901,26 @@ mod tests {
     fn result_serializes_and_round_trips() {
         let result = matched();
         result.validate().expect("valid result");
+        result
+            .validate_against(&Catalog::builtin().expect("built-in catalog"))
+            .expect("catalog-backed feature exists");
         let json = serde_json::to_string(&result).expect("serialize result");
         let decoded = ConformanceResult::from_json(&json).expect("deserialize valid result");
         assert_eq!(decoded, result);
+    }
+
+    #[test]
+    fn catalog_validation_rejects_fabricated_catalog_features() {
+        let mut result = matched();
+        result.features = vec![
+            FeatureId::from_catalog(Kind::Action, "notAWorkshopAction")
+                .expect("syntactically valid feature"),
+        ];
+        assert!(
+            result
+                .validate_against(&Catalog::builtin().expect("built-in catalog"))
+                .is_err()
+        );
     }
 
     #[test]
