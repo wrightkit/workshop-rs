@@ -21,7 +21,6 @@ struct CorpusManifest {
     schema_version: u32,
     id: String,
     locale: String,
-    source: EvidenceArtifact,
     expectation: ExpectationSource,
     cases: Vec<CorpusCase>,
 }
@@ -31,6 +30,7 @@ struct CorpusCase {
     id: String,
     class: EvidenceClass,
     fixture: String,
+    source: EvidenceArtifact,
     features: Vec<FeatureId>,
     #[serde(rename = "expectedStatus")]
     expected_status: ExpectedStatus,
@@ -144,20 +144,15 @@ pub(crate) fn run(manifest_path: &Path) -> Result<CorpusReport, String> {
                 fixture_path.display()
             )
         })?;
-        let fixture = EvidenceArtifact {
-            name: manifest.source.name.clone(),
-            revision: manifest.source.revision.clone(),
-            path: Some(case.fixture.clone()),
-            sha256: Some(sha256(&input)),
-            license: manifest.source.license.clone(),
-        };
+        validate_source_artifact(&case.id, &case.source, &input)?;
         let expectation = case
             .expectation
             .clone()
             .unwrap_or_else(|| manifest.expectation.clone());
+        validate_expected_artifact(&case.id, &expectation.artifact)?;
         let evidence = Evidence {
             class: case.class,
-            fixture,
+            fixture: case.source.clone(),
             expectation: expectation.clone(),
             catalog: catalog_identity.clone(),
             locale: Some(locale.clone()),
@@ -314,4 +309,58 @@ fn non_match(
 fn sha256(value: &str) -> String {
     let digest = Sha256::digest(value.as_bytes());
     format!("{digest:x}")
+}
+
+fn validate_source_artifact(
+    case_id: &str,
+    artifact: &EvidenceArtifact,
+    input: &str,
+) -> Result<(), String> {
+    validate_expected_artifact(case_id, artifact)?;
+    let Some(expected_digest) = artifact.sha256.as_deref() else {
+        return Err(format!("case {case_id} source must pin a SHA-256 digest"));
+    };
+    let actual_digest = sha256(input);
+    if expected_digest != actual_digest {
+        return Err(format!(
+            "case {case_id} source digest mismatch: manifest {expected_digest}, fixture {actual_digest}"
+        ));
+    }
+    Ok(())
+}
+
+fn validate_expected_artifact(case_id: &str, artifact: &EvidenceArtifact) -> Result<(), String> {
+    if artifact.name.trim().is_empty() {
+        return Err(format!(
+            "case {case_id} evidence artifact has no repository identity"
+        ));
+    }
+    if artifact.revision.as_deref().is_none_or(str::is_empty) {
+        return Err(format!(
+            "case {case_id} evidence artifact must pin a revision"
+        ));
+    }
+    if artifact.path.as_deref().is_none_or(str::is_empty) {
+        return Err(format!("case {case_id} evidence artifact must pin a path"));
+    }
+    let Some(digest) = artifact.sha256.as_deref() else {
+        return Err(format!(
+            "case {case_id} evidence artifact must pin a SHA-256 digest"
+        ));
+    };
+    if digest.len() != 64
+        || !digest
+            .chars()
+            .all(|character| character.is_ascii_hexdigit())
+    {
+        return Err(format!(
+            "case {case_id} evidence artifact has an invalid SHA-256 digest"
+        ));
+    }
+    if artifact.license.as_deref().is_none_or(str::is_empty) {
+        return Err(format!(
+            "case {case_id} evidence artifact must record a license"
+        ));
+    }
+    Ok(())
 }

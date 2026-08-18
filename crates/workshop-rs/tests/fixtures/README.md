@@ -15,14 +15,16 @@ core migration (Issue #2).
 | `corpus/expressions-values.ws` | wright `compatibility/fixtures/synthetic/expressions-values/oracle.json` `compile.workshop` | OverPy 9.7.10, en-US emission |
 | `corpus/preprocessing.ws` | wright `compatibility/fixtures/synthetic/preprocessing/oracle.json` `compile.workshop` | OverPy 9.7.10, en-US emission |
 | `corpus/receiver-calls.ws` | wright `compatibility/fixtures/synthetic/receiver-calls/oracle.json` `compile.workshop` | OverPy 9.7.10, en-US emission |
-| `corpus/overpy-cake.ws` | wright `compatibility/fixtures/real-world/overpy-cake/oracle.json` `compile.workshop` | OverPy 9.7.10, en-US emission |
-| `corpus/minimized/overpy-cake-loop.ws` | minimized from `corpus/overpy-cake.ws`, retaining its variable/loop/array/random-value interaction | linked to `1273e345d1dcb6f6f678c5d93a03b5b0e9adb0a2`, OverPy 9.7.10 oracle |
+| `corpus/overpy-cake.ws` | migrated in workshop-rs `44c04a1166f3df9a495fc04c79e0ae2adc4542d2` from wright `compatibility/fixtures/real-world/overpy-cake/oracle.json` `compile.workshop` | OverPy 9.7.10, en-US emission |
+| `corpus/minimized/overpy-cake-loop.ws` | minimized from `corpus/overpy-cake.ws`, retaining its variable/loop/array/random-value interaction | workshop-rs migration `44c04a1166f3df9a495fc04c79e0ae2adc4542d2`, linked to the pinned wright OverPy 9.7.10 oracle |
 | `settings/pixelart.settings.ws` | wright `compatibility/fixtures/real-world/overpy-pixelart/oracle.json` `compile.workshop` settings section | OverPy 9.7.10, en-US emission |
 | `settings/santa.settings.ws` | wright `compatibility/fixtures/real-world/overpy-santa/oracle.json` `compile.workshop` settings section | OverPy 9.7.10, en-US emission |
 | `settings/pixelart.zh-CN.settings.ws` | deterministic conversion of `settings/pixelart.settings.ws` through the reviewed PR #9 locale corpus | reviewed `zh-CN` mappings, no fallback |
 
-The original oracle snapshots record their generator version, source revision,
-and language `en-US` in the corresponding `oracle.json` files.
+The original wright oracle snapshot is pinned in the executable manifest by
+its wright revision and SHA-256. It records OverPy 9.7.10, the original
+OverPy source revision, and language `en-US`; the oracle JSON is not
+redistributed here.
 
 ## Extraction
 
@@ -48,8 +50,11 @@ catalog data change and must be recorded here.
 
 `corpus/real-projects.json` is the executable #20 manifest. It keeps the
 complete `overpy-cake.ws` project-level case and the minimized loop case as
-separate complementary layers. The source and pinned oracle metadata point to
-the immutable workshop-rs migration commit that recorded the original Wright
-compatibility path; the original external oracle JSON is not redistributed.
+separate complementary layers. Each source tuple points to the immutable
+workshop-rs migration artifact, while its expectation tuple points to the
+immutable wright oracle artifact. The original external oracle JSON is not
+redistributed. The runner validates fixture digests from local files and the
+required pinned oracle digest fields; it never recomputes a historical
+expectation from current content.
 The offline runner records parse/WIR behavior as #18 conformance results and
 never replaces the pinned expectation with current implementation output.

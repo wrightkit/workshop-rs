@@ -2,21 +2,14 @@
   "schemaVersion": 1,
   "id": "workshop-rs-real-projects-v1",
   "locale": "en-US",
-  "source": {
-    "name": "wright compatibility corpus / overpy-cake",
-    "revision": "1273e345d1dcb6f6f678c5d93a03b5b0e9adb0a2",
-    "path": "compatibility/fixtures/real-world/overpy-cake/oracle.json",
-    "sha256": null,
-    "license": "MIT"
-  },
   "expectation": {
     "basis": "pinned-external-oracle",
     "artifact": {
-      "name": "OverPy 9.7.10 en-US compile.workshop oracle",
-      "revision": "1273e345d1dcb6f6f678c5d93a03b5b0e9adb0a2",
+      "name": "wrightkit/wright (OverPy 9.7.10 oracle)",
+      "revision": "af955449d4476a26f8ef25c76868fb0ceb0bcd2d",
       "path": "compatibility/fixtures/real-world/overpy-cake/oracle.json",
-      "sha256": null,
-      "license": "MIT"
+      "sha256": "cc84203e6c5de8eb3ead332c621e06d3639db2491dcf798177def627ee27ee9b",
+      "license": "GPL-3.0-only"
     },
     "trackingRef": "#20"
   },
@@ -25,6 +18,13 @@
       "id": "real-project/overpy-cake/full",
       "class": "real-project",
       "fixture": "overpy-cake.ws",
+      "source": {
+        "name": "wrightkit/workshop-rs",
+        "revision": "44c04a1166f3df9a495fc04c79e0ae2adc4542d2",
+        "path": "crates/workshop-rs/tests/fixtures/corpus/overpy-cake.ws",
+        "sha256": "0be12ad51ac3fd77224eb037b55325951ee1b7737f59c155706ff40c794fca14",
+        "license": "MIT"
+      },
       "features": [
         {"namespace": "wir", "kind": "variable", "name": "global"},
         {"namespace": "wir", "kind": "control-flow", "name": "for-global-variable"},
@@ -44,6 +44,13 @@
       "id": "minimized-regression/overpy-cake-loop",
       "class": "minimized-regression",
       "fixture": "minimized/overpy-cake-loop.ws",
+      "source": {
+        "name": "wrightkit/workshop-rs",
+        "revision": "44c04a1166f3df9a495fc04c79e0ae2adc4542d2",
+        "path": "crates/workshop-rs/tests/fixtures/corpus/minimized/overpy-cake-loop.ws",
+        "sha256": "78a0d9103f42393b5c442e33bde0374f6135fe919604a99f2c612c0718d9ace8",
+        "license": "MIT"
+      },
       "features": [
         {"namespace": "wir", "kind": "variable", "name": "global"},
         {"namespace": "wir", "kind": "control-flow", "name": "for-global-variable"},
@@ -56,11 +63,11 @@
       "expectation": {
         "basis": "preserved-regression",
         "artifact": {
-          "name": "overpy-cake full project regression source",
-          "revision": "1273e345d1dcb6f6f678c5d93a03b5b0e9adb0a2",
+          "name": "wrightkit/wright (OverPy 9.7.10 oracle)",
+          "revision": "af955449d4476a26f8ef25c76868fb0ceb0bcd2d",
           "path": "compatibility/fixtures/real-world/overpy-cake/oracle.json",
-          "sha256": null,
-          "license": "MIT"
+          "sha256": "cc84203e6c5de8eb3ead332c621e06d3639db2491dcf798177def627ee27ee9b",
+          "license": "GPL-3.0-only"
         },
         "trackingRef": "#20"
       }
