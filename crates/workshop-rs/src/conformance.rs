@@ -13,6 +13,32 @@ use crate::catalog::{CatalogIdentity, Kind, Locale};
 /// The current machine-readable conformance schema version.
 pub const CONFORMANCE_SCHEMA_VERSION: u32 = 1;
 
+/// The owner namespace of a Workshop capability identity.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum FeatureNamespace {
+    /// An identity declared by the canonical Workshop catalog.
+    Catalog,
+    /// A Workshop IR or structural identity owned by this crate.
+    Wir,
+    /// A canonical custom-game settings path owned by this crate.
+    Settings,
+    /// A locale conversion or localization capability owned by this crate.
+    Localization,
+}
+
+impl FeatureNamespace {
+    /// The stable serialized spelling of this namespace.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Catalog => "catalog",
+            Self::Wir => "wir",
+            Self::Settings => "settings",
+            Self::Localization => "localization",
+        }
+    }
+}
+
 /// The canonical category of a Workshop capability.
 ///
 /// Catalog-backed categories use the canonical catalog identity as `name`.
@@ -91,6 +117,8 @@ impl From<Kind> for FeatureKind {
 /// A stable, locale-independent Workshop feature identity.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize)]
 pub struct FeatureId {
+    /// The WrightKit repository-owned namespace for this identity.
+    pub namespace: FeatureNamespace,
     /// The semantic category of the feature.
     pub kind: FeatureKind,
     /// The canonical name within the category.
@@ -103,7 +131,11 @@ impl FeatureId {
     /// Names are intentionally opaque to this contract because catalog and
     /// WIR owners define their canonical names. Whitespace and control
     /// characters are rejected so serialized identities remain unambiguous.
-    pub fn new(kind: FeatureKind, name: impl Into<String>) -> Result<Self, ConformanceError> {
+    pub fn new(
+        namespace: FeatureNamespace,
+        kind: FeatureKind,
+        name: impl Into<String>,
+    ) -> Result<Self, ConformanceError> {
         let name = name.into();
         if name.is_empty() {
             return Err(ConformanceError::invalid(
@@ -120,12 +152,46 @@ impl FeatureId {
                 "must not contain whitespace or control characters",
             ));
         }
-        Ok(Self { kind, name })
+        Ok(Self {
+            namespace,
+            kind,
+            name,
+        })
     }
 
     /// Construct a feature identity from a canonical catalog kind and id.
     pub fn from_catalog(kind: Kind, id: impl Into<String>) -> Result<Self, ConformanceError> {
-        Self::new(kind.into(), id)
+        Self::new(FeatureNamespace::Catalog, kind.into(), id)
+    }
+
+    /// Construct a canonical enum-member identity that retains its domain.
+    pub fn from_enum_member(
+        domain: impl Into<String>,
+        member: impl Into<String>,
+    ) -> Result<Self, ConformanceError> {
+        let domain = domain.into();
+        let member = member.into();
+        if domain.is_empty() || member.is_empty() {
+            return Err(ConformanceError::invalid(
+                "feature.name",
+                "enum member identities require a domain and member",
+            ));
+        }
+        Self::new(
+            FeatureNamespace::Catalog,
+            FeatureKind::EnumMember,
+            format!("{domain}/{member}"),
+        )
+    }
+
+    /// Construct a feature identity owned by Workshop IR or another
+    /// `workshop-rs` namespace.
+    pub fn owned(
+        namespace: FeatureNamespace,
+        kind: FeatureKind,
+        name: impl Into<String>,
+    ) -> Result<Self, ConformanceError> {
+        Self::new(namespace, kind, name)
     }
 }
 
@@ -157,29 +223,43 @@ pub enum EvidenceClass {
     LiveClient,
 }
 
-/// The immutable source identity for a conformance case.
+/// An immutable source or artifact identity.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub struct EvidenceSource {
-    /// Repository, fixture, oracle, or client-capture name.
+pub struct EvidenceArtifact {
+    /// Repository, fixture, oracle, or captured-artifact name.
     pub name: String,
     /// Immutable revision, release, or capture identifier where available.
     pub revision: Option<String>,
     /// Source path or artifact path within the named source.
     pub path: Option<String>,
+    /// Content digest when the source is a materialized artifact.
+    #[serde(rename = "sha256")]
+    pub sha256: Option<String>,
     /// License or redistribution note for preserved source material.
     pub license: Option<String>,
 }
 
-impl EvidenceSource {
+impl EvidenceArtifact {
     /// Construct a source with no optional provenance fields.
     pub fn new(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),
             revision: None,
             path: None,
+            sha256: None,
             license: None,
         }
     }
+}
+
+/// The independent source that defines the expected behavior.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExpectationSource {
+    pub basis: EvidenceBasis,
+    pub artifact: EvidenceArtifact,
+    /// Issue, review, or other tracking reference for a known classification.
+    pub tracking_ref: Option<String>,
 }
 
 /// The live-client metadata attached to a client observation.
@@ -214,8 +294,10 @@ pub struct ImplementationIdentity {
 #[serde(rename_all = "camelCase")]
 pub struct Evidence {
     pub class: EvidenceClass,
-    pub basis: EvidenceBasis,
-    pub source: EvidenceSource,
+    /// The fixture or observation being executed.
+    pub fixture: EvidenceArtifact,
+    /// The independent source that defines the expectation.
+    pub expectation: ExpectationSource,
     /// The catalog identity used to interpret the case.
     pub catalog: CatalogIdentity,
     /// The source locale, when the case has localized input or output.
@@ -240,6 +322,36 @@ pub enum Equivalence {
     /// No comparison is claimed for this unsupported, gap, or inconclusive
     /// result.
     NotComparable,
+}
+
+/// The structured comparison attached to a conformance result.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Comparison {
+    pub mode: Equivalence,
+    pub expected: Option<EvidenceArtifact>,
+    pub observed: Option<EvidenceArtifact>,
+    /// The semantic/normalization procedure used for the comparison.
+    pub normalizer: Option<String>,
+}
+
+/// A stable reason code for a non-matching result.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ReasonCode {
+    Unsupported,
+    KnownGap,
+    UnexpectedRegression,
+    Inconclusive,
+}
+
+/// Structured detail for a non-matching result.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConformanceReason {
+    pub code: ReasonCode,
+    pub detail: String,
+    pub tracking_ref: Option<String>,
 }
 
 /// The conformance state of one case for one or more Workshop features.
@@ -276,11 +388,11 @@ pub struct ConformanceResult {
     /// Features exercised or implicated by this result.
     pub features: Vec<FeatureId>,
     pub status: ConformanceStatus,
-    pub equivalence: Equivalence,
+    pub comparison: Comparison,
     pub evidence: Evidence,
-    /// Required for non-matching states and useful for diagnostics in all
-    /// states. This is a diagnostic, not an expected-output oracle.
-    pub detail: Option<String>,
+    /// Required for non-matching states. This is a diagnostic, not an
+    /// expected-output oracle.
+    pub reason: Option<ConformanceReason>,
 }
 
 impl ConformanceResult {
@@ -304,7 +416,7 @@ impl ConformanceResult {
         }
         let mut seen_features: HashSet<&FeatureId> = HashSet::with_capacity(self.features.len());
         for (index, feature) in self.features.iter().enumerate() {
-            FeatureId::new(feature.kind, feature.name.clone())
+            FeatureId::new(feature.namespace, feature.kind, feature.name.clone())
                 .map_err(|error| error.at(format!("features[{index}]")))?;
             if !seen_features.insert(feature) {
                 return Err(ConformanceError::invalid(
@@ -314,32 +426,45 @@ impl ConformanceResult {
             }
         }
         validate_evidence(&self.evidence)?;
-        if self.status.is_match() && self.equivalence == Equivalence::NotComparable {
+        if self.status.is_match() && self.comparison.mode == Equivalence::NotComparable {
             return Err(ConformanceError::invalid(
-                "equivalence",
+                "comparison.mode",
                 "matched results must declare semantic, normalized, or exact-text equivalence",
             ));
         }
-        if !self.status.is_match()
-            && self
-                .detail
-                .as_deref()
-                .is_none_or(|detail| detail.trim().is_empty())
-        {
-            return Err(ConformanceError::invalid(
-                "detail",
-                "non-matching results must explain the unsupported, gap, regression, or inconclusive state",
-            ));
-        }
-        if self.status == ConformanceStatus::UnexpectedRegression
-            && self.equivalence == Equivalence::NotComparable
-        {
-            return Err(ConformanceError::invalid(
-                "equivalence",
-                "an unexpected regression must identify the comparison contract",
-            ));
+        validate_comparison(&self.comparison)?;
+        if self.status.is_match() {
+            if self.comparison.expected.is_none() || self.comparison.observed.is_none() {
+                return Err(ConformanceError::invalid(
+                    "comparison",
+                    "matched results require expected and observed artifacts",
+                ));
+            }
+        } else {
+            let reason = self.reason.as_ref().ok_or_else(|| {
+                ConformanceError::invalid(
+                    "reason",
+                    "non-matching results require a structured reason",
+                )
+            })?;
+            validate_reason(self.status, reason)?;
+            if self.status == ConformanceStatus::UnexpectedRegression
+                && self.comparison.mode == Equivalence::NotComparable
+            {
+                return Err(ConformanceError::invalid(
+                    "comparison.mode",
+                    "an unexpected regression must identify the comparison contract",
+                ));
+            }
         }
         Ok(())
+    }
+
+    /// Deserialize and validate a JSON result in one operation.
+    pub fn from_json(json: &str) -> Result<Self, ConformanceDecodeError> {
+        let result: Self = serde_json::from_str(json).map_err(ConformanceDecodeError::Json)?;
+        result.validate().map_err(ConformanceDecodeError::Invalid)?;
+        Ok(result)
     }
 
     /// Whether this result contributes to a successful conformance count.
@@ -349,18 +474,41 @@ impl ConformanceResult {
 }
 
 fn validate_evidence(evidence: &Evidence) -> Result<(), ConformanceError> {
-    validate_non_empty("evidence.source.name", &evidence.source.name)?;
+    validate_artifact(
+        "evidence.fixture",
+        &evidence.fixture,
+        false,
+        evidence.class == EvidenceClass::LiveClient,
+    )?;
+    validate_artifact(
+        "evidence.expectation.artifact",
+        &evidence.expectation.artifact,
+        matches!(
+            evidence.expectation.basis,
+            EvidenceBasis::PinnedExternalOracle | EvidenceBasis::PreservedRegression
+        ),
+        false,
+    )?;
+    if evidence.class == EvidenceClass::LiveClient
+        && evidence.expectation.basis != EvidenceBasis::WorkshopClient
+    {
+        return Err(ConformanceError::invalid(
+            "evidence.expectation.basis",
+            "live-client evidence must use workshop-client evidence basis",
+        ));
+    }
     if matches!(
-        evidence.basis,
+        evidence.expectation.basis,
         EvidenceBasis::PinnedExternalOracle | EvidenceBasis::PreservedRegression
     ) && evidence
-        .source
+        .expectation
+        .artifact
         .revision
         .as_deref()
         .is_none_or(str::is_empty)
     {
         return Err(ConformanceError::invalid(
-            "evidence.source.revision",
+            "evidence.expectation.artifact.revision",
             "pinned oracle and preserved regression evidence require an immutable revision",
         ));
     }
@@ -379,12 +527,6 @@ fn validate_evidence(evidence: &Evidence) -> Result<(), ConformanceError> {
                 "live-client evidence requires a client locale",
             ));
         }
-        if evidence.basis != EvidenceBasis::WorkshopClient {
-            return Err(ConformanceError::invalid(
-                "evidence.basis",
-                "live-client evidence must use workshop-client evidence basis",
-            ));
-        }
     } else if evidence.client.is_some() {
         return Err(ConformanceError::invalid(
             "evidence.client",
@@ -392,11 +534,118 @@ fn validate_evidence(evidence: &Evidence) -> Result<(), ConformanceError> {
         ));
     }
     if evidence.class == EvidenceClass::MinimizedRegression
-        && evidence.basis != EvidenceBasis::PreservedRegression
+        && evidence.expectation.basis != EvidenceBasis::PreservedRegression
     {
         return Err(ConformanceError::invalid(
-            "evidence.basis",
+            "evidence.expectation.basis",
             "minimized-regression evidence must use preserved-regression basis",
+        ));
+    }
+    validate_non_empty(
+        "evidence.catalog.implementationVersion",
+        &evidence.catalog.implementation_version,
+    )?;
+    validate_non_empty(
+        "evidence.catalog.catalogVersion",
+        &evidence.catalog.catalog_version,
+    )?;
+    if evidence
+        .catalog
+        .catalog_digest
+        .as_deref()
+        .is_none_or(str::is_empty)
+    {
+        return Err(ConformanceError::invalid(
+            "evidence.catalog.catalogDigest",
+            "conformance evidence requires a pinned catalog digest",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_artifact(
+    field: &str,
+    artifact: &EvidenceArtifact,
+    require_revision: bool,
+    require_digest: bool,
+) -> Result<(), ConformanceError> {
+    validate_non_empty(&format!("{field}.name"), &artifact.name)?;
+    if require_revision && artifact.revision.as_deref().is_none_or(str::is_empty) {
+        return Err(ConformanceError::invalid(
+            format!("{field}.revision"),
+            "must identify an immutable revision",
+        ));
+    }
+    if let Some(digest) = &artifact.sha256 {
+        if digest.len() != 64 || !digest.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return Err(ConformanceError::invalid(
+                format!("{field}.sha256"),
+                "must be a 64-character hexadecimal SHA-256 digest",
+            ));
+        }
+    }
+    if require_digest && artifact.sha256.is_none() {
+        return Err(ConformanceError::invalid(
+            format!("{field}.sha256"),
+            "materialized evidence requires a SHA-256 digest",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_comparison(comparison: &Comparison) -> Result<(), ConformanceError> {
+    if comparison.mode == Equivalence::Normalized
+        && comparison
+            .normalizer
+            .as_deref()
+            .is_none_or(|normalizer| normalizer.trim().is_empty())
+    {
+        return Err(ConformanceError::invalid(
+            "comparison.normalizer",
+            "normalized comparisons require a named normalizer",
+        ));
+    }
+    if let Some(expected) = &comparison.expected {
+        validate_artifact("comparison.expected", expected, false, true)?;
+    }
+    if let Some(observed) = &comparison.observed {
+        validate_artifact("comparison.observed", observed, false, true)?;
+    }
+    Ok(())
+}
+
+fn validate_reason(
+    status: ConformanceStatus,
+    reason: &ConformanceReason,
+) -> Result<(), ConformanceError> {
+    validate_non_empty("reason.detail", &reason.detail)?;
+    let expected = match status {
+        ConformanceStatus::Unsupported => ReasonCode::Unsupported,
+        ConformanceStatus::KnownGap => ReasonCode::KnownGap,
+        ConformanceStatus::UnexpectedRegression => ReasonCode::UnexpectedRegression,
+        ConformanceStatus::Inconclusive => ReasonCode::Inconclusive,
+        ConformanceStatus::Matched => {
+            return Err(ConformanceError::invalid(
+                "reason",
+                "matched results must not carry a non-matching reason",
+            ));
+        }
+    };
+    if reason.code != expected {
+        return Err(ConformanceError::invalid(
+            "reason.code",
+            "reason code must match conformance status",
+        ));
+    }
+    if reason.code == ReasonCode::KnownGap
+        && reason
+            .tracking_ref
+            .as_deref()
+            .is_none_or(|tracking_ref| tracking_ref.trim().is_empty())
+    {
+        return Err(ConformanceError::invalid(
+            "reason.trackingRef",
+            "known gaps require a tracking reference",
         ));
     }
     Ok(())
@@ -442,6 +691,24 @@ impl std::fmt::Display for ConformanceError {
 
 impl std::error::Error for ConformanceError {}
 
+/// Errors returned by the validated JSON entry point.
+#[derive(Debug)]
+pub enum ConformanceDecodeError {
+    Json(serde_json::Error),
+    Invalid(ConformanceError),
+}
+
+impl std::fmt::Display for ConformanceDecodeError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json(error) => write!(formatter, "invalid conformance JSON: {error}"),
+            Self::Invalid(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl std::error::Error for ConformanceDecodeError {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -454,12 +721,25 @@ mod tests {
     fn evidence(class: EvidenceClass, basis: EvidenceBasis) -> Evidence {
         Evidence {
             class,
-            basis,
-            source: EvidenceSource {
+            fixture: EvidenceArtifact {
                 name: "fixture".to_string(),
                 revision: Some("abc123".to_string()),
                 path: Some("cases/basic.ws".to_string()),
+                sha256: Some(
+                    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
+                ),
                 license: Some("MIT".to_string()),
+            },
+            expectation: ExpectationSource {
+                basis,
+                artifact: EvidenceArtifact {
+                    name: "semantic-contract".to_string(),
+                    revision: Some("contract-1".to_string()),
+                    path: Some("docs/adr/0002-conformance-contract.md".to_string()),
+                    sha256: None,
+                    license: Some("MIT".to_string()),
+                },
+                tracking_ref: None,
             },
             catalog: catalog(),
             locale: Some(Locale::new("en-US")),
@@ -472,6 +752,16 @@ mod tests {
         }
     }
 
+    fn hashed_artifact(name: &str) -> EvidenceArtifact {
+        EvidenceArtifact {
+            name: name.to_string(),
+            sha256: Some(
+                "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb".to_string(),
+            ),
+            ..EvidenceArtifact::new(name)
+        }
+    }
+
     fn matched() -> ConformanceResult {
         ConformanceResult {
             schema_version: CONFORMANCE_SCHEMA_VERSION,
@@ -480,9 +770,14 @@ mod tests {
                 FeatureId::from_catalog(Kind::Action, "setHealth").expect("valid feature"),
             ],
             status: ConformanceStatus::Matched,
-            equivalence: Equivalence::Semantic,
+            comparison: Comparison {
+                mode: Equivalence::Semantic,
+                expected: Some(hashed_artifact("expected")),
+                observed: Some(hashed_artifact("observed")),
+                normalizer: Some("canonical-wir".to_string()),
+            },
             evidence: evidence(EvidenceClass::Synthetic, EvidenceBasis::SemanticContract),
-            detail: None,
+            reason: None,
         }
     }
 
@@ -493,8 +788,10 @@ mod tests {
         assert_eq!(feature.name, "setHealth");
         assert_eq!(
             serde_json::to_string(&feature).unwrap(),
-            r#"{"kind":"action","name":"setHealth"}"#
+            r#"{"namespace":"catalog","kind":"action","name":"setHealth"}"#
         );
+        let member = FeatureId::from_enum_member("Hero", "ANA").expect("valid member");
+        assert_eq!(member.name, "Hero/ANA");
     }
 
     #[test]
@@ -502,7 +799,7 @@ mod tests {
         let result = matched();
         result.validate().expect("valid result");
         let json = serde_json::to_string(&result).expect("serialize result");
-        let decoded: ConformanceResult = serde_json::from_str(&json).expect("deserialize result");
+        let decoded = ConformanceResult::from_json(&json).expect("deserialize valid result");
         assert_eq!(decoded, result);
     }
 
@@ -510,9 +807,13 @@ mod tests {
     fn known_gap_is_not_a_match_and_requires_detail() {
         let mut result = matched();
         result.status = ConformanceStatus::KnownGap;
-        result.equivalence = Equivalence::NotComparable;
+        result.comparison.mode = Equivalence::NotComparable;
         assert!(result.validate().is_err());
-        result.detail = Some("client spelling is not yet evidenced".to_string());
+        result.reason = Some(ConformanceReason {
+            code: ReasonCode::KnownGap,
+            detail: "client spelling is not yet evidenced".to_string(),
+            tracking_ref: Some("#18".to_string()),
+        });
         result.validate().expect("documented gap");
         assert!(!result.is_match());
     }
@@ -525,7 +826,11 @@ mod tests {
 
         let mut result = matched();
         result.status = ConformanceStatus::Inconclusive;
-        result.detail = Some("  \n".to_string());
+        result.reason = Some(ConformanceReason {
+            code: ReasonCode::Inconclusive,
+            detail: "  \n".to_string(),
+            tracking_ref: None,
+        });
         assert!(result.validate().is_err());
     }
 
@@ -533,7 +838,7 @@ mod tests {
     fn live_client_requires_client_and_locale_provenance() {
         let mut result = matched();
         result.evidence.class = EvidenceClass::LiveClient;
-        result.evidence.basis = EvidenceBasis::WorkshopClient;
+        result.evidence.expectation.basis = EvidenceBasis::WorkshopClient;
         result.evidence.client = Some(ClientEvidence {
             game: "overwatch-2".to_string(),
             client_version: Some("season-1".to_string()),
@@ -558,9 +863,17 @@ mod tests {
             .validate()
             .expect("implementation metadata is allowed");
         assert_ne!(
-            result.evidence.basis,
+            result.evidence.expectation.basis,
             EvidenceBasis::PinnedExternalOracle,
             "implementation metadata is not an oracle"
         );
+    }
+
+    #[test]
+    fn validated_json_rejects_an_invalid_status_reason() {
+        let mut value = serde_json::to_value(matched()).expect("serialize result");
+        value["status"] = serde_json::json!("known-gap");
+        let json = serde_json::to_string(&value).expect("serialize invalid result");
+        assert!(ConformanceResult::from_json(&json).is_err());
     }
 }

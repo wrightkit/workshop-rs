@@ -21,7 +21,7 @@
 
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::signatures::ExpectedDomain;
 
@@ -31,7 +31,7 @@ use crate::error::{CatalogError, Result};
 pub const CATALOG_DATA: &str = include_str!("data/catalog.json");
 
 /// A normalized Workshop client locale, e.g. `en-US`.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize)]
 pub struct Locale(String);
 
 impl Locale {
@@ -43,6 +43,16 @@ impl Locale {
     /// The normalized locale string.
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+impl<'de> Deserialize<'de> for Locale {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = String::deserialize(deserializer)?;
+        Ok(Self::new(&value))
     }
 }
 
