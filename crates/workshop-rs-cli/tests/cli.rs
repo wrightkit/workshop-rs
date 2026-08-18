@@ -194,3 +194,41 @@ fn census_runs_with_machine_readable_results() {
     let output = run(&["census", "--bogus"]);
     assert_eq!(output.status.code(), Some(2));
 }
+
+#[test]
+fn corpus_runs_full_and_minimized_cases_with_visible_gap() {
+    let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../workshop-rs/tests/fixtures/corpus/real-projects.json");
+    let output = run(&["corpus", manifest.to_str().unwrap()]);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(
+        stdout.contains("real-project/overpy-cake/full: KnownGap"),
+        "{stdout}"
+    );
+    assert!(
+        stdout.contains("minimized-regression/overpy-cake-loop: Matched"),
+        "{stdout}"
+    );
+    assert!(
+        stdout.contains("matched=1") && stdout.contains("known-gap=1"),
+        "{stdout}"
+    );
+
+    let output = run(&["corpus", manifest.to_str().unwrap(), "--json"]);
+    assert!(output.status.success());
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect("valid report");
+    assert_eq!(report["results"].as_array().unwrap().len(), 2);
+    assert_eq!(report["summary"]["known-gap"], 1);
+}
+
+#[test]
+fn corpus_missing_manifest_fails_explicitly() {
+    let output = run(&["corpus", "/no/such/workshop-rs-manifest.json"]);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("cannot read"));
+}

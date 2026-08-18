@@ -15,6 +15,8 @@ use workshop_rs::detect;
 use workshop_rs::emitter::{self, EmitOptions};
 use workshop_rs::parser;
 
+mod corpus;
+
 /// The default locale override for parsing when the input locale is not
 /// specified explicitly.
 const USAGE: &str = "\
@@ -41,6 +43,10 @@ commands:
   census [--json]
       Run the deterministic offline Workshop feature census. Unexpected
       regressions exit with status 1; known gaps remain visible.
+  corpus <manifest> [--json]
+      Run an offline provenance-linked real-project corpus manifest and print
+      its #18 conformance report. Known gaps remain visible and do not count
+      as matches; unexpected regressions return exit code 1.
 ";
 
 pub fn run(args: Vec<String>) -> i32 {
@@ -57,6 +63,7 @@ pub fn run(args: Vec<String>) -> i32 {
         "locales" => locales_command(rest),
         "version" => version_command(rest),
         "census" => census_command(rest),
+        "corpus" => corpus_command(rest),
         "help" | "--help" | "-h" => {
             print!("{USAGE}");
             0
@@ -402,6 +409,47 @@ fn census_command(args: Vec<String>) -> i32 {
         1
     } else {
         0
+    }
+}
+
+fn corpus_command(args: Vec<String>) -> i32 {
+    let mut parser = ArgParser::new(args);
+    let mut manifest: Option<PathBuf> = None;
+    let mut json = false;
+    loop {
+        match parser.next() {
+            None => break,
+            Some("--json") => json = true,
+            Some(value) if manifest.is_none() => manifest = Some(PathBuf::from(value)),
+            Some(value) => return usage_error(&format!("unexpected argument '{value}'")),
+        }
+    }
+    let Some(manifest) = manifest else {
+        return usage_error("corpus requires a manifest file");
+    };
+    match corpus::run(&manifest) {
+        Ok(report) => {
+            if json {
+                match serde_json::to_string_pretty(&report) {
+                    Ok(text) => println!("{text}"),
+                    Err(error) => {
+                        eprintln!("workshop-rs-cli: cannot serialize corpus report: {error}");
+                        return 1;
+                    }
+                }
+            } else {
+                print!("{}", report.human_summary());
+            }
+            if report.has_unexpected_regression() {
+                1
+            } else {
+                0
+            }
+        }
+        Err(error) => {
+            eprintln!("workshop-rs-cli: corpus: {error}");
+            1
+        }
     }
 }
 
