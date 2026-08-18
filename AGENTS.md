@@ -82,4 +82,4 @@ pass is not final acceptance.
 * Conventional Commits; focused commits; no pushes to `main`; deliver through
   PRs.
 * Never commit credentials, private runtime data, or unreviewed third-party
-  material. Fixtures carry provenance (see `tests/fixtures/README.md`).
+  material. Fixtures carry provenance (see `crates/workshop-rs/tests/fixtures/README.md`).
