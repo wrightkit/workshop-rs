@@ -117,6 +117,29 @@ jobs:
           }
           echo "tag=${tag}" >>"${GITHUB_OUTPUT}"
 
+      - name: Ensure draft GitHub Release exists
+        if: steps.release-plz.outputs.releases_created == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          TAG: ${{ steps.release-identity.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if gh release view "${TAG}" --json isDraft,publishedAt >/dev/null 2>&1; then
+            is_draft="$(gh release view "${TAG}" --json isDraft --jq .isDraft)"
+            published_at="$(gh release view "${TAG}" --json publishedAt --jq .publishedAt)"
+            if [[ "${is_draft}" == "true" && "${published_at}" == "null" ]]; then
+              echo "draft GitHub Release ${TAG} already exists"
+              exit 0
+            fi
+            echo "${TAG} exists but is not an unpublished draft." >&2
+            exit 1
+          fi
+          gh release create "${TAG}" \
+            --draft \
+            --verify-tag \
+            --title "${TAG}" \
+            --generate-notes
+
   release-artifacts:
     name: Build and publish release artifacts
     needs: release
