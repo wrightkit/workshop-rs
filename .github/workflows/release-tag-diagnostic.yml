@@ -12,13 +12,7 @@ jobs:
     if: github.head_ref == 'agent/fix-release-state-handling'
     runs-on: ubuntu-latest
     steps:
-      - name: Inspect release tags
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Inspect complete tag namespace
         run: |
           set -euo pipefail
-          git ls-remote --tags "https://github.com/${GITHUB_REPOSITORY}.git" '*0.1.2*'
-          echo 'v0.1.2 commit lookup:'
-          gh api "repos/${GITHUB_REPOSITORY}/commits/v0.1.2" --jq .sha || true
-          echo 'workshop-rs-v0.1.2 commit lookup:'
-          gh api "repos/${GITHUB_REPOSITORY}/commits/workshop-rs-v0.1.2" --jq .sha || true
+          git ls-remote --tags "https://github.com/${GITHUB_REPOSITORY}.git"
