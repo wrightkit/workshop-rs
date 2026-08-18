@@ -11,23 +11,24 @@ draft GitHub Release.
 
 Configure these repository resources before enabling the workflow:
 
-1. Create an environment named `release` with required reviewers enabled.
+1. Provide a repository or organization `GH_TOKEN` secret with access to this
+   repository and permission to read/write contents and pull requests. The
+   release workflow uses this token to create/update `release-plz-*` branches
+   and Release PRs and to create the shared `vX.Y.Z` tag/draft release.
+2. Create an environment named `release` with required reviewers enabled.
    Store `CARGO_REGISTRY_TOKEN` in that environment and grant it permission to
    publish both crates. The environment is used only by the merged Release PR
    publication job.
-2. Allow the repository `GITHUB_TOKEN` to create `release-plz-*` branches,
-   update Release PRs, create immutable `vX.Y.Z` tags, and create draft
-   releases. Normal development remains PR-only; no direct `main` push
-   exception is required.
-3. The default token does not start a separate workflow from a tag event, so
-   artifacts are invoked through `workflow_call` in the same release run.
-   Release gates run after the Release PR is merged and before publication;
-   CI checks on the bot-created Release PR are not relied on as the release
-   gate.
+3. Normal development remains PR-only; no direct `main` push exception is
+   required. The dedicated `GH_TOKEN` is release-management infrastructure,
+   not authority to bypass repository review policy.
+4. Artifact publication remains a `workflow_call` from the release workflow.
+   It does not depend on a tag event starting a second workflow. Release gates
+   run after the Release PR is merged and before publication.
 
-The release workflow grants only the permissions needed by each job. The
-artifact workflow uses the caller's `GITHUB_TOKEN` to update the draft release
-after the release-plz job returns its tag output.
+The release-plz jobs use `GH_TOKEN` for GitHub release management. The called
+artifact workflow can use its own scoped `GITHUB_TOKEN` to update the draft
+release after release-plz returns the canonical tag.
 
 ## Release identity and retries
 
