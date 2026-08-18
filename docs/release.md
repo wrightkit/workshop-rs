@@ -1,44 +1,59 @@
 # Release automation
 
-`Release` is a manually triggered GitHub Actions workflow. Dispatch it from
-the repository's `main` branch and select `patch`, `minor`, or `major`; the
-normal patch path requires no version text entry.
+`release-plz` maintains a Release PR from pushes to `main`. Merging that PR
+is the normal release action. The merged Release PR runs the repository gates,
+publishes `workshop-rs` before `workshop-rs-cli`, and creates one draft
+`vX.Y.Z` tag/release. The tag workflow builds the CLI archives, adds checksums
+and catalog identity, then publishes the draft GitHub Release.
 
 ## Repository configuration
 
-The repository needs:
+Configure these repository resources before enabling the workflow:
 
-1. An environment named `release` with required reviewers enabled for the
-   publication jobs.
-2. An environment secret named `CARGO_REGISTRY_TOKEN`. The token must be
-   allowed to publish both `workshop-rs` and `workshop-rs-cli`; it is never
-   printed by the workflow.
-3. A ruleset/environment exception allowing the release workflow's
-   `github-actions[bot]` to push the deterministic version commit to `main`
-   and the immutable `vX.Y.Z` tag. Normal development remains PR-only.
+1. Create a fine-grained `RELEASE_PLZ_TOKEN` with repository access and
+   `Contents: read and write` plus `Pull requests: read and write`. Use it for
+   checkout and release-plz. The default `GITHUB_TOKEN` cannot trigger the tag
+   workflow or CI for a Release PR.
+2. Create an environment named `release` with required reviewers enabled.
+   Store `CARGO_REGISTRY_TOKEN` in that environment and grant it permission to
+   publish both crates. The environment is used only by the merged Release PR
+   publication job.
+3. Allow the release-plz token to create `release-plz-*` branches, update
+   Release PRs, create immutable `vX.Y.Z` tags, and create draft releases.
+   Normal development remains PR-only; no direct `main` push exception is
+   required.
+4. Keep the normal CI checks required on Release PRs. The PAT is deliberate so
+   those checks run for the bot-created PR and the tag event starts the
+   artifact workflow.
 
-The workflow grants `contents: read` by default and `contents: write` only to
-the prepare and GitHub Release jobs. Registry publication is gated by the
-protected `release` environment. A future crates.io trusted-publishing
-configuration may replace the registry token, but it must preserve the same
-environment approval and package-order guarantees.
+The release workflow grants only the permissions needed by each job. The
+artifact workflow uses the run's `GITHUB_TOKEN` only to update the draft
+release after the tag has triggered it.
 
 ## Release identity and retries
 
-The workspace version, both package versions, Cargo.lock, the release commit,
-the `vX.Y.Z` tag, registry packages, and GitHub Release all refer to one
-revision. The library is published before the CLI because the CLI declares a
-matching registry-compatible `workshop-rs` dependency while retaining its
-local path for development.
+Both packages use the `workshop-rs` release-plz `version_group`. Only the
+library package owns the shared `vX.Y.Z` tag and GitHub Release; the CLI remains
+published at the same version without a second public tag or release. Cargo's
+dependency order makes the library publish before the CLI.
 
-The workflow detects an incomplete version/tag/release and resumes it. It
-skips crates already visible at the target version, reuses an existing
-immutable tag, and resumes a draft GitHub Release. Once a tag has a published
-GitHub Release and both crates are present, a new dispatch computes the next
-selected bump instead of reusing the completed version.
+The release-plz release job is gated by format, clippy, tests, catalog check,
+and `cargo package` for both crates. A failed publication or artifact run can
+be retried: release-plz checks the registry and existing tag/release state, and
+the artifact workflow uploads with `--clobber` before making the draft public.
+Do not manually bump versions, create tags, or run `cargo publish` for a normal
+release. Rerun the failed GitHub Actions run instead.
 
-Platform artifacts are built for Linux x86_64/aarch64, macOS x86_64/aarch64,
-and Windows x86_64. The final GitHub Release contains the five archives,
-`SHA256SUMS.txt`, generated notes, the exact revision, and the CLI's
-machine-readable catalog identity (catalog version, digest, and locale
-coverage).
+## Maintainer procedure
+
+1. Merge normal changes through PRs using Conventional Commits.
+2. Review the automatically maintained Release PR and its CI checks.
+3. Merge the Release PR after the protected `release` environment is ready.
+4. Approve the publication job when prompted. It publishes the two crates and
+   creates the draft release; the tag workflow then attaches the five platform
+   archives, `SHA256SUMS.txt`, and `catalog-identity.json`, and publishes the
+   release.
+
+The resulting GitHub Release notes contain the generated release-plz notes,
+the exact revision, and the CLI's machine-readable catalog version, digest,
+locale coverage, and provenance identity.
