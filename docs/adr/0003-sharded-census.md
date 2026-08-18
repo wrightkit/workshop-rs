@@ -26,9 +26,17 @@ also equal to an independently recorded reference source; generated probes
 without such an artifact remain inconclusive even when all offline gates pass.
 The report retains every `ConformanceResult`, including unsupported,
 known-gap, unexpected-regression, and inconclusive states.
-`CensusReport::validate_against` binds catalog feature IDs and result case IDs
-to the actual catalog and declared shards. `Census::export_json` exports shard
-definitions without making the export itself an oracle.
+`Census::identity` exposes a deterministic SHA-256 digest of the reviewed,
+serialized shard definition together with the sorted shard IDs. Every
+`CensusReport` carries that authoritative `CensusIdentity`; report validation
+checks its schema, digest shape, and shard list. `CensusReport::validate_against`
+also binds catalog feature IDs and result case IDs to the actual catalog and
+declared shards. `Census::export_json` exports shard definitions without
+making the export itself an oracle.
+
+The committed localization inputs are newly authored probes, not independent
+locale evidence. They therefore remain `Inconclusive` until reviewed external
+or historical captures are recorded through the #18 contract.
 
 The report's comparison fields describe the independent semantic/normalized
 gate; they do not turn the implementation's own output into an expected

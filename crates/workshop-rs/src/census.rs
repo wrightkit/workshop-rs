@@ -25,6 +25,7 @@ use crate::settings::table::{self, KeyKind, PathPart, TableEntry};
 use crate::wir::{CENSUS_CAPABILITIES, CensusCapabilityKind};
 
 pub const CENSUS_SCHEMA_VERSION: u32 = 1;
+pub const CENSUS_IDENTITY_SCHEMA_VERSION: u32 = 1;
 const EN_US: &str = "en-US";
 const ZH_CN: &str = "zh-CN";
 const CENSUS_TRACKING_REF: &str = "#19";
@@ -140,6 +141,15 @@ pub struct Census {
     shards: Vec<CensusShard>,
 }
 
+/// The stable identity of a reviewed census definition.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CensusIdentity {
+    pub schema_version: u32,
+    pub digest: String,
+    pub shards: Vec<String>,
+}
+
 impl Census {
     /// Assemble shards in stable shard and case order.
     pub fn assemble(mut shards: Vec<CensusShard>) -> Result<Self, CensusError> {
@@ -207,12 +217,24 @@ impl Census {
             schema_version: CENSUS_SCHEMA_VERSION,
             conformance_schema_version: CONFORMANCE_SCHEMA_VERSION,
             catalog: catalog.identity(),
+            census: self.identity(),
+            results,
+        }
+    }
+
+    /// Return the deterministic identity of this census definition.
+    pub fn identity(&self) -> CensusIdentity {
+        let definition = self
+            .export_json()
+            .expect("census definitions must remain serializable");
+        CensusIdentity {
+            schema_version: CENSUS_IDENTITY_SCHEMA_VERSION,
+            digest: sha256(&definition),
             shards: self
                 .shards
                 .iter()
                 .map(|shard| shard.shard_id.clone())
                 .collect(),
-            results,
         }
     }
 
@@ -230,7 +252,7 @@ pub struct CensusReport {
     pub schema_version: u32,
     pub conformance_schema_version: u32,
     pub catalog: crate::catalog::CatalogIdentity,
-    pub shards: Vec<String>,
+    pub census: CensusIdentity,
     pub results: Vec<ConformanceResult>,
 }
 
@@ -253,7 +275,25 @@ impl CensusReport {
                 "report catalog identity does not match the loaded catalog",
             ));
         }
-        if self.shards.is_empty() || self.shards.windows(2).any(|pair| pair[0] >= pair[1]) {
+        if self.census.schema_version != CENSUS_IDENTITY_SCHEMA_VERSION {
+            return Err(CensusError::new(
+                "unsupported census identity schema version",
+            ));
+        }
+        if self.census.digest.len() != 64
+            || !self
+                .census
+                .digest
+                .chars()
+                .all(|character| character.is_ascii_hexdigit())
+        {
+            return Err(CensusError::new(
+                "census identity digest must be a SHA-256 hex digest",
+            ));
+        }
+        if self.census.shards.is_empty()
+            || self.census.shards.windows(2).any(|pair| pair[0] >= pair[1])
+        {
             return Err(CensusError::new(
                 "report shards must be non-empty and strictly sorted",
             ));
@@ -263,6 +303,7 @@ impl CensusReport {
                 .validate_against(catalog)
                 .map_err(|error| CensusError::new(error.to_string()))?;
             let matching_shards = self
+                .census
                 .shards
                 .iter()
                 .filter(|shard| {
@@ -504,9 +545,9 @@ fn localization_shard() -> Result<CensusShard, CensusError> {
                     "en-us-to-zh-cn",
                 )],
                 source_locale: EN_US.to_string(),
-                source: en_source.clone(),
-                reference_source: Some(zh_source.clone()),
-                support: CensusSupport::Exercise,
+                source: en_source,
+                reference_source: None,
+                support: generated_probe_support(),
             },
             CensusCase {
                 case_id: "localization/zh-cn-to-en-us".to_string(),
@@ -517,8 +558,8 @@ fn localization_shard() -> Result<CensusShard, CensusError> {
                 )],
                 source_locale: ZH_CN.to_string(),
                 source: zh_source,
-                reference_source: Some(en_source),
-                support: CensusSupport::Exercise,
+                reference_source: None,
+                support: generated_probe_support(),
             },
         ],
     )
@@ -1027,15 +1068,10 @@ fn artifact(name: impl Into<String>, content: &str) -> EvidenceArtifact {
 }
 
 fn reference_artifact(case: &CensusCase, content: &str) -> EvidenceArtifact {
-    let path = match case.case_id.as_str() {
-        "localization/en-us-to-zh-cn" => "tests/fixtures/census/localization-zh-cn.ws",
-        "localization/zh-cn-to-en-us" => "tests/fixtures/census/localization-en-us.ws",
-        _ => "tests/fixtures/census/reference.ws",
-    };
     EvidenceArtifact {
         name: format!("census reference for {}", case.case_id),
         revision: Some("census-v1".to_string()),
-        path: Some(path.to_string()),
+        path: Some("tests/fixtures/census/reference.ws".to_string()),
         sha256: Some(sha256(content)),
         license: Some("MIT".to_string()),
     }
@@ -1078,6 +1114,8 @@ mod tests {
                 .any(|feature| feature.kind == FeatureKind::ControlFlow)
         }));
         assert_eq!(first.export_json().unwrap(), second.export_json().unwrap());
+        assert_eq!(first.identity(), second.identity());
+        assert_eq!(first.identity().digest.len(), 64);
     }
 
     #[test]
@@ -1135,5 +1173,26 @@ mod tests {
         report
             .validate_against(&catalog)
             .expect("census results use canonical catalog identities");
+        assert_eq!(report.census, census.identity());
+        assert!(
+            report
+                .results
+                .iter()
+                .filter(|result| result.case_id.starts_with("localization/"))
+                .all(|result| result.status == ConformanceStatus::Inconclusive)
+        );
+    }
+
+    #[test]
+    fn census_report_rejects_a_malformed_identity_digest() {
+        let catalog = Catalog::builtin().expect("builtin catalog");
+        let census = Census::builtin(&catalog).expect("census");
+        let mut report = census.run(&catalog);
+        report.census.digest = "not-a-digest".to_string();
+
+        let error = report
+            .validate_against(&catalog)
+            .expect_err("report identity must carry a SHA-256 digest");
+        assert!(error.to_string().contains("SHA-256"));
     }
 }
