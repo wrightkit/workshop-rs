@@ -620,6 +620,25 @@ fn embedded_records_keep_pinned_provenance_on_every_fact() {
 }
 
 #[test]
+fn representative_hero_and_ability_records_round_trip_through_json() {
+    let catalog = builtin().unwrap();
+    let original = catalog.hero_by_id("ramattra").unwrap();
+    let encoded = serde_json::to_string(original).unwrap();
+    let decoded: Hero = serde_json::from_str(&encoded).unwrap();
+
+    assert_eq!(original, &decoded);
+    assert_eq!(
+        decoded
+            .ability_by_id(&AbilityId::new("pummel"))
+            .unwrap()
+            .variant()
+            .unwrap()
+            .as_str(),
+        "nemesis"
+    );
+}
+
+#[test]
 fn loader_rejects_stale_digest_and_unsupported_schema() {
     let stale = GAMEPLAY_DATA.replacen(
         "d15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
