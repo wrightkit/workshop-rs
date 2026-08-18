@@ -20,11 +20,15 @@ cases use `workshop-rs`-owned namespaces.
 
 `Census::run` executes each case independently through parse, WIR validation,
 canonical identity validation, emission, semantic round-trip, and en-US/zh-CN
-conversion checks. The report retains every `ConformanceResult`, including
-unsupported, known-gap, unexpected-regression, and inconclusive states.
-`CensusReport::validate_against` binds catalog feature IDs to the actual
-catalog. `Census::export_json` exports shard definitions without making the
-export itself an oracle.
+conversion checks. The WIR shard is derived from the WIR-owned
+`CENSUS_CAPABILITIES` registry. A case is matched only when its conversion is
+also equal to an independently recorded reference source; generated probes
+without such an artifact remain inconclusive even when all offline gates pass.
+The report retains every `ConformanceResult`, including unsupported,
+known-gap, unexpected-regression, and inconclusive states.
+`CensusReport::validate_against` binds catalog feature IDs and result case IDs
+to the actual catalog and declared shards. `Census::export_json` exports shard
+definitions without making the export itself an oracle.
 
 The report's comparison fields describe the independent semantic/normalized
 gate; they do not turn the implementation's own output into an expected
