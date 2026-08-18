@@ -313,5 +313,5 @@ fn non_match(
 
 fn sha256(value: &str) -> String {
     let digest = Sha256::digest(value.as_bytes());
-    digest.iter().map(|byte| format!("{byte:02x}")).collect()
+    format!("{digest:x}")
 }
