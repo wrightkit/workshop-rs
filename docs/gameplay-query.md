@@ -7,16 +7,20 @@ invent missing facts, or mutate the catalog.
 ## Deterministic lookup
 
 ```rust
-use workshop_rs::gameplay::{slots, AbilityVariant};
+use workshop_rs::gameplay::{hero_ids, slots};
 use workshop_rs::gameplay_query::GameplayQueryError;
 
 let query = catalog.query();
-let ana = query.hero("ana")?;
-let kit = query.kit("ana")?;
-let sleep_dart = query.slot_ability("ana", slots::ABILITY_1)?;
-let stat = query.quantity_stat("ana", slots::ABILITY_1, None, "cooldown")?;
+let ana = query.hero(hero_ids::ANA)?;
+let kit = query.kit(hero_ids::ANA)?;
+let sleep_dart = query.slot_ability(hero_ids::ANA, slots::ABILITY_1)?;
+let stat = query.quantity_stat(hero_ids::ANA, slots::ABILITY_1, None, "cooldown")?;
 # let _: Result<(), GameplayQueryError> = Ok(());
 ```
+
+Typed hero and slot symbols are the normal Rust developer surface. The same
+query methods also accept canonical string identities such as `"ana"` and
+`"ability1"` when a consumer is operating on dynamic or wire-provided data.
 
 The catalog's heroes are in canonical ID order. A kit is sorted by logical
 slot, and variant; a slot result is sorted by slot and variant; keyword
