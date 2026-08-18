@@ -596,12 +596,12 @@ pub enum GameplayDataError {
     InvalidQuantity {
         value: f64,
     },
-    MissingEvidence(String),
-    EmptyId(&'static str),
-    InvalidQuantity { value: f64 },
     Malformed(String),
     UnsupportedSchema(u32),
-    DigestMismatch { declared: String, computed: String },
+    DigestMismatch {
+        declared: String,
+        computed: String,
+    },
 }
 
 impl std::fmt::Display for GameplayDataError {

@@ -15,7 +15,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "sleepDart",
           "keywords": [
             "crowdControl"
           ],
@@ -65,7 +64,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "bioticGrenade",
           "keywords": [
             "healing",
             "damage",
@@ -117,7 +115,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "nanoBoost",
           "keywords": [
             "buff"
           ],
@@ -210,7 +207,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "infernoRush",
           "name": {
             "evidence": [
               {
@@ -234,7 +230,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "dancingBlaze",
           "name": {
             "evidence": [
               {
@@ -258,7 +253,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "vermillionAscent",
           "name": {
             "evidence": [
               {
@@ -317,7 +311,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "coachGun",
           "name": {
             "evidence": [
               {
@@ -354,7 +347,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "dynamite",
           "name": {
             "evidence": [
               {
@@ -391,7 +383,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "bob",
           "name": {
             "evidence": [
               {
@@ -476,7 +467,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "regenerativeBurst",
           "name": {
             "evidence": [
               {
@@ -513,7 +503,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "immortalityField",
           "name": {
             "evidence": [
               {
@@ -550,7 +539,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "amplificationMatrix",
           "name": {
             "evidence": [
               {
@@ -635,7 +623,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "a36TacticalGrenade",
           "name": {
             "evidence": [
               {
@@ -677,7 +664,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "reconfigure",
           "keywords": [
             "form"
           ],
@@ -722,7 +708,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "configurationArtillery",
           "name": {
             "evidence": [
               {
@@ -759,7 +744,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "configurationAssault",
           "name": {
             "evidence": [
               {
@@ -783,7 +767,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "configurationRecon",
           "name": {
             "evidence": [
               {
@@ -855,7 +838,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "barrierShield",
           "name": {
             "evidence": [
               {
@@ -897,7 +879,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "whipShot",
           "keywords": [
             "damage",
             "knockback"
@@ -943,7 +924,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "repairPack",
           "name": {
             "evidence": [
               {
@@ -985,7 +965,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "shieldBash",
           "keywords": [
             "mobility",
             "crowdControl",
@@ -1032,7 +1011,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "rally",
           "name": {
             "evidence": [
               {
@@ -1117,7 +1095,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "combatRoll",
           "name": {
             "evidence": [
               {
@@ -1154,7 +1131,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "flashbang",
           "name": {
             "evidence": [
               {
@@ -1191,7 +1167,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "deadeye",
           "name": {
             "evidence": [
               {
@@ -1276,7 +1251,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "powerBarrier",
           "name": {
             "evidence": [
               {
@@ -1299,7 +1273,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "propulsors",
           "name": {
             "evidence": [
               {
@@ -1322,7 +1295,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "fusionRepeater",
           "name": {
             "evidence": [
               {
@@ -1345,7 +1317,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "limitBreak",
           "name": {
             "evidence": [
               {
@@ -1402,7 +1373,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "photonMagnum",
           "name": {
             "evidence": [
               {
@@ -1427,7 +1397,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "barrierArray",
           "name": {
             "evidence": [
               {
@@ -1452,7 +1421,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "sonicRepulsors",
           "name": {
             "evidence": [
               {
@@ -1477,7 +1445,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "crystalCharge",
           "name": {
             "evidence": [
               {
@@ -1502,7 +1469,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "panopticon",
           "name": {
             "evidence": [
               {
@@ -1527,7 +1493,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "reconstruction",
           "name": {
             "evidence": [
               {
@@ -1588,7 +1553,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "rocketPunch",
           "name": {
             "evidence": [
               {
@@ -1625,7 +1589,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "powerBlock",
           "name": {
             "evidence": [
               {
@@ -1662,7 +1625,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "seismicSlam",
           "name": {
             "evidence": [
               {
@@ -1699,7 +1661,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "meteorStrike",
           "name": {
             "evidence": [
               {
@@ -1789,7 +1750,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "defenseMatrix",
           "keywords": [
             "barrier",
             "resource"
@@ -1835,7 +1795,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "boosters",
           "name": {
             "evidence": [
               {
@@ -1872,7 +1831,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "microMissiles",
           "name": {
             "evidence": [
               {
@@ -1909,7 +1867,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "selfDestruct",
           "name": {
             "evidence": [
               {
@@ -1946,7 +1903,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "fusionCannons",
           "name": {
             "evidence": [
               {
@@ -1970,7 +1926,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "lightGun",
           "name": {
             "evidence": [
               {
@@ -2042,7 +1997,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "stickyBombs",
           "name": {
             "evidence": [
               {
@@ -2079,7 +2033,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "flight",
           "name": {
             "evidence": [
               {
@@ -2116,7 +2069,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "focusingBeam",
           "name": {
             "evidence": [
               {
@@ -2153,7 +2105,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "duplicate",
           "name": {
             "evidence": [
               {
@@ -2190,7 +2141,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "glide",
           "name": {
             "evidence": [
               {
@@ -2275,7 +2225,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "siphonBlaster",
           "name": {
             "evidence": [
               {
@@ -2300,7 +2249,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "cyberFrag",
           "name": {
             "evidence": [
               {
@@ -2325,7 +2273,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "overrideProtocol",
           "name": {
             "evidence": [
               {
@@ -2386,7 +2333,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "takeAim",
           "name": {
             "evidence": [
               {
@@ -2411,7 +2357,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "quickDash",
           "name": {
             "evidence": [
               {
@@ -2436,7 +2381,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "updraft",
           "name": {
             "evidence": [
               {
@@ -2461,7 +2405,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "bolaShot",
           "name": {
             "evidence": [
               {
@@ -2522,7 +2465,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "swiftStrike",
           "name": {
             "evidence": [
               {
@@ -2559,7 +2501,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "deflect",
           "name": {
             "evidence": [
               {
@@ -2596,7 +2537,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "dragonblade",
           "name": {
             "evidence": [
               {
@@ -2681,7 +2621,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "sonicArrow",
           "name": {
             "evidence": [
               {
@@ -2718,7 +2657,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "stormArrows",
           "name": {
             "evidence": [
               {
@@ -2755,7 +2693,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "lunge",
           "name": {
             "evidence": [
               {
@@ -2792,7 +2729,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "dragonstrike",
           "name": {
             "evidence": [
               {
@@ -2877,7 +2813,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "bonespur",
           "name": {
             "evidence": [
               {
@@ -2914,7 +2849,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "spikeGuard",
           "name": {
             "evidence": [
               {
@@ -2951,7 +2885,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "violentLeap",
           "name": {
             "evidence": [
               {
@@ -2988,7 +2921,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "jaggedWall",
           "name": {
             "evidence": [
               {
@@ -3025,7 +2957,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "downpour",
           "name": {
             "evidence": [
               {
@@ -3110,7 +3041,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "outburst",
           "name": {
             "evidence": [
               {
@@ -3147,7 +3077,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "healingPylon",
           "name": {
             "evidence": [
               {
@@ -3184,7 +3113,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "captiveSun",
           "name": {
             "evidence": [
               {
@@ -3269,7 +3197,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "freneticFlight",
           "name": {
             "evidence": [
               {
@@ -3294,7 +3221,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "lifeline",
           "name": {
             "evidence": [
               {
@@ -3319,7 +3245,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "purr",
           "name": {
             "evidence": [
               {
@@ -3344,7 +3269,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "catnapper",
           "name": {
             "evidence": [
               {
@@ -3405,7 +3329,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "jaggedBladeGracie",
           "name": {
             "evidence": [
               {
@@ -3442,7 +3365,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "commandingShout",
           "name": {
             "evidence": [
               {
@@ -3479,7 +3401,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "carnage",
           "name": {
             "evidence": [
               {
@@ -3516,7 +3437,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "rampage",
           "name": {
             "evidence": [
               {
@@ -3601,7 +3521,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "concussionMine",
           "name": {
             "evidence": [
               {
@@ -3638,7 +3557,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "steelTrap",
           "name": {
             "evidence": [
               {
@@ -3675,7 +3593,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "ripTire",
           "name": {
             "evidence": [
               {
@@ -3760,7 +3677,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "mediblaster",
           "name": {
             "evidence": [
               {
@@ -3797,7 +3713,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "pulsarTorpedoes",
           "name": {
             "evidence": [
               {
@@ -3834,7 +3749,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "glideBoost",
           "name": {
             "evidence": [
               {
@@ -3871,7 +3785,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "hyperRing",
           "name": {
             "evidence": [
               {
@@ -3908,7 +3821,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "orbitalRay",
           "name": {
             "evidence": [
               {
@@ -3945,7 +3857,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "martianOverboots",
           "name": {
             "evidence": [
               {
@@ -4030,7 +3941,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "swiftStep",
           "name": {
             "evidence": [
               {
@@ -4067,7 +3977,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "protectionSuzu",
           "name": {
             "evidence": [
               {
@@ -4104,7 +4013,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "kitsuneRush",
           "name": {
             "evidence": [
               {
@@ -4189,7 +4097,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "petalPlatform",
           "name": {
             "evidence": [
               {
@@ -4226,7 +4133,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "rejuvenatingDash",
           "name": {
             "evidence": [
               {
@@ -4263,7 +4169,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "lifeGrip",
           "name": {
             "evidence": [
               {
@@ -4300,7 +4205,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "treeOfLife",
           "name": {
             "evidence": [
               {
@@ -4385,7 +4289,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "soundwave",
           "name": {
             "evidence": [
               {
@@ -4422,7 +4325,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "crossfade",
           "name": {
             "evidence": [
               {
@@ -4459,7 +4361,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "ampItUp",
           "name": {
             "evidence": [
               {
@@ -4496,7 +4397,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "soundBarrier",
           "name": {
             "evidence": [
               {
@@ -4581,7 +4481,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "incendiaryChaingun",
           "name": {
             "evidence": [
               {
@@ -4618,7 +4517,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "volatileChaingun",
           "name": {
             "evidence": [
               {
@@ -4655,7 +4553,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "overrun",
           "name": {
             "evidence": [
               {
@@ -4692,7 +4589,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "cardiacOverdrive",
           "name": {
             "evidence": [
               {
@@ -4729,7 +4625,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "cageFight",
           "name": {
             "evidence": [
               {
@@ -4814,7 +4709,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "cryoFreeze",
           "name": {
             "evidence": [
               {
@@ -4851,7 +4745,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "iceWall",
           "name": {
             "evidence": [
               {
@@ -4888,7 +4781,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "blizzard",
           "name": {
             "evidence": [
               {
@@ -4973,7 +4865,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "guardianAngel",
           "name": {
             "evidence": [
               {
@@ -5010,7 +4901,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "resurrect",
           "name": {
             "evidence": [
               {
@@ -5047,7 +4937,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "valkyrie",
           "name": {
             "evidence": [
               {
@@ -5084,7 +4973,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "sympatheticRecovery",
           "name": {
             "evidence": [
               {
@@ -5169,7 +5057,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "healingKasa",
           "name": {
             "evidence": [
               {
@@ -5194,7 +5081,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "katashiroReturn",
           "name": {
             "evidence": [
               {
@@ -5219,7 +5105,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "bindingChain",
           "name": {
             "evidence": [
               {
@@ -5244,7 +5129,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "kekkaiSanctuary",
           "name": {
             "evidence": [
               {
@@ -5305,7 +5189,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "fade",
           "name": {
             "evidence": [
               {
@@ -5342,7 +5225,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "bioticOrb",
           "name": {
             "evidence": [
               {
@@ -5379,7 +5261,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "coalescence",
           "name": {
             "evidence": [
               {
@@ -5464,7 +5345,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "energyJavelin",
           "name": {
             "evidence": [
               {
@@ -5501,7 +5381,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "fortify",
           "name": {
             "evidence": [
               {
@@ -5538,7 +5417,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "javelinSpin",
           "name": {
             "evidence": [
               {
@@ -5575,7 +5453,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "terraSurge",
           "name": {
             "evidence": [
               {
@@ -5660,7 +5537,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "jetDash",
           "name": {
             "evidence": [
               {
@@ -5697,7 +5573,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "jumpJet",
           "name": {
             "evidence": [
               {
@@ -5734,7 +5609,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "concussiveBlast",
           "name": {
             "evidence": [
               {
@@ -5771,7 +5645,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "barrage",
           "name": {
             "evidence": [
               {
@@ -5808,7 +5681,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "hoverJets",
           "name": {
             "evidence": [
               {
@@ -5893,7 +5765,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "voidBarrierOmnic",
           "name": {
             "evidence": [
               {
@@ -5930,7 +5801,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "nemesisForm",
           "name": {
             "evidence": [
               {
@@ -5972,7 +5842,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "ravenousVortex",
           "keywords": [
             "damage",
             "crowdControl"
@@ -6018,7 +5887,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "annihilation",
           "name": {
             "evidence": [
               {
@@ -6055,7 +5923,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "voidAccelerator",
           "name": {
             "evidence": [
               {
@@ -6079,7 +5946,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "pummel",
           "name": {
             "evidence": [
               {
@@ -6151,7 +6017,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "wraithForm",
           "name": {
             "evidence": [
               {
@@ -6188,7 +6053,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "shadowStep",
           "name": {
             "evidence": [
               {
@@ -6225,7 +6089,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "deathBlossom",
           "name": {
             "evidence": [
               {
@@ -6310,7 +6173,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "barrierField",
           "name": {
             "evidence": [
               {
@@ -6347,7 +6209,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "charge",
           "name": {
             "evidence": [
               {
@@ -6384,7 +6245,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "fireStrike",
           "name": {
             "evidence": [
               {
@@ -6421,7 +6281,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "earthshatter",
           "name": {
             "evidence": [
               {
@@ -6506,7 +6365,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "chainHook",
           "name": {
             "evidence": [
               {
@@ -6543,7 +6401,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "takeABreather",
           "name": {
             "evidence": [
               {
@@ -6580,7 +6437,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "wholeHog",
           "name": {
             "evidence": [
               {
@@ -6665,7 +6521,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "execution",
           "name": {
             "evidence": [
               {
@@ -6689,7 +6544,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "evade",
           "name": {
             "evidence": [
               {
@@ -6713,7 +6567,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "joyride",
           "name": {
             "evidence": [
               {
@@ -6737,7 +6590,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "satsurikuSpree",
           "name": {
             "evidence": [
               {
@@ -6796,7 +6648,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "trackingShot",
           "name": {
             "evidence": [
               {
@@ -6820,7 +6671,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "anchorDrone",
           "name": {
             "evidence": [
               {
@@ -6844,7 +6694,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "tremorCharge",
           "name": {
             "evidence": [
               {
@@ -6868,7 +6717,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "trailblazer",
           "name": {
             "evidence": [
               {
@@ -6927,7 +6775,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "experimentalBarrier",
           "name": {
             "evidence": [
               {
@@ -6964,7 +6811,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "kineticGrasp",
           "name": {
             "evidence": [
               {
@@ -7001,7 +6847,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "accretion",
           "name": {
             "evidence": [
               {
@@ -7038,7 +6883,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "graviticFlux",
           "name": {
             "evidence": [
               {
@@ -7123,7 +6967,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "chargedShot",
           "name": {
             "evidence": [
               {
@@ -7146,7 +6989,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "powerSlide",
           "name": {
             "evidence": [
               {
@@ -7183,7 +7025,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "disruptorShot",
           "name": {
             "evidence": [
               {
@@ -7220,7 +7061,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "overclock",
           "name": {
             "evidence": [
               {
@@ -7305,7 +7145,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "helixRockets",
           "name": {
             "evidence": [
               {
@@ -7342,7 +7181,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "sprint",
           "name": {
             "evidence": [
               {
@@ -7379,7 +7217,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "bioticField",
           "name": {
             "evidence": [
               {
@@ -7416,7 +7253,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "tacticalVisor",
           "name": {
             "evidence": [
               {
@@ -7501,7 +7337,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "hack",
           "name": {
             "evidence": [
               {
@@ -7538,7 +7373,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "virus",
           "name": {
             "evidence": [
               {
@@ -7575,7 +7409,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "translocator",
           "name": {
             "evidence": [
               {
@@ -7612,7 +7445,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "emp",
           "name": {
             "evidence": [
               {
@@ -7697,7 +7529,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "sentryTurret",
           "name": {
             "evidence": [
               {
@@ -7734,7 +7565,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "teleporter",
           "name": {
             "evidence": [
               {
@@ -7771,7 +7601,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "photonBarrier",
           "name": {
             "evidence": [
               {
@@ -7856,7 +7685,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "deployTurret",
           "name": {
             "evidence": [
               {
@@ -7893,7 +7721,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "overload",
           "name": {
             "evidence": [
               {
@@ -7930,7 +7757,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "moltenCore",
           "name": {
             "evidence": [
               {
@@ -8015,7 +7841,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "blink",
           "name": {
             "evidence": [
               {
@@ -8052,7 +7877,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "recall",
           "name": {
             "evidence": [
               {
@@ -8089,7 +7913,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "pulseBomb",
           "name": {
             "evidence": [
               {
@@ -8174,7 +7997,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "palatineFang",
           "name": {
             "evidence": [
               {
@@ -8199,7 +8021,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "wardingStance",
           "name": {
             "evidence": [
               {
@@ -8224,7 +8045,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "whirlwindDash",
           "name": {
             "evidence": [
               {
@@ -8249,7 +8069,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "soaringSlice",
           "name": {
             "evidence": [
               {
@@ -8274,7 +8093,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "sunderingBlade",
           "name": {
             "evidence": [
               {
@@ -8335,7 +8153,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "smartExcavator",
           "name": {
             "evidence": [
               {
@@ -8377,7 +8194,6 @@
               "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
-          "id": "drillDash",
           "keywords": [
             "mobility",
             "damage",
@@ -8414,41 +8230,7 @@
               "zh-TW": "鑽頭衝刺"
             }
           },
-          "slot": "secondaryFire",
-          "stats": {
-            "cooldown": {
-              "evidence": [
-                {
-                  "locator": "https://overwatch.blizzard.com/en-us/news/patch-notes/live/2026/6/",
-                  "note": "Venture June 30, 2026 live balance entry; accessed 2026-08-18",
-                  "source": "Blizzard Entertainment official Overwatch live patch notes"
-                }
-              ],
-              "value": {
-                "kind": "quantity",
-                "value": {
-                  "unit": "seconds",
-                  "value": 6
-                }
-              }
-            },
-            "damage": {
-              "evidence": [
-                {
-                  "locator": "https://overwatch.blizzard.com/en-us/news/patch-notes/live/2026/6/",
-                  "note": "Venture June 30, 2026 live balance entry; accessed 2026-08-18",
-                  "source": "Blizzard Entertainment official Overwatch live patch notes"
-                }
-              ],
-              "value": {
-                "kind": "quantity",
-                "value": {
-                  "unit": "damage",
-                  "value": 35
-                }
-              }
-            }
-          }
+          "slot": "secondaryFire"
         },
         {
           "evidence": [
@@ -8458,7 +8240,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "burrow",
           "name": {
             "evidence": [
               {
@@ -8495,7 +8276,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "tectonicShock",
           "name": {
             "evidence": [
               {
@@ -8568,24 +8348,6 @@
           }
         ],
         "value": "damage"
-      },
-      "stats": {
-        "health": {
-          "evidence": [
-            {
-              "locator": "https://overwatch.blizzard.com/en-us/news/patch-notes/live/2026/6/",
-              "note": "Venture June 30, 2026 live balance entry; accessed 2026-08-18",
-              "source": "Blizzard Entertainment official Overwatch live patch notes"
-            }
-          ],
-          "value": {
-            "kind": "quantity",
-            "value": {
-              "unit": "health",
-              "value": 225
-            }
-          }
-        }
       }
     },
     {
@@ -8598,7 +8360,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "grapplingHook",
           "name": {
             "evidence": [
               {
@@ -8635,7 +8396,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "venomMine",
           "name": {
             "evidence": [
               {
@@ -8672,7 +8432,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "infraSight",
           "name": {
             "evidence": [
               {
@@ -8757,7 +8516,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "jumpPack",
           "name": {
             "evidence": [
               {
@@ -8794,7 +8552,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "barrierProjector",
           "name": {
             "evidence": [
               {
@@ -8831,7 +8588,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "primalRage",
           "name": {
             "evidence": [
               {
@@ -8916,7 +8672,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "grapplingClaw",
           "name": {
             "evidence": [
               {
@@ -8953,7 +8708,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "roll",
           "name": {
             "evidence": [
               {
@@ -8990,7 +8744,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "adaptiveShield",
           "name": {
             "evidence": [
               {
@@ -9027,7 +8780,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "piledriver",
           "name": {
             "evidence": [
               {
@@ -9064,7 +8816,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "minefield",
           "name": {
             "evidence": [
               {
@@ -9149,7 +8900,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "restorativeStream",
           "name": {
             "evidence": [
               {
@@ -9174,7 +8924,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "rushingTorrent",
           "name": {
             "evidence": [
               {
@@ -9199,7 +8948,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "guardianWave",
           "name": {
             "evidence": [
               {
@@ -9224,7 +8972,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "tidalBlast",
           "name": {
             "evidence": [
               {
@@ -9285,7 +9032,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "particleBarrier",
           "name": {
             "evidence": [
               {
@@ -9322,7 +9068,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "projectedBarrier",
           "name": {
             "evidence": [
               {
@@ -9359,7 +9104,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "gravitonSurge",
           "name": {
             "evidence": [
               {
@@ -9444,7 +9188,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "orbOfHarmony",
           "name": {
             "evidence": [
               {
@@ -9481,7 +9224,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "orbOfDiscord",
           "name": {
             "evidence": [
               {
@@ -9518,7 +9260,6 @@
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
             }
           ],
-          "id": "transcendence",
           "name": {
             "evidence": [
               {
@@ -9596,7 +9337,7 @@
   ],
   "identity": {
     "datasetId": "overwatch-workshop-hero-gameplay",
-    "digest": "sha256:d15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
+    "digest": "sha256:5c01599839834f3599a524c7307d3ceaa493e6a1e845d9884dc9617f2af4068a",
     "license": "MIT-compatible user-provided export",
     "reviewed": true,
     "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6",

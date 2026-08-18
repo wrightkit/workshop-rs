@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 
 use workshop_rs::gameplay::{
-    Ability, AbilityId, AbilityVariant, EvidenceRef, Fact, GameplayCatalog, GameplayDataError,
+    Ability, AbilityVariant, EvidenceRef, Fact, GameplayCatalog, GameplayDataError,
     GameplayDatasetIdentity, Hero, HeroId, LocalizedText, LogicalSlot, Quantity, StatKey,
     StatValue, Unit,
 };
@@ -9,8 +9,6 @@ use workshop_rs::gameplay_data::{GAMEPLAY_DATA, builtin, content_digest, load};
 
 const SOURCE: &str = "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6";
 const OFFICIAL_HERO_SOURCE: &str = "Blizzard Entertainment official Overwatch hero detail";
-const OFFICIAL_PATCH_SOURCE: &str = "Blizzard Entertainment official Overwatch live patch notes";
-const PATCH_URL: &str = "https://overwatch.blizzard.com/en-us/news/patch-notes/live/2026/6/";
 
 fn evidence(locator: &str) -> EvidenceRef {
     EvidenceRef {
@@ -48,22 +46,11 @@ fn assert_evidence(evidence: &[EvidenceRef], source: &str, locator: &str) {
     );
 }
 
-fn assert_quantity(fact: &Fact<StatValue>, value: f64, unit: &str) {
-    match fact.value() {
-        StatValue::Quantity(quantity) => {
-            assert_eq!(quantity.value, value);
-            assert_eq!(quantity.unit.as_str(), unit);
-        }
-        other => panic!("expected quantity, got {other:?}"),
-    }
-}
-
-fn ability(id: &str, slot: &str, variant: Option<&str>) -> Ability {
+fn ability(name: &str, slot: &str, variant: Option<&str>) -> Ability {
     Ability::new(
-        AbilityId::new(id),
         LogicalSlot::new(slot),
         variant.map(AbilityVariant::new),
-        names(id, "data.heroes.test.ability1"),
+        names(name, "data.heroes.test.ability1"),
         vec![evidence("data.heroes.test.ability1")],
     )
 }
@@ -317,22 +304,9 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
         .flat_map(|hero| hero.abilities())
         .filter(|ability| ability.variant().is_some())
         .count();
-    let stat_count = catalog
-        .heroes()
-        .iter()
-        .map(|hero| {
-            hero.stats().count()
-                + hero
-                    .abilities()
-                    .iter()
-                    .map(|ability| ability.stats().count())
-                    .sum::<usize>()
-        })
-        .sum::<usize>();
     assert_eq!(ability_count, 207);
     assert!(keyword_count > 0);
     assert!(variant_count > 0);
-    assert!(stat_count > 0);
 
     for (hero_id, expected_slots) in expected {
         let hero = catalog.hero_by_id(hero_id).expect("expected hero identity");
@@ -367,12 +341,7 @@ fn embedded_catalog_is_deterministic_and_preserves_representative_ids() {
                 hero.id().as_str().to_string(),
                 hero.abilities()
                     .iter()
-                    .map(|ability| {
-                        (
-                            ability.id().as_str().to_string(),
-                            ability.slot().as_str().to_string(),
-                        )
-                    })
+                    .map(|ability| ability.slot().as_str().to_string())
                     .collect::<Vec<_>>(),
             )
         })
@@ -385,12 +354,7 @@ fn embedded_catalog_is_deterministic_and_preserves_representative_ids() {
                 hero.id().as_str().to_string(),
                 hero.abilities()
                     .iter()
-                    .map(|ability| {
-                        (
-                            ability.id().as_str().to_string(),
-                            ability.slot().as_str().to_string(),
-                        )
-                    })
+                    .map(|ability| ability.slot().as_str().to_string())
                     .collect::<Vec<_>>(),
             )
         })
@@ -404,15 +368,15 @@ fn embedded_catalog_is_deterministic_and_preserves_representative_ids() {
 
     assert_eq!(
         first.hero_by_id("ana").unwrap().abilities()[0]
-            .id()
+            .slot()
             .as_str(),
-        "sleepDart"
+        "ability1"
     );
     assert_eq!(
         first
             .hero_by_id("brigitte")
             .unwrap()
-            .ability_by_id(&AbilityId::new("shieldBash"))
+            .ability(&LogicalSlot::new("ability3"))
             .unwrap()
             .slot()
             .as_str(),
@@ -422,22 +386,25 @@ fn embedded_catalog_is_deterministic_and_preserves_representative_ids() {
         first
             .hero_by_id("ramattra")
             .unwrap()
-            .ability_by_id(&AbilityId::new("voidBarrierOmnic"))
-            .is_some()
+            .ability_variant(
+                &LogicalSlot::new("primaryFire"),
+                &AbilityVariant::new("omnic")
+            )
+            .is_ok()
     );
     assert!(
         first
             .hero_by_id("dva")
             .unwrap()
-            .ability_by_id(&AbilityId::new("boosters"))
-            .is_some()
+            .ability(&LogicalSlot::new("ability1"))
+            .is_ok()
     );
     assert!(
         first
             .hero_by_id("bastion")
             .unwrap()
-            .ability_by_id(&AbilityId::new("reconfigure"))
-            .is_some()
+            .ability(&LogicalSlot::new("ability1"))
+            .is_ok()
     );
 }
 
@@ -447,12 +414,12 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
 
     let ana = catalog.hero_by_id("ana").unwrap();
     assert_eq!(ana.role().unwrap().value().as_str(), "support");
-    for (id, name, keyword) in [
-        ("sleepDart", "Sleep Dart", "crowdControl"),
-        ("bioticGrenade", "Biotic Grenade", "healing"),
-        ("nanoBoost", "Nano Boost", "buff"),
+    for (slot, name, keyword) in [
+        ("ability1", "Sleep Dart", "crowdControl"),
+        ("ability2", "Biotic Grenade", "healing"),
+        ("ultimate", "Nano Boost", "buff"),
     ] {
-        let ability = ana.ability_by_id(&AbilityId::new(id)).unwrap();
+        let ability = ana.ability(&LogicalSlot::new(slot)).unwrap();
         assert_eq!(ability.name().value().get("en-US"), Some(name));
         assert!(ability.has_keyword(keyword));
         assert_evidence(
@@ -464,11 +431,11 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
 
     let brigitte = catalog.hero_by_id("brigitte").unwrap();
     assert_eq!(brigitte.role().unwrap().value().as_str(), "support");
-    for (id, name, keyword) in [
-        ("whipShot", "Whip Shot", "knockback"),
-        ("shieldBash", "Shield Bash", "mobility"),
+    for (slot, name, keyword) in [
+        ("ability1", "Whip Shot", "knockback"),
+        ("ability3", "Shield Bash", "mobility"),
     ] {
-        let ability = brigitte.ability_by_id(&AbilityId::new(id)).unwrap();
+        let ability = brigitte.ability(&LogicalSlot::new(slot)).unwrap();
         assert_eq!(ability.name().value().get("en-US"), Some(name));
         assert!(ability.has_keyword(keyword));
         assert_evidence(
@@ -480,9 +447,7 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
 
     let ramattra = catalog.hero_by_id("ramattra").unwrap();
     assert_eq!(ramattra.role().unwrap().value().as_str(), "tank");
-    let vortex = ramattra
-        .ability_by_id(&AbilityId::new("ravenousVortex"))
-        .unwrap();
+    let vortex = ramattra.ability(&LogicalSlot::new("ability2")).unwrap();
     assert_eq!(vortex.name().value().get("en-US"), Some("Ravenous Vortex"));
     assert!(vortex.has_keyword("crowdControl"));
     assert_evidence(
@@ -490,11 +455,13 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
         OFFICIAL_HERO_SOURCE,
         "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
     );
-    for (id, variant, name) in [
-        ("voidAccelerator", "omnic", "Void Accelerator"),
-        ("pummel", "nemesis", "Pummel"),
-    ] {
-        let ability = ramattra.ability_by_id(&AbilityId::new(id)).unwrap();
+    for (variant, name) in [("omnic", "Void Accelerator"), ("nemesis", "Pummel")] {
+        let ability = ramattra
+            .ability_variant(
+                &LogicalSlot::new("primaryFire"),
+                &AbilityVariant::new(variant),
+            )
+            .unwrap();
         assert_eq!(ability.variant().unwrap().as_str(), variant);
         assert_eq!(ability.name().value().get("en-US"), Some(name));
         assert_evidence(
@@ -506,7 +473,7 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
 
     let dva = catalog.hero_by_id("dva").unwrap();
     assert_eq!(dva.role().unwrap().value().as_str(), "tank");
-    let matrix = dva.ability_by_id(&AbilityId::new("defenseMatrix")).unwrap();
+    let matrix = dva.ability(&LogicalSlot::new("secondaryFire")).unwrap();
     assert!(matrix.has_keyword("barrier"));
     assert!(matrix.has_keyword("resource"));
     assert_evidence(
@@ -514,11 +481,13 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
         OFFICIAL_HERO_SOURCE,
         "https://overwatch.blizzard.com/en-us/heroes/dva/",
     );
-    for (id, variant, name) in [
-        ("fusionCannons", "mech", "Fusion Cannons"),
-        ("lightGun", "pilot", "Light Gun"),
-    ] {
-        let ability = dva.ability_by_id(&AbilityId::new(id)).unwrap();
+    for (variant, name) in [("mech", "Fusion Cannons"), ("pilot", "Light Gun")] {
+        let ability = dva
+            .ability_variant(
+                &LogicalSlot::new("primaryFire"),
+                &AbilityVariant::new(variant),
+            )
+            .unwrap();
         assert_eq!(ability.variant().unwrap().as_str(), variant);
         assert_eq!(ability.name().value().get("en-US"), Some(name));
         assert_evidence(
@@ -530,20 +499,23 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
 
     let bastion = catalog.hero_by_id("bastion").unwrap();
     assert_eq!(bastion.role().unwrap().value().as_str(), "damage");
-    let reconfigure = bastion
-        .ability_by_id(&AbilityId::new("reconfigure"))
-        .unwrap();
+    let reconfigure = bastion.ability(&LogicalSlot::new("ability1")).unwrap();
     assert!(reconfigure.has_keyword("form"));
     assert_evidence(
         reconfigure.evidence(),
         OFFICIAL_HERO_SOURCE,
         "https://overwatch.blizzard.com/en-us/heroes/bastion/",
     );
-    for (id, variant, name) in [
-        ("configurationAssault", "assault", "Configuration: Assault"),
-        ("configurationRecon", "recon", "Configuration: Recon"),
+    for (variant, name) in [
+        ("assault", "Configuration: Assault"),
+        ("recon", "Configuration: Recon"),
     ] {
-        let ability = bastion.ability_by_id(&AbilityId::new(id)).unwrap();
+        let ability = bastion
+            .ability_variant(
+                &LogicalSlot::new("primaryFire"),
+                &AbilityVariant::new(variant),
+            )
+            .unwrap();
         assert_eq!(ability.variant().unwrap().as_str(), variant);
         assert_eq!(ability.name().value().get("en-US"), Some(name));
         assert_evidence(
@@ -555,22 +527,16 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
 
     let venture = catalog.hero_by_id("venture").unwrap();
     assert_eq!(venture.role().unwrap().value().as_str(), "damage");
-    let health = venture.stat(&StatKey::new("health")).unwrap();
-    assert_quantity(health, 225.0, "health");
-    assert_evidence(health.evidence(), OFFICIAL_PATCH_SOURCE, PATCH_URL);
-    let drill_dash = venture.ability_by_id(&AbilityId::new("drillDash")).unwrap();
+    assert!(venture.stat(&StatKey::new("health")).is_none());
+    let drill_dash = venture.ability(&LogicalSlot::new("secondaryFire")).unwrap();
     assert!(drill_dash.has_keyword("mobility"));
     assert_evidence(
         drill_dash.evidence(),
         OFFICIAL_HERO_SOURCE,
         "https://overwatch.blizzard.com/en-us/heroes/venture/",
     );
-    let cooldown = drill_dash.stat(&StatKey::new("cooldown")).unwrap();
-    assert_quantity(cooldown, 6.0, "seconds");
-    assert_evidence(cooldown.evidence(), OFFICIAL_PATCH_SOURCE, PATCH_URL);
-    let damage = drill_dash.stat(&StatKey::new("damage")).unwrap();
-    assert_quantity(damage, 35.0, "damage");
-    assert_evidence(damage.evidence(), OFFICIAL_PATCH_SOURCE, PATCH_URL);
+    assert!(drill_dash.stat(&StatKey::new("cooldown")).is_none());
+    assert!(drill_dash.stat(&StatKey::new("damage")).is_none());
 }
 
 #[test]
@@ -629,7 +595,10 @@ fn representative_hero_and_ability_records_round_trip_through_json() {
     assert_eq!(original, &decoded);
     assert_eq!(
         decoded
-            .ability_by_id(&AbilityId::new("pummel"))
+            .ability_variant(
+                &LogicalSlot::new("primaryFire"),
+                &AbilityVariant::new("nemesis")
+            )
             .unwrap()
             .variant()
             .unwrap()
@@ -641,7 +610,7 @@ fn representative_hero_and_ability_records_round_trip_through_json() {
 #[test]
 fn loader_rejects_stale_digest_and_unsupported_schema() {
     let stale = GAMEPLAY_DATA.replacen(
-        "d15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
+        "5c01599839834f3599a524c7307d3ceaa493e6a1e845d9884dc9617f2af4068a",
         "e15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
         1,
     );
@@ -683,7 +652,7 @@ fn catalog_rejects_invalid_slots_unqualified_variants_and_non_finite_values() {
         names("Test", "data.heroes.test"),
         vec![
             ability("one", "ability1", None),
-            ability("two", "ability1", None),
+            ability("two", "ability1", Some("alternate")),
         ],
         vec![evidence("data.heroes.test")],
     );
@@ -714,18 +683,18 @@ fn catalog_rejects_invalid_slots_unqualified_variants_and_non_finite_values() {
 }
 
 #[test]
-fn every_embedded_ability_id_is_unique_per_hero() {
+fn every_embedded_ability_reference_is_unique_per_hero() {
     let catalog = builtin().unwrap();
     for hero in catalog.heroes() {
-        let ids: BTreeSet<_> = hero
+        let refs: BTreeSet<_> = hero
             .abilities()
             .iter()
-            .map(|ability| ability.id())
+            .map(|ability| (ability.slot().clone(), ability.variant().cloned()))
             .collect();
         assert_eq!(
-            ids.len(),
+            refs.len(),
             hero.abilities().len(),
-            "ability IDs for {}",
+            "ability references for {}",
             hero.id()
         );
     }

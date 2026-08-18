@@ -8,10 +8,10 @@ content digest before constructing a `GameplayCatalog`.
 ## Schema and identity
 
 The file has `schemaVersion: 1`, a `GameplayDatasetIdentity`, and a sorted
-hero list. Heroes and abilities carry evidence references. Hero and ability
-IDs are open strings; the ability IDs in this dataset are lowerCamel names
-derived from the export's `en-US` ability labels, with the source path retained
-in evidence. The current dataset uses the seven canonical slots from ADR-0002;
+hero list. Heroes and abilities carry evidence references. Hero, slot, and
+variant identities are open strings; an ability is canonically referenced by
+its hero, logical slot, and optional hero-local variant. Display names are
+metadata, not identity. The current dataset uses the seven canonical slots from ADR-0002;
 the open string-backed API also accepts future non-empty slot identities.
 Multiple abilities in one slot must have distinct, non-empty variants.
 
@@ -21,7 +21,7 @@ so formatting and input key order do not change the identity. The loader also
 sorts heroes and abilities before building lookup indexes.
 
 The committed dataset identity is version `2026-08-12` with digest
-`sha256:d15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635`.
+`sha256:5c01599839834f3599a524c7307d3ceaa493e6a1e845d9884dc9617f2af4068a`.
 
 ## Evidence and known gaps
 
@@ -29,8 +29,8 @@ The current dataset is an identity/naming and kit-topology dataset: it contains
 all 53 hero identities, their role facts, and all 201 named ability slots
 declared by the pinned export. It also contains six official-detail variant
 records for Bastion, D.Va, and Ramattra, for 207 ability records total. The
-embedded projection currently has nine keyword-bearing abilities, six variants,
-and three evidence-backed quantity facts. Every hero and ability name is linked to
+embedded projection currently has nine keyword-bearing abilities and six
+variants. Every hero and ability name is linked to
 `workshop-data/workshop-data.json` at commit
 `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date 2026-08-12).
 
@@ -50,10 +50,10 @@ ability evidence uses the official [Ana](https://overwatch.blizzard.com/en-us/he
 [Venture](https://overwatch.blizzard.com/en-us/heroes/venture/) pages, accessed
 2026-08-18.
 
-The Venture facts currently supported by an official live patch entry are base
-health `225 health`, and Drill Dash cooldown `6 seconds` and damage `35
-damage`, each evidenced by the [June 30, 2026 live patch notes](https://overwatch.blizzard.com/en-us/news/patch-notes/live/2026/6/)
-and accessed 2026-08-18. Armor/shields, other hero and ability stats,
+The previously proposed Venture base health and Drill Dash cooldown/damage
+facts are intentionally absent: their cited June 30, 2026 Community Crafted
+limited-mode patch scope is not modeled by this baseline dataset. Armor/shields,
+other hero and ability stats,
 cooldowns, healing, ammo, durations, ranges, projectile speeds, resources,
 and other balance values remain explicitly absent where no current evidence is
 recorded; no older or inferred balance values are included.
@@ -61,7 +61,7 @@ recorded; no older or inferred balance values are included.
 ## Validation boundary
 
 Loading rejects malformed JSON, unsupported schema versions, stale digests,
-duplicate hero or per-hero ability IDs, duplicate slot/variant pairs,
+duplicate hero or per-hero slot/variant pairs, duplicate slot/variant pairs,
 unqualified multiple entries in one slot, missing
 evidence, empty identities (including empty slots), and non-finite quantities.
 Unknown non-empty logical slot identities remain valid because `LogicalSlot` is

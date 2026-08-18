@@ -31,17 +31,16 @@ official Blizzard hero-detail URL and access date 2026-08-18 as separate
 evidence.
 
 The current identity digest is
-`sha256:d15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635`.
+`sha256:5c01599839834f3599a524c7307d3ceaa493e6a1e845d9884dc9617f2af4068a`.
 
 Representative ability keywords are semantic labels, not Blizzard or Workshop
 enum values. Their labels and the six variant names/shapes are evidenced by
 the official Blizzard hero-detail URLs for Ana, Brigitte, Ramattra, D.Va,
 Bastion, and Venture, accessed 2026-08-18;
 the variants intentionally carry no fabricated Workshop-export provenance.
-Venture base health `225 health`, Drill Dash cooldown `6 seconds`, and Drill
-Dash damage `35 damage` are separately evidenced by the official [June 30,
-2026 live patch notes](https://overwatch.blizzard.com/en-us/news/patch-notes/live/2026/6/),
-accessed 2026-08-18. Other base stats, armor/shields, cooldowns, damage,
+Venture base health and Drill Dash cooldown/damage are intentionally absent
+because the cited June 30, 2026 Community Crafted patch source is scoped to a
+limited mode and that scope is not modeled. Other base stats, armor/shields, cooldowns, damage,
 healing, ammo, durations, ranges, projectile speeds, resources, and balance
 values remain absent unless supported by a current explicit source. The
 loader verifies the separate gameplay dataset identity and deterministic
