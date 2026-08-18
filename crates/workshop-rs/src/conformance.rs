@@ -467,6 +467,12 @@ impl ConformanceResult {
     /// cannot prove that a catalog identity name exists without the catalog.
     pub fn validate_against(&self, catalog: &Catalog) -> Result<(), ConformanceError> {
         self.validate()?;
+        if self.evidence.catalog != catalog.identity() {
+            return Err(ConformanceError::invalid(
+                "evidence.catalog",
+                "must match the catalog supplied to validate_against",
+            ));
+        }
         for (index, feature) in self.features.iter().enumerate() {
             if feature.namespace != FeatureNamespace::Catalog {
                 continue;
@@ -932,6 +938,18 @@ mod tests {
                 .validate_against(&Catalog::builtin().expect("built-in catalog"))
                 .is_err()
         );
+    }
+
+    #[test]
+    fn catalog_validation_rejects_mismatched_catalog_evidence() {
+        let mut result = matched();
+        result.evidence.catalog.catalog_digest = Some("f".repeat(64));
+        let catalog = Catalog::builtin().expect("built-in catalog");
+
+        let error = result
+            .validate_against(&catalog)
+            .expect_err("evidence must be bound to the supplied catalog");
+        assert_eq!(error.field, "evidence.catalog");
     }
 
     #[test]
