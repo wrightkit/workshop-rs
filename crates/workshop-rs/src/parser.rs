@@ -139,11 +139,14 @@ impl Parser<'_> {
             let node = match name.as_str() {
                 "main" | "lobby" => SettingsNode::Group {
                     name: name.clone(),
-                    children: self.settings_members(&[PathPart::Part(if name == "main" {
-                        "main"
-                    } else {
-                        "lobby"
-                    })])?,
+                    children: self.settings_members(
+                        &[PathPart::Part(if name == "main" {
+                            "main"
+                        } else {
+                            "lobby"
+                        })],
+                        None,
+                    )?,
                     span: Some(self.settings_span(child_start)),
                 },
                 "modes" => self.settings_modes(child_start)?,
@@ -185,7 +188,7 @@ impl Parser<'_> {
             let mode = self.resolve_settings_name(table::MODE_NAMES, "modes", &display)?;
             self.expect(TokenKind::LBrace, "expected '{' after game mode")?;
             let mut mode_children =
-                self.settings_members(&[PathPart::Part("gamemodes"), PathPart::Part(mode)])?;
+                self.settings_members(&[PathPart::Part("gamemodes"), PathPart::Part(mode)], None)?;
             if disabled {
                 mode_children.insert(
                     0,
@@ -226,11 +229,10 @@ impl Parser<'_> {
                 {
                     let hero = self.resolve_settings_name(table::HERO_NAMES, "heroes", &display)?;
                     self.expect(TokenKind::LBrace, "expected '{' after hero settings group")?;
-                    let children = self.settings_members(&[
-                        PathPart::Part("heroes"),
-                        PathPart::Team,
-                        PathPart::Hero,
-                    ])?;
+                    let children = self.settings_members(
+                        &[PathPart::Part("heroes"), PathPart::Team, PathPart::Hero],
+                        Some(hero),
+                    )?;
                     team_children.push(SettingsNode::Group {
                         name: hero.to_string(),
                         children,
@@ -242,6 +244,7 @@ impl Parser<'_> {
                         child_start,
                         child_end,
                         &[PathPart::Part("heroes"), PathPart::Team],
+                        None,
                     )?);
                 }
             }
@@ -260,11 +263,15 @@ impl Parser<'_> {
         })
     }
 
-    fn settings_members(&mut self, path: &[PathPart<'static>]) -> Result<Vec<SettingsNode>> {
+    fn settings_members(
+        &mut self,
+        path: &[PathPart<'static>],
+        hero: Option<&str>,
+    ) -> Result<Vec<SettingsNode>> {
         let mut children = Vec::new();
         while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
             let (display, start, end) = self.phrase_on_line()?;
-            children.push(self.settings_member_named(display, start, end, path)?);
+            children.push(self.settings_member_named(display, start, end, path, hero)?);
         }
         self.expect(TokenKind::RBrace, "expected '}' after settings group")?;
         Ok(children)
@@ -276,6 +283,7 @@ impl Parser<'_> {
         start: Position,
         _end: Position,
         path: &[PathPart<'static>],
+        hero: Option<&str>,
     ) -> Result<SettingsNode> {
         let entry = table::ENTRIES.iter().find(|candidate| {
             candidate.path.len() == path.len() + 1
@@ -283,7 +291,7 @@ impl Parser<'_> {
                     .iter()
                     .zip(path.iter())
                     .all(|(left, right)| left == right)
-                && self.settings_name_matches("labels", candidate.workshop_name, &display)
+                && self.settings_name_matches_for_path(candidate, &display, hero)
         });
         let Some(entry) = entry else {
             return Err(self.unknown("setting", &display));
@@ -414,6 +422,27 @@ impl Parser<'_> {
             .find(|candidate| self.settings_name_matches(section, candidate.name, display))
             .map(|candidate| candidate.key)
             .ok_or_else(|| self.unknown("setting", display))
+    }
+
+    fn settings_name_matches_for_path(
+        &self,
+        candidate: &table::TableEntry,
+        display: &str,
+        hero: Option<&str>,
+    ) -> bool {
+        if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(candidate.path)) {
+            return crate::gameplay_data::builtin()
+                .ok()
+                .and_then(|catalog| {
+                    catalog
+                        .query()
+                        .ability_name(hero, slot, None, self.locale.as_str())
+                        .ok()
+                        .map(|name| name == display)
+                })
+                .unwrap_or(false);
+        }
+        self.settings_name_matches("labels", candidate.workshop_name, display)
     }
 
     fn settings_name_matches(&self, section: &str, english: &str, display: &str) -> bool {

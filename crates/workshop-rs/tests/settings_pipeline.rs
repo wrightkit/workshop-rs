@@ -106,3 +106,20 @@ fn supported_dva_name_parses() {
     let emitted = emitter::emit(&program, &catalog, &Locale::new("en-US")).expect("emits");
     assert!(emitted.contains("D.Va"));
 }
+
+#[test]
+fn hero_ability_names_resolve_through_gameplay_catalog_in_both_locales() {
+    let catalog = catalog();
+    let en = Locale::new("en-US");
+    let zh = Locale::new("zh-CN");
+    let source = "settings { heroes { General { Mei { Cryo-Freeze: Off Ice Wall: On } } } }";
+    let program = parser::parse(source, &catalog, &en).expect("English ability names parse");
+    let emitted = emitter::emit(&program, &catalog, &zh).expect("Chinese ability names emit");
+    assert!(emitted.contains("急冻: 关"));
+    assert!(emitted.contains("冰墙: 开"));
+    let reparsed = parser::parse(&emitted, &catalog, &zh).expect("Chinese ability names parse");
+    assert!(roundtrip::equivalent(&program, &reparsed));
+    let back = emitter::emit(&reparsed, &catalog, &en).expect("English ability names re-emit");
+    assert!(back.contains("Cryo-Freeze: Off"));
+    assert!(back.contains("Ice Wall: On"));
+}

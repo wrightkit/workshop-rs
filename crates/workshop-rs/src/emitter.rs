@@ -150,7 +150,7 @@ impl Emitter<'_> {
                 "main" | "lobby" => {
                     self.line(1, &format!("{name} {{"))?;
                     for member in children {
-                        self.settings_member(member, 2, &[PathPart::Part(name)])?;
+                        self.settings_member(member, 2, &[PathPart::Part(name)], None)?;
                     }
                     self.line(1, "}")?;
                 }
@@ -200,6 +200,7 @@ impl Emitter<'_> {
                     member,
                     3,
                     &[PathPart::Part("gamemodes"), PathPart::Part(name)],
+                    None,
                 )?;
             }
             self.line(2, "}")?;
@@ -231,13 +232,17 @@ impl Emitter<'_> {
                                 inner,
                                 4,
                                 &[PathPart::Part("heroes"), PathPart::Team, PathPart::Hero],
+                                Some(name),
                             )?;
                         }
                         self.line(3, "}")?;
                     }
-                    other => {
-                        self.settings_member(other, 3, &[PathPart::Part("heroes"), PathPart::Team])?
-                    }
+                    other => self.settings_member(
+                        other,
+                        3,
+                        &[PathPart::Part("heroes"), PathPart::Team],
+                        None,
+                    )?,
                 }
             }
             self.line(2, "}")?;
@@ -252,6 +257,7 @@ impl Emitter<'_> {
         node: &SettingsNode,
         level: usize,
         path: &[PathPart],
+        hero: Option<&str>,
     ) -> Result<()> {
         let name = node.name();
         let mut full = path.to_vec();
@@ -263,7 +269,11 @@ impl Emitter<'_> {
             ))
         })?;
         let display_name =
-            self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?;
+            if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(&full)) {
+                self.gameplay_setting_name(hero, slot, &table::path_string(&full))?
+            } else {
+                self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
+            };
         match (node, &entry.kind) {
             (SettingsNode::String { value, .. }, KeyKind::String) => {
                 self.line(
@@ -341,6 +351,34 @@ impl Emitter<'_> {
     /// Resolve a settings spelling from the generated locale corpus. The
     /// English table remains the explicit fallback only when the caller opts
     /// into `en-US`, matching the catalog's missing-mapping contract.
+    fn gameplay_setting_name(&mut self, hero: &str, slot: &str, id: &str) -> Result<String> {
+        let resolve = |locale: &Locale| {
+            crate::gameplay_data::builtin().ok().and_then(|catalog| {
+                catalog
+                    .query()
+                    .ability_name(hero, slot, None, locale.as_str())
+                    .ok()
+                    .map(str::to_string)
+            })
+        };
+        if let Some(name) = resolve(&self.locale) {
+            return Ok(name);
+        }
+        if let Some(fallback) = &self.fallback {
+            if let Some(name) = resolve(fallback) {
+                if !self.fallback_ids.iter().any(|value| value == "settings") {
+                    self.fallback_ids.push("settings".to_string());
+                }
+                return Ok(name);
+            }
+        }
+        Err(WorkshopError::MissingMapping {
+            kind: "setting",
+            id: id.to_string(),
+            locale: self.locale.clone(),
+        })
+    }
+
     fn setting_name(&mut self, section: &str, english: &str, id: &str) -> Result<String> {
         let en_us = Locale::new("en-US");
         if self.locale == en_us {

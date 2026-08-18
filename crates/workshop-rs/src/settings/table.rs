@@ -381,7 +381,7 @@ pub static ENTRIES: &[TableEntry] = &[
             PathPart::Hero,
             PathPart::Part("enableAbility1")
         ],
-        "Cryo-Freeze",
+        "Ability 1",
         KeyKind::Bool
     ),
     entry!(
@@ -391,7 +391,7 @@ pub static ENTRIES: &[TableEntry] = &[
             PathPart::Hero,
             PathPart::Part("enableAbility2")
         ],
-        "Ice Wall",
+        "Ability 2",
         KeyKind::Bool
     ),
     entry!(
@@ -559,6 +559,17 @@ pub fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
     ENTRIES.iter().find(|entry| {
         entry.path.len() == path.len() && entry.path.iter().zip(path.iter()).all(|(a, b)| a == b)
     })
+}
+
+/// Map the existing hero-settings leaf keys to canonical gameplay slots.
+/// The setting tree remains the owner of the keys; display names are resolved
+/// from the gameplay catalog by the parser/emitter when a hero context exists.
+pub fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str> {
+    match path.last() {
+        Some(PathPart::Part("enableAbility1")) => Some("ability1"),
+        Some(PathPart::Part("enableAbility2")) => Some("ability2"),
+        _ => None,
+    }
 }
 
 fn name_in(maps: &[NameMap], key: &str) -> Option<&'static str> {

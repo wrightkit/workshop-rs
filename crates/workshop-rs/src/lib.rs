@@ -40,6 +40,7 @@ mod error;
 pub mod format;
 pub mod gameplay;
 pub mod gameplay_data;
+pub mod gameplay_query;
 pub mod ids;
 pub mod lexer;
 pub mod live_capture;
