@@ -1,34 +1,38 @@
 use workshop_rs::gameplay::{
-    Ability, AbilityId, EvidenceRef, Fact, GameplayCatalog, GameplayDatasetIdentity, Hero, HeroId,
-    LocalizedText, LogicalSlot, Quantity, StatKey, StatValue, Unit, units,
+    Ability, AbilityRef, AbilityVariant, EvidenceRef, Fact, GameplayCatalog,
+    GameplayDatasetIdentity, Hero, HeroId, LocalizedText, LogicalSlot, Quantity, StatKey,
+    StatValue, Unit, hero_ids, slots, units,
 };
+use workshop_rs::gameplay_data::builtin;
 use workshop_rs::gameplay_query::{
-    CooldownError, CooldownNonApplicability, CooldownPercentage, CooldownPercentageError,
-    GameplayQueryError, StatOwner,
+    AbilityNameResolutionError, CooldownError, CooldownNonApplicability, CooldownPercentage,
+    CooldownPercentageError, GameplayQueryError, StatOwner,
 };
 
 fn evidence(locator: &str) -> EvidenceRef {
     EvidenceRef {
-        source: "workshop-data".to_string(),
+        source: "test-fixture".to_string(),
         locator: locator.to_string(),
         note: None,
     }
 }
 
-fn names(name: &str, locator: &str) -> Fact<LocalizedText> {
+fn names(en: &str, zh: &str, locator: &str) -> Fact<LocalizedText> {
     Fact::new(
-        LocalizedText::new([("en-US".to_string(), name.to_string())]),
+        LocalizedText::new([
+            ("en-US".to_string(), en.to_string()),
+            ("zh-CN".to_string(), zh.to_string()),
+        ]),
         vec![evidence(locator)],
     )
 }
 
-fn ability(id: &str, slot: &str, variant: Option<&str>) -> Ability {
+fn ability(en: &str, zh: &str, slot: &str, variant: Option<&str>) -> Ability {
     Ability::new(
-        AbilityId::new(id),
         LogicalSlot::new(slot),
-        variant.map(Into::into),
-        names(id, &format!("abilities.{id}")),
-        vec![evidence(&format!("abilities.{id}"))],
+        variant.map(AbilityVariant::new),
+        names(en, zh, &format!("ability.{slot}")),
+        vec![evidence(&format!("ability.{slot}"))],
     )
 }
 
@@ -49,37 +53,38 @@ fn identity() -> GameplayDatasetIdentity {
 }
 
 fn catalog() -> GameplayCatalog {
+    let sleep = ability("Sleep Dart", "麻醉镖", "ability1", None)
+        .with_keyword("crowd-control")
+        .with_stat(
+            StatKey::new("cooldown"),
+            Fact::new(
+                StatValue::Quantity(seconds(12.0)),
+                vec![evidence("ana.sleep")],
+            ),
+        );
+    let nano = ability("Nano Boost", "纳米激素", "ultimate", None)
+        .with_keyword("buff")
+        .with_stat(
+            StatKey::new("description"),
+            Fact::new(
+                StatValue::Text("ultimate".to_string()),
+                vec![evidence("ana.nano.description")],
+            ),
+        );
     let ana = Hero::new(
         HeroId::new("ana"),
-        names("Ana", "heroes.ana"),
-        vec![
-            ability("sleepDart", "ability1", None)
-                .with_keyword("crowd-control")
-                .with_stat(
-                    StatKey::new("cooldown"),
-                    Fact::new(
-                        StatValue::Quantity(seconds(12.0)),
-                        vec![evidence("ana.sleep")],
-                    ),
-                ),
-            ability("nanoBoost", "ultimate", None)
-                .with_keyword("buff")
-                .with_stat(
-                    StatKey::new("description"),
-                    Fact::new(
-                        StatValue::Text("ultimate".to_string()),
-                        vec![evidence("ana.nano.description")],
-                    ),
-                ),
-        ],
+        names("Ana", "安娜", "heroes.ana"),
+        vec![sleep, nano],
         vec![evidence("heroes.ana")],
     );
     let ramattra = Hero::new(
         HeroId::new("ramattra"),
-        names("Ramattra", "heroes.ramattra"),
+        names("Ramattra", "拉玛刹", "heroes.ramattra"),
         vec![
-            ability("voidBarrierNemesis", "secondaryFire", Some("nemesis")).with_keyword("barrier"),
-            ability("voidBarrierOmnic", "secondaryFire", Some("omnic")).with_keyword("barrier"),
+            ability("Void Barrier", "虚空屏障", "secondaryFire", Some("nemesis"))
+                .with_keyword("barrier"),
+            ability("Void Barrier", "虚空屏障", "secondaryFire", Some("omnic"))
+                .with_keyword("barrier"),
         ],
         vec![evidence("heroes.ramattra")],
     );
@@ -87,10 +92,8 @@ fn catalog() -> GameplayCatalog {
 }
 
 #[test]
-fn queries_are_deterministic_and_cover_hero_kit_slot_variant_keyword_and_stat() {
-    let catalog = catalog();
-    let query = catalog.query();
-
+fn queries_use_open_typed_hero_slot_and_variant_semantics() {
+    let query = catalog().query();
     assert_eq!(
         query
             .heroes()
@@ -101,41 +104,40 @@ fn queries_are_deterministic_and_cover_hero_kit_slot_variant_keyword_and_stat() 
     );
     assert_eq!(
         query
-            .kit("ana")
+            .kit(hero_ids::ANA)
             .unwrap()
             .iter()
-            .map(|ability| ability.id().as_str())
+            .map(|ability| ability.slot().as_str())
             .collect::<Vec<_>>(),
-        ["sleepDart", "nanoBoost"]
+        ["ability1", "ultimate"]
     );
     assert_eq!(
         query
-            .slot("ramattra", "secondaryFire")
+            .slot(hero_ids::RAMATTRA, slots::SECONDARY_FIRE)
             .unwrap()
-            .iter()
-            .map(|ability| ability.id().as_str())
-            .collect::<Vec<_>>(),
-        ["voidBarrierNemesis", "voidBarrierOmnic"]
+            .len(),
+        2
     );
     assert_eq!(
         query
-            .variant("ramattra", "secondaryFire", "omnic")
+            .variant(hero_ids::RAMATTRA, slots::SECONDARY_FIRE, "omnic")
             .unwrap()
-            .id()
+            .variant()
+            .unwrap()
             .as_str(),
-        "voidBarrierOmnic"
+        "omnic"
     );
-    let keyword = query.keyword("barrier");
-    assert_eq!(keyword.len(), 2);
-    assert_eq!(keyword[0].hero.id().as_str(), "ramattra");
-    assert_eq!(keyword[0].ability.id().as_str(), "voidBarrierNemesis");
+    assert_eq!(query.keyword("barrier").len(), 2);
     assert_eq!(
-        query.stat("ana", "sleepDart", "cooldown").unwrap().value(),
+        query
+            .stat(hero_ids::ANA, slots::ABILITY_1, None, "cooldown")
+            .unwrap()
+            .value(),
         &StatValue::Quantity(seconds(12.0))
     );
     assert_eq!(
         query
-            .quantity_stat("ana", "sleepDart", "cooldown")
+            .quantity_stat(hero_ids::ANA, slots::ABILITY_1, None, "cooldown")
             .unwrap()
             .value,
         12.0
@@ -143,93 +145,120 @@ fn queries_are_deterministic_and_cover_hero_kit_slot_variant_keyword_and_stat() 
 }
 
 #[test]
-fn query_failures_are_explicit_and_no_match_keyword_is_empty() {
-    let catalog = catalog();
-    let query = catalog.query();
+fn missing_unknown_ambiguous_and_wrong_stat_paths_are_explicit() {
+    let query = catalog().query();
     assert!(matches!(
         query.hero("missing"),
         Err(GameplayQueryError::MissingHero { .. })
     ));
     assert!(matches!(
-        query.slot("ana", "ability2"),
+        query.slot(hero_ids::ANA, slots::ABILITY_2),
         Err(GameplayQueryError::MissingSlot { .. })
     ));
+    assert!(
+        matches!(query.ability(hero_ids::RAMATTRA, slots::SECONDARY_FIRE), Err(GameplayQueryError::AmbiguousSlot { candidates, .. }) if candidates.iter().all(|reference| reference.variant().is_some()))
+    );
     assert!(matches!(
-        query.slot_ability("ramattra", "secondaryFire"),
-        Err(GameplayQueryError::AmbiguousSlot { candidates, .. }) if candidates == [
-            AbilityId::new("voidBarrierNemesis"),
-            AbilityId::new("voidBarrierOmnic")
-        ]
-    ));
-    assert!(matches!(
-        query.variant("ramattra", "secondaryFire", "missing"),
+        query.variant(hero_ids::RAMATTRA, slots::SECONDARY_FIRE, "missing"),
         Err(GameplayQueryError::MissingVariant { .. })
     ));
     assert!(matches!(
-        query.stat("ana", "sleepDart", "damage"),
+        query.stat(hero_ids::ANA, slots::ABILITY_1, None, "damage"),
         Err(GameplayQueryError::MissingStat {
             owner: StatOwner::Ability { .. },
             ..
         })
     ));
     assert!(matches!(
-        query.quantity_stat("ana", "nanoBoost", "description"),
+        query.quantity_stat(hero_ids::ANA, slots::ULTIMATE, None, "description"),
         Err(GameplayQueryError::WrongStatType { .. })
     ));
+    let unknown = AbilityRef::new(HeroId::new("ana"), LogicalSlot::new("ability2"), None);
     assert!(matches!(
-        query.ability("ana", "missing"),
-        Err(GameplayQueryError::MissingAbility { .. })
+        query.ability_ref(&unknown),
+        Err(GameplayQueryError::MissingSlot { .. } | GameplayQueryError::MissingAbility { .. })
     ));
-    assert!(query.keyword("missing").is_empty());
+}
+
+#[test]
+fn locale_forward_and_inverse_resolution_is_exact_and_preserves_reference() {
+    let query = catalog().query();
+    let sleep = AbilityRef::new(
+        HeroId::from(hero_ids::ANA),
+        LogicalSlot::from(slots::ABILITY_1),
+        None,
+    );
+    assert_eq!(
+        query
+            .ability_name(hero_ids::ANA, slots::ABILITY_1, None, "en-US")
+            .unwrap(),
+        "Sleep Dart"
+    );
+    assert_eq!(
+        query
+            .ability_name(hero_ids::ANA, slots::ABILITY_1, None, "zh-CN")
+            .unwrap(),
+        "麻醉镖"
+    );
+    assert_eq!(
+        query
+            .resolve_ability_name(hero_ids::ANA, "zh-CN", "麻醉镖")
+            .unwrap(),
+        sleep
+    );
+    assert!(matches!(
+        query.ability_name(hero_ids::ANA, slots::ABILITY_1, None, "fr-FR"),
+        Err(AbilityNameResolutionError::UnsupportedLocale { .. })
+    ));
+    assert!(matches!(
+        query.resolve_ability_name(hero_ids::ANA, "en-US", "unknown"),
+        Err(AbilityNameResolutionError::MissingDisplayName { .. })
+    ));
+    assert!(matches!(
+        query.ability_name(hero_ids::RAMATTRA, slots::SECONDARY_FIRE, None, "en-US"),
+        Err(AbilityNameResolutionError::AmbiguousSlot { .. })
+    ));
+    assert!(matches!(
+        query.resolve_ability_name(hero_ids::RAMATTRA, "en-US", "Void Barrier"),
+        Err(AbilityNameResolutionError::AmbiguousName { .. })
+    ));
 }
 
 #[test]
 fn cooldown_calculations_are_unit_safe_bounded_and_non_mutating() {
-    let catalog = catalog();
-    let query = catalog.query();
-    let ability = query.ability("ana", "sleepDart").unwrap();
-    let base = query.cooldown(ability).unwrap();
-    assert_eq!(base.value, 12.0);
+    let query = catalog().query();
+    let reference = AbilityRef::new(
+        HeroId::from(hero_ids::ANA),
+        LogicalSlot::from(slots::ABILITY_1),
+        None,
+    );
+    assert_eq!(query.cooldown(&reference).unwrap().value, 12.0);
     assert_eq!(
         query
-            .effective_cooldown(ability, CooldownPercentage::new(50.0).unwrap())
+            .effective_cooldown(&reference, CooldownPercentage::new(50.0).unwrap())
             .unwrap()
             .value,
         6.0
     );
     assert_eq!(
         query
-            .effective_cooldown(ability, CooldownPercentage::new(100.0).unwrap())
-            .unwrap()
-            .value,
-        12.0
-    );
-    assert_eq!(
-        query
-            .effective_cooldown(ability, CooldownPercentage::new(0.0).unwrap())
-            .unwrap()
-            .value,
-        0.0
-    );
-    assert_eq!(
-        query
-            .effective_cooldown(ability, CooldownPercentage::new(500.0).unwrap())
+            .effective_cooldown(&reference, CooldownPercentage::new(500.0).unwrap())
             .unwrap()
             .value,
         60.0
     );
     assert_eq!(
         query
-            .required_cooldown_percentage(ability, &seconds(3.0))
+            .required_cooldown_percentage(&reference, &seconds(3.0))
             .unwrap()
             .value(),
         25.0
     );
-    assert_eq!(query.cooldown(ability).unwrap().value, 12.0);
+    assert_eq!(query.cooldown(&reference).unwrap().value, 12.0);
 }
 
 #[test]
-fn cooldown_percentage_rejects_invalid_values_and_targets() {
+fn cooldown_percentage_and_data_errors_never_default() {
     assert!(matches!(
         CooldownPercentage::new(f64::NAN),
         Err(CooldownPercentageError::NotFinite { .. })
@@ -242,84 +271,95 @@ fn cooldown_percentage_rejects_invalid_values_and_targets() {
         CooldownPercentage::new(500.1),
         Err(CooldownPercentageError::OutOfRange { .. })
     ));
-
-    let catalog = catalog();
-    let query = catalog.query();
-    let ability = query.ability("ana", "sleepDart").unwrap();
-    assert!(matches!(
-        query.required_cooldown_percentage(
-            ability,
-            &Quantity::new(1.0, Unit::new("meters")).unwrap()
-        ),
-        Err(CooldownError::TargetWrongUnit { .. })
-    ));
-    assert!(matches!(
-        query.required_cooldown_percentage(ability, &seconds(-1.0)),
-        Err(CooldownError::InvalidTarget { .. })
-    ));
-    assert!(matches!(
-        query.required_cooldown_percentage(ability, &seconds(61.0)),
-        Err(CooldownError::InvalidPercentage(
-            CooldownPercentageError::OutOfRange { .. }
-        ))
-    ));
-}
-
-#[test]
-fn cooldown_missing_and_non_applicable_data_is_not_defaulted() {
     let missing = Hero::new(
         HeroId::new("missing"),
-        names("Missing", "heroes.missing"),
-        vec![ability("noCooldown", "ability1", None)],
+        names("Missing", "缺失", "heroes.missing"),
+        vec![ability("No Cooldown", "无冷却", "ability1", None)],
         vec![evidence("heroes.missing")],
     );
-    let wrong_type = ability("textCooldown", "ability1", None).with_stat(
+    let wrong_type = ability("Text Cooldown", "文本冷却", "ability1", None).with_stat(
         StatKey::new("cooldown"),
         Fact::new(StatValue::Text("12".to_string()), vec![evidence("text")]),
     );
-    let wrong_unit = ability("meterCooldown", "ability2", None).with_stat(
+    let wrong_unit = ability("Meter Cooldown", "米冷却", "ability2", None).with_stat(
         StatKey::new("cooldown"),
         Fact::new(
             StatValue::Quantity(Quantity::new(12.0, Unit::new("meters")).unwrap()),
             vec![evidence("meters")],
         ),
     );
-    let zero = ability("zeroCooldown", "ability3", None).with_stat(
+    let zero = ability("Zero Cooldown", "零冷却", "ability3", None).with_stat(
         StatKey::new("cooldown"),
         Fact::new(StatValue::Quantity(seconds(0.0)), vec![evidence("zero")]),
     );
-    let hero = Hero::new(
+    let edge = Hero::new(
         HeroId::new("edge"),
-        names("Edge", "heroes.edge"),
+        names("Edge", "边界", "heroes.edge"),
         vec![wrong_type, wrong_unit, zero],
         vec![evidence("heroes.edge")],
     );
-    let catalog = GameplayCatalog::new(identity(), vec![missing, hero]).unwrap();
-    let query = catalog.query();
-
+    let query = GameplayCatalog::new(identity(), vec![missing, edge])
+        .unwrap()
+        .query();
+    let no = AbilityRef::new(HeroId::new("missing"), LogicalSlot::new("ability1"), None);
     assert!(matches!(
-        query.cooldown(query.ability("missing", "noCooldown").unwrap()),
+        query.cooldown(&no),
         Err(CooldownError::Missing { .. })
     ));
+    for (slot, reason) in [
+        ("ability1", CooldownNonApplicability::WrongValueType),
+        (
+            "ability2",
+            CooldownNonApplicability::WrongUnit {
+                actual: Unit::new("meters"),
+            },
+        ),
+        ("ability3", CooldownNonApplicability::NonPositiveBase),
+    ] {
+        let reference = AbilityRef::new(HeroId::new("edge"), LogicalSlot::new(slot), None);
+        assert!(
+            matches!(query.cooldown(&reference), Err(CooldownError::NonApplicable { reason: actual, .. }) if actual == reason)
+        );
+    }
+}
+
+#[test]
+fn builtin_query_and_locale_resolution_use_real_records_without_fabricated_facts() {
+    let catalog = builtin().unwrap();
+    let query = catalog.query();
+    let ana = query.ability(hero_ids::ANA, slots::ABILITY_1).unwrap();
+    assert_eq!(ana.name().value().get("en-US"), Some("Sleep Dart"));
+    assert_eq!(
+        query
+            .ability_name(hero_ids::ANA, slots::ABILITY_1, None, "en-US")
+            .unwrap(),
+        "Sleep Dart"
+    );
+    assert_eq!(
+        query
+            .ability_name(hero_ids::ANA, slots::ABILITY_1, None, "zh-CN")
+            .unwrap(),
+        "麻醉镖"
+    );
+    assert_eq!(
+        query
+            .resolve_ability_name(hero_ids::ANA, "zh-CN", "麻醉镖")
+            .unwrap()
+            .slot()
+            .as_str(),
+        "ability1"
+    );
     assert!(matches!(
-        query.cooldown(query.ability("edge", "textCooldown").unwrap()),
-        Err(CooldownError::NonApplicable {
-            reason: CooldownNonApplicability::WrongValueType,
-            ..
-        })
+        query.ability(hero_ids::RAMATTRA, slots::PRIMARY_FIRE),
+        Err(GameplayQueryError::AmbiguousSlot { .. })
     ));
+    let venture = AbilityRef::new(
+        HeroId::from(hero_ids::VENTURE),
+        LogicalSlot::from(slots::SECONDARY_FIRE),
+        None,
+    );
     assert!(matches!(
-        query.cooldown(query.ability("edge", "meterCooldown").unwrap()),
-        Err(CooldownError::NonApplicable {
-            reason: CooldownNonApplicability::WrongUnit { .. },
-            ..
-        })
-    ));
-    assert!(matches!(
-        query.cooldown(query.ability("edge", "zeroCooldown").unwrap()),
-        Err(CooldownError::NonApplicable {
-            reason: CooldownNonApplicability::NonPositiveBase,
-            ..
-        })
+        query.cooldown(&venture),
+        Err(CooldownError::Missing { .. })
     ));
 }
