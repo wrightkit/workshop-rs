@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       tag:
-        description: GitHub Release tag created by release-plz
+        description: Canonical GitHub Release tag created by the release job
         required: true
         type: string
       commit:
@@ -139,33 +139,18 @@ jobs:
           cargo run --locked -p workshop-rs-cli -- version --json \
             > dist/catalog-identity.json
 
-      - name: Wait for the release-plz draft release
+      - name: Verify the draft GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          for attempt in $(seq 1 30); do
-            if gh release view "${TAG}" --json isDraft,publishedAt \
-              >/dev/null 2>&1; then
-              is_draft="$(gh release view "${TAG}" --json isDraft \
-                --jq .isDraft)"
-              published_at="$(gh release view "${TAG}" --json publishedAt \
-                --jq .publishedAt)"
-              if [[ "${is_draft}" == "true" \
-                && "${published_at}" == "null" ]]; then
-                exit 0
-              fi
-              echo "${TAG} exists but is not an unpublished draft." >&2
-              exit 1
-            fi
-            [[ "${attempt}" -eq 30 ]] && {
-              echo "Timed out waiting for release-plz to create" \
-                "draft ${TAG}." >&2
-              exit 1
-            }
-            sleep 10
-          done
+          release="$(gh release view "${TAG}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --json tagName,isDraft,isImmutable,url)"
+          echo "${release}"
+          test "$(jq -r .tagName <<<"${release}")" = "${TAG}"
+          test "$(jq -r .isDraft <<<"${release}")" = "true"
 
       - name: Add catalog identity to release notes
         env:
@@ -175,7 +160,8 @@ jobs:
         run: |
           set -euo pipefail
           marker='<!-- workshop-rs-catalog-identity -->'
-          body="$(gh release view "${TAG}" --json body --jq .body)"
+          body="$(gh release view "${TAG}" \
+            --repo "${GITHUB_REPOSITORY}" --json body --jq .body)"
           if [[ "${body}" != *"${marker}"* ]]; then
             {
               printf '%s\n\n' "${body}"
@@ -187,17 +173,23 @@ jobs:
               cat dist/catalog-identity.json
               printf '%s\n' '```'
             } > release-notes.md
-            gh release edit "${TAG}" --notes-file release-notes.md
+            gh release edit "${TAG}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --notes-file release-notes.md
           fi
 
       - name: Upload artifacts and checksums
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
-        run: gh release upload "${TAG}" dist/* --clobber
+        run: >-
+          gh release upload "${TAG}" dist/* --clobber
+          --repo "${GITHUB_REPOSITORY}"
 
       - name: Publish the completed GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
-        run: gh release edit "${TAG}" --draft=false
+        run: >-
+          gh release edit "${TAG}" --draft=false
+          --repo "${GITHUB_REPOSITORY}"
