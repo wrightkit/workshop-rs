@@ -10,26 +10,14 @@ use std::collections::{BTreeMap, HashSet};
 use serde::{Deserialize, Serialize};
 
 use crate::catalog::{Catalog, CatalogIdentity, Locale};
-use crate::census::CENSUS_SCHEMA_VERSION;
+pub use crate::census::{CENSUS_IDENTITY_SCHEMA_VERSION, CensusIdentity};
 use crate::conformance::{
-    CONFORMANCE_SCHEMA_VERSION, ConformanceResult, ConformanceStatus, Equivalence,
-    EvidenceArtifact, EvidenceBasis, EvidenceClass, FeatureId,
+    ConformanceResult, ConformanceStatus, Equivalence, EvidenceArtifact, EvidenceBasis,
+    EvidenceClass, FeatureId,
 };
 
 /// The current machine-readable live-capture schema version.
 pub const LIVE_CAPTURE_SCHEMA_VERSION: u32 = 1;
-
-/// The pinned identity of the census used to assemble client probes.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CensusIdentity {
-    pub schema_version: u32,
-    pub conformance_schema_version: u32,
-    /// Immutable census release, revision, or content identity.
-    pub identity: String,
-    /// Shards included in this capture, in canonical order.
-    pub shards: Vec<String>,
-}
 
 /// One machine-readable capture from a manually operated Workshop client.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -205,7 +193,7 @@ impl LiveCapture {
         if self.census != newer.census {
             changes.push(DiffEntry::metadata(
                 DiffCategory::SemanticSchema,
-                "census schema, conformance schema, identity, or shard set changed",
+                "census identity or shard set changed",
             ));
         }
         if self.raw_artifact != newer.raw_artifact {
@@ -440,19 +428,13 @@ fn validate_catalog(catalog: &CatalogIdentity) -> Result<(), LiveCaptureError> {
 }
 
 fn validate_census(census: &CensusIdentity) -> Result<(), LiveCaptureError> {
-    if census.schema_version != CENSUS_SCHEMA_VERSION {
+    if census.schema_version != CENSUS_IDENTITY_SCHEMA_VERSION {
         return Err(invalid(format!(
-            "unsupported census schema version {}; expected {}",
-            census.schema_version, CENSUS_SCHEMA_VERSION
+            "unsupported census identity schema version {}; expected {}",
+            census.schema_version, CENSUS_IDENTITY_SCHEMA_VERSION
         )));
     }
-    if census.conformance_schema_version != CONFORMANCE_SCHEMA_VERSION {
-        return Err(invalid(format!(
-            "unsupported census conformance schema version {}; expected {}",
-            census.conformance_schema_version, CONFORMANCE_SCHEMA_VERSION
-        )));
-    }
-    validate_name("census.identity", &census.identity)?;
+    validate_sha256("census.digest", &census.digest)?;
     if census.shards.is_empty() || census.shards.windows(2).any(|pair| pair[0] >= pair[1]) {
         return Err(invalid(
             "census.shards must be non-empty and strictly sorted",

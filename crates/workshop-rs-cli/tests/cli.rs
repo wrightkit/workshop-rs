@@ -6,14 +6,15 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use workshop_rs::catalog::{Catalog, Locale};
-use workshop_rs::census::CENSUS_SCHEMA_VERSION;
 use workshop_rs::conformance::CONFORMANCE_SCHEMA_VERSION;
 use workshop_rs::conformance::{
     Comparison, ConformanceReason, ConformanceResult, ConformanceStatus, Equivalence, Evidence,
     EvidenceArtifact, EvidenceBasis, EvidenceClass, ExpectationSource, FeatureId, FeatureKind,
     FeatureNamespace, ReasonCode,
 };
-use workshop_rs::live_capture::{CensusIdentity, LIVE_CAPTURE_SCHEMA_VERSION, LiveCapture};
+use workshop_rs::live_capture::{
+    CENSUS_IDENTITY_SCHEMA_VERSION, CensusIdentity, LIVE_CAPTURE_SCHEMA_VERSION, LiveCapture,
+};
 
 fn bin() -> &'static str {
     env!("CARGO_BIN_EXE_workshop-rs-cli")
@@ -92,9 +93,8 @@ fn synthetic_capture(id: &str) -> String {
         locale,
         catalog: catalog.identity(),
         census: CensusIdentity {
-            schema_version: CENSUS_SCHEMA_VERSION,
-            conformance_schema_version: CONFORMANCE_SCHEMA_VERSION,
-            identity: "synthetic-cli-census".to_string(),
+            schema_version: CENSUS_IDENTITY_SCHEMA_VERSION,
+            digest: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
             shards: vec!["synthetic-cli-shard".to_string()],
         },
         raw_artifact: raw,
