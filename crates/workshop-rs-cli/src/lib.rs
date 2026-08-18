@@ -9,6 +9,7 @@
 use std::path::{Path, PathBuf};
 
 use workshop_rs::catalog::{Catalog, Locale};
+use workshop_rs::census;
 use workshop_rs::convert::{self, ConvertOptions};
 use workshop_rs::detect;
 use workshop_rs::emitter::{self, EmitOptions};
@@ -37,6 +38,9 @@ commands:
       Print the machine-readable catalog identity: implementation version,
       catalog version and content digest, locale coverage, target evidence,
       and provenance.
+  census [--json]
+      Run the deterministic offline Workshop feature census. Unexpected
+      regressions exit with status 1; known gaps remain visible.
 ";
 
 pub fn run(args: Vec<String>) -> i32 {
@@ -52,6 +56,7 @@ pub fn run(args: Vec<String>) -> i32 {
         "convert" => convert_command(rest),
         "locales" => locales_command(rest),
         "version" => version_command(rest),
+        "census" => census_command(rest),
         "help" | "--help" | "-h" => {
             print!("{USAGE}");
             0
@@ -357,6 +362,47 @@ fn version_command(args: Vec<String>) -> i32 {
         );
     }
     0
+}
+
+fn census_command(args: Vec<String>) -> i32 {
+    let json = match args.as_slice() {
+        [] => false,
+        [flag] if flag == "--json" => true,
+        _ => return usage_error("census accepts only the optional --json flag"),
+    };
+    let catalog = match Catalog::builtin() {
+        Ok(catalog) => catalog,
+        Err(error) => return usage_error(&format!("cannot load catalog: {error}")),
+    };
+    let census = match census::Census::builtin(&catalog) {
+        Ok(census) => census,
+        Err(error) => return usage_error(&format!("cannot build census: {error}")),
+    };
+    let report = census.run(&catalog);
+    if let Err(error) = report.validate_against(&catalog) {
+        return usage_error(&format!("invalid census report: {error}"));
+    }
+    if json {
+        match report.to_json() {
+            Ok(text) => println!("{text}"),
+            Err(error) => return usage_error(&format!("cannot serialize census: {error}")),
+        }
+    } else {
+        println!(
+            "census schema {} / conformance schema {}",
+            report.schema_version, report.conformance_schema_version
+        );
+        for result in &report.results {
+            println!("{}: {:?}", result.case_id, result.status);
+        }
+    }
+    if report.results.iter().any(|result| {
+        result.status == workshop_rs::conformance::ConformanceStatus::UnexpectedRegression
+    }) {
+        1
+    } else {
+        0
+    }
 }
 
 fn usage_error(message: &str) -> i32 {

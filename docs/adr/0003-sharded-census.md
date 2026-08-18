@@ -1,0 +1,39 @@
+# ADR-0003: Canonical sharded Workshop feature census
+
+## Status
+
+Accepted as the offline census layer for the #10 evidence corpus.
+
+## Decision
+
+`workshop_rs::census::Census::builtin` derives deterministic shards from the
+canonical catalog, the reviewed settings table, and Workshop IR capabilities
+owned by `workshop-rs`. It does not import OPY/DEL inventories or claim live
+client/runtime behavior.
+
+Each `CensusCase` has a stable case ID, one or more #18 `FeatureId` values,
+canonical en-US source text, and an explicit support classification. Catalog
+entries and enum members are emitted from the loaded canonical catalog;
+content IDs use their domain-qualified canonical enum-member identities.
+Settings, variables, subroutines, control flow, strings, and localization
+cases use `workshop-rs`-owned namespaces.
+
+`Census::run` executes each case independently through parse, WIR validation,
+canonical identity validation, emission, semantic round-trip, and en-US/zh-CN
+conversion checks. The report retains every `ConformanceResult`, including
+unsupported, known-gap, unexpected-regression, and inconclusive states.
+`CensusReport::validate_against` binds catalog feature IDs to the actual
+catalog. `Census::export_json` exports shard definitions without making the
+export itself an oracle.
+
+The report's comparison fields describe the independent semantic/normalized
+gate; they do not turn the implementation's own output into an expected
+oracle. Focused parser/catalog/emitter tests remain complementary and are not
+replaced by census totals.
+
+## Consequences
+
+Future live-client workflows can assemble the same shards into probes while
+retaining feature attribution. A census result is offline evidence only until
+an independent client or other expectation source is recorded through the #18
+contract.

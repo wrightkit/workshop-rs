@@ -29,6 +29,7 @@
 
 pub mod arena;
 pub mod catalog;
+pub mod census;
 pub mod conformance;
 pub mod convert;
 pub mod detect;
