@@ -8,6 +8,9 @@ use workshop_rs::gameplay::{
 use workshop_rs::gameplay_data::{GAMEPLAY_DATA, builtin, content_digest, load};
 
 const SOURCE: &str = "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6";
+const OFFICIAL_HERO_SOURCE: &str = "Blizzard Entertainment official Overwatch hero detail";
+const OFFICIAL_PATCH_SOURCE: &str = "Blizzard Entertainment official Overwatch live patch notes";
+const PATCH_URL: &str = "https://overwatch.blizzard.com/en-us/news/patch-notes/live/2026/6/";
 
 fn evidence(locator: &str) -> EvidenceRef {
     EvidenceRef {
@@ -36,6 +39,25 @@ fn identity() -> GameplayDatasetIdentity {
     }
 }
 
+fn assert_evidence(evidence: &[EvidenceRef], source: &str, locator: &str) {
+    assert!(
+        evidence
+            .iter()
+            .any(|item| item.source == source && item.locator == locator),
+        "missing evidence {source} at {locator}"
+    );
+}
+
+fn assert_quantity(fact: &Fact<StatValue>, value: f64, unit: &str) {
+    match fact.value() {
+        StatValue::Quantity(quantity) => {
+            assert_eq!(quantity.value, value);
+            assert_eq!(quantity.unit.as_str(), unit);
+        }
+        other => panic!("expected quantity, got {other:?}"),
+    }
+}
+
 fn ability(id: &str, slot: &str, variant: Option<&str>) -> Ability {
     Ability::new(
         AbilityId::new(id),
@@ -56,7 +78,10 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
         ("anran", &["ability1", "ability2", "ultimate"][..]),
         ("ashe", &["ability1", "ability2", "ultimate"][..]),
         ("baptiste", &["ability1", "ability2", "ultimate"][..]),
-        ("bastion", &["secondaryFire", "ability1", "ultimate"][..]),
+        (
+            "bastion",
+            &["primaryFire", "secondaryFire", "ability1", "ultimate"][..],
+        ),
         (
             "brigitte",
             &[
@@ -89,7 +114,13 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
         ),
         (
             "dva",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
+            &[
+                "primaryFire",
+                "secondaryFire",
+                "ability1",
+                "ability2",
+                "ultimate",
+            ][..],
         ),
         (
             "echo",
@@ -209,7 +240,13 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
         ("zenyatta", &["ability1", "ability2", "ultimate"][..]),
         (
             "ramattra",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
+            &[
+                "primaryFire",
+                "secondaryFire",
+                "ability1",
+                "ability2",
+                "ultimate",
+            ][..],
         ),
         (
             "lifeweaver",
@@ -263,6 +300,40 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
         .collect();
     assert_eq!(actual_ids, expected_ids);
 
+    let ability_count: usize = catalog
+        .heroes()
+        .iter()
+        .map(|hero| hero.abilities().len())
+        .sum();
+    let keyword_count = catalog
+        .heroes()
+        .iter()
+        .flat_map(|hero| hero.abilities())
+        .filter(|ability| ability.keywords().next().is_some())
+        .count();
+    let variant_count = catalog
+        .heroes()
+        .iter()
+        .flat_map(|hero| hero.abilities())
+        .filter(|ability| ability.variant().is_some())
+        .count();
+    let stat_count = catalog
+        .heroes()
+        .iter()
+        .map(|hero| {
+            hero.stats().count()
+                + hero
+                    .abilities()
+                    .iter()
+                    .map(|ability| ability.stats().count())
+                    .sum::<usize>()
+        })
+        .sum::<usize>();
+    assert_eq!(ability_count, 207);
+    assert!(keyword_count > 0);
+    assert!(variant_count > 0);
+    assert!(stat_count > 0);
+
     for (hero_id, expected_slots) in expected {
         let hero = catalog.hero_by_id(hero_id).expect("expected hero identity");
         let actual_slots: BTreeSet<_> = hero
@@ -278,15 +349,7 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
             "tank" | "damage" | "support"
         ));
         assert_eq!(role.evidence().len(), 1);
-        assert_eq!(
-            hero.stats().count(),
-            0,
-            "stats must remain absent for {hero_id}"
-        );
         for ability in hero.abilities() {
-            assert!(ability.variant().is_none());
-            assert_eq!(ability.stats().count(), 0);
-            assert_eq!(ability.keywords().count(), 0);
             assert!(ability.name().value().get("en-US").is_some());
         }
     }
@@ -379,6 +442,138 @@ fn embedded_catalog_is_deterministic_and_preserves_representative_ids() {
 }
 
 #[test]
+fn embedded_facts_have_representative_names_values_and_official_provenance() {
+    let catalog = builtin().unwrap();
+
+    let ana = catalog.hero_by_id("ana").unwrap();
+    assert_eq!(ana.role().unwrap().value().as_str(), "support");
+    for (id, name, keyword) in [
+        ("sleepDart", "Sleep Dart", "crowdControl"),
+        ("bioticGrenade", "Biotic Grenade", "healing"),
+        ("nanoBoost", "Nano Boost", "buff"),
+    ] {
+        let ability = ana.ability_by_id(&AbilityId::new(id)).unwrap();
+        assert_eq!(ability.name().value().get("en-US"), Some(name));
+        assert!(ability.has_keyword(keyword));
+        assert_evidence(
+            ability.evidence(),
+            OFFICIAL_HERO_SOURCE,
+            "https://overwatch.blizzard.com/en-us/heroes/ana/",
+        );
+    }
+
+    let brigitte = catalog.hero_by_id("brigitte").unwrap();
+    assert_eq!(brigitte.role().unwrap().value().as_str(), "support");
+    for (id, name, keyword) in [
+        ("whipShot", "Whip Shot", "knockback"),
+        ("shieldBash", "Shield Bash", "mobility"),
+    ] {
+        let ability = brigitte.ability_by_id(&AbilityId::new(id)).unwrap();
+        assert_eq!(ability.name().value().get("en-US"), Some(name));
+        assert!(ability.has_keyword(keyword));
+        assert_evidence(
+            ability.evidence(),
+            OFFICIAL_HERO_SOURCE,
+            "https://overwatch.blizzard.com/en-us/heroes/brigitte/",
+        );
+    }
+
+    let ramattra = catalog.hero_by_id("ramattra").unwrap();
+    assert_eq!(ramattra.role().unwrap().value().as_str(), "tank");
+    let vortex = ramattra
+        .ability_by_id(&AbilityId::new("ravenousVortex"))
+        .unwrap();
+    assert_eq!(vortex.name().value().get("en-US"), Some("Ravenous Vortex"));
+    assert!(vortex.has_keyword("crowdControl"));
+    assert_evidence(
+        vortex.evidence(),
+        OFFICIAL_HERO_SOURCE,
+        "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
+    );
+    for (id, variant, name) in [
+        ("voidAccelerator", "omnic", "Void Accelerator"),
+        ("pummel", "nemesis", "Pummel"),
+    ] {
+        let ability = ramattra.ability_by_id(&AbilityId::new(id)).unwrap();
+        assert_eq!(ability.variant().unwrap().as_str(), variant);
+        assert_eq!(ability.name().value().get("en-US"), Some(name));
+        assert_evidence(
+            ability.evidence(),
+            OFFICIAL_HERO_SOURCE,
+            "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
+        );
+    }
+
+    let dva = catalog.hero_by_id("dva").unwrap();
+    assert_eq!(dva.role().unwrap().value().as_str(), "tank");
+    let matrix = dva.ability_by_id(&AbilityId::new("defenseMatrix")).unwrap();
+    assert!(matrix.has_keyword("barrier"));
+    assert!(matrix.has_keyword("resource"));
+    assert_evidence(
+        matrix.evidence(),
+        OFFICIAL_HERO_SOURCE,
+        "https://overwatch.blizzard.com/en-us/heroes/dva/",
+    );
+    for (id, variant, name) in [
+        ("fusionCannons", "mech", "Fusion Cannons"),
+        ("lightGun", "pilot", "Light Gun"),
+    ] {
+        let ability = dva.ability_by_id(&AbilityId::new(id)).unwrap();
+        assert_eq!(ability.variant().unwrap().as_str(), variant);
+        assert_eq!(ability.name().value().get("en-US"), Some(name));
+        assert_evidence(
+            ability.evidence(),
+            OFFICIAL_HERO_SOURCE,
+            "https://overwatch.blizzard.com/en-us/heroes/dva/",
+        );
+    }
+
+    let bastion = catalog.hero_by_id("bastion").unwrap();
+    assert_eq!(bastion.role().unwrap().value().as_str(), "damage");
+    let reconfigure = bastion
+        .ability_by_id(&AbilityId::new("reconfigure"))
+        .unwrap();
+    assert!(reconfigure.has_keyword("form"));
+    assert_evidence(
+        reconfigure.evidence(),
+        OFFICIAL_HERO_SOURCE,
+        "https://overwatch.blizzard.com/en-us/heroes/bastion/",
+    );
+    for (id, variant, name) in [
+        ("configurationAssault", "assault", "Configuration: Assault"),
+        ("configurationRecon", "recon", "Configuration: Recon"),
+    ] {
+        let ability = bastion.ability_by_id(&AbilityId::new(id)).unwrap();
+        assert_eq!(ability.variant().unwrap().as_str(), variant);
+        assert_eq!(ability.name().value().get("en-US"), Some(name));
+        assert_evidence(
+            ability.evidence(),
+            OFFICIAL_HERO_SOURCE,
+            "https://overwatch.blizzard.com/en-us/heroes/bastion/",
+        );
+    }
+
+    let venture = catalog.hero_by_id("venture").unwrap();
+    assert_eq!(venture.role().unwrap().value().as_str(), "damage");
+    let health = venture.stat(&StatKey::new("health")).unwrap();
+    assert_quantity(health, 225.0, "health");
+    assert_evidence(health.evidence(), OFFICIAL_PATCH_SOURCE, PATCH_URL);
+    let drill_dash = venture.ability_by_id(&AbilityId::new("drillDash")).unwrap();
+    assert!(drill_dash.has_keyword("mobility"));
+    assert_evidence(
+        drill_dash.evidence(),
+        OFFICIAL_HERO_SOURCE,
+        "https://overwatch.blizzard.com/en-us/heroes/venture/",
+    );
+    let cooldown = drill_dash.stat(&StatKey::new("cooldown")).unwrap();
+    assert_quantity(cooldown, 6.0, "seconds");
+    assert_evidence(cooldown.evidence(), OFFICIAL_PATCH_SOURCE, PATCH_URL);
+    let damage = drill_dash.stat(&StatKey::new("damage")).unwrap();
+    assert_quantity(damage, 35.0, "damage");
+    assert_evidence(damage.evidence(), OFFICIAL_PATCH_SOURCE, PATCH_URL);
+}
+
+#[test]
 fn embedded_records_keep_pinned_provenance_on_every_fact() {
     let catalog = builtin().unwrap();
     for hero in catalog.heroes() {
@@ -403,8 +598,22 @@ fn embedded_records_keep_pinned_provenance_on_every_fact() {
         );
         for ability in hero.abilities() {
             for evidence in ability.evidence().iter().chain(ability.name().evidence()) {
-                assert_eq!(evidence.source, SOURCE);
-                assert!(evidence.locator.starts_with("data.heroes."));
+                if evidence.source == SOURCE {
+                    assert!(evidence.locator.starts_with("data.heroes."));
+                    assert_eq!(evidence.note.as_deref(), Some("commitDate=2026-08-12"));
+                } else if evidence.source == OFFICIAL_HERO_SOURCE {
+                    assert!(
+                        evidence
+                            .locator
+                            .starts_with("https://overwatch.blizzard.com/en-us/heroes/")
+                    );
+                    assert_eq!(
+                        evidence.note.as_deref(),
+                        Some("official ability description; accessed 2026-08-18")
+                    );
+                } else {
+                    panic!("unexpected ability evidence source: {}", evidence.source);
+                }
             }
         }
     }
@@ -413,8 +622,8 @@ fn embedded_records_keep_pinned_provenance_on_every_fact() {
 #[test]
 fn loader_rejects_stale_digest_and_unsupported_schema() {
     let stale = GAMEPLAY_DATA.replacen(
-        "6af26398d2a2967ee5534a0ce194de502cf1c87b90444141b75629c6d05607d3",
-        "7af26398d2a2967ee5534a0ce194de502cf1c87b90444141b75629c6d05607d3",
+        "d15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
+        "e15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
         1,
     );
     assert!(matches!(

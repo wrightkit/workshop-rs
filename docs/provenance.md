@@ -23,14 +23,29 @@ to commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date
 2026-08-12). The export is used only for hero identity, localized naming, and
 declared named ability-slot topology; no OverPy or OSTW data is copied.
 
-The committed projection contains 53 heroes, 53 role facts, and 201 named
-ability slots. Each hero/ability name fact and record carries the export path
-as an `EvidenceRef`. Each role fact carries its official Blizzard hero-detail
-URL and access date 2026-08-18 as separate evidence. Base stats, balance
-facts, and ability-keyword facts remain absent because they are not supported
-by these sources; they require independent evidence. The loader verifies the
-separate gameplay dataset identity and deterministic SHA-256 digest; it does
-not alter the Workshop catalog identity.
+The committed projection contains 53 heroes, 53 role facts, and 201
+export-declared named ability slots, plus six official-detail variant records
+for Bastion, D.Va, and Ramattra. Each hero/ability name fact and export record
+carries the export path as an `EvidenceRef`. Each role fact carries its
+official Blizzard hero-detail URL and access date 2026-08-18 as separate
+evidence.
+
+The current identity digest is
+`sha256:d15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635`.
+
+Representative ability keywords are semantic labels, not Blizzard or Workshop
+enum values. Their labels and the six variant names/shapes are evidenced by
+the official Blizzard hero-detail URLs for Ana, Brigitte, Ramattra, D.Va,
+Bastion, and Venture, accessed 2026-08-18;
+the variants intentionally carry no fabricated Workshop-export provenance.
+Venture base health `225 health`, Drill Dash cooldown `6 seconds`, and Drill
+Dash damage `35 damage` are separately evidenced by the official [June 30,
+2026 live patch notes](https://overwatch.blizzard.com/en-us/news/patch-notes/live/2026/6/),
+accessed 2026-08-18. Other base stats, armor/shields, cooldowns, damage,
+healing, ammo, durations, ranges, projectile speeds, resources, and balance
+values remain absent unless supported by a current explicit source. The
+loader verifies the separate gameplay dataset identity and deterministic
+SHA-256 digest; it does not alter the Workshop catalog identity.
 
 ## Catalog data (`src/catalog/data/catalog.json`)
 

@@ -70,7 +70,8 @@ facts remain absent until separately evidenced.
 - Extra logical slots: Brigitte, Hanzo, and Wrecking Ball demonstrate
   `ability3` without a hero-specific field.
 - Form/configuration variants: Ramattra, Bastion, and D.Va require multiple
-  entries or future dataset variants without changing the hero schema.
+  entries, represented by official-detail variant records without changing the
+  hero schema.
 - Weapon/configuration entries: Mauga, Venture, and Juno demonstrate optional
   `primaryFire` and `secondaryFire` data.
 - Passive and resource/recharge-oriented shapes: Echo, Mercy, Pharah, Juno,

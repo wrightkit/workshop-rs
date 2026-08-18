@@ -8,15 +8,28 @@
               "locator": "data.heroes.ana.ability1",
               "note": "commitDate=2026-08-12",
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+            },
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/ana/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
           "id": "sleepDart",
+          "keywords": [
+            "crowdControl"
+          ],
           "name": {
             "evidence": [
               {
                 "locator": "data.heroes.ana.ability1",
                 "note": "commitDate=2026-08-12",
                 "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/ana/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -45,15 +58,30 @@
               "locator": "data.heroes.ana.ability2",
               "note": "commitDate=2026-08-12",
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+            },
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/ana/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
           "id": "bioticGrenade",
+          "keywords": [
+            "healing",
+            "damage",
+            "buff"
+          ],
           "name": {
             "evidence": [
               {
                 "locator": "data.heroes.ana.ability2",
                 "note": "commitDate=2026-08-12",
                 "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/ana/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -82,15 +110,28 @@
               "locator": "data.heroes.ana.ultimate",
               "note": "commitDate=2026-08-12",
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+            },
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/ana/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
           "id": "nanoBoost",
+          "keywords": [
+            "buff"
+          ],
           "name": {
             "evidence": [
               {
                 "locator": "data.heroes.ana.ultimate",
                 "note": "commitDate=2026-08-12",
                 "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/ana/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -629,15 +670,28 @@
               "locator": "data.heroes.bastion.ability1",
               "note": "commitDate=2026-08-12",
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+            },
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/bastion/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
           "id": "reconfigure",
+          "keywords": [
+            "form"
+          ],
           "name": {
             "evidence": [
               {
                 "locator": "data.heroes.bastion.ability1",
                 "note": "commitDate=2026-08-12",
                 "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/bastion/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -696,6 +750,54 @@
             }
           },
           "slot": "ultimate"
+        },
+        {
+          "evidence": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/bastion/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
+            }
+          ],
+          "id": "configurationAssault",
+          "name": {
+            "evidence": [
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/bastion/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              }
+            ],
+            "value": {
+              "en-US": "Configuration: Assault"
+            }
+          },
+          "slot": "primaryFire",
+          "variant": "assault"
+        },
+        {
+          "evidence": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/bastion/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
+            }
+          ],
+          "id": "configurationRecon",
+          "name": {
+            "evidence": [
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/bastion/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              }
+            ],
+            "value": {
+              "en-US": "Configuration: Recon"
+            }
+          },
+          "slot": "primaryFire",
+          "variant": "recon"
         }
       ],
       "evidence": [
@@ -788,15 +890,29 @@
               "locator": "data.heroes.brigitte.ability1",
               "note": "commitDate=2026-08-12",
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+            },
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/brigitte/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
           "id": "whipShot",
+          "keywords": [
+            "damage",
+            "knockback"
+          ],
           "name": {
             "evidence": [
               {
                 "locator": "data.heroes.brigitte.ability1",
                 "note": "commitDate=2026-08-12",
                 "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/brigitte/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -862,15 +978,30 @@
               "locator": "data.heroes.brigitte.ability3",
               "note": "commitDate=2026-08-12",
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+            },
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/brigitte/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
           "id": "shieldBash",
+          "keywords": [
+            "mobility",
+            "crowdControl",
+            "knockback"
+          ],
           "name": {
             "evidence": [
               {
                 "locator": "data.heroes.brigitte.ability3",
                 "note": "commitDate=2026-08-12",
                 "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/brigitte/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -1651,15 +1782,29 @@
               "locator": "data.heroes.dva.secondaryFire",
               "note": "commitDate=2026-08-12",
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+            },
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/dva/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
           "id": "defenseMatrix",
+          "keywords": [
+            "barrier",
+            "resource"
+          ],
           "name": {
             "evidence": [
               {
                 "locator": "data.heroes.dva.secondaryFire",
                 "note": "commitDate=2026-08-12",
                 "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/dva/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -1792,6 +1937,54 @@
             }
           },
           "slot": "ultimate"
+        },
+        {
+          "evidence": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/dva/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
+            }
+          ],
+          "id": "fusionCannons",
+          "name": {
+            "evidence": [
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/dva/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              }
+            ],
+            "value": {
+              "en-US": "Fusion Cannons"
+            }
+          },
+          "slot": "primaryFire",
+          "variant": "mech"
+        },
+        {
+          "evidence": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/dva/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
+            }
+          ],
+          "id": "lightGun",
+          "name": {
+            "evidence": [
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/dva/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              }
+            ],
+            "value": {
+              "en-US": "Light Gun"
+            }
+          },
+          "slot": "primaryFire",
+          "variant": "pilot"
         }
       ],
       "evidence": [
@@ -5772,15 +5965,29 @@
               "locator": "data.heroes.ramattra.ability2",
               "note": "commitDate=2026-08-12",
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+            },
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
           "id": "ravenousVortex",
+          "keywords": [
+            "damage",
+            "crowdControl"
+          ],
           "name": {
             "evidence": [
               {
                 "locator": "data.heroes.ramattra.ability2",
                 "note": "commitDate=2026-08-12",
                 "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -5839,6 +6046,54 @@
             }
           },
           "slot": "ultimate"
+        },
+        {
+          "evidence": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
+            }
+          ],
+          "id": "voidAccelerator",
+          "name": {
+            "evidence": [
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              }
+            ],
+            "value": {
+              "en-US": "Void Accelerator"
+            }
+          },
+          "slot": "primaryFire",
+          "variant": "omnic"
+        },
+        {
+          "evidence": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
+            }
+          ],
+          "id": "pummel",
+          "name": {
+            "evidence": [
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              }
+            ],
+            "value": {
+              "en-US": "Pummel"
+            }
+          },
+          "slot": "primaryFire",
+          "variant": "nemesis"
         }
       ],
       "evidence": [
@@ -8115,15 +8370,30 @@
               "locator": "data.heroes.venture.secondaryFire",
               "note": "commitDate=2026-08-12",
               "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+            },
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/venture/",
+              "note": "official ability description; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
             }
           ],
           "id": "drillDash",
+          "keywords": [
+            "mobility",
+            "damage",
+            "knockback"
+          ],
           "name": {
             "evidence": [
               {
                 "locator": "data.heroes.venture.secondaryFire",
                 "note": "commitDate=2026-08-12",
                 "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/venture/",
+                "note": "official ability description; accessed 2026-08-18",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -8144,7 +8414,41 @@
               "zh-TW": "鑽頭衝刺"
             }
           },
-          "slot": "secondaryFire"
+          "slot": "secondaryFire",
+          "stats": {
+            "cooldown": {
+              "evidence": [
+                {
+                  "locator": "https://overwatch.blizzard.com/en-us/news/patch-notes/live/2026/6/",
+                  "note": "Venture June 30, 2026 live balance entry; accessed 2026-08-18",
+                  "source": "Blizzard Entertainment official Overwatch live patch notes"
+                }
+              ],
+              "value": {
+                "kind": "quantity",
+                "value": {
+                  "unit": "seconds",
+                  "value": 6
+                }
+              }
+            },
+            "damage": {
+              "evidence": [
+                {
+                  "locator": "https://overwatch.blizzard.com/en-us/news/patch-notes/live/2026/6/",
+                  "note": "Venture June 30, 2026 live balance entry; accessed 2026-08-18",
+                  "source": "Blizzard Entertainment official Overwatch live patch notes"
+                }
+              ],
+              "value": {
+                "kind": "quantity",
+                "value": {
+                  "unit": "damage",
+                  "value": 35
+                }
+              }
+            }
+          }
         },
         {
           "evidence": [
@@ -8264,6 +8568,24 @@
           }
         ],
         "value": "damage"
+      },
+      "stats": {
+        "health": {
+          "evidence": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/news/patch-notes/live/2026/6/",
+              "note": "Venture June 30, 2026 live balance entry; accessed 2026-08-18",
+              "source": "Blizzard Entertainment official Overwatch live patch notes"
+            }
+          ],
+          "value": {
+            "kind": "quantity",
+            "value": {
+              "unit": "health",
+              "value": 225
+            }
+          }
+        }
       }
     },
     {
@@ -9274,7 +9596,7 @@
   ],
   "identity": {
     "datasetId": "overwatch-workshop-hero-gameplay",
-    "digest": "sha256:6af26398d2a2967ee5534a0ce194de502cf1c87b90444141b75629c6d05607d3",
+    "digest": "sha256:d15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
     "license": "MIT-compatible user-provided export",
     "reviewed": true,
     "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
