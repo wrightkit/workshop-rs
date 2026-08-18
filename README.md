@@ -1,137 +1,106 @@
 # workshop-rs
 
 The canonical, separately versioned **Overwatch Workshop semantic core** for
-the WrightKit ecosystem: a standalone, MIT-licensed library and CLI for
-parsing, validating, analyzing, converting, and emitting raw Workshop text.
+the WrightKit ecosystem: a standalone, MIT-licensed Rust library and CLI for
+parsing, validating, analyzing, converting, and emitting raw Workshop text and
+hero gameplay data.
 
-Status: **v0.2 bootstrap** (Issue #2). The repository is under active
-development; no release compatibility claims are made yet.
+`workshop-rs` has no dependency on Wright compiler crates or source-language
+provider internals (OPY, OSTW). Semantic code contains no locale-specific
+branches; locale coverage lives exclusively in the catalog dataset.
 
-## What it is
+## Features
 
-`workshop-rs` owns the Workshop-language foundation that WrightKit tooling
-(and, in future, the Wright compiler) consume:
+- **Raw Workshop parsing & WIR:** parse raw Workshop text into a validated,
+  locale-independent Workshop Intermediate Representation (WIR).
+- **Deterministic emission & conversion:** deterministic localized emission and
+  raw Workshop conversion (`en-US` ↔ `zh-CN`) with fail-explicit missing-mapping
+  safety and opt-in fallback.
+- **Catalog & allowlist validation:** canonical, locale-independent identities
+  for Workshop actions, values, events, enums, operators, and settings blocks.[^catalog-boundary]
+- **Hero gameplay & query domain:** embedded hero roster dataset and typed
+  semantic queries for abilities, logical slots, variants, Custom Game cooldown
+  percentages, and localized ability name resolution.[^gameplay-domain]
+- **Conformance & census harness:** deterministic offline feature census,
+  real-project regression runner, and seasonal client drift analysis.[^conformance]
+- **Standalone architecture:** zero external runtime dependencies.
 
-* a **catalog** of Workshop-defined content (actions, values, events, enums
-  and members, operators, structural and settings entries) bound to
-  **locale-independent canonical identities**, with per-locale spelling
-  tables;
-* a **raw Workshop parser** (lexer/parser) producing validated **Workshop IR
-  (WIR)**, a locale-independent semantic representation;
-* **catalog-backed validation**, a **deterministic localized emitter**, and
-  **locale detection**;
-* **raw Workshop locale conversion** (`en-US` <-> other locales), with
-  missing target-locale mappings failing explicitly by default and fallback
-  opt-in.
+## CLI usage
 
-It has **no dependency on Wright tooling crates** (`wright-*`) or on any
-source-language provider implementation (OPY, OSTW, DEL). Locale coverage
-lives exclusively in the catalog dataset; semantic code contains no
-locale-specific branches.
+The standalone CLI provides tools for parsing, emission, conversion, census, and
+conformance:
 
-Boundary contract: [docs/adr/0001-catalog-boundaries.md](docs/adr/0001-catalog-boundaries.md)
-(ADR-0001). Data provenance and licensing: [docs/provenance.md](docs/provenance.md).
-
-## Workspace layout
-
+```sh
+workshop-rs-cli parse file.ws                 # parse raw Workshop text -> WIR dump
+workshop-rs-cli emit file.ws                  # parse -> emit localized Workshop text
+workshop-rs-cli convert file.ws --from en-US --to zh-CN
+workshop-rs-cli convert file.ws --from en-US --to zh-CN --fallback-locale en-US
+workshop-rs-cli locales                       # list declared locales and mapping coverage
+workshop-rs-cli version --json                # machine-readable catalog and provenance identity
+workshop-rs-cli census [--json]               # run deterministic offline feature census
+workshop-rs-cli corpus manifest.json [--json] # run provenance-linked real-project corpus
 ```
-crates/workshop-rs/      library: catalog, lexer/parser, WIR, validation, emitter, detect, convert
-  src/bin/               workshop-catalog-gen: the reproducible catalog data pipeline
-crates/workshop-rs-cli/  standalone CLI: parse, emit, convert, locales, version
-docs/                    ADR-0001 (boundary contract), provenance record
-```
+
+Exit codes: `0` success, `1` parse/emit/conversion/catalog failure, `2` usage error.
 
 ## Library usage
 
 ```rust
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::convert::{convert, ConvertOptions};
-use workshop_rs::emitter::{emit, EmitOptions};
+use workshop_rs::emitter::emit;
+use workshop_rs::gameplay::{hero_ids, slots};
+use workshop_rs::gameplay_data;
 
+// Parse raw Workshop text into locale-independent WIR
 let catalog = Catalog::builtin()?;
 let locale = Locale::new("en-US");
-
-// Parse raw Workshop text into locale-independent WIR.
 let program = workshop_rs::parser::parse_with_context(text, &catalog, &locale, &catalog)?;
 
-// Emit localized Workshop text (fails explicitly on missing mappings).
+// Emit localized Workshop text
 let emitted = emit(&program, &catalog, &locale)?;
 
-// Convert raw Workshop text between locales. Missing target-locale mappings
-// fail explicitly unless a fallback locale is opted into.
-let out = convert(text, &catalog, &Locale::new("en-US"), &Locale::new("zh-CN"),
-                  &ConvertOptions::default())?; // Err: missing mapping
-let out = convert(text, &catalog, &Locale::new("en-US"), &Locale::new("zh-CN"),
-                  &ConvertOptions { fallback_locale: Some(Locale::new("en-US")) })?;
+// Convert raw Workshop text between locales (fails explicitly on missing mappings)
+let converted = convert(
+    text,
+    &catalog,
+    &Locale::new("en-US"),
+    &Locale::new("zh-CN"),
+    &ConvertOptions::default(),
+)?;
 
-// Machine-readable catalog identity (implementation version, catalog
-// version + digest, locale coverage, target evidence, provenance).
-let identity = catalog.identity();
+// Query hero gameplay facts and calculate effective cooldowns
+let gameplay = gameplay_data::builtin()?;
+let query = gameplay.query();
+let sleep_dart = query.slot_ability(hero_ids::ANA, slots::ABILITY_1)?;
+let base_cooldown = query.cooldown(&sleep_dart)?;
 ```
 
-Settings-bearing programs are parsed into the canonical WIR settings carrier
-and emitted by the library. Locale detection is available via
-`workshop_rs::detect`.
+## Current support
 
-### Rule event contract
-
-The public WIR event contract is locale- and provider-independent. It includes
-`Event::Global`, `Event::EachPlayer`, filtered `Event::EachPlayerWithFilters`,
-nine filtered `Event::Player` identities (`PlayerEventKind`), and
-`Event::Subroutine`. Filtered events carry a canonical `EventTeam` and an
-`EventTarget` (`All`, Workshop slot `0..=11`, or a canonical hero id).
-Raw Workshop player events require both their team and player filters;
-parameterless `Ongoing - Each Player` remains supported for existing programs.
-Event identities and filter members are checked against the catalog before a
-program is accepted for canonical emission, so source-language providers can
-consume this public model without defining a second event table.
-
-## CLI usage
-
-```sh
-cargo run -p workshop-rs-cli -- parse file.ws                 # parse -> WIR dump
-cargo run -p workshop-rs-cli -- emit file.ws                  # parse -> emit
-cargo run -p workshop-rs-cli -- convert file.ws --from en-US --to zh-CN
-cargo run -p workshop-rs-cli -- convert file.ws --from en-US --to zh-CN --fallback-locale en-US
-cargo run -p workshop-rs-cli -- locales                       # declared locales + coverage
-cargo run -p workshop-rs-cli -- version --json                # machine-readable catalog identity
-```
-
-Exit codes: `0` success, `1` parse/emit/conversion failure, `2` usage error.
-A conversion with missing target-locale mappings fails with exit `1` and a
-`missing … mapping for locale …` diagnostic; with `--fallback-locale` the
-fallback choice is reported on stderr.
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Raw Workshop parser & WIR | ✅ Supported | CST-to-WIR frontend, settings blocks, comment/structure validation |
+| Deterministic localized emitter | ✅ Supported | Formatted Workshop text emission for declared locales |
+| Locale conversion (`en-US` ↔ `zh-CN`) | ✅ Supported | Full declared canonical surface (366/366 entries);[^locale-provenance] fail-explicit on missing mappings |
+| Workshop catalog & signatures | ✅ Supported | Locale-independent canonical identities for actions, values, events, enums, and operators |
+| Hero gameplay dataset & topology | ✅ Supported | 53 heroes, 207 ability records, role facts, open logical slots, and variant modeling |
+| Gameplay query & cooldown math | ✅ Supported | Deterministic kit lookups, Custom Game cooldown percentage math (0%–500%), ability name resolution |
+| Offline census & conformance | ✅ Supported | Sharded feature census, real-project regression runner, and seasonal drift detection |
+| Additional client locales | ⏳ Not yet | Admitted only through reviewed, MIT-compatible evidence pipelines |
 
 ## Catalog data pipeline
 
-Catalog updates are bounded data changes, never code rewrites:
+Catalog and gameplay dataset updates are bounded data changes verified by
+deterministic generators:
 
 ```sh
 cargo run -p workshop-rs --bin workshop-catalog-gen -- check
 cargo run -p workshop-rs --bin workshop-catalog-gen -- build
 ```
 
-`check` validates (schema, duplicate ids, alias collisions, undeclared
-locales, param arity) and verifies the content digest; `build` regenerates
-the canonical form with a fresh digest (byte-idempotent). See
-[docs/provenance.md](docs/provenance.md) and the repo `AGENTS.md`.
-
-## Locale status
-
-* `en-US`: complete declared surface (366/366 canonical entries), corpus
-  round-trips and settings emission tested.
-* `zh-CN`: the reviewed export-backed corpus covers **366/366** canonical
-  entries (structural 11/11, actions 60/60, values 77/77, events 12/12,
-  operators 14/14, enum members 192/192). The declared surface is complete;
-  settings data covers labels 19/19 and all other declared settings sections.
-
-The corpus is reproducible with the user-provided export (not committed):
-
-```sh
-cargo run -p workshop-rs --bin workshop-catalog-gen -- corpus \
-  --export /path/to/workshop-data.json
-cargo run -p workshop-rs --bin workshop-catalog-gen -- build
-```
+See [`docs/provenance.md`](docs/provenance.md) and [`AGENTS.md`](AGENTS.md) for
+provenance requirements and pipeline details.
 
 ## Validation
 
@@ -144,17 +113,26 @@ cargo run -p workshop-rs --bin workshop-catalog-gen -- check
 
 CI runs the same checks on stable and the pinned toolchain (1.85.0).
 
+## Documentation
+
+Detailed architecture specifications, ADRs, catalog/gameplay contracts,
+conformance evidence, and release procedures are indexed in
+[`docs/README.md`](docs/README.md).
+
 ## Releases
 
-Maintainers publish a versioned library and CLI release from the manually
-triggered `Release` GitHub Actions workflow. Select the `patch`, `minor`, or
-`major` bump while dispatching from `main`; the workflow runs the quality and
-catalog gates, publishes the library before the CLI, and attaches checksummed
-cross-platform CLI artifacts. Repository setup and retry behavior are
-documented in [docs/release.md](docs/release.md).
+`workshop-rs` is published on [crates.io](https://crates.io/crates/workshop-rs),
+with precompiled CLI archives attached to
+[GitHub Releases](https://github.com/wrightkit/workshop-rs/releases).
+Release automation and repository setup are documented in
+[`docs/release.md`](docs/release.md).
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Committed mapping data carries recorded
-provenance ([docs/provenance.md](docs/provenance.md)); the user-provided JSON
-is build input and is not redistributed.
+`workshop-rs` is distributed under the [MIT License](LICENSE). Committed dataset
+and fixture mappings carry recorded provenance ([`docs/provenance.md`](docs/provenance.md)).
+
+[^catalog-boundary]: Contract defined in [ADR-0001: Workshop catalog, locale, provenance, and version boundaries](docs/adr/0001-catalog-boundaries.md).
+[^gameplay-domain]: Hero data schema and query model defined in [ADR-0002 (Gameplay)](docs/adr/0002-gameplay-domain-api.md) and [Hero gameplay dataset](docs/gameplay-data.md).
+[^conformance]: Conformance contracts and evidence runners defined in [ADR-0002](docs/adr/0002-conformance-contract.md), [ADR-0003](docs/adr/0003-sharded-census.md), [ADR-0004](docs/adr/0004-real-project-evidence.md), and [ADR-0005](docs/adr/0005-seasonal-client-validation.md).
+[^locale-provenance]: Declared entries cover all structural tokens, actions, values, events, operators, and enum members. See the [provenance record](docs/provenance.md) for details.
