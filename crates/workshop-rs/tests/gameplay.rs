@@ -1,7 +1,7 @@
 use workshop_rs::gameplay::{
-    Ability, AbilityId, AbilityLookupError, AbilityVariant, EvidenceRef, Fact, GameplayCatalog,
-    GameplayDatasetIdentity, Hero, HeroId, LocalizedText, LogicalSlot, Quantity, StatKey,
-    StatValue, Unit, ability_ids, hero_ids, slots,
+    Ability, AbilityLookupError, AbilityRef, AbilityVariant, EvidenceRef, Fact, GameplayCatalog,
+    GameplayDataError, GameplayDatasetIdentity, Hero, HeroId, LocalizedText, LogicalSlot, Quantity,
+    StatKey, StatValue, Unit, hero_ids, slots,
 };
 
 fn evidence(locator: &str) -> EvidenceRef {
@@ -19,13 +19,12 @@ fn names(name: &str, locator: &str) -> Fact<LocalizedText> {
     )
 }
 
-fn ability(id: &str, slot: &str, variant: Option<&str>, name: &str) -> Ability {
+fn ability(slot: &str, variant: Option<&str>, name: &str) -> Ability {
     Ability::new(
-        AbilityId::new(id),
         LogicalSlot::new(slot),
         variant.map(AbilityVariant::new),
-        names(name, &format!("heroes.ana.{id}")),
-        vec![evidence(&format!("heroes.ana.{id}"))],
+        names(name, &format!("heroes.ana.{slot}")),
+        vec![evidence(&format!("heroes.ana.{slot}"))],
     )
 }
 
@@ -62,29 +61,18 @@ fn non_uniform_kits_and_explicit_variant_lookup_are_supported() {
     let brigitte = hero(
         "brigitte",
         vec![
-            ability("whipShot", "ability1", None, "Whip Shot"),
-            ability("shieldBash", "ability3", None, "Shield Bash"),
+            ability("ability1", None, "Whip Shot"),
+            ability("ability3", None, "Shield Bash"),
         ],
     );
     let ramattra = hero(
         "ramattra",
         vec![
-            ability(
-                "voidBarrierOmnic",
-                "secondaryFire",
-                Some("omnic"),
-                "Void Barrier",
-            ),
-            ability(
-                "voidBarrierNemesis",
-                "secondaryFire",
-                Some("nemesis"),
-                "Void Barrier",
-            ),
+            ability("secondaryFire", Some("omnic"), "Void Barrier"),
+            ability("secondaryFire", Some("nemesis"), "Void Barrier"),
         ],
     );
     let catalog = GameplayCatalog::new(identity(), vec![ramattra, brigitte]).unwrap();
-
     assert_eq!(catalog.heroes()[0].id().as_str(), "brigitte");
     assert_eq!(catalog.hero_by_id("ramattra").unwrap().abilities().len(), 2);
     assert!(matches!(
@@ -100,11 +88,11 @@ fn non_uniform_kits_and_explicit_variant_lookup_are_supported() {
             .unwrap()
             .ability_variant(
                 &LogicalSlot::from(slots::SECONDARY_FIRE),
-                &AbilityVariant::new("nemesis"),
+                &AbilityVariant::new("nemesis")
             )
             .unwrap()
-            .id(),
-        &AbilityId::from(ability_ids::VOID_BARRIER_NEMESIS)
+            .slot(),
+        &LogicalSlot::from(slots::SECONDARY_FIRE)
     );
     assert_eq!(
         catalog
@@ -112,20 +100,19 @@ fn non_uniform_kits_and_explicit_variant_lookup_are_supported() {
             .unwrap()
             .ability(&LogicalSlot::from(slots::ABILITY_3))
             .unwrap()
-            .id()
+            .slot()
             .as_str(),
-        "shieldBash"
+        "ability3"
     );
 }
 
 #[test]
 fn missing_and_unknown_data_are_explicit() {
-    let ana = hero(
-        "ana",
-        vec![ability("sleepDart", "ability1", None, "Sleep Dart")],
-    );
-    let catalog = GameplayCatalog::new(identity(), vec![ana]).unwrap();
-
+    let catalog = GameplayCatalog::new(
+        identity(),
+        vec![hero("ana", vec![ability("ability1", None, "Sleep Dart")])],
+    )
+    .unwrap();
     assert!(catalog.hero_by_id("unknown-hero").is_none());
     assert!(
         catalog
@@ -149,14 +136,14 @@ fn facts_carry_evidence_and_quantities_reject_non_finite_values() {
         StatValue::Quantity(Quantity::new(12.0, Unit::new("seconds")).unwrap()),
         vec![evidence("heroes.ana.ability1.cooldown")],
     );
-    let sleep = ability("sleepDart", "ability1", None, "Sleep Dart")
+    let sleep = ability("ability1", None, "Sleep Dart")
         .with_keyword("crowd-control")
         .with_stat(StatKey::new("cooldown"), stat);
     let catalog = GameplayCatalog::new(identity(), vec![hero("ana", vec![sleep])]).unwrap();
     let cooldown = catalog
         .hero_by_id("ana")
         .unwrap()
-        .ability_by_id(&AbilityId::new("sleepDart"))
+        .ability(&LogicalSlot::from(slots::ABILITY_1))
         .unwrap()
         .stat(&StatKey::new("cooldown"))
         .unwrap();
@@ -184,11 +171,39 @@ fn duplicate_slot_variant_is_rejected() {
     let ana = hero(
         "ana",
         vec![
-            ability("sleepDartA", "ability1", Some("default"), "Sleep Dart"),
-            ability("sleepDartB", "ability1", Some("default"), "Sleep Dart"),
+            ability("ability1", Some("default"), "Sleep Dart"),
+            ability("ability1", Some("default"), "Sleep Dart"),
         ],
     );
     assert!(GameplayCatalog::new(identity(), vec![ana]).is_err());
+}
+
+#[test]
+fn multiple_entries_require_variants_and_display_names_are_not_identity() {
+    let missing_variant = hero(
+        "ramattra",
+        vec![
+            ability("secondaryFire", None, "Void Barrier"),
+            ability("secondaryFire", Some("nemesis"), "Void Barrier"),
+        ],
+    );
+    assert!(matches!(
+        GameplayCatalog::new(identity(), vec![missing_variant]),
+        Err(GameplayDataError::VariantRequired { .. })
+    ));
+    let first = ability("ability1", None, "Sleep Dart").reference(&HeroId::new("ana"));
+    let renamed = ability("ability1", None, "麻醉镖").reference(&HeroId::new("ana"));
+    assert_eq!(first, renamed);
+    let explicit = AbilityRef::new(
+        HeroId::new("ana"),
+        LogicalSlot::from(slots::ABILITY_1),
+        None,
+    );
+    assert_eq!(explicit, first);
+    let encoded = serde_json::to_value(&first).unwrap();
+    assert_eq!(encoded["hero"], "ana");
+    assert_eq!(encoded["slot"], "ability1");
+    assert!(encoded.get("name").is_none());
 }
 
 #[test]
@@ -200,7 +215,6 @@ fn empty_id_and_empty_evidence_are_rejected() {
         vec![evidence("heroes.unnamed")],
     );
     assert!(GameplayCatalog::new(identity(), vec![empty_id]).is_err());
-
     let empty_evidence = Hero::new(
         HeroId::new("ana"),
         Fact::new(

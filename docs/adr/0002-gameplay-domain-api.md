@@ -19,17 +19,21 @@ change look like a parser/catalog change and would make provenance ambiguous.
 
 ## Decisions
 
-1. Hero, ability, logical-slot, variant, role, stat-key, and unit identities
-   are open string-backed newtypes. The crate provides typed references and
-   constants for common identities, but adding a future identity is a data
-   change rather than a breaking enum change.
+1. Hero, logical-slot, variant, role, stat-key, and unit identities are open
+   string-backed newtypes. An ability's canonical reference is the tuple
+   `AbilityRef { hero, slot, variant }`; there is no global ability identity
+   derived from an English or localized display name. The crate provides
+   typed references and constants for common hero/slot identities, but adding
+   a future identity is a data change rather than a breaking enum change.
 2. `LogicalSlot` is a classification (`primaryFire`, `secondaryFire`,
    `ability1`, `ability2`, `ability3`, `ultimate`, `passive`), not a control,
    activation condition, or runtime state-machine model. Multiple abilities in
    one slot require distinguishable variants and ambiguous lookup returns an
    explicit error.
-3. Raw gameplay records use `Hero`, `Ability`, `Fact<T>`, `StatValue`, and
-   `Quantity`. Facts carry one or more `EvidenceRef` values; the enclosing
+3. Raw gameplay records use `Hero`, `Ability`, `AbilityRef`, `Fact<T>`,
+   `StatValue`, and `Quantity`. Ability localized/display names are metadata
+   on the hero/slot/variant record and can change without changing its
+   `AbilityRef`. Facts carry one or more `EvidenceRef` values; the enclosing
    `GameplayDatasetIdentity` carries dataset id, version, digest, source,
    license, target, and review status. Missing facts stay absent.
 4. `GameplayDatasetIdentity` is separate from
@@ -45,7 +49,7 @@ The complete row-by-row survey is pinned in
 [`docs/gameplay-roster-survey.md`](../gameplay-roster-survey.md). The
 user-provided `workshop-data` export at commit
 `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date 2026-08-12) contains
-53 hero identities and named logical abilities. Its topology categories
+53 hero identities and logical-slot records with localized/display names. Its topology categories
 include:
 
 | Shape | Evidence examples | API consequence |
