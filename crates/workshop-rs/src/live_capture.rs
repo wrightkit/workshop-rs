@@ -503,8 +503,8 @@ mod tests {
     use super::*;
     use crate::catalog::Catalog;
     use crate::conformance::{
-        ClientEvidence, Comparison, ConformanceReason, Evidence, ExpectationSource, FeatureKind,
-        FeatureNamespace, ReasonCode,
+        CONFORMANCE_SCHEMA_VERSION, ClientEvidence, Comparison, ConformanceReason, Evidence,
+        ExpectationSource, FeatureKind, FeatureNamespace, ReasonCode,
     };
 
     const DIGEST: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -611,9 +611,8 @@ mod tests {
             locale: locale.clone(),
             catalog: identity.clone(),
             census: CensusIdentity {
-                schema_version: CENSUS_SCHEMA_VERSION,
-                conformance_schema_version: CONFORMANCE_SCHEMA_VERSION,
-                identity: "constructed-unit-test-census".to_string(),
+                schema_version: CENSUS_IDENTITY_SCHEMA_VERSION,
+                digest: DIGEST.to_string(),
                 shards: vec!["constructed-unit-test-shard".to_string()],
             },
             raw_artifact: raw.clone(),
@@ -706,7 +705,6 @@ mod tests {
             ConformanceStatus::Inconclusive,
             "two",
         );
-        newer.census.identity = "constructed-unit-test-census-v2".to_string();
         newer.catalog.catalog_digest = Some(OTHER_DIGEST.to_string());
         newer.results[0].evidence.catalog = newer.catalog.clone();
         let diff = prior.diff(&newer).expect("constructed diff validates");
