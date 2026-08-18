@@ -697,6 +697,17 @@ fn validate_comparison(
                 "expected artifact must not be the executed fixture",
             ));
         }
+        if evidence
+            .implementation
+            .as_ref()
+            .and_then(|implementation| implementation.artifact.as_ref())
+            == Some(expected)
+        {
+            return Err(ConformanceError::invalid(
+                "comparison.expected",
+                "expected artifact must not be the implementation artifact",
+            ));
+        }
     }
     if let Some(observed) = &comparison.observed {
         if Some(observed) == Some(&evidence.fixture)
@@ -965,6 +976,13 @@ mod tests {
         result.evidence.implementation.as_mut().unwrap().artifact =
             Some(implementation_artifact.clone());
         result.comparison.observed = Some(implementation_artifact);
+        assert!(result.validate().is_err());
+
+        let mut result = matched();
+        let implementation_artifact = hashed_artifact("implementation-output");
+        result.evidence.implementation.as_mut().unwrap().artifact =
+            Some(implementation_artifact.clone());
+        result.comparison.expected = Some(implementation_artifact);
         assert!(result.validate().is_err());
     }
 
