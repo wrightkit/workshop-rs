@@ -1,0 +1,63 @@
+# Gameplay query API
+
+`workshop-rs` exposes `GameplayCatalog::query()` as a read-only semantic view
+over validated `GameplayCatalog` records. Queries do not load a data file,
+invent missing facts, or mutate the catalog.
+
+## Deterministic lookup
+
+```rust
+use workshop_rs::gameplay_query::GameplayQueryError;
+
+let query = catalog.query();
+let ana = query.hero("ana")?;
+let kit = query.kit("ana")?;
+let sleep_dart = query.slot_ability("ana", "ability1")?;
+let stat = query.quantity_stat("ana", "sleepDart", "cooldown")?;
+# let _: Result<(), GameplayQueryError> = Ok(());
+```
+
+The catalog's heroes are in canonical ID order. A kit is sorted by logical
+slot, variant, and ability ID; a slot result is sorted by ability ID; keyword
+matches are sorted by hero ID, slot, variant, and ability ID. `slot()` returns
+all entries and reports an absent slot as `MissingSlot`. `slot_ability()` is the
+single-result form and reports `AmbiguousSlot` when a slot has multiple
+entries. A form-dependent ability must be selected with `variant()`; no first
+entry is selected implicitly.
+
+Missing heroes, abilities, variants, and stats are structured errors. A keyword
+query with no matches returns an empty collection because it is a collection
+query rather than a single-result lookup.
+
+`stat()` returns the extensible `Fact<StatValue>` representation. The
+`quantity_stat()` convenience accessor returns a `Quantity` and reports
+`WrongStatType` when the stat is not numeric. Hero-level stats are available
+through `hero_stat()`.
+
+## Cooldown calculations
+
+`query.cooldown(ability)` is the common typed cooldown accessor. It only accepts
+a finite, positive `Quantity` whose unit is `seconds`. Missing cooldown stats,
+text/boolean/choice values, other units, and non-positive values return an
+explicit `CooldownError`; there is no default cooldown.
+
+`CooldownPercentage` accepts the inclusive range `0%..=500%` and rejects
+negative, above-maximum, NaN, and infinite values. Effective cooldown uses the
+Custom Game convention:
+
+```text
+effective cooldown = base cooldown × custom-game percentage ÷ 100
+```
+
+Thus `100%` preserves the base value, `50%` halves it, and `0%` produces a
+zero-second result. The result remains a seconds `Quantity` and raw data is not
+changed.
+
+To calculate a setting for a target, pass a seconds `Quantity` to
+`required_cooldown_percentage()`. A target may be zero, but must be finite and
+non-negative. The resulting percentage must fit the same `0%..=500%` range;
+targets above the supported range return `InvalidPercentage` rather than being
+clamped or silently approximated. A target with another unit is rejected.
+
+The query layer is intentionally independent of Wright, OPY, DEL, CLI
+presentation, source syntax, and runtime simulation.
