@@ -428,25 +428,23 @@ impl<'a> GameplayQuery<'a> {
         &self,
         hero: impl AsRef<str>,
         slot: impl AsRef<str>,
-        variant: Option<impl AsRef<str>>,
+        variant: Option<&AbilityVariant>,
         stat: impl AsRef<str>,
     ) -> Result<&'a Fact<StatValue>, GameplayQueryError> {
         let reference = self.reference(hero, slot, variant)?;
         let ability = self.ability_ref(&reference)?;
         let stat = StatKey::new(stat.as_ref());
-        ability
-            .stat(&stat)
-            .ok_or_else(|| GameplayQueryError::MissingStat {
-                owner: StatOwner::Ability { reference },
-                stat,
-            })
+        ability.stat(&stat).ok_or(GameplayQueryError::MissingStat {
+            owner: StatOwner::Ability { reference },
+            stat,
+        })
     }
 
     pub fn quantity_stat(
         &self,
         hero: impl AsRef<str>,
         slot: impl AsRef<str>,
-        variant: Option<impl AsRef<str>>,
+        variant: Option<&AbilityVariant>,
         stat: impl AsRef<str>,
     ) -> Result<&'a Quantity, GameplayQueryError> {
         let reference = self.reference(hero, slot, variant)?;
@@ -454,7 +452,7 @@ impl<'a> GameplayQuery<'a> {
         let fact = self.stat(
             reference.hero().as_str(),
             reference.slot().as_str(),
-            reference.variant().map(|v| v.as_str()),
+            reference.variant(),
             stat_key.as_str(),
         )?;
         match fact.value() {
@@ -471,7 +469,7 @@ impl<'a> GameplayQuery<'a> {
         &self,
         hero: impl AsRef<str>,
         slot: impl AsRef<str>,
-        variant: Option<impl AsRef<str>>,
+        variant: Option<&AbilityVariant>,
         locale: impl AsRef<str>,
     ) -> Result<&'a str, AbilityNameResolutionError> {
         let reference = self.reference_for_names(hero, slot, variant)?;
@@ -619,7 +617,7 @@ impl<'a> GameplayQuery<'a> {
         &self,
         hero: impl AsRef<str>,
         slot: impl AsRef<str>,
-        variant: Option<impl AsRef<str>>,
+        variant: Option<&AbilityVariant>,
     ) -> Result<AbilityRef, GameplayQueryError> {
         let hero = self.hero(hero)?;
         let slot = LogicalSlot::new(slot.as_ref());
@@ -627,7 +625,7 @@ impl<'a> GameplayQuery<'a> {
             Some(variant) => Ok(AbilityRef::new(
                 hero.id().clone(),
                 slot,
-                Some(AbilityVariant::new(variant.as_ref())),
+                Some(variant.clone()),
             )),
             None => Ok(self.unique_slot(hero, slot)?.reference(hero.id())),
         }
@@ -647,7 +645,7 @@ impl<'a> GameplayQuery<'a> {
         &self,
         hero: impl AsRef<str>,
         slot: impl AsRef<str>,
-        variant: Option<impl AsRef<str>>,
+        variant: Option<&AbilityVariant>,
     ) -> Result<AbilityRef, AbilityNameResolutionError> {
         let hero = self.hero_for_names(hero)?;
         let slot = LogicalSlot::new(slot.as_ref());
@@ -655,7 +653,7 @@ impl<'a> GameplayQuery<'a> {
             Some(variant) => Ok(AbilityRef::new(
                 hero.id().clone(),
                 slot,
-                Some(AbilityVariant::new(variant.as_ref())),
+                Some(variant.clone()),
             )),
             None => {
                 let mut matches = hero.abilities_in_slot(&slot);

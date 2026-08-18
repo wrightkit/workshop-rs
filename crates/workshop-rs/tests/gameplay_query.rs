@@ -93,7 +93,8 @@ fn catalog() -> GameplayCatalog {
 
 #[test]
 fn queries_use_open_typed_hero_slot_and_variant_semantics() {
-    let query = catalog().query();
+    let catalog = catalog();
+    let query = catalog.query();
     assert_eq!(
         query
             .heroes()
@@ -146,7 +147,8 @@ fn queries_use_open_typed_hero_slot_and_variant_semantics() {
 
 #[test]
 fn missing_unknown_ambiguous_and_wrong_stat_paths_are_explicit() {
-    let query = catalog().query();
+    let catalog = catalog();
+    let query = catalog.query();
     assert!(matches!(
         query.hero("missing"),
         Err(GameplayQueryError::MissingHero { .. })
@@ -182,7 +184,8 @@ fn missing_unknown_ambiguous_and_wrong_stat_paths_are_explicit() {
 
 #[test]
 fn locale_forward_and_inverse_resolution_is_exact_and_preserves_reference() {
-    let query = catalog().query();
+    let catalog = catalog();
+    let query = catalog.query();
     let sleep = AbilityRef::new(
         HeroId::from(hero_ids::ANA),
         LogicalSlot::from(slots::ABILITY_1),
@@ -226,7 +229,8 @@ fn locale_forward_and_inverse_resolution_is_exact_and_preserves_reference() {
 
 #[test]
 fn cooldown_calculations_are_unit_safe_bounded_and_non_mutating() {
-    let query = catalog().query();
+    let catalog = catalog();
+    let query = catalog.query();
     let reference = AbilityRef::new(
         HeroId::from(hero_ids::ANA),
         LogicalSlot::from(slots::ABILITY_1),
@@ -298,9 +302,8 @@ fn cooldown_percentage_and_data_errors_never_default() {
         vec![wrong_type, wrong_unit, zero],
         vec![evidence("heroes.edge")],
     );
-    let query = GameplayCatalog::new(identity(), vec![missing, edge])
-        .unwrap()
-        .query();
+    let catalog = GameplayCatalog::new(identity(), vec![missing, edge]).unwrap();
+    let query = catalog.query();
     let no = AbilityRef::new(HeroId::new("missing"), LogicalSlot::new("ability1"), None);
     assert!(matches!(
         query.cooldown(&no),
