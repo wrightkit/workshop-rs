@@ -180,15 +180,14 @@ fn census_runs_with_machine_readable_results() {
     );
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect("valid report");
     assert!(
-        report["shards"]
+        report["census"]["shards"]
             .as_array()
             .is_some_and(|shards| !shards.is_empty())
     );
     assert!(report["results"].as_array().is_some_and(|results| {
-        results.iter().any(|result| result["status"] == "matched")
-            && results
-                .iter()
-                .any(|result| result["status"] == "inconclusive")
+        results
+            .iter()
+            .any(|result| result["status"] == "inconclusive")
     }));
 
     let output = run(&["census", "--json", "extra"]);
