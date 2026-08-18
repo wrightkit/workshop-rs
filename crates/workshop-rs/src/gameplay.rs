@@ -58,13 +58,63 @@ impl HeroIdRef {
     }
 }
 
-/// Canonical hero identity constants for representative roster access.
+/// Canonical hero identity constants for the current roster. The identity
+/// remains open; these symbols are ergonomic accessors, not a closed enum.
 pub mod hero_ids {
     use super::HeroIdRef;
     pub const ANA: HeroIdRef = HeroIdRef::new("ana");
+    pub const ANRAN: HeroIdRef = HeroIdRef::new("anran");
+    pub const ASHE: HeroIdRef = HeroIdRef::new("ashe");
+    pub const BAPTISTE: HeroIdRef = HeroIdRef::new("baptiste");
+    pub const BASTION: HeroIdRef = HeroIdRef::new("bastion");
     pub const BRIGITTE: HeroIdRef = HeroIdRef::new("brigitte");
+    pub const CASSIDY: HeroIdRef = HeroIdRef::new("cassidy");
+    pub const DMON: HeroIdRef = HeroIdRef::new("dmon");
+    pub const DOMINA: HeroIdRef = HeroIdRef::new("domina");
+    pub const DOOMFIST: HeroIdRef = HeroIdRef::new("doomfist");
     pub const DVA: HeroIdRef = HeroIdRef::new("dva");
+    pub const ECHO: HeroIdRef = HeroIdRef::new("echo");
+    pub const EMRE: HeroIdRef = HeroIdRef::new("emre");
+    pub const FREJA: HeroIdRef = HeroIdRef::new("freja");
+    pub const GENJI: HeroIdRef = HeroIdRef::new("genji");
+    pub const ILLARI: HeroIdRef = HeroIdRef::new("illari");
+    pub const WRECKING_BALL: HeroIdRef = HeroIdRef::new("wreckingBall");
+    pub const HANZO: HeroIdRef = HeroIdRef::new("hanzo");
+    pub const JETPACK_CAT: HeroIdRef = HeroIdRef::new("jetpackCat");
+    pub const JUNKER_QUEEN: HeroIdRef = HeroIdRef::new("junkerQueen");
+    pub const JUNKRAT: HeroIdRef = HeroIdRef::new("junkrat");
+    pub const KIRIKO: HeroIdRef = HeroIdRef::new("kiriko");
+    pub const LUCIO: HeroIdRef = HeroIdRef::new("lucio");
+    pub const MAUGA: HeroIdRef = HeroIdRef::new("mauga");
+    pub const MEI: HeroIdRef = HeroIdRef::new("mei");
+    pub const MERCY: HeroIdRef = HeroIdRef::new("mercy");
+    pub const MIZUKI: HeroIdRef = HeroIdRef::new("mizuki");
+    pub const MOIRA: HeroIdRef = HeroIdRef::new("moira");
+    pub const ORISA: HeroIdRef = HeroIdRef::new("orisa");
+    pub const PHARAH: HeroIdRef = HeroIdRef::new("pharah");
+    pub const REAPER: HeroIdRef = HeroIdRef::new("reaper");
+    pub const REINHARDT: HeroIdRef = HeroIdRef::new("reinhardt");
+    pub const ROADHOG: HeroIdRef = HeroIdRef::new("roadhog");
+    pub const SHION: HeroIdRef = HeroIdRef::new("shion");
+    pub const SIERRA: HeroIdRef = HeroIdRef::new("sierra");
+    pub const SIGMA: HeroIdRef = HeroIdRef::new("sigma");
+    pub const SOJOURN: HeroIdRef = HeroIdRef::new("sojourn");
+    pub const SOLDIER: HeroIdRef = HeroIdRef::new("soldier");
+    pub const SOMBRA: HeroIdRef = HeroIdRef::new("sombra");
+    pub const SYMMETRA: HeroIdRef = HeroIdRef::new("symmetra");
+    pub const TORBJORN: HeroIdRef = HeroIdRef::new("torbjorn");
+    pub const TRACER: HeroIdRef = HeroIdRef::new("tracer");
+    pub const WIDOWMAKER: HeroIdRef = HeroIdRef::new("widowmaker");
+    pub const WINSTON: HeroIdRef = HeroIdRef::new("winston");
+    pub const ZARYA: HeroIdRef = HeroIdRef::new("zarya");
+    pub const ZENYATTA: HeroIdRef = HeroIdRef::new("zenyatta");
     pub const RAMATTRA: HeroIdRef = HeroIdRef::new("ramattra");
+    pub const LIFEWEAVER: HeroIdRef = HeroIdRef::new("lifeweaver");
+    pub const VENTURE: HeroIdRef = HeroIdRef::new("venture");
+    pub const JUNO: HeroIdRef = HeroIdRef::new("juno");
+    pub const HAZARD: HeroIdRef = HeroIdRef::new("hazard");
+    pub const WUYANG: HeroIdRef = HeroIdRef::new("wuyang");
+    pub const VENDETTA: HeroIdRef = HeroIdRef::new("vendetta");
 }
 
 macro_rules! open_string_id {
@@ -120,6 +170,7 @@ open_string_id!(HeroRole, HeroRoleRef);
 /// The canonical, serializable identity of an ability record.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
 pub struct AbilityRef {
     hero: HeroId,
     slot: LogicalSlot,

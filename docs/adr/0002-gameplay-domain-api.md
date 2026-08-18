@@ -23,8 +23,10 @@ change look like a parser/catalog change and would make provenance ambiguous.
    string-backed newtypes. An ability's canonical reference is the tuple
    `AbilityRef { hero, slot, variant }`; there is no global ability identity
    derived from an English or localized display name. The crate provides
-   typed references and constants for common hero/slot identities, but adding
-   a future identity is a data change rather than a breaking enum change.
+   typed references and constants for the current hero roster and common
+   slots, but adding a future identity is a data change rather than a breaking
+   enum change. `AbilityRef` rejects unknown wire fields so name-derived
+   identity cannot be silently accepted.
 2. `LogicalSlot` is a classification (`primaryFire`, `secondaryFire`,
    `ability1`, `ability2`, `ability3`, `ultimate`, `passive`), not a control,
    activation condition, or runtime state-machine model. Multiple abilities in

@@ -204,6 +204,22 @@ fn multiple_entries_require_variants_and_display_names_are_not_identity() {
     assert_eq!(encoded["hero"], "ana");
     assert_eq!(encoded["slot"], "ability1");
     assert!(encoded.get("name").is_none());
+    assert!(
+        serde_json::from_value::<AbilityRef>(serde_json::json!({
+            "hero": "ana",
+            "slot": "ability1",
+            "name": "Sleep Dart"
+        }))
+        .is_err()
+    );
+    assert!(
+        serde_json::from_value::<AbilityRef>(serde_json::json!({
+            "hero": "ana",
+            "slot": "ability1",
+            "abilityId": "sleepDart"
+        }))
+        .is_err()
+    );
 }
 
 #[test]
