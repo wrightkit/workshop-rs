@@ -83,6 +83,9 @@ impl LiveCapture {
         validate_name("environment", &self.environment)?;
         validate_name("locale", self.locale.as_str())?;
         validate_catalog(&self.catalog)?;
+        if normalize_game(&self.catalog.target.game) != normalize_game(&self.game) {
+            return Err(invalid("capture game does not match catalog target game"));
+        }
         if let Some(catalog) = catalog {
             if self.catalog != catalog.identity() {
                 return Err(invalid(
@@ -144,6 +147,7 @@ impl LiveCapture {
                 || client.client_version.as_deref() != Some(self.client.as_str())
                 || client.season.as_deref() != Some(self.season.as_str())
                 || client.captured_at != self.captured_at
+                || client.environment.as_deref() != Some(self.environment.as_str())
             {
                 return Err(invalid(format!(
                     "results[{index}].evidence.client does not match capture client provenance"
@@ -489,6 +493,14 @@ fn validate_sha256(field: &str, digest: &str) -> Result<(), LiveCaptureError> {
     Ok(())
 }
 
+fn normalize_game(value: &str) -> String {
+    value
+        .chars()
+        .filter(char::is_ascii_alphanumeric)
+        .flat_map(char::to_lowercase)
+        .collect()
+}
+
 fn same_features(left: &ConformanceResult, right: &ConformanceResult) -> bool {
     left.features.len() == right.features.len()
         && left
@@ -578,11 +590,13 @@ mod tests {
                 catalog: identity.clone(),
                 locale: Some(locale.clone()),
                 client: Some(ClientEvidence {
-                    game: "constructed-unit-test-game".to_string(),
+                    game: "overwatch-2".to_string(),
                     client_version: Some("constructed-unit-test-client".to_string()),
                     season: Some("constructed-unit-test-season".to_string()),
                     captured_at: "2026-08-18T00:00:00Z".to_string(),
-                    environment: Some("constructed unit test; not live evidence".to_string()),
+                    environment: Some(
+                        "constructed schema/diff unit test; not live evidence".to_string(),
+                    ),
                 }),
                 implementation: None,
             },
@@ -607,7 +621,7 @@ mod tests {
         LiveCapture {
             schema_version: LIVE_CAPTURE_SCHEMA_VERSION,
             capture_id: capture_id.to_string(),
-            game: "constructed-unit-test-game".to_string(),
+            game: "overwatch-2".to_string(),
             client: "constructed-unit-test-client".to_string(),
             season: "constructed-unit-test-season".to_string(),
             captured_at: "2026-08-18T00:00:00Z".to_string(),
@@ -666,6 +680,31 @@ mod tests {
             "one",
         );
         capture.results[0].evidence.client = None;
+        assert!(capture.validate().is_err());
+
+        let mut capture = make_capture(
+            "capture-a",
+            "en-US",
+            DIGEST,
+            ConformanceStatus::Matched,
+            "one",
+        );
+        capture.game = "not-overwatch".to_string();
+        assert!(capture.validate().is_err());
+
+        let mut capture = make_capture(
+            "capture-a",
+            "en-US",
+            DIGEST,
+            ConformanceStatus::Matched,
+            "one",
+        );
+        capture.results[0]
+            .evidence
+            .client
+            .as_mut()
+            .unwrap()
+            .environment = Some("different environment".to_string());
         assert!(capture.validate().is_err());
     }
 
