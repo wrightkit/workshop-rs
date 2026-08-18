@@ -1,0 +1,191 @@
+name: Release artifacts
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-artifacts-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            runner: ubuntu-latest
+          - target: x86_64-apple-darwin
+            runner: macos-13
+          - target: aarch64-apple-darwin
+            runner: macos-14
+          - target: x86_64-pc-windows-msvc
+            runner: windows-latest
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Install Linux cross linker
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes gcc-aarch64-linux-gnu
+
+      - name: Install Rust target
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+
+      - name: Build CLI
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        run: >-
+          cargo build --locked --release -p workshop-rs-cli
+          --target ${{ matrix.target }}
+
+      - name: Package Unix artifact
+        if: runner.os != 'Windows'
+        env:
+          VERSION: ${{ github.ref_name }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          version="${VERSION#v}"
+          mkdir -p "dist/workshop-rs-cli-${version}-${TARGET}"
+          cp "target/${TARGET}/release/workshop-rs-cli" \
+            "dist/workshop-rs-cli-${version}-${TARGET}/"
+          tar -C dist -czf \
+            "dist/workshop-rs-cli-${version}-${TARGET}.tar.gz" \
+            "workshop-rs-cli-${version}-${TARGET}"
+
+      - name: Package Windows artifact
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VERSION: ${{ github.ref_name }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          $version = $env:VERSION.Substring(1)
+          $directory = "workshop-rs-cli-$version-$env:TARGET"
+          New-Item -ItemType Directory -Path "dist/$directory" | Out-Null
+          $binary = "target/$env:TARGET/release/workshop-rs-cli.exe"
+          Copy-Item $binary "dist/$directory/"
+          Compress-Archive -Path "dist/$directory" `
+            -DestinationPath "dist/workshop-rs-cli-$version-$env:TARGET.zip"
+
+      - name: Upload platform artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.target }}
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+          if-no-files-found: error
+
+  publish:
+    name: Attach artifacts and publish release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+
+      - name: Download platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Generate checksums and catalog identity
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum *.tar.gz *.zip > SHA256SUMS.txt
+          cd ..
+          cargo run --locked -p workshop-rs-cli -- version --json \
+            > dist/catalog-identity.json
+
+      - name: Wait for the release-plz draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 30); do
+            if gh release view "${TAG}" --json isDraft,publishedAt \
+              >/dev/null 2>&1; then
+              is_draft="$(gh release view "${TAG}" --json isDraft \
+                --jq .isDraft)"
+              published_at="$(gh release view "${TAG}" --json publishedAt \
+                --jq .publishedAt)"
+              if [[ "${is_draft}" == "true" \
+                && "${published_at}" == "null" ]]; then
+                exit 0
+              fi
+              echo "${TAG} exists but is not an unpublished draft." >&2
+              exit 1
+            fi
+            [[ "${attempt}" -eq 30 ]] && {
+              echo "Timed out waiting for release-plz to create" \
+                "draft ${TAG}." >&2
+              exit 1
+            }
+            sleep 10
+          done
+
+      - name: Add catalog identity to release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          marker='<!-- workshop-rs-catalog-identity -->'
+          body="$(gh release view "${TAG}" --json body --jq .body)"
+          if [[ "${body}" != *"${marker}"* ]]; then
+            {
+              printf '%s\n\n' "${body}"
+              printf '%s\n\n' "${marker}"
+              printf '%s\n\n' '## Release identity'
+              printf '%s\n\n' "- Revision: \`${GITHUB_SHA}\`"
+              printf '%s\n' '### Catalog identity'
+              printf '%s\n' '```json'
+              cat dist/catalog-identity.json
+              printf '%s\n' '```'
+            } > release-notes.md
+            gh release edit "${TAG}" --notes-file release-notes.md
+          fi
+
+      - name: Upload artifacts and checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release upload "${TAG}" dist/* --clobber
+
+      - name: Publish the completed GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release edit "${TAG}" --draft=false
