@@ -1,15 +1,26 @@
 name: Release artifacts
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_call:
+    inputs:
+      ref:
+        description: Git revision containing the release packages
+        required: true
+        type: string
+      tag:
+        description: GitHub Release tag created by release-plz
+        required: true
+        type: string
+      commit:
+        description: Release commit used in the release notes
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-artifacts-${{ github.ref_name }}
+  group: release-artifacts-${{ inputs.tag }}
   cancel-in-progress: false
 
 env:
@@ -37,7 +48,7 @@ jobs:
       - name: Checkout release tag
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.ref }}
 
       - name: Install Linux cross linker
         if: matrix.target == 'aarch64-unknown-linux-gnu'
@@ -61,7 +72,7 @@ jobs:
       - name: Package Unix artifact
         if: runner.os != 'Windows'
         env:
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ inputs.tag }}
           TARGET: ${{ matrix.target }}
         run: |
           set -euo pipefail
@@ -77,7 +88,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         env:
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ inputs.tag }}
           TARGET: ${{ matrix.target }}
         run: |
           $version = $env:VERSION.Substring(1)
@@ -105,7 +116,7 @@ jobs:
       - name: Checkout release tag
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.ref }}
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
@@ -131,7 +142,7 @@ jobs:
       - name: Wait for the release-plz draft release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
           for attempt in $(seq 1 30); do
@@ -159,7 +170,8 @@ jobs:
       - name: Add catalog identity to release notes
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag }}
+          COMMIT: ${{ inputs.commit }}
         run: |
           set -euo pipefail
           marker='<!-- workshop-rs-catalog-identity -->'
@@ -169,7 +181,7 @@ jobs:
               printf '%s\n\n' "${body}"
               printf '%s\n\n' "${marker}"
               printf '%s\n\n' '## Release identity'
-              printf '%s\n\n' "- Revision: \`${GITHUB_SHA}\`"
+              printf '%s\n\n' "- Revision: \`${COMMIT}\`"
               printf '%s\n' '### Catalog identity'
               printf '%s\n' '```json'
               cat dist/catalog-identity.json
@@ -181,11 +193,11 @@ jobs:
       - name: Upload artifacts and checksums
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag }}
         run: gh release upload "${TAG}" dist/* --clobber
 
       - name: Publish the completed GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ inputs.tag }}
         run: gh release edit "${TAG}" --draft=false
