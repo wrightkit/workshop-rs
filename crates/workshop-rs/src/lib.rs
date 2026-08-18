@@ -21,6 +21,8 @@
 //! * [`roundtrip`] — cross-locale round-trip validation;
 //! * [`convert`] — raw Workshop locale conversion (parse -> canonical
 //!   semantics -> emit).
+//! * [`live_capture`] — offline validation and structured comparison contracts
+//!   for manually recorded client evidence; it never controls a client.
 //!
 //! The catalog is locale-independent at the identity layer: analyzer and WIR
 //! APIs never need locale-specific strings to identify a builtin. Locale
@@ -38,6 +40,7 @@ mod error;
 pub mod format;
 pub mod ids;
 pub mod lexer;
+pub mod live_capture;
 pub mod parser;
 pub mod roundtrip;
 pub mod settings;

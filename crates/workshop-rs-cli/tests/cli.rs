@@ -171,6 +171,23 @@ fn usage_errors_exit_2() {
 }
 
 #[test]
+fn seasonal_diff_requires_two_capture_files() {
+    let output = run(&["seasonal-diff"]);
+    assert_eq!(output.status.code(), Some(2));
+    let output = run(&["seasonal-diff", "previous.json"]);
+    assert_eq!(output.status.code(), Some(2));
+    let output = run(&["seasonal-diff", "previous.json", "current.json", "extra"]);
+    assert_eq!(output.status.code(), Some(2));
+}
+
+#[test]
+fn seasonal_diff_missing_capture_fails_without_fabricating_evidence() {
+    let output = run(&["seasonal-diff", "/no/previous.json", "/no/current.json"]);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("cannot read"));
+}
+
+#[test]
 fn census_runs_with_machine_readable_results() {
     let output = run(&["census", "--json"]);
     assert_eq!(output.status.code(), Some(1));
