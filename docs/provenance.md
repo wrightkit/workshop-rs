@@ -15,6 +15,37 @@ The repository is MIT-licensed. Committed mapping data is workshop-rs-owned,
 with the source evidence and generation method recorded here. The input JSON
 is a build-time evidence artifact and is not redistributed by workshop-rs.
 
+## Hero gameplay data (`src/data/gameplay.json`)
+
+The gameplay dataset is a workshop-rs-owned, MIT-compatible projection of the
+user-provided `workshop-data/workshop-data.json` export. Its source is pinned
+to commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date
+2026-08-12). The export is used only for hero identity, localized naming, and
+declared named ability-slot topology; no OverPy or OSTW data is copied.
+
+The committed projection contains 53 heroes, 53 role facts, and 201
+export-declared named ability slots, plus six official-detail variant records
+for Bastion, D.Va, and Ramattra. Each hero/ability name fact and export record
+carries the export path as an `EvidenceRef`. Each role fact carries its
+official Blizzard hero-detail URL and access date 2026-08-18 as separate
+evidence.
+
+The current identity digest is
+`sha256:5c01599839834f3599a524c7307d3ceaa493e6a1e845d9884dc9617f2af4068a`.
+
+Representative ability keywords are semantic labels, not Blizzard or Workshop
+enum values. Their labels and the six variant names/shapes are evidenced by
+the official Blizzard hero-detail URLs for Ana, Brigitte, Ramattra, D.Va,
+Bastion, and Venture, accessed 2026-08-18;
+the variants intentionally carry no fabricated Workshop-export provenance.
+Venture base health and Drill Dash cooldown/damage are intentionally absent
+because the cited June 30, 2026 Community Crafted patch source is scoped to a
+limited mode and that scope is not modeled. Other base stats, armor/shields, cooldowns, damage,
+healing, ammo, durations, ranges, projectile speeds, resources, and balance
+values remain absent unless supported by a current explicit source. The
+loader verifies the separate gameplay dataset identity and deterministic
+SHA-256 digest; it does not alter the Workshop catalog identity.
+
 ## Catalog data (`src/catalog/data/catalog.json`)
 
 The catalog dataset is WrightKit-authored data with recorded provenance,
