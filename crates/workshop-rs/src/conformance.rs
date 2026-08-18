@@ -287,6 +287,8 @@ pub struct ImplementationIdentity {
     pub name: String,
     pub version: String,
     pub revision: Option<String>,
+    /// The materialized implementation artifact, when one is recorded.
+    pub artifact: Option<EvidenceArtifact>,
 }
 
 /// Provenance attached to one conformance result.
@@ -432,7 +434,7 @@ impl ConformanceResult {
                 "matched results must declare semantic, normalized, or exact-text equivalence",
             ));
         }
-        validate_comparison(&self.comparison)?;
+        validate_comparison(&self.comparison, &self.evidence)?;
         if self.status.is_match() {
             if self.comparison.expected.is_none() || self.comparison.observed.is_none() {
                 return Err(ConformanceError::invalid(
@@ -593,7 +595,10 @@ fn validate_artifact(
     Ok(())
 }
 
-fn validate_comparison(comparison: &Comparison) -> Result<(), ConformanceError> {
+fn validate_comparison(
+    comparison: &Comparison,
+    evidence: &Evidence,
+) -> Result<(), ConformanceError> {
     if comparison.mode == Equivalence::Normalized
         && comparison
             .normalizer
@@ -610,6 +615,37 @@ fn validate_comparison(comparison: &Comparison) -> Result<(), ConformanceError> 
     }
     if let Some(observed) = &comparison.observed {
         validate_artifact("comparison.observed", observed, false, true)?;
+    }
+    if let (Some(expected), Some(observed)) = (&comparison.expected, &comparison.observed) {
+        if expected == observed {
+            return Err(ConformanceError::invalid(
+                "comparison",
+                "expected and observed artifacts must be distinct",
+            ));
+        }
+    }
+    if let Some(expected) = &comparison.expected {
+        if Some(expected) == Some(&evidence.fixture) {
+            return Err(ConformanceError::invalid(
+                "comparison.expected",
+                "expected artifact must not be the executed fixture",
+            ));
+        }
+    }
+    if let Some(observed) = &comparison.observed {
+        if Some(observed) == Some(&evidence.fixture)
+            || Some(observed) == Some(&evidence.expectation.artifact)
+            || evidence
+                .implementation
+                .as_ref()
+                .and_then(|implementation| implementation.artifact.as_ref())
+                == Some(observed)
+        {
+            return Err(ConformanceError::invalid(
+                "comparison.observed",
+                "observed artifact must be distinct from fixture, expectation, and implementation artifacts",
+            ));
+        }
     }
     Ok(())
 }
@@ -748,6 +784,7 @@ mod tests {
                 name: "workshop-rs".to_string(),
                 version: "0.1.0".to_string(),
                 revision: Some("impl123".to_string()),
+                artifact: None,
             }),
         }
     }
@@ -835,6 +872,20 @@ mod tests {
     }
 
     #[test]
+    fn matched_artifacts_cannot_reuse_fixture_or_implementation_output() {
+        let mut result = matched();
+        result.comparison.observed = Some(result.evidence.fixture.clone());
+        assert!(result.validate().is_err());
+
+        let mut result = matched();
+        let implementation_artifact = hashed_artifact("implementation-output");
+        result.evidence.implementation.as_mut().unwrap().artifact =
+            Some(implementation_artifact.clone());
+        result.comparison.observed = Some(implementation_artifact);
+        assert!(result.validate().is_err());
+    }
+
+    #[test]
     fn live_client_requires_client_and_locale_provenance() {
         let mut result = matched();
         result.evidence.class = EvidenceClass::LiveClient;
@@ -858,6 +909,7 @@ mod tests {
             name: "changed-implementation".to_string(),
             version: "dev".to_string(),
             revision: None,
+            artifact: None,
         });
         result
             .validate()
