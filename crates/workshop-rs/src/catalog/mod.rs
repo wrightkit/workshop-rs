@@ -21,7 +21,7 @@
 
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::signatures::ExpectedDomain;
 
@@ -43,6 +43,16 @@ impl Locale {
     /// The normalized locale string.
     pub fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+impl<'de> Deserialize<'de> for Locale {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = String::deserialize(deserializer)?;
+        Ok(Self::new(&value))
     }
 }
 
@@ -156,7 +166,7 @@ pub struct Provenance {
 
 /// Per-locale mapping coverage: how many canonical entries (builtins and
 /// enum members) carry a mapping for the locale out of the declared total.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct LocaleCoverage {
     pub locale: Locale,
     /// Canonical entries with a declared mapping in this locale.
@@ -170,7 +180,7 @@ pub struct LocaleCoverage {
 /// dataset version plus content digest, locale coverage, and target evidence
 /// — plus the data provenance record. Serialized with the ADR's kebab-case
 /// identity names.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct CatalogIdentity {
     /// The `workshop-rs` package version (semver); bumped by code changes.
