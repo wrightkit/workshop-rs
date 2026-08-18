@@ -822,13 +822,8 @@ fn run_case(case: &CensusCase, shard_id: &str, catalog: &Catalog) -> Conformance
             )),
             None,
         ),
-        CensusSupport::Inconclusive { detail } => base(
-            ConformanceStatus::Inconclusive,
-            not_comparable(),
-            Some(reason(ReasonCode::Inconclusive, detail, None)),
-            None,
-        ),
-        CensusSupport::Exercise => execute_case(case, base, catalog),
+        CensusSupport::Inconclusive { detail } => execute_case(case, base, catalog, Some(detail)),
+        CensusSupport::Exercise => execute_case(case, base, catalog, None),
     }
 }
 
@@ -841,6 +836,7 @@ fn execute_case(
         Option<Locale>,
     ) -> ConformanceResult,
     catalog: &Catalog,
+    inconclusive_detail: Option<&str>,
 ) -> ConformanceResult {
     let source_locale = Locale::new(&case.source_locale);
     let target_locale = if source_locale.as_str() == Locale::new(ZH_CN).as_str() {
@@ -951,7 +947,10 @@ fn execute_case(
         return failed_text(
             base,
             ReasonCode::Inconclusive,
-            "offline semantic and locale gates passed, but no independent expectation artifact is recorded".to_string(),
+            inconclusive_detail.unwrap_or(
+                "offline semantic and locale gates passed, but no independent expectation artifact is recorded",
+            )
+            .to_string(),
             Some(source_locale),
         );
     };
