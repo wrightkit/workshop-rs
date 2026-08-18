@@ -31,7 +31,7 @@ use crate::error::{CatalogError, Result};
 pub const CATALOG_DATA: &str = include_str!("data/catalog.json");
 
 /// A normalized Workshop client locale, e.g. `en-US`.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Deserialize, Serialize)]
 pub struct Locale(String);
 
 impl Locale {
@@ -156,7 +156,7 @@ pub struct Provenance {
 
 /// Per-locale mapping coverage: how many canonical entries (builtins and
 /// enum members) carry a mapping for the locale out of the declared total.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct LocaleCoverage {
     pub locale: Locale,
     /// Canonical entries with a declared mapping in this locale.
@@ -170,7 +170,7 @@ pub struct LocaleCoverage {
 /// dataset version plus content digest, locale coverage, and target evidence
 /// — plus the data provenance record. Serialized with the ADR's kebab-case
 /// identity names.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct CatalogIdentity {
     /// The `workshop-rs` package version (semver); bumped by code changes.
