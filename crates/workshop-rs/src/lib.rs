@@ -34,6 +34,7 @@ pub mod detect;
 pub mod emitter;
 mod error;
 pub mod format;
+pub mod gameplay;
 pub mod ids;
 pub mod lexer;
 pub mod parser;

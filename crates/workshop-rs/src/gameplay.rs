@@ -1,0 +1,746 @@
+//! Canonical hero and ability gameplay data.
+//!
+//! This module owns the data contract used by gameplay-aware tooling. It is
+//! deliberately independent from the Workshop [`crate::catalog`] identity
+//! and from any source-language provider. Identities are open strings so a
+//! data update can add a hero, slot, or stat without changing this API.
+
+use std::collections::{BTreeMap, BTreeSet, HashMap};
+
+use serde::{Deserialize, Deserializer, Serialize};
+
+/// A canonical hero identity. The value is stable within the gameplay data
+/// contract and is not a closed Rust enum.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+pub struct HeroId(String);
+
+impl HeroId {
+    pub fn new(value: impl Into<String>) -> Self {
+        Self(value.into())
+    }
+
+    pub const fn from_static(value: &'static str) -> HeroIdRef {
+        HeroIdRef(value)
+    }
+
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<HeroIdRef> for HeroId {
+    fn from(value: HeroIdRef) -> Self {
+        Self::new(value.0)
+    }
+}
+
+impl std::fmt::Display for HeroId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+/// A typed constant reference for a canonical hero identity.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct HeroIdRef(&'static str);
+
+impl HeroIdRef {
+    pub const fn new(value: &'static str) -> Self {
+        Self(value)
+    }
+
+    pub const fn as_str(self) -> &'static str {
+        self.0
+    }
+}
+
+/// Canonical hero identity constants for the currently represented roster.
+pub mod hero_ids {
+    use super::HeroIdRef;
+
+    pub const ANA: HeroIdRef = HeroIdRef::new("ana");
+    pub const BRIGITTE: HeroIdRef = HeroIdRef::new("brigitte");
+    pub const DVA: HeroIdRef = HeroIdRef::new("dva");
+    pub const RAMATTRA: HeroIdRef = HeroIdRef::new("ramattra");
+}
+
+/// Typed constants for representative named abilities. The identity type
+/// remains open for abilities added by later datasets.
+pub mod ability_ids {
+    use super::AbilityIdRef;
+
+    pub const SLEEP_DART: AbilityIdRef = AbilityIdRef::new("sleepDart");
+    pub const SHIELD_BASH: AbilityIdRef = AbilityIdRef::new("shieldBash");
+    pub const VOID_BARRIER_OMNIC: AbilityIdRef = AbilityIdRef::new("voidBarrierOmnic");
+    pub const VOID_BARRIER_NEMESIS: AbilityIdRef = AbilityIdRef::new("voidBarrierNemesis");
+    pub const BOOSTERS: AbilityIdRef = AbilityIdRef::new("boosters");
+    pub const RECONFIGURE: AbilityIdRef = AbilityIdRef::new("reconfigure");
+}
+
+macro_rules! open_string_id {
+    ($name:ident, $reference:ident) => {
+        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+        pub struct $name(String);
+
+        impl $name {
+            pub fn new(value: impl Into<String>) -> Self {
+                Self(value.into())
+            }
+
+            pub const fn from_static(value: &'static str) -> $reference {
+                $reference(value)
+            }
+
+            pub fn as_str(&self) -> &str {
+                &self.0
+            }
+        }
+
+        impl From<$reference> for $name {
+            fn from(value: $reference) -> Self {
+                Self::new(value.0)
+            }
+        }
+
+        impl From<&str> for $name {
+            fn from(value: &str) -> Self {
+                Self::new(value)
+            }
+        }
+
+        impl std::fmt::Display for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                f.write_str(self.as_str())
+            }
+        }
+
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        pub struct $reference(&'static str);
+
+        impl $reference {
+            pub const fn new(value: &'static str) -> Self {
+                Self(value)
+            }
+
+            pub const fn as_str(self) -> &'static str {
+                self.0
+            }
+        }
+    };
+}
+
+open_string_id!(AbilityId, AbilityIdRef);
+open_string_id!(LogicalSlot, LogicalSlotRef);
+open_string_id!(AbilityVariant, AbilityVariantRef);
+open_string_id!(KeywordId, KeywordIdRef);
+open_string_id!(StatKey, StatKeyRef);
+open_string_id!(Unit, UnitRef);
+open_string_id!(HeroRole, HeroRoleRef);
+
+/// Typed constants for the stable logical slot classifications.
+pub mod slots {
+    use super::LogicalSlotRef;
+
+    pub const PRIMARY_FIRE: LogicalSlotRef = LogicalSlotRef::new("primaryFire");
+    pub const SECONDARY_FIRE: LogicalSlotRef = LogicalSlotRef::new("secondaryFire");
+    pub const ABILITY_1: LogicalSlotRef = LogicalSlotRef::new("ability1");
+    pub const ABILITY_2: LogicalSlotRef = LogicalSlotRef::new("ability2");
+    pub const ABILITY_3: LogicalSlotRef = LogicalSlotRef::new("ability3");
+    pub const ULTIMATE: LogicalSlotRef = LogicalSlotRef::new("ultimate");
+    pub const PASSIVE: LogicalSlotRef = LogicalSlotRef::new("passive");
+}
+
+/// Common stat identity constants. Long-tail stats remain open string IDs.
+pub mod stat_keys {
+    use super::StatKeyRef;
+
+    pub const COOLDOWN: StatKeyRef = StatKeyRef::new("cooldown");
+    pub const DAMAGE: StatKeyRef = StatKeyRef::new("damage");
+    pub const HEALING: StatKeyRef = StatKeyRef::new("healing");
+    pub const DURATION: StatKeyRef = StatKeyRef::new("duration");
+    pub const CHARGES: StatKeyRef = StatKeyRef::new("charges");
+    pub const RESOURCE_COST: StatKeyRef = StatKeyRef::new("resourceCost");
+}
+
+/// Common unit identity constants. New units can be represented without an
+/// enum change.
+pub mod units {
+    use super::UnitRef;
+
+    pub const SECONDS: UnitRef = UnitRef::new("seconds");
+    pub const PERCENT: UnitRef = UnitRef::new("percent");
+    pub const HEALTH: UnitRef = UnitRef::new("health");
+    pub const DAMAGE: UnitRef = UnitRef::new("damage");
+    pub const HEALING: UnitRef = UnitRef::new("healing");
+    pub const METERS: UnitRef = UnitRef::new("meters");
+    pub const AMMO: UnitRef = UnitRef::new("ammo");
+    pub const CHARGES: UnitRef = UnitRef::new("charges");
+    pub const RESOURCE: UnitRef = UnitRef::new("resource");
+}
+
+/// A deterministic set of localized display strings.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+pub struct LocalizedText(BTreeMap<String, String>);
+
+impl LocalizedText {
+    pub fn new(values: impl IntoIterator<Item = (String, String)>) -> Self {
+        Self(values.into_iter().collect())
+    }
+
+    pub fn get(&self, locale: &str) -> Option<&str> {
+        self.0.get(locale).map(String::as_str)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&str, &str)> {
+        self.0
+            .iter()
+            .map(|(locale, text)| (locale.as_str(), text.as_str()))
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+}
+
+/// A machine-identifiable evidence reference for a gameplay fact.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EvidenceRef {
+    pub source: String,
+    pub locator: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
+}
+
+/// Identity and provenance of a gameplay dataset. This is distinct from the
+/// Workshop parser/catalog dataset identity.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GameplayDatasetIdentity {
+    pub dataset_id: String,
+    pub version: String,
+    pub digest: String,
+    pub source: String,
+    pub license: String,
+    pub target: String,
+    pub reviewed: bool,
+}
+
+/// A gameplay fact tied to evidence in the dataset version being consumed.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Fact<T> {
+    pub value: T,
+    pub evidence: Vec<EvidenceRef>,
+}
+
+impl<T> Fact<T> {
+    pub fn new(value: T, evidence: Vec<EvidenceRef>) -> Self {
+        Self { value, evidence }
+    }
+
+    pub fn value(&self) -> &T {
+        &self.value
+    }
+
+    pub fn evidence(&self) -> &[EvidenceRef] {
+        &self.evidence
+    }
+}
+
+/// A finite numeric quantity with an explicit unit.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct Quantity {
+    pub value: f64,
+    pub unit: Unit,
+}
+
+impl Quantity {
+    pub fn new(value: f64, unit: Unit) -> Result<Self, GameplayDataError> {
+        if !value.is_finite() {
+            return Err(GameplayDataError::InvalidQuantity { value });
+        }
+        Ok(Self { value, unit })
+    }
+}
+
+impl<'de> Deserialize<'de> for Quantity {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct RawQuantity {
+            value: f64,
+            unit: Unit,
+        }
+
+        let raw = RawQuantity::deserialize(deserializer)?;
+        Self::new(raw.value, raw.unit).map_err(serde::de::Error::custom)
+    }
+}
+
+/// A typed common or extensible gameplay stat value.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "kind", content = "value")]
+pub enum StatValue {
+    Quantity(Quantity),
+    Text(String),
+    Boolean(bool),
+    Choice(String),
+}
+
+/// A named ability in a logical slot. The slot is a classification, not a
+/// control or runtime-state machine.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Ability {
+    id: AbilityId,
+    slot: LogicalSlot,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    variant: Option<AbilityVariant>,
+    name: Fact<LocalizedText>,
+    #[serde(default)]
+    keywords: BTreeSet<KeywordId>,
+    #[serde(default)]
+    stats: BTreeMap<StatKey, Fact<StatValue>>,
+    evidence: Vec<EvidenceRef>,
+}
+
+impl Ability {
+    pub fn new(
+        id: AbilityId,
+        slot: LogicalSlot,
+        variant: Option<AbilityVariant>,
+        name: Fact<LocalizedText>,
+        evidence: Vec<EvidenceRef>,
+    ) -> Self {
+        Self {
+            id,
+            slot,
+            variant,
+            name,
+            keywords: BTreeSet::new(),
+            stats: BTreeMap::new(),
+            evidence,
+        }
+    }
+
+    pub fn with_keyword(mut self, keyword: impl Into<KeywordId>) -> Self {
+        self.keywords.insert(keyword.into());
+        self
+    }
+
+    pub fn with_stat(mut self, key: StatKey, value: Fact<StatValue>) -> Self {
+        self.stats.insert(key, value);
+        self
+    }
+
+    pub fn id(&self) -> &AbilityId {
+        &self.id
+    }
+
+    pub fn slot(&self) -> &LogicalSlot {
+        &self.slot
+    }
+
+    pub fn variant(&self) -> Option<&AbilityVariant> {
+        self.variant.as_ref()
+    }
+
+    pub fn name(&self) -> &Fact<LocalizedText> {
+        &self.name
+    }
+
+    pub fn keywords(&self) -> impl Iterator<Item = &KeywordId> {
+        self.keywords.iter()
+    }
+
+    pub fn has_keyword(&self, keyword: &str) -> bool {
+        self.keywords.iter().any(|known| known.as_str() == keyword)
+    }
+
+    pub fn stat(&self, key: &StatKey) -> Option<&Fact<StatValue>> {
+        self.stats.get(key)
+    }
+
+    pub fn stats(&self) -> impl Iterator<Item = (&StatKey, &Fact<StatValue>)> {
+        self.stats.iter()
+    }
+
+    pub fn evidence(&self) -> &[EvidenceRef] {
+        &self.evidence
+    }
+}
+
+/// A hero record with a non-uniform ability kit.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Hero {
+    id: HeroId,
+    name: Fact<LocalizedText>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    role: Option<Fact<HeroRole>>,
+    #[serde(default)]
+    stats: BTreeMap<StatKey, Fact<StatValue>>,
+    abilities: Vec<Ability>,
+    evidence: Vec<EvidenceRef>,
+}
+
+impl Hero {
+    pub fn new(
+        id: HeroId,
+        name: Fact<LocalizedText>,
+        abilities: Vec<Ability>,
+        evidence: Vec<EvidenceRef>,
+    ) -> Self {
+        Self {
+            id,
+            name,
+            role: None,
+            stats: BTreeMap::new(),
+            abilities,
+            evidence,
+        }
+    }
+
+    pub fn with_role(mut self, role: Fact<HeroRole>) -> Self {
+        self.role = Some(role);
+        self
+    }
+
+    pub fn with_stat(mut self, key: StatKey, value: Fact<StatValue>) -> Self {
+        self.stats.insert(key, value);
+        self
+    }
+
+    pub fn id(&self) -> &HeroId {
+        &self.id
+    }
+
+    pub fn name(&self) -> &Fact<LocalizedText> {
+        &self.name
+    }
+
+    pub fn role(&self) -> Option<&Fact<HeroRole>> {
+        self.role.as_ref()
+    }
+
+    pub fn stat(&self, key: &StatKey) -> Option<&Fact<StatValue>> {
+        self.stats.get(key)
+    }
+
+    pub fn stats(&self) -> impl Iterator<Item = (&StatKey, &Fact<StatValue>)> {
+        self.stats.iter()
+    }
+
+    pub fn abilities(&self) -> &[Ability] {
+        &self.abilities
+    }
+
+    pub fn abilities_in_slot(&self, slot: &LogicalSlot) -> Vec<&Ability> {
+        self.abilities
+            .iter()
+            .filter(|ability| ability.slot() == slot)
+            .collect()
+    }
+
+    pub fn ability(&self, slot: &LogicalSlot) -> Result<&Ability, AbilityLookupError> {
+        let matches = self.abilities_in_slot(slot);
+        match matches.as_slice() {
+            [] => Err(AbilityLookupError::Missing {
+                hero: self.id.clone(),
+                slot: slot.clone(),
+            }),
+            [ability] => Ok(ability),
+            _ => Err(AbilityLookupError::Ambiguous {
+                hero: self.id.clone(),
+                slot: slot.clone(),
+                candidates: matches
+                    .into_iter()
+                    .map(|ability| ability.id.clone())
+                    .collect(),
+            }),
+        }
+    }
+
+    pub fn ability_by_id(&self, id: &AbilityId) -> Option<&Ability> {
+        self.abilities.iter().find(|ability| ability.id() == id)
+    }
+
+    pub fn ability_variant(
+        &self,
+        slot: &LogicalSlot,
+        variant: &AbilityVariant,
+    ) -> Result<&Ability, AbilityLookupError> {
+        self.abilities
+            .iter()
+            .find(|ability| ability.slot() == slot && ability.variant.as_ref() == Some(variant))
+            .ok_or_else(|| AbilityLookupError::MissingVariant {
+                hero: self.id.clone(),
+                slot: slot.clone(),
+                variant: variant.clone(),
+            })
+    }
+
+    pub fn evidence(&self) -> &[EvidenceRef] {
+        &self.evidence
+    }
+}
+
+/// Explicit failure for a logical-slot lookup.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AbilityLookupError {
+    Missing {
+        hero: HeroId,
+        slot: LogicalSlot,
+    },
+    Ambiguous {
+        hero: HeroId,
+        slot: LogicalSlot,
+        candidates: Vec<AbilityId>,
+    },
+    MissingVariant {
+        hero: HeroId,
+        slot: LogicalSlot,
+        variant: AbilityVariant,
+    },
+}
+
+impl std::fmt::Display for AbilityLookupError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Missing { hero, slot } => {
+                write!(f, "hero '{hero}' has no ability in slot '{slot}'")
+            }
+            Self::Ambiguous {
+                hero,
+                slot,
+                candidates,
+            } => write!(
+                f,
+                "hero '{hero}' has multiple abilities in slot '{slot}': {:?}",
+                candidates
+            ),
+            Self::MissingVariant {
+                hero,
+                slot,
+                variant,
+            } => write!(
+                f,
+                "hero '{hero}' has no ability in slot '{slot}' with variant '{variant}'"
+            ),
+        }
+    }
+}
+
+impl std::error::Error for AbilityLookupError {}
+
+/// Validation and construction errors for gameplay data.
+#[derive(Debug, Clone, PartialEq)]
+pub enum GameplayDataError {
+    EmptyIdentity(&'static str),
+    DuplicateHero(HeroId),
+    DuplicateAbility { hero: HeroId, ability: AbilityId },
+    DuplicateSlotVariant { hero: HeroId, slot: LogicalSlot },
+    MissingEvidence(String),
+    EmptyId(&'static str),
+    InvalidQuantity { value: f64 },
+}
+
+impl std::fmt::Display for GameplayDataError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::EmptyIdentity(field) => {
+                write!(f, "gameplay dataset identity field '{field}' is empty")
+            }
+            Self::DuplicateHero(id) => write!(f, "duplicate hero identity '{id}'"),
+            Self::DuplicateAbility { hero, ability } => {
+                write!(
+                    f,
+                    "hero '{hero}' has duplicate ability identity '{ability}'"
+                )
+            }
+            Self::DuplicateSlotVariant { hero, slot } => {
+                write!(f, "hero '{hero}' has duplicate slot/variant '{slot}'")
+            }
+            Self::MissingEvidence(path) => write!(f, "gameplay fact '{path}' has no evidence"),
+            Self::EmptyId(field) => write!(f, "gameplay identity '{field}' is empty"),
+            Self::InvalidQuantity { value } => write!(f, "quantity value '{value}' is not finite"),
+        }
+    }
+}
+
+impl std::error::Error for GameplayDataError {}
+
+/// The validated gameplay dataset and its lookup indexes.
+#[derive(Debug, Clone)]
+pub struct GameplayCatalog {
+    identity: GameplayDatasetIdentity,
+    heroes: Vec<Hero>,
+    by_id: HashMap<HeroId, usize>,
+}
+
+impl GameplayCatalog {
+    pub fn new(
+        identity: GameplayDatasetIdentity,
+        mut heroes: Vec<Hero>,
+    ) -> Result<Self, GameplayDataError> {
+        for (field, value) in [
+            ("datasetId", identity.dataset_id.as_str()),
+            ("version", identity.version.as_str()),
+            ("digest", identity.digest.as_str()),
+            ("source", identity.source.as_str()),
+            ("license", identity.license.as_str()),
+            ("target", identity.target.as_str()),
+        ] {
+            if value.is_empty() {
+                return Err(GameplayDataError::EmptyIdentity(field));
+            }
+        }
+
+        heroes.sort_by(|left, right| left.id.cmp(&right.id));
+        let mut by_id = HashMap::with_capacity(heroes.len());
+        for (index, hero) in heroes.iter().enumerate() {
+            if by_id.insert(hero.id.clone(), index).is_some() {
+                return Err(GameplayDataError::DuplicateHero(hero.id.clone()));
+            }
+            validate_hero(hero)?;
+        }
+
+        Ok(Self {
+            identity,
+            heroes,
+            by_id,
+        })
+    }
+
+    pub fn identity(&self) -> &GameplayDatasetIdentity {
+        &self.identity
+    }
+
+    pub fn heroes(&self) -> &[Hero] {
+        &self.heroes
+    }
+
+    pub fn hero(&self, id: &HeroId) -> Option<&Hero> {
+        self.by_id.get(id).map(|index| &self.heroes[*index])
+    }
+
+    pub fn hero_by_id(&self, id: impl AsRef<str>) -> Option<&Hero> {
+        self.hero(&HeroId::new(id.as_ref()))
+    }
+
+    pub fn find_abilities_by_keyword(&self, keyword: &str) -> Vec<(&Hero, &Ability)> {
+        self.heroes
+            .iter()
+            .flat_map(|hero| {
+                hero.abilities()
+                    .iter()
+                    .filter(move |ability| ability.has_keyword(keyword))
+                    .map(move |ability| (hero, ability))
+            })
+            .collect()
+    }
+}
+
+fn validate_hero(hero: &Hero) -> Result<(), GameplayDataError> {
+    if hero.id.as_str().is_empty() {
+        return Err(GameplayDataError::EmptyId("hero"));
+    }
+    if hero.evidence.is_empty() {
+        return Err(GameplayDataError::MissingEvidence(format!(
+            "hero {}",
+            hero.id
+        )));
+    }
+    if hero.name.evidence.is_empty() {
+        return Err(GameplayDataError::MissingEvidence(format!(
+            "hero {} name",
+            hero.id
+        )));
+    }
+    validate_evidence(&format!("hero {}", hero.id), &hero.evidence)?;
+    validate_evidence(&format!("hero {} name", hero.id), &hero.name.evidence)?;
+    for (key, fact) in &hero.stats {
+        if key.as_str().is_empty() {
+            return Err(GameplayDataError::EmptyId("hero stat"));
+        }
+        validate_fact(&format!("hero {} stat {}", hero.id, key), fact)?;
+    }
+    let mut ability_ids = BTreeSet::new();
+    let mut slot_variants = BTreeSet::new();
+    for ability in &hero.abilities {
+        if !ability_ids.insert(ability.id.clone()) {
+            return Err(GameplayDataError::DuplicateAbility {
+                hero: hero.id.clone(),
+                ability: ability.id.clone(),
+            });
+        }
+        if ability.id.as_str().is_empty() {
+            return Err(GameplayDataError::EmptyId("ability"));
+        }
+        if ability.slot.as_str().is_empty() {
+            return Err(GameplayDataError::EmptyId("ability slot"));
+        }
+        if ability
+            .variant
+            .as_ref()
+            .is_some_and(|variant| variant.as_str().is_empty())
+        {
+            return Err(GameplayDataError::EmptyId("ability variant"));
+        }
+        if ability.evidence.is_empty() {
+            return Err(GameplayDataError::MissingEvidence(format!(
+                "hero {} ability {}",
+                hero.id, ability.id
+            )));
+        }
+        validate_evidence(
+            &format!("hero {} ability {}", hero.id, ability.id),
+            &ability.evidence,
+        )?;
+        validate_evidence(
+            &format!("hero {} ability {} name", hero.id, ability.id),
+            &ability.name.evidence,
+        )?;
+        if ability.name.evidence.is_empty() {
+            return Err(GameplayDataError::MissingEvidence(format!(
+                "hero {} ability {} name",
+                hero.id, ability.id
+            )));
+        }
+        let slot_variant = (ability.slot.clone(), ability.variant.clone());
+        if !slot_variants.insert(slot_variant) {
+            return Err(GameplayDataError::DuplicateSlotVariant {
+                hero: hero.id.clone(),
+                slot: ability.slot.clone(),
+            });
+        }
+        for (key, fact) in &ability.stats {
+            if key.as_str().is_empty() {
+                return Err(GameplayDataError::EmptyId("ability stat"));
+            }
+            validate_fact(
+                &format!("hero {} ability {} stat {}", hero.id, ability.id, key),
+                fact,
+            )?;
+        }
+    }
+    Ok(())
+}
+
+fn validate_fact<T>(path: &str, fact: &Fact<T>) -> Result<(), GameplayDataError> {
+    if fact.evidence.is_empty() {
+        return Err(GameplayDataError::MissingEvidence(path.to_string()));
+    }
+    validate_evidence(path, &fact.evidence)
+}
+
+fn validate_evidence(path: &str, evidence: &[EvidenceRef]) -> Result<(), GameplayDataError> {
+    for item in evidence {
+        if item.source.is_empty() || item.locator.is_empty() {
+            return Err(GameplayDataError::MissingEvidence(path.to_string()));
+        }
+    }
+    Ok(())
+}

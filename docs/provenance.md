@@ -7,6 +7,10 @@ consumer projects > upstream references > documented community evidence >
 assumptions) and ADR-0001 Decision 6 (provenance and the reproducible
 catalog-update pipeline).
 
+Hero/gameplay data follows the separate identity and evidence contract in
+[`docs/adr/0002-gameplay-domain-api.md`](adr/0002-gameplay-domain-api.md). The
+Workshop catalog identity below does not identify a gameplay dataset.
+
 The repository is MIT-licensed. Committed mapping data is workshop-rs-owned,
 with the source evidence and generation method recorded here. The input JSON
 is a build-time evidence artifact and is not redistributed by workshop-rs.
