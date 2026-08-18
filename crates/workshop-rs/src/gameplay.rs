@@ -58,6 +58,12 @@ impl HeroIdRef {
     }
 }
 
+impl AsRef<str> for HeroIdRef {
+    fn as_ref(&self) -> &str {
+        self.0
+    }
+}
+
 /// Canonical hero identity constants for the current roster. The identity
 /// remains open; these symbols are ergonomic accessors, not a closed enum.
 pub mod hero_ids {
@@ -154,6 +160,11 @@ macro_rules! open_string_id {
                 Self(value)
             }
             pub const fn as_str(self) -> &'static str {
+                self.0
+            }
+        }
+        impl AsRef<str> for $reference {
+            fn as_ref(&self) -> &str {
                 self.0
             }
         }
