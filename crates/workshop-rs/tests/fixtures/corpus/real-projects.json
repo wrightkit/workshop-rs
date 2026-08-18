@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "id": "workshop-rs-real-projects-v1",
+  "locale": "en-US",
+  "source": {
+    "name": "wright compatibility corpus / overpy-cake",
+    "revision": "1273e345d1dcb6f6f678c5d93a03b5b0e9adb0a2",
+    "path": "compatibility/fixtures/real-world/overpy-cake/oracle.json",
+    "sha256": null,
+    "license": "MIT"
+  },
+  "expectation": {
+    "basis": "pinned-external-oracle",
+    "artifact": {
+      "name": "OverPy 9.7.10 en-US compile.workshop oracle",
+      "revision": "1273e345d1dcb6f6f678c5d93a03b5b0e9adb0a2",
+      "path": "compatibility/fixtures/real-world/overpy-cake/oracle.json",
+      "sha256": null,
+      "license": "MIT"
+    },
+    "trackingRef": "#20"
+  },
+  "cases": [
+    {
+      "id": "real-project/overpy-cake/full",
+      "class": "real-project",
+      "fixture": "overpy-cake.ws",
+      "features": [
+        {"namespace": "wir", "kind": "variable", "name": "global"},
+        {"namespace": "wir", "kind": "control-flow", "name": "for-global-variable"},
+        {"namespace": "wir", "kind": "control-flow", "name": "while"},
+        {"namespace": "catalog", "kind": "action", "name": "createBeamEffect"},
+        {"namespace": "catalog", "kind": "action", "name": "playEffect"},
+        {"namespace": "catalog", "kind": "value", "name": "countOf"}
+      ],
+      "expectedStatus": "success",
+      "failureContains": "ambiguous enum member 'Up'",
+      "knownGap": {
+        "detail": "the preserved full project contains OverPy's bare Up member, which is ambiguous across canonical enum domains without the original source context",
+        "trackingRef": "#20"
+      }
+    },
+    {
+      "id": "minimized-regression/overpy-cake-loop",
+      "class": "minimized-regression",
+      "fixture": "minimized/overpy-cake-loop.ws",
+      "features": [
+        {"namespace": "wir", "kind": "variable", "name": "global"},
+        {"namespace": "wir", "kind": "control-flow", "name": "for-global-variable"},
+        {"namespace": "catalog", "kind": "action", "name": "modifyGlobalVariable"},
+        {"namespace": "catalog", "kind": "value", "name": "randomReal"},
+        {"namespace": "catalog", "kind": "value", "name": "vector"}
+      ],
+      "expectedStatus": "success",
+      "derivedFrom": "real-project/overpy-cake/full",
+      "expectation": {
+        "basis": "preserved-regression",
+        "artifact": {
+          "name": "overpy-cake full project regression source",
+          "revision": "1273e345d1dcb6f6f678c5d93a03b5b0e9adb0a2",
+          "path": "compatibility/fixtures/real-world/overpy-cake/oracle.json",
+          "sha256": null,
+          "license": "MIT"
+        },
+        "trackingRef": "#20"
+      }
+    }
+  ]
+}

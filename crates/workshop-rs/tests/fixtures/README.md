@@ -16,6 +16,7 @@ core migration (Issue #2).
 | `corpus/preprocessing.ws` | wright `compatibility/fixtures/synthetic/preprocessing/oracle.json` `compile.workshop` | OverPy 9.7.10, en-US emission |
 | `corpus/receiver-calls.ws` | wright `compatibility/fixtures/synthetic/receiver-calls/oracle.json` `compile.workshop` | OverPy 9.7.10, en-US emission |
 | `corpus/overpy-cake.ws` | wright `compatibility/fixtures/real-world/overpy-cake/oracle.json` `compile.workshop` | OverPy 9.7.10, en-US emission |
+| `corpus/minimized/overpy-cake-loop.ws` | minimized from `corpus/overpy-cake.ws`, retaining its variable/loop/array/random-value interaction | linked to `1273e345d1dcb6f6f678c5d93a03b5b0e9adb0a2`, OverPy 9.7.10 oracle |
 | `settings/pixelart.settings.ws` | wright `compatibility/fixtures/real-world/overpy-pixelart/oracle.json` `compile.workshop` settings section | OverPy 9.7.10, en-US emission |
 | `settings/santa.settings.ws` | wright `compatibility/fixtures/real-world/overpy-santa/oracle.json` `compile.workshop` settings section | OverPy 9.7.10, en-US emission |
 | `settings/pixelart.zh-CN.settings.ws` | deterministic conversion of `settings/pixelart.settings.ws` through the reviewed PR #9 locale corpus | reviewed `zh-CN` mappings, no fallback |
@@ -42,3 +43,13 @@ evidence; the external JSON evidence artifact is not redistributed.
 Tests read these files via `env!("CARGO_MANIFEST_DIR")`; do not edit them
 incidentally. A corpus change is a reviewed, evidenced change like any
 catalog data change and must be recorded here.
+
+## Real-project admission
+
+`corpus/real-projects.json` is the executable #20 manifest. It keeps the
+complete `overpy-cake.ws` project-level case and the minimized loop case as
+separate complementary layers. The source and pinned oracle metadata point to
+the immutable workshop-rs migration commit that recorded the original Wright
+compatibility path; the original external oracle JSON is not redistributed.
+The offline runner records parse/WIR behavior as #18 conformance results and
+never replaces the pinned expectation with current implementation output.
