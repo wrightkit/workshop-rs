@@ -38,7 +38,7 @@ jobs:
           MarcoIeni/release-plz-action@476794ede164c5137bfc3a1dc6ed3675275690f9
         with:
           command: release-pr
-          version: "0.3.125"
+          version: "0.3.160"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -94,7 +94,7 @@ jobs:
           MarcoIeni/release-plz-action@476794ede164c5137bfc3a1dc6ed3675275690f9
         with:
           command: release
-          version: "0.3.125"
+          version: "0.3.160"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
