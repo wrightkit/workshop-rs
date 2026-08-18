@@ -169,3 +169,28 @@ fn usage_errors_exit_2() {
     let output = run(&["no-such-command"]);
     assert_eq!(output.status.code(), Some(2));
 }
+
+#[test]
+fn census_runs_with_machine_readable_results() {
+    let output = run(&["census", "--json"]);
+    assert_eq!(output.status.code(), Some(1));
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect("valid report");
+    assert!(
+        report["census"]["shards"]
+            .as_array()
+            .is_some_and(|shards| !shards.is_empty())
+    );
+    assert!(report["results"].as_array().is_some_and(|results| {
+        results
+            .iter()
+            .any(|result| result["status"] == "inconclusive")
+            && results
+                .iter()
+                .any(|result| result["status"] == "unexpected-regression")
+    }));
+
+    let output = run(&["census", "--json", "extra"]);
+    assert_eq!(output.status.code(), Some(2));
+    let output = run(&["census", "--bogus"]);
+    assert_eq!(output.status.code(), Some(2));
+}

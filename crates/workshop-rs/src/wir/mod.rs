@@ -20,6 +20,62 @@ mod validate;
 
 pub mod error;
 
+/// The WIR-owned capability surface used by the canonical census. Providers
+/// do not contribute source-language inventories to this registry.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CensusCapabilityKind {
+    Variable,
+    PlayerVariable,
+    Subroutine,
+    ControlFlow,
+    String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CensusCapability {
+    pub kind: CensusCapabilityKind,
+    pub name: &'static str,
+}
+
+pub const CENSUS_CAPABILITIES: &[CensusCapability] = &[
+    CensusCapability {
+        kind: CensusCapabilityKind::Variable,
+        name: "global",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::PlayerVariable,
+        name: "player",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::Subroutine,
+        name: "declaration-and-call",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::ControlFlow,
+        name: "if",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::ControlFlow,
+        name: "else-if",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::ControlFlow,
+        name: "else",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::ControlFlow,
+        name: "while",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::ControlFlow,
+        name: "for-global-variable",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::String,
+        name: "custom-string",
+    },
+];
+
 use crate::arena::Arena;
 use crate::ids::Id;
 use crate::source::{SourceFile, Span};
