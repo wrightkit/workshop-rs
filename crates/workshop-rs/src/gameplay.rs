@@ -596,6 +596,12 @@ pub enum GameplayDataError {
     InvalidQuantity {
         value: f64,
     },
+    MissingEvidence(String),
+    EmptyId(&'static str),
+    InvalidQuantity { value: f64 },
+    Malformed(String),
+    UnsupportedSchema(u32),
+    DigestMismatch { declared: String, computed: String },
 }
 
 impl std::fmt::Display for GameplayDataError {
@@ -620,6 +626,14 @@ impl std::fmt::Display for GameplayDataError {
             Self::MissingEvidence(path) => write!(f, "gameplay fact '{path}' has no evidence"),
             Self::EmptyId(field) => write!(f, "gameplay identity '{field}' is empty"),
             Self::InvalidQuantity { value } => write!(f, "quantity value '{value}' is not finite"),
+            Self::Malformed(message) => write!(f, "malformed gameplay data: {message}"),
+            Self::UnsupportedSchema(version) => {
+                write!(f, "unsupported gameplay data schemaVersion {version}")
+            }
+            Self::DigestMismatch { declared, computed } => write!(
+                f,
+                "gameplay data digest mismatch: declared '{declared}', content '{computed}'"
+            ),
         }
     }
 }
@@ -651,6 +665,11 @@ impl GameplayCatalog {
             }
         }
         heroes.sort_by(|left, right| left.id.cmp(&right.id));
+        for hero in &mut heroes {
+            hero.abilities.sort_by(|left, right| {
+                (&left.slot, &left.variant).cmp(&(&right.slot, &right.variant))
+            });
+        }
         let mut by_id = HashMap::with_capacity(heroes.len());
         for (index, hero) in heroes.iter().enumerate() {
             if by_id.insert(hero.id.clone(), index).is_some() {
@@ -715,16 +734,23 @@ fn validate_hero(hero: &Hero) -> Result<(), GameplayDataError> {
     }
     validate_evidence(&format!("hero {}", hero.id), &hero.evidence)?;
     validate_evidence(&format!("hero {} name", hero.id), &hero.name.evidence)?;
+    if let Some(role) = &hero.role {
+        if role.value.as_str().is_empty() {
+            return Err(GameplayDataError::EmptyId("hero role"));
+        }
+        validate_fact(&format!("hero {} role", hero.id), role)?;
+    }
     for (key, fact) in &hero.stats {
         if key.as_str().is_empty() {
             return Err(GameplayDataError::EmptyId("hero stat"));
         }
         validate_fact(&format!("hero {} stat {}", hero.id, key), fact)?;
+        validate_stat_value(&format!("hero {} stat {}", hero.id, key), &fact.value)?;
     }
     let mut slot_variants = BTreeSet::new();
-    let mut slot_counts: BTreeMap<&LogicalSlot, usize> = BTreeMap::new();
+    let mut slot_counts: BTreeMap<LogicalSlot, usize> = BTreeMap::new();
     for ability in &hero.abilities {
-        if ability.slot.as_str().is_empty() {
+        if ability.slot.as_str().trim().is_empty() {
             return Err(GameplayDataError::EmptyId("ability slot"));
         }
         if ability
@@ -762,7 +788,7 @@ fn validate_hero(hero: &Hero) -> Result<(), GameplayDataError> {
                 variant: ability.variant.clone(),
             });
         }
-        *slot_counts.entry(&ability.slot).or_default() += 1;
+        *slot_counts.entry(ability.slot.clone()).or_default() += 1;
         for (key, fact) in &ability.stats {
             if key.as_str().is_empty() {
                 return Err(GameplayDataError::EmptyId("ability stat"));
@@ -771,19 +797,38 @@ fn validate_hero(hero: &Hero) -> Result<(), GameplayDataError> {
                 &format!("hero {} ability {} stat {}", hero.id, ability.slot, key),
                 fact,
             )?;
+            validate_stat_value(
+                &format!("hero {} ability {} stat {}", hero.id, ability.slot, key),
+                &fact.value,
+            )?;
         }
     }
     for (slot, count) in slot_counts {
         if count > 1
             && hero
-                .abilities_in_slot(slot)
+                .abilities
                 .iter()
+                .filter(|ability| ability.slot == slot)
                 .any(|ability| ability.variant.is_none())
         {
             return Err(GameplayDataError::VariantRequired {
                 hero: hero.id.clone(),
-                slot: slot.clone(),
+                slot,
             });
+        }
+    }
+    Ok(())
+}
+
+fn validate_stat_value(_path: &str, value: &StatValue) -> Result<(), GameplayDataError> {
+    if let StatValue::Quantity(quantity) = value {
+        if !quantity.value.is_finite() {
+            return Err(GameplayDataError::InvalidQuantity {
+                value: quantity.value,
+            });
+        }
+        if quantity.unit.as_str().is_empty() {
+            return Err(GameplayDataError::EmptyId("quantity unit"));
         }
     }
     Ok(())
