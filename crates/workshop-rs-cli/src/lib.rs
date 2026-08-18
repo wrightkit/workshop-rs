@@ -13,6 +13,7 @@ use workshop_rs::census;
 use workshop_rs::convert::{self, ConvertOptions};
 use workshop_rs::detect;
 use workshop_rs::emitter::{self, EmitOptions};
+use workshop_rs::live_capture;
 use workshop_rs::parser;
 
 mod corpus;
@@ -47,6 +48,9 @@ commands:
       Run an offline provenance-linked real-project corpus manifest and print
       its #18 conformance report. Known gaps remain visible and do not count
       as matches; unexpected regressions return exit code 1.
+  seasonal-diff <previous.json> <current.json> [--json]
+      Validate two provenance-rich live-client capture documents and emit a
+      structured offline drift report. This command never captures a client.
 ";
 
 pub fn run(args: Vec<String>) -> i32 {
@@ -64,6 +68,7 @@ pub fn run(args: Vec<String>) -> i32 {
         "version" => version_command(rest),
         "census" => census_command(rest),
         "corpus" => corpus_command(rest),
+        "seasonal-diff" => seasonal_diff_command(rest),
         "help" | "--help" | "-h" => {
             print!("{USAGE}");
             0
@@ -451,6 +456,70 @@ fn corpus_command(args: Vec<String>) -> i32 {
             1
         }
     }
+}
+
+fn seasonal_diff_command(args: Vec<String>) -> i32 {
+    let mut paths = Vec::new();
+    let mut json = false;
+    for argument in args {
+        if argument == "--json" {
+            json = true;
+        } else if paths.len() < 2 {
+            paths.push(PathBuf::from(argument));
+        } else {
+            return usage_error("seasonal-diff accepts two capture files and --json");
+        }
+    }
+    if paths.len() != 2 {
+        return usage_error("seasonal-diff requires previous and current capture files");
+    }
+    let previous = match read_file(&paths[0]) {
+        Ok(text) => text,
+        Err(error) => {
+            eprintln!("workshop-rs-cli: {error}");
+            return 1;
+        }
+    };
+    let current = match read_file(&paths[1]) {
+        Ok(text) => text,
+        Err(error) => {
+            eprintln!("workshop-rs-cli: {error}");
+            return 1;
+        }
+    };
+    let previous = match live_capture::LiveCapture::from_json(&previous) {
+        Ok(capture) => capture,
+        Err(error) => {
+            eprintln!("workshop-rs-cli: seasonal-diff: {error}");
+            return 1;
+        }
+    };
+    let current = match live_capture::LiveCapture::from_json(&current) {
+        Ok(capture) => capture,
+        Err(error) => {
+            eprintln!("workshop-rs-cli: seasonal-diff: {error}");
+            return 1;
+        }
+    };
+    let diff = match previous.diff(&current) {
+        Ok(diff) => diff,
+        Err(error) => {
+            eprintln!("workshop-rs-cli: seasonal-diff: {error}");
+            return 1;
+        }
+    };
+    if json {
+        match diff.to_json() {
+            Ok(text) => println!("{text}"),
+            Err(error) => {
+                eprintln!("workshop-rs-cli: cannot serialize seasonal diff: {error}");
+                return 1;
+            }
+        }
+    } else {
+        print!("{}", diff.human_summary());
+    }
+    0
 }
 
 fn usage_error(message: &str) -> i32 {

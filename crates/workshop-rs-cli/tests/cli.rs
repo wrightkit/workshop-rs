@@ -5,6 +5,17 @@
 use std::path::PathBuf;
 use std::process::Command;
 
+use workshop_rs::catalog::{Catalog, Locale};
+use workshop_rs::conformance::CONFORMANCE_SCHEMA_VERSION;
+use workshop_rs::conformance::{
+    Comparison, ConformanceReason, ConformanceResult, ConformanceStatus, Equivalence, Evidence,
+    EvidenceArtifact, EvidenceBasis, EvidenceClass, ExpectationSource, FeatureId, FeatureKind,
+    FeatureNamespace, ReasonCode,
+};
+use workshop_rs::live_capture::{
+    CENSUS_IDENTITY_SCHEMA_VERSION, CensusIdentity, LIVE_CAPTURE_SCHEMA_VERSION, LiveCapture,
+};
+
 fn bin() -> &'static str {
     env!("CARGO_BIN_EXE_workshop-rs-cli")
 }
@@ -17,6 +28,80 @@ fn fixture(fixture_id: &str) -> PathBuf {
 
 fn run(args: &[&str]) -> std::process::Output {
     Command::new(bin()).args(args).output().expect("cli runs")
+}
+
+// Synthetic schema/diff input only. This helper deliberately creates no
+// client artifact and is not an Overwatch evidence fixture.
+fn synthetic_capture(id: &str) -> String {
+    let catalog = Catalog::builtin().unwrap();
+    let locale = Locale::new("en-US");
+    let raw = EvidenceArtifact {
+        name: "synthetic-cli/raw.ws".to_string(),
+        revision: Some("synthetic-cli".to_string()),
+        path: Some("synthetic-cli/raw.ws".to_string()),
+        sha256: Some(
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
+        ),
+        license: Some("test-only".to_string()),
+    };
+    let result = ConformanceResult {
+        schema_version: CONFORMANCE_SCHEMA_VERSION,
+        case_id: "wir/variables-global".to_string(),
+        features: vec![
+            FeatureId::owned(FeatureNamespace::Wir, FeatureKind::Variable, "global").unwrap(),
+        ],
+        status: ConformanceStatus::Inconclusive,
+        comparison: Comparison {
+            mode: Equivalence::NotComparable,
+            expected: None,
+            observed: None,
+            normalizer: None,
+        },
+        evidence: Evidence {
+            class: EvidenceClass::LiveClient,
+            fixture: raw.clone(),
+            expectation: ExpectationSource {
+                basis: EvidenceBasis::WorkshopClient,
+                artifact: EvidenceArtifact::new("synthetic-cli/client-expectation"),
+                tracking_ref: None,
+            },
+            catalog: catalog.identity(),
+            locale: Some(locale.clone()),
+            client: Some(workshop_rs::conformance::ClientEvidence {
+                game: "overwatch-2".to_string(),
+                client_version: Some("synthetic-client".to_string()),
+                season: Some("synthetic-season".to_string()),
+                captured_at: "2026-08-18T00:00:00Z".to_string(),
+                environment: Some("synthetic CLI unit input".to_string()),
+            }),
+            implementation: None,
+        },
+        reason: Some(ConformanceReason {
+            code: ReasonCode::Inconclusive,
+            detail: "synthetic CLI schema input".to_string(),
+            tracking_ref: None,
+        }),
+    };
+    LiveCapture {
+        schema_version: LIVE_CAPTURE_SCHEMA_VERSION,
+        capture_id: id.to_string(),
+        game: "overwatch-2".to_string(),
+        client: "synthetic-client".to_string(),
+        season: "synthetic-season".to_string(),
+        captured_at: "2026-08-18T00:00:00Z".to_string(),
+        environment: "synthetic CLI unit input".to_string(),
+        locale,
+        catalog: catalog.identity(),
+        census: CensusIdentity {
+            schema_version: CENSUS_IDENTITY_SCHEMA_VERSION,
+            digest: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa".to_string(),
+            shards: vec!["synthetic-cli-shard".to_string()],
+        },
+        raw_artifact: raw,
+        results: vec![result],
+    }
+    .to_json()
+    .unwrap()
 }
 
 #[test]
@@ -168,6 +253,56 @@ fn usage_errors_exit_2() {
     assert_eq!(output.status.code(), Some(2));
     let output = run(&["no-such-command"]);
     assert_eq!(output.status.code(), Some(2));
+}
+
+#[test]
+fn seasonal_diff_requires_two_capture_files() {
+    let output = run(&["seasonal-diff"]);
+    assert_eq!(output.status.code(), Some(2));
+    let output = run(&["seasonal-diff", "previous.json"]);
+    assert_eq!(output.status.code(), Some(2));
+    let output = run(&["seasonal-diff", "previous.json", "current.json", "extra"]);
+    assert_eq!(output.status.code(), Some(2));
+}
+
+#[test]
+fn seasonal_diff_missing_capture_fails_without_fabricating_evidence() {
+    let output = run(&["seasonal-diff", "/no/previous.json", "/no/current.json"]);
+    assert_eq!(output.status.code(), Some(1));
+    assert!(String::from_utf8_lossy(&output.stderr).contains("cannot read"));
+}
+
+#[test]
+fn seasonal_diff_runs_text_and_json_success_paths_with_synthetic_schema_input() {
+    let dir = std::env::temp_dir().join(format!("workshop-rs-cli-seasonal-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let previous = dir.join("previous.json");
+    let current = dir.join("current.json");
+    std::fs::write(&previous, synthetic_capture("capture-a")).unwrap();
+    std::fs::write(&current, synthetic_capture("capture-b")).unwrap();
+    let previous_arg = previous.to_string_lossy().to_string();
+    let current_arg = current.to_string_lossy().to_string();
+
+    let output = run(&["seasonal-diff", &previous_arg, &current_arg]);
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(String::from_utf8_lossy(&output.stdout).contains("RuntimeUncertainty"));
+
+    let output = run(&["seasonal-diff", &previous_arg, &current_arg, "--json"]);
+    assert!(output.status.success());
+    let report: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert!(
+        report["runtimeUncertainty"]
+            .as_array()
+            .is_some_and(|entries| !entries.is_empty())
+    );
+
+    let _ = std::fs::remove_file(previous);
+    let _ = std::fs::remove_file(current);
+    let _ = std::fs::remove_dir(&dir);
 }
 
 #[test]
