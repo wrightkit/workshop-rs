@@ -3,83 +3,113 @@
 This repository is part of the **WrightKit** multi-repository workspace. Apply
 the workspace-level `AGENTS.md` when available, then follow this file.
 
-`workshop-rs` is the canonical, separately versioned Overwatch Workshop
-semantic core and standalone Workshop tooling foundation for WrightKit. It is
-MIT-licensed.
+`workshop-rs` is WrightKit's standalone Rust implementation of raw Overwatch
+Workshop and the canonical Workshop semantic core shared by the ecosystem. It
+is not an internal Wright backend repository: Wright, `opy-rs`, and `del-rs`
+consume its reviewed public contracts while `workshop-rs` remains independently
+usable as a library and CLI.
 
 ## Ownership
 
 This repository owns:
 
-* canonical Workshop semantics: the catalog of Workshop-defined content
-  (actions, values, events, enums and members, operators, structural and
-  settings entries) bound to locale-independent canonical identities;
-* the raw Workshop parser/CST-to-WIR frontend, catalog-backed validation,
-  deterministic emitter, and WIR (Workshop IR);
-* locale tables mapping canonical identities to client spellings, and
-  locale detection/conversion.
+- canonical Workshop semantics and locale-independent identities for actions,
+  values, events, enums/members, operators, settings, heroes, maps, modes, and
+  other declared Workshop content;
+- raw Workshop parsing, canonical WIR, validation, deterministic emission, and
+  locale conversion;
+- Workshop-owned source/provenance contracts needed by consumers;
+- reviewed Workshop gameplay/catalog data and semantic query APIs;
+- Workshop conformance, corpus, and seasonal-client evidence.
 
-This repository does **not** own, and must not depend on:
+This repository does **not** own:
 
-* Wright tooling crates (`wright-*`), Wright services, or their internals;
-* any source-language provider (OPY, OSTW, DEL) semantics or internals;
-* OverPy or OSTW implementations or data (GPL-3.0 reference data, including
-  OverPy translation tables, is not a permissible data source — see
-  [`docs/provenance.md`](docs/provenance.md) and Wright
-  [`docs/adr/0004-overpy-licensing-boundary.md`](https://github.com/wrightkit/wright/blob/main/docs/adr/0004-overpy-licensing-boundary.md)).
+- OverPy syntax, preprocessing, macros, source semantics, or reconstruction
+  (`opy-rs`);
+- DEL/OSTW syntax, project/runtime semantics, or reconstruction (`del-rs`);
+- Wright lint/analyze/agent/CI/LSP/orchestration behavior (`wright`);
+- LPP protocol semantics (`language-provider-protocol`).
 
-All code and data in this repository must be MIT-compatible with recorded
-provenance. Observed reference behavior is an interoperability input, never
-permission to copy an implementation.
+The durable dependency direction is consumer → Workshop core:
+
+```text
+opy-rs ─────► workshop-rs
+del-rs ─────► workshop-rs
+wright  ─────► workshop-rs
+```
+
+Do not introduce dependencies from `workshop-rs` back to source-language
+implementations or Wright tooling internals merely to make one integration
+simpler.
+
+A request from `opy-rs` or `del-rs` becomes `workshop-rs` work only when the
+missing capability is genuinely canonical Workshop behavior. Do not add
+provider-shaped nodes, aliases, runtime layouts, or source-language semantics to
+WIR/catalog contracts unless they are independently justified as Workshop
+semantics.
+
+See [`docs/implementation-role.md`](docs/implementation-role.md) for the durable
+relationship with the other WrightKit implementations.
 
 ## Architecture boundaries
 
-* Semantic code (parser, emitter, validation, WIR) contains no locale-specific
-  branches and no per-locale spelling knowledge. Locale coverage lives
-  exclusively in the catalog dataset.
-* Canonical identities are locale-independent and never derived from provider
-  naming. The catalog is an allowlist: anything not in the catalog is
-  diagnosed, never guessed, never silently accepted.
-* Missing target-locale mappings fail explicitly (error, not fallback);
-  fallback is opt-in and visible in tooling output.
-* See [`docs/adr/0001-catalog-boundaries.md`](docs/adr/0001-catalog-boundaries.md)
-  for the full contract this implementation conforms to.
+- Semantic code contains no locale-specific branches or per-locale spelling
+  knowledge; locale coverage lives in reviewed catalog data.
+- Canonical identities are locale-independent and never derived from OPY/DEL
+  naming.
+- Missing mappings or unsupported catalog entries fail explicitly rather than
+  being guessed.
+- Public WIR/catalog contracts should remain generic enough for raw Workshop and
+  multiple source-language implementations.
+- Internal representation can evolve when tests and public contracts remain
+  valid; do not spend product-critical time preserving incidental internal
+  structure.
+
+## Development priority
+
+Prioritize observable Workshop correctness and real consumer blockers over
+architecture polish. New canonical contracts should normally be justified by at
+least one of:
+
+1. raw Workshop evidence;
+2. seasonal/client/catalog evidence;
+3. a real `opy-rs` or `del-rs` integration blocker demonstrating a missing
+   canonical Workshop capability;
+4. a Wright tooling blocker that cannot be solved correctly above the Workshop
+   layer.
+
+When the problem is source-language-specific, route it back to the owning
+implementation instead of widening `workshop-rs`.
 
 ## Catalog data pipeline
 
-Catalog updates are bounded data changes, never parser/emitter rewrites:
+Catalog updates are bounded data changes with recorded provenance:
 
-1. Edit `crates/workshop-rs/src/catalog/data/catalog.json` with updated
-   provenance in `docs/provenance.md`.
-2. Run `cargo run -p workshop-rs --bin workshop-catalog-gen -- check` — it
-   must pass (schema, duplicate ids, alias collisions, undeclared locales,
-   param arity, digest).
-3. Run `cargo run -p workshop-rs --bin workshop-catalog-gen -- build` and
-   review the canonical diff (recomputed digest).
-4. Commit data and regenerated file together.
+1. edit the canonical data source;
+2. run `cargo run -p workshop-rs --bin workshop-catalog-gen -- check`;
+3. rebuild generated data and review the diff;
+4. commit source data, provenance, and generated artifacts together.
 
-Adding a locale or aliases requires reviewed, MIT-permissible evidence
-(workspace evidence hierarchy: reproducible behavior > contracts > tests and
-fixtures > consumer projects > upstream references > documented community
-evidence > assumptions) with provenance recorded per entry. Do not add
-spellings you cannot evidence.
+Do not use unreviewed or license-incompatible upstream compiler data as a
+canonical source.
 
 ## Validation
 
-Before declaring implementation work complete:
+```sh
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace --all-targets
+cargo run -p workshop-rs --bin workshop-catalog-gen -- check
+git diff --check
+```
 
-* `cargo fmt --all --check`
-* `cargo clippy --workspace --all-targets -- -D warnings`
-* `cargo test --workspace --all-targets`
-* `cargo run -p workshop-rs --bin workshop-catalog-gen -- check`
-* `git diff --check`
-
-CI runs the same checks on stable and the pinned toolchain (1.85.0). A local
-pass is not final acceptance.
+A local pass is not proof of live-client behavior. Claims about current
+Workshop acceptance or seasonal behavior require the corresponding client or
+provenance-backed evidence.
 
 ## Delivery
 
-* Conventional Commits; focused commits; no pushes to `main`; deliver through
-  PRs.
-* Never commit credentials, private runtime data, or unreviewed third-party
-  material. Fixtures carry provenance (see `crates/workshop-rs/tests/fixtures/README.md`).
+- Use focused branches and PRs; never push directly to `main`.
+- Keep commits scoped and avoid unrelated repository changes.
+- Never commit credentials, private runtime data, or unreviewed third-party
+  material.
