@@ -6,23 +6,23 @@ on:
 
 jobs:
   release:
-    name: Publish crates and release tag
+    name: Publish crates and create release tag
     if: github.repository_owner == 'wrightkit'
     runs-on: ubuntu-latest
     environment: release
+    concurrency:
+      group: release-plz-release
+      cancel-in-progress: false
     permissions:
       contents: write
       pull-requests: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
           token: ${{ secrets.GH_TOKEN }}
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
 
       - name: Publish unpublished crates
         uses: release-plz/action@v0.5
@@ -44,14 +44,11 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           persist-credentials: false
           token: ${{ secrets.GH_TOKEN }}
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
 
       - name: Update release PR
         uses: release-plz/action@v0.5
