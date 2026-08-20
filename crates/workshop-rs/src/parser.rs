@@ -1093,11 +1093,9 @@ impl Parser<'_> {
                         "For Player Variable" => actions.push(self.for_player_group()?),
                         "While" => actions.push(self.while_group()?),
                         "Loop" => actions.push(self.opaque_action()?),
-                        "Loop If Condition Is True" => actions.push(self.action_call_from_phrase(
-                            phrase,
-                            start,
-                            end,
-                        )?),
+                        "Loop If Condition Is True" => {
+                            actions.push(self.action_call_from_phrase(phrase, start, end)?)
+                        }
                         "Global" | "Event Player" => {
                             self.pos = saved;
                             actions.push(self.opaque_action()?);
@@ -2315,13 +2313,11 @@ impl Parser<'_> {
                     .call_stack
                     .iter()
                     .any(|call| call == "startAcceleration")
-                || self
-                    .call_stack
-                    .iter()
-                    .any(|call| {
-                        call == "Ray Cast Hit Position" || call == "Direction Towards"
-                            || call == "directionTowards"
-                    })))
+                || self.call_stack.iter().any(|call| {
+                    call == "Ray Cast Hit Position"
+                        || call == "Direction Towards"
+                        || call == "directionTowards"
+                })))
             || (matches!(self.expected_domain, Some("Position")) && matches!(phrase, "Up" | "上"))
         {
             return Ok(self.target.values.push(ValueNode::new(

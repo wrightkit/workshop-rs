@@ -70,10 +70,7 @@ fn locale_coverage_is_exact_and_primary_is_complete() {
     let catalog = Catalog::builtin().expect("built-in catalog");
     let en = catalog.locale_coverage(&Locale::new("en-US"));
     assert_eq!(en.mapped, en.total, "the primary locale is complete");
-    assert_eq!(
-        en.mapped, 531,
-        "declared en-US surface"
-    );
+    assert_eq!(en.mapped, 531, "declared en-US surface");
     let zh = catalog.locale_coverage(&Locale::new("zh-CN"));
     assert_eq!(zh.mapped, 531, "zh-CN corpus coverage is pinned");
     assert_eq!(zh.total, en.total);
