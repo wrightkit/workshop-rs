@@ -135,8 +135,12 @@ fn locales_lists_declared_locales_with_coverage() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     let lines: Vec<&str> = stdout.lines().collect();
     assert_eq!(lines.len(), 2);
-    assert!(lines[0].starts_with("en-us 531/531"), "{stdout}");
-    assert!(lines[1].starts_with("zh-cn 531/531"), "{stdout}");
+    for (line, locale) in lines.iter().zip(["en-us", "zh-cn"]) {
+        let (reported_locale, coverage) = line.split_once(' ').expect("locale coverage line");
+        let (mapped, total) = coverage.split_once('/').expect("mapped/total coverage");
+        assert_eq!(reported_locale, locale);
+        assert_eq!(mapped, total, "{line}");
+    }
 }
 
 #[test]

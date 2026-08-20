@@ -69,10 +69,9 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 
 ### Locale coverage
 
-* `en-US` is the primary locale and is complete (366/366 canonical entries:
-  174 builtins + 192 enum members). The committed catalog validates that the
-  primary locale is complete.
-* `zh-CN` has an evidence-backed corpus of **366/366** canonical entries:
+* `en-US` is the primary locale and is complete. The committed catalog
+  validates that the primary locale is complete.
+* `zh-CN` has an evidence-backed exact-match corpus of **366/366** entries:
   structural 11/11, actions 60/60, values 77/77, events 12/12, operators 14/14,
   and enum members 192/192. The reproducible manifest is
   `tools/corpus/zh-cn-corpus.json`; it records exact en-US spelling matches,

@@ -3,7 +3,8 @@
 //! target-locale mappings fail explicitly by default; fallback is opt-in and
 //! visible; settings follow the same contract.
 //!
-//! The committed catalog declares an evidence-backed `zh-CN` corpus (366/366).
+//! The committed catalog includes the evidence-backed `zh-CN` corpus; its
+//! exact-match manifest is pinned separately in `tools/corpus/zh-cn-corpus.json`.
 //! This suite pins both successful corpus conversion and the fail-explicit
 //! behavior for an unsupported undeclared target locale.
 
