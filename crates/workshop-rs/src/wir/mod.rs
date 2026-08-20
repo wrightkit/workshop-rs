@@ -134,6 +134,15 @@ impl Program {
         validate::validate(self)
     }
 
+    /// Report preserved or unknown constructs separately from structural
+    /// validation so consumers cannot present analysis as definitive.
+    pub fn semantic_issues(
+        &self,
+        catalog: &crate::catalog::Catalog,
+    ) -> Vec<crate::semantic::SemanticIssue> {
+        crate::semantic::inspect(self, catalog)
+    }
+
     /// Render a deterministic debug dump of the workshop program.
     pub fn dump(&self) -> String {
         dump::dump(self)

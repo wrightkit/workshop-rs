@@ -46,6 +46,7 @@ pub mod lexer;
 pub mod live_capture;
 pub mod parser;
 pub mod roundtrip;
+pub mod semantic;
 pub mod settings;
 pub mod signatures;
 pub mod source;
