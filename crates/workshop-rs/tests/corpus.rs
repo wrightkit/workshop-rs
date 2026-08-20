@@ -122,20 +122,14 @@ fn settings_corpus_includes_general_mode_and_team_labels() {
     let settings: serde_json::Value =
         serde_json::from_str(include_str!("../src/settings/data/zh-cn.json"))
             .expect("generated settings corpus is valid JSON");
-    assert_eq!(
-        settings["coverage"]["modes"],
-        serde_json::json!({"matched": 7, "total": 7})
-    );
-    assert_eq!(
-        settings["coverage"]["teams"],
-        serde_json::json!({"matched": 1, "total": 1})
-    );
+    for section in ["modes", "teams", "labels", "enums", "heroes", "maps"] {
+        assert_eq!(
+            settings["coverage"][section]["matched"], settings["coverage"][section]["total"],
+            "generated {section} inventory must be fully localized"
+        );
+    }
     assert_eq!(settings["modes"]["General"]["zh-CN"], "综合");
     assert_eq!(settings["teams"]["General"]["zh-CN"], "综合");
-    assert_eq!(
-        settings["coverage"]["labels"],
-        serde_json::json!({"matched": 19, "total": 19})
-    );
     assert_eq!(
         settings["labels"]["Ultimate Generation - Passive Blizzard"]["zh-CN"],
         "终极技能自动充能速度 暴雪"

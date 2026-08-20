@@ -282,6 +282,7 @@ fn check_settings_node(node: &IrSettingsNode, program: &Program) -> Result<(), I
         }
         IrSettingsNode::Number { span, .. }
         | IrSettingsNode::Bool { span, .. }
+        | IrSettingsNode::Flag { span, .. }
         | IrSettingsNode::String { span, .. }
         | IrSettingsNode::Raw { span, .. } => check_span(*span, program),
         IrSettingsNode::List { elements, span, .. } => {

@@ -12,6 +12,7 @@ use workshop_rs::catalog::{Catalog, Kind, Locale};
 use workshop_rs::convert::{self, ConvertOptions};
 use workshop_rs::emitter::{self, EmitOptions};
 use workshop_rs::parser;
+use workshop_rs::settings::SettingsNode;
 
 fn builtin() -> Catalog {
     Catalog::builtin().expect("built-in catalog")
@@ -323,4 +324,41 @@ fn catalog_spelling_lookup_distinguishes_mapped_and_unmapped_locales() {
             .is_none(),
         "en-US spellings never resolve in zh-CN"
     );
+}
+
+#[test]
+fn current_settings_inventory_resolves_extensions_and_hero_keys() {
+    let source = r#"settings
+{
+	heroes
+	{
+		队伍1
+		{
+			半藏
+			{
+				伤害量: 100%
+			}
+		}
+	}
+	扩展
+	{
+		生成更多机器人
+	}
+}
+"#;
+    let catalog = builtin();
+    let program = parser::parse_with_context(source, &catalog, &zh(), &catalog).expect("parses");
+    fn assert_no_raw(nodes: &[SettingsNode]) {
+        for node in nodes {
+            assert!(
+                !matches!(node, SettingsNode::Raw { .. }),
+                "raw setting: {}",
+                node.name()
+            );
+            if let SettingsNode::Group { children, .. } = node {
+                assert_no_raw(children);
+            }
+        }
+    }
+    assert_no_raw(&program.settings.expect("settings").children);
 }

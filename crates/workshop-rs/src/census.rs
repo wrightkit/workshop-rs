@@ -729,6 +729,7 @@ fn settings_probe(entry: &TableEntry) -> String {
     }
     let indent = "    ".repeat(depth);
     match entry.kind {
+        KeyKind::Flag => lines.push(format!("{indent}{}", entry.workshop_name)),
         KeyKind::String => lines.push(format!("{indent}{}: \"census\"", entry.workshop_name)),
         KeyKind::Bool => lines.push(format!("{indent}{}: On", entry.workshop_name)),
         KeyKind::Number => lines.push(format!("{indent}{}: 1", entry.workshop_name)),

@@ -77,7 +77,10 @@ fn inspect_setting(node: &SettingsNode, issues: &mut Vec<SemanticIssue>) {
                 });
             }
         }
-        SettingsNode::Number { .. } | SettingsNode::Bool { .. } | SettingsNode::String { .. } => {}
+        SettingsNode::Number { .. }
+        | SettingsNode::Bool { .. }
+        | SettingsNode::Flag { .. }
+        | SettingsNode::String { .. } => {}
     }
 }
 

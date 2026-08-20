@@ -146,7 +146,16 @@ impl Parser<'_> {
         let mut children = Vec::new();
         while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
             let (display, child_start, _) = self.phrase()?;
-            let name = canonical_keyword(&display);
+            let name = match canonical_keyword(&display) {
+                value
+                    if value == "extensions"
+                        || display == "扩展"
+                        || self.settings_name_matches("labels", "Extensions", &display) =>
+                {
+                    "extensions"
+                }
+                value => value,
+            };
             self.expect(TokenKind::LBrace, "expected '{' after settings group")?;
             let node = match name {
                 "main" | "lobby" => SettingsNode::Group {
@@ -163,6 +172,11 @@ impl Parser<'_> {
                 },
                 "modes" => self.settings_modes(child_start)?,
                 "heroes" => self.settings_heroes(child_start)?,
+                "extensions" => SettingsNode::Group {
+                    name: "extensions".to_string(),
+                    children: self.settings_members(&[PathPart::Part("extensions")], None)?,
+                    span: Some(self.settings_span(child_start)),
+                },
                 _ => self.settings_opaque_group(name, child_start)?,
             };
             children.push(node);
@@ -198,7 +212,12 @@ impl Parser<'_> {
             }
             let (display, mode_start, _) = self.phrase_on_line()?;
             let mode = self
-                .resolve_settings_name(table::MODE_NAMES, "modes", &display)
+                .resolve_settings_name_extended(
+                    table::MODE_NAMES,
+                    table::GENERATED_MODE_NAMES,
+                    "modes",
+                    &display,
+                )
                 .ok();
             self.expect(TokenKind::LBrace, "expected '{' after game mode")?;
             let mut mode_children = if let Some(mode) = mode {
@@ -241,10 +260,20 @@ impl Parser<'_> {
                 let (display, child_start, child_end) = self.phrase_on_line()?;
                 if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace))
                     && self
-                        .resolve_settings_name(table::HERO_NAMES, "heroes", &display)
+                        .resolve_settings_name_extended(
+                            table::HERO_NAMES,
+                            table::GENERATED_HERO_NAMES,
+                            "heroes",
+                            &display,
+                        )
                         .is_ok()
                 {
-                    let hero = self.resolve_settings_name(table::HERO_NAMES, "heroes", &display)?;
+                    let hero = self.resolve_settings_name_extended(
+                        table::HERO_NAMES,
+                        table::GENERATED_HERO_NAMES,
+                        "heroes",
+                        &display,
+                    )?;
                     self.expect(TokenKind::LBrace, "expected '{' after hero settings group")?;
                     let children = self.settings_members(
                         &[PathPart::Part("heroes"), PathPart::Team, PathPart::Hero],
@@ -302,7 +331,7 @@ impl Parser<'_> {
         path: &[PathPart<'static>],
         hero: Option<&str>,
     ) -> Result<SettingsNode> {
-        let entry = table::ENTRIES.iter().find(|candidate| {
+        let entry = table::entries().find(|candidate| {
             candidate.path.len() == path.len() + 1
                 && candidate.path[..path.len()]
                     .iter()
@@ -328,10 +357,35 @@ impl Parser<'_> {
                 let (value, value_start, value_end) = self.phrase_on_line()?;
                 let canonical = match entry.kind {
                     KeyKind::ListMap => self
-                        .resolve_settings_name(table::MAP_NAMES, "maps", &value)
+                        .resolve_settings_name_extended(
+                            table::MAP_NAMES,
+                            table::GENERATED_MAP_NAMES,
+                            "maps",
+                            &value,
+                        )
+                        .or_else(|_| {
+                            value
+                                .split_whitespace()
+                                .next()
+                                .and_then(|name| {
+                                    self.resolve_settings_name_extended(
+                                        table::MAP_NAMES,
+                                        table::GENERATED_MAP_NAMES,
+                                        "maps",
+                                        name,
+                                    )
+                                    .ok()
+                                })
+                                .ok_or_else(|| self.unknown("setting", &value))
+                        })
                         .unwrap_or(value.as_str()),
                     KeyKind::ListHero => self
-                        .resolve_settings_name(table::HERO_NAMES, "heroes", &value)
+                        .resolve_settings_name_extended(
+                            table::HERO_NAMES,
+                            table::GENERATED_HERO_NAMES,
+                            "heroes",
+                            &value,
+                        )
                         .unwrap_or(value.as_str()),
                     _ => {
                         return Err(
@@ -351,10 +405,17 @@ impl Parser<'_> {
                 span: Some(Span::new(self.file(), start, self.previous_span().1)),
             });
         }
+        if matches!(entry.kind, KeyKind::Flag) {
+            return Ok(SettingsNode::Flag {
+                name: name.to_string(),
+                span: Some(Span::new(self.file(), start, self.previous_span().1)),
+            });
+        }
         self.expect(TokenKind::Colon, "expected ':' after settings key")?;
         let end = self.previous_span().1;
         let span = Some(Span::new(self.file(), start, end));
         match entry.kind {
+            KeyKind::Flag => unreachable!("presence-only settings returned before ':'"),
             KeyKind::String => Ok(SettingsNode::String {
                 name: name.to_string(),
                 value: self.expect_string("expected a settings string")?,
@@ -512,6 +573,15 @@ impl Parser<'_> {
                     && self.settings_name_matches("enums", member.name, &display)
             })
             .map(|member| member.member.to_string())
+            .or_else(|| {
+                table::GENERATED_ENUM_MEMBERS
+                    .iter()
+                    .find(|member| {
+                        member.domain == domain
+                            && self.settings_name_matches("enums", member.name, &display)
+                    })
+                    .map(|member| member.member.to_string())
+            })
             .ok_or_else(|| self.unknown("settings enum", &display))
     }
 
@@ -528,13 +598,39 @@ impl Parser<'_> {
             .ok_or_else(|| self.unknown("setting", display))
     }
 
+    fn resolve_settings_name_extended(
+        &self,
+        names: &[table::NameMap],
+        generated: &[table::NameMap],
+        section: &str,
+        display: &str,
+    ) -> Result<&'static str> {
+        names
+            .iter()
+            .chain(generated.iter())
+            .find(|candidate| self.settings_name_matches(section, candidate.name, display))
+            .map(|candidate| candidate.key)
+            .ok_or_else(|| self.unknown("setting", display))
+    }
+
     fn settings_name_matches_for_path(
         &self,
         candidate: &table::TableEntry,
         display: &str,
         hero: Option<&str>,
     ) -> bool {
-        if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(candidate.path)) {
+        if let (Some(hero), Some(PathPart::Part(key))) = (hero, candidate.path.last()) {
+            if table::hero_setting_name(hero, key, self.locale.as_str()) == Some(display) {
+                return true;
+            }
+        }
+        if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(candidate.path))
+            && (candidate.workshop_name.contains("%1$s")
+                || matches!(
+                    candidate.path.last(),
+                    Some(PathPart::Part("enableAbility1" | "enableAbility2"))
+                ))
+        {
             return crate::gameplay_data::builtin()
                 .ok()
                 .and_then(|catalog| {

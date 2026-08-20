@@ -156,6 +156,13 @@ impl Emitter<'_> {
                 }
                 "gamemodes" => self.emit_modes(children)?,
                 "heroes" => self.emit_heroes(children)?,
+                "extensions" => {
+                    self.line(1, "extensions {")?;
+                    for member in children {
+                        self.settings_member(member, 2, &[PathPart::Part("extensions")], None)?;
+                    }
+                    self.line(1, "}")?;
+                }
                 _ => self.emit_opaque_group(children, name, 1)?,
             }
         }
@@ -273,13 +280,33 @@ impl Emitter<'_> {
                 table::path_string(&full)
             ))
         })?;
-        let display_name =
-            if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(&full)) {
+        let display_name = if let (Some(hero), Some(key)) = (
+            hero,
+            full.last().and_then(|part| match part {
+                PathPart::Part(key) => Some(*key),
+                _ => None,
+            }),
+        ) {
+            if let Some(name) = table::hero_setting_name(hero, key, self.locale.as_str()) {
+                name.to_string()
+            } else if !matches!(
+                key,
+                "enableAbility1" | "enableAbility2" | "enableAbility3" | "enableSecondaryFire"
+            ) && let Some(slot) = table::ability_slot_for_path(&full)
+            {
                 self.gameplay_setting_name(hero, slot, &table::path_string(&full))?
             } else {
                 self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
-            };
+            }
+        } else if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(&full)) {
+            self.gameplay_setting_name(hero, slot, &table::path_string(&full))?
+        } else {
+            self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
+        };
         match (node, &entry.kind) {
+            (SettingsNode::Flag { .. }, KeyKind::Flag) => {
+                self.line(level, &display_name)?;
+            }
             (SettingsNode::String { value, .. }, KeyKind::String) => {
                 self.line(
                     level,

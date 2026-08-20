@@ -37,6 +37,8 @@ pub enum SettingsNode {
         value: bool,
         span: Option<Span>,
     },
+    /// A presence-only Workshop extension setting (for example `Beam Effects`).
+    Flag { name: String, span: Option<Span> },
     String {
         name: String,
         value: String,
@@ -71,6 +73,7 @@ impl SettingsNode {
             SettingsNode::Group { span, .. }
             | SettingsNode::Number { span, .. }
             | SettingsNode::Bool { span, .. }
+            | SettingsNode::Flag { span, .. }
             | SettingsNode::String { span, .. }
             | SettingsNode::List { span, .. }
             | SettingsNode::Raw { span, .. } => *span,
@@ -83,6 +86,7 @@ impl SettingsNode {
             SettingsNode::Group { name, .. }
             | SettingsNode::Number { name, .. }
             | SettingsNode::Bool { name, .. }
+            | SettingsNode::Flag { name, .. }
             | SettingsNode::String { name, .. }
             | SettingsNode::List { name, .. }
             | SettingsNode::Raw { name, .. } => name,

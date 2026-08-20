@@ -208,6 +208,14 @@ fn nodes_equivalent(
                     },
                 ) => left_name == right_name && left_value == right_value,
                 (
+                    crate::settings::SettingsNode::Flag {
+                        name: left_name, ..
+                    },
+                    crate::settings::SettingsNode::Flag {
+                        name: right_name, ..
+                    },
+                ) => left_name == right_name,
+                (
                     crate::settings::SettingsNode::String {
                         name: left_name,
                         value: left_value,
