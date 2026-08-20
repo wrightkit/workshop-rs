@@ -27,3 +27,7 @@ perf = { level = "warn", priority = -1 }
 dbg_macro = "deny"
 todo = "deny"
 unimplemented = "deny"
+
+[profile.dist]
+inherits = "release"
+lto = "thin"
