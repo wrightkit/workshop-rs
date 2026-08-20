@@ -201,11 +201,13 @@ pub enum PlayerEventKind {
     DealtDamage,
     DealtFinalBlow,
     DealtHealing,
+    DealtKnockback,
     Died,
     EarnedElimination,
     Joined,
     Left,
     ReceivedHealing,
+    ReceivedKnockback,
     TookDamage,
 }
 
@@ -216,11 +218,13 @@ impl PlayerEventKind {
             PlayerEventKind::DealtDamage => "playerDealtDamage",
             PlayerEventKind::DealtFinalBlow => "playerDealtFinalBlow",
             PlayerEventKind::DealtHealing => "playerDealtHealing",
+            PlayerEventKind::DealtKnockback => "playerDealtKnockback",
             PlayerEventKind::Died => "playerDied",
             PlayerEventKind::EarnedElimination => "playerEarnedElimination",
             PlayerEventKind::Joined => "playerJoined",
             PlayerEventKind::Left => "playerLeft",
             PlayerEventKind::ReceivedHealing => "playerReceivedHealing",
+            PlayerEventKind::ReceivedKnockback => "playerReceivedKnockback",
             PlayerEventKind::TookDamage => "playerTookDamage",
         }
     }
@@ -425,6 +429,7 @@ pub enum ModifyOp {
     RaiseToPower,
     AppendToArray,
     RemoveFromArray,
+    RemoveFromArrayByIndex,
 }
 
 impl ModifyOp {
@@ -439,6 +444,7 @@ impl ModifyOp {
             ModifyOp::RaiseToPower => "RaiseToPower",
             ModifyOp::AppendToArray => "AppendToArray",
             ModifyOp::RemoveFromArray => "RemoveFromArray",
+            ModifyOp::RemoveFromArrayByIndex => "RemoveFromArrayByIndex",
         }
     }
 }

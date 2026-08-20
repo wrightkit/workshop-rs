@@ -135,9 +135,7 @@ fn contains_word(haystack: &str, needle: &str) -> bool {
     if needle.is_empty() {
         return false;
     }
-    let mut search_from = 0;
-    while let Some(index) = haystack[search_from..].find(needle) {
-        let start = search_from + index;
+    for (start, _) in haystack.match_indices(needle) {
         let end = start + needle.len();
         let before_ok = start == 0
             || !haystack[..start]
@@ -149,7 +147,6 @@ fn contains_word(haystack: &str, needle: &str) -> bool {
         if before_ok && after_ok {
             return true;
         }
-        search_from = start + 1;
     }
     false
 }

@@ -30,6 +30,49 @@
     }
   },
   "enums": {
+    "After A Game": {
+      "en-US": "After A Game",
+      "sources": [
+        "customGameSettings.lobby.values.mapRotation",
+        "customGameSettings.lobby.values.returnToLobby"
+      ],
+      "zh-CN": "完成比赛后"
+    },
+    "Enabled": {
+      "en-US": "Enabled",
+      "sources": [
+        "customGameSettings.lobby.values.enableMatchVoiceChat"
+      ],
+      "zh-CN": "启用"
+    },
+    "Disabled": {
+      "en-US": "Disabled",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.spawnHealthPacks"
+      ],
+      "zh-CN": "禁用"
+    },
+    "Immediately": {
+      "en-US": "Immediately",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.gameModeStartTrigger"
+      ],
+      "zh-CN": "即时"
+    },
+    "Manual": {
+      "en-US": "Manual",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.gameModeStartTrigger"
+      ],
+      "zh-CN": "手动"
+    },
+    "Never": {
+      "en-US": "Never",
+      "sources": [
+        "customGameSettings.lobby.values.returnToLobby"
+      ],
+      "zh-CN": "从不"
+    },
     "2 Of Each Role Per Team": {
       "en-US": "2 Of Each Role Per Team",
       "sources": [
@@ -119,6 +162,55 @@
     }
   },
   "labels": {
+    "Game Mode Start": {
+      "en-US": "Game Mode Start",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.gameModeStartTrigger"
+      ],
+      "zh-CN": "游戏模式开始"
+    },
+    "Allow Players Who Are In Queue": {
+      "en-US": "Allow Players Who Are In Queue",
+      "sources": [
+        "customGameSettings.lobby.values.allowPlayersInQueue"
+      ],
+      "zh-CN": "队列中的玩家可以加入"
+    },
+    "Map Rotation": {
+      "en-US": "Map Rotation",
+      "sources": [
+        "customGameSettings.lobby.values.mapRotation"
+      ],
+      "zh-CN": "地图轮换"
+    },
+    "Match Voice Chat": {
+      "en-US": "Match Voice Chat",
+      "sources": [
+        "customGameSettings.lobby.values.enableMatchVoiceChat"
+      ],
+      "zh-CN": "比赛语音聊天"
+    },
+    "Max Spectators": {
+      "en-US": "Max Spectators",
+      "sources": [
+        "customGameSettings.lobby.values.spectatorSlots"
+      ],
+      "zh-CN": "观战者人数上限"
+    },
+    "Max Team 1 Players": {
+      "en-US": "Max Team 1 Players",
+      "sources": [
+        "customGameSettings.lobby.values.team1Slots"
+      ],
+      "zh-CN": "玩家上限 队伍1"
+    },
+    "Max Team 2 Players": {
+      "en-US": "Max Team 2 Players",
+      "sources": [
+        "customGameSettings.lobby.values.team2Slots"
+      ],
+      "zh-CN": "玩家上限 队伍2"
+    },
     "Allow Hero Switching": {
       "en-US": "Allow Hero Switching",
       "sources": [
@@ -200,6 +292,27 @@
         "customGameSettings.main.values.modeName"
       ],
       "zh-CN": "模式名称"
+    },
+    "Spawn Health Packs": {
+      "en-US": "Spawn Health Packs",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.spawnHealthPacks"
+      ],
+      "zh-CN": "生成治疗包"
+    },
+    "Swap Teams After Match": {
+      "en-US": "Swap Teams After Match",
+      "sources": [
+        "customGameSettings.lobby.values.swapTeamsAfterMatch"
+      ],
+      "zh-CN": "比赛结束后转换队伍"
+    },
+    "Return To Lobby": {
+      "en-US": "Return To Lobby",
+      "sources": [
+        "customGameSettings.lobby.values.returnToLobby"
+      ],
+      "zh-CN": "返回大厅"
     },
     "Primary Fire": {
       "en-US": "Primary Fire",
@@ -355,9 +468,30 @@
         "customGameSettings.heroes.teams.allTeams"
       ],
       "zh-CN": "综合"
+    },
+    "Team 1": {
+      "en-US": "Team 1",
+      "sources": [
+        "customGameSettings.heroes.teams.team1"
+      ],
+      "zh-CN": "队伍1"
+    },
+    "Team 2": {
+      "en-US": "Team 2",
+      "sources": [
+        "customGameSettings.heroes.teams.team2"
+      ],
+      "zh-CN": "队伍2"
     }
   },
   "tokens": {
+    "No": {
+      "en-US": "No",
+      "sources": [
+        "other.customGameSettings.__no__"
+      ],
+      "zh-CN": "否"
+    },
     "Off": {
       "en-US": "Off",
       "sources": [

@@ -156,11 +156,7 @@ impl Emitter<'_> {
                 }
                 "gamemodes" => self.emit_modes(children)?,
                 "heroes" => self.emit_heroes(children)?,
-                other => {
-                    return Err(
-                        self.malformed(format!("unknown top-level settings group '{other}'"))
-                    );
-                }
+                _ => self.emit_opaque_group(children, name, 1)?,
             }
         }
         self.line(0, "}")?;
@@ -174,9 +170,10 @@ impl Emitter<'_> {
             let SettingsNode::Group { name, children, .. } = mode else {
                 return Err(self.malformed("mode entries must be groups"));
             };
-            let english = table::mode_name(name)
-                .ok_or_else(|| self.malformed(format!("unknown game mode '{name}'")))?;
-            let display = self.setting_name("modes", english, &format!("mode.{name}"))?;
+            let display = match table::mode_name(name) {
+                Some(english) => self.setting_name("modes", english, &format!("mode.{name}"))?,
+                None => name.clone(),
+            };
             // `enabled: false` prefixes the mode header; true renders with no
             // prefix (only false is evidenced in the corpus, #86).
             let disabled = children.iter().any(|member| {
@@ -259,6 +256,14 @@ impl Emitter<'_> {
         path: &[PathPart],
         hero: Option<&str>,
     ) -> Result<()> {
+        if let SettingsNode::Raw { name, value, .. } = node {
+            if value.is_empty() {
+                self.line(level, name)?;
+            } else {
+                self.line(level, &format!("{name}: {value}"))?;
+            }
+            return Ok(());
+        }
         let name = node.name();
         let mut full = path.to_vec();
         full.push(PathPart::Part(name));
@@ -345,6 +350,25 @@ impl Emitter<'_> {
                 )));
             }
         }
+        Ok(())
+    }
+
+    fn emit_opaque_group(
+        &mut self,
+        children: &[SettingsNode],
+        name: &str,
+        level: usize,
+    ) -> Result<()> {
+        self.line(level, &format!("{name} {{"))?;
+        for child in children {
+            match child {
+                SettingsNode::Group { name, children, .. } => {
+                    self.emit_opaque_group(children, name, level + 1)?;
+                }
+                _ => self.settings_member(child, level + 1, &[], None)?,
+            }
+        }
+        self.line(level, "}")?;
         Ok(())
     }
 
@@ -1164,6 +1188,7 @@ impl Emitter<'_> {
             wir::ModifyOp::RaiseToPower => "raiseToPower",
             wir::ModifyOp::AppendToArray => "appendToArray",
             wir::ModifyOp::RemoveFromArray => "removeFromArray",
+            wir::ModifyOp::RemoveFromArrayByIndex => "removeFromArrayByIndex",
         };
         self.spelling(Kind::Operator, id)
     }

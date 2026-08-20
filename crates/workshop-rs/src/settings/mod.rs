@@ -47,6 +47,14 @@ pub enum SettingsNode {
         elements: Vec<SettingsListElement>,
         span: Option<Span>,
     },
+    /// A syntactically valid settings member whose semantic catalog entry is
+    /// not yet declared. The raw value is carried explicitly so parsing does
+    /// not fabricate a type or silently discard project settings.
+    Raw {
+        name: String,
+        value: String,
+        span: Option<Span>,
+    },
 }
 
 /// One element of a settings list (corpus lists are all strings).
@@ -64,7 +72,8 @@ impl SettingsNode {
             | SettingsNode::Number { span, .. }
             | SettingsNode::Bool { span, .. }
             | SettingsNode::String { span, .. }
-            | SettingsNode::List { span, .. } => *span,
+            | SettingsNode::List { span, .. }
+            | SettingsNode::Raw { span, .. } => *span,
         }
     }
 
@@ -75,7 +84,8 @@ impl SettingsNode {
             | SettingsNode::Number { name, .. }
             | SettingsNode::Bool { name, .. }
             | SettingsNode::String { name, .. }
-            | SettingsNode::List { name, .. } => name,
+            | SettingsNode::List { name, .. }
+            | SettingsNode::Raw { name, .. } => name,
         }
     }
 }

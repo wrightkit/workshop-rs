@@ -360,6 +360,49 @@ fn expected_domain_resolution_tracks_the_catalog_declared_domains() {
 }
 
 #[test]
+fn raw_workshop_member_access_and_disabled_groups_parse() {
+    let text = r#"
+        rule ("raw") {
+            event {
+                Ongoing - Each Player;
+                Team 1;
+                Soldier: 76;
+            }
+            actions {
+                disabled If(Event Player.ready == True);
+                    Event Player.ready = False;
+                End;
+                If((Players On Hero(Hero(Mercy), Team 1).abilities[6] ? True : False));
+                    Wait(0.016, Ignore Condition);
+                End;
+            }
+        }
+    "#;
+    let program = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+        .expect("raw member access and disabled groups must parse");
+    program
+        .validate()
+        .expect("the lowered raw program must validate");
+}
+
+#[test]
+fn raw_indexed_assignment_lowers_to_explicit_wir_call() {
+    let text = r#"
+        variables { global: 0: values }
+        rule ("raw") {
+            event { Ongoing - Global; }
+            actions { Global.values[0] = 1; }
+        }
+    "#;
+    let program = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+        .expect("indexed raw assignment must parse");
+    assert!(program.dump().contains("setGlobalVariableAtIndex"));
+    program
+        .validate()
+        .expect("the indexed assignment must validate");
+}
+
+#[test]
 fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
     // Systematic collision check: scan the declared catalog for member
     // spellings shared by more than one enum domain (en-US) and assert the
@@ -397,9 +440,12 @@ fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
             (
                 "None".to_string(),
                 vec![
+                    "FacingReeval".to_string(),
                     "ChaseTimeReeval".to_string(),
                     "ChaseRateReeval".to_string(),
-                    "Invis".to_string()
+                    "Invis".to_string(),
+                    "ThrottleReeval".to_string(),
+                    "EffectReeval".to_string()
                 ]
             ),
             (
