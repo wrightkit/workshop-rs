@@ -12,6 +12,8 @@ semver_check = false
 name = "workshop-rs"
 version_group = "workshop-rs"
 changelog_include = ["workshop-rs-cli"]
+git_tag_enable = true
+git_tag_name = "v{{ version }}"
 
 [[package]]
 name = "workshop-rs-cli"

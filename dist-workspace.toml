@@ -1,0 +1,28 @@
+[workspace]
+members = ["cargo:."]
+
+[dist]
+cargo-dist-version = "0.32.0"
+ci = "github"
+packages = ["workshop-rs-cli"]
+installers = []
+targets = [
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-apple-darwin",
+  "aarch64-apple-darwin",
+  "x86_64-pc-windows-msvc",
+]
+pr-run-mode = "plan"
+checksum = "sha256"
+unix-archive = ".tar.gz"
+windows-archive = ".zip"
+source-tarball = false
+github-release = "host"
+
+[[dist.extra-artifacts]]
+artifacts = ["target/distrib/catalog-identity.json"]
+build = ["sh", "-c", "target_dir=$(cargo metadata --locked --no-deps --format-version 1 | jq -r .target_directory); mkdir -p \"$target_dir/distrib\"; cargo run --locked -p workshop-rs-cli -- version --json > \"$target_dir/distrib/catalog-identity.json\""]
+
+[dist.github-custom-runners]
+aarch64-unknown-linux-gnu = "ubuntu-24.04-arm"

@@ -3,16 +3,38 @@ name: Release-plz
 on:
   push:
     branches: [main]
-  pull_request:
-    types: [closed]
-
-env:
-  CARGO_TERM_COLOR: always
 
 jobs:
+  release:
+    name: Publish crates and release tag
+    if: github.repository_owner == 'wrightkit'
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish unpublished crates
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
   release-pr:
     name: Maintain release PR
-    if: github.event_name == 'push'
+    if: github.repository_owner == 'wrightkit'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -22,201 +44,18 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
+        uses: dtolnay/rust-toolchain@stable
 
-      - name: Run release-plz release-pr
-        uses: >-
-          MarcoIeni/release-plz-action@476794ede164c5137bfc3a1dc6ed3675275690f9
+      - name: Update release PR
+        uses: release-plz/action@v0.5
         with:
           command: release-pr
-          version: "0.3.160"
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-
-  release:
-    name: Publish merged release PR
-    if: >-
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.merged == true &&
-      github.event.pull_request.base.ref == 'main' &&
-      contains(github.event.pull_request.labels.*.name, 'release') &&
-      github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    environment: release
-    outputs:
-      release_tag: ${{ steps.release-identity.outputs.tag }}
-      artifacts_required: ${{ steps.release-state.outputs.artifacts_required }}
-    permissions:
-      contents: write
-      pull-requests: read
-    concurrency:
-      group: release-plz-release-${{ github.event.pull_request.base.ref }}
-      cancel-in-progress: false
-    steps:
-      - name: Checkout merged release
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.pull_request.merge_commit_sha }}
-          fetch-depth: 0
-          persist-credentials: false
-          token: ${{ secrets.GH_TOKEN }}
-
-      - name: Attach release checkout to main upstream
-        run: |
-          set -euo pipefail
-          git switch --create release-plz-release
-          git branch --set-upstream-to=origin/main release-plz-release
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-          components: rustfmt, clippy
-
-      - name: Run release gates
-        run: |
-          set -euo pipefail
-          cargo fmt --all --check
-          cargo clippy --locked --workspace --all-targets -- -D warnings
-          cargo test --locked --workspace --all-targets
-          cargo run --locked -p workshop-rs --bin workshop-catalog-gen -- \
-            check
-          cargo package --locked -p workshop-rs
-
-      - name: Resolve release identity
-        id: release-identity
-        run: |
-          set -euo pipefail
-          metadata="$(cargo metadata --locked --no-deps --format-version 1)"
-          version="$(jq -r '.packages[] | select(.name == "workshop-rs") | .version' \
-            <<<"${metadata}")"
-          cli_version="$(jq -r '.packages[] | select(.name == "workshop-rs-cli") | .version' \
-            <<<"${metadata}")"
-          [[ -n "${version}" && "${version}" != "null" ]] || {
-            echo 'Could not resolve workshop-rs version.' >&2
-            exit 1
-          }
-          [[ "${version}" == "${cli_version}" ]] || {
-            echo "workshop-rs ${version} and workshop-rs-cli ${cli_version} are not version-aligned." >&2
-            exit 1
-          }
-          echo "version=${version}" >>"${GITHUB_OUTPUT}"
-          echo "tag=v${version}" >>"${GITHUB_OUTPUT}"
-
-      - name: Run release-plz release
-        id: release-plz
-        uses: >-
-          MarcoIeni/release-plz-action@476794ede164c5137bfc3a1dc6ed3675275690f9
-        with:
-          command: release
-          version: "0.3.160"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-
-      - name: Ensure canonical release tag
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          TAG: ${{ steps.release-identity.outputs.tag }}
-          RELEASE_COMMIT: ${{ github.event.pull_request.merge_commit_sha }}
-        run: |
-          set -euo pipefail
-          if tag_commit="$(gh api \
-            "repos/${GITHUB_REPOSITORY}/commits/${TAG}" --jq .sha 2>/dev/null)"; then
-            [[ "${tag_commit}" == "${RELEASE_COMMIT}" ]] || {
-              echo "${TAG} points to ${tag_commit}, expected ${RELEASE_COMMIT}." >&2
-              exit 1
-            }
-            echo "${TAG} already points to the release commit."
-          else
-            gh api --method POST "repos/${GITHUB_REPOSITORY}/git/refs" \
-              -f "ref=refs/tags/${TAG}" \
-              -f "sha=${RELEASE_COMMIT}" >/dev/null
-            echo "Created ${TAG} at ${RELEASE_COMMIT}."
-          fi
-
-      - name: Prepare GitHub Release state
-        id: release-state
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          TAG: ${{ steps.release-identity.outputs.tag }}
-          VERSION: ${{ steps.release-identity.outputs.version }}
-        run: |
-          set -euo pipefail
-          set +e
-          release="$(gh release view "${TAG}" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --json tagName,isDraft,isImmutable,assets,url 2>&1)"
-          status=$?
-          set -e
-
-          if [[ "${status}" -eq 0 ]]; then
-            echo "${release}"
-            [[ "$(jq -r .tagName <<<"${release}")" == "${TAG}" ]] || {
-              echo "GitHub Release tag identity does not match ${TAG}." >&2
-              exit 1
-            }
-            if [[ "$(jq -r .isDraft <<<"${release}")" == "true" ]]; then
-              echo "Reusing draft GitHub Release ${TAG}."
-              echo "artifacts_required=true" >>"${GITHUB_OUTPUT}"
-              exit 0
-            fi
-
-            expected=(
-              "workshop-rs-cli-${VERSION}-x86_64-unknown-linux-gnu.tar.gz"
-              "workshop-rs-cli-${VERSION}-aarch64-unknown-linux-gnu.tar.gz"
-              "workshop-rs-cli-${VERSION}-x86_64-apple-darwin.tar.gz"
-              "workshop-rs-cli-${VERSION}-aarch64-apple-darwin.tar.gz"
-              "workshop-rs-cli-${VERSION}-x86_64-pc-windows-msvc.zip"
-              "SHA256SUMS.txt"
-              "catalog-identity.json"
-            )
-            for asset in "${expected[@]}"; do
-              jq -e --arg asset "${asset}" \
-                '[.assets[].name] | index($asset) != null' \
-                <<<"${release}" >/dev/null || {
-                  echo "Published GitHub Release ${TAG} is incomplete; missing ${asset}." >&2
-                  exit 1
-                }
-            done
-            echo "Published GitHub Release ${TAG} is already complete."
-            echo "artifacts_required=false" >>"${GITHUB_OUTPUT}"
-            exit 0
-          fi
-
-          if [[ "${release}" != *"release not found"* ]]; then
-            printf '%s\n' "${release}" >&2
-            exit "${status}"
-          fi
-
-          gh release create "${TAG}" \
-            --repo "${GITHUB_REPOSITORY}" \
-            --draft \
-            --verify-tag \
-            --title "${TAG}" \
-            --generate-notes >/dev/null
-          echo "Created draft GitHub Release ${TAG}."
-          echo "artifacts_required=true" >>"${GITHUB_OUTPUT}"
-
-  release-artifacts:
-    name: Build and publish release artifacts
-    needs: release
-    if: needs.release.outputs.artifacts_required == 'true'
-    uses: ./.github/workflows/release-artifacts.yml
-    with:
-      ref: ${{ github.event.pull_request.merge_commit_sha }}
-      tag: ${{ needs.release.outputs.release_tag }}
-      commit: ${{ github.event.pull_request.merge_commit_sha }}
-    permissions:
-      contents: write

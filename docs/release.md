@@ -1,73 +1,104 @@
 # Release automation
 
-`release-plz` maintains a Release PR from pushes to `main`. Merging that PR
-is the normal release action. The merged Release PR runs the repository gates
-and publishes `workshop-rs` before `workshop-rs-cli`. Repository-owned workflow
-steps then establish the canonical `vX.Y.Z` tag and draft GitHub Release before
-the artifact workflow builds the CLI archives, adds checksums and catalog
-identity, and publishes the completed GitHub Release.
+`workshop-rs` uses two upstream release tools with separate responsibilities:
+
+- `release-plz` maintains the Release PR, publishes the Rust crates to crates.io,
+  and creates the canonical `vX.Y.Z` tag.
+- `dist` owns binary distribution from that tag: release planning, five-platform
+  CLI builds, per-artifact SHA-256 files, `catalog-identity.json`, and the final
+  GitHub Release.
+
+The repository does not maintain a second tag/Release state machine around
+those tools.
 
 ## Repository configuration
 
-Configure these repository resources before enabling the workflow:
+1. Configure `GH_TOKEN` as a repository or organization secret with permission
+   to update this repository and maintain pull requests. `release-plz` uses it
+   for the Release PR and canonical tag. A dedicated token is retained here so
+   the tag created by release automation can trigger the tag-based `dist`
+   workflow.
+2. Keep `CARGO_REGISTRY_TOKEN` in the protected `release` environment with
+   permission to publish both `workshop-rs` and `workshop-rs-cli`. This PR keeps
+   the already-proven registry credential path while the release orchestration
+   is simplified. crates.io Trusted Publishing can replace this token in a
+   separate change after both crates have been configured and verified there.
+3. Keep normal CI required on the Release PR. Release-specific orchestration
+   should not duplicate the repository's normal Rust test suite.
 
-1. Provide a repository or organization `GH_TOKEN` secret with access to this
-   repository and permission to read/write contents and pull requests. The
-   release workflow uses this token for `release-plz-*` branches and Release
-   PRs, and for repository-owned tag and draft Release management.
-2. Create an environment named `release` with required reviewers enabled.
-   Store `CARGO_REGISTRY_TOKEN` in that environment and grant it permission to
-   publish both crates. The environment is used only by the merged Release PR
-   publication job.
-3. Normal development remains PR-only; no direct `main` push exception is
-   required. Release-management credentials do not bypass repository review
-   policy.
-4. Artifact publication remains a `workflow_call` from the release workflow.
-   It does not depend on a tag event starting a second workflow.
+## Release flow
 
-`release-plz` owns version calculation, Release PR maintenance, and crates.io
-publication. It is deliberately configured not to create Git tags or GitHub
-Releases. After publication succeeds, the repository workflow derives the
-release version from the merged Cargo metadata, creates or validates the
-canonical tag against the merge commit, and creates or reuses the draft GitHub
-Release. The called artifact workflow uses its scoped `GITHUB_TOKEN` to attach
-assets and publish the completed release.
+Normal pushes to `main` run the two standard `release-plz` jobs:
 
-## Release identity and retries
+1. `release-plz release` publishes any workspace versions that are present in
+   Git but not yet in crates.io. The library and CLI share the `workshop-rs`
+   version group; the library is published before the CLI. The `workshop-rs`
+   package owns the single public `vX.Y.Z` tag. `release-plz` does not create a
+   GitHub Release.
+2. `release-plz release-pr` creates or refreshes the next Release PR.
 
-Both packages use the `workshop-rs` release-plz `version_group` and therefore
-must have the same release version. There is one public `vX.Y.Z` tag and one
-GitHub Release for the repository; the CLI does not get a second public tag or
-release. Cargo's dependency order makes the library publish before the CLI.
+When the canonical tag reaches GitHub, the dist-generated `Release` workflow
+runs:
 
-The release-plz release job is gated by format, clippy, tests, catalog check,
-and `cargo package` for both crates. The workflow is recoverable across partial
-publication: release-plz skips crate versions already present in the registry,
-the repository workflow independently resolves the intended release identity,
-validates or creates the tag, and creates or reuses an unpublished draft. The
-artifact workflow uploads with `--clobber` before publishing the draft.
+```text
+vX.Y.Z
+  -> dist plan
+  -> build workshop-rs-cli for five targets
+  -> build global artifacts/checksums
+  -> create the GitHub Release with the complete artifact set
+  -> announce
+```
 
-If a GitHub Release is already public, the workflow does not move it back to
-draft. A complete published release is treated as already finished; an
-incomplete published release fails explicitly for maintainer recovery. This
-keeps the normal path compatible with immutable-release semantics.
+The supported targets are:
 
-Do not manually bump versions or run `cargo publish` for a normal release.
-Retry the failed GitHub Actions job so the workflow can resume from the
-externally visible registry/tag/draft state.
+- `x86_64-unknown-linux-gnu`
+- `aarch64-unknown-linux-gnu`
+- `x86_64-apple-darwin`
+- `aarch64-apple-darwin`
+- `x86_64-pc-windows-msvc`
+
+Linux ARM64 uses GitHub's native `ubuntu-24.04-arm` runner rather than a
+repository-maintained cross-linker setup.
+
+`dist` preserves the existing `.tar.gz`/`.zip` archive formats and emits a
+`.sha256` file for each archive. `catalog-identity.json` is configured as a
+`dist` extra artifact and is generated from `workshop-rs-cli version --json`.
+The previous aggregate `SHA256SUMS.txt` file is replaced by dist's standard
+per-artifact checksum files.
+
+## Pull-request validation
+
+The dist workflow runs `dist plan` on pull requests. This validates release tag
+interpretation, the selected package, target matrix, and artifact plan without
+performing publication side effects. The generated workflow should be updated
+through `dist init`/`dist generate` when the pinned dist version or distribution
+configuration changes; do not hand-maintain a parallel release implementation.
+
+## Failure and recovery
+
+The release systems are intentionally not treated as one atomic transaction.
+crates.io, Git tags, and GitHub Releases are separate external states.
+
+- If crates.io publication fails, rerun the failed `release-plz` job; already
+  published crate versions are skipped.
+- If crate publication succeeds but tag creation fails, repair/retry the
+  canonical tag before invoking distribution. Do not create a replacement
+  version solely to repair binary distribution.
+- If dist fails before hosting, rerun the tag workflow after fixing the actual
+  build/configuration problem. GitHub Release creation remains owned by dist.
+- Do not recreate repository-specific draft/published Release state machines to
+  automate rare recovery cases. Prefer explicit maintainer recovery when an
+  external service is left in an unusual partial state.
 
 ## Maintainer procedure
 
 1. Merge normal changes through PRs using Conventional Commits.
-2. Review the automatically maintained Release PR and its CI checks.
-3. Merge the Release PR after the protected `release` environment is ready.
-4. Approve the publication job when prompted. It publishes both crates,
-   establishes the canonical tag and draft GitHub Release, then invokes the
-   artifact workflow.
-5. The artifact workflow attaches the five platform archives,
-   `SHA256SUMS.txt`, and `catalog-identity.json`, then publishes the completed
+2. Review the automatically maintained Release PR and its normal CI checks.
+3. Merge the Release PR when the version is ready.
+4. Approve the protected `release` environment if required.
+5. `release-plz` publishes the crates and creates `vX.Y.Z`.
+6. The tag-triggered dist workflow builds the CLI artifacts and publishes the
    GitHub Release.
 
-The resulting GitHub Release notes contain generated release notes, the exact
-revision, and the CLI's machine-readable catalog version, digest, locale
-coverage, and provenance identity.
+For routine releases, maintainers should not manually bump versions, run
+`cargo publish`, create GitHub Releases, or edit generated dist CI.
