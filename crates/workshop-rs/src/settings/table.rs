@@ -984,6 +984,23 @@ pub fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static
         })
 }
 
+/// Reviewed producer aliases observed in the pinned AI-PVE artifact. These
+/// labels omit the export's `倍率` suffix or use the producer's shorter
+/// ability label, but identify the same canonical setting path.
+pub fn hero_setting_alias(hero: &str, key: &str, locale: &str, display: &str) -> bool {
+    locale.eq_ignore_ascii_case("zh-CN")
+        && matches!(
+            (hero, key, display),
+            (
+                "sojourn",
+                "secondaryFireEnergyChargeRate%",
+                "充能速度 充能射击"
+            ) | ("roadhog", "secondaryFireRechargeRate%", "呼吸器充能速度")
+                | ("hazard", "secondaryFireRegen%", "尖刺护体资源恢复")
+                | ("hazard", "secondaryFireCost%", "尖刺护体资源消耗")
+        )
+}
+
 fn name_in(maps: &[NameMap], key: &str) -> Option<&'static str> {
     maps.iter().find(|m| m.key == key).map(|m| m.name)
 }

@@ -510,7 +510,7 @@ mod corpus {
         // (the mode header's `disabled` prefix instead) and are excluded.
         let mut labels: Vec<(String, String)> = Vec::new();
         let mut seen = std::collections::HashSet::new();
-        for entry in table::ENTRIES {
+        for entry in table::entries() {
             if matches!(entry.path.last(), Some(table::PathPart::Part("enabled"))) {
                 continue;
             }
@@ -523,14 +523,17 @@ mod corpus {
         }
         let modes = table::MODE_NAMES
             .iter()
+            .chain(table::GENERATED_MODE_NAMES.iter())
             .map(|m| (format!("mode.{}.name", m.key), m.name.to_string()))
             .collect();
         let maps = table::MAP_NAMES
             .iter()
+            .chain(table::GENERATED_MAP_NAMES.iter())
             .map(|m| (format!("map.{}.name", m.key), m.name.to_string()))
             .collect();
         let heroes = table::HERO_NAMES
             .iter()
+            .chain(table::GENERATED_HERO_NAMES.iter())
             .map(|m| (format!("hero.{}.name", m.key), m.name.to_string()))
             .collect();
         let teams = table::TEAM_NAMES
@@ -539,6 +542,7 @@ mod corpus {
             .collect();
         let enums = table::ENUM_MEMBERS
             .iter()
+            .chain(table::GENERATED_ENUM_MEMBERS.iter())
             .map(|m| {
                 (
                     format!("enum.{}.{}", m.domain, m.member),

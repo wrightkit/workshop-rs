@@ -24,6 +24,56 @@ fn catalog() -> Catalog {
     Catalog::builtin().expect("built-in catalog")
 }
 
+#[test]
+fn colonated_enum_members_resolve_from_signature_domains() {
+    let source = r#"variables
+{
+    global:
+        0: icon
+}
+rule("colonated enum")
+{
+    event
+    {
+        Ongoing - Global;
+    }
+    actions
+    {
+        Set Global Variable(icon, Icon String(Arrow: Up));
+    }
+}
+"#;
+    let program = parser::parse_with_context(source, &catalog(), &Locale::new("en-US"), &catalog())
+        .expect("Arrow: Up resolves through Icon");
+    assert!(program
+        .values
+        .iter()
+        .any(|value| matches!(value.value, wir::Value::Enum { ref value_type, ref value } if value_type == "Icon" && value == "ARROW_UP")));
+}
+
+#[test]
+fn localized_hero_call_resolves_dotted_member() {
+    assert_eq!(
+        catalog().resolve_enum_domain(&Locale::new("zh-CN"), "英雄"),
+        Some("Hero")
+    );
+    let source = r#"规则("hero")
+{
+    event
+    {
+        持续 - 全局;
+    }
+    actions
+    {
+        设置全局变量(x, 英雄(D.Va));
+    }
+}
+"#;
+    let program = parser::parse_with_context(source, &catalog(), &Locale::new("zh-CN"), &catalog())
+        .expect("localized Hero(D.Va) resolves");
+    assert!(program.values.iter().any(|value| matches!(value.value, wir::Value::Enum { ref value_type, ref value } if value_type == "Hero" && value == "DVA")));
+}
+
 const CORPUS_FIXTURES: &[&str] = &[
     "basic-rule",
     "control-flow",

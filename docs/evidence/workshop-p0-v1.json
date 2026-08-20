@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Pinned five-artifact P0 semantic census",
+  "artifactManifest": "docs/evidence/raw-workshop-p0-v1.json",
+  "workshopRsBaseRevision": "a39b24e277eee37d8e53dc27c120a38deedb3eb2",
+  "validation": {
+    "catalogCheck": "OK 515 entries, 52 enum domains, 2 locale(s)",
+    "catalogDigest": "5345a68a72ac3cb9b6adcce4402f385d222c999c0fd911266e2671fe17bfb373",
+    "localeCoverage": {
+      "en-US": "1192/1192",
+      "zh-CN": "1178/1192"
+    },
+    "semanticCommand": "cargo test -p workshop-rs --locked --test p0_report_tmp -- --nocapture"
+  },
+  "artifacts": [
+    {"id": "ai-pve", "sha256": "b0405707d54fd30e20f285ce4a3fdaf9899e3959fb5dd223c898040c63a18773", "locale": "zh-CN", "issues": 247},
+    {"id": "bastion", "sha256": "44e453ddf7f373be65aea82d019abd45dd60f5ecb57c8d1607d3576a8bc60259", "locale": "en-US", "issues": 396},
+    {"id": "defend", "sha256": "06a956b650313ee2d6e24ec989f907244dc4444579bdba27c580b031de97b268", "locale": "en-US", "issues": 3},
+    {"id": "illari", "sha256": "f3aff73b9e677730bddc9c85b04c2bd38439bb7a4ba4fa2e80dc28db2e4a0860", "locale": "zh-CN", "issues": 0},
+    {"id": "rework", "sha256": "aa32cda640dba41fd99245a7d425d9897b53875d15cf071862197a8e6840258c", "locale": "en-US", "issues": 1}
+  ],
+  "classifications": {
+    "ordinaryCurrentConstructs": {
+      "status": "closed",
+      "evidence": ["Hero(D.Va) localized enum regression", "Capture The Flag settings regression", "Sojourn/Roadhog/Hazard pinned AI-PVE setting aliases", "Modulo/Game Mode/vector catalog reconciliation"]
+    },
+    "projectDefinedOrEvidenceInsufficient": {
+      "status": "preserved-and-visible",
+      "groups": ["AI-PVE custom Workshop Setting labels and project variables", "Bastion custom settings and project variables", "defend gateHealthChase project variable", "rework disabled Is Using Ability 1 project construct"]
+    },
+    "intentionallyOpaque": {
+      "status": "preserved-and-visible",
+      "groups": ["defend rawWorkshopAction at the artifact's trailing End"]
+    }
+  },
+  "note": "Issue counts are semantic incompleteness counts, not failure counts. Remaining groups are not silently promoted to canonical identities. Full structural validation, emission, and roundtrip verification must be recorded by the independent QA run before P0 acceptance."
+}

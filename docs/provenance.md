@@ -65,25 +65,23 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 | Rule event identities and filters (`global`, `eachPlayer`, the nine player events, `subroutine`, `EventTeam`, and `EventPlayer`) | User-provided Workshop export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (`other.events`, `other.eventTeams`, `other.eventPlayers`, and computed `other.eventSlots`), cross-checked against documented raw Workshop event blocks; the canonical WIR keeps existing parameterless `eachPlayer` input and requires the evidenced team/player filters for other filtered events. The `Player` filter's accepted union (`EventPlayer` slot/all or a canonical `Hero`) is represented explicitly by `EventTarget` (classes 1/2). |
 | OSTW-exercised params/spellings and enum domains (CreateEffect, Workshop Setting, Hero/Map/Button/Icon/Operation/Rounding/InworldTextRev, …) | Pinned OSTW v3.4.0 reference probe emissions (P4/P5/P6/P6b) and the protect-ban entry-point reachable closure (class 5). |
 | Parameter metadata (`paramDomains`, `paramDefaults`) | Pinned-reference probe evidence (classes 1/5), never copied from upstream game data. |
-| Settings emission table (`src/settings/table.rs`) | Observed from pinned OverPy 9.7.10 en-US output of the oracle-success settings programs (classes 1/5); provenance is recorded in the table header itself. |
+| Settings emission table (`src/settings/table.rs` and generated data files) | Hand-written fixture surface plus the reviewed `workshop-data` export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; generated entries, names, locale mappings, and source paths are committed together, while pinned OverPy 9.7.10 output remains the behavioral check (classes 1/5). |
 
 ### Locale coverage
 
 * `en-US` is the primary locale and is complete. The committed catalog
   validates that the primary locale is complete.
-* `zh-CN` has an evidence-backed exact-match corpus of **366/366** entries:
-  structural 11/11, actions 60/60, values 77/77, events 12/12, operators 14/14,
-  and enum members 192/192. The reproducible manifest is
-  `tools/corpus/zh-cn-corpus.json`; it records exact en-US spelling matches,
-  every exclusion, and the export provenance. The source is the user-provided
+* `zh-CN` is an open, evidence-backed locale: the current canonical catalog
+  maps **1178/1192** entries. The 14 unmapped spellings remain explicit and
+  fail closed; `workshop-catalog-gen check` is the authoritative coverage
+  report. The source for the reconciled additions is the user-provided
   `workshop-data/workshop-data.json` export at commit
-  `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`, commit date 2026-08-12, fetched
-  2026-08-17. The export is not committed to this repository.
-* The generated settings corpus covers labels 19/19, modes 7/7, maps 2/2,
-  heroes 10/10, enum values 2/2, tokens 3/3, and teams 1/1. Its exact-match
-  exclusions are recorded in
-  `crates/workshop-rs/src/settings/data/zh-cn.json`; settings without a
-  mapping continue to fail explicitly.
+  `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; the export is not committed.
+* The generated settings inventory currently covers labels 233/233, modes
+  7/7, maps 2/2, heroes 52/52, enum values 86/86, tokens 4/4, and teams 3/3
+  in `crates/workshop-rs/src/settings/data/zh-cn.json`. Each mapping records
+  its export source paths; settings without a mapping continue to fail
+  explicitly.
 
 All committed zh-CN spellings come from the JSON evidence through the corpus
 pipeline. The confirmed legacy mappings use the export identities/GUIDs for
@@ -130,6 +128,12 @@ translated.
   digest test (`tests/identity.rs`).
 * `locale-coverage`: declared locales with per-locale mapped/total counts.
 * `target-evidence`: recorded in the dataset `target` record.
+
+The source-bound settings inventory is regenerated with
+`tools/settings/generate_inventory.py`; its committed output is
+`crates/workshop-rs/src/settings/data/inventory.json` and records the input
+SHA-256 plus per-entry source paths. The generated Rust settings projection
+and catalog surface are then checked with `workshop-catalog-gen check`.
 
 Dataset changes are deliberate: edit the data, update this document and the
 dataset `provenance` record, run `workshop-catalog-gen check` then `build`,

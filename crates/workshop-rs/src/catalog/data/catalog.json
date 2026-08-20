@@ -3098,7 +3098,7 @@
       ]
     }
   ],
-  "digest": "299e12d514829d938a93e9e37717799baa09af17789fff706274e2cb6c0d5636",
+  "digest": "5345a68a72ac3cb9b6adcce4402f385d222c999c0fd911266e2671fe17bfb373",
   "enums": [
     {
       "domain": "Impulse",
@@ -3146,6 +3146,9 @@
       ]
     },
     {
+      "aliases": {
+        "zh-CN": "颜色"
+      },
       "domain": "Color",
       "members": [
         {
@@ -5390,6 +5393,9 @@
       ]
     },
     {
+      "aliases": {
+        "zh-CN": "英雄"
+      },
       "domain": "Hero",
       "members": [
         {
@@ -6474,7 +6480,10 @@
         },
         {
           "aliases": {
-            "en-US": "Nearest",
+            "en-US": [
+              "Nearest",
+              "To Nearest"
+            ],
             "zh-CN": "至最近"
           },
           "id": "NEAREST"
@@ -7858,6 +7867,245 @@
           "id": "FRIENDLINESS"
         }
       ]
+    },
+    {
+      "aliases": {
+        "en-US": "Game Mode"
+      },
+      "domain": "Gamemode",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Assault",
+            "zh-CN": "攻防作战"
+          },
+          "id": "ASSAULT"
+        },
+        {
+          "aliases": {
+            "en-US": "Bounty Hunter",
+            "zh-CN": "赏金猎手"
+          },
+          "id": "BOUNTYHUNTER"
+        },
+        {
+          "aliases": {
+            "en-US": "Clash",
+            "zh-CN": "攻防阵线"
+          },
+          "id": "CLASH"
+        },
+        {
+          "aliases": {
+            "en-US": "Control",
+            "zh-CN": "占领要点"
+          },
+          "id": "CONTROL"
+        },
+        {
+          "aliases": {
+            "en-US": "Control April Fools"
+          },
+          "id": "CONTROLAPRILFOOLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Control Community"
+          },
+          "id": "CONTROLCOMMUNITY"
+        },
+        {
+          "aliases": {
+            "en-US": "Capture The Flag",
+            "zh-CN": "勇夺锦旗"
+          },
+          "id": "CTF"
+        },
+        {
+          "aliases": {
+            "en-US": "Elimination",
+            "zh-CN": "决斗先锋"
+          },
+          "id": "ELIMINATION"
+        },
+        {
+          "aliases": {
+            "en-US": "Escort",
+            "zh-CN": "运载目标"
+          },
+          "id": "ESCORT"
+        },
+        {
+          "aliases": {
+            "en-US": "Escort Community"
+          },
+          "id": "ESCORTCOMMUNITY"
+        },
+        {
+          "aliases": {
+            "en-US": "Escort April Fools"
+          },
+          "id": "ESCORTAPRILFOOLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Deathmatch",
+            "zh-CN": "死斗"
+          },
+          "id": "FFA"
+        },
+        {
+          "aliases": {
+            "en-US": "Flashpoint",
+            "zh-CN": "闪点作战"
+          },
+          "id": "FLASHPOINT"
+        },
+        {
+          "aliases": {
+            "en-US": "Flashpoint April Fools"
+          },
+          "id": "FLASHPOINTAPRILFOOLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Freezethaw Elimination",
+            "zh-CN": "融冰决斗"
+          },
+          "id": "FREEZETHAWELIMINATION"
+        },
+        {
+          "aliases": {
+            "en-US": "Hybrid",
+            "zh-CN": "攻击护送"
+          },
+          "id": "HYBRID"
+        },
+        {
+          "aliases": {
+            "en-US": "Hybrid April Fools"
+          },
+          "id": "HYBRIDAPRILFOOLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Hybrid Community"
+          },
+          "id": "HYBRIDCOMMUNITY"
+        },
+        {
+          "aliases": {
+            "en-US": "Junkenstein's Revenge",
+            "zh-CN": "怪鼠复仇"
+          },
+          "id": "JUNKENSTEIN"
+        },
+        {
+          "aliases": {
+            "en-US": "Lúcioball",
+            "zh-CN": "动感斗球"
+          },
+          "id": "LUCIOBALL"
+        },
+        {
+          "aliases": {
+            "en-US": "Mei's Snowball Offensive",
+            "zh-CN": "雪球攻势"
+          },
+          "id": "MEISSNOWBALLOFFENSIVE"
+        },
+        {
+          "aliases": {
+            "en-US": "Practice Range",
+            "zh-CN": "训练靶场"
+          },
+          "id": "PRACTICERANGE"
+        },
+        {
+          "aliases": {
+            "en-US": "Push",
+            "zh-CN": "机动推进"
+          },
+          "id": "PUSH"
+        },
+        {
+          "aliases": {
+            "en-US": "Push April Fools"
+          },
+          "id": "PUSHAPRILFOOLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Push Community"
+          },
+          "id": "PUSHCOMMUNITY"
+        },
+        {
+          "aliases": {
+            "en-US": "Skirmish",
+            "zh-CN": "突击模式"
+          },
+          "id": "SKIRMISH"
+        },
+        {
+          "aliases": {
+            "en-US": "Snowball Deathmatch",
+            "zh-CN": "雪球死斗"
+          },
+          "id": "SNOWBALLFFA"
+        },
+        {
+          "aliases": {
+            "en-US": "Stadium Practice Range",
+            "zh-CN": "决斗领域"
+          },
+          "id": "STADIUMPRACTICERANGE"
+        },
+        {
+          "aliases": {
+            "en-US": "Team Deathmatch",
+            "zh-CN": "团队死斗"
+          },
+          "id": "TDM"
+        },
+        {
+          "aliases": {
+            "en-US": "Yeti Hunter",
+            "zh-CN": "雪域狩猎"
+          },
+          "id": "YETIHUNTER"
+        },
+        {
+          "aliases": {
+            "en-US": "Assault Balanced Overwatch"
+          },
+          "id": "ASSAULTBALANCEDOVERWATCH"
+        },
+        {
+          "aliases": {
+            "en-US": "Control Balanced Overwatch"
+          },
+          "id": "CONTROLBALANCEDOVERWATCH"
+        },
+        {
+          "aliases": {
+            "en-US": "Escort Balanced Overwatch"
+          },
+          "id": "ESCORTBALANCEDOVERWATCH"
+        },
+        {
+          "aliases": {
+            "en-US": "Hybrid Balanced Overwatch"
+          },
+          "id": "HYBRIDBALANCEDOVERWATCH"
+        },
+        {
+          "aliases": {
+            "en-US": "Push Balanced Overwatch"
+          },
+          "id": "PUSHBALANCEDOVERWATCH"
+        }
+      ]
     }
   ],
   "events": [
@@ -8187,7 +8435,8 @@
       "Is Dummy Bot, Ability Cooldown, facing-angle/speed, ground-state, dot-product, event-damage, normalize, and angle-difference values are transcribed from the pinned workshop-data export and exercised by the pinned direct raw Workshop artifacts",
       "event/control/effect identities added in this slice are transcribed from workshop-data constants and values and exercised by the pinned direct raw Workshop artifacts",
       "93 additional value identities are mechanically reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; parameter names/types and reviewed en-US/zh-CN aliases remain data-backed",
-      "enum domains/members and action signatures are reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; structural aliases remain owned by the parser"
+      "enum domains/members and action signatures are reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; structural aliases remain owned by the parser",
+      "current vector constants, Game Mode and Modulo values, Gamemode members, Hero and Color domain aliases, and To Nearest alias are reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
     ]
   },
   "schemaVersion": 1,
@@ -10991,7 +11240,75 @@
         "Player",
         "Position"
       ]
+    },
+    {
+      "aliases": {
+        "en-US": "Backward",
+        "zh-CN": "后"
+      },
+      "id": "backward",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Down",
+        "zh-CN": "下"
+      },
+      "id": "down",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Left",
+        "zh-CN": "左"
+      },
+      "id": "left",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Right",
+        "zh-CN": "右"
+      },
+      "id": "right",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Up",
+        "zh-CN": "上"
+      },
+      "id": "up",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Game Mode",
+        "zh-CN": "游戏模式"
+      },
+      "id": "gameMode",
+      "paramDomains": [
+        "Gamemode"
+      ],
+      "params": [
+        "Gamemode"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Modulo",
+        "zh-CN": "余数"
+      },
+      "id": "modulo",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Value",
+        "Value"
+      ]
     }
   ],
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

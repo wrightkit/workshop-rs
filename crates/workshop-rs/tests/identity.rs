@@ -5,14 +5,14 @@
 
 use workshop_rs::catalog::{Catalog, Locale};
 
-/// The pinned digest of the committed catalog dataset (version 0.1.0).
+/// The pinned digest of the committed catalog dataset (version 0.1.1).
 ///
 /// Any dataset change (entries, aliases, locale tables, provenance, target)
 /// changes the content digest, and this test fails until the pipeline
 /// (`workshop-catalog-gen build`) recomputes it and the pin is updated
 /// deliberately together with the data.
 const PINNED_CATALOG_DIGEST: &str =
-    "299e12d514829d938a93e9e37717799baa09af17789fff706274e2cb6c0d5636";
+    "5345a68a72ac3cb9b6adcce4402f385d222c999c0fd911266e2671fe17bfb373";
 
 #[test]
 fn committed_catalog_digest_is_pinned() {
@@ -37,7 +37,7 @@ fn identity_reports_all_four_machine_readable_identities() {
     let catalog = Catalog::builtin().expect("built-in catalog");
     let identity = catalog.identity();
     assert_eq!(identity.implementation_version, env!("CARGO_PKG_VERSION"));
-    assert_eq!(identity.catalog_version, "0.1.0");
+    assert_eq!(identity.catalog_version, "0.1.1");
     assert_eq!(
         identity.catalog_digest.as_deref(),
         Some(PINNED_CATALOG_DIGEST)
@@ -71,7 +71,7 @@ fn locale_coverage_is_exact_and_primary_is_complete() {
     let en = catalog.locale_coverage(&Locale::new("en-US"));
     assert_eq!(en.mapped, en.total, "the primary locale is complete");
     let zh = catalog.locale_coverage(&Locale::new("zh-CN"));
-    assert_eq!(zh.mapped, zh.total, "zh-CN locale coverage is complete");
+    assert!(zh.mapped > 0 && zh.mapped < zh.total);
     assert_eq!(zh.total, en.total);
     let all = catalog.locale_coverage_all();
     assert_eq!(all.len(), 2);

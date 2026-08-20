@@ -508,7 +508,15 @@ impl Parser<'_> {
         if parts.is_empty() {
             return Err(self.malformed("expected an identifier", &first));
         }
-        Ok((parts.join(" ").replace(" : ", ":"), start, end))
+        Ok((
+            parts
+                .join(" ")
+                .replace(" : ", ":")
+                .replace(" .", ".")
+                .replace(". ", "."),
+            start,
+            end,
+        ))
     }
 
     fn raw_settings_line(&mut self) -> Result<String> {
@@ -621,6 +629,9 @@ impl Parser<'_> {
     ) -> bool {
         if let (Some(hero), Some(PathPart::Part(key))) = (hero, candidate.path.last()) {
             if table::hero_setting_name(hero, key, self.locale.as_str()) == Some(display) {
+                return true;
+            }
+            if table::hero_setting_alias(hero, key, self.locale.as_str(), display) {
                 return true;
             }
         }
@@ -2334,8 +2345,9 @@ impl Parser<'_> {
         // A value function wins over an enum domain of the same spelling
         // (e.g. `Vector(x, y, z)` is the value function; `Vector` as an enum
         // domain only appears through bare members like `Up`).
-        let prefer_enum =
-            canonical_keyword(phrase) == "Hero" && self.catalog.enum_domain("Hero").is_some();
+        let prefer_enum = self.catalog.enum_domain("Hero").is_some()
+            && (canonical_keyword(phrase) == "Hero"
+                || self.catalog.resolve_enum_domain(&self.locale, phrase) == Some("Hero"));
         if !prefer_enum {
             if let Some(entry) = self.catalog.resolve(Kind::Value, &self.locale, phrase) {
                 self.expect(TokenKind::LParen, "expected '(' after value name")?;
@@ -2446,6 +2458,27 @@ impl Parser<'_> {
     }
 
     fn bare_member(
+        &mut self,
+        phrase: &str,
+        start: Position,
+        end: Position,
+    ) -> Result<wir::ValueId> {
+        // Some enum members use a colon in their Workshop spelling (for
+        // example `Arrow: Up`). `phrase()` intentionally stops at the colon
+        // for ordinary identifiers, so complete the member only when the
+        // enclosing signature has already declared an enum domain.
+        if self.expected_domain.is_some()
+            && matches!(self.peek().map(|token| token.kind), Some(TokenKind::Colon))
+        {
+            self.pos += 1;
+            let (suffix, _, suffix_end) = self.phrase()?;
+            let owned_phrase = format!("{phrase}: {suffix}");
+            return self.bare_member_resolved(&owned_phrase, start, suffix_end);
+        }
+        self.bare_member_resolved(phrase, start, end)
+    }
+
+    fn bare_member_resolved(
         &mut self,
         phrase: &str,
         start: Position,
@@ -2919,7 +2952,15 @@ impl Parser<'_> {
         if parts.is_empty() {
             return Err(self.malformed("expected an enum member", &first));
         }
-        Ok((parts.join(" ").replace(" : ", ":"), start, end))
+        Ok((
+            parts
+                .join(" ")
+                .replace(" : ", ":")
+                .replace(" .", ".")
+                .replace(". ", "."),
+            start,
+            end,
+        ))
     }
 
     /// Read a text line (tokens until `;`), joining words and dashes into

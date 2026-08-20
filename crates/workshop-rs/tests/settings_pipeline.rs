@@ -98,6 +98,32 @@ fn supported_apostrophe_map_name_parses() {
 }
 
 #[test]
+fn generated_capture_the_flag_settings_surface_is_canonical() {
+    let catalog = catalog();
+    let source = "settings { modes { Capture The Flag { enabled maps { Ayutthaya } Flag Score Respawn Time: 15 Flag Return Time: 4 Flag Dropped Lock Time: 5 } } }";
+    let program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("parses");
+    assert!(
+        program
+            .semantic_issues(&catalog)
+            .iter()
+            .all(|issue| { issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting })
+    );
+}
+
+#[test]
+fn pinned_ai_hero_setting_aliases_are_canonical() {
+    let catalog = catalog();
+    let source = "设置 { 英雄 { 综合 { 索杰恩 { 充能速度 充能射击: 200% } 路霸 { 呼吸器充能速度: 150% } 骇灾 { 尖刺护体资源恢复: 150% 尖刺护体资源消耗: 50% } } } }";
+    let program = parser::parse(source, &catalog, &Locale::new("zh-CN")).expect("parses");
+    assert!(
+        program
+            .semantic_issues(&catalog)
+            .iter()
+            .all(|issue| { issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting })
+    );
+}
+
+#[test]
 fn supported_dva_name_parses() {
     let catalog = catalog();
     let source =
