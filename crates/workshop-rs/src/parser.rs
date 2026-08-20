@@ -1202,6 +1202,31 @@ impl Parser<'_> {
             })));
         }
 
+        // Object/member assignments use the same value grammar as member
+        // reads (`receiver.member` and `receiver.member[index]`). Keep this
+        // source-level form distinct from catalog actions: the receiver and
+        // member are dynamic Workshop values, not a builtin identity.
+        if self.line_has_assignment() {
+            self.pos = saved;
+            let target = self.value()?;
+            let Some(operator) = self.assignment_operator() else {
+                self.pos = saved;
+                return Ok(None);
+            };
+            let value = self.value()?;
+            self.expect(TokenKind::Semi, "expected ';' after member assignment")?;
+            let op = match operator {
+                AssignmentOperator::Set => None,
+                AssignmentOperator::Modify(op) => Some(op),
+            };
+            return Ok(Some(self.target.actions.push(Action::AssignMember {
+                target,
+                op,
+                value,
+                span: Some(Span::new(self.file(), start, self.previous_span().1)),
+            })));
+        }
+
         if !matches!(canonical_keyword(&first), "Event" | "event")
             || !matches!(
                 self.peek_at(1).map(|token| token.kind),

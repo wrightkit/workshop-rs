@@ -103,6 +103,10 @@ fn check_action(program: &Program, id: super::ActionId) -> Result<(), IrError> {
             }
             check_value(program, *value)
         }
+        Action::AssignMember { target, value, .. } => {
+            check_value(program, *target)?;
+            check_value(program, *value)
+        }
         Action::CallSubroutine { subroutine, .. } => {
             if !program.subroutines.contains(*subroutine) {
                 return Err(dangling("subroutine", subroutine.index()));

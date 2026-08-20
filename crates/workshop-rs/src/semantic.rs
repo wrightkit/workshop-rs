@@ -105,6 +105,7 @@ fn inspect_action(
         | Action::ModifyGlobalVariable { .. }
         | Action::SetPlayerVariable { .. }
         | Action::ModifyPlayerVariable { .. }
+        | Action::AssignMember { .. }
         | Action::CallSubroutine { .. }
         | Action::Debug { .. }
         | Action::Print { .. } => {}

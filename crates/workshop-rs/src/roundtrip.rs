@@ -401,6 +401,20 @@ fn action_equivalent(
                 && value_equivalent(a, b, *x, *y)
         }
         (
+            wir::Action::AssignMember {
+                target: ta,
+                op: oa,
+                value: xa,
+                ..
+            },
+            wir::Action::AssignMember {
+                target: tb,
+                op: ob,
+                value: xb,
+                ..
+            },
+        ) => oa == ob && value_equivalent(a, b, *ta, *tb) && value_equivalent(a, b, *xa, *xb),
+        (
             wir::Action::CallSubroutine { subroutine: sa, .. },
             wir::Action::CallSubroutine { subroutine: sb, .. },
         ) => name_eq(a.subroutines.get(*sa), b.subroutines.get(*sb)),

@@ -140,6 +140,10 @@ fn validate_action(
             validate_value(program, catalog, *player, errors);
             validate_value(program, catalog, *value, errors);
         }
+        wir::Action::AssignMember { target, value, .. } => {
+            validate_value(program, catalog, *target, errors);
+            validate_value(program, catalog, *value, errors);
+        }
         wir::Action::If {
             branches,
             else_body,

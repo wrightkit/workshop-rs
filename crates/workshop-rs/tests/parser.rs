@@ -82,6 +82,25 @@ fn every_corpus_workshop_text_parses_to_valid_wir() {
 }
 
 #[test]
+fn member_assignment_lowers_to_source_semantic_wir() {
+    let text = r#"rule ("member") { event { Ongoing - Global; } actions {
+        All Players(All Teams).abilityHUD[17] = True;
+    } }"#;
+    let catalog = catalog();
+    let program = parser::parse_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("member assignments parse");
+    assert!(
+        program
+            .actions
+            .iter()
+            .any(|action| matches!(action, wir::Action::AssignMember { op: None, .. }))
+    );
+    assert!(!program.actions.iter().any(
+        |action| matches!(action, wir::Action::Call { name, .. } if name == "rawWorkshopAction")
+    ));
+}
+
+#[test]
 fn parsing_is_deterministic() {
     let text = corpus_workshop_text("control-flow");
     let catalog = catalog();

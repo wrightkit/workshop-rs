@@ -717,6 +717,36 @@ impl Emitter<'_> {
             wir::Action::Print { message, .. } => {
                 self.emit_hud_text(*message, level, false)?;
             }
+            wir::Action::AssignMember {
+                target, op, value, ..
+            } => {
+                let mut target_text = String::new();
+                let mut value_text = String::new();
+                self.value(*target, &mut target_text)?;
+                self.value(*value, &mut value_text)?;
+                let operator = match op {
+                    None => "=".to_string(),
+                    Some(op) => {
+                        let token = match op {
+                            wir::ModifyOp::Add => "+",
+                            wir::ModifyOp::Subtract => "-",
+                            wir::ModifyOp::Multiply => "*",
+                            wir::ModifyOp::Divide => "/",
+                            wir::ModifyOp::Modulo => "%",
+                            _ => {
+                                return Err(WorkshopError::Unsupported {
+                                    message: format!(
+                                        "unsupported member assignment operator {op:?}"
+                                    ),
+                                    span: None,
+                                });
+                            }
+                        };
+                        format!("{token}=")
+                    }
+                };
+                self.line(level, &format!("{target_text} {operator} {value_text};"))?;
+            }
             wir::Action::Call { name, args, .. } => {
                 // The chase family dispatches on the first argument's
                 // variable kind, mirroring the pinned reference: a global
