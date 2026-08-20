@@ -821,7 +821,10 @@
     {
       "aliases": {
         "en-US": "Enable Built-In Game Mode Music",
-        "zh-CN": "启用内置游戏模式音乐"
+        "zh-CN": [
+          "启用内置游戏模式音乐",
+          "开启游戏预设音乐模式"
+        ]
       },
       "id": "enableBuiltinGameModeMusic",
       "params": []
@@ -829,7 +832,10 @@
     {
       "aliases": {
         "en-US": "Destroy All In-World Text",
-        "zh-CN": "摧毁所有世界内文本"
+        "zh-CN": [
+          "摧毁所有世界内文本",
+          "消除所有地图文本"
+        ]
       },
       "id": "destroyAllInWorldText",
       "params": []
@@ -837,7 +843,10 @@
     {
       "aliases": {
         "en-US": "Destroy All Icons",
-        "zh-CN": "摧毁所有图标"
+        "zh-CN": [
+          "摧毁所有图标",
+          "消除所有图标"
+        ]
       },
       "id": "destroyAllIcons",
       "params": []
@@ -845,7 +854,10 @@
     {
       "aliases": {
         "en-US": "Destroy All HUD Text",
-        "zh-CN": "摧毁所有HUD文本"
+        "zh-CN": [
+          "摧毁所有HUD文本",
+          "消除所有HUD文本"
+        ]
       },
       "id": "destroyAllHudText",
       "params": []
@@ -853,7 +865,10 @@
     {
       "aliases": {
         "en-US": "Destroy All Effects",
-        "zh-CN": "摧毁所有效果"
+        "zh-CN": [
+          "摧毁所有效果",
+          "消除所有效果"
+        ]
       },
       "id": "destroyAllEffects",
       "params": []
@@ -861,7 +876,10 @@
     {
       "aliases": {
         "en-US": "Disable Built-In Game Mode Music",
-        "zh-CN": "禁用内置游戏模式音乐"
+        "zh-CN": [
+          "禁用内置游戏模式音乐",
+          "关闭游戏预设音乐模式"
+        ]
       },
       "id": "disableBuiltinGameModeMusic",
       "params": []
@@ -877,7 +895,10 @@
     {
       "aliases": {
         "en-US": "Disable Built-In Game Mode Completion",
-        "zh-CN": "禁用内置游戏模式完成"
+        "zh-CN": [
+          "禁用内置游戏模式完成",
+          "关闭游戏预设完成条件"
+        ]
       },
       "id": "disableBuiltinGameModeCompletion",
       "params": []
@@ -885,7 +906,10 @@
     {
       "aliases": {
         "en-US": "Disable Built-In Game Mode Announcer",
-        "zh-CN": "禁用内置游戏模式播报员"
+        "zh-CN": [
+          "禁用内置游戏模式播报员",
+          "关闭游戏预设通告模式"
+        ]
       },
       "id": "disableBuiltinGameModeAnnouncer",
       "params": []
@@ -893,7 +917,10 @@
     {
       "aliases": {
         "en-US": "Disable Built-In Game Mode Scoring",
-        "zh-CN": "禁用内置游戏模式计分"
+        "zh-CN": [
+          "禁用内置游戏模式计分",
+          "关闭游戏预设计分模式"
+        ]
       },
       "id": "disableBuiltinGameModeScoring",
       "params": []
@@ -901,7 +928,10 @@
     {
       "aliases": {
         "en-US": "Unpause Match Time",
-        "zh-CN": "继续比赛时间"
+        "zh-CN": [
+          "继续比赛时间",
+          "比赛时间继续"
+        ]
       },
       "id": "unpauseMatchTime",
       "params": []
@@ -1283,7 +1313,10 @@
     {
       "aliases": {
         "en-US": "Wait Until",
-        "zh-CN": "等待直到 "
+        "zh-CN": [
+          "等待直到 ",
+          "等待直到"
+        ]
       },
       "id": "waitUntil",
       "params": [
@@ -1788,13 +1821,16 @@
     {
       "aliases": {
         "en-US": "Abort",
-        "zh-CN": "中止"
+        "zh-CN": [
+          "中止",
+          "中断"
+        ]
       },
       "id": "abort",
       "params": []
     }
   ],
-  "digest": "b519a3a938e5a74d6c8bbe4fcc21b9d0e7c9ddb477da3200694b81cc97a45013",
+  "digest": "7b89670293ae220584bbbf172a65fff13e55903cb7005c41800fc2b39f872f4f",
   "enums": [
     {
       "domain": "Impulse",
@@ -3877,7 +3913,11 @@
     "generatorVersion": "0.1.0",
     "license": "MIT (WrightKit-authored data, ownership transfer to workshop-rs per wright#136 direction; see docs/provenance.md)",
     "reviewed": true,
-    "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); rule-event identities and EventTeam/EventPlayer filter aliases are transcribed from the user-provided workshop-data export and its Workshop event annotations, cross-checked against documented raw Workshop event forms; migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; zh-CN aliases are generated from the user-provided workshop-data JSON; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; the exact-match corpus and its exclusions are pinned separately in tools/corpus/zh-cn-corpus.json"
+    "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); rule-event identities and EventTeam/EventPlayer filter aliases are transcribed from the user-provided workshop-data export and its Workshop event annotations, cross-checked against documented raw Workshop event forms; migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; zh-CN aliases are generated from the user-provided workshop-data JSON; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; the exact-match corpus and its exclusions are pinned separately in tools/corpus/zh-cn-corpus.json",
+    "sourceNotes": [
+      "abort zh-CN retains both 中止 from the reviewed workshop-data export and 中断 observed in the reproducible Bastion c010e1a2d468ec7140f474e334067e5ab8d02d89 build:release/build:main:zh output; the first spelling is emitted deterministically and both are accepted for parsing",
+      "disableBuiltinGameModeCompletion zh-CN retains 禁用内置游戏模式完成 from the reviewed workshop-data export and 关闭游戏预设完成条件 observed in the same reproducible Bastion build; the first spelling is emitted deterministically and both are accepted for parsing"
+    ]
   },
   "schemaVersion": 1,
   "structural": [

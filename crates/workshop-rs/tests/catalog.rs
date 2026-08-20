@@ -66,6 +66,28 @@ fn localized_spelling_resolves_to_canonical_id_and_back() {
 }
 
 #[test]
+fn reviewed_locale_alias_conflicts_resolve_to_one_canonical_identity() {
+    let catalog = builtin();
+    for spelling in ["中止", "中断"] {
+        let entry = catalog
+            .resolve(Kind::Action, &Locale::new("zh-CN"), spelling)
+            .expect("reviewed alias resolves");
+        assert_eq!(entry.id, "abort");
+    }
+    assert_eq!(
+        catalog.spelling(Kind::Action, &Locale::new("zh-CN"), "abort"),
+        Some("中止")
+    );
+    assert_eq!(
+        catalog
+            .entry(Kind::Action, "abort")
+            .expect("abort entry")
+            .spellings(&Locale::new("zh-CN")),
+        &["中止".to_string(), "中断".to_string()]
+    );
+}
+
+#[test]
 fn enums_resolve_members_to_canonical_identity() {
     let catalog = builtin();
     assert_eq!(

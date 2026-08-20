@@ -114,13 +114,22 @@ pub struct CatalogEntry {
     /// resolved when a call omits the argument. See the catalog data
     /// provenance for the value syntax and evidence.
     pub param_defaults: Vec<Option<String>>,
-    aliases: HashMap<Locale, String>,
+    aliases: HashMap<Locale, Vec<String>>,
 }
 
 impl CatalogEntry {
     /// The localized spelling of this builtin in `locale`, when declared.
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
-        self.aliases.get(locale).map(String::as_str)
+        self.aliases
+            .get(locale)
+            .and_then(|spellings| spellings.first())
+            .map(String::as_str)
+    }
+
+    /// Every reviewed localized spelling of this builtin, with the first
+    /// spelling reserved for deterministic emission.
+    pub fn spellings(&self, locale: &Locale) -> &[String] {
+        self.aliases.get(locale).map(Vec::as_slice).unwrap_or(&[])
     }
 
     /// The number of declared arguments for this builtin.
@@ -153,13 +162,22 @@ impl CatalogEntry {
 #[derive(Debug, Clone)]
 pub struct EnumMember {
     pub member: String,
-    aliases: HashMap<Locale, String>,
+    aliases: HashMap<Locale, Vec<String>>,
 }
 
 impl EnumMember {
     /// The localized spelling of this member in `locale`, when declared.
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
-        self.aliases.get(locale).map(String::as_str)
+        self.aliases
+            .get(locale)
+            .and_then(|spellings| spellings.first())
+            .map(String::as_str)
+    }
+
+    /// Every reviewed localized spelling of this enum member, with the first
+    /// spelling reserved for deterministic emission.
+    pub fn spellings(&self, locale: &Locale) -> &[String] {
+        self.aliases.get(locale).map(Vec::as_slice).unwrap_or(&[])
     }
 }
 
@@ -187,6 +205,10 @@ pub struct Provenance {
     pub source: String,
     pub license: String,
     pub reviewed: bool,
+    /// Additional immutable observations that qualify the dataset source,
+    /// including reviewed spelling conflicts retained as parse aliases.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub source_notes: Vec<String>,
 }
 
 /// Per-locale mapping coverage: how many canonical entries (builtins and
@@ -278,7 +300,7 @@ struct CatalogFile {
 #[serde(rename_all = "camelCase")]
 struct EntryFile {
     id: String,
-    aliases: HashMap<String, String>,
+    aliases: HashMap<String, AliasFile>,
     #[serde(default)]
     params: Vec<String>,
     /// Canonical enum domain per parameter position (parallel to `params`);
@@ -304,7 +326,34 @@ struct EnumFile {
 #[derive(Deserialize)]
 struct MemberFile {
     id: String,
-    aliases: HashMap<String, String>,
+    aliases: HashMap<String, AliasFile>,
+}
+
+/// A locale may have one canonical emitter spelling or several reviewed
+/// spellings observed across current Workshop producers. The string form is
+/// retained for the common case; the array form makes conflicts explicit in
+/// the data instead of forcing parser branches or silently choosing one.
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum AliasFile {
+    One(String),
+    Many(Vec<String>),
+}
+
+impl AliasFile {
+    fn into_spellings(self, id: &str, locale: &str) -> Result<Vec<String>> {
+        let spellings = match self {
+            AliasFile::One(spelling) => vec![spelling],
+            AliasFile::Many(spellings) => spellings,
+        };
+        if spellings.is_empty() || spellings.iter().any(String::is_empty) {
+            return Err(CatalogError::validation(format!(
+                "catalog entry '{}' declares an empty alias for locale '{}'",
+                id, locale
+            )));
+        }
+        Ok(spellings)
+    }
 }
 
 impl Catalog {
@@ -545,7 +594,11 @@ impl Catalog {
         let mut matches = Vec::new();
         for domain in &self.enums {
             for member in &domain.members {
-                if member.spelling(locale) == Some(spelling) {
+                if member
+                    .spellings(locale)
+                    .iter()
+                    .any(|alias| alias == spelling)
+                {
                     matches.push((domain.domain.clone(), member.member.clone()));
                 }
             }
@@ -556,24 +609,27 @@ impl Catalog {
     fn insert_entry(&mut self, kind: Kind, item: EntryFile) -> Result<()> {
         let index = self.entries.len();
         let mut aliases = HashMap::new();
-        for (locale_str, spelling) in &item.aliases {
-            let locale = Locale::new(locale_str);
+        for (locale_str, alias_file) in item.aliases {
+            let locale = Locale::new(&locale_str);
             if !self.locales.contains(&locale) {
                 return Err(CatalogError::validation(format!(
                     "entry '{}' declares alias for undeclared locale '{}'",
                     item.id, locale
                 )));
             }
-            let key = (kind, locale.clone(), spelling.clone());
-            if self.alias_to_entry.contains_key(&key) {
-                return Err(CatalogError::validation(format!(
-                    "duplicate {} alias '{spelling}' for locale '{}'",
-                    kind.as_str(),
-                    locale
-                )));
+            let spellings = alias_file.into_spellings(&item.id, locale.as_str())?;
+            for spelling in &spellings {
+                let key = (kind, locale.clone(), spelling.clone());
+                if self.alias_to_entry.contains_key(&key) {
+                    return Err(CatalogError::validation(format!(
+                        "duplicate {} alias '{spelling}' for locale '{}'",
+                        kind.as_str(),
+                        locale
+                    )));
+                }
+                self.alias_to_entry.insert(key, index);
             }
-            aliases.insert(locale, spelling.clone());
-            self.alias_to_entry.insert(key, index);
+            aliases.insert(locale, spellings);
         }
         let id_key = (kind, item.id.clone());
         if self.by_id.contains_key(&id_key) {
@@ -650,24 +706,27 @@ impl Catalog {
         let mut members = Vec::new();
         for (member_index, member) in domain.members.into_iter().enumerate() {
             let mut aliases = HashMap::new();
-            for (locale_str, spelling) in &member.aliases {
-                let locale = Locale::new(locale_str);
+            for (locale_str, alias_file) in member.aliases {
+                let locale = Locale::new(&locale_str);
                 if !self.locales.contains(&locale) {
                     return Err(CatalogError::validation(format!(
                         "enum {}::{} declares alias for undeclared locale '{}'",
                         domain.domain, member.id, locale
                     )));
                 }
-                let key = (domain.domain.clone(), locale.clone(), spelling.clone());
-                if self.enum_alias_to_member.contains_key(&key) {
-                    return Err(CatalogError::validation(format!(
-                        "duplicate enum alias '{spelling}' in '{}' for locale '{}'",
-                        domain.domain, locale
-                    )));
+                let spellings = alias_file.into_spellings(&member.id, locale.as_str())?;
+                for spelling in &spellings {
+                    let key = (domain.domain.clone(), locale.clone(), spelling.clone());
+                    if self.enum_alias_to_member.contains_key(&key) {
+                        return Err(CatalogError::validation(format!(
+                            "duplicate enum alias '{spelling}' in '{}' for locale '{}'",
+                            domain.domain, locale
+                        )));
+                    }
+                    self.enum_alias_to_member
+                        .insert(key, (domain_index, member_index));
                 }
-                aliases.insert(locale, spelling.clone());
-                self.enum_alias_to_member
-                    .insert(key, (domain_index, member_index));
+                aliases.insert(locale, spellings);
             }
             if !aliases.contains_key(&primary) {
                 return Err(CatalogError::validation(format!(

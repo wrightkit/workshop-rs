@@ -1023,38 +1023,33 @@ impl Parser<'_> {
                     }
                     let saved = self.pos;
                     let (phrase, start, end) = self.phrase()?;
-                    if canonical_keyword(&phrase) == "disabled While" {
-                        actions.push(self.while_group()?);
-                        continue;
-                    }
-                    if canonical_keyword(&phrase) == "disabled If" {
-                        actions.push(self.if_group()?);
-                        continue;
-                    }
-                    if canonical_keyword(&phrase) == "disabled Abort" {
-                        actions.push(self.action_call_from_phrase(
-                            "Abort If".to_string(),
-                            start,
-                            end,
-                        )?);
-                        continue;
-                    }
-                    if canonical_keyword(&phrase) == "disabled Wait Until" {
-                        actions.push(self.action_call_from_phrase(
-                            "Wait Until".to_string(),
-                            start,
-                            end,
-                        )?);
-                        continue;
-                    }
-                    if let Some(rest) = phrase.strip_prefix("disabled ") {
-                        if self
-                            .catalog
-                            .resolve(Kind::Action, &self.locale, rest)
-                            .is_some()
+                    if let Some(rest) = self.disabled_action_rest(&phrase) {
+                        if let Some(structural) =
+                            self.catalog.resolve(Kind::Structural, &self.locale, rest)
                         {
+                            match structural.id.as_str() {
+                                "while" => {
+                                    actions.push(self.while_group()?);
+                                    continue;
+                                }
+                                "if" => {
+                                    actions.push(self.if_group()?);
+                                    continue;
+                                }
+                                _ => {}
+                            }
+                        }
+                        if let Some(action) = self.catalog.resolve(Kind::Action, &self.locale, rest)
+                        {
+                            let canonical = if action.id == "abort" {
+                                self.catalog
+                                    .spelling(Kind::Action, &self.locale, "abortIf")
+                                    .unwrap_or(rest)
+                            } else {
+                                rest
+                            };
                             actions.push(self.action_call_from_phrase(
-                                rest.to_string(),
+                                canonical.to_string(),
                                 start,
                                 end,
                             )?);
@@ -1124,6 +1119,17 @@ impl Parser<'_> {
                 }
             }
         }
+    }
+
+    /// Return the action spelling after the locale-declared disabled
+    /// modifier. The modifier itself is settings/catalog data, not a parser
+    /// branch for a fixed pair of client locales.
+    fn disabled_action_rest<'a>(&self, phrase: &'a str) -> Option<&'a str> {
+        if let Some(rest) = phrase.strip_prefix("disabled ") {
+            return Some(rest);
+        }
+        let localized = table::localized_name(self.locale.as_str(), "tokens", "disabled")?;
+        phrase.strip_prefix(localized)?.strip_prefix(' ')
     }
 
     fn assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
@@ -2283,6 +2289,17 @@ impl Parser<'_> {
                 )));
             }
             _ => {}
+        }
+        if let Some(expected) = self.expected_domain {
+            if let Some((value_type, value)) =
+                self.catalog
+                    .resolve_enum_member(expected, &self.locale, phrase)
+            {
+                return Ok(self.target.values.push(ValueNode::new(
+                    Value::Enum { value_type, value },
+                    Some(Span::new(self.file(), start, end)),
+                )));
+            }
         }
         if let Some((value_type, value)) =
             self.catalog
