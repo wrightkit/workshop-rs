@@ -1177,8 +1177,7 @@ impl Parser<'_> {
                 })));
             }
             let Some(operator) = self.assignment_operator() else {
-                self.pos = saved;
-                return Ok(None);
+                return self.member_assignment_action(saved, start);
             };
             let variable = self.global_by_name(&name)?;
             let value = self.value()?;
@@ -1202,31 +1201,6 @@ impl Parser<'_> {
             })));
         }
 
-        // Object/member assignments use the same value grammar as member
-        // reads (`receiver.member` and `receiver.member[index]`). Keep this
-        // source-level form distinct from catalog actions: the receiver and
-        // member are dynamic Workshop values, not a builtin identity.
-        if self.line_has_assignment() {
-            self.pos = saved;
-            let target = self.value()?;
-            let Some(operator) = self.assignment_operator() else {
-                self.pos = saved;
-                return Ok(None);
-            };
-            let value = self.value()?;
-            self.expect(TokenKind::Semi, "expected ';' after member assignment")?;
-            let op = match operator {
-                AssignmentOperator::Set => None,
-                AssignmentOperator::Modify(op) => Some(op),
-            };
-            return Ok(Some(self.target.actions.push(Action::AssignMember {
-                target,
-                op,
-                value,
-                span: Some(Span::new(self.file(), start, self.previous_span().1)),
-            })));
-        }
-
         if !matches!(canonical_keyword(&first), "Event" | "event")
             || !matches!(
                 self.peek_at(1).map(|token| token.kind),
@@ -1234,6 +1208,15 @@ impl Parser<'_> {
                     if matches!(canonical_keyword(&word), "Player" | "player")
             )
         {
+            // Object/member assignments use the same value grammar as member
+            // reads (`receiver.member` and `receiver.member[index]`). Keep
+            // this source-level form distinct from catalog actions: the
+            // receiver and member are dynamic Workshop values, not a builtin
+            // identity. Global and Event Player assignments are handled by
+            // their dedicated variable paths above and below.
+            if !matches!(canonical_keyword(&first), "Event" | "event") {
+                return self.member_assignment_action(saved, start);
+            }
             return Ok(None);
         }
 
@@ -1277,8 +1260,7 @@ impl Parser<'_> {
             })));
         }
         let Some(operator) = self.assignment_operator() else {
-            self.pos = saved;
-            return Ok(None);
+            return self.member_assignment_action(saved, start);
         };
         let value = self.value()?;
         self.expect(TokenKind::Semi, "expected ';' after assignment")?;
@@ -1300,6 +1282,34 @@ impl Parser<'_> {
                 span,
                 target_span,
             },
+        })))
+    }
+
+    fn member_assignment_action(
+        &mut self,
+        saved: usize,
+        start: Position,
+    ) -> Result<Option<wir::ActionId>> {
+        self.pos = saved;
+        if !self.line_has_assignment() {
+            return Ok(None);
+        }
+        let target = self.value()?;
+        let Some(operator) = self.assignment_operator() else {
+            self.pos = saved;
+            return Ok(None);
+        };
+        let value = self.value()?;
+        self.expect(TokenKind::Semi, "expected ';' after member assignment")?;
+        let op = match operator {
+            AssignmentOperator::Set => None,
+            AssignmentOperator::Modify(op) => Some(op),
+        };
+        Ok(Some(self.target.actions.push(Action::AssignMember {
+            target,
+            op,
+            value,
+            span: Some(Span::new(self.file(), start, self.previous_span().1)),
         })))
     }
 
@@ -1835,8 +1845,13 @@ impl Parser<'_> {
                     ));
                     continue;
                 }
-                if is_comparison(&op)
-                    || matches!(op.as_str(), "and" | "or" | "+" | "-" | "*" | "/" | "%")
+                let compound_assignment = matches!(
+                    self.peek_at(1).map(|token| token.kind),
+                    Some(TokenKind::Op(equal)) if equal == "="
+                );
+                if !compound_assignment
+                    && (is_comparison(&op)
+                        || matches!(op.as_str(), "and" | "or" | "+" | "-" | "*" | "/" | "%"))
                 {
                     self.pos += 1;
                     let right = self.primary()?;

@@ -85,6 +85,8 @@ fn every_corpus_workshop_text_parses_to_valid_wir() {
 fn member_assignment_lowers_to_source_semantic_wir() {
     let text = r#"rule ("member") { event { Ongoing - Global; } actions {
         All Players(All Teams).abilityHUD[17] = True;
+        Global.botOrisaChild.botDoesUniqueBehaviour = False;
+        Event Player.beamID.uppercutMomentum += 1;
     } }"#;
     let catalog = catalog();
     let program = parser::parse_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
@@ -95,6 +97,13 @@ fn member_assignment_lowers_to_source_semantic_wir() {
             .iter()
             .any(|action| matches!(action, wir::Action::AssignMember { op: None, .. }))
     );
+    assert!(program.actions.iter().any(|action| matches!(
+        action,
+        wir::Action::AssignMember {
+            op: Some(wir::ModifyOp::Add),
+            ..
+        }
+    )));
     assert!(!program.actions.iter().any(
         |action| matches!(action, wir::Action::Call { name, .. } if name == "rawWorkshopAction")
     ));
