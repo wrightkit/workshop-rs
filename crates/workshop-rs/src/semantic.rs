@@ -6,6 +6,7 @@
 
 use crate::catalog::{Catalog, Kind};
 use crate::settings::SettingsNode;
+use crate::settings::table;
 use crate::source::Span;
 use crate::wir::{Action, Program, Value};
 
@@ -54,10 +55,29 @@ fn inspect_setting(node: &SettingsNode, issues: &mut Vec<SemanticIssue>) {
             name: name.clone(),
             span: *span,
         }),
-        SettingsNode::Number { .. }
-        | SettingsNode::Bool { .. }
-        | SettingsNode::String { .. }
-        | SettingsNode::List { .. } => {}
+        SettingsNode::List {
+            name,
+            elements,
+            span,
+        } => {
+            let known = match name.as_str() {
+                "enabledMaps" | "disabledMaps" => elements
+                    .iter()
+                    .all(|element| table::map_name(&element.value).is_some()),
+                "enabledHeroes" | "disabledHeroes" => elements
+                    .iter()
+                    .all(|element| table::hero_name(&element.value).is_some()),
+                _ => true,
+            };
+            if !known {
+                issues.push(SemanticIssue {
+                    kind: IncompletenessKind::RawSetting,
+                    name: name.clone(),
+                    span: *span,
+                });
+            }
+        }
+        SettingsNode::Number { .. } | SettingsNode::Bool { .. } | SettingsNode::String { .. } => {}
     }
 }
 

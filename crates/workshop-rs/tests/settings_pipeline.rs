@@ -123,3 +123,33 @@ fn hero_ability_names_resolve_through_gameplay_catalog_in_both_locales() {
     assert!(back.contains("Cryo-Freeze: Off"));
     assert!(back.contains("Ice Wall: On"));
 }
+
+#[test]
+fn disabled_maps_is_a_known_symmetric_settings_list() {
+    let catalog = catalog();
+    let source = "settings { modes { disabled Skirmish { disabled maps {\nKing's Row Winter\nWorkshop Island\n} } } }";
+    let program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("parses");
+    let issues = program.semantic_issues(&catalog);
+    assert!(
+        issues
+            .iter()
+            .all(|issue| issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting),
+        "known disabled-map settings must not remain raw: {issues:?}"
+    );
+    let emitted = emitter::emit(&program, &catalog, &Locale::new("en-US")).expect("emits");
+    assert!(emitted.contains("disabled Skirmish"));
+    assert!(emitted.contains("disabled maps"));
+    assert!(emitted.contains("King's Row Winter"));
+    assert!(emitted.contains("Workshop Island"));
+}
+
+#[test]
+fn unknown_settings_list_members_remain_semantically_incomplete() {
+    let catalog = catalog();
+    let source = "settings { modes { Skirmish { enabled maps { Future Map } } } }";
+    let program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("preserves");
+    assert!(program.semantic_issues(&catalog).iter().any(|issue| {
+        issue.kind == workshop_rs::semantic::IncompletenessKind::RawSetting
+            && issue.name == "enabledMaps"
+    }));
+}

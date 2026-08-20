@@ -265,6 +265,24 @@ pub static ENTRIES: &[TableEntry] = &[
     entry!(
         [
             PathPart::Part("gamemodes"),
+            PathPart::Part("assault"),
+            PathPart::Part("disabledMaps")
+        ],
+        "disabled maps",
+        KeyKind::ListMap
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
+            PathPart::Part("skirmish"),
+            PathPart::Part("disabledMaps")
+        ],
+        "disabled maps",
+        KeyKind::ListMap
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
             PathPart::Part("ffa"),
             PathPart::Part("enabledMaps")
         ],
