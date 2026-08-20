@@ -2219,11 +2219,18 @@ impl Parser<'_> {
                 )));
             }
         }
-        if let Some(domain) = self
+        if let Some(domain_name) = self
             .catalog
-            .enum_domain(phrase)
-            .or_else(|| self.catalog.enum_domain(canonical_keyword(phrase)))
+            .resolve_enum_domain(&self.locale, phrase)
+            .or_else(|| {
+                self.catalog
+                    .resolve_enum_domain(&self.locale, canonical_keyword(phrase))
+            })
         {
+            let domain = self
+                .catalog
+                .enum_domain(domain_name)
+                .expect("resolved enum domain must exist");
             // Enum call: `Color(Yellow)`.
             self.expect(TokenKind::LParen, "expected '('")?;
             let (member_phrase, _, _) = self.enum_member_phrase()?;
@@ -2331,7 +2338,7 @@ impl Parser<'_> {
                     .iter()
                     .any(|call| call == "startAcceleration")
                 || self.call_stack.iter().any(|call| {
-                    call == "Ray Cast Hit Position"
+                    call == "raycastHitPosition"
                         || call == "Direction Towards"
                         || call == "directionTowards"
                 })))
@@ -2391,6 +2398,12 @@ impl Parser<'_> {
         }
         // A bare value constant (e.g. Empty Array).
         if let Some(entry) = self.catalog.resolve(Kind::Value, &self.locale, phrase) {
+            if entry.id == "null" {
+                return Ok(self.target.values.push(ValueNode::new(
+                    Value::Null,
+                    Some(Span::new(self.file(), start, end)),
+                )));
+            }
             return Ok(self.target.values.push(ValueNode::new(
                 Value::Call {
                     name: entry.id.clone(),

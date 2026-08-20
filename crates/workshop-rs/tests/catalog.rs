@@ -109,6 +109,29 @@ fn enums_resolve_members_to_canonical_identity() {
 }
 
 #[test]
+fn localized_enum_domains_and_real_project_values_resolve_canonically() {
+    let catalog = builtin();
+    let zh = Locale::new("zh-CN");
+    assert_eq!(catalog.resolve_enum_domain(&zh, "按钮"), Some("Button"));
+    assert_eq!(
+        catalog.resolve_enum_member("Button", &zh, "技能1"),
+        Some(("Button".to_string(), "ABILITY_1".to_string()))
+    );
+    assert_eq!(
+        catalog
+            .resolve(Kind::Value, &zh, "射线命中位置")
+            .map(|entry| entry.id.as_str()),
+        Some("raycastHitPosition")
+    );
+    assert_eq!(
+        catalog
+            .resolve(Kind::Value, &zh, "空")
+            .map(|entry| entry.id.as_str()),
+        Some("null")
+    );
+}
+
+#[test]
 fn unknown_spellings_and_ids_do_not_resolve() {
     let catalog = builtin();
     assert!(

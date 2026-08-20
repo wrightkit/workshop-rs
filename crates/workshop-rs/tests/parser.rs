@@ -486,6 +486,10 @@ fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
                 ]
             ),
             (
+                "Healing Dealt".to_string(),
+                vec!["Stat".to_string(), "HeroStat".to_string()]
+            ),
+            (
                 "None".to_string(),
                 vec![
                     "FacingReeval".to_string(),
@@ -535,6 +539,10 @@ fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
                     "EffectReeval".to_string(),
                     "InworldTextReeval".to_string()
                 ]
+            ),
+            (
+                "Visible To and Position".to_string(),
+                vec!["InworldTextReeval".to_string(), "IconReeval".to_string()]
             ),
             (
                 "Visible To and String".to_string(),

@@ -264,6 +264,7 @@ pub struct Catalog {
     by_id: HashMap<(Kind, String), usize>,
     alias_to_entry: HashMap<(Kind, Locale, String), usize>,
     enum_by_domain: HashMap<String, usize>,
+    enum_alias_to_domain: HashMap<(Locale, String), String>,
     enum_alias_to_member: HashMap<(String, Locale, String), (usize, usize)>,
 }
 
@@ -320,6 +321,8 @@ struct EntryFile {
 #[derive(Deserialize)]
 struct EnumFile {
     domain: String,
+    #[serde(default)]
+    aliases: HashMap<String, AliasFile>,
     members: Vec<MemberFile>,
 }
 
@@ -403,6 +406,7 @@ impl Catalog {
             by_id: HashMap::new(),
             alias_to_entry: HashMap::new(),
             enum_by_domain: HashMap::new(),
+            enum_alias_to_domain: HashMap::new(),
             enum_alias_to_member: HashMap::new(),
         };
 
@@ -548,6 +552,18 @@ impl Catalog {
     /// The enum domain with the given name.
     pub fn enum_domain(&self, domain: &str) -> Option<&EnumDomain> {
         self.enum_by_domain.get(domain).map(|i| &self.enums[*i])
+    }
+
+    /// Resolve a localized enum-domain spelling to its canonical domain id.
+    pub fn resolve_enum_domain(&self, locale: &Locale, spelling: &str) -> Option<&str> {
+        self.enum_by_domain
+            .get_key_value(spelling)
+            .map(|(domain, _)| domain.as_str())
+            .or_else(|| {
+                self.enum_alias_to_domain
+                    .get(&(locale.clone(), spelling.to_string()))
+                    .map(String::as_str)
+            })
     }
 
     /// Every enum domain, in catalog order.
@@ -703,6 +719,34 @@ impl Catalog {
             )));
         }
         let primary = self.locales[0].clone();
+        let mut domain_aliases = HashMap::new();
+        for (locale_str, alias_file) in domain.aliases {
+            let locale = Locale::new(&locale_str);
+            if !self.locales.contains(&locale) {
+                return Err(CatalogError::validation(format!(
+                    "enum domain '{}' declares alias for undeclared locale '{}'",
+                    domain.domain, locale
+                )));
+            }
+            let spellings = alias_file.into_spellings(&domain.domain, locale.as_str())?;
+            for spelling in &spellings {
+                let key = (locale.clone(), spelling.clone());
+                if let Some(existing) = self.enum_alias_to_domain.get(&key) {
+                    return Err(CatalogError::validation(format!(
+                        "duplicate enum domain alias '{spelling}' for '{}' and '{}' in locale '{}'",
+                        existing, domain.domain, locale
+                    )));
+                }
+                self.enum_alias_to_domain.insert(key, domain.domain.clone());
+            }
+            domain_aliases.insert(locale, spellings);
+        }
+        domain_aliases
+            .entry(primary.clone())
+            .or_insert_with(|| vec![domain.domain.clone()]);
+        self.enum_alias_to_domain
+            .entry((primary.clone(), domain.domain.clone()))
+            .or_insert_with(|| domain.domain.clone());
         let mut members = Vec::new();
         for (member_index, member) in domain.members.into_iter().enumerate() {
             let mut aliases = HashMap::new();

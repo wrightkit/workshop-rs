@@ -14,7 +14,20 @@
         "zh-CN": "开始强制设置玩家轮廓"
       },
       "id": "startForcingOutlineFor",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null,
+        "Color",
+        "OutlineVisibility"
+      ],
+      "params": [
+        "ViewedPlayers",
+        "ViewingPlayers",
+        "Visible",
+        "Color",
+        "Visibility"
+      ]
     },
     {
       "aliases": {
@@ -46,7 +59,22 @@
         "zh-CN": "创建图标"
       },
       "id": "createIcon",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        "Icon",
+        "IconReeval",
+        "Color",
+        null
+      ],
+      "params": [
+        "VisibleTo",
+        "Position",
+        "Icon",
+        "Reevaluation",
+        "Color",
+        "ShowWhenOffscreen"
+      ]
     },
     {
       "aliases": {
@@ -1830,7 +1858,7 @@
       "params": []
     }
   ],
-  "digest": "7b89670293ae220584bbbf172a65fff13e55903cb7005c41800fc2b39f872f4f",
+  "digest": "4557318ee877b518c09a3455246058a152aa5cf0bb6ea2c446c3e3529b2229f4",
   "enums": [
     {
       "domain": "Impulse",
@@ -2064,6 +2092,13 @@
             "zh-CN": "环状爆炸声音"
           },
           "id": "RING_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Brigitte Repair Pack Armor Effect",
+            "zh-CN": "布丽吉塔恢复包护甲效果"
+          },
+          "id": "BRIGITTE_REPAIR_PACK_ARMOR"
         }
       ]
     },
@@ -2104,16 +2139,29 @@
         {
           "aliases": {
             "en-US": "Left",
-            "zh-CN": "左边"
+            "zh-CN": [
+              "左边",
+              "左"
+            ]
           },
           "id": "LEFT"
         },
         {
           "aliases": {
             "en-US": "Right",
-            "zh-CN": "右边"
+            "zh-CN": [
+              "右边",
+              "右"
+            ]
           },
           "id": "RIGHT"
+        },
+        {
+          "aliases": {
+            "en-US": "Top",
+            "zh-CN": "顶部"
+          },
+          "id": "TOP"
         }
       ]
     },
@@ -2573,6 +2621,10 @@
       ]
     },
     {
+      "aliases": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      },
       "domain": "Button",
       "members": [
         {
@@ -2675,6 +2727,41 @@
             "zh-CN": "球"
           },
           "id": "ORB"
+        },
+        {
+          "aliases": {
+            "en-US": "Bad Aura",
+            "zh-CN": "有害光环"
+          },
+          "id": "BAD_AURA"
+        },
+        {
+          "aliases": {
+            "en-US": "Ring",
+            "zh-CN": "环"
+          },
+          "id": "RING"
+        },
+        {
+          "aliases": {
+            "en-US": "Baptiste Immortality Field Protected Effect",
+            "zh-CN": "巴蒂斯特维生力场保护效果"
+          },
+          "id": "BAPTISTE_IMMORTALITY_FIELD_PROTECTED"
+        },
+        {
+          "aliases": {
+            "en-US": "Ana Nano Boosted Effect",
+            "zh-CN": "安娜纳米激素强化效果"
+          },
+          "id": "ANA_NANO_BOOSTED"
+        },
+        {
+          "aliases": {
+            "en-US": "Light Shaft",
+            "zh-CN": "光柱"
+          },
+          "id": "LIGHT_SHAFT"
         }
       ]
     },
@@ -2691,7 +2778,10 @@
         {
           "aliases": {
             "en-US": "Visible To Position and Radius",
-            "zh-CN": "可见，位置和半径"
+            "zh-CN": [
+              "可见，位置和半径",
+              "位置和半径"
+            ]
           },
           "id": "VISIBLE_TO_POSITION_AND_RADIUS"
         },
@@ -3131,6 +3221,13 @@
             "zh-CN": "细环"
           },
           "id": "RING_THIN"
+        },
+        {
+          "aliases": {
+            "en-US": "Flag",
+            "zh-CN": "旗帜"
+          },
+          "id": "FLAG"
         }
       ]
     },
@@ -3592,6 +3689,78 @@
           "id": "NEAREST"
         }
       ]
+    },
+    {
+      "domain": "BarrierLos",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Barriers Do Not Block LOS",
+            "zh-CN": "屏障不会阻挡视线"
+          },
+          "id": "PASS_THROUGH_BARRIERS"
+        }
+      ]
+    },
+    {
+      "domain": "Health",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Armor",
+            "zh-CN": "护甲"
+          },
+          "id": "ARMOR"
+        }
+      ]
+    },
+    {
+      "domain": "OutlineVisibility",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Always",
+            "zh-CN": "总是"
+          },
+          "id": "ALWAYS"
+        }
+      ]
+    },
+    {
+      "domain": "Stat",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Healing Dealt",
+            "zh-CN": "治疗量"
+          },
+          "id": "HEALING_DEALT"
+        }
+      ]
+    },
+    {
+      "domain": "HeroStat",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Healing Dealt",
+            "zh-CN": "治疗量"
+          },
+          "id": "HEALING_DEALT"
+        }
+      ]
+    },
+    {
+      "domain": "IconReeval",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Visible To and Position",
+            "zh-CN": "可见和位置"
+          },
+          "id": "VISIBILITY_AND_POSITION"
+        }
+      ]
     }
   ],
   "events": [
@@ -3916,7 +4085,8 @@
     "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); rule-event identities and EventTeam/EventPlayer filter aliases are transcribed from the user-provided workshop-data export and its Workshop event annotations, cross-checked against documented raw Workshop event forms; migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; zh-CN aliases are generated from the user-provided workshop-data JSON; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; the exact-match corpus and its exclusions are pinned separately in tools/corpus/zh-cn-corpus.json",
     "sourceNotes": [
       "abort zh-CN retains both 中止 from the reviewed workshop-data export and 中断 observed in the reproducible Bastion c010e1a2d468ec7140f474e334067e5ab8d02d89 build:release/build:main:zh output; the first spelling is emitted deterministically and both are accepted for parsing",
-      "disableBuiltinGameModeCompletion zh-CN retains 禁用内置游戏模式完成 from the reviewed workshop-data export and 关闭游戏预设完成条件 observed in the same reproducible Bastion build; the first spelling is emitted deterministically and both are accepted for parsing"
+      "disableBuiltinGameModeCompletion zh-CN retains 禁用内置游戏模式完成 from the reviewed workshop-data export and 关闭游戏预设完成条件 observed in the same reproducible Bastion build; the first spelling is emitted deterministically and both are accepted for parsing",
+      "value and enum identities added in the Bastion spatial/player/effect slice are cross-checked against workshop-data GUID translations and the reproducible c010e1a2d468ec7140f474e334067e5ab8d02d89 en-US/zh-CN builds; aliases remain data-backed and canonical signatures retain their declared parameter domains"
     ]
   },
   "schemaVersion": 1,
@@ -4005,6 +4175,391 @@
     "surface": "M5 P0 set, documented in docs/provenance.md (mirrors wright docs/workshop/support-matrix.md)"
   },
   "values": [
+    {
+      "aliases": {
+        "en-US": "Max Health",
+        "zh-CN": "最大生命值"
+      },
+      "id": "getMaxHealth",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is In Alternate Form",
+        "zh-CN": "处于非初始状态"
+      },
+      "id": "isInAlternateForm",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Normalized Health",
+        "zh-CN": "标准化生命值"
+      },
+      "id": "getNormalizedHealth",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Last Heal Over Time ID",
+        "zh-CN": "上一个持续治疗效果ID"
+      },
+      "id": "getLastHealingOverTimeId",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Objective Position",
+        "zh-CN": "目标位置"
+      },
+      "id": "getObjectivePosition",
+      "params": [
+        "Objective"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Stat",
+        "zh-CN": "玩家数据"
+      },
+      "id": "getStatistic",
+      "paramDomains": [
+        null,
+        "Stat"
+      ],
+      "params": [
+        "Player",
+        "Statistic"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Hero Stat",
+        "zh-CN": "玩家英雄数据"
+      },
+      "id": "getHeroStatistic",
+      "paramDomains": [
+        null,
+        "Hero",
+        "HeroStat"
+      ],
+      "params": [
+        "Player",
+        "Hero",
+        "Statistic"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Facing Direction Of",
+        "zh-CN": "面朝方向"
+      },
+      "id": "getFacingDirection",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Slot Of",
+        "zh-CN": "栏位"
+      },
+      "id": "getSlot",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Entity Exists",
+        "zh-CN": "实体存在"
+      },
+      "id": "entityExists",
+      "params": [
+        "Entity"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Last Created Health Pool",
+        "zh-CN": "最后创建的生命池"
+      },
+      "id": "getLastCreatedHealthPool",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Is In Line of Sight",
+        "zh-CN": "在视线内"
+      },
+      "id": "isInLoS",
+      "paramDomains": [
+        null,
+        null,
+        "BarrierLos"
+      ],
+      "params": [
+        "Start Position",
+        "End Position",
+        "Barriers"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Nearest Walkable Position",
+        "zh-CN": "最近的可行走位置"
+      },
+      "id": "nearestWalkablePosition",
+      "params": [
+        "Position"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Random Integer",
+        "zh-CN": "随机整数"
+      },
+      "id": "randomInteger",
+      "params": [
+        "Min",
+        "Max"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Firing Secondary Fire",
+        "zh-CN": "正在使用辅助武器"
+      },
+      "id": "isFiringSecondaryFire",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Null",
+        "zh-CN": "空"
+      },
+      "id": "null",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Distance Between",
+        "zh-CN": "相距距离"
+      },
+      "id": "distance",
+      "params": [
+        "Position",
+        "Position"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Eye Position",
+        "zh-CN": "眼睛位置"
+      },
+      "id": "getEyePosition",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Speed Of",
+        "zh-CN": "速度"
+      },
+      "id": "getSpeed",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Velocity Of",
+        "zh-CN": "速率"
+      },
+      "id": "getVelocity",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Array Slice",
+        "zh-CN": "数组分割"
+      },
+      "id": "slice",
+      "params": [
+        "Array",
+        "Start Index",
+        "Count"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Ray Cast Hit Position",
+        "zh-CN": "射线命中位置"
+      },
+      "id": "raycastHitPosition",
+      "params": [
+        "Start Position",
+        "End Position",
+        "Players To Include",
+        "Players To Exclude",
+        "Include Player Owned Objects"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Char In String",
+        "zh-CN": "字符串中字符"
+      },
+      "id": "charAt",
+      "params": [
+        "String",
+        "Index"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Index Of String Char",
+        "zh-CN": "字符串字符索引"
+      },
+      "id": "strIndex",
+      "params": [
+        "String",
+        "Character"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "X Component Of",
+        "zh-CN": "X方向分量"
+      },
+      "id": "__xComponentOf__",
+      "params": [
+        "Vector"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Y Component Of",
+        "zh-CN": "Y方向分量"
+      },
+      "id": "__yComponentOf__",
+      "params": [
+        "Vector"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Z Component Of",
+        "zh-CN": "Z方向分量"
+      },
+      "id": "__zComponentOf__",
+      "params": [
+        "Vector"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Total Time Elapsed",
+        "zh-CN": "总计消耗时间"
+      },
+      "id": "getTotalTimeElapsed",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Server Load Average",
+        "zh-CN": "服务器负载平均值"
+      },
+      "id": "getAverageServerLoad",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Server Load Peak",
+        "zh-CN": "服务器负载峰值"
+      },
+      "id": "getPeakServerLoad",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Server Load",
+        "zh-CN": "服务器负载"
+      },
+      "id": "getServerLoad",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "All Living Players",
+        "zh-CN": "所有存活玩家"
+      },
+      "id": "getLivingPlayers",
+      "paramDefaults": [
+        "Team.ALL"
+      ],
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Dead",
+        "zh-CN": "死亡"
+      },
+      "id": "isDead",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Moving",
+        "zh-CN": "正在移动"
+      },
+      "id": "isMoving",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Attacker",
+        "zh-CN": "攻击方"
+      },
+      "id": "attacker",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Host Player",
+        "zh-CN": "主机玩家"
+      },
+      "id": "hostPlayer",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Victim",
+        "zh-CN": "被攻击方"
+      },
+      "id": "victim",
+      "params": []
+    },
     {
       "aliases": {
         "en-US": "Add",
