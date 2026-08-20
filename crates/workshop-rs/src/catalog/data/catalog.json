@@ -6,7 +6,12 @@
         "zh-CN": "消除图标"
       },
       "id": "destroyIcon",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "EntityId"
+      ]
     },
     {
       "aliases": {
@@ -35,7 +40,12 @@
         "zh-CN": "重置玩家英雄可选状态"
       },
       "id": "resetHeroAvailability",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -43,7 +53,14 @@
         "zh-CN": "停止强制设置玩家轮廓"
       },
       "id": "stopForcingOutlineFor",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -51,7 +68,14 @@
         "zh-CN": "设置启用蹲下"
       },
       "id": "setCrouchEnabled",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -82,7 +106,14 @@
         "zh-CN": "设置启用跳跃"
       },
       "id": "setJumpEnabled",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -90,7 +121,12 @@
         "zh-CN": "设置慢动作"
       },
       "id": "setSlowMotion",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -98,7 +134,14 @@
         "zh-CN": "设置启用近战攻击"
       },
       "id": "setMeleeEnabled",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -106,7 +149,14 @@
         "zh-CN": "开始强制重生室"
       },
       "id": "startForcingSpawn",
-      "params": []
+      "paramDomains": [
+        "Team",
+        null
+      ],
+      "params": [
+        "Team",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -114,7 +164,14 @@
         "zh-CN": "设置主要攻击模式启用"
       },
       "id": "setPrimaryFireEnabled",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -122,7 +179,16 @@
         "zh-CN": "开始修改英雄语音"
       },
       "id": "startModifyingVoicelinePitch",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -130,7 +196,16 @@
         "zh-CN": "设置技能充能"
       },
       "id": "setAbilityCharge",
-      "params": []
+      "paramDomains": [
+        null,
+        "Button",
+        null
+      ],
+      "params": [
+        "Object",
+        "Button",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -138,7 +213,14 @@
         "zh-CN": "开始为机器人强制设置名称"
       },
       "id": "startForcingName",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "String"
+      ]
     },
     {
       "aliases": {
@@ -146,7 +228,16 @@
         "zh-CN": "开始调整障碍大小"
       },
       "id": "startScalingBarriers",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -154,7 +245,12 @@
         "zh-CN": "解除绑定"
       },
       "id": "detach",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -162,7 +258,12 @@
         "zh-CN": "停止所有持续伤害"
       },
       "id": "stopAllDamageOverTime",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -170,7 +271,12 @@
         "zh-CN": "复活"
       },
       "id": "resurrect",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -178,7 +284,16 @@
         "zh-CN": "绑定玩家"
       },
       "id": "attachTo",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Player",
+        "Player",
+        "Position"
+      ]
     },
     {
       "aliases": {
@@ -186,7 +301,12 @@
         "zh-CN": "停止修改英雄语音"
       },
       "id": "stopModifyingVoicelinePitch",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -194,7 +314,14 @@
         "zh-CN": "击杀"
       },
       "id": "kill",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Player"
+      ]
     },
     {
       "aliases": {
@@ -202,7 +329,12 @@
         "zh-CN": "复生"
       },
       "id": "respawn",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -210,7 +342,12 @@
         "zh-CN": "停止调整障碍大小"
       },
       "id": "stopScalingBarriers",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -218,7 +355,14 @@
         "zh-CN": "隐藏姓名板"
       },
       "id": "disableNameplatesFor",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -226,7 +370,12 @@
         "zh-CN": "停止持续伤害"
       },
       "id": "stopDamageOverTime",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "DotId"
+      ]
     },
     {
       "aliases": {
@@ -234,7 +383,12 @@
         "zh-CN": "停止调整玩家大小"
       },
       "id": "stopScalingSize",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -242,7 +396,14 @@
         "zh-CN": "显示姓名板"
       },
       "id": "enableNameplatesFor",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -266,7 +427,18 @@
         "zh-CN": "禁用语音聊天"
       },
       "id": "disableVoiceChat",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Boolean",
+        "Boolean",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -274,7 +446,16 @@
         "zh-CN": "设置技能资源"
       },
       "id": "setAbilityResource",
-      "params": []
+      "paramDomains": [
+        null,
+        "Button",
+        null
+      ],
+      "params": [
+        "Object",
+        "Button",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -282,7 +463,12 @@
         "zh-CN": "记入查看器"
       },
       "id": "logToInspector",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -290,7 +476,12 @@
         "zh-CN": "对所有玩家禁用死亡回放"
       },
       "id": "disableDeathSpectateAllPlayers",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -298,7 +489,20 @@
         "zh-CN": "为玩家添加生命池"
       },
       "id": "addHealthPool",
-      "params": []
+      "paramDomains": [
+        null,
+        "Health",
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Health",
+        "Number",
+        "Boolean",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -314,7 +518,12 @@
         "zh-CN": "禁用文字聊天"
       },
       "id": "disableTextChat",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -322,7 +531,18 @@
         "zh-CN": "开始伤害调整"
       },
       "id": "startDamageModification",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null,
+        "DamageReeval"
+      ],
+      "params": [
+        "Object",
+        "Object",
+        "Number",
+        "DamageReeval"
+      ]
     },
     {
       "aliases": {
@@ -330,7 +550,12 @@
         "zh-CN": "停止持续治疗"
       },
       "id": "stopHealingOverTime",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "HotId"
+      ]
     },
     {
       "aliases": {
@@ -338,7 +563,12 @@
         "zh-CN": "隐藏信息"
       },
       "id": "disableMessages",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -346,7 +576,12 @@
         "zh-CN": "停止伤害调整"
       },
       "id": "stopDamageModification",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "DamageModificationId"
+      ]
     },
     {
       "aliases": {
@@ -354,7 +589,12 @@
         "zh-CN": "禁用死亡回放时目标的HUD"
       },
       "id": "disableDeathSpectateTargetHud",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -362,7 +602,18 @@
         "zh-CN": "开始持续伤害"
       },
       "id": "startDamageOverTime",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Player",
+        "Number",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -370,7 +621,12 @@
         "zh-CN": "停止强制玩家选择英雄 "
       },
       "id": "stopForcingCurrentHero",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -378,7 +634,12 @@
         "zh-CN": "隐藏消灭提示"
       },
       "id": "disableKillFeed",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -386,7 +647,16 @@
         "zh-CN": "设置技能冷却"
       },
       "id": "setAbilityCooldown",
-      "params": []
+      "paramDomains": [
+        null,
+        "Button",
+        null
+      ],
+      "params": [
+        "Object",
+        "Button",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -394,7 +664,14 @@
         "zh-CN": "开始强制玩家选择英雄 "
       },
       "id": "startForcingHero",
-      "params": []
+      "paramDomains": [
+        null,
+        "Hero"
+      ],
+      "params": [
+        "Object",
+        "Hero"
+      ]
     },
     {
       "aliases": {
@@ -410,7 +687,14 @@
         "zh-CN": "设置启用技能 2"
       },
       "id": "setAbility2Enabled",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -418,7 +702,14 @@
         "zh-CN": "预加载英雄"
       },
       "id": "preloadHero",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -426,7 +717,14 @@
         "zh-CN": "设置造成治疗"
       },
       "id": "setHealingDealt",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -434,7 +732,18 @@
         "zh-CN": "开始持续治疗"
       },
       "id": "startHealingOverTime",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Player",
+        "Number",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -442,7 +751,12 @@
         "zh-CN": "移除玩家的生命池"
       },
       "id": "removeHealthPool",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "HealthPoolId"
+      ]
     },
     {
       "aliases": {
@@ -450,7 +764,16 @@
         "zh-CN": "开始调整玩家大小"
       },
       "id": "startScalingSize",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -458,7 +781,16 @@
         "zh-CN": "设置朝向"
       },
       "id": "setFacing",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        "Relativity"
+      ],
+      "params": [
+        "Object",
+        "Direction",
+        "Relativity"
+      ]
     },
     {
       "aliases": {
@@ -466,7 +798,12 @@
         "zh-CN": "停止强制设置玩家位置"
       },
       "id": "stopForcingPosition",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -474,7 +811,14 @@
         "zh-CN": "设置造成的击退"
       },
       "id": "setKnockbackDealt",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -482,7 +826,12 @@
         "zh-CN": "停止加速"
       },
       "id": "stopAcceleration",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -490,7 +839,12 @@
         "zh-CN": "宣告队伍胜利"
       },
       "id": "declareTeamVictory",
-      "params": []
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
     },
     {
       "aliases": {
@@ -498,7 +852,12 @@
         "zh-CN": "停止朝向"
       },
       "id": "stopFacing",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -506,7 +865,16 @@
         "zh-CN": "开始强制设置玩家位置"
       },
       "id": "startForcingPosition",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Player",
+        "Position",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -514,7 +882,14 @@
         "zh-CN": "设置受到的击退"
       },
       "id": "setKnockbackReceived",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -522,7 +897,22 @@
         "zh-CN": "开始加速"
       },
       "id": "startAcceleration",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null,
+        "Relativity",
+        "AccelReeval"
+      ],
+      "params": [
+        "Object",
+        "Direction",
+        "Number",
+        "Number",
+        "Relativity",
+        "AccelReeval"
+      ]
     },
     {
       "aliases": {
@@ -530,7 +920,28 @@
         "zh-CN": "创建进度条HUD文本"
       },
       "id": "progressBarHud",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null,
+        "HudPosition",
+        null,
+        "Color",
+        "Color",
+        "ProgressHudReeval",
+        "SpecVisibility"
+      ],
+      "params": [
+        "Object",
+        "Number",
+        "Object",
+        "HudPosition",
+        "Number",
+        "Color",
+        "Color",
+        "ProgressHudReeval",
+        "SpecVisibility"
+      ]
     },
     {
       "aliases": {
@@ -538,7 +949,14 @@
         "zh-CN": "停止按下按钮"
       },
       "id": "stopForcingButton",
-      "params": []
+      "paramDomains": [
+        null,
+        "Button"
+      ],
+      "params": [
+        "Object",
+        "Button"
+      ]
     },
     {
       "aliases": {
@@ -546,7 +964,14 @@
         "zh-CN": "设置受到治疗"
       },
       "id": "setHealingReceived",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -554,7 +979,12 @@
         "zh-CN": "消除进度条地图文本"
       },
       "id": "destroyProgressBarInWorldText",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "TextId"
+      ]
     },
     {
       "aliases": {
@@ -562,7 +992,16 @@
         "zh-CN": "设置目标点描述"
       },
       "id": "setObjectiveDescription",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        "HudReeval"
+      ],
+      "params": [
+        "Object",
+        "Object",
+        "HudReeval"
+      ]
     },
     {
       "aliases": {
@@ -570,7 +1009,14 @@
         "zh-CN": "开始按下按钮"
       },
       "id": "startForcingButton",
-      "params": []
+      "paramDomains": [
+        null,
+        "Button"
+      ],
+      "params": [
+        "Object",
+        "Button"
+      ]
     },
     {
       "aliases": {
@@ -578,7 +1024,16 @@
         "zh-CN": "伤害"
       },
       "id": "damage",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Player",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -586,7 +1041,14 @@
         "zh-CN": "设置弹道引力"
       },
       "id": "setProjectileGravity",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -594,7 +1056,14 @@
         "zh-CN": "清除状态"
       },
       "id": "clearStatusEffect",
-      "params": []
+      "paramDomains": [
+        null,
+        "Status"
+      ],
+      "params": [
+        "Object",
+        "Status"
+      ]
     },
     {
       "aliases": {
@@ -602,7 +1071,16 @@
         "zh-CN": "设置弹药"
       },
       "id": "setAmmo",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -610,7 +1088,14 @@
         "zh-CN": "移除机器人"
       },
       "id": "destroyDummy",
-      "params": []
+      "paramDomains": [
+        "Team",
+        null
+      ],
+      "params": [
+        "Team",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -629,7 +1114,14 @@
         "zh-CN": "设置弹道速度"
       },
       "id": "setProjectileSpeed",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -637,7 +1129,14 @@
         "zh-CN": "设置启用终极技能"
       },
       "id": "setUltEnabled",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -645,7 +1144,16 @@
         "zh-CN": "设置最大弹药"
       },
       "id": "setMaxAmmo",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -685,7 +1193,14 @@
         "zh-CN": "设置启用技能 1"
       },
       "id": "setAbility1Enabled",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Boolean"
+      ]
     },
     {
       "aliases": {
@@ -693,7 +1208,14 @@
         "zh-CN": "设置最大复生时间"
       },
       "id": "setRespawnTime",
-      "params": []
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -701,7 +1223,12 @@
         "zh-CN": "设置比赛时间"
       },
       "id": "setMatchTime",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -717,7 +1244,12 @@
         "zh-CN": "开启游戏预设复生模式"
       },
       "id": "enableRespawn",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -725,7 +1257,16 @@
         "zh-CN": "治疗"
       },
       "id": "heal",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Player",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -733,7 +1274,14 @@
         "zh-CN": "按下按键"
       },
       "id": "forceButtonPress",
-      "params": []
+      "paramDomains": [
+        null,
+        "Button"
+      ],
+      "params": [
+        "Object",
+        "Button"
+      ]
     },
     {
       "aliases": {
@@ -741,7 +1289,24 @@
         "zh-CN": "开始限制阈值 "
       },
       "id": "startForcingThrottle",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number",
+        "Number",
+        "Number",
+        "Number",
+        "Number",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -770,7 +1335,14 @@
         "zh-CN": "交流"
       },
       "id": "communicate",
-      "params": []
+      "paramDomains": [
+        null,
+        "Comms"
+      ],
+      "params": [
+        "Object",
+        "Comms"
+      ]
     },
     {
       "aliases": {
@@ -778,7 +1350,12 @@
         "zh-CN": "关闭游戏预设复生模式"
       },
       "id": "disableRespawn",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -823,7 +1400,12 @@
         "zh-CN": "移除玩家"
       },
       "id": "removeFromGame",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -846,7 +1428,12 @@
         "zh-CN": "取消主要动作"
       },
       "id": "cancelPrimaryAction",
-      "params": []
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
     },
     {
       "aliases": {
@@ -1311,6 +1898,11 @@
         "zh-CN": "设置状态"
       },
       "id": "setStatusEffect",
+      "paramDomains": [
+        null,
+        null,
+        "Status"
+      ],
       "params": [
         "player",
         "assister",
@@ -1452,7 +2044,7 @@
         null,
         null,
         "Clipping",
-        "InworldTextReeval",
+        "WorldTextReeval",
         "Color",
         "SpecVisibility"
       ],
@@ -1482,7 +2074,7 @@
         "Clipping",
         "Color",
         "Color",
-        "ProgressBarWorldReeval",
+        "ProgressWorldTextReeval",
         "SpecVisibility"
       ],
       "params": [
@@ -1866,9 +2458,647 @@
       },
       "id": "abort",
       "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Modify Player Score",
+        "zh-CN": "修改玩家分数"
+      },
+      "id": "addToScore",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Death Spectate All Players",
+        "zh-CN": "对所有玩家启用死亡回放"
+      },
+      "id": "enableDeathSpectateAllPlayers",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Death Spectate Target HUD",
+        "zh-CN": "启用死亡回放时目标的HUD"
+      },
+      "id": "enableDeathSpectateTargetHud",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Kill Feed",
+        "zh-CN": "显示消灭提示"
+      },
+      "id": "enableKillFeed",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Messages",
+        "zh-CN": "显示信息"
+      },
+      "id": "enableMessages",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Text Chat",
+        "zh-CN": "启用文字聊天"
+      },
+      "id": "enableTextChat",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Voice Chat",
+        "zh-CN": "启用语音聊天"
+      },
+      "id": "enableVoiceChat",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Set Jump Vertical Speed",
+        "zh-CN": "设置跳跃垂直速度"
+      },
+      "id": "setJumpVerticalSpeed",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Set Reload Enabled",
+        "zh-CN": "设置启用装填"
+      },
+      "id": "setReloadEnabled",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Boolean"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Set Player Score",
+        "zh-CN": "设置玩家分数"
+      },
+      "id": "setScore",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Set Weapon",
+        "zh-CN": "设置武器"
+      },
+      "id": "setWeapon",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Start Assist",
+        "zh-CN": "开始助攻"
+      },
+      "id": "startGrantingAssistFor",
+      "paramDomains": [
+        null,
+        null,
+        "AssistReeval"
+      ],
+      "params": [
+        "Object",
+        "Object",
+        "AssistReeval"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Start Transforming Throttle",
+        "zh-CN": "开始转换阈值"
+      },
+      "id": "startTransformingThrottle",
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Object",
+        "Number",
+        "Number",
+        "Direction"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Stop All Heal Over Time",
+        "zh-CN": "停止所有持续治疗"
+      },
+      "id": "stopAllHealingOverTime",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Forcing Dummy Bot Name",
+        "zh-CN": "停止为机器人强制设置名称"
+      },
+      "id": "stopForcingName",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Transforming Throttle",
+        "zh-CN": "停止转换阈值"
+      },
+      "id": "stopTransformingThrottle",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Object"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Abort If Condition Is False",
+        "zh-CN": "如条件为“假”则中止"
+      },
+      "id": "__abortIfConditionIsFalse__",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Abort If Condition Is True",
+        "zh-CN": "如条件为“真”则中止"
+      },
+      "id": "__abortIfConditionIsTrue__",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "For Player Variable",
+        "zh-CN": "For 玩家变量"
+      },
+      "id": "__forPlayerVariable__",
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Player",
+        "PlayerVariable",
+        "Number",
+        "Number",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Loop If Condition Is False",
+        "zh-CN": "如条件为“假”则循环"
+      },
+      "id": "__loopIfConditionIsFalse__",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Modify Team Score",
+        "zh-CN": "修改队伍分数"
+      },
+      "id": "addToTeamScore",
+      "paramDomains": [
+        "Team",
+        null
+      ],
+      "params": [
+        "Team",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Continue",
+        "zh-CN": "继续"
+      },
+      "id": "continue",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Declare Match Draw",
+        "zh-CN": "宣布比赛为平局"
+      },
+      "id": "declareDraw",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Declare Player Victory",
+        "zh-CN": "宣告玩家胜利"
+      },
+      "id": "declarePlayerVictory",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Declare Round Draw",
+        "zh-CN": "宣布回合为平局"
+      },
+      "id": "declareRoundDraw",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Declare Round Victory",
+        "zh-CN": "宣告回合胜利"
+      },
+      "id": "declareRoundVictory",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Destroy Progress Bar HUD Text",
+        "zh-CN": "消除进度条HUD文本"
+      },
+      "id": "destroyProgressBarHud",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "TextId"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Built-In Game Mode Announcer",
+        "zh-CN": "开启游戏预设通告模式"
+      },
+      "id": "enableAnnouncer",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Built-In Game Mode Completion",
+        "zh-CN": "开启游戏预设完成条件"
+      },
+      "id": "enableGamemodeCompletion",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Built-In Game Mode Scoring",
+        "zh-CN": "开启游戏预设计分模式"
+      },
+      "id": "enableScoring",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Go To Assemble Heroes",
+        "zh-CN": "前往集结英雄"
+      },
+      "id": "goToAssembleHeroes",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Move Player to Team",
+        "zh-CN": "调整玩家队伍"
+      },
+      "id": "moveToTeam",
+      "paramDomains": [
+        null,
+        "Team",
+        null
+      ],
+      "params": [
+        "Object",
+        "Team",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Return To Lobby",
+        "zh-CN": "返回大厅"
+      },
+      "id": "returnToLobby",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Team Score",
+        "zh-CN": "设置队伍分数"
+      },
+      "id": "setTeamScore",
+      "paramDomains": [
+        "Team",
+        null
+      ],
+      "params": [
+        "Team",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Start Healing Modification",
+        "zh-CN": "开始治疗调整"
+      },
+      "id": "startHealingModification",
+      "paramDomains": [
+        null,
+        null,
+        null,
+        "HealingReeval"
+      ],
+      "params": [
+        "Object",
+        "Object",
+        "Number",
+        "HealingReeval"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Stop All Assists",
+        "zh-CN": "停止所有助攻"
+      },
+      "id": "stopAllAssists",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop All Damage Modifications",
+        "zh-CN": "停止所有伤害调整"
+      },
+      "id": "stopAllDamageModifications",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop All Healing Modifications",
+        "zh-CN": "停止所有治疗调整"
+      },
+      "id": "stopAllHealingModifications",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Assist",
+        "zh-CN": "停止助攻"
+      },
+      "id": "stopAssist",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "AssistId"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Forcing Spawn Room",
+        "zh-CN": "停止强制重生室"
+      },
+      "id": "stopForcingSpawn",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Healing Modification",
+        "zh-CN": "停止治疗调整"
+      },
+      "id": "stopHealingModification",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "HealingModificationId"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Create Projectile",
+        "zh-CN": "创建弹道"
+      },
+      "id": "createProjectile",
+      "paramDomains": [
+        "Projectile",
+        null,
+        null,
+        null,
+        "Relativity",
+        "ModifyHealth",
+        "Team",
+        null,
+        null,
+        null,
+        "DynamicEffect",
+        "DynamicEffect",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Projectile",
+        "Object",
+        "Position",
+        "Direction",
+        "Relativity",
+        "ModifyHealth",
+        "Team",
+        "Number",
+        "Number",
+        "Number",
+        "DynamicEffect",
+        "DynamicEffect",
+        "Number",
+        "Number",
+        "Number",
+        "Number",
+        "Number",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Create Homing Projectile",
+        "zh-CN": "创建追踪弹道"
+      },
+      "id": "createHomingProjectile",
+      "paramDomains": [
+        "Projectile",
+        null,
+        null,
+        null,
+        "Relativity",
+        "ModifyHealth",
+        "Team",
+        null,
+        null,
+        null,
+        "DynamicEffect",
+        "DynamicEffect",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Projectile",
+        "Object",
+        "Position",
+        "Direction",
+        "Relativity",
+        "ModifyHealth",
+        "Team",
+        "Number",
+        "Number",
+        "Number",
+        "DynamicEffect",
+        "DynamicEffect",
+        "Number",
+        "Number",
+        "Number",
+        "Number",
+        "Player",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Create Projectile Effect",
+        "zh-CN": "创建弹道效果"
+      },
+      "id": "createProjectileEffect",
+      "paramDomains": [
+        null,
+        "Projectile",
+        null,
+        null,
+        null,
+        null,
+        "ProjectileEffectReeval"
+      ],
+      "params": [
+        "Object",
+        "Projectile",
+        "Object",
+        "Object",
+        "Direction",
+        "Number",
+        "ProjectileEffectReeval"
+      ]
     }
   ],
-  "digest": "136e41ad78a89582475c676ff6e2cc9818f36f9700532356abf997bfc68538b9",
+  "digest": "299e12d514829d938a93e9e37717799baa09af17789fff706274e2cb6c0d5636",
   "enums": [
     {
       "domain": "Impulse",
@@ -2055,6 +3285,132 @@
             "zh-CN": "有益光束"
           },
           "id": "GOOD"
+        },
+        {
+          "aliases": {
+            "en-US": "Bad Beam",
+            "zh-CN": "有害光束"
+          },
+          "id": "BAD"
+        },
+        {
+          "aliases": {
+            "en-US": "Brigitte Flail Chain Beam",
+            "zh-CN": "布丽吉塔连枷链光束"
+          },
+          "id": "BRIGITTE_FLAIL_CHAIN"
+        },
+        {
+          "aliases": {
+            "en-US": "Echo Focusing Beam",
+            "zh-CN": "“回声”聚焦光线光束"
+          },
+          "id": "ECHO_FOCUSING"
+        },
+        {
+          "aliases": {
+            "en-US": "Junkrat Trap Chain Beam",
+            "zh-CN": "“狂鼠”陷阱链光束"
+          },
+          "id": "JUNKRAT_TRAP_CHAIN"
+        },
+        {
+          "aliases": {
+            "en-US": "Mercy Heal Beam",
+            "zh-CN": "“天使”治疗光束"
+          },
+          "id": "MERCY_HEAL"
+        },
+        {
+          "aliases": {
+            "en-US": "Mercy Boost Beam",
+            "zh-CN": "“天使”强化光束"
+          },
+          "id": "MERCY_BOOST"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Orb Heal Beam",
+            "zh-CN": "莫伊拉生化之球治疗光束"
+          },
+          "id": "MOIRA_ORB_HEAL"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Orb Damage Beam",
+            "zh-CN": "莫伊拉生化之球伤害光束"
+          },
+          "id": "MOIRA_ORB_DAMAGE"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Grasp Connected Beam",
+            "zh-CN": "莫伊拉生化之触连接光束"
+          },
+          "id": "MOIRA_GRASP_CONNECTED"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Coalescence Beam",
+            "zh-CN": "莫伊拉聚合射线光束"
+          },
+          "id": "MOIRA_COALESCENCE"
+        },
+        {
+          "aliases": {
+            "en-US": "Orisa Halt Tendril Beam",
+            "zh-CN": "奥丽莎站住别动连线光束"
+          },
+          "id": "ORISA_HALT_TENDRIL"
+        },
+        {
+          "aliases": {
+            "en-US": "Orisa Amplifier Beam",
+            "zh-CN": "奥丽莎强化光束"
+          },
+          "id": "ORISA_AMPLIFIER"
+        },
+        {
+          "aliases": {
+            "en-US": "Symmetra Projector Beam",
+            "zh-CN": "“秩序之光”光子发射器光束"
+          },
+          "id": "SYMMETRA_PROJECTOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Symmetra Turret Beam",
+            "zh-CN": "“秩序之光”哨戒炮光束"
+          },
+          "id": "SYMMETRA_TURRET"
+        },
+        {
+          "aliases": {
+            "en-US": "Torbjörn Turret Sight Beam",
+            "zh-CN": "托比昂炮台视线光束"
+          },
+          "id": "TORBJORN_TURRET_SIGHT"
+        },
+        {
+          "aliases": {
+            "en-US": "Winston Tesla Cannon Beam",
+            "zh-CN": "温斯顿特斯拉炮光束"
+          },
+          "id": "WINSTON_TESLA_CANNON"
+        },
+        {
+          "aliases": {
+            "en-US": "Zarya Particle Beam",
+            "zh-CN": "查莉娅粒子光束"
+          },
+          "id": "ZARYA_PARTICLE"
+        },
+        {
+          "aliases": {
+            "en-US": "Omnic Slicer Beam",
+            "zh-CN": "智械切割者光束"
+          },
+          "id": "OMNIC_SLICER"
         }
       ]
     },
@@ -2137,6 +3493,629 @@
             "zh-CN": "环状爆炸"
           },
           "id": "RING_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Ana Biotic Grenade Increased Healing Sound",
+            "zh-CN": "安娜生物手雷增疗声音"
+          },
+          "id": "ANA_BIOTIC_GRENADE_INCREASED_HEALING_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Ana Biotic Grenade No Healing Sound",
+            "zh-CN": "安娜生物手雷禁疗声音"
+          },
+          "id": "ANA_BIOTIC_GRENAGE_NO_HEALING_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Ana Sleeping Sound",
+            "zh-CN": "安娜麻醉镖声音"
+          },
+          "id": "ANA_SLEEPING_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Reaper Wraith Form Sound",
+            "zh-CN": "“死神”幽灵形态声音"
+          },
+          "id": "REAPER_WRAITH_FORM_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Translocating Sound",
+            "zh-CN": "“黑影”位移传动声音"
+          },
+          "id": "SOMBRA_TRANSLOCATING_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Soldier: 76 Sprint Start Sound",
+            "zh-CN": "“士兵：76”疾跑开始声音"
+          },
+          "id": "SOLDIER_SPRINT_START_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Heal Target Active Effect",
+            "zh-CN": "治疗目标激活效果"
+          },
+          "id": "HEAL_TARGET_ACTIVE"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Translocating Material Effect",
+            "zh-CN": "“黑影”位移传动材料效果"
+          },
+          "id": "SOMBRA_TRANSLOCATING_MATERIAL"
+        },
+        {
+          "aliases": {
+            "en-US": "Cassidy Flashbang Stunned Effect",
+            "zh-CN": "卡西迪闪光弹击晕效果"
+          },
+          "id": "CASSIDY_FLASHBANG_STUNNED"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Hacked Starting Effect",
+            "zh-CN": "“黑影”黑客入侵完成开始效果"
+          },
+          "id": "SOMBRA_HACKED_STARTING"
+        },
+        {
+          "aliases": {
+            "en-US": "Brigitte Repair Pack Impact Effect",
+            "zh-CN": "布丽吉塔恢复包击中效果"
+          },
+          "id": "BRIGITTE_REPAIR_PACK_IMPACT"
+        },
+        {
+          "aliases": {
+            "en-US": "Brigitte Whip Shot Heal Area Effect",
+            "zh-CN": "布丽吉塔流星飞锤范围治疗效果"
+          },
+          "id": "BRIGITTE_WHIP_SHOT_HEAL_AREA"
+        },
+        {
+          "aliases": {
+            "en-US": "DVa Micro Missiles Explosion Effect",
+            "zh-CN": "D.Va微型飞弹爆炸效果"
+          },
+          "id": "DVA_MICRO_MISSILES_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "DVa Self Destruct Explosion Effect",
+            "zh-CN": "D.Va自毁爆炸效果"
+          },
+          "id": "DVA_SELF_DESTRUCT_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Echo Sticky Bomb Explosion Effect",
+            "zh-CN": "“回声”黏性炸弹爆炸效果"
+          },
+          "id": "ECHO_STICKY_BOMB_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Hanzo Sonic Arrow Initial Pulse Effect",
+            "zh-CN": "半藏音初始脉冲效果"
+          },
+          "id": "HANZO_SONIC_ARROW_INITIAL_PULSE"
+        },
+        {
+          "aliases": {
+            "en-US": "Lúcio Sound Barrier Cast Effect",
+            "zh-CN": "卢西奥音障施放效果"
+          },
+          "id": "LUCIO_SOUND_BARRIER_CAST"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Fade Disappear Effect",
+            "zh-CN": "莫伊拉消散消失效果"
+          },
+          "id": "MOIRA_FADE_DISAPPEAR"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Fade Reappear Effect",
+            "zh-CN": "莫伊拉消散重现效果"
+          },
+          "id": "MOIRA_FADE_REAPPEAR"
+        },
+        {
+          "aliases": {
+            "en-US": "Orisa Halt Implosion Effect",
+            "zh-CN": "奥丽莎站住别动内爆效果"
+          },
+          "id": "ORISA_HALT_IMPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Sigma Hypersphere Implosion Effect",
+            "zh-CN": "“西格玛”超能之球内爆效果"
+          },
+          "id": "SIGMA_HYPERSPHERE_IMPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Logo Effect",
+            "zh-CN": "“黑影”标志效果"
+          },
+          "id": "SOMBRA_LOGO"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Translocator Disappear Effect",
+            "zh-CN": "“黑影”位移传动消失效果"
+          },
+          "id": "SOMBRA_TRANSLOCATOR_DISAPPEAR"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Translocator Reappear Effect",
+            "zh-CN": "“黑影”位移传动重现效果"
+          },
+          "id": "SOMBRA_TRANSLOCATOR_REAPPEAR"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra EMP Explosion Effect",
+            "zh-CN": "“黑影”电磁脉冲爆炸效果"
+          },
+          "id": "SOMBRA_EMP_EXPLOSION_EFFECT"
+        },
+        {
+          "aliases": {
+            "en-US": "Symmetra Teleporter Reappear Effect",
+            "zh-CN": "“秩序之光”传送面板重现效果"
+          },
+          "id": "SYMMETRA_TELEPORTER_REAPPEAR"
+        },
+        {
+          "aliases": {
+            "en-US": "Tracer Recall Disappear Effect",
+            "zh-CN": "“猎空”闪回消失效果"
+          },
+          "id": "TRACER_RECALL_DISAPPEAR"
+        },
+        {
+          "aliases": {
+            "en-US": "Tracer Recall Reappear Effect",
+            "zh-CN": "“猎空“闪回重现效果"
+          },
+          "id": "TRACER_RECALL_REAPPEAR"
+        },
+        {
+          "aliases": {
+            "en-US": "Zarya Particle Cannon Explosion Effect",
+            "zh-CN": "查莉娅粒子炮爆炸效果"
+          },
+          "id": "ZARYA_PARTICLE_CANNON_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Ana Biotic Grenade Explosion Sound",
+            "zh-CN": "安娜生物手雷爆炸声音"
+          },
+          "id": "ANA_BIOTIC_GRENADE_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Ashe Dynamite Explosion Sound",
+            "zh-CN": "艾什延时雷管爆炸声音"
+          },
+          "id": "ASHE_DYNAMITE_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Baptiste Biotic Launcher Explosion Sound",
+            "zh-CN": "巴蒂斯特生化榴弹枪爆炸声音"
+          },
+          "id": "BAPTISTE_BIOTIC_LAUNCHER_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Bastion Tank Cannon Explosion Sound",
+            "zh-CN": "“堡垒”坦克炮爆炸声音"
+          },
+          "id": "BASTION_TANK_CANNON_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Brigitte Whip Shot Heal Area Sound",
+            "zh-CN": "布丽吉塔流星飞锤范围治疗声音"
+          },
+          "id": "BRIGITTE_WHIP_SHOT_HEAL_AREA_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Brigitte Repair Pack Impact Sound",
+            "zh-CN": "布丽吉塔恢复包击中声音"
+          },
+          "id": "BRIGITTE_REPAIR_PACK_IMPACT_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Brigitte Repair Pack Armor Sound",
+            "zh-CN": "布丽吉塔恢复包护甲声音"
+          },
+          "id": "BRIGITTE_REPAIR_PACK_ARMOR_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "DVa Micro Missiles Explosion Sound",
+            "zh-CN": "D.Va微型飞弹爆炸声音"
+          },
+          "id": "DVA_MICRO_MISSILES_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "DVa Self Destruct Explosion Sound",
+            "zh-CN": "D.Va自毁爆炸声音"
+          },
+          "id": "DVA_SELF_DESTRUCT_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Doomfist Rising Uppercut Leap Sound",
+            "zh-CN": "“末日铁拳”上勾重拳跳跃声音"
+          },
+          "id": "DOOMFIST_RISING_UPPERCUT_LEAP_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Doomfist Rising Uppercut Impact Sound",
+            "zh-CN": "“末日铁拳”上勾重拳击中声音"
+          },
+          "id": "DOOMFIST_RISING_UPPERCUT_IMPACT_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Doomfist Meteor Strike Impact Sound",
+            "zh-CN": "“末日铁拳”毁天灭地击中声音"
+          },
+          "id": "DOOMFIST_METEOR_STRIKE_IMPACT_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Echo Sticky Bomb Explosion Sound",
+            "zh-CN": "“回声”黏性炸弹爆炸声音"
+          },
+          "id": "ECHO_STICKY_BOMB_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Junkrat Frag Launcher Explosion Sound",
+            "zh-CN": "“狂鼠”榴弹发射器爆炸声音"
+          },
+          "id": "JUNKRAT_FRAG_LAUNCHER_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Junkrat Concussion Mine Explosion Sound",
+            "zh-CN": "“狂鼠”震荡地雷爆炸声音"
+          },
+          "id": "JUNKRAT_CONCUSSION_MINE_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Junkrat RIP Tire Explosion Sound",
+            "zh-CN": "“狂鼠”炸弹轮胎爆炸声音"
+          },
+          "id": "JUNKRAT_RIP_TIRE_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Hanzo Sonic Arrow Initial Pulse Sound",
+            "zh-CN": "半藏音初始脉冲声音"
+          },
+          "id": "HANZO_SONIC_ARROW_INITIAL_PULSE_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Lúcio Sound Barrier Cast Sound",
+            "zh-CN": "卢西奥音障施放声音"
+          },
+          "id": "LUCIO_SOUND_BARRIER_CAST_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Cassidy Flashbang Explosion Sound",
+            "zh-CN": "卡西迪闪光弹爆炸声音"
+          },
+          "id": "CASSIDY_FLASHBANG_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Fade Disappear Sound",
+            "zh-CN": "莫伊拉消散消失声音"
+          },
+          "id": "MOIRA_FADE_DISAPPEAR_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Fade Reappear Sound",
+            "zh-CN": "莫伊拉消散重现声音"
+          },
+          "id": "MOIRA_FADE_REAPPEAR_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Orisa Halt Implosion Sound",
+            "zh-CN": "奥丽莎站住别动内爆声音"
+          },
+          "id": "ORISA_HALT_IMPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Pharah Rocket Launcher Explosion Sound",
+            "zh-CN": "“法老之鹰”火箭发射器爆炸声音"
+          },
+          "id": "PHARAH_ROCKET_LAUNCHER_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Pharah Concussive Blast Sound",
+            "zh-CN": "“法老之鹰”震荡冲击声音"
+          },
+          "id": "PHARAH_CONCUSSIVE_BLAST_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Pharah Barrage Explosion Sound",
+            "zh-CN": "“法老之鹰”火箭弹幕爆炸声音"
+          },
+          "id": "PHARAH_BARRAGE_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Reinhardt Fire Strike Target Impact Sound",
+            "zh-CN": "莱因哈特烈焰打击目标击中声音"
+          },
+          "id": "REINHARDT_FIRE_STRIKE_TARGET_IMPACT_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Sigma Hypersphere Implosion Sound",
+            "zh-CN": "“西格玛”超能之球内爆声音"
+          },
+          "id": "SIGMA_HYPERSPHERE_IMPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Sigma Accretion Impact Sound",
+            "zh-CN": "“西格玛”质量吸附击中声音"
+          },
+          "id": "SIGMA_ACCRETION_IMPACT_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Logo Sound",
+            "zh-CN": "“黑影”标志声音"
+          },
+          "id": "SOMBRA_LOGO_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Translocator Disappear Sound",
+            "zh-CN": "“黑影”位移传动消失声音"
+          },
+          "id": "SOMBRA_TRANSLOCATOR_DISAPPEAR_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Translocator Reappear Sound",
+            "zh-CN": "“黑影”位移传动重现声音"
+          },
+          "id": "SOMBRA_TRANSLOCATOR_REAPPEAR_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra EMP Explosion Sound",
+            "zh-CN": "“黑影”电磁脉冲爆炸声音"
+          },
+          "id": "SOMBRA_EMP_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Symmetra Teleporter Reappear Sound",
+            "zh-CN": "“秩序之光”传送面板重现声音"
+          },
+          "id": "SYMMETRA_TELEPORTER_REAPPEAR_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Tracer Recall Disappear Sound",
+            "zh-CN": "“猎空”闪回消失声音"
+          },
+          "id": "TRACER_RECALL_DISAPPEAR_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Tracer Recall Reappear Sound",
+            "zh-CN": "“猎空”闪回重现声音"
+          },
+          "id": "TRACER_RECALL_REAPPEAR_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Widowmaker Venom Mine Explosion Sound",
+            "zh-CN": "“黑百合”剧毒诡雷爆炸声音"
+          },
+          "id": "WIDOWMAKER_VENOM_MINE_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Winston Jump Pack Landing Sound",
+            "zh-CN": "温斯顿喷射背包着陆声音"
+          },
+          "id": "WINSTON_JUMP_PACK_LANDING_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Wrecking Ball Piledriver Impact Sound",
+            "zh-CN": "“破坏球”重力坠击击中声音"
+          },
+          "id": "WRECKING_BALL_PILEDRIVER_IMPACT_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Wrecking Ball Minefield Explosion Sound",
+            "zh-CN": "“破坏球”地雷禁区爆炸声音"
+          },
+          "id": "WRECKING_BALL_MINEFIELD_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Zarya Particle Cannon Explosion Sound",
+            "zh-CN": "查莉娅粒子炮爆炸声音"
+          },
+          "id": "ZARYA_PARTICLE_CANNON_EXPLOSION_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Ana Biotic Grenade Explosion Effect",
+            "zh-CN": "安娜生物手雷爆炸效果"
+          },
+          "id": "ANA_BIOTIC_GRENADE_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Ashe Dynamite Explosion Effect",
+            "zh-CN": "艾什延时雷管爆炸效果"
+          },
+          "id": "ASHE_DYNAMITE_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Baptiste Biotic Launcher Explosion Effect",
+            "zh-CN": "巴蒂斯特生化榴弹枪爆炸效果"
+          },
+          "id": "BAPTISTE_BIOTIC_LAUNCHER_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Bastion Tank Cannon Explosion Effect",
+            "zh-CN": "“堡垒”坦克炮爆炸效果"
+          },
+          "id": "BASTION_TANK_CANNON_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Doomfist Rising Uppercut Leap Effect",
+            "zh-CN": "“末日铁拳”上勾重拳跳跃效果"
+          },
+          "id": "DOOMFIST_RISING_UPPERCUT_LEAP"
+        },
+        {
+          "aliases": {
+            "en-US": "Doomfist Rising Uppercut Impact Effect",
+            "zh-CN": "“末日铁拳”上勾重拳击中效果"
+          },
+          "id": "DOOMFIST_RISING_UPPERCUT_IMPACT"
+        },
+        {
+          "aliases": {
+            "en-US": "Doomfist Meteor Strike Impact Effect",
+            "zh-CN": "“末日铁拳”毁天灭地击中效果"
+          },
+          "id": "DOOMFIST_METEOR_STRIKE_IMPACT"
+        },
+        {
+          "aliases": {
+            "en-US": "Junkrat Frag Launcher Explosion Effect",
+            "zh-CN": "“狂鼠”榴弹发射器爆炸效果"
+          },
+          "id": "JUNKRAT_FRAG_LAUNCHER_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Junkrat Concussion Mine Explosion Effect",
+            "zh-CN": "“狂鼠”震荡地雷爆炸效果"
+          },
+          "id": "JUNKRAT_CONCUSSION_MINE_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Junkrat RIP Tire Explosion Effect",
+            "zh-CN": "“狂鼠”炸弹轮胎爆炸效果"
+          },
+          "id": "JUNKRAT_RIP_TIRE_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Cassidy Flashbang Explosion Effect",
+            "zh-CN": "卡西迪闪光弹爆炸效果"
+          },
+          "id": "CASSIDY_FLASHBANG_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Pharah Rocket Launcher Explosion Effect",
+            "zh-CN": "“法老之鹰”火箭发射器爆炸效果"
+          },
+          "id": "PHARAH_ROCKET_LAUNCHER_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Pharah Concussive Blast Effect",
+            "zh-CN": "“法老之鹰”震荡冲击效果"
+          },
+          "id": "PHARAH_CONCUSSIVE_BLAST"
+        },
+        {
+          "aliases": {
+            "en-US": "Pharah Barrage Explosion Effect",
+            "zh-CN": "“法老之鹰”火箭弹幕爆炸效果"
+          },
+          "id": "PHARAH_BARRAGE_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Reinhardt Fire Strike Target Impact Effect",
+            "zh-CN": "莱因哈特烈焰打击目标击中效果"
+          },
+          "id": "REINHARDT_FIRE_STRIKE_TARGET_IMPACT"
+        },
+        {
+          "aliases": {
+            "en-US": "Sigma Accretion Impact Effect",
+            "zh-CN": "“西格玛”质量吸附击中效果"
+          },
+          "id": "SIGMA_ACCRETION_IMPACT"
+        },
+        {
+          "aliases": {
+            "en-US": "Widowmaker Venom Mine Explosion Effect",
+            "zh-CN": "“黑百合“剧毒诡雷爆炸效果"
+          },
+          "id": "WIDOWMAKER_VENOM_MINE_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Winston Jump Pack Landing Effect",
+            "zh-CN": "温斯顿喷射背包着陆效果"
+          },
+          "id": "WINSTON_JUMP_PACK_LANDING"
+        },
+        {
+          "aliases": {
+            "en-US": "Wrecking Ball Piledriver Impact Effect",
+            "zh-CN": "“破坏球”重力坠击击中效果"
+          },
+          "id": "WRECKING_BALL_PILEDRIVER_IMPACT"
+        },
+        {
+          "aliases": {
+            "en-US": "Wrecking Ball Minefield Explosion Effect",
+            "zh-CN": "“破坏球”地雷禁区爆炸效果"
+          },
+          "id": "WRECKING_BALL_MINEFIELD_EXPLOSION"
         }
       ]
     },
@@ -2247,6 +4226,83 @@
             "zh-CN": "可见和颜色"
           },
           "id": "VISIBLE_TO_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Sort Order and String",
+            "zh-CN": "可见性，排序规则和字符串"
+          },
+          "id": "VISIBILITY_SORT_ORDER_AND_STRING"
+        },
+        {
+          "aliases": {
+            "en-US": "Color",
+            "zh-CN": "颜色"
+          },
+          "id": "COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "全部禁用"
+          },
+          "id": "NONE"
+        },
+        {
+          "aliases": {
+            "en-US": "Sort Order",
+            "zh-CN": "排序"
+          },
+          "id": "SORT_ORDER"
+        },
+        {
+          "aliases": {
+            "en-US": "Sort Order and Color",
+            "zh-CN": "排序规则和颜色"
+          },
+          "id": "SORT_ORDER_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Sort Order and String",
+            "zh-CN": "排序规则和字符串"
+          },
+          "id": "SORT_ORDER_AND_STRING"
+        },
+        {
+          "aliases": {
+            "en-US": "Sort Order String and Color",
+            "zh-CN": "排序规则，字符串和颜色"
+          },
+          "id": "SORT_ORDER_STRING_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "String",
+            "zh-CN": "字符串"
+          },
+          "id": "STRING"
+        },
+        {
+          "aliases": {
+            "en-US": "String and Color",
+            "zh-CN": "字符串和颜色"
+          },
+          "id": "STRING_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To and Sort Order",
+            "zh-CN": "可见性和排序"
+          },
+          "id": "VISIBILITY_AND_SORT_ORDER"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Sort Order and Color",
+            "zh-CN": "可见，排序规则和颜色"
+          },
+          "id": "VISIBILITY_SORT_ORDER_AND_COLOR"
         }
       ]
     },
@@ -2530,6 +4586,13 @@
             "zh-CN": "至地图"
           },
           "id": "TO_WORLD"
+        },
+        {
+          "aliases": {
+            "en-US": "To Player",
+            "zh-CN": "至玩家"
+          },
+          "id": "TO_PLAYER"
         }
       ]
     },
@@ -2821,6 +4884,447 @@
             "zh-CN": "球体"
           },
           "id": "SPHERE"
+        },
+        {
+          "aliases": {
+            "en-US": "Bad Aura Sound",
+            "zh-CN": "负面光环音效"
+          },
+          "id": "BAD_AURA_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Beacon Sound",
+            "zh-CN": "信标声音"
+          },
+          "id": "BEACON_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Cloud",
+            "zh-CN": "云"
+          },
+          "id": "CLOUD"
+        },
+        {
+          "aliases": {
+            "en-US": "Decal Sound",
+            "zh-CN": "诱饵声音"
+          },
+          "id": "DECAL_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Energy Sound",
+            "zh-CN": "能量声音"
+          },
+          "id": "ENERGY_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Good Aura Sound",
+            "zh-CN": "有益光环声音"
+          },
+          "id": "GOOD_AURA_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Pick-up Sound",
+            "zh-CN": "拾取音效"
+          },
+          "id": "PICKUP_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Smoke Sound",
+            "zh-CN": "烟雾声音"
+          },
+          "id": "SMOKE_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Sparkles",
+            "zh-CN": "火花"
+          },
+          "id": "SPARKLES"
+        },
+        {
+          "aliases": {
+            "en-US": "Sparkles Sound",
+            "zh-CN": "火花声音"
+          },
+          "id": "SPARKLES_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Echo Focusing Beam Sound",
+            "zh-CN": "“回声”聚焦光线光束声音"
+          },
+          "id": "ECHO_FOCUSING_BEAM_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Junkrat Trap Chain Sound",
+            "zh-CN": "“狂鼠”陷阱链声音"
+          },
+          "id": "JUNKRAT_TRAP_CHAIN_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Mercy Heal Beam Sound",
+            "zh-CN": "“天使”治疗光束声音"
+          },
+          "id": "MERCY_HEAL_BEAM_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Mercy Boost Beam Sound",
+            "zh-CN": "“天使”强化光束声音"
+          },
+          "id": "MERCY_BOOST_BEAM_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Grasp Connected Sound",
+            "zh-CN": "莫伊拉生化之触连接声音"
+          },
+          "id": "MOIRA_GRASP_CONNECTED_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Orb Damage Sound",
+            "zh-CN": "莫伊拉生化之球伤害声音"
+          },
+          "id": "MOIRA_ORB_DAMAGE_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Orb Heal Sound",
+            "zh-CN": "莫伊拉生化之球治疗声音"
+          },
+          "id": "MOIRA_ORB_HEAL_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Coalescence Sound",
+            "zh-CN": "莫伊拉聚合射线声音"
+          },
+          "id": "MOIRA_COALESCENCE_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Orisa Amplifier Sound",
+            "zh-CN": "奥丽莎强化声音"
+          },
+          "id": "ORISA_AMPLIFIER_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Orisa Halt Tendril Sound",
+            "zh-CN": "奥丽莎站住别动连线声音"
+          },
+          "id": "ORISA_HALT_TENDRIL_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Symmetra Projector Sound",
+            "zh-CN": "“秩序之光”光子发射器声音"
+          },
+          "id": "SYMMETRA_PROJECTOR_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Winston Tesla Cannon Sound",
+            "zh-CN": "温斯顿特斯拉炮声音"
+          },
+          "id": "WINSTON_TESLA_CANNON_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Zarya Particle Beam Sound",
+            "zh-CN": "查莉娅粒子光束声音"
+          },
+          "id": "ZARYA_PARTICLE_BEAM_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Omnic Slicer Beam Sound",
+            "zh-CN": "智械切割者光束声音"
+          },
+          "id": "OMNIC_SLICER_BEAM_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Ana Nano Boosted Sound",
+            "zh-CN": "安娜纳米激素强化声音"
+          },
+          "id": "ANA_NANO_BOOSTED_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Baptiste Immortality Field Protected Sound",
+            "zh-CN": "巴蒂斯特维生力场保护声音"
+          },
+          "id": "BAPTISTE_IMMORTALITY_FIELD_PROTECTED_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Echo Cloning Sound",
+            "zh-CN": "“回声”复制声音"
+          },
+          "id": "ECHO_CLONING_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Lúcio Sound Barrier Protected Sound",
+            "zh-CN": "卢西奥音障保护声音"
+          },
+          "id": "LUCIO_SOUND_BARRIER_PROTECTED_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Mei Frozen Sound",
+            "zh-CN": "美冰冻声音"
+          },
+          "id": "MEI_FROZEN_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Mercy Damage Boosted Sound",
+            "zh-CN": "“天使”伤害强化声音"
+          },
+          "id": "MERCY_DAMAGE_BOOSTED_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Sigma Gravitic Flux Target Sound",
+            "zh-CN": "“西格玛”引力乱流目标声音"
+          },
+          "id": "SIGMA_GRAVITIC_FLUX_TARGET_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Hacking Sound",
+            "zh-CN": "“黑影”黑客入侵进行声音"
+          },
+          "id": "SOMBRA_HACKING_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Hacked Sound",
+            "zh-CN": "“黑影”黑客入侵完成声音"
+          },
+          "id": "SOMBRA_HACKED_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Torbjörn Overloading Sound",
+            "zh-CN": "托比昂热力过载声音"
+          },
+          "id": "TORBJORN_OVERLOADING_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Widowmaker Venom Mine Target Sound",
+            "zh-CN": "“黑百合“剧毒诡雷目标声音"
+          },
+          "id": "WIDOWMAKER_VENOM_MINE_TARGET_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Winston Tesla Cannon Target Sound",
+            "zh-CN": "温斯顿特斯拉炮目标声音"
+          },
+          "id": "WINSTON_TESLA_CANNON_TARGET_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Winston Primal Rage Sound",
+            "zh-CN": "温斯顿原始暴怒声音"
+          },
+          "id": "WINSTON_PRIMAL_RAGE_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Wrecking Ball Adaptive Shield Target Sound",
+            "zh-CN": "“破坏球”感应护盾目标声音"
+          },
+          "id": "WRECKING_BALL_ADAPTIVE_SHIELD_TARGET_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Wrecking Ball Piledriver Fire Sound",
+            "zh-CN": "“破坏球”重力坠击火焰声音"
+          },
+          "id": "WRECKING_BALL_PILEDRIVER_FIRE_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Zenyatta Orb of Discord Target Sound",
+            "zh-CN": "禅雅塔乱目标声音"
+          },
+          "id": "ZENYATTA_ORB_OF_DISCORD_TARGET_SOUND"
+        },
+        {
+          "aliases": {
+            "en-US": "Heal Target Active Effect",
+            "zh-CN": "治疗目标激活效果"
+          },
+          "id": "HEAL_TARGET_ACTIVE"
+        },
+        {
+          "aliases": {
+            "en-US": "Heal Target Effect",
+            "zh-CN": "治疗目标效果"
+          },
+          "id": "HEAL_TARGET"
+        },
+        {
+          "aliases": {
+            "en-US": "Ana Biotic Grenade Increased Healing Effect",
+            "zh-CN": "安娜生物手雷增疗效果"
+          },
+          "id": "ANA_BIOTIC_GRENADE_INCREASED_HEALING"
+        },
+        {
+          "aliases": {
+            "en-US": "Echo Cloning Effect",
+            "zh-CN": "“回声”复制效果"
+          },
+          "id": "ECHO_CLONING"
+        },
+        {
+          "aliases": {
+            "en-US": "Lúcio Sound Barrier Protected Effect",
+            "zh-CN": "卢西奥音障保护效果"
+          },
+          "id": "LUCIO_SOUND_BARRIER_PROTECTED"
+        },
+        {
+          "aliases": {
+            "en-US": "Mercy Damage Boosted Effect",
+            "zh-CN": "“天使”伤害强化效果"
+          },
+          "id": "MERCY_DAMAGE_BOOSTED"
+        },
+        {
+          "aliases": {
+            "en-US": "Reaper Wraith Form Effect",
+            "zh-CN": "“死神”幽灵形态效果"
+          },
+          "id": "REAPER_WRAITH_FORM"
+        },
+        {
+          "aliases": {
+            "en-US": "Soldier: 76 Sprinting Effect",
+            "zh-CN": "“士兵：76”疾跑效果"
+          },
+          "id": "SOLDIER_SPRINTING"
+        },
+        {
+          "aliases": {
+            "en-US": "Torbjörn Overloading Effect",
+            "zh-CN": "托比昂热力过载效果"
+          },
+          "id": "TORBJORN_OVERLOADING"
+        },
+        {
+          "aliases": {
+            "en-US": "Winston Primal Rage Effect",
+            "zh-CN": "温斯顿原始暴怒效果"
+          },
+          "id": "WINSTON_PRIMAL_RAGE"
+        },
+        {
+          "aliases": {
+            "en-US": "Wrecking Ball Adaptive Shield Target Effect",
+            "zh-CN": "“破坏球”感应护盾目标效果"
+          },
+          "id": "WRECKING_BALL_ADAPTIVE_SHIELD_TARGET"
+        },
+        {
+          "aliases": {
+            "en-US": "Wrecking Ball Piledriver Fire Effect",
+            "zh-CN": "“破坏球”重力坠击火焰效果"
+          },
+          "id": "WRECKING_BALL_PILEDRIVER_FIRE"
+        },
+        {
+          "aliases": {
+            "en-US": "Ana Biotic Grenade No Healing Effect",
+            "zh-CN": "安娜生物手雷禁疗效果"
+          },
+          "id": "ANA_BIOTIC_GRENADE_NO_HEALING"
+        },
+        {
+          "aliases": {
+            "en-US": "Ana Sleeping Effect",
+            "zh-CN": "安娜麻醉镖效果"
+          },
+          "id": "ANA_SLEEPING"
+        },
+        {
+          "aliases": {
+            "en-US": "Ashe Dynamite Burning Particle Effect",
+            "zh-CN": "艾什延时雷管燃烧粒子效果"
+          },
+          "id": "ASHE_DYNAMITE_BURNING_PARTICLE"
+        },
+        {
+          "aliases": {
+            "en-US": "Ashe Dynamite Burning Material Effect",
+            "zh-CN": "艾什延时雷管燃烧材料效果"
+          },
+          "id": "ASHE_DYNAMITE_BURNING_MATERIAL"
+        },
+        {
+          "aliases": {
+            "en-US": "Cassidy Flashbang Stunned Effect",
+            "zh-CN": "卡西迪闪光弹击晕效果"
+          },
+          "id": "CASSIDY_FLASHBANG_STUNNED"
+        },
+        {
+          "aliases": {
+            "en-US": "Mei Frozen Effect",
+            "zh-CN": "美冰冻效果"
+          },
+          "id": "MEI_FROZEN"
+        },
+        {
+          "aliases": {
+            "en-US": "Sigma Gravitic Flux Target Effect",
+            "zh-CN": "“西格玛”引力乱流目标效果"
+          },
+          "id": "SIGMA_GRAVITIC_FLUX_TARGET"
+        },
+        {
+          "aliases": {
+            "en-US": "Sombra Hacked Looping Effect",
+            "zh-CN": "“黑影”黑客入侵完成循环效果"
+          },
+          "id": "SOMBRA_HACKED_LOOPING"
+        },
+        {
+          "aliases": {
+            "en-US": "Widowmaker Venom Mine Target Effect",
+            "zh-CN": "“黑百合”剧毒诡雷目标效果"
+          },
+          "id": "WIDOWMAKER_VENOM_MINE_TARGET"
+        },
+        {
+          "aliases": {
+            "en-US": "Winston Tesla Cannon Target Effect",
+            "zh-CN": "温斯顿特斯拉炮目标效果"
+          },
+          "id": "WINSTON_TESLA_CANNON_TARGET"
+        },
+        {
+          "aliases": {
+            "en-US": "Zenyatta Orb of Discord Target Effect",
+            "zh-CN": "禅雅塔乱目标效果"
+          },
+          "id": "ZENYATTA_ORB_OF_DISCORD_TARGET"
         }
       ]
     },
@@ -2837,10 +5341,7 @@
         {
           "aliases": {
             "en-US": "Visible To Position and Radius",
-            "zh-CN": [
-              "可见，位置和半径",
-              "位置和半径"
-            ]
+            "zh-CN": "可见，位置和半径"
           },
           "id": "VISIBLE_TO_POSITION_AND_RADIUS"
         },
@@ -2864,6 +5365,27 @@
             "zh-CN": "可见和颜色"
           },
           "id": "VISIBILITY_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Position and Radius",
+            "zh-CN": "位置和半径"
+          },
+          "id": "POSITION_AND_RADIUS"
+        },
+        {
+          "aliases": {
+            "en-US": "Position Radius and Color",
+            "zh-CN": "位置，半径和颜色"
+          },
+          "id": "POSITION_RADIUS_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Position Radius and Color",
+            "zh-CN": "可见，位置，半径和颜色"
+          },
+          "id": "VISIBILITY_POSITION_RADIUS_AND_COLOR"
         }
       ]
     },
@@ -3322,6 +5844,181 @@
             "zh-CN": "剧毒"
           },
           "id": "POISON"
+        },
+        {
+          "aliases": {
+            "en-US": "Arrow: Down",
+            "zh-CN": "箭头：向下"
+          },
+          "id": "ARROW_DOWN"
+        },
+        {
+          "aliases": {
+            "en-US": "Arrow: Left",
+            "zh-CN": "箭头：向左"
+          },
+          "id": "ARROW_LEFT"
+        },
+        {
+          "aliases": {
+            "en-US": "Arrow: Right",
+            "zh-CN": "箭头：向右"
+          },
+          "id": "ARROW_RIGHT"
+        },
+        {
+          "aliases": {
+            "en-US": "Arrow: Up",
+            "zh-CN": "箭头：向上"
+          },
+          "id": "ARROW_UP"
+        },
+        {
+          "aliases": {
+            "en-US": "Circle",
+            "zh-CN": "圆圈"
+          },
+          "id": "CIRCLE"
+        },
+        {
+          "aliases": {
+            "en-US": "Club",
+            "zh-CN": "梅花"
+          },
+          "id": "CLUB"
+        },
+        {
+          "aliases": {
+            "en-US": "Diamond",
+            "zh-CN": "方块"
+          },
+          "id": "DIAMOND"
+        },
+        {
+          "aliases": {
+            "en-US": "Dizzy",
+            "zh-CN": "晕眩"
+          },
+          "id": "DIZZY"
+        },
+        {
+          "aliases": {
+            "en-US": "Exclamation Mark",
+            "zh-CN": "感叹号"
+          },
+          "id": "EXCLAMATION_MARK"
+        },
+        {
+          "aliases": {
+            "en-US": "Eye",
+            "zh-CN": "眼睛"
+          },
+          "id": "EYE"
+        },
+        {
+          "aliases": {
+            "en-US": "Halo",
+            "zh-CN": "光晕"
+          },
+          "id": "HALO"
+        },
+        {
+          "aliases": {
+            "en-US": "Happy",
+            "zh-CN": "高兴"
+          },
+          "id": "HAPPY"
+        },
+        {
+          "aliases": {
+            "en-US": "Heart",
+            "zh-CN": "红桃"
+          },
+          "id": "HEART"
+        },
+        {
+          "aliases": {
+            "en-US": "Moon",
+            "zh-CN": "满月"
+          },
+          "id": "MOON"
+        },
+        {
+          "aliases": {
+            "en-US": "Poison 2",
+            "zh-CN": "剧毒2"
+          },
+          "id": "POISON_2"
+        },
+        {
+          "aliases": {
+            "en-US": "Radioactive",
+            "zh-CN": "辐射"
+          },
+          "id": "RADIOACTIVE"
+        },
+        {
+          "aliases": {
+            "en-US": "Recycle",
+            "zh-CN": "回收"
+          },
+          "id": "RECYCLE"
+        },
+        {
+          "aliases": {
+            "en-US": "Ring Thick",
+            "zh-CN": "宽环"
+          },
+          "id": "RING_THICK"
+        },
+        {
+          "aliases": {
+            "en-US": "Sad",
+            "zh-CN": "难过"
+          },
+          "id": "SAD"
+        },
+        {
+          "aliases": {
+            "en-US": "Spade",
+            "zh-CN": "黑桃"
+          },
+          "id": "SPADE"
+        },
+        {
+          "aliases": {
+            "en-US": "Spiral",
+            "zh-CN": "螺旋"
+          },
+          "id": "SPIRAL"
+        },
+        {
+          "aliases": {
+            "en-US": "Stop",
+            "zh-CN": "停止"
+          },
+          "id": "STOP"
+        },
+        {
+          "aliases": {
+            "en-US": "Trashcan",
+            "zh-CN": "垃圾箱"
+          },
+          "id": "TRASHCAN"
+        },
+        {
+          "aliases": {
+            "en-US": "Warning",
+            "zh-CN": "警告"
+          },
+          "id": "WARNING"
+        },
+        {
+          "aliases": {
+            "en-US": "X",
+            "zh-CN": "X"
+          },
+          "id": "CROSS"
         }
       ]
     },
@@ -3793,6 +6490,20 @@
             "zh-CN": "屏障不会阻挡视线"
           },
           "id": "PASS_THROUGH_BARRIERS"
+        },
+        {
+          "aliases": {
+            "en-US": "Enemy Barriers Block LOS",
+            "zh-CN": "敌方屏障阻挡视线"
+          },
+          "id": "BLOCKED_BY_ENEMY_BARRIERS"
+        },
+        {
+          "aliases": {
+            "en-US": "All Barriers Block LOS",
+            "zh-CN": "所有屏障阻挡视线"
+          },
+          "id": "BLOCKED_BY_ALL_BARRIERS"
         }
       ]
     },
@@ -3812,6 +6523,13 @@
             "zh-CN": "护盾"
           },
           "id": "SHIELDS"
+        },
+        {
+          "aliases": {
+            "en-US": "Health",
+            "zh-CN": "生命值"
+          },
+          "id": "NORMAL"
         }
       ]
     },
@@ -3824,6 +6542,20 @@
             "zh-CN": "总是"
           },
           "id": "ALWAYS"
+        },
+        {
+          "aliases": {
+            "en-US": "Default",
+            "zh-CN": "默认"
+          },
+          "id": "DEFAULT"
+        },
+        {
+          "aliases": {
+            "en-US": "Occluded",
+            "zh-CN": "遮蔽"
+          },
+          "id": "OCCLUDED"
         }
       ]
     },
@@ -3836,6 +6568,139 @@
             "zh-CN": "治疗量"
           },
           "id": "HEALING_DEALT"
+        },
+        {
+          "aliases": {
+            "en-US": "All Damage Dealt",
+            "zh-CN": "所有造成伤害量"
+          },
+          "id": "DAMAGE_DEALT"
+        },
+        {
+          "aliases": {
+            "en-US": "Barrier Damage Dealt",
+            "zh-CN": "对屏障造成伤害量"
+          },
+          "id": "BARRIER_DAMAGE_DEALT"
+        },
+        {
+          "aliases": {
+            "en-US": "Damage Blocked",
+            "zh-CN": "阻挡伤害量"
+          },
+          "id": "DAMAGE_BLOCKED"
+        },
+        {
+          "aliases": {
+            "en-US": "Damage Taken",
+            "zh-CN": "承受伤害量"
+          },
+          "id": "DAMAGE_TAKEN"
+        },
+        {
+          "aliases": {
+            "en-US": "Deaths",
+            "zh-CN": "阵亡"
+          },
+          "id": "DEATHS"
+        },
+        {
+          "aliases": {
+            "en-US": "Eliminations",
+            "zh-CN": "消灭"
+          },
+          "id": "ELIMINATIONS"
+        },
+        {
+          "aliases": {
+            "en-US": "Defensive Assists",
+            "zh-CN": "协助防守"
+          },
+          "id": "DEFENSIVE_ASSISTS"
+        },
+        {
+          "aliases": {
+            "en-US": "Final Blows",
+            "zh-CN": "最后一击"
+          },
+          "id": "FINAL_BLOWS"
+        },
+        {
+          "aliases": {
+            "en-US": "Environmental Deaths",
+            "zh-CN": "地形阵亡"
+          },
+          "id": "ENVIRONMENTAL_DEATHS"
+        },
+        {
+          "aliases": {
+            "en-US": "Environmental Kills",
+            "zh-CN": "地形消灭"
+          },
+          "id": "ENVIRONMENTAL_KILLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Hero Damage Dealt",
+            "zh-CN": "对英雄造成伤害量"
+          },
+          "id": "HERO_DAMAGE_DEALT"
+        },
+        {
+          "aliases": {
+            "en-US": "Multikill Best",
+            "zh-CN": "最佳瞬间消灭"
+          },
+          "id": "MULTIKILL_BEST"
+        },
+        {
+          "aliases": {
+            "en-US": "Multikills",
+            "zh-CN": "瞬间消灭"
+          },
+          "id": "MULTIKILLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Objective Kills",
+            "zh-CN": "目标攻防消灭"
+          },
+          "id": "OBJECTIVE_KILLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Offensive Assists",
+            "zh-CN": "协助进攻"
+          },
+          "id": "OFFENSIVE_ASSISTS"
+        },
+        {
+          "aliases": {
+            "en-US": "Solo Kills",
+            "zh-CN": "单独消灭"
+          },
+          "id": "SOLO_KILLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Ultimates Earned",
+            "zh-CN": "获得终极技能"
+          },
+          "id": "ULTIMATES_EARNED"
+        },
+        {
+          "aliases": {
+            "en-US": "Ultimates Used",
+            "zh-CN": "使用终极技能"
+          },
+          "id": "ULTIMATES_USED"
+        },
+        {
+          "aliases": {
+            "en-US": "Weapon Accuracy",
+            "zh-CN": "武器命中率"
+          },
+          "id": "WEAPON_ACCURACY"
         }
       ]
     },
@@ -3848,6 +6713,230 @@
             "zh-CN": "治疗量"
           },
           "id": "HEALING_DEALT"
+        },
+        {
+          "aliases": {
+            "en-US": "All Damage Dealt",
+            "zh-CN": "所有造成伤害量"
+          },
+          "id": "DAMAGE_DEALT"
+        },
+        {
+          "aliases": {
+            "en-US": "Barrier Damage Dealt",
+            "zh-CN": "对屏障造成伤害量"
+          },
+          "id": "BARRIER_DAMAGE_DEALT"
+        },
+        {
+          "aliases": {
+            "en-US": "Critical Hit Accuracy",
+            "zh-CN": "暴击命中率"
+          },
+          "id": "CRITICAL_HIT_ACCURACY"
+        },
+        {
+          "aliases": {
+            "en-US": "Critical Hits",
+            "zh-CN": "暴击"
+          },
+          "id": "CRITICAL_HITS"
+        },
+        {
+          "aliases": {
+            "en-US": "Damage Blocked",
+            "zh-CN": "阻挡伤害量"
+          },
+          "id": "DAMAGE_BLOCKED"
+        },
+        {
+          "aliases": {
+            "en-US": "Damage Taken",
+            "zh-CN": "承受伤害量"
+          },
+          "id": "DAMAGE_TAKEN"
+        },
+        {
+          "aliases": {
+            "en-US": "Deaths",
+            "zh-CN": "阵亡"
+          },
+          "id": "DEATHS"
+        },
+        {
+          "aliases": {
+            "en-US": "Defensive Assists",
+            "zh-CN": "协助防守"
+          },
+          "id": "DEFENSIVE_ASSISTS"
+        },
+        {
+          "aliases": {
+            "en-US": "Eliminations",
+            "zh-CN": "消灭"
+          },
+          "id": "ELIMINATIONS"
+        },
+        {
+          "aliases": {
+            "en-US": "Environmental Deaths",
+            "zh-CN": "地形阵亡"
+          },
+          "id": "ENVIRONMENTAL_DEATHS"
+        },
+        {
+          "aliases": {
+            "en-US": "Environmental Kills",
+            "zh-CN": "地形消灭"
+          },
+          "id": "ENVIRONMENTAL_KILLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Final Blows",
+            "zh-CN": "最后一击"
+          },
+          "id": "FINAL_BLOWS"
+        },
+        {
+          "aliases": {
+            "en-US": "Healing Received",
+            "zh-CN": "受到治疗量"
+          },
+          "id": "HEALING_RECEIVED"
+        },
+        {
+          "aliases": {
+            "en-US": "Hero Damage Dealt",
+            "zh-CN": "对英雄造成伤害量"
+          },
+          "id": "HERO_DAMAGE_DEALT"
+        },
+        {
+          "aliases": {
+            "en-US": "Multikill Best",
+            "zh-CN": "最佳瞬间消灭"
+          },
+          "id": "MULTIKILL_BEST"
+        },
+        {
+          "aliases": {
+            "en-US": "Multikills",
+            "zh-CN": "瞬间消灭"
+          },
+          "id": "MULTIKILLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Objective Kills",
+            "zh-CN": "目标攻防消灭"
+          },
+          "id": "OBJECTIVE_KILLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Offensive Assists",
+            "zh-CN": "协助进攻"
+          },
+          "id": "OFFENSIVE_ASSISTS"
+        },
+        {
+          "aliases": {
+            "en-US": "Scoped Accuracy",
+            "zh-CN": "开镜命中率"
+          },
+          "id": "SCOPED_ACCURACY"
+        },
+        {
+          "aliases": {
+            "en-US": "Scoped Critical Hit Accuracy",
+            "zh-CN": "开镜暴击率"
+          },
+          "id": "SCOPED_CRITICAL_HIT_ACCURACY"
+        },
+        {
+          "aliases": {
+            "en-US": "Scoped Critical Hit Kills",
+            "zh-CN": "开镜暴击消灭"
+          },
+          "id": "SCOPED_CRITICAL_HIT_KILLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Scoped Critical Hits",
+            "zh-CN": "开镜暴击"
+          },
+          "id": "SCOPED_CRITICAL_HITS"
+        },
+        {
+          "aliases": {
+            "en-US": "Scoped Hits",
+            "zh-CN": "开镜命中"
+          },
+          "id": "SCOPED_HITS"
+        },
+        {
+          "aliases": {
+            "en-US": "Scoped Shots",
+            "zh-CN": "开镜射击"
+          },
+          "id": "SCOPED_SHOTS"
+        },
+        {
+          "aliases": {
+            "en-US": "Self Healing",
+            "zh-CN": "自我治疗量"
+          },
+          "id": "SELF_HEALING"
+        },
+        {
+          "aliases": {
+            "en-US": "Shots Fired",
+            "zh-CN": "射击次数"
+          },
+          "id": "SHOTS_FIRED"
+        },
+        {
+          "aliases": {
+            "en-US": "Shots Hit",
+            "zh-CN": "射击命中"
+          },
+          "id": "SHOTS_HIT"
+        },
+        {
+          "aliases": {
+            "en-US": "Shots Missed",
+            "zh-CN": "射击未命中"
+          },
+          "id": "SHOTS_MISSED"
+        },
+        {
+          "aliases": {
+            "en-US": "Solo Kills",
+            "zh-CN": "单独消灭"
+          },
+          "id": "SOLO_KILLS"
+        },
+        {
+          "aliases": {
+            "en-US": "Ultimates Earned",
+            "zh-CN": "获得终极技能"
+          },
+          "id": "ULTIMATES_EARNED"
+        },
+        {
+          "aliases": {
+            "en-US": "Ultimates Used",
+            "zh-CN": "使用终极技能"
+          },
+          "id": "ULTIMATES_USED"
+        },
+        {
+          "aliases": {
+            "en-US": "Weapon Accuracy",
+            "zh-CN": "武器命中率"
+          },
+          "id": "WEAPON_ACCURACY"
         }
       ]
     },
@@ -3860,6 +6949,55 @@
             "zh-CN": "可见和位置"
           },
           "id": "VISIBILITY_AND_POSITION"
+        },
+        {
+          "aliases": {
+            "en-US": "Color",
+            "zh-CN": "颜色"
+          },
+          "id": "COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "无"
+          },
+          "id": "NONE"
+        },
+        {
+          "aliases": {
+            "en-US": "Position",
+            "zh-CN": "位置"
+          },
+          "id": "POSITION"
+        },
+        {
+          "aliases": {
+            "en-US": "Position and Color",
+            "zh-CN": "位置和颜色"
+          },
+          "id": "POSITION_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To",
+            "zh-CN": "可见"
+          },
+          "id": "VISIBILITY"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To and Color",
+            "zh-CN": "可见和颜色"
+          },
+          "id": "VISIBILITY_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Position and Color",
+            "zh-CN": "可见，位置和颜色"
+          },
+          "id": "VISIBILITY_POSITION_AND_COLOR"
         }
       ]
     },
@@ -3879,6 +7017,845 @@
             "zh-CN": "无动作"
           },
           "id": "NOOP"
+        }
+      ]
+    },
+    {
+      "domain": "AccelReeval",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Direction Rate and Max Speed",
+            "zh-CN": "方向，速率，及最大速度"
+          },
+          "id": "DIRECTION_RATE_AND_MAX_SPEED"
+        },
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "无"
+          },
+          "id": "NONE"
+        }
+      ]
+    },
+    {
+      "domain": "AssistReeval",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Assisters and Targets",
+            "zh-CN": "助攻者和目标"
+          },
+          "id": "ASSISTERS_AND_TARGETS"
+        },
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "无"
+          },
+          "id": "NONE"
+        }
+      ]
+    },
+    {
+      "domain": "Comms",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Acknowledge",
+            "zh-CN": "收到"
+          },
+          "id": "ACKNOWLEDGE"
+        },
+        {
+          "aliases": {
+            "en-US": "Attacking",
+            "zh-CN": "正在进攻"
+          },
+          "id": "ATTACKING"
+        },
+        {
+          "aliases": {
+            "en-US": "Countdown",
+            "zh-CN": "倒计时"
+          },
+          "id": "COUNTDOWN"
+        },
+        {
+          "aliases": {
+            "en-US": "Defending",
+            "zh-CN": "正在防守"
+          },
+          "id": "DEFENDING"
+        },
+        {
+          "aliases": {
+            "en-US": "Emote Down",
+            "zh-CN": "表情（下）"
+          },
+          "id": "EMOTE_DOWN"
+        },
+        {
+          "aliases": {
+            "en-US": "Emote Left",
+            "zh-CN": "表情（左）"
+          },
+          "id": "EMOTE_LEFT"
+        },
+        {
+          "aliases": {
+            "en-US": "Emote Right",
+            "zh-CN": "表情（右）"
+          },
+          "id": "EMOTE_RIGHT"
+        },
+        {
+          "aliases": {
+            "en-US": "Emote Up",
+            "zh-CN": "表情（上）"
+          },
+          "id": "EMOTE_UP"
+        },
+        {
+          "aliases": {
+            "en-US": "Fall Back",
+            "zh-CN": "撤退"
+          },
+          "id": "FALL_BACK"
+        },
+        {
+          "aliases": {
+            "en-US": "Go",
+            "zh-CN": "前进"
+          },
+          "id": "GO"
+        },
+        {
+          "aliases": {
+            "en-US": "Going In",
+            "zh-CN": "我上了"
+          },
+          "id": "GOING_IN"
+        },
+        {
+          "aliases": {
+            "en-US": "Goodbye",
+            "zh-CN": "再见"
+          },
+          "id": "GOODBYE"
+        },
+        {
+          "aliases": {
+            "en-US": "Group Up",
+            "zh-CN": "集合"
+          },
+          "id": "GROUP_UP"
+        },
+        {
+          "aliases": {
+            "en-US": "Hello",
+            "zh-CN": "问候"
+          },
+          "id": "HELLO"
+        },
+        {
+          "aliases": {
+            "en-US": "Incoming",
+            "zh-CN": "敌人来袭"
+          },
+          "id": "INCOMING"
+        },
+        {
+          "aliases": {
+            "en-US": "Need Healing",
+            "zh-CN": "需要治疗"
+          },
+          "id": "NEED_HEALING"
+        },
+        {
+          "aliases": {
+            "en-US": "Need Help",
+            "zh-CN": "需要帮助"
+          },
+          "id": "NEED_HELP"
+        },
+        {
+          "aliases": {
+            "en-US": "No",
+            "zh-CN": "不行"
+          },
+          "id": "NO"
+        },
+        {
+          "aliases": {
+            "en-US": "On My Way",
+            "zh-CN": "正在赶来"
+          },
+          "id": "ON_MY_WAY"
+        },
+        {
+          "aliases": {
+            "en-US": "Press the Attack",
+            "zh-CN": "继续攻击"
+          },
+          "id": "PRESS_THE_ATTACK"
+        },
+        {
+          "aliases": {
+            "en-US": "Push Forward",
+            "zh-CN": "推进"
+          },
+          "id": "PUSH_FORWARD"
+        },
+        {
+          "aliases": {
+            "en-US": "Ready",
+            "zh-CN": "做好准备"
+          },
+          "id": "READY"
+        },
+        {
+          "aliases": {
+            "en-US": "Sorry",
+            "zh-CN": "抱歉"
+          },
+          "id": "SORRY"
+        },
+        {
+          "aliases": {
+            "en-US": "Spray Down",
+            "zh-CN": "喷漆下"
+          },
+          "id": "SPRAY_DOWN"
+        },
+        {
+          "aliases": {
+            "en-US": "Spray Left",
+            "zh-CN": "喷漆左"
+          },
+          "id": "SPRAY_LEFT"
+        },
+        {
+          "aliases": {
+            "en-US": "Spray Right",
+            "zh-CN": "喷漆右"
+          },
+          "id": "SPRAY_RIGHT"
+        },
+        {
+          "aliases": {
+            "en-US": "Spray Up",
+            "zh-CN": "喷漆上"
+          },
+          "id": "SPRAY_UP"
+        },
+        {
+          "aliases": {
+            "en-US": "Thanks",
+            "zh-CN": "感谢"
+          },
+          "id": "THANKS"
+        },
+        {
+          "aliases": {
+            "en-US": "Ultimate Status",
+            "zh-CN": "终极技能状态"
+          },
+          "id": "ULTIMATE_STATUS"
+        },
+        {
+          "aliases": {
+            "en-US": "Voice Line Down",
+            "zh-CN": "语音（下）"
+          },
+          "id": "VOICE_LINE_DOWN"
+        },
+        {
+          "aliases": {
+            "en-US": "Voice Line Left",
+            "zh-CN": "语音（左）"
+          },
+          "id": "VOICE_LINE_LEFT"
+        },
+        {
+          "aliases": {
+            "en-US": "Voice Line Right",
+            "zh-CN": "语音（右）"
+          },
+          "id": "VOICE_LINE_RIGHT"
+        },
+        {
+          "aliases": {
+            "en-US": "Voice Line Up",
+            "zh-CN": "语音（上）"
+          },
+          "id": "VOICE_LINE_UP"
+        },
+        {
+          "aliases": {
+            "en-US": "With You",
+            "zh-CN": "我跟着你"
+          },
+          "id": "WITH_YOU"
+        },
+        {
+          "aliases": {
+            "en-US": "Yes",
+            "zh-CN": "好的"
+          },
+          "id": "YES"
+        },
+        {
+          "aliases": {
+            "en-US": "You are Welcome",
+            "zh-CN": "不用谢"
+          },
+          "id": "YOURE_WELCOME"
+        }
+      ]
+    },
+    {
+      "domain": "DamageReeval",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "无"
+          },
+          "id": "NONE"
+        },
+        {
+          "aliases": {
+            "en-US": "Receivers and Damagers",
+            "zh-CN": "受伤害者和伤害者"
+          },
+          "id": "RECEIVERS_AND_DAMAGERS"
+        },
+        {
+          "aliases": {
+            "en-US": "Receivers Damagers and Damage Percent",
+            "zh-CN": "受伤害者，伤害者及伤害百分比"
+          },
+          "id": "RECEIVERS_DAMAGERS_AND_DMGPERCENT"
+        }
+      ]
+    },
+    {
+      "domain": "HealingReeval",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "全部禁用"
+          },
+          "id": "NONE"
+        },
+        {
+          "aliases": {
+            "en-US": "Receivers and Healers",
+            "zh-CN": "受治疗者和治疗者"
+          },
+          "id": "RECEIVERS_AND_HEALERS"
+        },
+        {
+          "aliases": {
+            "en-US": "Receivers Healers and Healing Percent",
+            "zh-CN": "受治疗者，治疗者及治疗百分比"
+          },
+          "id": "RECEIVERS_HEALERS_AND_HEALPERCENT"
+        }
+      ]
+    },
+    {
+      "domain": "ProgressHudReeval",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Color",
+            "zh-CN": "颜色"
+          },
+          "id": "COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "全部禁用"
+          },
+          "id": "NONE"
+        },
+        {
+          "aliases": {
+            "en-US": "Values",
+            "zh-CN": "值"
+          },
+          "id": "VALUES"
+        },
+        {
+          "aliases": {
+            "en-US": "Values and Color",
+            "zh-CN": "值和颜色"
+          },
+          "id": "VALUES_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To",
+            "zh-CN": "可见"
+          },
+          "id": "VISIBILITY"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To and Color",
+            "zh-CN": "可见和颜色"
+          },
+          "id": "VISIBILITY_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To and Values",
+            "zh-CN": "可见和值"
+          },
+          "id": "VISIBILITY_AND_VALUES"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Values and Color",
+            "zh-CN": "可见，值和颜色"
+          },
+          "id": "VISIBILITY_VALUES_AND_COLOR"
+        }
+      ]
+    },
+    {
+      "domain": "ProgressWorldTextReeval",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Color",
+            "zh-CN": "颜色"
+          },
+          "id": "COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "全部禁用"
+          },
+          "id": "NONE"
+        },
+        {
+          "aliases": {
+            "en-US": "Position",
+            "zh-CN": "位置"
+          },
+          "id": "POSITION"
+        },
+        {
+          "aliases": {
+            "en-US": "Position and Color",
+            "zh-CN": "位置和颜色"
+          },
+          "id": "POSITION_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Position and Values",
+            "zh-CN": "位置和值"
+          },
+          "id": "POSITION_AND_VALUES"
+        },
+        {
+          "aliases": {
+            "en-US": "Position Values and Color",
+            "zh-CN": "位置，值和颜色"
+          },
+          "id": "POSITION_VALUES_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Values",
+            "zh-CN": "值"
+          },
+          "id": "VALUES"
+        },
+        {
+          "aliases": {
+            "en-US": "Values and Color",
+            "zh-CN": "值和颜色"
+          },
+          "id": "VALUES_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To",
+            "zh-CN": "可见"
+          },
+          "id": "VISIBILITY"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To and Color",
+            "zh-CN": "可见和颜色"
+          },
+          "id": "VISIBILITY_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To and Position",
+            "zh-CN": "可见和位置"
+          },
+          "id": "VISIBILITY_AND_POSITION"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To and Values",
+            "zh-CN": "可见和值"
+          },
+          "id": "VISIBILITY_AND_VALUES"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Position and Color",
+            "zh-CN": "可见，位置和颜色"
+          },
+          "id": "VISIBILITY_POSITION_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Position and Values",
+            "zh-CN": "可见，位置和值"
+          },
+          "id": "VISIBILITY_POSITION_AND_VALUES"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Values and Color",
+            "zh-CN": "可见，值和颜色"
+          },
+          "id": "VISIBILITY_VALUES_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Position Values and Color",
+            "zh-CN": "可见，位置，值和颜色"
+          },
+          "id": "VISIBILITY_POSITION_VALUES_AND_COLOR"
+        }
+      ]
+    },
+    {
+      "domain": "WorldTextReeval",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Color",
+            "zh-CN": "颜色"
+          },
+          "id": "COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "全部禁用"
+          },
+          "id": "NONE"
+        },
+        {
+          "aliases": {
+            "en-US": "String",
+            "zh-CN": "字符串"
+          },
+          "id": "STRING"
+        },
+        {
+          "aliases": {
+            "en-US": "String and Color",
+            "zh-CN": "字符串和颜色"
+          },
+          "id": "STRING_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To",
+            "zh-CN": "可见"
+          },
+          "id": "VISIBILITY"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To and Color",
+            "zh-CN": "可见和颜色"
+          },
+          "id": "VISIBILITY_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To and Position",
+            "zh-CN": "可见和位置"
+          },
+          "id": "VISIBILITY_AND_POSITION"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To and String",
+            "zh-CN": "可见和字符串"
+          },
+          "id": "VISIBILITY_AND_STRING"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Position and Color",
+            "zh-CN": "可见，位置和颜色"
+          },
+          "id": "VISIBILITY_POSITION_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Position and String",
+            "zh-CN": "可见，位置和字符串"
+          },
+          "id": "VISIBILITY_POSITION_AND_STRING"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To String and Color",
+            "zh-CN": "可见，字符串和颜色"
+          },
+          "id": "VISIBILITY_STRING_AND_COLOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Position String and Color",
+            "zh-CN": "可见，位置，字符串和颜色"
+          },
+          "id": "VISIBILITY_POSITION_STRING_AND_COLOR"
+        }
+      ]
+    },
+    {
+      "domain": "ModifyHealth",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Damage",
+            "zh-CN": "输出"
+          },
+          "id": "DAMAGE"
+        },
+        {
+          "aliases": {
+            "en-US": "Heal",
+            "zh-CN": "治疗"
+          },
+          "id": "HEAL"
+        }
+      ]
+    },
+    {
+      "domain": "Projectile",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Orb Projectile",
+            "zh-CN": "球弹道"
+          },
+          "id": "ORB"
+        },
+        {
+          "aliases": {
+            "en-US": "Baptiste Biotic Launcher",
+            "zh-CN": "巴蒂斯特生化榴弹枪"
+          },
+          "id": "BAPTISTE_BIOTIC_LAUNCHER"
+        },
+        {
+          "aliases": {
+            "en-US": "Bastion A-36 Tactical Grenade",
+            "zh-CN": "“堡垒”A-36战术榴弹"
+          },
+          "id": "BASTION_TACTICAL_GRENADE"
+        },
+        {
+          "aliases": {
+            "en-US": "Echo Sticky Bomb",
+            "zh-CN": "“回声”黏性炸弹"
+          },
+          "id": "ECHO_STICKY_BOMB"
+        },
+        {
+          "aliases": {
+            "en-US": "Genji Shuriken",
+            "zh-CN": "源氏“镖”"
+          },
+          "id": "GENJI_SHURIKEN"
+        },
+        {
+          "aliases": {
+            "en-US": "Lucio Sonic Amplifier",
+            "zh-CN": "卢西奥音速扩音器"
+          },
+          "id": "LUCIO_SONIC_AMPLIFIER"
+        },
+        {
+          "aliases": {
+            "en-US": "Mei Icicle",
+            "zh-CN": "美冰锥"
+          },
+          "id": "MEI_ICICLE"
+        },
+        {
+          "aliases": {
+            "en-US": "Mercy Caduceus Blaster",
+            "zh-CN": "“天使”天使冲击枪"
+          },
+          "id": "MERCY_CADUCEUS_BLASTER"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Damage Orb",
+            "zh-CN": "莫伊拉伤害生化之球"
+          },
+          "id": "MOIRA_DAMAGE_ORB"
+        },
+        {
+          "aliases": {
+            "en-US": "Moira Heal Orb",
+            "zh-CN": "莫伊拉治疗生化之球"
+          },
+          "id": "MOIRA_HEAL_ORB"
+        },
+        {
+          "aliases": {
+            "en-US": "Orisa Fusion Driver",
+            "zh-CN": "奥丽莎聚变驱动器"
+          },
+          "id": "ORISA_FUSION_DRIVER"
+        },
+        {
+          "aliases": {
+            "en-US": "Pharah Rocket",
+            "zh-CN": "“法老之鹰”火箭"
+          },
+          "id": "PHARAH_ROCKET"
+        },
+        {
+          "aliases": {
+            "en-US": "Reinhardt Fire Strike",
+            "zh-CN": "莱因哈特烈焰打击"
+          },
+          "id": "REINHARDT_FIRE_STRIKE"
+        },
+        {
+          "aliases": {
+            "en-US": "Roadhog Scrap",
+            "zh-CN": "“路霸”爆裂枪"
+          },
+          "id": "ROADHOG_SCRAP"
+        },
+        {
+          "aliases": {
+            "en-US": "Roadhog Scrap Ball",
+            "zh-CN": "“路霸”爆裂枪废铁球"
+          },
+          "id": "ROADHOG_SCRAP_BALL"
+        },
+        {
+          "aliases": {
+            "en-US": "Sigma Hypersphere",
+            "zh-CN": "西格玛超能之球"
+          },
+          "id": "SIGMA_HYPERSPHERE"
+        },
+        {
+          "aliases": {
+            "en-US": "Symmetra Photon Projector",
+            "zh-CN": "“秩序之光”光子发射器"
+          },
+          "id": "SYMMETRA_PHOTON_PROJECTOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Ramattra Ravenous Vortex Sphere",
+            "zh-CN": "拉玛刹吞噬漩涡能量球"
+          },
+          "id": "RAMATTRA_RAVENOUS_VORTEX_SPHERE"
+        },
+        {
+          "aliases": {
+            "en-US": "Zarya Graviton",
+            "zh-CN": "查莉娅重力喷涌"
+          },
+          "id": "ZARYA_GRAVITON"
+        },
+        {
+          "aliases": {
+            "en-US": "Zarya Particle Cannon",
+            "zh-CN": "查莉娅粒子炮"
+          },
+          "id": "ZARYA_PARTICLE_CANNON"
+        }
+      ]
+    },
+    {
+      "domain": "ProjectileEffectReeval",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Visible To Position Direction and Size",
+            "zh-CN": "可见，位置，方向和大小"
+          },
+          "id": "VISIBILITY_POSITION_DIRECTION_AND_SIZE"
+        },
+        {
+          "aliases": {
+            "en-US": "Position Direction and Size",
+            "zh-CN": "位置，方向和大小"
+          },
+          "id": "POSITION_DIRECTION_AND_SIZE"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To",
+            "zh-CN": "可见"
+          },
+          "id": "VISIBILITY"
+        },
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "无"
+          },
+          "id": "NONE"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Friendly To Position Direction and Size",
+            "zh-CN": "可见，友善，位置，方向和大小"
+          },
+          "id": "VISIBILITY_FRIENDLINESS_POSITION_DIRECTION_AND_SIZE"
+        },
+        {
+          "aliases": {
+            "en-US": "Friendly To Position Direction and Size",
+            "zh-CN": "友善，位置，方向和大小"
+          },
+          "id": "FRIENDLINESS_POSITION_DIRECTION_AND_SIZE"
+        },
+        {
+          "aliases": {
+            "en-US": "Visible To Friendly To",
+            "zh-CN": "可见，友善"
+          },
+          "id": "VISIBILITY_AND_FRIENDLINESS"
+        },
+        {
+          "aliases": {
+            "en-US": "Friendly To",
+            "zh-CN": "友善"
+          },
+          "id": "FRIENDLINESS"
         }
       ]
     }
@@ -4208,7 +8185,9 @@
       "disableBuiltinGameModeCompletion zh-CN retains 禁用内置游戏模式完成 from the reviewed workshop-data export and 关闭游戏预设完成条件 observed in the same reproducible Bastion build; the first spelling is emitted deterministically and both are accepted for parsing",
       "value and enum identities added in the Bastion spatial/player/effect slice are cross-checked against workshop-data GUID translations and the reproducible c010e1a2d468ec7140f474e334067e5ab8d02d89 en-US/zh-CN builds; aliases remain data-backed and canonical signatures retain their declared parameter domains",
       "Is Dummy Bot, Ability Cooldown, facing-angle/speed, ground-state, dot-product, event-damage, normalize, and angle-difference values are transcribed from the pinned workshop-data export and exercised by the pinned direct raw Workshop artifacts",
-      "event/control/effect identities added in this slice are transcribed from workshop-data constants and values and exercised by the pinned direct raw Workshop artifacts"
+      "event/control/effect identities added in this slice are transcribed from workshop-data constants and values and exercised by the pinned direct raw Workshop artifacts",
+      "93 additional value identities are mechanically reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; parameter names/types and reviewed en-US/zh-CN aliases remain data-backed",
+      "enum domains/members and action signatures are reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; structural aliases remain owned by the parser"
     ]
   },
   "schemaVersion": 1,
@@ -5953,6 +9932,1064 @@
         "Player",
         "Team",
         "ViewAngle"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Weapon",
+        "zh-CN": "武器"
+      },
+      "id": "getCurrentWeapon",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Horizontal Speed Of",
+        "zh-CN": "水平速度"
+      },
+      "id": "getHorizontalSpeed",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Max Health Of Type",
+        "zh-CN": "类型的最大生命值"
+      },
+      "id": "getMaxHealthOfType",
+      "paramDomains": [
+        null,
+        "Health"
+      ],
+      "params": [
+        "Player",
+        "Health"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Number Of Deaths",
+        "zh-CN": "死亡数"
+      },
+      "id": "getNumberOfDeaths",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Number Of Eliminations",
+        "zh-CN": "消灭数"
+      },
+      "id": "getNumberOfElims",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Number Of Final Blows",
+        "zh-CN": "最后一击数"
+      },
+      "id": "getNumberOfFinalBlows",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Closest To Reticle",
+        "zh-CN": "距离准星最近的玩家"
+      },
+      "id": "getPlayerClosestToReticle",
+      "paramDomains": [
+        null,
+        "Team"
+      ],
+      "params": [
+        "Player",
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Score Of",
+        "zh-CN": "分数"
+      },
+      "id": "getScore",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Vertical Speed Of",
+        "zh-CN": "垂直速度"
+      },
+      "id": "getVerticalSpeed",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Communicating Any",
+        "zh-CN": "正在与人交流"
+      },
+      "id": "isCommunicatingAnything",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Communicating Any Emote",
+        "zh-CN": "正在使用表情交流"
+      },
+      "id": "isCommunicatingEmote",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Communicating Any Spray",
+        "zh-CN": "正在使用喷漆交流"
+      },
+      "id": "isCommunicatingSpray",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Communicating Any Voice line",
+        "zh-CN": "正在使用语音交流"
+      },
+      "id": "isCommunicatingVoiceline",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Jumping",
+        "zh-CN": "正在跳跃"
+      },
+      "id": "isJumping",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Meleeing",
+        "zh-CN": "正在近战攻击"
+      },
+      "id": "isMeleeing",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Portrait On Fire",
+        "zh-CN": "头像火力全开"
+      },
+      "id": "isOnFire",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is On Objective",
+        "zh-CN": "在目标点上"
+      },
+      "id": "isOnObjective",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is On Wall",
+        "zh-CN": "在墙上"
+      },
+      "id": "isOnWall",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Standing",
+        "zh-CN": "正在站立"
+      },
+      "id": "isStanding",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Ray Cast Hit Normal",
+        "zh-CN": "射线命中法线"
+      },
+      "id": "raycastHitNormal",
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Position",
+        "Position",
+        "Player",
+        "Player",
+        "Boolean"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Ray Cast Hit Player",
+        "zh-CN": "射线命中玩家"
+      },
+      "id": "raycastHitPlayer",
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "Position",
+        "Position",
+        "Player",
+        "Player",
+        "Boolean"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Workshop Setting Hero",
+        "zh-CN": "地图工坊设置英雄"
+      },
+      "id": "createWorkshopSettingHero",
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "CustomStringLiteral",
+        "CustomStringLiteral",
+        "HeroLiteral",
+        "IntLiteral"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Workshop Setting Real",
+        "zh-CN": "地图工坊设置实数"
+      },
+      "id": "createWorkshopSettingFloat",
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "params": [
+        "CustomStringLiteral",
+        "CustomStringLiteral",
+        "FloatLiteral",
+        "FloatLiteral",
+        "FloatLiteral",
+        "IntLiteral"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Arccosine In Radians",
+        "zh-CN": "以弧度为单位的反余弦值"
+      },
+      "id": "acos",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Arccosine In Degrees",
+        "zh-CN": "以角度为单位的反余弦值"
+      },
+      "id": "acosDeg",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Angle Between Vectors",
+        "zh-CN": "矢量间夹角"
+      },
+      "id": "angleBetweenVectors",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Direction",
+        "Direction"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Arcsine In Radians",
+        "zh-CN": "以弧度为单位的反正弦值"
+      },
+      "id": "asin",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Arcsine In Degrees",
+        "zh-CN": "以角度为单位的反正弦值"
+      },
+      "id": "asinDeg",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Arctangent In Radians",
+        "zh-CN": "以弧度为单位的反正切值"
+      },
+      "id": "atan2",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Number",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Arctangent In Degrees",
+        "zh-CN": "以角度为单位的反正切值"
+      },
+      "id": "atan2Deg",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Number",
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Cosine From Radians",
+        "zh-CN": "弧度的余弦值"
+      },
+      "id": "cos",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Cosine From Degrees",
+        "zh-CN": "角度的余弦值"
+      },
+      "id": "cosDeg",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Event Direction",
+        "zh-CN": "事件方向"
+      },
+      "id": "eventDirection",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Event Was Environment",
+        "zh-CN": "事件为环境事件"
+      },
+      "id": "eventWasEnvironment",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Point Capture Percentage",
+        "zh-CN": "目标点占领百分比"
+      },
+      "id": "getCapturePercentage",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Closest Player To",
+        "zh-CN": "距离最近的玩家"
+      },
+      "id": "getClosestPlayer",
+      "paramDomains": [
+        null,
+        "Team"
+      ],
+      "params": [
+        "Position",
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Control Mode Scoring Percentage",
+        "zh-CN": "占领要点模式得分百分比"
+      },
+      "id": "getControlScorePercentage",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Control Mode Scoring Team",
+        "zh-CN": "占领要点模式正在得分的队伍"
+      },
+      "id": "getControlScoringTeam",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Current Game Mode",
+        "zh-CN": "当前游戏模式"
+      },
+      "id": "getCurrentGamemode",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Objective Index",
+        "zh-CN": "对象索引"
+      },
+      "id": "getCurrentObjective",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "All Dead Players",
+        "zh-CN": "所有死亡玩家"
+      },
+      "id": "getDeadPlayers",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Farthest Player From",
+        "zh-CN": "距离最远的玩家"
+      },
+      "id": "getFarthestPlayer",
+      "paramDomains": [
+        null,
+        "Team"
+      ],
+      "params": [
+        "Position",
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Carrying Flag",
+        "zh-CN": "携带旗帜的玩家"
+      },
+      "id": "getFlagCarrier",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Flag Position",
+        "zh-CN": "旗帜位置"
+      },
+      "id": "getFlagPosition",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Last Assist ID",
+        "zh-CN": "上一个助攻ID"
+      },
+      "id": "getLastAssistId",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Last Damage Over Time ID",
+        "zh-CN": "上一个持续伤害效果ID"
+      },
+      "id": "getLastDamageOverTimeId",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Last Healing Modification ID",
+        "zh-CN": "上一个治疗调整ID"
+      },
+      "id": "getLastHealingModification",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Match Round",
+        "zh-CN": "比赛回合"
+      },
+      "id": "getMatchRound",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Match Time",
+        "zh-CN": "比赛时间"
+      },
+      "id": "getMatchTime",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Assist Count",
+        "zh-CN": "助攻数量"
+      },
+      "id": "getNumberOfAssistIds",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Damage Modification Count",
+        "zh-CN": "伤害调整数量"
+      },
+      "id": "getNumberOfDamageModificationIds",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Number Of Dead Players",
+        "zh-CN": "死亡玩家数量"
+      },
+      "id": "getNumberOfDeadPlayers",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Damage Over Time Count",
+        "zh-CN": "持续伤害数量"
+      },
+      "id": "getNumberOfDamageOverTimeIds",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Entity Count",
+        "zh-CN": "实体数量"
+      },
+      "id": "getNumberOfEntityIds",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Healing Modification Count",
+        "zh-CN": "治疗调整数量"
+      },
+      "id": "getNumberOfHealingModificationIds",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Number Of Heroes",
+        "zh-CN": "英雄数量"
+      },
+      "id": "getNumberOfHeroes",
+      "paramDomains": [
+        "Hero",
+        "Team"
+      ],
+      "params": [
+        "Hero",
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Heal Over Time Count",
+        "zh-CN": "持续治疗数量"
+      },
+      "id": "getNumberOfHealingOverTimeIds",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Number Of Living Players",
+        "zh-CN": "存活玩家数量"
+      },
+      "id": "getNumberOfLivingPlayers",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Number Of Players On Objective",
+        "zh-CN": "目标点上玩家数量"
+      },
+      "id": "getNumberOfPlayersOnObjective",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Number Of Slots",
+        "zh-CN": "栏位数量"
+      },
+      "id": "getNumberOfSlots",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Text Count",
+        "zh-CN": "文本数量"
+      },
+      "id": "getNumberOfTextIds",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Payload Position",
+        "zh-CN": "运载目标位置"
+      },
+      "id": "getPayloadPosition",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Payload Progress Percentage",
+        "zh-CN": "运载目标进度百分比"
+      },
+      "id": "getPayloadProgressPercentage",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Players In Slot",
+        "zh-CN": "此栏位的玩家"
+      },
+      "id": "getPlayersInSlot",
+      "paramDomains": [
+        null,
+        "Team"
+      ],
+      "params": [
+        "Number",
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "All Players Not On Objective",
+        "zh-CN": "所有目标点外玩家"
+      },
+      "id": "getPlayersNotOnObjective",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "All Players On Objective",
+        "zh-CN": "所有目标点内玩家"
+      },
+      "id": "getPlayersOnObjective",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Horizontal Angle Towards",
+        "zh-CN": "水平方向夹角"
+      },
+      "id": "horizontalAngleTowards",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Player",
+        "Position"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Control Mode Point Locked",
+        "zh-CN": "占领要点模式占领点解锁"
+      },
+      "id": "isControlPointLocked",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Is Flag At Base",
+        "zh-CN": "旗帜是否在基地中"
+      },
+      "id": "isFlagAtBase",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Flag Being Carried",
+        "zh-CN": "是否有人携带旗帜"
+      },
+      "id": "isFlagBeingCarried",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is CTF Mode In Sudden Death",
+        "zh-CN": "在夺旗模式中开始绝杀局"
+      },
+      "id": "isInSuddenDeath",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Is Between Rounds",
+        "zh-CN": "处于回合之间"
+      },
+      "id": "isMatchBetweenRounds",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Is Match Complete",
+        "zh-CN": "比赛结束"
+      },
+      "id": "isMatchComplete",
+      "paramDomains": [],
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Is Team On Defense",
+        "zh-CN": "正在防守"
+      },
+      "id": "isTeamOnDefense",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Local Vector Of",
+        "zh-CN": "本地矢量"
+      },
+      "id": "localVector",
+      "paramDomains": [
+        "Vector",
+        null,
+        "Transform"
+      ],
+      "params": [
+        "Vector",
+        "Player",
+        "Transform"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Magnitude Of",
+        "zh-CN": "幅值"
+      },
+      "id": "magnitude",
+      "paramDomains": [
+        "Vector"
+      ],
+      "params": [
+        "Vector"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Sine From Degrees",
+        "zh-CN": "角度的正弦值"
+      },
+      "id": "sinDeg",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "String Contains",
+        "zh-CN": "字符串包含"
+      },
+      "id": "strContains",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "String",
+        "String"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "String Length",
+        "zh-CN": "字符串长度"
+      },
+      "id": "strLen",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "String"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Tangent From Radians",
+        "zh-CN": "弧度的正切值"
+      },
+      "id": "tan",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Tangent From Degrees",
+        "zh-CN": "角度的正切值"
+      },
+      "id": "tanDeg",
+      "paramDomains": [
+        null
+      ],
+      "params": [
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Hero Being Played",
+        "zh-CN": "正在使用英雄"
+      },
+      "id": "isHeroBeingPlayed",
+      "paramDomains": [
+        "Hero",
+        "Team"
+      ],
+      "params": [
+        "Hero",
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Team Score",
+        "zh-CN": "团队得分"
+      },
+      "id": "teamScore",
+      "paramDomains": [
+        "Team"
+      ],
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Vertical Angle Towards",
+        "zh-CN": "垂直方向夹角"
+      },
+      "id": "verticalAngleTowards",
+      "paramDomains": [
+        null,
+        null
+      ],
+      "params": [
+        "Player",
+        "Position"
       ]
     }
   ],

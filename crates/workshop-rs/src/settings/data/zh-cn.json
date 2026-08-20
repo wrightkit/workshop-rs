@@ -30,6 +30,20 @@
     }
   },
   "enums": {
+    "Always Enabled": {
+      "en-US": "Always Enabled",
+      "sources": [
+        "customGameSettings.gamemodes.values.assault.values.tankPassiveHealthBonus"
+      ],
+      "zh-CN": "始终启用"
+    },
+    "1 Tank 2 Offense 2 Support": {
+      "en-US": "1 Tank 2 Offense 2 Support",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.roleLimit"
+      ],
+      "zh-CN": "1 重装，2输出，2支援"
+    },
     "After A Game": {
       "en-US": "After A Game",
       "sources": [
@@ -90,6 +104,13 @@
   },
   "excluded": [],
   "heroes": {
+    "Anran": {
+      "en-US": "Anran",
+      "sources": [
+        "heroes.anran"
+      ],
+      "zh-CN": "安燃"
+    },
     "Ashe": {
       "en-US": "Ashe",
       "sources": [
@@ -110,6 +131,20 @@
         "heroes.dva"
       ],
       "zh-CN": "D.Va"
+    },
+    "Hazard": {
+      "en-US": "Hazard",
+      "sources": [
+        "heroes.hazard"
+      ],
+      "zh-CN": "探奇"
+    },
+    "Juno": {
+      "en-US": "Juno",
+      "sources": [
+        "heroes.juno"
+      ],
+      "zh-CN": "朱诺"
     },
     "Doomfist": {
       "en-US": "Doomfist",
@@ -138,6 +173,13 @@
         "heroes.moira"
       ],
       "zh-CN": "莫伊拉"
+    },
+    "Mauga": {
+      "en-US": "Mauga",
+      "sources": [
+        "heroes.mauga"
+      ],
+      "zh-CN": "毛加"
     },
     "Reinhardt": {
       "en-US": "Reinhardt",
@@ -168,6 +210,13 @@
         "customGameSettings.gamemodes.values.general.values.gameModeStartTrigger"
       ],
       "zh-CN": "游戏模式开始"
+    },
+    "Tank Role Passive Health Bonus": {
+      "en-US": "Tank Role Passive Health Bonus",
+      "sources": [
+        "customGameSettings.gamemodes.values.assault.values.tankPassiveHealthBonus"
+      ],
+      "zh-CN": "重装职责被动生命值加成"
     },
     "Allow Players Who Are In Queue": {
       "en-US": "Allow Players Who Are In Queue",

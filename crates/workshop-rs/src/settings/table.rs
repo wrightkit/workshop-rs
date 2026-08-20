@@ -328,6 +328,15 @@ pub static ENTRIES: &[TableEntry] = &[
     entry!(
         [
             PathPart::Part("gamemodes"),
+            PathPart::Part("general"),
+            PathPart::Part("roleLimit")
+        ],
+        "Limit Roles",
+        KeyKind::Enum("roleLimit")
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
             PathPart::Part("assault"),
             PathPart::Part("enableCompetitiveRules")
         ],
@@ -410,6 +419,24 @@ pub static ENTRIES: &[TableEntry] = &[
     entry!(
         [
             PathPart::Part("gamemodes"),
+            PathPart::Part("assault"),
+            PathPart::Part("gameModeStartTrigger")
+        ],
+        "Game Mode Start",
+        KeyKind::Enum("gameModeStartTrigger")
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
+            PathPart::Part("assault"),
+            PathPart::Part("tankPassiveHealthBonus")
+        ],
+        "Tank Role Passive Health Bonus",
+        KeyKind::Enum("tankPassiveHealthBonus")
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
             PathPart::Part("general"),
             PathPart::Part("spawnHealthPacks")
         ],
@@ -430,6 +457,15 @@ pub static ENTRIES: &[TableEntry] = &[
         [
             PathPart::Part("heroes"),
             PathPart::Team,
+            PathPart::Part("disabledHeroes")
+        ],
+        "disabled heroes",
+        KeyKind::ListHero
+    ),
+    entry!(
+        [
+            PathPart::Part("heroes"),
+            PathPart::Part("general"),
             PathPart::Part("disabledHeroes")
         ],
         "disabled heroes",
@@ -563,6 +599,10 @@ pub static MAP_NAMES: &[NameMap] = &[
 /// Hero names inside hero lists and hero-config groups.
 pub static HERO_NAMES: &[NameMap] = &[
     NameMap {
+        key: "anran",
+        name: "Anran",
+    },
+    NameMap {
         key: "ashe",
         name: "Ashe",
     },
@@ -593,6 +633,18 @@ pub static HERO_NAMES: &[NameMap] = &[
     NameMap {
         key: "hammond",
         name: "Wrecking Ball",
+    },
+    NameMap {
+        key: "hazard",
+        name: "Hazard",
+    },
+    NameMap {
+        key: "juno",
+        name: "Juno",
+    },
+    NameMap {
+        key: "mauga",
+        name: "Mauga",
     },
     NameMap {
         key: "zenyatta",
@@ -673,6 +725,21 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         domain: "roleLimit",
         member: "2OfEachRolePerTeam",
         name: "2 Of Each Role Per Team",
+    },
+    EnumMember {
+        domain: "roleLimit",
+        member: "1Tank2Offense2Support",
+        name: "1 Tank 2 Offense 2 Support",
+    },
+    EnumMember {
+        domain: "tankPassiveHealthBonus",
+        member: "alwaysEnabled",
+        name: "Always Enabled",
+    },
+    EnumMember {
+        domain: "tankPassiveHealthBonus",
+        member: "disabled",
+        name: "Disabled",
     },
     EnumMember {
         domain: "heroLimit",

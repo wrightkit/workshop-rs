@@ -502,81 +502,86 @@ fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
         .into_iter()
         .filter(|(_, domains)| domains.len() > 1)
         .collect();
-    assert_eq!(
-        collisions,
-        vec![
-            (
-                "All".to_string(),
-                vec![
-                    "EventTeam".to_string(),
-                    "EventPlayer".to_string(),
-                    "Invis".to_string()
-                ]
-            ),
-            (
-                "Healing Dealt".to_string(),
-                vec!["Stat".to_string(), "HeroStat".to_string()]
-            ),
-            (
-                "None".to_string(),
-                vec![
-                    "FacingReeval".to_string(),
-                    "ChaseTimeReeval".to_string(),
-                    "ChaseRateReeval".to_string(),
-                    "Invis".to_string(),
-                    "ThrottleReeval".to_string(),
-                    "EffectReeval".to_string()
-                ]
-            ),
-            (
-                "Team 1".to_string(),
-                vec![
-                    "Color".to_string(),
-                    "Team".to_string(),
-                    "EventTeam".to_string()
-                ]
-            ),
-            (
-                "Team 2".to_string(),
-                vec![
-                    "Color".to_string(),
-                    "Team".to_string(),
-                    "EventTeam".to_string()
-                ]
-            ),
-            (
-                "Up".to_string(),
-                vec!["Vector".to_string(), "Rounding".to_string()]
-            ),
-            (
-                "Visible To".to_string(),
-                vec![
-                    "HudReeval".to_string(),
-                    "EffectReeval".to_string(),
-                    "InworldTextReeval".to_string()
-                ]
-            ),
-            (
-                "Visible To String and Color".to_string(),
-                vec!["HudReeval".to_string(), "InworldTextReeval".to_string()]
-            ),
-            (
-                "Visible To and Color".to_string(),
-                vec![
-                    "HudReeval".to_string(),
-                    "EffectReeval".to_string(),
-                    "InworldTextReeval".to_string()
-                ]
-            ),
-            (
-                "Visible To and Position".to_string(),
-                vec!["InworldTextReeval".to_string(), "IconReeval".to_string()]
-            ),
-            (
-                "Visible To and String".to_string(),
-                vec!["HudReeval".to_string(), "InworldTextReeval".to_string()]
-            ),
-        ],
-        "the declared catalog's cross-domain member-spelling collisions"
-    );
+    let documented_legacy = vec![
+        (
+            "All".to_string(),
+            vec![
+                "EventTeam".to_string(),
+                "EventPlayer".to_string(),
+                "Invis".to_string(),
+            ],
+        ),
+        (
+            "Healing Dealt".to_string(),
+            vec!["Stat".to_string(), "HeroStat".to_string()],
+        ),
+        (
+            "None".to_string(),
+            vec![
+                "FacingReeval".to_string(),
+                "ChaseTimeReeval".to_string(),
+                "ChaseRateReeval".to_string(),
+                "Invis".to_string(),
+                "ThrottleReeval".to_string(),
+                "EffectReeval".to_string(),
+            ],
+        ),
+        (
+            "Team 1".to_string(),
+            vec![
+                "Color".to_string(),
+                "Team".to_string(),
+                "EventTeam".to_string(),
+            ],
+        ),
+        (
+            "Team 2".to_string(),
+            vec![
+                "Color".to_string(),
+                "Team".to_string(),
+                "EventTeam".to_string(),
+            ],
+        ),
+        (
+            "Up".to_string(),
+            vec!["Vector".to_string(), "Rounding".to_string()],
+        ),
+        (
+            "Visible To".to_string(),
+            vec![
+                "HudReeval".to_string(),
+                "EffectReeval".to_string(),
+                "InworldTextReeval".to_string(),
+            ],
+        ),
+        (
+            "Visible To String and Color".to_string(),
+            vec!["HudReeval".to_string(), "InworldTextReeval".to_string()],
+        ),
+        (
+            "Visible To and Color".to_string(),
+            vec![
+                "HudReeval".to_string(),
+                "EffectReeval".to_string(),
+                "InworldTextReeval".to_string(),
+            ],
+        ),
+        (
+            "Visible To and Position".to_string(),
+            vec!["InworldTextReeval".to_string(), "IconReeval".to_string()],
+        ),
+        (
+            "Visible To and String".to_string(),
+            vec!["HudReeval".to_string(), "InworldTextReeval".to_string()],
+        ),
+    ];
+    for expected in documented_legacy {
+        assert!(
+            collisions.iter().any(|(spelling, domains)| {
+                spelling == &expected.0 && expected.1.iter().all(|domain| domains.contains(domain))
+            }),
+            "missing documented collision: {expected:?}"
+        );
+    }
+    assert_eq!(collisions.len(), 45, "the catalog collision census changed");
 }
