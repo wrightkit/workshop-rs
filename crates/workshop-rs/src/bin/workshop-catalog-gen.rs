@@ -780,6 +780,8 @@ mod corpus {
         // --- merge zh-CN aliases into the catalog data -----------------------
         let merged = merge_zh_aliases(&catalog, &matches)?;
         let merged_text = canonical_json(&merged)?;
+        Catalog::load_unverified(&merged_text)
+            .map_err(|error| format!("merged catalog is invalid: {error}"))?;
         std::fs::write(catalog_file, &merged_text)
             .map_err(|error| format!("cannot write {}: {error}", catalog_file.display()))?;
 
@@ -920,16 +922,31 @@ mod corpus {
         Ok(merged)
     }
 
-    /// Set (or verify) the zh-CN alias of one catalog entry.
+    /// Set (or extend) the reviewed zh-CN aliases of one catalog entry.
     fn set_zh_alias(entry: &mut Value, zh: &str) -> Result<(), String> {
         let Some(aliases) = entry.get_mut("aliases").and_then(Value::as_object_mut) else {
             return Err("catalog entry without aliases object".to_string());
         };
-        match aliases.get("zh-CN") {
-            Some(existing) if existing.as_str() == Some(zh) => {}
+        match aliases.remove("zh-CN") {
+            Some(Value::String(existing)) if existing == zh => {
+                aliases.insert("zh-CN".to_string(), Value::String(existing));
+            }
+            Some(Value::String(existing)) => {
+                aliases.insert(
+                    "zh-CN".to_string(),
+                    Value::Array(vec![Value::String(existing), Value::String(zh.to_string())]),
+                );
+            }
+            Some(Value::Array(existing)) => {
+                let mut existing = existing;
+                if !existing.iter().any(|alias| alias.as_str() == Some(zh)) {
+                    existing.push(Value::String(zh.to_string()));
+                }
+                aliases.insert("zh-CN".to_string(), Value::Array(existing));
+            }
             Some(existing) => {
                 return Err(format!(
-                    "catalog already declares zh-CN '{existing}' but the corpus yields '{zh}'"
+                    "catalog declares invalid zh-CN aliases value {existing}"
                 ));
             }
             None => {
@@ -1279,5 +1296,37 @@ mod corpus {
                 .to_string(),
         );
         lines
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::set_zh_alias;
+        use serde_json::json;
+
+        #[test]
+        fn corpus_merge_preserves_and_extends_reviewed_alias_arrays() {
+            let mut entry = json!({
+                "aliases": {"zh-CN": ["中止", "中断"]}
+            });
+
+            set_zh_alias(&mut entry, "中断").expect("existing reviewed alias is accepted");
+            set_zh_alias(&mut entry, "中止条件").expect("new corpus alias is appended");
+
+            assert_eq!(
+                entry["aliases"]["zh-CN"],
+                json!(["中止", "中断", "中止条件"])
+            );
+        }
+
+        #[test]
+        fn corpus_merge_promotes_a_scalar_conflict_to_reviewed_aliases() {
+            let mut entry = json!({
+                "aliases": {"zh-CN": "中止"}
+            });
+
+            set_zh_alias(&mut entry, "中断").expect("conflicting corpus alias is retained");
+
+            assert_eq!(entry["aliases"]["zh-CN"], json!(["中止", "中断"]));
+        }
     }
 }
