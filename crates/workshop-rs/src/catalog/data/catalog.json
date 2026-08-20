@@ -634,6 +634,14 @@
     },
     {
       "aliases": {
+        "en-US": "Loop",
+        "zh-CN": "循环"
+      },
+      "id": "loop",
+      "params": []
+    },
+    {
+      "aliases": {
         "en-US": "Set Player Variable At Index",
         "zh-CN": "在索引处设置玩家变量"
       },
@@ -1786,7 +1794,7 @@
       "params": []
     }
   ],
-  "digest": "bd23ace1376713019bb0e9286febbb338397308569699acd6c30d7a2540a06e3",
+  "digest": "b519a3a938e5a74d6c8bbe4fcc21b9d0e7c9ddb477da3200694b81cc97a45013",
   "enums": [
     {
       "domain": "Impulse",

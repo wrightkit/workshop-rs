@@ -122,6 +122,31 @@ impl CatalogEntry {
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
         self.aliases.get(locale).map(String::as_str)
     }
+
+    /// The number of declared arguments for this builtin.
+    pub fn param_count(&self) -> usize {
+        self.params.len()
+    }
+
+    /// The number of arguments that must be present when trailing defaults
+    /// are applied. A missing default in the middle of a signature remains a
+    /// required position; defaults only make the suffix optional.
+    pub fn required_param_count(&self) -> usize {
+        (0..self.params.len())
+            .rev()
+            .find(|index| {
+                self.param_defaults
+                    .get(*index)
+                    .and_then(Option::as_ref)
+                    .is_none()
+            })
+            .map_or(0, |index| index + 1)
+    }
+
+    /// The declared enum domain for an argument position, when one exists.
+    pub fn param_domain(&self, index: usize) -> Option<&str> {
+        self.param_domains.get(index).and_then(Option::as_deref)
+    }
 }
 
 /// One enum member within a domain.

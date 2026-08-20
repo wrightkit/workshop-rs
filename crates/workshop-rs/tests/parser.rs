@@ -228,6 +228,54 @@ fn unknown_spelling_is_reported_as_unknown() {
 }
 
 #[test]
+fn canonical_validation_enforces_declared_arity_and_enum_domain() {
+    let catalog = catalog();
+    let arity = r#"rule ("arity") { event { Ongoing - Global; } actions { Wait(); } }"#;
+    let program = parser::parse_with_context(arity, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("parser preserves the call for canonical validation");
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("missing required signature argument must be rejected");
+    assert!(
+        error
+            .to_string()
+            .contains("action 'wait' expects 1..2 argument(s), got 0")
+    );
+
+    let wrong_domain = r#"rule ("domain") { event { Ongoing - Global; } actions { Set Invisible(All Players(All Teams), Color(White)); } }"#;
+    let program =
+        parser::parse_with_context(wrong_domain, &catalog, &Locale::new("en-US"), &catalog)
+            .expect("parser preserves the call for canonical validation");
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("wrong enum domain must be rejected");
+    assert!(
+        error
+            .to_string()
+            .contains("action 'setInvisibility' argument 2")
+    );
+}
+
+#[test]
+fn current_loop_action_resolves_to_canonical_generic_wir() {
+    let catalog = catalog();
+    let source = r#"rule ("loop") { event { Ongoing - Global; } actions { Loop; } }"#;
+    let program = parser::parse_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("declared Loop action parses");
+    let rule = program.rules.get(wir::RuleId::from_index(0)).expect("rule");
+    let action = program.actions.get(rule.actions[0]).expect("action");
+    assert!(matches!(
+        action,
+        wir::Action::Call { name, args, .. } if name == "loop" && args.is_empty()
+    ));
+    validate::validate_canonical_ids(&program, &catalog).expect("Loop has canonical identity");
+    assert!(
+        workshop_rs::semantic::inspect(&program, &catalog)
+            .iter()
+            .all(|issue| issue.name != "rawWorkshopAction"),
+        "declared Loop must not use the opaque action path"
+    );
+}
+
+#[test]
 fn unsupported_construct_is_distinct_from_malformed() {
     // A non-default eachPlayer sub-parameter is recognized but unsupported.
     let text = "rule (\"x\") { event { Ongoing - Each Player; Team 1; } actions { } }";

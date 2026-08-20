@@ -114,13 +114,16 @@ fn validate_action(
     };
     match action {
         wir::Action::Call { name, args, span } => {
-            if catalog.entry(Kind::Action, name).is_none() {
+            let entry = catalog.entry(Kind::Action, name);
+            if entry.is_none() {
                 errors.push(WorkshopError::Unknown {
                     kind: "action",
                     spelling: name.clone(),
                     locale: crate::catalog::Locale::new("en-US"),
                     span: *span,
                 });
+            } else if let Some(entry) = entry {
+                validate_call_signature(entry, args, *span, program, catalog, errors);
             }
             for arg in args {
                 validate_value(program, catalog, *arg, errors);
@@ -219,6 +222,8 @@ fn validate_value(
                     locale: crate::catalog::Locale::new("en-US"),
                     span: node.span,
                 });
+            } else if let Some(entry) = catalog.entry(Kind::Value, name) {
+                validate_call_signature(entry, args, node.span, program, catalog, errors);
             }
             for arg in args {
                 validate_value(program, catalog, *arg, errors);
@@ -265,5 +270,95 @@ fn validate_value(
         | wir::Value::Null
         | wir::Value::GlobalVariable(_)
         | wir::Value::EventPlayer => {}
+    }
+}
+
+fn validate_call_signature(
+    entry: &crate::catalog::CatalogEntry,
+    args: &[wir::ValueId],
+    span: Option<crate::source::Span>,
+    program: &wir::Program,
+    catalog: &Catalog,
+    errors: &mut Vec<WorkshopError>,
+) {
+    // An empty signature in the current inventory means that arity is not
+    // declared, not that the builtin is a zero-argument function. This is
+    // important for documented variadic calls such as Custom String.
+    if entry.param_count() == 0 && entry.required_param_count() == 0 {
+        return;
+    }
+    // Existing WIR callers may intentionally construct a partial generic
+    // call while probing one argument's semantics. Reject the unambiguous
+    // boundary violations (no arguments for a required signature, or too
+    // many arguments) while leaving partial calls available for the explicit
+    // evidence-insufficient path.
+    if (args.is_empty() && entry.required_param_count() > 0) || args.len() > entry.param_count() {
+        errors.push(WorkshopError::Unsupported {
+            message: format!(
+                "{} '{}' expects {}..{} argument(s), got {}",
+                entry.kind.as_str(),
+                entry.id,
+                entry.required_param_count(),
+                entry.param_count(),
+                args.len()
+            ),
+            span,
+        });
+        return;
+    }
+
+    let complete_signature = args.len() == entry.param_count();
+    for (index, arg_id) in args.iter().enumerate() {
+        let Some(domain) = entry.param_domain(index) else {
+            continue;
+        };
+        let Some(node) = program.values.get(*arg_id) else {
+            continue;
+        };
+        // A declared enum domain constrains enum literals. Dynamic values,
+        // Null, and defaults remain valid expressions for the same position;
+        // their runtime value cannot be proven from WIR alone.
+        let valid = match &node.value {
+            wir::Value::Enum {
+                value_type, value, ..
+            } => {
+                let member_is_known = catalog
+                    .enum_spelling(value_type, catalog.primary_locale(), value)
+                    .is_some();
+                if complete_signature {
+                    value_type == domain
+                        && catalog
+                            .enum_spelling(domain, catalog.primary_locale(), value)
+                            .is_some()
+                } else {
+                    // Partial generic calls do not provide enough evidence
+                    // to prove the positional domain, but an explicitly
+                    // unknown enum literal must still fail closed.
+                    member_is_known
+                }
+            }
+            _ => true,
+        };
+        if !valid {
+            let actual = match &node.value {
+                wir::Value::Enum {
+                    value_type, value, ..
+                } => {
+                    format!("{value_type}.{value}")
+                }
+                _ => "non-enum expression".to_string(),
+            };
+            errors.push(WorkshopError::Unsupported {
+                message: format!(
+                    "{} '{}' argument {} must be a member of enum domain '{}', got {}",
+                    entry.kind.as_str(),
+                    entry.id,
+                    index + 1,
+                    domain,
+                    actual
+                ),
+                span: node.span,
+            });
+        }
     }
 }

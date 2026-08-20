@@ -1091,7 +1091,7 @@ impl Parser<'_> {
                         "For Global Variable" => actions.push(self.for_group()?),
                         "For Player Variable" => actions.push(self.for_player_group()?),
                         "While" => actions.push(self.while_group()?),
-                        "Loop" => actions.push(self.opaque_action()?),
+                        "Loop" => actions.push(self.action_call_from_phrase(phrase, start, end)?),
                         "Loop If Condition Is True" => {
                             actions.push(self.action_call_from_phrase(phrase, start, end)?)
                         }
