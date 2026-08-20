@@ -5,10 +5,10 @@
   "workshopRsBaseRevision": "9d5e32906011e9fbd45f1de26ed8a24dd296de6b",
   "validation": {
     "catalogCheck": "OK 515 entries, 52 enum domains, 2 locale(s)",
-    "catalogDigest": "5345a68a72ac3cb9b6adcce4402f385d222c999c0fd911266e2671fe17bfb373",
+    "catalogDigest": "eddaa0cef06ba8bcf82a19036c608d763e8a5bd17d36b08be05145c63672efb2",
     "localeCoverage": {
-      "en-US": "1192/1192",
-      "zh-CN": "1178/1192"
+      "en-US": "1237/1237",
+      "zh-CN": "1218/1237"
     },
     "semanticCommand": "WRIGHTKIT_P0_ARTIFACT_DIR=/path/to/reacquired-artifacts cargo test -p workshop-rs --locked --test p0_corpus -- --ignored --nocapture",
     "requiredChecks": ["parse", "canonical validation", "semantic inspection", "deterministic emission", "reparse", "semantic roundtrip equivalence"]
@@ -34,5 +34,5 @@
       "groups": ["defend rawWorkshopAction at the artifact's trailing End"]
     }
   },
-  "note": "Issue counts are semantic incompleteness counts, not failure counts. Remaining groups are not silently promoted to canonical identities. The durable harness performs canonical validation, semantic inspection, deterministic emission, reparse, and semantic roundtrip equivalence when run against the reacquired artifacts. Independent QA must still run it with the pinned artifacts before P0 acceptance."
+  "note": "Issue counts are semantic incompleteness counts, not failure counts. Remaining groups are not silently promoted to canonical identities. The durable harness performs canonical validation, semantic inspection, deterministic emission, reparse, and semantic roundtrip equivalence when run against the reacquired artifacts; artifact-specific gaps are classified and remain visible in the test output. Independent QA must still run it with the pinned artifacts before P0 acceptance."
 }

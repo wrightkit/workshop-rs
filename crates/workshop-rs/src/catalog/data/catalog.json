@@ -3098,7 +3098,7 @@
       ]
     }
   ],
-  "digest": "5345a68a72ac3cb9b6adcce4402f385d222c999c0fd911266e2671fe17bfb373",
+  "digest": "eddaa0cef06ba8bcf82a19036c608d763e8a5bd17d36b08be05145c63672efb2",
   "enums": [
     {
       "domain": "Impulse",
@@ -6352,6 +6352,316 @@
             "zh-CN": "鲁纳塞彼"
           },
           "id": "RUNASAPI"
+        },
+        {
+          "aliases": {
+            "en-US": "Arena Victoriae"
+          },
+          "id": "ARENAVICTORIAE"
+        },
+        {
+          "aliases": {
+            "en-US": "Gogadoro"
+          },
+          "id": "GOGADORO"
+        },
+        {
+          "aliases": {
+            "en-US": "Redwood Dam"
+          },
+          "id": "REDWOODDAM"
+        },
+        {
+          "aliases": {
+            "en-US": "Place Lacroix"
+          },
+          "id": "PLACELACROIX"
+        },
+        {
+          "aliases": {
+            "en-US": "Black Forest Winter",
+            "zh-CN": "圣诞节黑森林"
+          },
+          "id": "BLACKFORESTWINTER"
+        },
+        {
+          "aliases": {
+            "en-US": "Busan Downtown Lunar New Year",
+            "zh-CN": "春节釜山城区"
+          },
+          "id": "BUSANDOWNTOWNLNY"
+        },
+        {
+          "aliases": {
+            "en-US": "Busan Sanctuary Lunar New Year",
+            "zh-CN": "春节釜山寺院"
+          },
+          "id": "BUSANSANCTUARYLNY"
+        },
+        {
+          "aliases": {
+            "en-US": "Busan Stadium",
+            "zh-CN": "釜山体育场"
+          },
+          "id": "BUSANSTADIUM"
+        },
+        {
+          "aliases": {
+            "en-US": "Busan Stadium Classic",
+            "zh-CN": "釜山体育场（经典）"
+          },
+          "id": "BUSANSTADIUMCLASSIC"
+        },
+        {
+          "aliases": {
+            "en-US": "Château Guillard Halloween",
+            "zh-CN": "万圣节吉拉德堡"
+          },
+          "id": "CHATEAUGUILLARDHALLOWEEN"
+        },
+        {
+          "aliases": {
+            "en-US": "Ecopoint: Antarctica",
+            "zh-CN": "生态监测站：南极洲"
+          },
+          "id": "ECOPOINTANTARCTICA"
+        },
+        {
+          "aliases": {
+            "en-US": "Ecopoint: Antarctica Winter",
+            "zh-CN": "圣诞节生态监测站：南极洲"
+          },
+          "id": "ECOPOINTANTARCTICAWINTER"
+        },
+        {
+          "aliases": {
+            "en-US": "Estádio das Rãs",
+            "zh-CN": "弗格体育场"
+          },
+          "id": "ESTADIODASRAS"
+        },
+        {
+          "aliases": {
+            "en-US": "Ilios Lighthouse",
+            "zh-CN": "伊利奥斯灯塔"
+          },
+          "id": "ILIOSLIGHTHOUSE"
+        },
+        {
+          "aliases": {
+            "en-US": "Ilios Ruins",
+            "zh-CN": "伊利奥斯废墟"
+          },
+          "id": "ILIOSRUINS"
+        },
+        {
+          "aliases": {
+            "en-US": "Ilios Well",
+            "zh-CN": "伊利奥斯深井"
+          },
+          "id": "ILIOSWELL"
+        },
+        {
+          "aliases": {
+            "en-US": "Junkenstein's Revenge",
+            "zh-CN": "怪鼠复仇"
+          },
+          "id": "JUNKENSTEIN"
+        },
+        {
+          "aliases": {
+            "en-US": "Kanezaka",
+            "zh-CN": "铁坂"
+          },
+          "id": "KANEZAKA"
+        },
+        {
+          "aliases": {
+            "en-US": "Lijiang Control Center",
+            "zh-CN": "漓江塔控制中心"
+          },
+          "id": "LIJIANGCONTROLCENTER"
+        },
+        {
+          "aliases": {
+            "en-US": "Lijiang Control Center Lunar New Year",
+            "zh-CN": "春节漓江塔控制中心"
+          },
+          "id": "LIJIANGCONTROLCENTERLNY"
+        },
+        {
+          "aliases": {
+            "en-US": "Lijiang Garden",
+            "zh-CN": "漓江塔庭院"
+          },
+          "id": "LIJIANGGARDEN"
+        },
+        {
+          "aliases": {
+            "en-US": "Lijiang Garden Lunar New Year",
+            "zh-CN": "春节漓江塔庭院"
+          },
+          "id": "LIJIANGGARDENLNY"
+        },
+        {
+          "aliases": {
+            "en-US": "Lijiang Night Market",
+            "zh-CN": "漓江塔夜市"
+          },
+          "id": "LIJIANGNIGHTMARKET"
+        },
+        {
+          "aliases": {
+            "en-US": "Lijiang Night Market Lunar New Year",
+            "zh-CN": "春节漓江塔夜市"
+          },
+          "id": "LIJIANGNIGHTMARKETLNY"
+        },
+        {
+          "aliases": {
+            "en-US": "Malevento",
+            "zh-CN": "马莱温多"
+          },
+          "id": "MALEVENTO"
+        },
+        {
+          "aliases": {
+            "en-US": "Necropolis",
+            "zh-CN": "墓园"
+          },
+          "id": "NECROPOLIS"
+        },
+        {
+          "aliases": {
+            "en-US": "Neon Junction",
+            "zh-CN": "霓虹枢纽"
+          },
+          "id": "NEONJUNCTION"
+        },
+        {
+          "aliases": {
+            "en-US": "Nepal Sanctum",
+            "zh-CN": "尼泊尔圣所"
+          },
+          "id": "NEPALSANCTUM"
+        },
+        {
+          "aliases": {
+            "en-US": "Nepal Shrine",
+            "zh-CN": "尼泊尔圣坛"
+          },
+          "id": "NEPALSHRINE"
+        },
+        {
+          "aliases": {
+            "en-US": "Nepal Village",
+            "zh-CN": "尼泊尔村庄"
+          },
+          "id": "NEPALVILLAGE"
+        },
+        {
+          "aliases": {
+            "en-US": "Nepal Village Winter",
+            "zh-CN": "圣诞节尼泊尔村庄"
+          },
+          "id": "NEPALVILLAGEWINTER"
+        },
+        {
+          "aliases": {
+            "en-US": "Oasis City Center",
+            "zh-CN": "绿洲城中心"
+          },
+          "id": "OASISCITYCENTER"
+        },
+        {
+          "aliases": {
+            "en-US": "Oasis Gardens",
+            "zh-CN": "绿洲城花园"
+          },
+          "id": "OASISGARDENS"
+        },
+        {
+          "aliases": {
+            "en-US": "Oasis University",
+            "zh-CN": "绿洲城大学"
+          },
+          "id": "OASISUNIVERSITY"
+        },
+        {
+          "aliases": {
+            "en-US": "Petra",
+            "zh-CN": "佩特拉"
+          },
+          "id": "PETRA"
+        },
+        {
+          "aliases": {
+            "en-US": "Practice Range",
+            "zh-CN": "训练靶场"
+          },
+          "id": "PRACTICERANGE"
+        },
+        {
+          "aliases": {
+            "en-US": "Sydney Harbour Arena",
+            "zh-CN": "悉尼海港竞技场"
+          },
+          "id": "SYDNEYHARBOURARENA"
+        },
+        {
+          "aliases": {
+            "en-US": "Sydney Harbour Arena Classic",
+            "zh-CN": "悉尼海港竞技场（经典）"
+          },
+          "id": "SYDNEYHARBOURARENACLASSIC"
+        },
+        {
+          "aliases": {
+            "en-US": "Workshop Chamber",
+            "zh-CN": "地图工坊室内"
+          },
+          "id": "WORKSHOPCHAMBER"
+        },
+        {
+          "aliases": {
+            "en-US": "Workshop Expanse",
+            "zh-CN": "地图工坊空地"
+          },
+          "id": "WORKSHOPEXPANSE"
+        },
+        {
+          "aliases": {
+            "en-US": "Workshop Expanse Night",
+            "zh-CN": "地图工坊空地（夜间）"
+          },
+          "id": "WORKSHOPEXPANSENIGHT"
+        },
+        {
+          "aliases": {
+            "en-US": "Workshop Green Screen",
+            "zh-CN": "地图工坊绿幕"
+          },
+          "id": "WORKSHOPGREENSCREEN"
+        },
+        {
+          "aliases": {
+            "en-US": "Workshop Island",
+            "zh-CN": "地图工坊岛屿"
+          },
+          "id": "WORKSHOPISLAND"
+        },
+        {
+          "aliases": {
+            "en-US": "Workshop Island Night",
+            "zh-CN": "地图工坊岛屿（夜间）"
+          },
+          "id": "WORKSHOPISLANDNIGHT"
+        },
+        {
+          "aliases": {
+            "en-US": "Lijiang Tower Lunar New Year"
+          },
+          "id": "LIJIANGTOWERLNY"
         }
       ]
     },
@@ -8436,7 +8746,10 @@
       "event/control/effect identities added in this slice are transcribed from workshop-data constants and values and exercised by the pinned direct raw Workshop artifacts",
       "93 additional value identities are mechanically reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; parameter names/types and reviewed en-US/zh-CN aliases remain data-backed",
       "enum domains/members and action signatures are reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; structural aliases remain owned by the parser",
-      "current vector constants, Game Mode and Modulo values, Gamemode members, Hero and Color domain aliases, and To Nearest alias are reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+      "current vector constants, Game Mode and Modulo values, Gamemode members, Hero and Color domain aliases, and To Nearest alias are reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
+      "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
+      "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
+      "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
     ]
   },
   "schemaVersion": 1,
@@ -11310,5 +11623,5 @@
       ]
     }
   ],
-  "version": "0.1.1"
+  "version": "0.1.2"
 }

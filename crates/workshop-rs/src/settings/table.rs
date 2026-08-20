@@ -982,6 +982,18 @@ pub fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static
                 None
             }
         })
+        .or_else(|| {
+            if !locale.eq_ignore_ascii_case("zh-CN") {
+                return None;
+            }
+            match (hero, key) {
+                ("sojourn", "secondaryFireEnergyChargeRate%") => Some("充能速度 充能射击"),
+                ("roadhog", "secondaryFireRechargeRate%") => Some("呼吸器充能速度"),
+                ("hazard", "secondaryFireRegen%") => Some("尖刺护体资源恢复"),
+                ("hazard", "secondaryFireCost%") => Some("尖刺护体资源消耗"),
+                _ => None,
+            }
+        })
 }
 
 /// Reviewed producer aliases observed in the pinned AI-PVE artifact. These

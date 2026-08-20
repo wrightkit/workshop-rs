@@ -633,5 +633,5 @@ fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
             "missing documented collision: {expected:?}"
         );
     }
-    assert_eq!(collisions.len(), 45, "the catalog collision census changed");
+    assert_eq!(collisions.len(), 47, "the catalog collision census changed");
 }

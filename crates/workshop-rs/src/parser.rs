@@ -103,6 +103,58 @@ struct Parser<'a> {
 }
 
 impl Parser<'_> {
+    fn resolve_entry(&self, kind: Kind, spelling: &str) -> Option<crate::catalog::CatalogEntry> {
+        self.catalog
+            .resolve(kind, &self.locale, spelling)
+            .cloned()
+            .or_else(|| {
+                if self.locale != *self.catalog.primary_locale() {
+                    self.catalog
+                        .resolve(kind, self.catalog.primary_locale(), spelling)
+                        .cloned()
+                } else {
+                    None
+                }
+            })
+    }
+
+    fn resolve_enum_domain_mixed(&self, spelling: &str) -> Option<&str> {
+        self.catalog
+            .resolve_enum_domain(&self.locale, spelling)
+            .or_else(|| {
+                if self.locale != *self.catalog.primary_locale() {
+                    self.catalog
+                        .resolve_enum_domain(self.catalog.primary_locale(), spelling)
+                } else {
+                    None
+                }
+            })
+    }
+
+    fn resolve_enum_member_mixed(&self, domain: &str, spelling: &str) -> Option<(String, String)> {
+        let alternate = (!spelling.contains(": ") && spelling.contains(':'))
+            .then(|| spelling.replacen(':', ": ", 1));
+        self.catalog
+            .resolve_enum_member(domain, &self.locale, spelling)
+            .or_else(|| {
+                alternate.as_deref().and_then(|spelling| {
+                    self.catalog
+                        .resolve_enum_member(domain, &self.locale, spelling)
+                })
+            })
+            .or_else(|| {
+                if self.locale != *self.catalog.primary_locale() {
+                    self.catalog.resolve_enum_member(
+                        domain,
+                        self.catalog.primary_locale(),
+                        alternate.as_deref().unwrap_or(spelling),
+                    )
+                } else {
+                    None
+                }
+            })
+    }
+
     fn program(mut self) -> Result<wir::Program> {
         let file = self.target.files.push(SourceFile::new("workshop.txt"));
         // Re-point synthetic spans at the real file id by keeping a helper.
@@ -999,8 +1051,7 @@ impl Parser<'_> {
             });
         }
         let team_member = self
-            .catalog
-            .resolve_enum_member("EventTeam", &self.locale, parameters[0])
+            .resolve_enum_member_mixed("EventTeam", parameters[0])
             .map(|(_, member)| member);
         let team = match team_member.as_deref() {
             Some("ALL") => EventTeam::All,
@@ -1009,8 +1060,7 @@ impl Parser<'_> {
             _ => return Err(self.unknown("event team", parameters[0])),
         };
         let target = if let Some((_, member)) =
-            self.catalog
-                .resolve_enum_member("EventPlayer", &self.locale, parameters[1])
+            self.resolve_enum_member_mixed("EventPlayer", parameters[1])
         {
             if member == "ALL" {
                 EventTarget::All
@@ -1131,9 +1181,7 @@ impl Parser<'_> {
                     let saved = self.pos;
                     let (phrase, start, end) = self.phrase()?;
                     if let Some(rest) = self.disabled_action_rest(&phrase) {
-                        if let Some(structural) =
-                            self.catalog.resolve(Kind::Structural, &self.locale, rest)
-                        {
+                        if let Some(structural) = self.resolve_entry(Kind::Structural, rest) {
                             match structural.id.as_str() {
                                 "while" => {
                                     actions.push(self.while_group()?);
@@ -1146,8 +1194,7 @@ impl Parser<'_> {
                                 _ => {}
                             }
                         }
-                        if let Some(action) = self.catalog.resolve(Kind::Action, &self.locale, rest)
-                        {
+                        if let Some(action) = self.resolve_entry(Kind::Action, rest) {
                             let canonical = if action.id == "abort" {
                                 self.catalog
                                     .spelling(Kind::Action, &self.locale, "abortIf")
@@ -1734,19 +1781,15 @@ impl Parser<'_> {
             None => {
                 // Generic action call; the argument list is optional.
                 let Some(action) = self
-                    .catalog
-                    .resolve(Kind::Action, &self.locale, &phrase)
-                    .or_else(|| {
-                        self.catalog
-                            .resolve(Kind::Action, &self.locale, &format!("{phrase} "))
-                    })
+                    .resolve_entry(Kind::Action, &phrase)
+                    .or_else(|| self.resolve_entry(Kind::Action, &format!("{phrase} ")))
                     .or_else(|| {
                         let alias = match phrase.as_str() {
                             "Set Player Allowed Heroes" => "Set Allowed Heroes",
                             "设置技能充能" => "设置终极技能充能",
                             _ => return None,
                         };
-                        self.catalog.resolve(Kind::Action, &self.locale, alias)
+                        self.resolve_entry(Kind::Action, alias)
                     })
                 else {
                     return Err(WorkshopError::Unknown {
@@ -2347,9 +2390,9 @@ impl Parser<'_> {
         // domain only appears through bare members like `Up`).
         let prefer_enum = self.catalog.enum_domain("Hero").is_some()
             && (canonical_keyword(phrase) == "Hero"
-                || self.catalog.resolve_enum_domain(&self.locale, phrase) == Some("Hero"));
+                || self.resolve_enum_domain_mixed(phrase) == Some("Hero"));
         if !prefer_enum {
-            if let Some(entry) = self.catalog.resolve(Kind::Value, &self.locale, phrase) {
+            if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
                 self.expect(TokenKind::LParen, "expected '(' after value name")?;
                 if entry.id == "compare" {
                     // Compare(a, op, b) -> Call(op, [a, b]). The operands are
@@ -2407,12 +2450,8 @@ impl Parser<'_> {
             }
         }
         if let Some(domain_name) = self
-            .catalog
-            .resolve_enum_domain(&self.locale, phrase)
-            .or_else(|| {
-                self.catalog
-                    .resolve_enum_domain(&self.locale, canonical_keyword(phrase))
-            })
+            .resolve_enum_domain_mixed(phrase)
+            .or_else(|| self.resolve_enum_domain_mixed(canonical_keyword(phrase)))
         {
             let domain = self
                 .catalog
@@ -2422,8 +2461,7 @@ impl Parser<'_> {
             self.expect(TokenKind::LParen, "expected '('")?;
             let (member_phrase, _, _) = self.enum_member_phrase()?;
             let member = self
-                .catalog
-                .resolve_enum_member(&domain.domain, &self.locale, &member_phrase)
+                .resolve_enum_member_mixed(&domain.domain, &member_phrase)
                 .unwrap_or_else(|| (domain.domain.clone(), member_phrase.clone()));
             self.expect(TokenKind::RParen, "expected ')' after enum member")?;
             return Ok(self.target.values.push(ValueNode::new(
@@ -2506,20 +2544,14 @@ impl Parser<'_> {
             _ => {}
         }
         if let Some(expected) = self.expected_domain {
-            if let Some((value_type, value)) =
-                self.catalog
-                    .resolve_enum_member(expected, &self.locale, phrase)
-            {
+            if let Some((value_type, value)) = self.resolve_enum_member_mixed(expected, phrase) {
                 return Ok(self.target.values.push(ValueNode::new(
                     Value::Enum { value_type, value },
                     Some(Span::new(self.file(), start, end)),
                 )));
             }
         }
-        if let Some((value_type, value)) =
-            self.catalog
-                .resolve_enum_member("Team", &self.locale, phrase)
-        {
+        if let Some((value_type, value)) = self.resolve_enum_member_mixed("Team", phrase) {
             return Ok(self.target.values.push(ValueNode::new(
                 Value::Enum { value_type, value },
                 Some(Span::new(self.file(), start, end)),
@@ -2605,7 +2637,7 @@ impl Parser<'_> {
             });
         }
         // A bare value constant (e.g. Empty Array).
-        if let Some(entry) = self.catalog.resolve(Kind::Value, &self.locale, phrase) {
+        if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
             if entry.id == "null" {
                 return Ok(self.target.values.push(ValueNode::new(
                     Value::Null,

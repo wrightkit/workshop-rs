@@ -217,7 +217,10 @@ fn validate_value(
             // Comparison operators are represented as call names (`==`, `<`,
             // …) following the `Compare(a, op, b)` convention, so both value
             // and operator identities are valid call names.
-            let known = catalog.entry(Kind::Value, name).is_some()
+            let canonical_helper =
+                matches!(name.as_str(), "memberAccess" | "+" | "-" | "*" | "/" | "%");
+            let known = canonical_helper
+                || catalog.entry(Kind::Value, name).is_some()
                 || catalog.entry(Kind::Operator, name).is_some();
             if !known {
                 errors.push(WorkshopError::Unknown {

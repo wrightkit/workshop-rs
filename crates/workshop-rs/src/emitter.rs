@@ -1028,6 +1028,33 @@ impl Emitter<'_> {
             }
             wir::Value::EventPlayer => out.push_str(&self.spelling(Kind::Value, "eventPlayer")?),
             wir::Value::Call { name, args } => {
+                if name == "memberAccess" {
+                    if args.len() < 2 || args.len() > 3 {
+                        return Err(WorkshopError::Malformed {
+                            message: "memberAccess expects two or three arguments".to_string(),
+                            span: node.span,
+                        });
+                    }
+                    let Some(wir::ValueNode {
+                        value: wir::Value::String(member),
+                        ..
+                    }) = self.program.values.get(args[1])
+                    else {
+                        return Err(WorkshopError::Malformed {
+                            message: "memberAccess member must be a string".to_string(),
+                            span: node.span,
+                        });
+                    };
+                    out.push('(');
+                    self.value(args[0], out)?;
+                    write!(out, ").{member}").unwrap();
+                    if let Some(index) = args.get(2) {
+                        out.push('[');
+                        self.value(*index, out)?;
+                        out.push(']');
+                    }
+                    return Ok(());
+                }
                 if is_comparison_operator(name) {
                     // Canonical form: Compare(a, op, b).
                     if args.len() != 2 {
