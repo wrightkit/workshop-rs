@@ -921,8 +921,7 @@ impl Parser<'_> {
             .into_iter()
             .chain(
                 self.catalog
-                    .bare_member_matches(&self.locale, &parameters[1].replace(':', ": "))
-                    .into_iter(),
+                    .bare_member_matches(&self.locale, &parameters[1].replace(':', ": ")),
             )
             .find(|(domain, _)| domain == "Hero")
         {
@@ -2264,25 +2263,20 @@ impl Parser<'_> {
         start: Position,
         end: Position,
     ) -> Result<wir::ValueId> {
-        if matches!(phrase, "None" | "无") {
-            if let Some(expected) = self.expected_domain
-                && matches!(
-                    expected,
-                    "ChaseTimeReeval"
-                        | "ChaseRateReeval"
-                        | "Invis"
-                        | "ThrottleReeval"
-                        | "EffectReeval"
-                )
-            {
-                return Ok(self.target.values.push(ValueNode::new(
-                    Value::Enum {
-                        value_type: expected.to_string(),
-                        value: "NONE".to_string(),
-                    },
-                    Some(Span::new(self.file(), start, end)),
-                )));
-            }
+        if matches!(phrase, "None" | "无")
+            && let Some(expected) = self.expected_domain
+            && matches!(
+                expected,
+                "ChaseTimeReeval" | "ChaseRateReeval" | "Invis" | "ThrottleReeval" | "EffectReeval"
+            )
+        {
+            return Ok(self.target.values.push(ValueNode::new(
+                Value::Enum {
+                    value_type: expected.to_string(),
+                    value: "NONE".to_string(),
+                },
+                Some(Span::new(self.file(), start, end)),
+            )));
         }
         if let Some((value_type, value)) =
             self.catalog
