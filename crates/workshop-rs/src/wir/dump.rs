@@ -112,11 +112,13 @@ fn player_event_name(kind: PlayerEventKind) -> &'static str {
         PlayerEventKind::DealtDamage => "PlayerDealtDamage",
         PlayerEventKind::DealtFinalBlow => "PlayerDealtFinalBlow",
         PlayerEventKind::DealtHealing => "PlayerDealtHealing",
+        PlayerEventKind::DealtKnockback => "PlayerDealtKnockback",
         PlayerEventKind::Died => "PlayerDied",
         PlayerEventKind::EarnedElimination => "PlayerEarnedElimination",
         PlayerEventKind::Joined => "PlayerJoined",
         PlayerEventKind::Left => "PlayerLeft",
         PlayerEventKind::ReceivedHealing => "PlayerReceivedHealing",
+        PlayerEventKind::ReceivedKnockback => "PlayerReceivedKnockback",
         PlayerEventKind::TookDamage => "PlayerTookDamage",
     }
 }

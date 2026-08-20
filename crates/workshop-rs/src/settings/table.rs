@@ -129,6 +129,52 @@ pub static ENTRIES: &[TableEntry] = &[
         "Max FFA Players",
         KeyKind::Number
     ),
+    entry!(
+        [PathPart::Part("lobby"), PathPart::Part("mapRotation")],
+        "Map Rotation",
+        KeyKind::Enum("mapRotation")
+    ),
+    entry!(
+        [PathPart::Part("lobby"), PathPart::Part("spectatorSlots")],
+        "Max Spectators",
+        KeyKind::Number
+    ),
+    entry!(
+        [PathPart::Part("lobby"), PathPart::Part("matchVoiceChat")],
+        "Match Voice Chat",
+        KeyKind::Enum("matchVoiceChat")
+    ),
+    entry!(
+        [PathPart::Part("lobby"), PathPart::Part("team1Slots")],
+        "Max Team 1 Players",
+        KeyKind::Number
+    ),
+    entry!(
+        [PathPart::Part("lobby"), PathPart::Part("team2Slots")],
+        "Max Team 2 Players",
+        KeyKind::Number
+    ),
+    entry!(
+        [PathPart::Part("lobby"), PathPart::Part("returnToLobby")],
+        "Return To Lobby",
+        KeyKind::Enum("returnToLobby")
+    ),
+    entry!(
+        [
+            PathPart::Part("lobby"),
+            PathPart::Part("allowPlayersInQueue")
+        ],
+        "Allow Players Who Are In Queue",
+        KeyKind::Bool
+    ),
+    entry!(
+        [
+            PathPart::Part("lobby"),
+            PathPart::Part("swapTeamsAfterMatch")
+        ],
+        "Swap Teams After Match",
+        KeyKind::Bool
+    ),
     // gamemodes.<mode> — per-key subsets (exact-path entries, #86):
     // enabledMaps under modes {assault, control, escort, hybrid, skirmish,
     // ffa}; enabled/roleLimit/enableCompetitiveRules under {assault, control,
@@ -334,6 +380,24 @@ pub static ENTRIES: &[TableEntry] = &[
         "Respawn As Random Hero",
         KeyKind::Bool
     ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
+            PathPart::Part("general"),
+            PathPart::Part("gameModeStartTrigger")
+        ],
+        "Game Mode Start",
+        KeyKind::Enum("gameModeStartTrigger")
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
+            PathPart::Part("general"),
+            PathPart::Part("spawnHealthPacks")
+        ],
+        "Spawn Health Packs",
+        KeyKind::Enum("spawnHealthPacks")
+    ),
     // heroes.<team>
     entry!(
         [
@@ -523,10 +587,20 @@ pub static HERO_NAMES: &[NameMap] = &[
 ];
 
 /// Team names inside `heroes` (evidenced: allTeams).
-pub static TEAM_NAMES: &[NameMap] = &[NameMap {
-    key: "allTeams",
-    name: "General",
-}];
+pub static TEAM_NAMES: &[NameMap] = &[
+    NameMap {
+        key: "allTeams",
+        name: "General",
+    },
+    NameMap {
+        key: "team1",
+        name: "Team 1",
+    },
+    NameMap {
+        key: "team2",
+        name: "Team 2",
+    },
+];
 
 /// An enum domain member (domain -> localized workshop name).
 #[derive(Debug, Clone, Copy)]
@@ -542,6 +616,41 @@ pub struct EnumMember {
 /// (settings-unknown-value) until a snapshot evidences it. `heroLimit` "off"
 /// is evidenced (santa, clientToServer, parabola, crosshair, inputhud).
 pub static ENUM_MEMBERS: &[EnumMember] = &[
+    EnumMember {
+        domain: "mapRotation",
+        member: "afterAGame",
+        name: "After A Game",
+    },
+    EnumMember {
+        domain: "matchVoiceChat",
+        member: "enabled",
+        name: "Enabled",
+    },
+    EnumMember {
+        domain: "returnToLobby",
+        member: "never",
+        name: "Never",
+    },
+    EnumMember {
+        domain: "returnToLobby",
+        member: "afterAGame",
+        name: "After A Game",
+    },
+    EnumMember {
+        domain: "gameModeStartTrigger",
+        member: "immediately",
+        name: "Immediately",
+    },
+    EnumMember {
+        domain: "gameModeStartTrigger",
+        member: "manual",
+        name: "Manual",
+    },
+    EnumMember {
+        domain: "spawnHealthPacks",
+        member: "disabled",
+        name: "Disabled",
+    },
     EnumMember {
         domain: "roleLimit",
         member: "2OfEachRolePerTeam",

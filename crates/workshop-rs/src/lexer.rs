@@ -20,7 +20,7 @@ pub enum TokenKind {
     },
     /// A string literal (content, unescaped).
     String(String),
-    /// An operator token: `== != < <= > >= + - * / %`.
+    /// An operator token: `= == != < <= > >= && || ! + - * / %`.
     Op(String),
     LParen,
     RParen,
@@ -30,6 +30,8 @@ pub enum TokenKind {
     RBrace,
     Colon,
     Dot,
+    LBracket,
+    RBracket,
     Eof,
 }
 
@@ -149,6 +151,24 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                     end: pos!(),
                 });
             }
+            '[' => {
+                let start = pos!();
+                advance(&mut index, &mut line, &mut col, &chars);
+                tokens.push(Token {
+                    kind: TokenKind::LBracket,
+                    start,
+                    end: pos!(),
+                });
+            }
+            ']' => {
+                let start = pos!();
+                advance(&mut index, &mut line, &mut col, &chars);
+                tokens.push(Token {
+                    kind: TokenKind::RBracket,
+                    start,
+                    end: pos!(),
+                });
+            }
             '"' => {
                 let start = pos!();
                 advance(&mut index, &mut line, &mut col, &chars);
@@ -225,9 +245,10 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                         end: pos!(),
                     });
                 } else {
-                    return Err(LexError {
-                        message: "unexpected '='; expected '=='".to_string(),
-                        position: start,
+                    tokens.push(Token {
+                        kind: TokenKind::Op("=".to_string()),
+                        start,
+                        end: pos!(),
                     });
                 }
             }
@@ -242,8 +263,43 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                         end: pos!(),
                     });
                 } else {
+                    tokens.push(Token {
+                        kind: TokenKind::Op("not".to_string()),
+                        start,
+                        end: pos!(),
+                    });
+                }
+            }
+            '&' | '|' | '?' => {
+                if ch == '?' {
+                    let start = pos!();
+                    advance(&mut index, &mut line, &mut col, &chars);
+                    tokens.push(Token {
+                        kind: TokenKind::Op("?".to_string()),
+                        start,
+                        end: pos!(),
+                    });
+                    continue;
+                }
+                let start = pos!();
+                let operator = ch;
+                advance(&mut index, &mut line, &mut col, &chars);
+                if index < chars.len() && chars[index] == operator {
+                    advance(&mut index, &mut line, &mut col, &chars);
+                    tokens.push(Token {
+                        kind: TokenKind::Op(if operator == '&' {
+                            "and".to_string()
+                        } else {
+                            "or".to_string()
+                        }),
+                        start,
+                        end: pos!(),
+                    });
+                } else {
                     return Err(LexError {
-                        message: "unexpected '!'".to_string(),
+                        message: format!(
+                            "unexpected '{operator}'; expected '{operator}{operator}'"
+                        ),
                         position: start,
                     });
                 }
@@ -295,7 +351,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                     end: pos!(),
                 });
             }
-            c if c.is_alphabetic() || c == '_' => {
+            c if is_word_start(c) => {
                 let start = pos!();
                 let mut word = String::new();
                 while index < chars.len() {
@@ -303,7 +359,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                     let interior_dash = c == '-'
                         && index + 1 < chars.len()
                         && (chars[index + 1].is_alphanumeric() || chars[index + 1] == '_');
-                    if c.is_alphanumeric() || c == '_' || c == '\'' || interior_dash {
+                    if is_word_character(c) || interior_dash {
                         word.push(c);
                         advance(&mut index, &mut line, &mut col, &chars);
                     } else {
@@ -332,4 +388,19 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
         end,
     });
     Ok(tokens)
+}
+
+fn is_word_start(ch: char) -> bool {
+    ch.is_alphabetic() || ch == '_' || is_raw_label_punctuation(ch)
+}
+
+fn is_word_character(ch: char) -> bool {
+    ch.is_alphanumeric() || ch == '_' || ch == '\'' || is_raw_label_punctuation(ch)
+}
+
+fn is_raw_label_punctuation(ch: char) -> bool {
+    matches!(
+        ch,
+        '“' | '”' | '（' | '）' | '，' | '、' | '！' | '？' | '：' | '【' | '】' | '［' | '］'
+    )
 }

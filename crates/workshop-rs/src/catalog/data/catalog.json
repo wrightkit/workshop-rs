@@ -2,6 +2,920 @@
   "actions": [
     {
       "aliases": {
+        "en-US": "Destroy Icon",
+        "zh-CN": "消除图标"
+      },
+      "id": "destroyIcon",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Forcing Player Outlines",
+        "zh-CN": "开始强制设置玩家轮廓"
+      },
+      "id": "startForcingOutlineFor",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Reset Player Hero Availability",
+        "zh-CN": "重置玩家英雄可选状态"
+      },
+      "id": "resetHeroAvailability",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Forcing Player Outlines",
+        "zh-CN": "停止强制设置玩家轮廓"
+      },
+      "id": "stopForcingOutlineFor",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Crouch Enabled",
+        "zh-CN": "设置启用蹲下"
+      },
+      "id": "setCrouchEnabled",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Create Icon",
+        "zh-CN": "创建图标"
+      },
+      "id": "createIcon",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Jump Enabled",
+        "zh-CN": "设置启用跳跃"
+      },
+      "id": "setJumpEnabled",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Slow Motion",
+        "zh-CN": "设置慢动作"
+      },
+      "id": "setSlowMotion",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Melee Enabled",
+        "zh-CN": "设置启用近战攻击"
+      },
+      "id": "setMeleeEnabled",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Forcing Spawn Room",
+        "zh-CN": "开始强制重生室"
+      },
+      "id": "startForcingSpawn",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Primary Fire Enabled",
+        "zh-CN": "设置主要攻击模式启用"
+      },
+      "id": "setPrimaryFireEnabled",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Modifying Hero Voice Lines",
+        "zh-CN": "开始修改英雄语音"
+      },
+      "id": "startModifyingVoicelinePitch",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Ability Charge",
+        "zh-CN": "设置技能充能"
+      },
+      "id": "setAbilityCharge",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Forcing Dummy Bot Name",
+        "zh-CN": "开始为机器人强制设置名称"
+      },
+      "id": "startForcingName",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Scaling Barriers",
+        "zh-CN": "开始调整障碍大小"
+      },
+      "id": "startScalingBarriers",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Detach Players",
+        "zh-CN": "解除绑定"
+      },
+      "id": "detach",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop All Damage Over Time",
+        "zh-CN": "停止所有持续伤害"
+      },
+      "id": "stopAllDamageOverTime",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Resurrect",
+        "zh-CN": "复活"
+      },
+      "id": "resurrect",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Attach Players",
+        "zh-CN": "绑定玩家"
+      },
+      "id": "attachTo",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Modifying Hero Voice Lines",
+        "zh-CN": "停止修改英雄语音"
+      },
+      "id": "stopModifyingVoicelinePitch",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Kill",
+        "zh-CN": "击杀"
+      },
+      "id": "kill",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Respawn",
+        "zh-CN": "复生"
+      },
+      "id": "respawn",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Scaling Barriers",
+        "zh-CN": "停止调整障碍大小"
+      },
+      "id": "stopScalingBarriers",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Nameplates",
+        "zh-CN": "隐藏姓名板"
+      },
+      "id": "disableNameplatesFor",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Damage Over Time",
+        "zh-CN": "停止持续伤害"
+      },
+      "id": "stopDamageOverTime",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Scaling Player",
+        "zh-CN": "停止调整玩家大小"
+      },
+      "id": "stopScalingSize",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Nameplates",
+        "zh-CN": "显示姓名板"
+      },
+      "id": "enableNameplatesFor",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Environment Credit Player",
+        "zh-CN": "设置地形消灭者玩家"
+      },
+      "id": "setEnvironmentCreditPlayer",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Modify Player Variable At Index",
+        "zh-CN": "在索引处修改玩家变量"
+      },
+      "id": "modifyPlayerVariableAtIndex",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Voice Chat",
+        "zh-CN": "禁用语音聊天"
+      },
+      "id": "disableVoiceChat",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Ability Resource",
+        "zh-CN": "设置技能资源"
+      },
+      "id": "setAbilityResource",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Log To Inspector",
+        "zh-CN": "记入查看器"
+      },
+      "id": "logToInspector",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Death Spectate All Players",
+        "zh-CN": "对所有玩家禁用死亡回放"
+      },
+      "id": "disableDeathSpectateAllPlayers",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Add Health Pool To Player",
+        "zh-CN": "为玩家添加生命池"
+      },
+      "id": "addHealthPool",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Modify Global Variable At Index",
+        "zh-CN": "在索引处修改全局变量"
+      },
+      "id": "modifyGlobalVariableAtIndex",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Text Chat",
+        "zh-CN": "禁用文字聊天"
+      },
+      "id": "disableTextChat",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Damage Modification",
+        "zh-CN": "开始伤害调整"
+      },
+      "id": "startDamageModification",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Heal Over Time",
+        "zh-CN": "停止持续治疗"
+      },
+      "id": "stopHealingOverTime",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Messages",
+        "zh-CN": "隐藏信息"
+      },
+      "id": "disableMessages",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Damage Modification",
+        "zh-CN": "停止伤害调整"
+      },
+      "id": "stopDamageModification",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Death Spectate Target HUD",
+        "zh-CN": "禁用死亡回放时目标的HUD"
+      },
+      "id": "disableDeathSpectateTargetHud",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Damage Over Time",
+        "zh-CN": "开始持续伤害"
+      },
+      "id": "startDamageOverTime",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Forcing Player To Be Hero",
+        "zh-CN": "停止强制玩家选择英雄 "
+      },
+      "id": "stopForcingCurrentHero",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Kill Feed",
+        "zh-CN": "隐藏消灭提示"
+      },
+      "id": "disableKillFeed",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Ability Cooldown",
+        "zh-CN": "设置技能冷却"
+      },
+      "id": "setAbilityCooldown",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Forcing Player To Be Hero",
+        "zh-CN": "开始强制玩家选择英雄 "
+      },
+      "id": "startForcingHero",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Chasing Global Variable",
+        "zh-CN": "停止追踪全局变量 "
+      },
+      "id": "stopChasingGlobalVariable",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Ability 2 Enabled",
+        "zh-CN": "设置启用技能 2"
+      },
+      "id": "setAbility2Enabled",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Preload Hero",
+        "zh-CN": "预加载英雄"
+      },
+      "id": "preloadHero",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Healing Dealt",
+        "zh-CN": "设置造成治疗"
+      },
+      "id": "setHealingDealt",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Heal Over Time",
+        "zh-CN": "开始持续治疗"
+      },
+      "id": "startHealingOverTime",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Remove Health Pool From Player",
+        "zh-CN": "移除玩家的生命池"
+      },
+      "id": "removeHealthPool",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Scaling Player",
+        "zh-CN": "开始调整玩家大小"
+      },
+      "id": "startScalingSize",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Facing",
+        "zh-CN": "设置朝向"
+      },
+      "id": "setFacing",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Forcing Player Position",
+        "zh-CN": "停止强制设置玩家位置"
+      },
+      "id": "stopForcingPosition",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Knockback Dealt",
+        "zh-CN": "设置造成的击退"
+      },
+      "id": "setKnockbackDealt",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Accelerating",
+        "zh-CN": "停止加速"
+      },
+      "id": "stopAcceleration",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Declare Team Victory",
+        "zh-CN": "宣告队伍胜利"
+      },
+      "id": "declareTeamVictory",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Facing",
+        "zh-CN": "停止朝向"
+      },
+      "id": "stopFacing",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Forcing Player Position",
+        "zh-CN": "开始强制设置玩家位置"
+      },
+      "id": "startForcingPosition",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Knockback Received",
+        "zh-CN": "设置受到的击退"
+      },
+      "id": "setKnockbackReceived",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Accelerating",
+        "zh-CN": "开始加速"
+      },
+      "id": "startAcceleration",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Create Progress Bar HUD Text",
+        "zh-CN": "创建进度条HUD文本"
+      },
+      "id": "progressBarHud",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Holding Button",
+        "zh-CN": "停止按下按钮"
+      },
+      "id": "stopForcingButton",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Healing Received",
+        "zh-CN": "设置受到治疗"
+      },
+      "id": "setHealingReceived",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Destroy Progress Bar In-World Text",
+        "zh-CN": "消除进度条地图文本"
+      },
+      "id": "destroyProgressBarInWorldText",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Objective Description",
+        "zh-CN": "设置目标点描述"
+      },
+      "id": "setObjectiveDescription",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Holding Button",
+        "zh-CN": "开始按下按钮"
+      },
+      "id": "startForcingButton",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Damage",
+        "zh-CN": "伤害"
+      },
+      "id": "damage",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Projectile Gravity",
+        "zh-CN": "设置弹道引力"
+      },
+      "id": "setProjectileGravity",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Clear Status",
+        "zh-CN": "清除状态"
+      },
+      "id": "clearStatusEffect",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Ammo",
+        "zh-CN": "设置弹药"
+      },
+      "id": "setAmmo",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Destroy Dummy Bot",
+        "zh-CN": "移除机器人"
+      },
+      "id": "destroyDummy",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Stop Chasing Player Variable",
+        "zh-CN": "停止追踪玩家变量"
+      },
+      "id": "stopChasingPlayerVariable",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Projectile Speed",
+        "zh-CN": "设置弹道速度"
+      },
+      "id": "setProjectileSpeed",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Ultimate Ability Enabled",
+        "zh-CN": "设置启用终极技能"
+      },
+      "id": "setUltEnabled",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Max Ammo",
+        "zh-CN": "设置最大弹药"
+      },
+      "id": "setMaxAmmo",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Create Dummy Bot",
+        "zh-CN": "生成机器人"
+      },
+      "id": "createDummyBot",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Loop If",
+        "zh-CN": "根据条件循环"
+      },
+      "id": "loopIf",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Player Variable At Index",
+        "zh-CN": "在索引处设置玩家变量"
+      },
+      "id": "setPlayerVariableAtIndex",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Ability 1 Enabled",
+        "zh-CN": "设置启用技能 1"
+      },
+      "id": "setAbility1Enabled",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Respawn Max Time",
+        "zh-CN": "设置最大复生时间"
+      },
+      "id": "setRespawnTime",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Match Time",
+        "zh-CN": "设置比赛时间"
+      },
+      "id": "setMatchTime",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Remove All Health Pools From Player",
+        "zh-CN": "移除玩家的所有生命值"
+      },
+      "id": "removeAllHealthPoolsFromPlayer",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Built-In Game Mode Respawning",
+        "zh-CN": "开启游戏预设复生模式"
+      },
+      "id": "enableRespawn",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Heal",
+        "zh-CN": "治疗"
+      },
+      "id": "heal",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Press Button",
+        "zh-CN": "按下按键"
+      },
+      "id": "forceButtonPress",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Forcing Throttle",
+        "zh-CN": "开始限制阈值 "
+      },
+      "id": "startForcingThrottle",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Apply Impulse",
+        "zh-CN": "施加推力"
+      },
+      "id": "applyImpulse",
+      "paramDomains": [
+        null,
+        "Vector",
+        null,
+        "Relativity",
+        "Impulse"
+      ],
+      "params": [
+        "Player",
+        "Direction",
+        "Speed",
+        "Relativity",
+        "Impulse"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Communicate",
+        "zh-CN": "交流"
+      },
+      "id": "communicate",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Built-In Game Mode Respawning",
+        "zh-CN": "关闭游戏预设复生模式"
+      },
+      "id": "disableRespawn",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Facing",
+        "zh-CN": "开始朝向"
+      },
+      "id": "startFacing",
+      "paramDomains": [
+        null,
+        "Vector",
+        null,
+        "Relativity",
+        "FacingReeval"
+      ],
+      "params": [
+        "Player",
+        "Direction",
+        "Turn Rate",
+        "Relativity",
+        "Reevaluation"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Skip If",
+        "zh-CN": "根据条件跳过"
+      },
+      "id": "skipIf",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Set Global Variable At Index",
+        "zh-CN": "在索引处设置全局变量"
+      },
+      "id": "setGlobalVariableAtIndex",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Remove Player",
+        "zh-CN": "移除玩家"
+      },
+      "id": "removeFromGame",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Start Rule",
+        "zh-CN": "开始规则"
+      },
+      "id": "startRule",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Cancel Primary Action",
+        "zh-CN": "取消主要动作"
+      },
+      "id": "cancelPrimaryAction",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Restart Match",
+        "zh-CN": "重新开始比赛"
+      },
+      "id": "restartMatch",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Enable Built-In Game Mode Music",
+        "zh-CN": "启用内置游戏模式音乐"
+      },
+      "id": "enableBuiltinGameModeMusic",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Destroy All In-World Text",
+        "zh-CN": "摧毁所有世界内文本"
+      },
+      "id": "destroyAllInWorldText",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Destroy All Icons",
+        "zh-CN": "摧毁所有图标"
+      },
+      "id": "destroyAllIcons",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Destroy All HUD Text",
+        "zh-CN": "摧毁所有HUD文本"
+      },
+      "id": "destroyAllHudText",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Destroy All Effects",
+        "zh-CN": "摧毁所有效果"
+      },
+      "id": "destroyAllEffects",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Built-In Game Mode Music",
+        "zh-CN": "禁用内置游戏模式音乐"
+      },
+      "id": "disableBuiltinGameModeMusic",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Break",
+        "zh-CN": "跳出循环"
+      },
+      "id": "break",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Built-In Game Mode Completion",
+        "zh-CN": "禁用内置游戏模式完成"
+      },
+      "id": "disableBuiltinGameModeCompletion",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Built-In Game Mode Announcer",
+        "zh-CN": "禁用内置游戏模式播报员"
+      },
+      "id": "disableBuiltinGameModeAnnouncer",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Disable Built-In Game Mode Scoring",
+        "zh-CN": "禁用内置游戏模式计分"
+      },
+      "id": "disableBuiltinGameModeScoring",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Unpause Match Time",
+        "zh-CN": "继续比赛时间"
+      },
+      "id": "unpauseMatchTime",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Destroy All Dummy Bots",
+        "zh-CN": "移除所有机器人"
+      },
+      "id": "destroyAllDummies",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Pause Match Time",
+        "zh-CN": "比赛时间暂停"
+      },
+      "id": "pauseMatchTime",
+      "params": []
+    },
+    {
+      "aliases": {
         "en-US": "Disable Inspector Recording",
         "zh-CN": "禁用查看器录制"
       },
@@ -606,6 +1520,50 @@
     },
     {
       "aliases": {
+        "en-US": "Stop Throttle In Direction",
+        "zh-CN": "停止定向阈值"
+      },
+      "id": "stopThrottleInDirection",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Start Throttle In Direction",
+        "zh-CN": "开始定向阈值"
+      },
+      "id": "startThrottleInDirection",
+      "paramDomains": [
+        null,
+        null,
+        null,
+        "Relativity",
+        "Throttle",
+        "ThrottleReeval"
+      ],
+      "params": [
+        "Player",
+        "Direction",
+        "Magnitude",
+        "Relativity",
+        "Throttle",
+        "ThrottleReeval"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Set Secondary Fire Enabled",
+        "zh-CN": "设置辅助攻击模式启用"
+      },
+      "id": "setSecondaryFireEnabled",
+      "params": [
+        "Player",
+        "bool"
+      ]
+    },
+    {
+      "aliases": {
         "en-US": "Disable Game Mode HUD",
         "zh-CN": "隐藏游戏模式HUD"
       },
@@ -828,8 +1786,53 @@
       "params": []
     }
   ],
-  "digest": "48b3a07188f7137a8a81e51fc33c06681da5ca5d30b79ee636b0147eb14dfc6d",
+  "digest": "9ff55b76ff52663f507dbc550420c92404c99ece6724f1f0974e989d5c755da7",
   "enums": [
+    {
+      "domain": "Impulse",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Cancel Contrary Motion",
+            "zh-CN": "取消相反运动"
+          },
+          "id": "CANCEL_CONTRARY_MOTION"
+        },
+        {
+          "aliases": {
+            "en-US": "Cancel Contrary Motion XYZ",
+            "zh-CN": "取消相反运动XYZ"
+          },
+          "id": "CANCEL_CONTRARY_MOTION_XYZ"
+        },
+        {
+          "aliases": {
+            "en-US": "Incorporate Contrary Motion",
+            "zh-CN": "合并相反运动"
+          },
+          "id": "INCORPORATE_CONTRARY_MOTION"
+        }
+      ]
+    },
+    {
+      "domain": "FacingReeval",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Direction and Turn Rate",
+            "zh-CN": "方向及角速率"
+          },
+          "id": "DIRECTION_AND_TURN_RATE"
+        },
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "无"
+          },
+          "id": "NONE"
+        }
+      ]
+    },
     {
       "domain": "Color",
       "members": [
@@ -1382,6 +2385,56 @@
       ]
     },
     {
+      "domain": "Relativity",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "To World",
+            "zh-CN": "至地图"
+          },
+          "id": "TO_WORLD"
+        }
+      ]
+    },
+    {
+      "domain": "Throttle",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Replace existing throttle",
+            "zh-CN": "替换现有阈值"
+          },
+          "id": "REPLACE_EXISTING"
+        },
+        {
+          "aliases": {
+            "en-US": "Add to existing throttle",
+            "zh-CN": "添加至现有阈值"
+          },
+          "id": "ADD_TO_EXISTING"
+        }
+      ]
+    },
+    {
+      "domain": "ThrottleReeval",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Direction and Magnitude",
+            "zh-CN": "方向和幅度"
+          },
+          "id": "DIRECTION_AND_MAGNITUDE"
+        },
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "无"
+          },
+          "id": "NONE"
+        }
+      ]
+    },
+    {
       "domain": "Status",
       "members": [
         {
@@ -1584,6 +2637,13 @@
     {
       "domain": "EffectReeval",
       "members": [
+        {
+          "aliases": {
+            "en-US": "None",
+            "zh-CN": "无"
+          },
+          "id": "NONE"
+        },
         {
           "aliases": {
             "en-US": "Visible To Position and Radius",
@@ -1840,6 +2900,153 @@
             "zh-CN": "禅雅塔"
           },
           "id": "ZENYATTA"
+        },
+        {
+          "aliases": {
+            "en-US": "Sojourn",
+            "zh-CN": "索杰恩"
+          },
+          "id": "SOJOURN"
+        },
+        {
+          "aliases": {
+            "en-US": "Lifeweaver",
+            "zh-CN": "生命之梭"
+          },
+          "id": "LIFEWEAVER"
+        },
+        {
+          "aliases": {
+            "en-US": "Junker Queen",
+            "zh-CN": "渣客女王"
+          },
+          "id": "JUNKER_QUEEN"
+        },
+        {
+          "aliases": {
+            "en-US": "Kiriko",
+            "zh-CN": "雾子"
+          },
+          "id": "KIRIKO"
+        },
+        {
+          "aliases": {
+            "en-US": "Ramattra",
+            "zh-CN": "拉玛刹"
+          },
+          "id": "RAMATTRA"
+        },
+        {
+          "aliases": {
+            "en-US": "Mauga",
+            "zh-CN": "毛加"
+          },
+          "id": "MAUGA"
+        },
+        {
+          "aliases": {
+            "en-US": "Freja",
+            "zh-CN": "弗蕾娅"
+          },
+          "id": "FREJA"
+        },
+        {
+          "aliases": {
+            "en-US": "Venture",
+            "zh-CN": "探奇"
+          },
+          "id": "VENTURE"
+        },
+        {
+          "aliases": {
+            "en-US": "Vendetta",
+            "zh-CN": "斩仇"
+          },
+          "id": "VENDETTA"
+        },
+        {
+          "aliases": {
+            "en-US": "Hazard",
+            "zh-CN": "骇灾"
+          },
+          "id": "HAZARD"
+        },
+        {
+          "aliases": {
+            "en-US": "Illari",
+            "zh-CN": "伊拉锐"
+          },
+          "id": "ILLARI"
+        },
+        {
+          "aliases": {
+            "en-US": "Juno",
+            "zh-CN": "朱诺"
+          },
+          "id": "JUNO"
+        },
+        {
+          "aliases": {
+            "en-US": "Emre",
+            "zh-CN": "埃姆雷"
+          },
+          "id": "EMRE"
+        },
+        {
+          "aliases": {
+            "en-US": "Anran",
+            "zh-CN": "安燃"
+          },
+          "id": "ANRAN"
+        },
+        {
+          "aliases": {
+            "en-US": "Jinyu",
+            "zh-CN": "金驭"
+          },
+          "id": "JINYU"
+        },
+        {
+          "aliases": {
+            "en-US": "Sierra",
+            "zh-CN": "西拉"
+          },
+          "id": "SIERRA"
+        },
+        {
+          "aliases": {
+            "en-US": "Shion",
+            "zh-CN": "死怨"
+          },
+          "id": "SHION"
+        },
+        {
+          "aliases": {
+            "en-US": "D.Mon",
+            "zh-CN": "D.Mon"
+          },
+          "id": "D_MON"
+        },
+        {
+          "aliases": {
+            "en-US": "Wuyang",
+            "zh-CN": "无漾"
+          },
+          "id": "WUYANG"
+        },
+        {
+          "aliases": {
+            "en-US": "Mizuki",
+            "zh-CN": "瑞稀"
+          },
+          "id": "MIZUKI"
+        },
+        {
+          "aliases": {
+            "en-US": "Jetpack Cat",
+            "zh-CN": "飞天猫"
+          },
+          "id": "JETPACK_CAT"
         }
       ]
     },
@@ -1886,6 +3093,34 @@
     {
       "domain": "Map",
       "members": [
+        {
+          "aliases": {
+            "en-US": "Ayutthaya",
+            "zh-CN": "阿育陀耶"
+          },
+          "id": "AYUTTHAYA"
+        },
+        {
+          "aliases": {
+            "en-US": "Black Forest",
+            "zh-CN": "黑森林"
+          },
+          "id": "BLACK_FOREST"
+        },
+        {
+          "aliases": {
+            "en-US": "Castillo",
+            "zh-CN": "城堡"
+          },
+          "id": "CASTILLO"
+        },
+        {
+          "aliases": {
+            "en-US": "Château Guillard",
+            "zh-CN": "吉拉德堡"
+          },
+          "id": "CHATEAU_GUILLARD"
+        },
         {
           "aliases": {
             "en-US": "Hanamura",
@@ -2318,6 +3553,36 @@
   "events": [
     {
       "aliases": {
+        "en-US": "Player Took Knockback",
+        "zh-CN": "玩家受到击退"
+      },
+      "id": "playerReceivedKnockback",
+      "paramDomains": [
+        "EventTeam",
+        "EventPlayer"
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Player Dealt Knockback",
+        "zh-CN": "玩家造成击退"
+      },
+      "id": "playerDealtKnockback",
+      "paramDomains": [
+        "EventTeam",
+        "EventPlayer"
+      ],
+      "params": [
+        "Team",
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
         "en-US": "Ongoing - Global",
         "zh-CN": "持续 - 全局"
       },
@@ -2488,6 +3753,13 @@
   "operators": [
     {
       "aliases": {
+        "en-US": "Remove From Array By Index",
+        "zh-CN": "根据索引从数组中移除"
+      },
+      "id": "removeFromArrayByIndex"
+    },
+    {
+      "aliases": {
         "en-US": "==",
         "zh-CN": "=="
       },
@@ -2583,6 +3855,13 @@
         "zh-CN": "从数组中移除"
       },
       "id": "removeFromArray"
+    },
+    {
+      "aliases": {
+        "en-US": "Remove From Array By Value",
+        "zh-CN": "根据值从数组中移除"
+      },
+      "id": "removeFromArrayByValue"
     }
   ],
   "provenance": {
@@ -2687,6 +3966,57 @@
       "params": [
         "a",
         "b"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Using Ability 1",
+        "zh-CN": "正在使用技能 1"
+      },
+      "id": "isUsingAbility1",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Firing Secondary",
+        "zh-CN": "正在发射辅助攻击"
+      },
+      "id": "isFiringSecondary",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Using Ability 2",
+        "zh-CN": "正在使用技能 2"
+      },
+      "id": "isUsingAbility2",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Using Ultimate",
+        "zh-CN": "正在使用终极技能"
+      },
+      "id": "isUsingUltimate",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Direction Towards",
+        "zh-CN": "方向"
+      },
+      "id": "directionTowards",
+      "params": [
+        "Position",
+        "Position"
       ]
     },
     {
@@ -2943,6 +4273,53 @@
     },
     {
       "aliases": {
+        "en-US": "Hero Of",
+        "zh-CN": "所用英雄"
+      },
+      "id": "getHero",
+      "params": [
+        "player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Hero",
+        "zh-CN": "英雄"
+      },
+      "id": "hero",
+      "params": [
+        "Hero"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Healer",
+        "zh-CN": "治疗者"
+      },
+      "id": "healer",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Has Status",
+        "zh-CN": "具有状态"
+      },
+      "id": "hasStatus",
+      "params": [
+        "Player",
+        "Status"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Event Was Health Pack",
+        "zh-CN": "事件为急救包"
+      },
+      "id": "eventWasHealthPack",
+      "params": []
+    },
+    {
+      "aliases": {
         "en-US": "Position Of",
         "zh-CN": "所选位置"
       },
@@ -2950,6 +4327,14 @@
       "params": [
         "player"
       ]
+    },
+    {
+      "aliases": {
+        "en-US": "Event Healing",
+        "zh-CN": "事件治疗"
+      },
+      "id": "eventHealing",
+      "params": []
     },
     {
       "aliases": {
