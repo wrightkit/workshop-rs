@@ -49,7 +49,7 @@ jobs:
       github.event_name == 'pull_request' &&
       github.event.pull_request.merged == true &&
       github.event.pull_request.base.ref == 'main' &&
-      startsWith(github.event.pull_request.head.ref, 'release-plz-') &&
+      contains(github.event.pull_request.labels.*.name, 'release') &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     environment: release
@@ -86,7 +86,6 @@ jobs:
           cargo run --locked -p workshop-rs --bin workshop-catalog-gen -- \
             check
           cargo package --locked -p workshop-rs
-          cargo package --locked -p workshop-rs-cli
 
       - name: Resolve release identity
         id: release-identity
