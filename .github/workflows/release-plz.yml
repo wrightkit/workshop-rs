@@ -71,6 +71,12 @@ jobs:
           persist-credentials: false
           token: ${{ secrets.GH_TOKEN }}
 
+      - name: Attach release checkout to main upstream
+        run: |
+          set -euo pipefail
+          git switch --create release-plz-release
+          git branch --set-upstream-to=origin/main release-plz-release
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@master
         with:
