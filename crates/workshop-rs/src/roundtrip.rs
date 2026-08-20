@@ -574,6 +574,9 @@ fn value_equivalent(
             value_equivalent(a, b, *p1, *p2)
                 && name_eq(a.player_variables.get(*v1), b.player_variables.get(*v2))
         }
+        (wir::Value::Subroutine(s1), wir::Value::Subroutine(s2)) => {
+            name_eq(a.subroutines.get(*s1), b.subroutines.get(*s2))
+        }
         (wir::Value::EventPlayer, wir::Value::EventPlayer) => true,
         (wir::Value::Call { name: n1, args: x1 }, wir::Value::Call { name: n2, args: x2 }) => {
             n1 == n2 && values_equivalent(a, b, x1, x2)

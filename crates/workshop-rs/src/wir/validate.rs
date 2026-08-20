@@ -220,6 +220,11 @@ fn check_value(program: &Program, id: super::ValueId) -> Result<(), IrError> {
                 return Err(dangling("global variable", variable.index()));
             }
         }
+        Value::Subroutine(subroutine) => {
+            if !program.subroutines.contains(*subroutine) {
+                return Err(dangling("subroutine", subroutine.index()));
+            }
+        }
         Value::Call { args, .. } => {
             for arg in args {
                 check_value(program, *arg)?;

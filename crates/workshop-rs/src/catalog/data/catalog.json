@@ -618,7 +618,10 @@
         "zh-CN": "停止追踪玩家变量"
       },
       "id": "stopChasingPlayerVariable",
-      "params": []
+      "params": [
+        "Player",
+        "PlayerVariable"
+      ]
     },
     {
       "aliases": {
@@ -828,7 +831,14 @@
         "zh-CN": "开始规则"
       },
       "id": "startRule",
-      "params": []
+      "paramDomains": [
+        null,
+        "StartRuleBehavior"
+      ],
+      "params": [
+        "Subroutine",
+        "IfAlreadyExecuting"
+      ]
     },
     {
       "aliases": {
@@ -1858,7 +1868,7 @@
       "params": []
     }
   ],
-  "digest": "4557318ee877b518c09a3455246058a152aa5cf0bb6ea2c446c3e3529b2229f4",
+  "digest": "136e41ad78a89582475c676ff6e2cc9818f36f9700532356abf997bfc68538b9",
   "enums": [
     {
       "domain": "Impulse",
@@ -2091,7 +2101,7 @@
             "en-US": "Ring Explosion Sound",
             "zh-CN": "环状爆炸声音"
           },
-          "id": "RING_EXPLOSION"
+          "id": "RING_EXPLOSION_SOUND"
         },
         {
           "aliases": {
@@ -2099,6 +2109,34 @@
             "zh-CN": "布丽吉塔恢复包护甲效果"
           },
           "id": "BRIGITTE_REPAIR_PACK_ARMOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Bad Pickup Effect",
+            "zh-CN": "有害选择效果"
+          },
+          "id": "BAD_PICKUP_EFFECT"
+        },
+        {
+          "aliases": {
+            "en-US": "Good Explosion",
+            "zh-CN": "有益爆炸"
+          },
+          "id": "GOOD_EXPLOSION"
+        },
+        {
+          "aliases": {
+            "en-US": "Good Pickup Effect",
+            "zh-CN": "有益选择效果"
+          },
+          "id": "GOOD_PICKUP_EFFECT"
+        },
+        {
+          "aliases": {
+            "en-US": "Ring Explosion",
+            "zh-CN": "环状爆炸"
+          },
+          "id": "RING_EXPLOSION"
         }
       ]
     },
@@ -2118,6 +2156,13 @@
             "zh-CN": "当为“假”时中止"
           },
           "id": "ABORT_WHEN_FALSE"
+        },
+        {
+          "aliases": {
+            "en-US": "Restart When True",
+            "zh-CN": "当为“真”时重新开始"
+          },
+          "id": "RESTART_WHEN_TRUE"
         }
       ]
     },
@@ -2762,6 +2807,20 @@
             "zh-CN": "光柱"
           },
           "id": "LIGHT_SHAFT"
+        },
+        {
+          "aliases": {
+            "en-US": "Good Aura",
+            "zh-CN": "有益光环"
+          },
+          "id": "GOOD_AURA"
+        },
+        {
+          "aliases": {
+            "en-US": "Sphere",
+            "zh-CN": "球体"
+          },
+          "id": "SPHERE"
         }
       ]
     },
@@ -3228,6 +3287,41 @@
             "zh-CN": "旗帜"
           },
           "id": "FLAG"
+        },
+        {
+          "aliases": {
+            "en-US": "Plus",
+            "zh-CN": "加号"
+          },
+          "id": "PLUS"
+        },
+        {
+          "aliases": {
+            "en-US": "Asterisk",
+            "zh-CN": "星形"
+          },
+          "id": "ASTERISK"
+        },
+        {
+          "aliases": {
+            "en-US": "Bolt",
+            "zh-CN": "箭矢"
+          },
+          "id": "BOLT"
+        },
+        {
+          "aliases": {
+            "en-US": "Fire",
+            "zh-CN": "火焰"
+          },
+          "id": "FIRE"
+        },
+        {
+          "aliases": {
+            "en-US": "Poison",
+            "zh-CN": "剧毒"
+          },
+          "id": "POISON"
         }
       ]
     },
@@ -3711,6 +3805,13 @@
             "zh-CN": "护甲"
           },
           "id": "ARMOR"
+        },
+        {
+          "aliases": {
+            "en-US": "Shields",
+            "zh-CN": "护盾"
+          },
+          "id": "SHIELDS"
         }
       ]
     },
@@ -3759,6 +3860,25 @@
             "zh-CN": "可见和位置"
           },
           "id": "VISIBILITY_AND_POSITION"
+        }
+      ]
+    },
+    {
+      "domain": "StartRuleBehavior",
+      "members": [
+        {
+          "aliases": {
+            "en-US": "Restart Rule",
+            "zh-CN": "重新开始规则"
+          },
+          "id": "RESTART"
+        },
+        {
+          "aliases": {
+            "en-US": "Do Nothing",
+            "zh-CN": "无动作"
+          },
+          "id": "NOOP"
         }
       ]
     }
@@ -4086,7 +4206,9 @@
     "sourceNotes": [
       "abort zh-CN retains both 中止 from the reviewed workshop-data export and 中断 observed in the reproducible Bastion c010e1a2d468ec7140f474e334067e5ab8d02d89 build:release/build:main:zh output; the first spelling is emitted deterministically and both are accepted for parsing",
       "disableBuiltinGameModeCompletion zh-CN retains 禁用内置游戏模式完成 from the reviewed workshop-data export and 关闭游戏预设完成条件 observed in the same reproducible Bastion build; the first spelling is emitted deterministically and both are accepted for parsing",
-      "value and enum identities added in the Bastion spatial/player/effect slice are cross-checked against workshop-data GUID translations and the reproducible c010e1a2d468ec7140f474e334067e5ab8d02d89 en-US/zh-CN builds; aliases remain data-backed and canonical signatures retain their declared parameter domains"
+      "value and enum identities added in the Bastion spatial/player/effect slice are cross-checked against workshop-data GUID translations and the reproducible c010e1a2d468ec7140f474e334067e5ab8d02d89 en-US/zh-CN builds; aliases remain data-backed and canonical signatures retain their declared parameter domains",
+      "Is Dummy Bot, Ability Cooldown, facing-angle/speed, ground-state, dot-product, event-damage, normalize, and angle-difference values are transcribed from the pinned workshop-data export and exercised by the pinned direct raw Workshop artifacts",
+      "event/control/effect identities added in this slice are transcribed from workshop-data constants and values and exercised by the pinned direct raw Workshop artifacts"
     ]
   },
   "schemaVersion": 1,
@@ -5438,6 +5560,399 @@
       ],
       "params": [
         "Button"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Dummy Bot",
+        "zh-CN": "是否是机器人"
+      },
+      "id": "isDummy",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Ability Cooldown",
+        "zh-CN": "技能冷却时间"
+      },
+      "id": "getAbilityCooldown",
+      "params": [
+        "Player",
+        "Button"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Horizontal Facing Angle Of",
+        "zh-CN": "水平朝向角度"
+      },
+      "id": "getHorizontalFacingAngle",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Vertical Facing Angle Of",
+        "zh-CN": "垂直朝向角度"
+      },
+      "id": "getVerticalFacingAngle",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Speed Of In Direction",
+        "zh-CN": "指定方向速度"
+      },
+      "id": "getSpeedInDirection",
+      "params": [
+        "Player",
+        "Direction"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is On Ground",
+        "zh-CN": "在地面上"
+      },
+      "id": "isOnGround",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Dot Product",
+        "zh-CN": "标量积"
+      },
+      "id": "dotProduct",
+      "params": [
+        "Value",
+        "Value"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Event Damage",
+        "zh-CN": "事件伤害"
+      },
+      "id": "eventDamage",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Normalize",
+        "zh-CN": "归一化"
+      },
+      "id": "normalize",
+      "params": [
+        "Vector"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Angle Difference",
+        "zh-CN": "角度差"
+      },
+      "id": "angleDifference",
+      "params": [
+        "Value",
+        "Value"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Event Ability",
+        "zh-CN": "事件技能"
+      },
+      "id": "eventAbility",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Ability Resource",
+        "zh-CN": "技能资源"
+      },
+      "id": "getAbilityResource",
+      "params": [
+        "Player",
+        "Button"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Altitude Of",
+        "zh-CN": "高度"
+      },
+      "id": "getAltitude",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Ammo",
+        "zh-CN": "弹药"
+      },
+      "id": "getAmmo",
+      "params": [
+        "Player",
+        "Clip"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Max Ammo",
+        "zh-CN": "最大弹药"
+      },
+      "id": "getMaxAmmo",
+      "params": [
+        "Player",
+        "Clip"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Ultimate Charge Percent",
+        "zh-CN": "终极技能充能百分比"
+      },
+      "id": "getUltCharge",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Duplicating",
+        "zh-CN": "正在人格复制"
+      },
+      "id": "isDuplicatingAHero",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Firing Primary",
+        "zh-CN": "正在使用主要武器"
+      },
+      "id": "isFiringPrimaryFire",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is In Air",
+        "zh-CN": "正在空中"
+      },
+      "id": "isInAir",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is In View Angle",
+        "zh-CN": "在视野内"
+      },
+      "id": "isInViewAngle",
+      "params": [
+        "Player",
+        "Location",
+        "ViewAngle"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Reloading",
+        "zh-CN": "正在装填"
+      },
+      "id": "isReloading",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is True For Any",
+        "zh-CN": "对任意为“真”"
+      },
+      "id": "isTrueForAny",
+      "params": [
+        "Array",
+        "Condition"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Players On Hero",
+        "zh-CN": "选择英雄的玩家"
+      },
+      "id": "getPlayersOnHero",
+      "params": [
+        "Hero",
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Sine From Radians",
+        "zh-CN": "弧度的正弦值"
+      },
+      "id": "sin",
+      "params": [
+        "Value"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Vector Towards",
+        "zh-CN": "向量"
+      },
+      "id": "vectorTowards",
+      "params": [
+        "Position",
+        "Position"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Last Damage Modification ID",
+        "zh-CN": "上一个伤害调整ID"
+      },
+      "id": "getLastDamageModification",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Hero Being Duplicated",
+        "zh-CN": "正在复制的英雄"
+      },
+      "id": "getHeroOfDuplication",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Healee",
+        "zh-CN": "受治疗者"
+      },
+      "id": "healee",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Event Was Critical Hit",
+        "zh-CN": "事件暴击"
+      },
+      "id": "eventWasCriticalHit",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Ability Charge",
+        "zh-CN": "技能充能"
+      },
+      "id": "getAbilityCharge",
+      "params": [
+        "Player",
+        "Button"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Health Of Type",
+        "zh-CN": "类型的生命值"
+      },
+      "id": "getHealthOfType",
+      "params": [
+        "Player",
+        "Health"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Communicating",
+        "zh-CN": "正在交流"
+      },
+      "id": "isCommunicating",
+      "params": [
+        "Player",
+        "Comms"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Crouching",
+        "zh-CN": "正在蹲下"
+      },
+      "id": "isCrouching",
+      "params": [
+        "Player"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Spawn Points",
+        "zh-CN": "重生点"
+      },
+      "id": "getSpawnPoints",
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Assembling Heroes",
+        "zh-CN": "正在集结英雄"
+      },
+      "id": "isAssemblingHeroes",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Is In Setup",
+        "zh-CN": "正在设置"
+      },
+      "id": "isInSetup",
+      "params": []
+    },
+    {
+      "aliases": {
+        "en-US": "Is Objective Complete",
+        "zh-CN": "目标是否完成"
+      },
+      "id": "isObjectiveComplete",
+      "params": [
+        "Number"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Is Team On Offense",
+        "zh-CN": "作为进攻队伍"
+      },
+      "id": "isTeamOnOffense",
+      "params": [
+        "Team"
+      ]
+    },
+    {
+      "aliases": {
+        "en-US": "Players in View Angle",
+        "zh-CN": "视角中的玩家"
+      },
+      "id": "getPlayersInViewAngle",
+      "params": [
+        "Player",
+        "Team",
+        "ViewAngle"
       ]
     }
   ],

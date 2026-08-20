@@ -296,6 +296,9 @@ pub enum Value {
         player: ValueId,
         variable: PlayerVarId,
     },
+    /// A declared Workshop subroutine referenced by a generic action such as
+    /// `Start Rule`. The identity is source-owned, not a catalog builtin.
+    Subroutine(SubroutineId),
     EventPlayer,
     /// A function call over workshop values.
     Call {

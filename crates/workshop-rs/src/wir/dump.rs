@@ -397,6 +397,13 @@ fn render_value(program: &Program, id: super::ValueId, out: &mut String) {
                 variable.index(),
             ));
         }
+        Value::Subroutine(subroutine) => out.push_str(
+            &program
+                .subroutines
+                .get(*subroutine)
+                .map(|value| value.name.clone())
+                .unwrap_or_else(|| format!("<dangling subroutine {}>", subroutine.index())),
+        ),
         Value::EventPlayer => out.push_str("eventPlayer"),
         Value::Call { name, args } => {
             out.push_str(name);

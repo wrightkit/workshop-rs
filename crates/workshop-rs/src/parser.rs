@@ -1708,6 +1708,45 @@ impl Parser<'_> {
                             span: Some(Span::new(self.file(), start, end)),
                         }));
                     }
+                    "startRule" => {
+                        self.expect(TokenKind::LParen, "expected '('")?;
+                        let (name, _, _) = self.phrase()?;
+                        let subroutine = self.subroutine_by_name(&name)?;
+                        self.expect(TokenKind::Comma, "expected ',' after subroutine")?;
+                        let saved = self.expected_domain;
+                        self.expected_domain = self.context.expected_domain(action.id.as_str(), 1);
+                        let behavior = self.value()?;
+                        self.expected_domain = saved;
+                        self.expect(TokenKind::RParen, "expected ')'")?;
+                        self.expect(TokenKind::Semi, "expected ';' after action")?;
+                        let subroutine_value = self
+                            .target
+                            .values
+                            .push(ValueNode::new(Value::Subroutine(subroutine), None));
+                        return Ok(self.target.actions.push(Action::Call {
+                            name: action.id.clone(),
+                            args: vec![subroutine_value, behavior],
+                            span: Some(Span::new(self.file(), start, end)),
+                        }));
+                    }
+                    "stopChasingPlayerVariable" => {
+                        self.expect(TokenKind::LParen, "expected '('")?;
+                        let player = self.value()?;
+                        self.expect(TokenKind::Comma, "expected ',' after player")?;
+                        let (name, _, _) = self.phrase()?;
+                        let variable = self.player_by_name(&name)?;
+                        self.expect(TokenKind::RParen, "expected ')'")?;
+                        self.expect(TokenKind::Semi, "expected ';' after action")?;
+                        let player_variable = self.target.values.push(ValueNode::new(
+                            Value::PlayerVariable { player, variable },
+                            None,
+                        ));
+                        return Ok(self.target.actions.push(Action::Call {
+                            name: action.id.clone(),
+                            args: vec![player_variable],
+                            span: Some(Span::new(self.file(), start, end)),
+                        }));
+                    }
                     _ => {}
                 }
                 let args = if let Some(Token {
@@ -2039,7 +2078,7 @@ impl Parser<'_> {
                     return Ok(player);
                 }
                 self.pos -= 1;
-                let (phrase, start, end) = self.phrase_with_dots()?;
+                let (phrase, start, end) = self.phrase()?;
                 if matches!(
                     self.peek(),
                     Some(Token {
@@ -2162,7 +2201,7 @@ impl Parser<'_> {
                 }
             }
             _ => {
-                let (phrase, start, end) = self.phrase_with_dots()?;
+                let (phrase, start, end) = self.phrase()?;
                 match canonical_keyword(&phrase) {
                     "True" | "真" => Ok(self.push_bool(true, start, end)),
                     "False" | "假" => Ok(self.push_bool(false, start, end)),
@@ -2761,19 +2800,6 @@ impl Parser<'_> {
             start,
             end,
         ))
-    }
-
-    fn phrase_with_dots(&mut self) -> Result<(String, Position, Position)> {
-        let (first, start, mut end) = self.phrase()?;
-        let mut phrase = first;
-        while matches!(self.peek().map(|token| token.kind), Some(TokenKind::Dot)) {
-            self.pos += 1;
-            let (part, _, part_end) = self.phrase()?;
-            phrase.push('.');
-            phrase.push_str(&part);
-            end = part_end;
-        }
-        Ok((phrase, start, end))
     }
 
     fn enum_member_phrase(&mut self) -> Result<(String, Position, Position)> {

@@ -268,6 +268,14 @@ fn validate_value(
         wir::Value::PlayerVariable { player, .. } => {
             validate_value(program, catalog, *player, errors);
         }
+        wir::Value::Subroutine(subroutine) => {
+            if !program.subroutines.contains(*subroutine) {
+                errors.push(WorkshopError::Malformed {
+                    message: format!("dangling subroutine value {}", subroutine.index()),
+                    span: node.span,
+                });
+            }
+        }
         wir::Value::Number { .. }
         | wir::Value::String(_)
         | wir::Value::Bool(_)

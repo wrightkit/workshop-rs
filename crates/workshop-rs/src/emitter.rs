@@ -793,6 +793,35 @@ impl Emitter<'_> {
                     self.args(args, &mut args_text)?;
                     return self.line(level, &format!("{spelling}({args_text});"));
                 }
+                if name == "stopChasingPlayerVariable" {
+                    let Some((player, variable)) = args.first().and_then(|id| {
+                        self.program
+                            .values
+                            .get(*id)
+                            .and_then(|node| match &node.value {
+                                wir::Value::PlayerVariable { player, variable } => {
+                                    Some((*player, *variable))
+                                }
+                                _ => None,
+                            })
+                    }) else {
+                        return Err(WorkshopError::Malformed {
+                            message: "Stop Chasing Player Variable requires a player variable"
+                                .into(),
+                            span: None,
+                        });
+                    };
+                    let spelling = self.spelling(Kind::Action, name)?;
+                    let mut player_text = String::new();
+                    self.value(player, &mut player_text)?;
+                    return self.line(
+                        level,
+                        &format!(
+                            "{spelling}({player_text}, {});",
+                            self.player_name(variable)?
+                        ),
+                    );
+                }
                 // Native `.opy` action names map to canonical catalog ids at
                 // emission (presentation concern).
                 let canonical = match name.as_str() {
@@ -957,6 +986,18 @@ impl Emitter<'_> {
                 out.push(')');
                 let name = self.player_name(*variable)?;
                 write!(out, ".{name}").unwrap();
+            }
+            wir::Value::Subroutine(subroutine) => {
+                let name = self
+                    .program
+                    .subroutines
+                    .get(*subroutine)
+                    .map(|value| value.name.clone())
+                    .ok_or_else(|| WorkshopError::Malformed {
+                        message: format!("dangling subroutine value {subroutine}"),
+                        span: None,
+                    })?;
+                out.push_str(&name);
             }
             wir::Value::EventPlayer => out.push_str(&self.spelling(Kind::Value, "eventPlayer")?),
             wir::Value::Call { name, args } => {

@@ -127,6 +127,14 @@ fn inspect_action_id(
 
 fn inspect_value(node: &crate::wir::ValueNode, catalog: &Catalog, issues: &mut Vec<SemanticIssue>) {
     if let Value::Call { name, .. } = &node.value {
+        // These names are canonical WIR helpers rather than Workshop
+        // builtins: memberAccess preserves dynamic receiver properties, and
+        // infix operators are lowered to their source spelling for emission.
+        let canonical_helper =
+            matches!(name.as_str(), "memberAccess" | "+" | "-" | "*" | "/" | "%");
+        if canonical_helper {
+            return;
+        }
         if catalog.entry(Kind::Value, name).is_none()
             && catalog.entry(Kind::Operator, name).is_none()
         {
