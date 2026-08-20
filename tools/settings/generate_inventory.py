@@ -44,15 +44,29 @@ def top_level_entries(data, category):
     return sorted(result, key=lambda item: item["id"])
 
 
+def reject_alias_conflicts(entries, category):
+    by_alias = {}
+    for entry in entries:
+        by_alias.setdefault(entry["en-US"], []).append(entry["id"])
+    conflicts = {alias: ids for alias, ids in by_alias.items() if len(ids) > 1}
+    if conflicts:
+        raise SystemExit(f"{category}: duplicate en-US aliases: {conflicts}")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--export", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--expected-commit", default="d854bf01fc7bbf3b2169f67408c07a8da8989ad6")
     args = parser.parse_args()
 
     raw = args.export.read_bytes()
     document = json.loads(raw)
     meta = document["meta"]
+    if meta["commit"] != args.expected_commit:
+        raise SystemExit(
+            f"unexpected workshop-data commit {meta['commit']}; expected {args.expected_commit}"
+        )
     settings_groups = []
     walk_labels(document["data"].get("customGameSettings", {}), ("data", "customGameSettings"), settings_groups)
     settings_groups.sort(key=lambda item: (item["en-US"], item["source"]))
@@ -60,6 +74,8 @@ def main():
         category: top_level_entries(document["data"], category)
         for category in ("values", "gamemodes", "maps", "heroes")
     }
+    for category, category_entries in entries.items():
+        reject_alias_conflicts(category_entries, category)
     output = {
         "schemaVersion": 1,
         "source": {

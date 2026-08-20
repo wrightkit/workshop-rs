@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "purpose": "Pinned five-artifact P0 semantic census",
   "artifactManifest": "docs/evidence/raw-workshop-p0-v1.json",
-  "workshopRsBaseRevision": "a39b24e277eee37d8e53dc27c120a38deedb3eb2",
+  "workshopRsBaseRevision": "9d5e32906011e9fbd45f1de26ed8a24dd296de6b",
   "validation": {
     "catalogCheck": "OK 515 entries, 52 enum domains, 2 locale(s)",
     "catalogDigest": "5345a68a72ac3cb9b6adcce4402f385d222c999c0fd911266e2671fe17bfb373",
@@ -10,7 +10,8 @@
       "en-US": "1192/1192",
       "zh-CN": "1178/1192"
     },
-    "semanticCommand": "cargo test -p workshop-rs --locked --test p0_report_tmp -- --nocapture"
+    "semanticCommand": "WRIGHTKIT_P0_ARTIFACT_DIR=/path/to/reacquired-artifacts cargo test -p workshop-rs --locked --test p0_corpus -- --ignored --nocapture",
+    "requiredChecks": ["parse", "canonical validation", "semantic inspection", "deterministic emission", "reparse", "semantic roundtrip equivalence"]
   },
   "artifacts": [
     {"id": "ai-pve", "sha256": "b0405707d54fd30e20f285ce4a3fdaf9899e3959fb5dd223c898040c63a18773", "locale": "zh-CN", "issues": 247},
@@ -33,5 +34,5 @@
       "groups": ["defend rawWorkshopAction at the artifact's trailing End"]
     }
   },
-  "note": "Issue counts are semantic incompleteness counts, not failure counts. Remaining groups are not silently promoted to canonical identities. Full structural validation, emission, and roundtrip verification must be recorded by the independent QA run before P0 acceptance."
+  "note": "Issue counts are semantic incompleteness counts, not failure counts. Remaining groups are not silently promoted to canonical identities. The durable harness performs canonical validation, semantic inspection, deterministic emission, reparse, and semantic roundtrip equivalence when run against the reacquired artifacts. Independent QA must still run it with the pinned artifacts before P0 acceptance."
 }
