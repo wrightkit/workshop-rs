@@ -2,7 +2,8 @@
   "schemaVersion": 1,
   "purpose": "Pinned five-artifact P0 semantic census",
   "artifactManifest": "docs/evidence/raw-workshop-p0-v1.json",
-  "workshopRsBaseRevision": "7cd3eea082f11e3c40267cfc26bacdff3650bf34",
+  "workshopRsBaseRevision": "5589cbc5579152027b2bc8828d871e921143f3da",
+  "residualInventory": "docs/evidence/workshop-p0-residual-v1.json",
   "validation": {
     "catalogCheck": "OK 515 entries, 52 enum domains, 2 locale(s)",
     "catalogDigest": "eddaa0cef06ba8bcf82a19036c608d763e8a5bd17d36b08be05145c63672efb2",
@@ -14,12 +15,17 @@
     "requiredChecks": ["parse", "canonical validation", "semantic inspection", "deterministic emission", "reparse", "semantic roundtrip equivalence"]
   },
   "artifacts": [
-    {"id": "ai-pve", "sha256": "d9c6460ca550e40083efcc2b57de16360088631970824599a22c0aa2cb7f11f9", "locale": "zh-CN", "issues": 246},
-    {"id": "bastion", "sha256": "44e453ddf7f373be65aea82d019abd45dd60f5ecb57c8d1607d3576a8bc60259", "locale": "en-US", "issues": 396},
-    {"id": "defend", "sha256": "06a956b650313ee2d6e24ec989f907244dc4444579bdba27c580b031de97b268", "locale": "en-US", "issues": 3},
-    {"id": "illari", "sha256": "f3aff73b9e677730bddc9c85b04c2bd38439bb7a4ba4fa2e80dc28db2e4a0860", "locale": "zh-CN", "issues": 0},
-    {"id": "rework", "sha256": "aa32cda640dba41fd99245a7d425d9897b53875d15cf071862197a8e6840258c", "locale": "en-US", "issues": 0}
+    {"id": "ai-pve", "sha256": "d9c6460ca550e40083efcc2b57de16360088631970824599a22c0aa2cb7f11f9", "locale": "zh-CN", "observedSemanticResiduals": 246},
+    {"id": "bastion", "sha256": "44e453ddf7f373be65aea82d019abd45dd60f5ecb57c8d1607d3576a8bc60259", "locale": "en-US", "observedSemanticResiduals": 396},
+    {"id": "defend", "sha256": "06a956b650313ee2d6e24ec989f907244dc4444579bdba27c580b031de97b268", "locale": "en-US", "observedSemanticResiduals": 3},
+    {"id": "illari", "sha256": "f3aff73b9e677730bddc9c85b04c2bd38439bb7a4ba4fa2e80dc28db2e4a0860", "locale": "zh-CN", "observedSemanticResiduals": 0},
+    {"id": "rework", "sha256": "aa32cda640dba41fd99245a7d425d9897b53875d15cf071862197a8e6840258c", "locale": "en-US", "observedSemanticResiduals": 0}
   ],
+  "hashReconciliation": {
+    "aiPvePrevious": "b040... was an older retained output produced with OverPy 9.7.10 and is not the pinned artifact",
+    "aiPvePinned": "d9c6460ca550e40083efcc2b57de16360088631970824599a22c0aa2cb7f11f9",
+    "reason": "reacquired from source revision e0c0721 with the manifest-pinned OverPy 9.7.13, Node 22, and pnpm 10.6.3 build; the digest is independently checked after acquisition and is not used as a self-validating expected output"
+  },
   "runtimeClassifications": {
     "ai-pve": ["OverPy 9.7.13 pinned build output is d9c6460...; project variable Brigitte remains unknown", "D.Mon settings hero parses canonically but zh-CN settings mapping is missing and emission fails explicitly"],
     "bastion": ["project variable breathPalette remains unknown"],
