@@ -229,6 +229,24 @@ fn validate_value(
                     locale: crate::catalog::Locale::new("en-US"),
                     span: node.span,
                 });
+            } else if name == "memberAccess" {
+                if !(2..=3).contains(&args.len()) {
+                    errors.push(WorkshopError::Malformed {
+                        message: "memberAccess expects two or three arguments".to_string(),
+                        span: node.span,
+                    });
+                } else if !matches!(
+                    program.values.get(args[1]),
+                    Some(wir::ValueNode {
+                        value: wir::Value::String(_),
+                        ..
+                    })
+                ) {
+                    errors.push(WorkshopError::Malformed {
+                        message: "memberAccess member must be a string".to_string(),
+                        span: node.span,
+                    });
+                }
             } else if let Some(entry) = catalog.entry(Kind::Value, name) {
                 validate_call_signature(entry, args, node.span, program, catalog, errors);
             }

@@ -1,0 +1,1609 @@
+{
+  "schema": "workshop-p0-residual/v1",
+  "artifacts": {
+    "ai-pve": [
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "半藏：暴击倍率",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 907,
+          "column": 3,
+          "end_line": 907,
+          "end_column": 15
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "工程抓钩冷却时间",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 894,
+          "column": 5,
+          "end_line": 894,
+          "end_column": 18
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "巴蒂斯特：暴击倍率",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 908,
+          "column": 3,
+          "end_line": 908,
+          "end_column": 17
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "帕拉蒂尼之牙：暴击对护甲造成额外最大生命值伤害 %",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 909,
+          "column": 3,
+          "end_line": 909,
+          "end_column": 32
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "帕拉蒂尼之牙：暴击造成额外最大生命值伤害 %",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 910,
+          "column": 3,
+          "end_line": 910,
+          "end_column": 29
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "心脏过载：额外伤害减免",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 911,
+          "column": 3,
+          "end_line": 911,
+          "end_column": 18
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "恐怖扳机：冷却时间",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 912,
+          "column": 3,
+          "end_line": 912,
+          "end_column": 17
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "恐怖扳机：基于灵魂层数造成流血伤害",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 913,
+          "column": 3,
+          "end_line": 913,
+          "end_column": 23
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "悍猛格挡：伤害吸收倍率",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 914,
+          "column": 3,
+          "end_line": 914,
+          "end_column": 17
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "感应护盾冷却时间",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 895,
+          "column": 5,
+          "end_line": 895,
+          "end_column": 18
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "收割：每层灵魂减少技能冷却",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 915,
+          "column": 3,
+          "end_line": 915,
+          "end_column": 21
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "斩地巨剑：击倒持续时间",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 916,
+          "column": 3,
+          "end_line": 916,
+          "end_column": 19
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "无影脚击退距离",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 917,
+          "column": 3,
+          "end_line": 917,
+          "end_column": 16
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "桎梏灼日 额外伤害增幅 %",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 918,
+          "column": 3,
+          "end_line": 918,
+          "end_column": 19
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "激活持续时间",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 919,
+          "column": 3,
+          "end_line": 919,
+          "end_column": 12
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "灾厄馈赠（被动）：基于受到伤害获得终极技能充能 %",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 920,
+          "column": 3,
+          "end_line": 920,
+          "end_column": 31
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "禅雅塔：暴击倍率（以下实际数值将被除以100）",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 921,
+          "column": 3,
+          "end_line": 921,
+          "end_column": 31
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "自定义 AI",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 922,
+          "column": 3,
+          "end_line": 922,
+          "end_column": 14
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "艾什：暴击倍率",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 923,
+          "column": 3,
+          "end_line": 923,
+          "end_column": 15
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "诛 （终极技能）额外造成伤害 %",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 906,
+          "column": 3,
+          "end_line": 906,
+          "end_column": 22
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "重力坠击冷却时间",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 896,
+          "column": 5,
+          "end_line": 896,
+          "end_column": 18
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "雾子：暴击倍率",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 924,
+          "column": 3,
+          "end_line": 924,
+          "end_column": 15
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "Ana_GrenadeDamage",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1199,
+          "column": 20,
+          "end_line": 1199,
+          "end_column": 37
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "AnranBuff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1263,
+          "column": 20,
+          "end_line": 1263,
+          "end_column": 29
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "BaptisteBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1244,
+          "column": 20,
+          "end_line": 1244,
+          "end_column": 32
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "BastionBuff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1265,
+          "column": 20,
+          "end_line": 1265,
+          "end_column": 31
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "Brigitte",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1179,
+          "column": 20,
+          "end_line": 1179,
+          "end_column": 28
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "CassidyBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1254,
+          "column": 20,
+          "end_line": 1254,
+          "end_column": 31
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "DmonBuff",
+        "count": 6,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1233,
+          "column": 20,
+          "end_line": 1233,
+          "end_column": 28
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "DominaBuff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1267,
+          "column": 20,
+          "end_line": 1267,
+          "end_column": 30
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "DoomBuff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1231,
+          "column": 20,
+          "end_line": 1231,
+          "end_column": 28
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "EchoBuff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1269,
+          "column": 20,
+          "end_line": 1269,
+          "end_column": 28
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "EmreBuff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1271,
+          "column": 20,
+          "end_line": 1271,
+          "end_column": 28
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "FrejaBuff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1239,
+          "column": 20,
+          "end_line": 1239,
+          "end_column": 29
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "Genji",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1188,
+          "column": 20,
+          "end_line": 1188,
+          "end_column": 25
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "HanzoBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1243,
+          "column": 20,
+          "end_line": 1243,
+          "end_column": 29
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "HazardBuff",
+        "count": 3,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1182,
+          "column": 20,
+          "end_line": 1182,
+          "end_column": 30
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "HeadshotDamage",
+        "count": 3,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1191,
+          "column": 20,
+          "end_line": 1191,
+          "end_column": 34
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "JetpackCatBuff",
+        "count": 4,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1273,
+          "column": 20,
+          "end_line": 1273,
+          "end_column": 34
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "JunkerQueenBuff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1277,
+          "column": 20,
+          "end_line": 1277,
+          "end_column": 35
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "JunkratBuff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1256,
+          "column": 20,
+          "end_line": 1256,
+          "end_column": 31
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "LucioBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1255,
+          "column": 20,
+          "end_line": 1255,
+          "end_column": 29
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "MaugaBuff",
+        "count": 8,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1219,
+          "column": 20,
+          "end_line": 1219,
+          "end_column": 29
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "MercyBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1181,
+          "column": 20,
+          "end_line": 1181,
+          "end_column": 29
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "MizukiBuff",
+        "count": 3,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1279,
+          "column": 20,
+          "end_line": 1279,
+          "end_column": 30
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "MoiraBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1258,
+          "column": 20,
+          "end_line": 1258,
+          "end_column": 29
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "Orisa_Fortify",
+        "count": 3,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1185,
+          "column": 20,
+          "end_line": 1185,
+          "end_column": 33
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "Ram_Annihilation",
+        "count": 7,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1192,
+          "column": 20,
+          "end_line": 1192,
+          "end_column": 36
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "ReaperBuff",
+        "count": 9,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1210,
+          "column": 20,
+          "end_line": 1210,
+          "end_column": 30
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "ReinhardtBuff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1259,
+          "column": 20,
+          "end_line": 1259,
+          "end_column": 33
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "RoadhogBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1282,
+          "column": 20,
+          "end_line": 1282,
+          "end_column": 31
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "S76Buff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1227,
+          "column": 20,
+          "end_line": 1227,
+          "end_column": 27
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "ShionBuff",
+        "count": 6,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1286,
+          "column": 20,
+          "end_line": 1286,
+          "end_column": 29
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "SierraBuff",
+        "count": 3,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1283,
+          "column": 20,
+          "end_line": 1283,
+          "end_column": 30
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "SigmaBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1229,
+          "column": 20,
+          "end_line": 1229,
+          "end_column": 29
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "SojournBuff",
+        "count": 6,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1201,
+          "column": 20,
+          "end_line": 1201,
+          "end_column": 31
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "SombraBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1203,
+          "column": 20,
+          "end_line": 1203,
+          "end_column": 30
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "Tracer_Ability",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1204,
+          "column": 20,
+          "end_line": 1204,
+          "end_column": 34
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "VendettaBuff",
+        "count": 7,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1247,
+          "column": 20,
+          "end_line": 1247,
+          "end_column": 32
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "VentureBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1261,
+          "column": 20,
+          "end_line": 1261,
+          "end_column": 31
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "WidowmakerBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1292,
+          "column": 20,
+          "end_line": 1292,
+          "end_column": 34
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "WinstonBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1293,
+          "column": 20,
+          "end_line": 1293,
+          "end_column": 31
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "WreckingBallBuff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1262,
+          "column": 20,
+          "end_line": 1262,
+          "end_column": 36
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "WuyangBuff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1241,
+          "column": 20,
+          "end_line": 1241,
+          "end_column": 30
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "ZaryaBuff",
+        "count": 3,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1206,
+          "column": 20,
+          "end_line": 1206,
+          "end_column": 29
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "brig_repair_pack_state",
+        "count": 3,
+        "representativeSpan": {
+          "file": 0,
+          "line": 5067,
+          "column": 101,
+          "end_line": 5067,
+          "end_column": 123
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "brigitte_buff",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 7670,
+          "column": 26,
+          "end_line": 7670,
+          "end_column": 39
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "freja_buff",
+        "count": 11,
+        "representativeSpan": {
+          "file": 0,
+          "line": 6586,
+          "column": 26,
+          "end_line": 6586,
+          "end_column": 36
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "heart_steel",
+        "count": 4,
+        "representativeSpan": {
+          "file": 0,
+          "line": 6004,
+          "column": 25,
+          "end_line": 6004,
+          "end_column": 36
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "hero_switch_pvar",
+        "count": 6,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1448,
+          "column": 26,
+          "end_line": 1448,
+          "end_column": 42
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "illari_captive_hud",
+        "count": 5,
+        "representativeSpan": {
+          "file": 0,
+          "line": 4770,
+          "column": 26,
+          "end_line": 4770,
+          "end_column": 44
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "juno_buff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 4016,
+          "column": 55,
+          "end_line": 4016,
+          "end_column": 64
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "mauga_berserker_soul_id",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 4627,
+          "column": 26,
+          "end_line": 4627,
+          "end_column": 49
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "reaper_buff",
+        "count": 4,
+        "representativeSpan": {
+          "file": 0,
+          "line": 6385,
+          "column": 26,
+          "end_line": 6385,
+          "end_column": 37
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "reinhardt_buff",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 5859,
+          "column": 26,
+          "end_line": 5859,
+          "end_column": 40
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "reset_pvar",
+        "count": 34,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1420,
+          "column": 26,
+          "end_line": 1420,
+          "end_column": 36
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "shion_buff",
+        "count": 18,
+        "representativeSpan": {
+          "file": 0,
+          "line": 6729,
+          "column": 26,
+          "end_line": 6729,
+          "end_column": 36
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "wuyang_buff",
+        "count": 5,
+        "representativeSpan": {
+          "file": 0,
+          "line": 6936,
+          "column": 26,
+          "end_line": 6936,
+          "end_column": 37
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "zarya_barrier_shields",
+        "count": 4,
+        "representativeSpan": {
+          "file": 0,
+          "line": 4160,
+          "column": 26,
+          "end_line": 4160,
+          "end_column": 47
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "zarya_buff",
+        "count": 8,
+        "representativeSpan": {
+          "file": 0,
+          "line": 4138,
+          "column": 26,
+          "end_line": 4138,
+          "end_column": 36
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      }
+    ],
+    "bastion": [
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "经典版地图",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 284,
+          "column": 3,
+          "end_line": 284,
+          "end_column": 13
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "自动重开时间间隔（小时）",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 283,
+          "column": 3,
+          "end_line": 283,
+          "end_column": 18
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "RawSetting",
+        "sourceCanonicalName": "难度",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 285,
+          "column": 3,
+          "end_line": 285,
+          "end_column": 10
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "anaSleepLimit",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 912,
+          "column": 56,
+          "end_line": 912,
+          "end_column": 69
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "breathPalette",
+        "count": 5,
+        "representativeSpan": {
+          "file": 0,
+          "line": 659,
+          "column": 38,
+          "end_line": 659,
+          "end_column": 51
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "buffEventDesc",
+        "count": 25,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1144,
+          "column": 38,
+          "end_line": 1144,
+          "end_column": 51
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "buffEventDuration",
+        "count": 25,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1145,
+          "column": 38,
+          "end_line": 1145,
+          "end_column": 55
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "buffEventName",
+        "count": 25,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1143,
+          "column": 38,
+          "end_line": 1143,
+          "end_column": 51
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "buffEventWeight",
+        "count": 30,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1146,
+          "column": 38,
+          "end_line": 1146,
+          "end_column": 53
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "debuffEventDesc",
+        "count": 19,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1187,
+          "column": 38,
+          "end_line": 1187,
+          "end_column": 53
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "debuffEventDuration",
+        "count": 19,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1188,
+          "column": 38,
+          "end_line": 1188,
+          "end_column": 57
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "debuffEventName",
+        "count": 19,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1186,
+          "column": 38,
+          "end_line": 1186,
+          "end_column": 53
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "debuffEventWeight",
+        "count": 24,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1189,
+          "column": 38,
+          "end_line": 1189,
+          "end_column": 55
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "difficultyText",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1826,
+          "column": 38,
+          "end_line": 1826,
+          "end_column": 52
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "dlcTimeChallenge",
+        "count": 9,
+        "representativeSpan": {
+          "file": 0,
+          "line": 3411,
+          "column": 55,
+          "end_line": 3411,
+          "end_column": 71
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "eventCount",
+        "count": 3,
+        "representativeSpan": {
+          "file": 0,
+          "line": 2145,
+          "column": 59,
+          "end_line": 2145,
+          "end_column": 69
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "eventEffect",
+        "count": 6,
+        "representativeSpan": {
+          "file": 0,
+          "line": 3205,
+          "column": 52,
+          "end_line": 3205,
+          "end_column": 63
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "eventMatchCounters",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 2874,
+          "column": 55,
+          "end_line": 2874,
+          "end_column": 73
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "hashTagWeightVerifyState",
+        "count": 5,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1978,
+          "column": 38,
+          "end_line": 1978,
+          "end_column": 62
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "healthId",
+        "count": 8,
+        "representativeSpan": {
+          "file": 0,
+          "line": 2349,
+          "column": 52,
+          "end_line": 2349,
+          "end_column": 60
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "heart_steel",
+        "count": 28,
+        "representativeSpan": {
+          "file": 0,
+          "line": 2525,
+          "column": 55,
+          "end_line": 2525,
+          "end_column": 66
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "kills",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 6218,
+          "column": 41,
+          "end_line": 6218,
+          "end_column": 46
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "mechEventDesc",
+        "count": 23,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1213,
+          "column": 38,
+          "end_line": 1213,
+          "end_column": 51
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "mechEventDuration",
+        "count": 23,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1214,
+          "column": 38,
+          "end_line": 1214,
+          "end_column": 55
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "mechEventName",
+        "count": 23,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1212,
+          "column": 38,
+          "end_line": 1212,
+          "end_column": 51
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "mechEventWeight",
+        "count": 28,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1215,
+          "column": 38,
+          "end_line": 1215,
+          "end_column": 53
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "menuTextID",
+        "count": 10,
+        "representativeSpan": {
+          "file": 0,
+          "line": 7080,
+          "column": 52,
+          "end_line": 7080,
+          "end_column": 62
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "phaseHero",
+        "count": 5,
+        "representativeSpan": {
+          "file": 0,
+          "line": 677,
+          "column": 38,
+          "end_line": 677,
+          "end_column": 47
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "playerOnceEventState",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 3096,
+          "column": 56,
+          "end_line": 3096,
+          "end_column": 76
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "savedData",
+        "count": 15,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1700,
+          "column": 42,
+          "end_line": 1700,
+          "end_column": 51
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "textIDs",
+        "count": 5,
+        "representativeSpan": {
+          "file": 0,
+          "line": 891,
+          "column": 38,
+          "end_line": 891,
+          "end_column": 45
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "titleColor",
+        "count": 4,
+        "representativeSpan": {
+          "file": 0,
+          "line": 4727,
+          "column": 42,
+          "end_line": 4727,
+          "end_column": 52
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      }
+    ],
+    "defend": [
+      {
+        "kind": "OpaqueAction",
+        "sourceCanonicalName": "rawWorkshopAction",
+        "count": 1,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1383,
+          "column": 3,
+          "end_line": 1383,
+          "end_column": 7
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      },
+      {
+        "kind": "UnknownValue",
+        "sourceCanonicalName": "gateHealthChase",
+        "count": 2,
+        "representativeSpan": {
+          "file": 0,
+          "line": 1633,
+          "column": 32,
+          "end_line": 1633,
+          "end_column": 47
+        },
+        "classification": "evidence-insufficient: preserved project-defined or opaque surface",
+        "evidence": "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle"
+      }
+    ],
+    "illari": [],
+    "rework": []
+  }
+}

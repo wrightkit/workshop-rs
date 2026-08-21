@@ -14,16 +14,20 @@ import json
 from pathlib import Path
 
 
+def localized_aliases(value):
+    return {
+        key: child
+        for key, child in value.items()
+        if isinstance(child, str) and key not in {"source", "sources"}
+    }
+
+
 def walk_labels(value, path, out):
     if isinstance(value, dict):
         for key, child in value.items():
-            if isinstance(child, dict) and "en-US" in child:
-                record = {
-                    "en-US": child["en-US"],
-                    "source": ".".join((*path, key)),
-                }
-                if child.get("zh-CN"):
-                    record["zh-CN"] = child["zh-CN"]
+            aliases = localized_aliases(child) if isinstance(child, dict) else {}
+            if aliases:
+                record = {**aliases, "source": ".".join((*path, key))}
                 out.append(record)
             else:
                 walk_labels(child, (*path, key), out)
@@ -35,22 +39,30 @@ def walk_labels(value, path, out):
 def top_level_entries(data, category):
     result = []
     for key, item in data[category].items():
-        if not isinstance(item, dict) or "en-US" not in item:
+        if not isinstance(item, dict):
             continue
-        record = {"id": key, "en-US": item["en-US"], "source": f"data.{category}.{key}"}
-        if item.get("zh-CN"):
-            record["zh-CN"] = item["zh-CN"]
+        aliases = localized_aliases(item)
+        if not aliases:
+            continue
+        record = {"id": key, **aliases, "source": f"data.{category}.{key}"}
         result.append(record)
     return sorted(result, key=lambda item: item["id"])
 
 
-def reject_alias_conflicts(entries, category):
+def reject_alias_conflicts(entries, category, locales):
     by_alias = {}
-    for entry in entries:
-        by_alias.setdefault(entry["en-US"], []).append(entry["id"])
-    conflicts = {alias: ids for alias, ids in by_alias.items() if len(ids) > 1}
+    for locale in locales:
+        for entry in entries:
+            alias = entry.get(locale)
+            if alias:
+                by_alias.setdefault((locale, alias), []).append(entry["id"])
+    conflicts = {
+        f"{locale}:{alias}": ids
+        for (locale, alias), ids in by_alias.items()
+        if len(ids) > 1
+    }
     if conflicts:
-        raise SystemExit(f"{category}: duplicate en-US aliases: {conflicts}")
+        raise SystemExit(f"{category}: duplicate localized aliases: {conflicts}")
 
 
 def main():
@@ -69,13 +81,28 @@ def main():
         )
     settings_groups = []
     walk_labels(document["data"].get("customGameSettings", {}), ("data", "customGameSettings"), settings_groups)
-    settings_groups.sort(key=lambda item: (item["en-US"], item["source"]))
     entries = {
         category: top_level_entries(document["data"], category)
         for category in ("values", "gamemodes", "maps", "heroes")
     }
+    locales = sorted(
+        {
+            locale
+            for entry in settings_groups
+            for locale in entry
+            if locale != "source"
+        }
+        | {
+            locale
+            for category_entries in entries.values()
+            for entry in category_entries
+            for locale in entry
+            if locale not in {"id", "source"}
+        }
+    )
+    settings_groups.sort(key=lambda item: (item.get(locales[0], ""), item["source"]))
     for category, category_entries in entries.items():
-        reject_alias_conflicts(category_entries, category)
+        reject_alias_conflicts(category_entries, category, locales)
     output = {
         "schemaVersion": 1,
         "source": {

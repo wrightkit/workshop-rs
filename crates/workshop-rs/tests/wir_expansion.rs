@@ -11,6 +11,45 @@ fn catalog() -> Catalog {
     Catalog::builtin().expect("built-in catalog")
 }
 
+#[test]
+fn member_access_has_a_canonical_shape_contract() {
+    let catalog = catalog();
+    let mut program = wir::Program::default();
+    let receiver = program
+        .values
+        .push(ValueNode::new(Value::EventPlayer, None));
+    let member = program.values.push(ValueNode::new(
+        Value::Number {
+            value: 1.0,
+            text: "1".into(),
+        },
+        None,
+    ));
+    let access = program.values.push(ValueNode::new(
+        Value::Call {
+            name: "memberAccess".into(),
+            args: vec![receiver, member],
+        },
+        None,
+    ));
+    program.rules.push(wir::Rule {
+        name: "member-contract".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: Event::Global,
+        conditions: vec![access],
+        actions: vec![],
+    });
+    let error =
+        validate::validate_canonical_ids(&program, &catalog).expect_err("invalid memberAccess");
+    assert!(
+        error
+            .to_string()
+            .contains("memberAccess member must be a string")
+    );
+}
+
 fn span(file: workshop_rs::ids::Id<SourceFile>, line: u32, col: u32, end_col: u32) -> Span {
     Span::new(file, Position::new(line, col), Position::new(line, end_col))
 }

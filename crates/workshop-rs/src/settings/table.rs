@@ -8,6 +8,7 @@
 //! (LICENSE-BOUNDARY policy). Additions to the table (e.g. the acquired
 //! candidate snapshots) are data-only.
 
+use serde::Deserialize;
 use serde_json::Value;
 use std::sync::OnceLock;
 
@@ -986,44 +987,45 @@ pub fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static
     GENERATED_HERO_SETTING_NAMES
         .iter()
         .find(|entry| entry.hero == hero && entry.key == key)
-        .and_then(|entry| {
-            if locale.eq_ignore_ascii_case("en-US") {
-                (!entry.en.is_empty()).then_some(entry.en)
-            } else if locale.eq_ignore_ascii_case("zh-CN") {
-                entry.zh.filter(|name| !name.is_empty())
-            } else {
-                None
-            }
-        })
+        .and_then(|entry| entry.localized(locale))
         .or_else(|| {
-            if !locale.eq_ignore_ascii_case("zh-CN") {
-                return None;
-            }
-            match (hero, key) {
-                ("sojourn", "secondaryFireEnergyChargeRate%") => Some("充能速度 充能射击"),
-                ("roadhog", "secondaryFireRechargeRate%") => Some("呼吸器充能速度"),
-                ("hazard", "secondaryFireRegen%") => Some("尖刺护体资源恢复"),
-                ("hazard", "secondaryFireCost%") => Some("尖刺护体资源消耗"),
-                _ => None,
-            }
+            hero_setting_aliases()
+                .iter()
+                .find(|alias| {
+                    alias.hero == hero
+                        && alias.key == key
+                        && alias.locale.eq_ignore_ascii_case(locale)
+                })
+                .map(|alias| alias.display.as_str())
         })
+}
+
+#[derive(Deserialize)]
+struct HeroSettingAlias {
+    hero: String,
+    key: String,
+    locale: String,
+    display: String,
+}
+
+fn hero_setting_aliases() -> &'static [HeroSettingAlias] {
+    static ALIASES: OnceLock<Vec<HeroSettingAlias>> = OnceLock::new();
+    ALIASES.get_or_init(|| {
+        serde_json::from_str(include_str!("data/hero_setting_aliases.json"))
+            .expect("hero setting alias data is valid JSON")
+    })
 }
 
 /// Reviewed producer aliases observed in the pinned AI-PVE artifact. These
 /// labels omit the export's `倍率` suffix or use the producer's shorter
 /// ability label, but identify the same canonical setting path.
 pub fn hero_setting_alias(hero: &str, key: &str, locale: &str, display: &str) -> bool {
-    locale.eq_ignore_ascii_case("zh-CN")
-        && matches!(
-            (hero, key, display),
-            (
-                "sojourn",
-                "secondaryFireEnergyChargeRate%",
-                "充能速度 充能射击"
-            ) | ("roadhog", "secondaryFireRechargeRate%", "呼吸器充能速度")
-                | ("hazard", "secondaryFireRegen%", "尖刺护体资源恢复")
-                | ("hazard", "secondaryFireCost%", "尖刺护体资源消耗")
-        )
+    hero_setting_aliases().iter().any(|alias| {
+        alias.hero == hero
+            && alias.key == key
+            && alias.locale.eq_ignore_ascii_case(locale)
+            && alias.display == display
+    })
 }
 
 fn name_in(maps: &[NameMap], key: &str) -> Option<&'static str> {

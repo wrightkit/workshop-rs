@@ -1,0 +1,6 @@
+[
+  { "hero": "sojourn", "key": "secondaryFireEnergyChargeRate%", "locale": "zh-CN", "display": "充能速度 充能射击" },
+  { "hero": "roadhog", "key": "secondaryFireRechargeRate%", "locale": "zh-CN", "display": "呼吸器充能速度" },
+  { "hero": "hazard", "key": "secondaryFireRegen%", "locale": "zh-CN", "display": "尖刺护体资源恢复" },
+  { "hero": "hazard", "key": "secondaryFireCost%", "locale": "zh-CN", "display": "尖刺护体资源消耗" }
+]

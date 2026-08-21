@@ -7,6 +7,7 @@
 //! as distinct structured diagnostics with source spans.
 
 use std::collections::HashMap;
+use std::sync::OnceLock;
 
 use crate::settings::table::{self, KeyKind, PathPart};
 use crate::settings::{Settings, SettingsListElement, SettingsNode};
@@ -729,17 +730,13 @@ impl Parser<'_> {
     }
 
     fn settings_name_matches(&self, section: &str, english: &str, display: &str) -> bool {
-        if self.locale == Locale::new("en-US") {
-            display == english
-        } else {
-            table::localized_name(self.locale.as_str(), section, english)
-                .is_some_and(|localized| localized == display)
-                // Real Workshop exports can mix the selected locale with
-                // primary-locale labels when a reviewed mapping is absent.
-                // Accept that source spelling for parsing, while emission
-                // still fails explicitly if the target mapping is missing.
-                || display == english
-        }
+        table::localized_name(self.locale.as_str(), section, english)
+            .is_some_and(|localized| localized == display)
+            // Real Workshop exports can mix the selected locale with
+            // primary-locale labels when a reviewed mapping is absent.
+            // Accept that source spelling for parsing, while emission
+            // still fails explicitly if the target mapping is missing.
+            || display == english
     }
 
     fn settings_span(&self, start: Position) -> Span {
@@ -3206,31 +3203,15 @@ fn is_comparison(op: &str) -> bool {
 }
 
 fn canonical_keyword(keyword: &str) -> &str {
-    match keyword {
-        "设置" => "settings",
-        "变量" => "variables",
-        "子程序" => "subroutines",
-        "规则" => "rule",
-        "事件" => "event",
-        "条件" => "conditions",
-        "动作" => "actions",
-        "主程序" => "main",
-        "大厅" => "lobby",
-        "模式" => "modes",
-        "英雄" => "heroes",
-        "地图" => "Map",
-        "循环" => "Loop",
-        "For 玩家变量" => "For Player Variable",
-        "如条件为“真”则循环" => "Loop If Condition Is True",
-        "全局" => "global",
-        "玩家" => "player",
-        "事件玩家" => "Event Player",
-        "禁用" => "disabled",
-        "结束" => "End",
-        "否则如果" => "Else If",
-        "否则" => "Else",
-        other => other,
-    }
+    static KEYWORDS: OnceLock<HashMap<String, String>> = OnceLock::new();
+    KEYWORDS
+        .get_or_init(|| {
+            serde_json::from_str(include_str!("structural_keywords.json"))
+                .expect("structural keyword data is valid JSON")
+        })
+        .get(keyword)
+        .map(String::as_str)
+        .unwrap_or(keyword)
 }
 
 fn raw_token_text(kind: &TokenKind) -> String {

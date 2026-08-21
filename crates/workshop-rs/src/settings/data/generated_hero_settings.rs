@@ -1,5 +1,13 @@
 // Generated from the reviewed workshop-data hero settings export.
 pub struct GeneratedHeroSettingName { pub hero: &'static str, pub key: &'static str, pub en: &'static str, pub zh: Option<&'static str> }
+impl GeneratedHeroSettingName {
+    pub fn localized(&self, locale: &str) -> Option<&'static str> {
+        [("en-US", self.en), ("zh-CN", self.zh.unwrap_or(""))]
+            .into_iter()
+            .find(|(known, value)| known.eq_ignore_ascii_case(locale) && !value.is_empty())
+            .map(|(_, value)| value)
+    }
+}
 pub static GENERATED_HERO_SETTING_NAMES: &[GeneratedHeroSettingName] = &[
     GeneratedHeroSettingName {
         hero: "ana",
