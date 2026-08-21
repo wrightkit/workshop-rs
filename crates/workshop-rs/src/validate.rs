@@ -361,20 +361,22 @@ fn validate_call_signature(
 
     let complete_signature = args.len() == entry.param_count();
     for (index, arg_id) in args.iter().enumerate() {
-        if let Some(expected) = entry.param_type(index) {
-            if !value_matches_type(program, catalog, *arg_id, expected) {
-                let actual = value_type_name(program, catalog, *arg_id);
-                errors.push(WorkshopError::Unsupported {
-                    message: format!(
-                        "{} '{}' argument {} must have semantic type '{}', got {}",
-                        entry.kind.as_str(),
-                        entry.id,
-                        index + 1,
-                        expected,
-                        actual
-                    ),
-                    span: program.values.get(*arg_id).and_then(|node| node.span),
-                });
+        if complete_signature {
+            if let Some(expected) = entry.param_type(index) {
+                if !value_matches_type(program, catalog, *arg_id, expected) {
+                    let actual = value_type_name(program, catalog, *arg_id);
+                    errors.push(WorkshopError::Unsupported {
+                        message: format!(
+                            "{} '{}' argument {} must have semantic type '{}', got {}",
+                            entry.kind.as_str(),
+                            entry.id,
+                            index + 1,
+                            expected,
+                            actual
+                        ),
+                        span: program.values.get(*arg_id).and_then(|node| node.span),
+                    });
+                }
             }
         }
         let Some(domain) = entry.param_domain(index) else {
@@ -440,28 +442,47 @@ fn value_matches_type(
     let Some(node) = program.values.get(value_id) else {
         return false;
     };
-    match (&node.value, expected) {
+    expected
+        .split('|')
+        .any(|alternative| value_matches_single_type(catalog, &node.value, alternative))
+}
+
+fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &str) -> bool {
+    match (value, expected) {
         (_, "Any" | "Unknown") => true,
-        (wir::Value::Number { .. }, "Number") => true,
+        (wir::Value::Number { .. }, "Number" | "Boolean") => true,
         (wir::Value::String(_), "String" | "Text") => true,
-        (wir::Value::Bool(_), "Boolean") => true,
+        (wir::Value::Bool(_), "Boolean" | "Number") => true,
         (wir::Value::Vector { .. }, "Vector") => true,
-        (wir::Value::Array(_), "Array") => true,
-        (wir::Value::Enum { value_type, .. }, domain) => value_type == domain,
+        (wir::Value::Array(_), "Array" | "Object" | "Player" | "Vector") => true,
+        (wir::Value::Enum { value_type, .. }, domain) => {
+            matches!(domain, "Any" | "Unknown" | "Object") || value_type == domain
+        }
         (wir::Value::Call { name, .. }, expected) => catalog
             .entry(crate::catalog::Kind::Value, name)
             .and_then(|entry| entry.return_type())
-            .is_some_and(|return_type| return_type == expected),
+            .is_none_or(|return_type| {
+                return_type.split('|').any(|return_type| {
+                    expected == "Object"
+                        || (expected == "Player" && return_type == "Array")
+                        || (expected == "Vector" && return_type == "Array")
+                        || return_type == expected
+                        || return_type == "Any"
+                        || return_type == "Unknown"
+                })
+            }),
+        // Null is a valid Workshop placeholder for every value contract;
+        // its runtime meaning is resolved by the enclosing builtin.
+        (wir::Value::Null, _) => true,
         // Variables and other runtime expressions are intentionally accepted
         // only for broad contracts; their value is not statically knowable.
         (
             wir::Value::GlobalVariable(_)
             | wir::Value::PlayerVariable { .. }
             | wir::Value::Subroutine(_)
-            | wir::Value::EventPlayer
-            | wir::Value::Null,
+            | wir::Value::EventPlayer,
             _,
-        ) => matches!(expected, "Any" | "Object" | "Player" | "Variable"),
+        ) => true,
         _ => false,
     }
 }

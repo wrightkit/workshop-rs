@@ -9,6 +9,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "EntityId"
+      ],
       "params": [
         "EntityId"
       ]
@@ -23,6 +26,13 @@
         null,
         null,
         null,
+        "Color",
+        "OutlineVisibility"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Player|Array",
+        "Boolean",
         "Color",
         "OutlineVisibility"
       ],
@@ -43,6 +53,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -56,6 +69,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Player|Array"
       ],
       "params": [
         "Object",
@@ -71,6 +88,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Boolean"
       ],
       "params": [
         "Object",
@@ -91,6 +112,14 @@
         "Color",
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Vector|Player",
+        "Icon",
+        "IconReeval",
+        "Color",
+        "Boolean"
+      ],
       "params": [
         "VisibleTo",
         "Position",
@@ -110,6 +139,10 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Boolean"
+      ],
       "params": [
         "Object",
         "Boolean"
@@ -124,6 +157,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Number"
       ]
@@ -137,6 +173,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Boolean"
       ],
       "params": [
         "Object",
@@ -153,6 +193,10 @@
         "Team",
         null
       ],
+      "paramTypes": [
+        "Team",
+        "Number"
+      ],
       "params": [
         "Team",
         "Number"
@@ -167,6 +211,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Boolean"
       ],
       "params": [
         "Object",
@@ -183,6 +231,11 @@
         null,
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number",
+        "Boolean"
       ],
       "params": [
         "Object",
@@ -201,6 +254,11 @@
         "Button",
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Button",
+        "Number"
+      ],
       "params": [
         "Object",
         "Button",
@@ -216,6 +274,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "String"
       ],
       "params": [
         "Object",
@@ -233,6 +295,11 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Number",
+        "Boolean"
+      ],
       "params": [
         "Object",
         "Number",
@@ -248,6 +315,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -261,6 +331,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -273,6 +346,9 @@
       "id": "resurrect",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -289,6 +365,11 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player",
+        "Player",
+        "Vector"
+      ],
       "params": [
         "Player",
         "Player",
@@ -304,6 +385,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -317,6 +401,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Player"
       ],
       "params": [
         "Object",
@@ -332,6 +420,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -344,6 +435,9 @@
       "id": "stopScalingBarriers",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -359,6 +453,10 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Player|Array"
+      ],
       "params": [
         "Object",
         "Object"
@@ -373,6 +471,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "DotId"
+      ],
       "params": [
         "DotId"
       ]
@@ -385,6 +486,9 @@
       "id": "stopScalingSize",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -399,6 +503,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Player|Array"
       ],
       "params": [
         "Object",
@@ -433,6 +541,12 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Boolean",
+        "Boolean",
+        "Boolean"
+      ],
       "params": [
         "Object",
         "Boolean",
@@ -451,6 +565,11 @@
         "Button",
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Button",
+        "Number"
+      ],
       "params": [
         "Object",
         "Button",
@@ -466,6 +585,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Object"
+      ],
       "params": [
         "Object"
       ]
@@ -478,6 +600,9 @@
       "id": "disableDeathSpectateAllPlayers",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -495,6 +620,13 @@
         null,
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Health",
+        "Number",
+        "Boolean",
+        "Boolean"
       ],
       "params": [
         "Object",
@@ -521,6 +653,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -535,6 +670,12 @@
         null,
         null,
         null,
+        "DamageReeval"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Player|Array",
+        "Number",
         "DamageReeval"
       ],
       "params": [
@@ -553,6 +694,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "HotId"
+      ],
       "params": [
         "HotId"
       ]
@@ -565,6 +709,9 @@
       "id": "disableMessages",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -579,6 +726,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "DamageModificationId"
+      ],
       "params": [
         "DamageModificationId"
       ]
@@ -591,6 +741,9 @@
       "id": "disableDeathSpectateTargetHud",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -608,6 +761,12 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Player",
+        "Number",
+        "Number"
+      ],
       "params": [
         "Object",
         "Player",
@@ -624,6 +783,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -636,6 +798,9 @@
       "id": "disableKillFeed",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -651,6 +816,11 @@
         null,
         "Button",
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Button",
+        "Number"
       ],
       "params": [
         "Object",
@@ -668,6 +838,10 @@
         null,
         "Hero"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Hero"
+      ],
       "params": [
         "Object",
         "Hero"
@@ -679,6 +853,9 @@
         "zh-CN": "停止追踪全局变量 "
       },
       "id": "stopChasingGlobalVariable",
+      "paramTypes": [
+        "Variable"
+      ],
       "params": [
         "Variable"
       ]
@@ -692,6 +869,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Boolean"
       ],
       "params": [
         "Object",
@@ -708,6 +889,10 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Hero|Array"
+      ],
       "params": [
         "Object",
         "Object"
@@ -722,6 +907,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number"
       ],
       "params": [
         "Object",
@@ -740,6 +929,12 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Player",
+        "Number",
+        "Number"
+      ],
       "params": [
         "Object",
         "Player",
@@ -756,6 +951,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "HealthPoolId"
+      ],
       "params": [
         "HealthPoolId"
       ]
@@ -770,6 +968,11 @@
         null,
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number",
+        "Boolean"
       ],
       "params": [
         "Object",
@@ -788,6 +991,11 @@
         "Vector",
         "Relativity"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Vector",
+        "Relativity"
+      ],
       "params": [
         "Object",
         "Direction",
@@ -803,6 +1011,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -816,6 +1027,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number"
       ],
       "params": [
         "Object",
@@ -831,6 +1046,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -842,6 +1060,9 @@
       },
       "id": "declareTeamVictory",
       "paramDomains": [
+        "Team"
+      ],
+      "paramTypes": [
         "Team"
       ],
       "params": [
@@ -857,6 +1078,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -871,6 +1095,11 @@
         null,
         null,
         null
+      ],
+      "paramTypes": [
+        "Player",
+        "Vector",
+        "Boolean"
       ],
       "params": [
         "Player",
@@ -888,6 +1117,10 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "Object",
         "Number"
@@ -904,6 +1137,14 @@
         "Vector",
         null,
         null,
+        "Relativity",
+        "AccelReeval"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Vector",
+        "Number",
+        "Number",
         "Relativity",
         "AccelReeval"
       ],
@@ -933,6 +1174,17 @@
         "ProgressHudReeval",
         "SpecVisibility"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Number",
+        "Object",
+        "HudPosition",
+        "Number",
+        "Color",
+        "Color",
+        "ProgressHudReeval",
+        "SpecVisibility"
+      ],
       "params": [
         "Object",
         "Number",
@@ -955,6 +1207,10 @@
         null,
         "Button"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Button"
+      ],
       "params": [
         "Object",
         "Button"
@@ -970,6 +1226,10 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "Object",
         "Number"
@@ -984,6 +1244,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "TextId"
+      ],
       "params": [
         "TextId"
       ]
@@ -997,6 +1260,11 @@
       "paramDomains": [
         null,
         null,
+        "HudReeval"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Object",
         "HudReeval"
       ],
       "params": [
@@ -1015,6 +1283,10 @@
         null,
         "Button"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Button"
+      ],
       "params": [
         "Object",
         "Button"
@@ -1030,6 +1302,11 @@
         null,
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Player",
+        "Number"
       ],
       "params": [
         "Object",
@@ -1047,6 +1324,10 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "Object",
         "Number"
@@ -1060,6 +1341,10 @@
       "id": "clearStatusEffect",
       "paramDomains": [
         null,
+        "Status"
+      ],
+      "paramTypes": [
+        "Player|Array",
         "Status"
       ],
       "params": [
@@ -1078,6 +1363,11 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Number",
+        "Number"
+      ],
       "params": [
         "Object",
         "Number",
@@ -1094,6 +1384,10 @@
         "Team",
         null
       ],
+      "paramTypes": [
+        "Team",
+        "Number"
+      ],
       "params": [
         "Team",
         "Number"
@@ -1105,6 +1399,10 @@
         "zh-CN": "停止追踪玩家变量"
       },
       "id": "stopChasingPlayerVariable",
+      "paramTypes": [
+        "Player|Array",
+        "Variable"
+      ],
       "params": [
         "Player",
         "PlayerVariable"
@@ -1119,6 +1417,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number"
       ],
       "params": [
         "Object",
@@ -1135,6 +1437,10 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Boolean"
+      ],
       "params": [
         "Object",
         "Boolean"
@@ -1150,6 +1456,11 @@
         null,
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number",
+        "Number"
       ],
       "params": [
         "Object",
@@ -1179,6 +1490,7 @@
         "zh-CN": "循环"
       },
       "id": "loop",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1199,6 +1511,10 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Boolean"
+      ],
       "params": [
         "Object",
         "Boolean"
@@ -1214,6 +1530,10 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "Object",
         "Number"
@@ -1227,6 +1547,9 @@
       "id": "setMatchTime",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Number"
       ],
       "params": [
         "Number"
@@ -1249,6 +1572,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -1264,6 +1590,11 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Player",
+        "Number"
+      ],
       "params": [
         "Object",
         "Player",
@@ -1278,6 +1609,10 @@
       "id": "forceButtonPress",
       "paramDomains": [
         null,
+        "Button"
+      ],
+      "paramTypes": [
+        "Player|Array",
         "Button"
       ],
       "params": [
@@ -1299,6 +1634,15 @@
         null,
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number",
+        "Number",
+        "Number",
+        "Number",
+        "Number",
+        "Number"
       ],
       "params": [
         "Object",
@@ -1323,6 +1667,13 @@
         "Relativity",
         "Impulse"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Vector",
+        "Number",
+        "Relativity",
+        "Impulse"
+      ],
       "params": [
         "Player",
         "Direction",
@@ -1341,6 +1692,10 @@
         null,
         "Comms"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Comms"
+      ],
       "params": [
         "Object",
         "Comms"
@@ -1354,6 +1709,9 @@
       "id": "disableRespawn",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -1369,6 +1727,13 @@
         null,
         "Vector",
         null,
+        "Relativity",
+        "FacingReeval"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Vector",
+        "Number",
         "Relativity",
         "FacingReeval"
       ],
@@ -1405,6 +1770,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -1417,6 +1785,10 @@
       "id": "startRule",
       "paramDomains": [
         null,
+        "StartRuleBehavior"
+      ],
+      "paramTypes": [
+        "Subroutine",
         "StartRuleBehavior"
       ],
       "params": [
@@ -1433,6 +1805,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -1443,6 +1818,7 @@
         "zh-CN": "重新开始比赛"
       },
       "id": "restartMatch",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1454,6 +1830,7 @@
         ]
       },
       "id": "enableBuiltinGameModeMusic",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1465,6 +1842,7 @@
         ]
       },
       "id": "destroyAllInWorldText",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1476,6 +1854,7 @@
         ]
       },
       "id": "destroyAllIcons",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1487,6 +1866,7 @@
         ]
       },
       "id": "destroyAllHudText",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1498,6 +1878,7 @@
         ]
       },
       "id": "destroyAllEffects",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1509,6 +1890,7 @@
         ]
       },
       "id": "disableBuiltinGameModeMusic",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1517,6 +1899,7 @@
         "zh-CN": "跳出循环"
       },
       "id": "break",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1528,6 +1911,7 @@
         ]
       },
       "id": "disableBuiltinGameModeCompletion",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1539,6 +1923,7 @@
         ]
       },
       "id": "disableBuiltinGameModeAnnouncer",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1550,6 +1935,7 @@
         ]
       },
       "id": "disableBuiltinGameModeScoring",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1561,6 +1947,7 @@
         ]
       },
       "id": "unpauseMatchTime",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1569,6 +1956,7 @@
         "zh-CN": "移除所有机器人"
       },
       "id": "destroyAllDummies",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1577,6 +1965,7 @@
         "zh-CN": "比赛时间暂停"
       },
       "id": "pauseMatchTime",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1585,6 +1974,7 @@
         "zh-CN": "禁用查看器录制"
       },
       "id": "disableInspector",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1599,6 +1989,10 @@
       ],
       "paramDomains": [
         null,
+        "Wait"
+      ],
+      "paramTypes": [
+        "Any",
         "Wait"
       ],
       "params": [
@@ -1617,6 +2011,14 @@
         "Beam",
         null,
         null,
+        "Color",
+        "EffectReeval"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Beam",
+        "Vector",
+        "Vector",
         "Color",
         "EffectReeval"
       ],
@@ -1661,6 +2063,19 @@
         "HudReeval",
         "SpecVisibility"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Object",
+        "Object",
+        "Object",
+        "HudPosition",
+        "Number",
+        "Color",
+        "Color",
+        "Color",
+        "HudReeval",
+        "SpecVisibility"
+      ],
       "params": [
         "VisibleTo",
         "Header",
@@ -1688,6 +2103,13 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "DynamicEffect",
+        "Color",
+        "Vector",
+        "Number"
+      ],
       "params": [
         "VisibleTo",
         "Type",
@@ -1702,6 +2124,10 @@
         "zh-CN": "设置瞄准速度"
       },
       "id": "setAimSpeed",
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "player",
         "turnSpeedPercent"
@@ -1713,6 +2139,10 @@
         "zh-CN": "设置造成伤害"
       },
       "id": "setDamageDealt",
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "player",
         "damageDealtPercent"
@@ -1724,6 +2154,10 @@
         "zh-CN": "设置受到伤害"
       },
       "id": "setDamageReceived",
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "player",
         "damageReceivedPercent"
@@ -1735,6 +2169,10 @@
         "zh-CN": "设置引力"
       },
       "id": "setGravity",
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "Player",
         "Gravity"
@@ -1746,6 +2184,10 @@
         "zh-CN": "设置玩家生命值"
       },
       "id": "setHealth",
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "player",
         "amount"
@@ -1757,6 +2199,10 @@
         "zh-CN": "设置最大生命值"
       },
       "id": "setMaxHealth",
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "player",
         "healthPercent"
@@ -1768,6 +2214,10 @@
         "zh-CN": "设置移动速度"
       },
       "id": "setMoveSpeed",
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "player",
         "moveSpeedPercent"
@@ -1779,6 +2229,10 @@
         "zh-CN": "设置终极技能充能"
       },
       "id": "setUltCharge",
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "player",
         "chargePercent"
@@ -1790,6 +2244,10 @@
         "zh-CN": "传送"
       },
       "id": "teleport",
+      "paramTypes": [
+        "Player|Array",
+        "Vector"
+      ],
       "params": [
         "Player",
         "Position"
@@ -1805,6 +2263,12 @@
         null,
         null,
         null,
+        "ChaseRateReeval"
+      ],
+      "paramTypes": [
+        "Variable",
+        "Any",
+        "Number",
         "ChaseRateReeval"
       ],
       "params": [
@@ -1824,6 +2288,12 @@
         null,
         null,
         null,
+        "ChaseTimeReeval"
+      ],
+      "paramTypes": [
+        "Variable",
+        "Any",
+        "Number",
         "ChaseTimeReeval"
       ],
       "params": [
@@ -1846,6 +2316,13 @@
         null,
         "ChaseRateReeval"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Variable",
+        "Any",
+        "Number",
+        "ChaseRateReeval"
+      ],
       "params": [
         "Player",
         "Variable",
@@ -1865,6 +2342,13 @@
         null,
         null,
         null,
+        "ChaseTimeReeval"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Variable",
+        "Any",
+        "Number",
         "ChaseTimeReeval"
       ],
       "params": [
@@ -1889,6 +2373,10 @@
         null,
         "Invis"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Invis"
+      ],
       "params": [
         "Player",
         "InvisibleTo"
@@ -1904,6 +2392,12 @@
         null,
         null,
         "Status"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Player",
+        "Status",
+        "Number"
       ],
       "params": [
         "player",
@@ -1922,6 +2416,10 @@
         "allPlayers",
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Object"
+      ],
       "params": [
         "VisibleTo",
         "Header"
@@ -1937,6 +2435,10 @@
         "allPlayers",
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Object"
+      ],
       "params": [
         "VisibleTo",
         "Header"
@@ -1951,6 +2453,10 @@
         ]
       },
       "id": "waitUntil",
+      "paramTypes": [
+        "Any",
+        "Number"
+      ],
       "params": [
         "Condition",
         "Timeout"
@@ -1962,6 +2468,9 @@
         "zh-CN": "跳过"
       },
       "id": "skip",
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Value"
       ]
@@ -1972,6 +2481,7 @@
         "zh-CN": "如条件为“真”则循环"
       },
       "id": "loopIfConditionIsTrue",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -1980,6 +2490,9 @@
         "zh-CN": "根据条件中止"
       },
       "id": "abortIf",
+      "paramTypes": [
+        "Boolean"
+      ],
       "params": [
         "Condition"
       ]
@@ -1994,6 +2507,11 @@
         null,
         "Operation",
         null
+      ],
+      "paramTypes": [
+        "Variable",
+        "Operation",
+        "Any"
       ],
       "params": [
         "Variable",
@@ -2013,6 +2531,14 @@
         "Color",
         null,
         null,
+        "EffectReeval"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Effect",
+        "Color",
+        "Vector|Player",
+        "Number",
         "EffectReeval"
       ],
       "params": [
@@ -2050,6 +2576,16 @@
         "Color",
         "SpecVisibility"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Object",
+        "Vector|Player",
+        "Number",
+        "Clipping",
+        "WorldTextReeval",
+        "Color",
+        "SpecVisibility"
+      ],
       "params": [
         "VisibleTo",
         "Header",
@@ -2073,6 +2609,18 @@
         null,
         null,
         null,
+        "Clipping",
+        "Color",
+        "Color",
+        "ProgressWorldTextReeval",
+        "SpecVisibility"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number",
+        "Object",
+        "Vector|Player",
+        "Number",
         "Clipping",
         "Color",
         "Color",
@@ -2104,6 +2652,12 @@
         null,
         "0"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Vector",
+        "Vector",
+        "Number"
+      ],
       "params": [
         "Player",
         "EyePosition",
@@ -2117,6 +2671,9 @@
         "zh-CN": "停止镜头"
       },
       "id": "stopCamera",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2127,6 +2684,7 @@
         "zh-CN": "开始游戏模式"
       },
       "id": "startGameMode",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2135,6 +2693,10 @@
         "zh-CN": "设置玩家可选的英雄"
       },
       "id": "setAllowedHeroes",
+      "paramTypes": [
+        "Player|Array",
+        "Hero|Array"
+      ],
       "params": [
         "Player",
         "Heroes"
@@ -2187,6 +2749,9 @@
         "zh-CN": "停止限制阈值"
       },
       "id": "stopForcingThrottle",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2197,6 +2762,9 @@
         "zh-CN": "停止定向阈值"
       },
       "id": "stopThrottleInDirection",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2211,6 +2779,14 @@
         null,
         "Vector",
         null,
+        "Relativity",
+        "Throttle",
+        "ThrottleReeval"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Vector",
+        "Number",
         "Relativity",
         "Throttle",
         "ThrottleReeval"
@@ -2230,6 +2806,10 @@
         "zh-CN": "设置辅助攻击模式启用"
       },
       "id": "setSecondaryFireEnabled",
+      "paramTypes": [
+        "Player|Array",
+        "Boolean"
+      ],
       "params": [
         "Player",
         "bool"
@@ -2241,6 +2821,9 @@
         "zh-CN": "隐藏游戏模式HUD"
       },
       "id": "disableGameModeHud",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2251,6 +2834,9 @@
         "zh-CN": "隐藏游戏模式地图UI"
       },
       "id": "disableGameModeInworldUI",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2261,6 +2847,9 @@
         "zh-CN": "隐藏英雄HUD"
       },
       "id": "disableHeroHud",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2271,6 +2860,9 @@
         "zh-CN": "隐藏计分板"
       },
       "id": "disableScoreboard",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2281,6 +2873,9 @@
         "zh-CN": "显示游戏模式HUD"
       },
       "id": "enableGameModeHud",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2291,6 +2886,9 @@
         "zh-CN": "显示游戏模式地图UI"
       },
       "id": "enableGameModeInworldUI",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2301,6 +2899,9 @@
         "zh-CN": "显示英雄HUD"
       },
       "id": "enableHeroHud",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2311,6 +2912,9 @@
         "zh-CN": "显示计分板"
       },
       "id": "enableScoreboard",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2321,6 +2925,7 @@
         "zh-CN": "启用查看器录制"
       },
       "id": "enableInspectorRecording",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2329,6 +2934,10 @@
         "zh-CN": "取消与环境的移动碰撞"
       },
       "id": "disableMovementCollisionWithEnvironment",
+      "paramTypes": [
+        "Player|Array",
+        "Boolean"
+      ],
       "params": [
         "Player",
         "IncludeFloors"
@@ -2340,6 +2949,9 @@
         "zh-CN": "取消与玩家的移动碰撞"
       },
       "id": "disableMovementCollisionWithPlayers",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2350,6 +2962,9 @@
         "zh-CN": "开启与环境的移动碰撞"
       },
       "id": "enableMovementCollisionWithEnvironment",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2360,6 +2975,9 @@
         "zh-CN": "开启与玩家的移动碰撞"
       },
       "id": "enableMovementCollisionWithPlayers",
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2372,6 +2990,10 @@
       "id": "disallowButton",
       "paramDomains": [
         null,
+        "Button"
+      ],
+      "paramTypes": [
+        "Player|Array",
         "Button"
       ],
       "params": [
@@ -2389,6 +3011,10 @@
         null,
         "Button"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Button"
+      ],
       "params": [
         "Player",
         "Button"
@@ -2400,6 +3026,9 @@
         "zh-CN": "消除HUD文本"
       },
       "id": "destroyHudText",
+      "paramTypes": [
+        "TextId"
+      ],
       "params": [
         "TextId"
       ]
@@ -2410,6 +3039,9 @@
         "zh-CN": "消除地图文本"
       },
       "id": "destroyInWorldText",
+      "paramTypes": [
+        "TextId"
+      ],
       "params": [
         "TextId"
       ]
@@ -2420,6 +3052,9 @@
         "zh-CN": "消除效果"
       },
       "id": "destroyEffect",
+      "paramTypes": [
+        "EntityId"
+      ],
       "params": [
         "EffectId"
       ]
@@ -2430,6 +3065,7 @@
         "zh-CN": "消除所有进度条HUD文本"
       },
       "id": "destroyAllProgressBarHudText",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2438,6 +3074,7 @@
         "zh-CN": "消除所有进度条地图文本"
       },
       "id": "destroyAllProgressBarInWorldText",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2459,6 +3096,7 @@
         ]
       },
       "id": "abort",
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2470,6 +3108,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number"
       ],
       "params": [
         "Object",
@@ -2485,6 +3127,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -2497,6 +3142,9 @@
       "id": "enableDeathSpectateTargetHud",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -2511,6 +3159,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -2523,6 +3174,9 @@
       "id": "enableMessages",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -2537,6 +3191,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -2549,6 +3206,9 @@
       "id": "enableVoiceChat",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -2563,6 +3223,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number"
       ],
       "params": [
         "Object",
@@ -2579,6 +3243,10 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Boolean"
+      ],
       "params": [
         "Object",
         "Boolean"
@@ -2593,6 +3261,10 @@
       "paramDomains": [
         null,
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number"
       ],
       "params": [
         "Object",
@@ -2609,6 +3281,10 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Number"
+      ],
       "params": [
         "Object",
         "Number"
@@ -2623,6 +3299,11 @@
       "paramDomains": [
         null,
         null,
+        "AssistReeval"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Player|Array",
         "AssistReeval"
       ],
       "params": [
@@ -2643,6 +3324,12 @@
         null,
         "Vector"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Number",
+        "Number",
+        "Vector"
+      ],
       "params": [
         "Object",
         "Number",
@@ -2659,6 +3346,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -2671,6 +3361,9 @@
       "id": "stopForcingName",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player|Array"
       ],
       "params": [
         "Object"
@@ -2685,6 +3378,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Object"
       ]
@@ -2696,6 +3392,7 @@
       },
       "id": "__abortIfConditionIsFalse__",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2705,6 +3402,7 @@
       },
       "id": "__abortIfConditionIsTrue__",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2719,6 +3417,13 @@
         null,
         null,
         null
+      ],
+      "paramTypes": [
+        "Player",
+        "Variable",
+        "Number",
+        "Number",
+        "Number"
       ],
       "params": [
         "Player",
@@ -2735,6 +3440,7 @@
       },
       "id": "__loopIfConditionIsFalse__",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2746,6 +3452,10 @@
       "paramDomains": [
         "Team",
         null
+      ],
+      "paramTypes": [
+        "Team",
+        "Number"
       ],
       "params": [
         "Team",
@@ -2759,6 +3469,7 @@
       },
       "id": "continue",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2768,6 +3479,7 @@
       },
       "id": "declareDraw",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2778,6 +3490,9 @@
       "id": "declarePlayerVictory",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "Player"
       ],
       "params": [
         "Player"
@@ -2790,6 +3505,7 @@
       },
       "id": "declareRoundDraw",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2799,6 +3515,9 @@
       },
       "id": "declareRoundVictory",
       "paramDomains": [
+        "Team"
+      ],
+      "paramTypes": [
         "Team"
       ],
       "params": [
@@ -2814,6 +3533,9 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "TextId"
+      ],
       "params": [
         "TextId"
       ]
@@ -2825,6 +3547,7 @@
       },
       "id": "enableAnnouncer",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2834,6 +3557,7 @@
       },
       "id": "enableGamemodeCompletion",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2843,6 +3567,7 @@
       },
       "id": "enableScoring",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2852,6 +3577,7 @@
       },
       "id": "goToAssembleHeroes",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2864,6 +3590,11 @@
         null,
         "Team",
         null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Team",
+        "Number"
       ],
       "params": [
         "Object",
@@ -2878,6 +3609,7 @@
       },
       "id": "returnToLobby",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2889,6 +3621,10 @@
       "paramDomains": [
         "Team",
         null
+      ],
+      "paramTypes": [
+        "Team",
+        "Number"
       ],
       "params": [
         "Team",
@@ -2907,6 +3643,12 @@
         null,
         "HealingReeval"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Player|Array",
+        "Number",
+        "HealingReeval"
+      ],
       "params": [
         "Object",
         "Object",
@@ -2921,6 +3663,7 @@
       },
       "id": "stopAllAssists",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2930,6 +3673,7 @@
       },
       "id": "stopAllDamageModifications",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2939,6 +3683,7 @@
       },
       "id": "stopAllHealingModifications",
       "paramDomains": [],
+      "paramTypes": [],
       "params": []
     },
     {
@@ -2949,6 +3694,9 @@
       "id": "stopAssist",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "AssistId"
       ],
       "params": [
         "AssistId"
@@ -2963,6 +3711,9 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
       ]
@@ -2975,6 +3726,9 @@
       "id": "stopHealingModification",
       "paramDomains": [
         null
+      ],
+      "paramTypes": [
+        "HealingModificationId"
       ],
       "params": [
         "HealingModificationId"
@@ -3005,6 +3759,26 @@
         null,
         null,
         null
+      ],
+      "paramTypes": [
+        "Projectile",
+        "Player|Array",
+        "Vector",
+        "Vector",
+        "Relativity",
+        "ModifyHealth",
+        "Team",
+        "Number",
+        "Number",
+        "Number",
+        "DynamicEffect",
+        "DynamicEffect",
+        "Number",
+        "Number",
+        "Number",
+        "Number",
+        "Number",
+        "Number"
       ],
       "params": [
         "Projectile",
@@ -3053,6 +3827,26 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Projectile",
+        "Player|Array",
+        "Vector",
+        "Vector",
+        "Relativity",
+        "ModifyHealth",
+        "Team",
+        "Number",
+        "Number",
+        "Number",
+        "DynamicEffect",
+        "DynamicEffect",
+        "Number",
+        "Number",
+        "Number",
+        "Number",
+        "Player",
+        "Number"
+      ],
       "params": [
         "Projectile",
         "Object",
@@ -3089,6 +3883,15 @@
         null,
         "ProjectileEffectReeval"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Projectile",
+        "Player|Array",
+        "Vector|Player",
+        "Vector",
+        "Number",
+        "ProjectileEffectReeval"
+      ],
       "params": [
         "Object",
         "Projectile",
@@ -3100,7 +3903,7 @@
       ]
     }
   ],
-  "digest": "2636616325d014cd348cae39ffda801fa0cac2e5ef396d707d3527b0919f644b",
+  "digest": "966161015ad5c69a7e3c06859ce68a25b87683dd7dc75123a1a1461a7a3c0cf1",
   "enums": [
     {
       "domain": "Impulse",
@@ -8793,6 +9596,10 @@
       "event/control/effect identities added in this slice are transcribed from workshop-data constants and values and exercised by the pinned direct raw Workshop artifacts",
       "93 additional value identities are mechanically reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; parameter names/types and reviewed en-US/zh-CN aliases remain data-backed",
       "enum domains/members and action signatures are reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; structural aliases remain owned by the parser",
+      "parameter and Value return types for 361 exact-id entries are reconciled from the pinned OverPy static metadata at https://github.com/Zezombye/overpy/tree/d854bf01fc7bbf3b2169f67408c07a8da8989ad6, whose metadata credits the parsed Workshop documentation at https://github.com/arxenix/owws-documentation/blob/master/workshop.json; unmatched or arity-conflicting entries remain evidence-insufficient instead of being inferred",
+      "OverPy metadata is a static cross-check only; it is not treated as a runtime or .NET dependency, and Workshop.codes/OSTW evidence remains required before narrowing entries where this source is absent or disputed",
+      "OSTW static Elements.json at https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/tree/817c1db4bace52123f054ffe10d3d8a06052e687 provides an independent cross-check: 210 Action and 250 Value names match the current en-US catalog; its any/any[] declarations keep polymorphic entries evidence-insufficient rather than narrowing them",
+      "static type spellings Clip/GamemodeLiteral/HeroLiteral are normalized to the canonical Clipping/Gamemode/Hero enum domains; distance, directionTowards, vector, vectorTowards, getObjectivePosition, charAt, valueInArray, arrayContains, max, and min retain Any parameter contracts where the pinned real-project artifacts demonstrate Workshop polymorphism beyond a narrower static declaration",
       "current vector constants, Game Mode and Modulo values, Gamemode members, Hero and Color domain aliases, and To Nearest alias are reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
       "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
       "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
@@ -8891,6 +9698,9 @@
         "zh-CN": "最大生命值"
       },
       "id": "getMaxHealth",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
       ],
@@ -8902,9 +9712,13 @@
         "zh-CN": "处于非初始状态"
       },
       "id": "isInAlternateForm",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -8912,9 +9726,13 @@
         "zh-CN": "标准化生命值"
       },
       "id": "getNormalizedHealth",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -8922,7 +9740,9 @@
         "zh-CN": "上一个持续治疗效果ID"
       },
       "id": "getLastHealingOverTimeId",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "HotId"
     },
     {
       "aliases": {
@@ -8930,9 +9750,13 @@
         "zh-CN": "目标位置"
       },
       "id": "getObjectivePosition",
+      "paramTypes": [
+        "Any"
+      ],
       "params": [
         "Objective"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -8944,10 +9768,15 @@
         null,
         "Stat"
       ],
+      "paramTypes": [
+        "Player",
+        "Stat"
+      ],
       "params": [
         "Player",
         "Statistic"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -8960,11 +9789,17 @@
         "Hero",
         "HeroStat"
       ],
+      "paramTypes": [
+        "Player",
+        "Hero",
+        "HeroStat"
+      ],
       "params": [
         "Player",
         "Hero",
         "Statistic"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -8972,9 +9807,13 @@
         "zh-CN": "面朝方向"
       },
       "id": "getFacingDirection",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -8982,9 +9821,13 @@
         "zh-CN": "栏位"
       },
       "id": "getSlot",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -8992,9 +9835,13 @@
         "zh-CN": "实体存在"
       },
       "id": "entityExists",
+      "paramTypes": [
+        "Player|EntityId"
+      ],
       "params": [
         "Entity"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9002,7 +9849,9 @@
         "zh-CN": "最后创建的生命池"
       },
       "id": "getLastCreatedHealthPool",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "HealthPoolId"
     },
     {
       "aliases": {
@@ -9015,11 +9864,17 @@
         null,
         "BarrierLos"
       ],
+      "paramTypes": [
+        "Vector|Player",
+        "Vector|Player",
+        "BarrierLos"
+      ],
       "params": [
         "Start Position",
         "End Position",
         "Barriers"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9027,9 +9882,13 @@
         "zh-CN": "最近的可行走位置"
       },
       "id": "nearestWalkablePosition",
+      "paramTypes": [
+        "Vector"
+      ],
       "params": [
         "Position"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -9037,10 +9896,15 @@
         "zh-CN": "随机整数"
       },
       "id": "randomInteger",
+      "paramTypes": [
+        "Number",
+        "Number"
+      ],
       "params": [
         "Min",
         "Max"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9048,9 +9912,13 @@
         "zh-CN": "正在使用辅助武器"
       },
       "id": "isFiringSecondaryFire",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9058,7 +9926,9 @@
         "zh-CN": "空"
       },
       "id": "null",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -9066,10 +9936,15 @@
         "zh-CN": "相距距离"
       },
       "id": "distance",
+      "paramTypes": [
+        "Any",
+        "Any"
+      ],
       "params": [
         "Position",
         "Position"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9077,9 +9952,13 @@
         "zh-CN": "眼睛位置"
       },
       "id": "getEyePosition",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -9087,9 +9966,13 @@
         "zh-CN": "速度"
       },
       "id": "getSpeed",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9097,9 +9980,13 @@
         "zh-CN": "速率"
       },
       "id": "getVelocity",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -9107,11 +9994,17 @@
         "zh-CN": "数组分割"
       },
       "id": "slice",
+      "paramTypes": [
+        "Array",
+        "Number",
+        "Number"
+      ],
       "params": [
         "Array",
         "Start Index",
         "Count"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9119,13 +10012,21 @@
         "zh-CN": "射线命中位置"
       },
       "id": "raycastHitPosition",
+      "paramTypes": [
+        "Vector",
+        "Vector",
+        "Array",
+        "Array",
+        "Boolean"
+      ],
       "params": [
         "Start Position",
         "End Position",
         "Players To Include",
         "Players To Exclude",
         "Include Player Owned Objects"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -9133,10 +10034,15 @@
         "zh-CN": "字符串中字符"
       },
       "id": "charAt",
+      "paramTypes": [
+        "Any",
+        "Any"
+      ],
       "params": [
         "String",
         "Index"
-      ]
+      ],
+      "returnType": "String"
     },
     {
       "aliases": {
@@ -9144,10 +10050,15 @@
         "zh-CN": "字符串字符索引"
       },
       "id": "strIndex",
+      "paramTypes": [
+        "String",
+        "String"
+      ],
       "params": [
         "String",
         "Character"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9155,9 +10066,13 @@
         "zh-CN": "X方向分量"
       },
       "id": "__xComponentOf__",
+      "paramTypes": [
+        "Vector"
+      ],
       "params": [
         "Vector"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9165,9 +10080,13 @@
         "zh-CN": "Y方向分量"
       },
       "id": "__yComponentOf__",
+      "paramTypes": [
+        "Vector"
+      ],
       "params": [
         "Vector"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9175,9 +10094,13 @@
         "zh-CN": "Z方向分量"
       },
       "id": "__zComponentOf__",
+      "paramTypes": [
+        "Vector"
+      ],
       "params": [
         "Vector"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9185,7 +10108,9 @@
         "zh-CN": "总计消耗时间"
       },
       "id": "getTotalTimeElapsed",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9193,7 +10118,9 @@
         "zh-CN": "服务器负载平均值"
       },
       "id": "getAverageServerLoad",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9201,7 +10128,9 @@
         "zh-CN": "服务器负载峰值"
       },
       "id": "getPeakServerLoad",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9209,7 +10138,9 @@
         "zh-CN": "服务器负载"
       },
       "id": "getServerLoad",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9223,9 +10154,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9233,9 +10168,13 @@
         "zh-CN": "死亡"
       },
       "id": "isDead",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9243,9 +10182,13 @@
         "zh-CN": "正在移动"
       },
       "id": "isMoving",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9253,7 +10196,9 @@
         "zh-CN": "攻击方"
       },
       "id": "attacker",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -9261,7 +10206,9 @@
         "zh-CN": "主机玩家"
       },
       "id": "hostPlayer",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -9269,7 +10216,9 @@
         "zh-CN": "被攻击方"
       },
       "id": "victim",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -9277,10 +10226,15 @@
         "zh-CN": "加"
       },
       "id": "add",
+      "paramTypes": [
+        "Any",
+        "Any"
+      ],
       "params": [
         "a",
         "b"
-      ]
+      ],
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -9288,9 +10242,13 @@
         "zh-CN": "正在使用技能 1"
       },
       "id": "isUsingAbility1",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9308,9 +10266,13 @@
         "zh-CN": "正在使用技能 2"
       },
       "id": "isUsingAbility2",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9318,9 +10280,13 @@
         "zh-CN": "正在使用终极技能"
       },
       "id": "isUsingUltimate",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9328,10 +10294,15 @@
         "zh-CN": "方向"
       },
       "id": "directionTowards",
+      "paramTypes": [
+        "Any",
+        "Any"
+      ],
       "params": [
         "Position",
         "Position"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -9339,10 +10310,15 @@
         "zh-CN": "减"
       },
       "id": "subtract",
+      "paramTypes": [
+        "Any",
+        "Any"
+      ],
       "params": [
         "a",
         "b"
-      ]
+      ],
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -9350,10 +10326,15 @@
         "zh-CN": "乘"
       },
       "id": "multiply",
+      "paramTypes": [
+        "Any",
+        "Any"
+      ],
       "params": [
         "a",
         "b"
-      ]
+      ],
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -9361,10 +10342,15 @@
         "zh-CN": "除"
       },
       "id": "divide",
+      "paramTypes": [
+        "Any",
+        "Any"
+      ],
       "params": [
         "a",
         "b"
-      ]
+      ],
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -9372,11 +10358,17 @@
         "zh-CN": "比较"
       },
       "id": "compare",
+      "paramTypes": [
+        "Any",
+        "__Operator__",
+        "Any"
+      ],
       "params": [
         "a",
         "operator",
         "b"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9405,9 +10397,13 @@
         "zh-CN": "数量"
       },
       "id": "countOf",
+      "paramTypes": [
+        "Array"
+      ],
       "params": [
         "Array"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9429,11 +10425,17 @@
         "zh-CN": "矢量"
       },
       "id": "vector",
+      "paramTypes": [
+        "Any",
+        "Any",
+        "Any"
+      ],
       "params": [
         "X",
         "Y",
         "Z"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -9448,10 +10450,15 @@
         "zh-CN": "数组中的值"
       },
       "id": "valueInArray",
+      "paramTypes": [
+        "Any",
+        "Any"
+      ],
       "params": [
         "array",
         "index"
-      ]
+      ],
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -9459,10 +10466,15 @@
         "zh-CN": "映射的数组"
       },
       "id": "mappedArray",
+      "paramTypes": [
+        "Array",
+        "Any"
+      ],
       "params": [
         "Array",
         "Map"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9501,9 +10513,13 @@
       "paramDefaults": [
         "Team.ALL"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9518,9 +10534,13 @@
         "zh-CN": "数组随机取值"
       },
       "id": "randomValueInArray",
+      "paramTypes": [
+        "Array"
+      ],
       "params": [
         "Array"
-      ]
+      ],
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -9528,9 +10548,13 @@
         "zh-CN": "已重生"
       },
       "id": "hasSpawned",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9538,7 +10562,9 @@
         "zh-CN": "空数组"
       },
       "id": "emptyArray",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9552,7 +10578,9 @@
         "en-US": "Current Array Element",
         "zh-CN": "当前数组元素"
       },
-      "id": "currentArrayElement"
+      "id": "currentArrayElement",
+      "paramTypes": [],
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -9560,10 +10588,15 @@
         "zh-CN": "添加至数组"
       },
       "id": "appendToArray",
+      "paramTypes": [
+        "Array",
+        "Any"
+      ],
       "params": [
         "Array",
         "Value"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9571,9 +10604,13 @@
         "zh-CN": "平方根"
       },
       "id": "squareRoot",
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "value"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9581,9 +10618,13 @@
         "zh-CN": "生命值"
       },
       "id": "getHealth",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9591,9 +10632,13 @@
         "zh-CN": "所用英雄"
       },
       "id": "getHero",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "player"
-      ]
+      ],
+      "returnType": "Hero"
     },
     {
       "aliases": {
@@ -9601,9 +10646,13 @@
         "zh-CN": "英雄"
       },
       "id": "hero",
+      "paramTypes": [
+        "Hero"
+      ],
       "params": [
         "Hero"
-      ]
+      ],
+      "returnType": "Hero"
     },
     {
       "aliases": {
@@ -9611,7 +10660,9 @@
         "zh-CN": "治疗者"
       },
       "id": "healer",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -9619,10 +10670,15 @@
         "zh-CN": "具有状态"
       },
       "id": "hasStatus",
+      "paramTypes": [
+        "Player",
+        "Status"
+      ],
       "params": [
         "Player",
         "Status"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9630,7 +10686,9 @@
         "zh-CN": "事件为急救包"
       },
       "id": "eventWasHealthPack",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9638,9 +10696,13 @@
         "zh-CN": "所选位置"
       },
       "id": "getPosition",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "player"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -9648,7 +10710,9 @@
         "zh-CN": "事件治疗"
       },
       "id": "eventHealing",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9656,9 +10720,13 @@
         "zh-CN": "存活"
       },
       "id": "isAlive",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9666,9 +10734,13 @@
         "zh-CN": "阈值"
       },
       "id": "getThrottle",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "player"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -9676,19 +10748,28 @@
         "zh-CN": "范围内玩家"
       },
       "id": "getPlayersInRadius",
+      "paramTypes": [
+        "Vector",
+        "Number",
+        "Team",
+        "LosCheck"
+      ],
       "params": [
         "center",
         "radius",
         "team",
         "losCheck"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
         "en-US": "Is Game In Progress",
         "zh-CN": "游戏正在进行中"
       },
-      "id": "isGameInProgress"
+      "id": "isGameInProgress",
+      "paramTypes": [],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9696,11 +10777,17 @@
         "zh-CN": "地图矢量"
       },
       "id": "worldVector",
+      "paramTypes": [
+        "Vector",
+        "Player",
+        "Transform"
+      ],
       "params": [
         "localVector",
         "relativePlayer",
         "transformation"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -9708,6 +10795,14 @@
         "zh-CN": "地图工坊设置整数"
       },
       "id": "workshopSettingInteger",
+      "paramTypes": [
+        "String",
+        "String",
+        "Number",
+        "Number",
+        "Number",
+        "Number"
+      ],
       "params": [
         "Category",
         "Name",
@@ -9715,7 +10810,8 @@
         "MinValue",
         "MaxValue",
         "SortOrder"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9723,12 +10819,19 @@
         "zh-CN": "地图工坊设置开关"
       },
       "id": "workshopSettingToggle",
+      "paramTypes": [
+        "String",
+        "String",
+        "Boolean",
+        "Number"
+      ],
       "params": [
         "Category",
         "Name",
         "Default",
         "SortOrder"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9736,13 +10839,21 @@
         "zh-CN": "地图工坊设置组合"
       },
       "id": "workshopSettingCombo",
+      "paramTypes": [
+        "String",
+        "String",
+        "Number",
+        "Array",
+        "Number"
+      ],
       "params": [
         "Category",
         "Name",
         "Default",
         "Options",
         "SortOrder"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9750,7 +10861,9 @@
         "zh-CN": "全部英雄"
       },
       "id": "allHeroes",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9758,7 +10871,9 @@
         "zh-CN": "所有重装英雄"
       },
       "id": "allTankHeroes",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9766,7 +10881,9 @@
         "zh-CN": "所有输出英雄"
       },
       "id": "allDamageHeroes",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9774,7 +10891,9 @@
         "zh-CN": "所有支援英雄"
       },
       "id": "allSupportHeroes",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9782,9 +10901,13 @@
         "zh-CN": "可用英雄"
       },
       "id": "allowedHeroes",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9792,7 +10915,9 @@
         "zh-CN": "事件玩家"
       },
       "id": "eventPlayer",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -9800,7 +10925,9 @@
         "zh-CN": "本地玩家"
       },
       "id": "localPlayer",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -9808,9 +10935,13 @@
         "zh-CN": "所在队伍"
       },
       "id": "teamOf",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Team"
     },
     {
       "aliases": {
@@ -9818,9 +10949,13 @@
         "zh-CN": "对方队伍"
       },
       "id": "oppositeTeamOf",
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Team"
     },
     {
       "aliases": {
@@ -9828,9 +10963,13 @@
         "zh-CN": "玩家数量"
       },
       "id": "numberOfPlayers",
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9838,10 +10977,15 @@
         "zh-CN": "数组包含"
       },
       "id": "arrayContains",
+      "paramTypes": [
+        "Any",
+        "Any"
+      ],
       "params": [
         "Array",
         "Value"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -9849,7 +10993,9 @@
         "zh-CN": "当前数组索引"
       },
       "id": "currentArrayIndex",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -9857,10 +11003,15 @@
         "zh-CN": "数组值的索引"
       },
       "id": "indexOfArrayValue",
+      "paramTypes": [
+        "Array",
+        "Object"
+      ],
       "params": [
         "Array",
         "Value"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9868,10 +11019,15 @@
         "zh-CN": "已过滤的数组"
       },
       "id": "filteredArray",
+      "paramTypes": [
+        "Array",
+        "Boolean"
+      ],
       "params": [
         "Array",
         "Condition"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9879,10 +11035,15 @@
         "zh-CN": "已排序的数组"
       },
       "id": "sortedArray",
+      "paramTypes": [
+        "Array",
+        "Object"
+      ],
       "params": [
         "Array",
         "Sort"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9890,9 +11051,13 @@
         "zh-CN": "最后"
       },
       "id": "lastOf",
+      "paramTypes": [
+        "Array"
+      ],
       "params": [
         "Array"
-      ]
+      ],
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -9900,10 +11065,15 @@
         "zh-CN": "从数组中移除"
       },
       "id": "removeFromArray",
+      "paramTypes": [
+        "Array",
+        "Any"
+      ],
       "params": [
         "Array",
         "Value"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9911,10 +11081,15 @@
         "zh-CN": "较大"
       },
       "id": "max",
+      "paramTypes": [
+        "Number",
+        "Number"
+      ],
       "params": [
         "Value",
         "Value"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9922,10 +11097,15 @@
         "zh-CN": "较小"
       },
       "id": "min",
+      "paramTypes": [
+        "Number",
+        "Number"
+      ],
       "params": [
         "Value",
         "Value"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9937,10 +11117,15 @@
         null,
         "Rounding"
       ],
+      "paramTypes": [
+        "Number",
+        "Rounding"
+      ],
       "params": [
         "Value",
         "Rounding"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9948,10 +11133,15 @@
         "zh-CN": "矢量积"
       },
       "id": "crossProduct",
+      "paramTypes": [
+        "Vector",
+        "Vector"
+      ],
       "params": [
         "Vector",
         "Vector"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -9959,10 +11149,15 @@
         "zh-CN": "与此角度的相对方向"
       },
       "id": "directionFromAngles",
+      "paramTypes": [
+        "Number",
+        "Number"
+      ],
       "params": [
         "HorizontalAngle",
         "VerticalAngle"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -9970,9 +11165,13 @@
         "zh-CN": "与此方向的水平角度"
       },
       "id": "horizontalAngleFromDirection",
+      "paramTypes": [
+        "Vector"
+      ],
       "params": [
         "Direction"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9980,9 +11179,13 @@
         "zh-CN": "与此方向的垂直角度"
       },
       "id": "verticalAngleFromDirection",
+      "paramTypes": [
+        "Vector"
+      ],
       "params": [
         "Direction"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -9990,7 +11193,9 @@
         "zh-CN": "前"
       },
       "id": "forward",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -9998,12 +11203,19 @@
         "zh-CN": "自定义颜色"
       },
       "id": "customColor",
+      "paramTypes": [
+        "Number",
+        "Number",
+        "Number",
+        "Number"
+      ],
       "params": [
         "Red",
         "Green",
         "Blue",
         "Alpha"
-      ]
+      ],
+      "returnType": "Color"
     },
     {
       "aliases": {
@@ -10019,10 +11231,15 @@
         null,
         "Button"
       ],
+      "paramTypes": [
+        "Player",
+        "Button"
+      ],
       "params": [
         "Player",
         "Button"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10030,9 +11247,13 @@
         "zh-CN": "在重生室中"
       },
       "id": "isInSpawnRoom",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10040,10 +11261,15 @@
         "zh-CN": "对全部为“真”"
       },
       "id": "isTrueForAll",
+      "paramTypes": [
+        "Array",
+        "Boolean"
+      ],
       "params": [
         "Array",
         "Condition"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10051,7 +11277,9 @@
         "zh-CN": "正在等待玩家"
       },
       "id": "isWaitingForPlayers",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10059,7 +11287,9 @@
         "zh-CN": "当前地图"
       },
       "id": "currentMap",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Map"
     },
     {
       "aliases": {
@@ -10067,9 +11297,13 @@
         "zh-CN": "单次赋值"
       },
       "id": "evaluateOnce",
+      "paramTypes": [
+        "Any"
+      ],
       "params": [
         "Value"
-      ]
+      ],
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -10077,9 +11311,13 @@
         "zh-CN": "逐帧更新"
       },
       "id": "updateEveryFrame",
+      "paramTypes": [
+        "Any"
+      ],
       "params": [
         "Value"
-      ]
+      ],
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -10087,7 +11325,9 @@
         "zh-CN": "最后创建的实体"
       },
       "id": "lastCreatedEntity",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "EntityId"
     },
     {
       "aliases": {
@@ -10095,7 +11335,9 @@
         "zh-CN": "上一个文本ID"
       },
       "id": "lastTextId",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "TextId"
     },
     {
       "aliases": {
@@ -10106,9 +11348,13 @@
       "paramDomains": [
         "Hero"
       ],
+      "paramTypes": [
+        "Hero"
+      ],
       "params": [
         "Hero"
-      ]
+      ],
+      "returnType": "String"
     },
     {
       "aliases": {
@@ -10120,10 +11366,15 @@
         "Hero",
         "Button"
       ],
+      "paramTypes": [
+        "Hero",
+        "Button"
+      ],
       "params": [
         "Hero",
         "Button"
-      ]
+      ],
+      "returnType": "String"
     },
     {
       "aliases": {
@@ -10134,9 +11385,13 @@
       "paramDomains": [
         "Icon"
       ],
+      "paramTypes": [
+        "Icon"
+      ],
       "params": [
         "Icon"
-      ]
+      ],
+      "returnType": "String"
     },
     {
       "aliases": {
@@ -10147,9 +11402,13 @@
       "paramDomains": [
         "Button"
       ],
+      "paramTypes": [
+        "Button"
+      ],
       "params": [
         "Button"
-      ]
+      ],
+      "returnType": "String"
     },
     {
       "aliases": {
@@ -10157,9 +11416,13 @@
         "zh-CN": "是否是机器人"
       },
       "id": "isDummy",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10167,10 +11430,15 @@
         "zh-CN": "技能冷却时间"
       },
       "id": "getAbilityCooldown",
+      "paramTypes": [
+        "Player",
+        "Button"
+      ],
       "params": [
         "Player",
         "Button"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10178,9 +11446,13 @@
         "zh-CN": "水平朝向角度"
       },
       "id": "getHorizontalFacingAngle",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10188,9 +11460,13 @@
         "zh-CN": "垂直朝向角度"
       },
       "id": "getVerticalFacingAngle",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10198,10 +11474,15 @@
         "zh-CN": "指定方向速度"
       },
       "id": "getSpeedInDirection",
+      "paramTypes": [
+        "Player",
+        "Vector"
+      ],
       "params": [
         "Player",
         "Direction"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10209,9 +11490,13 @@
         "zh-CN": "在地面上"
       },
       "id": "isOnGround",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10219,10 +11504,15 @@
         "zh-CN": "标量积"
       },
       "id": "dotProduct",
+      "paramTypes": [
+        "Vector",
+        "Vector"
+      ],
       "params": [
         "Value",
         "Value"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10230,7 +11520,9 @@
         "zh-CN": "事件伤害"
       },
       "id": "eventDamage",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10238,9 +11530,13 @@
         "zh-CN": "归一化"
       },
       "id": "normalize",
+      "paramTypes": [
+        "Vector"
+      ],
       "params": [
         "Vector"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -10248,10 +11544,15 @@
         "zh-CN": "角度差"
       },
       "id": "angleDifference",
+      "paramTypes": [
+        "Number",
+        "Number"
+      ],
       "params": [
         "Value",
         "Value"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10259,7 +11560,9 @@
         "zh-CN": "事件技能"
       },
       "id": "eventAbility",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Button"
     },
     {
       "aliases": {
@@ -10267,10 +11570,15 @@
         "zh-CN": "技能资源"
       },
       "id": "getAbilityResource",
+      "paramTypes": [
+        "Player",
+        "Button"
+      ],
       "params": [
         "Player",
         "Button"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10278,9 +11586,13 @@
         "zh-CN": "高度"
       },
       "id": "getAltitude",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10288,10 +11600,15 @@
         "zh-CN": "弹药"
       },
       "id": "getAmmo",
+      "paramTypes": [
+        "Player",
+        "Number"
+      ],
       "params": [
         "Player",
         "Clip"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10299,10 +11616,15 @@
         "zh-CN": "最大弹药"
       },
       "id": "getMaxAmmo",
+      "paramTypes": [
+        "Player",
+        "Number"
+      ],
       "params": [
         "Player",
         "Clip"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10310,9 +11632,13 @@
         "zh-CN": "终极技能充能百分比"
       },
       "id": "getUltCharge",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10320,9 +11646,13 @@
         "zh-CN": "正在人格复制"
       },
       "id": "isDuplicatingAHero",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10330,9 +11660,13 @@
         "zh-CN": "正在使用主要武器"
       },
       "id": "isFiringPrimaryFire",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10340,9 +11674,13 @@
         "zh-CN": "正在空中"
       },
       "id": "isInAir",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10350,11 +11688,17 @@
         "zh-CN": "在视野内"
       },
       "id": "isInViewAngle",
+      "paramTypes": [
+        "Player",
+        "Vector",
+        "Number"
+      ],
       "params": [
         "Player",
         "Location",
         "ViewAngle"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10362,9 +11706,13 @@
         "zh-CN": "正在装填"
       },
       "id": "isReloading",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10372,10 +11720,15 @@
         "zh-CN": "对任意为“真”"
       },
       "id": "isTrueForAny",
+      "paramTypes": [
+        "Array",
+        "Boolean"
+      ],
       "params": [
         "Array",
         "Condition"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10383,10 +11736,15 @@
         "zh-CN": "选择英雄的玩家"
       },
       "id": "getPlayersOnHero",
+      "paramTypes": [
+        "Hero",
+        "Team"
+      ],
       "params": [
         "Hero",
         "Team"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -10394,9 +11752,13 @@
         "zh-CN": "弧度的正弦值"
       },
       "id": "sin",
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Value"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10404,10 +11766,15 @@
         "zh-CN": "向量"
       },
       "id": "vectorTowards",
+      "paramTypes": [
+        "Any",
+        "Any"
+      ],
       "params": [
         "Position",
         "Position"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -10415,7 +11782,9 @@
         "zh-CN": "上一个伤害调整ID"
       },
       "id": "getLastDamageModification",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "DamageModificationId"
     },
     {
       "aliases": {
@@ -10423,9 +11792,13 @@
         "zh-CN": "正在复制的英雄"
       },
       "id": "getHeroOfDuplication",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Hero"
     },
     {
       "aliases": {
@@ -10433,7 +11806,9 @@
         "zh-CN": "受治疗者"
       },
       "id": "healee",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -10441,7 +11816,9 @@
         "zh-CN": "事件暴击"
       },
       "id": "eventWasCriticalHit",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10449,10 +11826,15 @@
         "zh-CN": "技能充能"
       },
       "id": "getAbilityCharge",
+      "paramTypes": [
+        "Player",
+        "Button"
+      ],
       "params": [
         "Player",
         "Button"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10460,10 +11842,15 @@
         "zh-CN": "类型的生命值"
       },
       "id": "getHealthOfType",
+      "paramTypes": [
+        "Player",
+        "Health"
+      ],
       "params": [
         "Player",
         "Health"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10471,10 +11858,15 @@
         "zh-CN": "正在交流"
       },
       "id": "isCommunicating",
+      "paramTypes": [
+        "Player",
+        "Comms"
+      ],
       "params": [
         "Player",
         "Comms"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10482,9 +11874,13 @@
         "zh-CN": "正在蹲下"
       },
       "id": "isCrouching",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10492,9 +11888,13 @@
         "zh-CN": "重生点"
       },
       "id": "getSpawnPoints",
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -10502,7 +11902,9 @@
         "zh-CN": "正在集结英雄"
       },
       "id": "isAssemblingHeroes",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10510,7 +11912,9 @@
         "zh-CN": "正在设置"
       },
       "id": "isInSetup",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10518,9 +11922,13 @@
         "zh-CN": "目标是否完成"
       },
       "id": "isObjectiveComplete",
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Number"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10528,9 +11936,13 @@
         "zh-CN": "作为进攻队伍"
       },
       "id": "isTeamOnOffense",
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10538,11 +11950,17 @@
         "zh-CN": "视角中的玩家"
       },
       "id": "getPlayersInViewAngle",
+      "paramTypes": [
+        "Player",
+        "Team",
+        "Number"
+      ],
       "params": [
         "Player",
         "Team",
         "ViewAngle"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -10553,9 +11971,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10566,9 +11988,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10580,10 +12006,15 @@
         null,
         "Health"
       ],
+      "paramTypes": [
+        "Player",
+        "Health"
+      ],
       "params": [
         "Player",
         "Health"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10594,9 +12025,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10607,9 +12042,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10620,9 +12059,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10634,10 +12077,15 @@
         null,
         "Team"
       ],
+      "paramTypes": [
+        "Player",
+        "Team"
+      ],
       "params": [
         "Player",
         "Team"
-      ]
+      ],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -10648,9 +12096,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10661,9 +12113,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10674,9 +12130,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10687,9 +12147,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10700,9 +12164,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10713,9 +12181,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10726,9 +12198,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10739,9 +12215,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10752,9 +12232,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10765,9 +12249,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10778,9 +12266,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10791,9 +12283,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10808,13 +12304,21 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Vector",
+        "Vector",
+        "Array",
+        "Array",
+        "Boolean"
+      ],
       "params": [
         "Position",
         "Position",
         "Player",
         "Player",
         "Boolean"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -10829,13 +12333,21 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Vector",
+        "Vector",
+        "Array",
+        "Array",
+        "Boolean"
+      ],
       "params": [
         "Position",
         "Position",
         "Player",
         "Player",
         "Boolean"
-      ]
+      ],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -10849,12 +12361,19 @@
         null,
         null
       ],
+      "paramTypes": [
+        "String",
+        "String",
+        "Hero",
+        "Number"
+      ],
       "params": [
         "CustomStringLiteral",
         "CustomStringLiteral",
         "HeroLiteral",
         "IntLiteral"
-      ]
+      ],
+      "returnType": "Hero"
     },
     {
       "aliases": {
@@ -10870,6 +12389,14 @@
         null,
         null
       ],
+      "paramTypes": [
+        "String",
+        "String",
+        "Number",
+        "Number",
+        "Number",
+        "Number"
+      ],
       "params": [
         "CustomStringLiteral",
         "CustomStringLiteral",
@@ -10877,7 +12404,8 @@
         "FloatLiteral",
         "FloatLiteral",
         "IntLiteral"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10888,9 +12416,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Number"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10901,9 +12433,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Number"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10915,10 +12451,15 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Vector",
+        "Vector"
+      ],
       "params": [
         "Direction",
         "Direction"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10929,9 +12470,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Number"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10942,9 +12487,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Number"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10956,10 +12505,15 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Number",
+        "Number"
+      ],
       "params": [
         "Number",
         "Number"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10971,10 +12525,15 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Number",
+        "Number"
+      ],
       "params": [
         "Number",
         "Number"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10985,9 +12544,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Number"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10998,9 +12561,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Number"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11009,7 +12576,9 @@
       },
       "id": "eventDirection",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -11018,7 +12587,9 @@
       },
       "id": "eventWasEnvironment",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -11027,7 +12598,9 @@
       },
       "id": "getCapturePercentage",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11039,10 +12612,15 @@
         null,
         "Team"
       ],
+      "paramTypes": [
+        "Vector",
+        "Team"
+      ],
       "params": [
         "Position",
         "Team"
-      ]
+      ],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -11053,9 +12631,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11064,7 +12646,9 @@
       },
       "id": "getControlScoringTeam",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Team"
     },
     {
       "aliases": {
@@ -11073,7 +12657,9 @@
       },
       "id": "getCurrentGamemode",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Gamemode"
     },
     {
       "aliases": {
@@ -11082,7 +12668,9 @@
       },
       "id": "getCurrentObjective",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11093,9 +12681,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -11107,10 +12699,15 @@
         null,
         "Team"
       ],
+      "paramTypes": [
+        "Vector",
+        "Team"
+      ],
       "params": [
         "Position",
         "Team"
-      ]
+      ],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -11121,9 +12718,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Player"
     },
     {
       "aliases": {
@@ -11134,9 +12735,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -11145,7 +12750,9 @@
       },
       "id": "getLastAssistId",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "AssistId"
     },
     {
       "aliases": {
@@ -11154,7 +12761,9 @@
       },
       "id": "getLastDamageOverTimeId",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "DotId"
     },
     {
       "aliases": {
@@ -11163,7 +12772,9 @@
       },
       "id": "getLastHealingModification",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "HealingModificationId"
     },
     {
       "aliases": {
@@ -11172,7 +12783,9 @@
       },
       "id": "getMatchRound",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11181,7 +12794,9 @@
       },
       "id": "getMatchTime",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11190,7 +12805,9 @@
       },
       "id": "getNumberOfAssistIds",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11199,7 +12816,9 @@
       },
       "id": "getNumberOfDamageModificationIds",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11210,9 +12829,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11221,7 +12844,9 @@
       },
       "id": "getNumberOfDamageOverTimeIds",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11230,7 +12855,9 @@
       },
       "id": "getNumberOfEntityIds",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11239,7 +12866,9 @@
       },
       "id": "getNumberOfHealingModificationIds",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11251,10 +12880,15 @@
         "Hero",
         "Team"
       ],
+      "paramTypes": [
+        "Hero",
+        "Team"
+      ],
       "params": [
         "Hero",
         "Team"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11263,7 +12897,9 @@
       },
       "id": "getNumberOfHealingOverTimeIds",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11274,9 +12910,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11287,9 +12927,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11300,9 +12944,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11311,7 +12959,9 @@
       },
       "id": "getNumberOfTextIds",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11320,7 +12970,9 @@
       },
       "id": "getPayloadPosition",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -11329,7 +12981,9 @@
       },
       "id": "getPayloadProgressPercentage",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11341,10 +12995,15 @@
         null,
         "Team"
       ],
+      "paramTypes": [
+        "Number",
+        "Team"
+      ],
       "params": [
         "Number",
         "Team"
-      ]
+      ],
+      "returnType": "Player|Array"
     },
     {
       "aliases": {
@@ -11355,9 +13014,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -11368,9 +13031,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -11382,10 +13049,15 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player",
+        "Vector"
+      ],
       "params": [
         "Player",
         "Position"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11394,7 +13066,9 @@
       },
       "id": "isControlPointLocked",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -11405,9 +13079,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -11418,9 +13096,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -11429,7 +13111,9 @@
       },
       "id": "isInSuddenDeath",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -11438,7 +13122,9 @@
       },
       "id": "isMatchBetweenRounds",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -11447,7 +13133,9 @@
       },
       "id": "isMatchComplete",
       "paramDomains": [],
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -11458,9 +13146,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -11473,11 +13165,17 @@
         null,
         "Transform"
       ],
+      "paramTypes": [
+        "Vector",
+        "Player",
+        "Transform"
+      ],
       "params": [
         "Vector",
         "Player",
         "Transform"
-      ]
+      ],
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -11488,9 +13186,13 @@
       "paramDomains": [
         "Vector"
       ],
+      "paramTypes": [
+        "Vector"
+      ],
       "params": [
         "Vector"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11501,9 +13203,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Number"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11515,10 +13221,15 @@
         null,
         null
       ],
+      "paramTypes": [
+        "String",
+        "String"
+      ],
       "params": [
         "String",
         "String"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -11529,9 +13240,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "String"
+      ],
       "params": [
         "String"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11542,9 +13257,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Number"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11555,9 +13274,13 @@
       "paramDomains": [
         null
       ],
+      "paramTypes": [
+        "Number"
+      ],
       "params": [
         "Number"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11569,10 +13292,15 @@
         "Hero",
         "Team"
       ],
+      "paramTypes": [
+        "Hero",
+        "Team"
+      ],
       "params": [
         "Hero",
         "Team"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -11583,9 +13311,13 @@
       "paramDomains": [
         "Team"
       ],
+      "paramTypes": [
+        "Team"
+      ],
       "params": [
         "Team"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11597,10 +13329,15 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Player",
+        "Vector"
+      ],
       "params": [
         "Player",
         "Position"
-      ]
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11608,7 +13345,9 @@
         "zh-CN": "后"
       },
       "id": "backward",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -11616,7 +13355,9 @@
         "zh-CN": "下"
       },
       "id": "down",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -11624,7 +13365,9 @@
         "zh-CN": "左"
       },
       "id": "left",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -11632,7 +13375,9 @@
         "zh-CN": "右"
       },
       "id": "right",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -11640,7 +13385,9 @@
         "zh-CN": "上"
       },
       "id": "up",
-      "params": []
+      "paramTypes": [],
+      "params": [],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -11651,9 +13398,13 @@
       "paramDomains": [
         "Gamemode"
       ],
+      "paramTypes": [
+        "Gamemode"
+      ],
       "params": [
         "Gamemode"
-      ]
+      ],
+      "returnType": "Gamemode"
     },
     {
       "aliases": {
@@ -11665,10 +13416,15 @@
         null,
         null
       ],
+      "paramTypes": [
+        "Number",
+        "Number"
+      ],
       "params": [
         "Value",
         "Value"
-      ]
+      ],
+      "returnType": "Number"
     }
   ],
   "version": "0.1.2"

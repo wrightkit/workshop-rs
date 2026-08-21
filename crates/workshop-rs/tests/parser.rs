@@ -361,6 +361,34 @@ fn canonical_validation_enforces_declared_arity_and_enum_domain() {
 }
 
 #[test]
+fn canonical_validation_enforces_literal_types_and_value_return_types() {
+    let catalog = catalog();
+    let wrong_literal = r#"rule ("type") { event { Ongoing - Global; } actions { Set Crouch Enabled(All Players(All Teams), Color(White)); } }"#;
+    let program =
+        parser::parse_with_context(wrong_literal, &catalog, &Locale::new("en-US"), &catalog)
+            .expect("parser preserves a typed call for canonical validation");
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("a Color is not a Boolean action parameter");
+    assert!(
+        error
+            .to_string()
+            .contains("must have semantic type 'Boolean'")
+    );
+
+    let wrong_return = r#"rule ("return") { event { Ongoing - Global; } actions { Teleport(Event Player, Max Health(Event Player)); } }"#;
+    let program =
+        parser::parse_with_context(wrong_return, &catalog, &Locale::new("en-US"), &catalog)
+            .expect("parser preserves a value-returning call for canonical validation");
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("a Number Value return is not a Vector action parameter");
+    assert!(
+        error
+            .to_string()
+            .contains("must have semantic type 'Vector'")
+    );
+}
+
+#[test]
 fn current_loop_action_resolves_to_canonical_generic_wir() {
     let catalog = catalog();
     let source = r#"rule ("loop") { event { Ongoing - Global; } actions { Loop; } }"#;

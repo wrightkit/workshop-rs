@@ -302,12 +302,17 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
 #[test]
 fn evidence_backed_signature_types_are_exposed() {
     let catalog = builtin();
+    let max_health = catalog
+        .entry(Kind::Value, "getMaxHealth")
+        .expect("getMaxHealth");
+    assert_eq!(max_health.param_type(0), Some("Player"));
+    assert_eq!(max_health.return_type(), Some("Number"));
     assert_eq!(
         catalog
-            .entry(Kind::Value, "getMaxHealth")
-            .expect("getMaxHealth")
-            .return_type(),
-        Some("Number")
+            .entry(Kind::Action, "setCrouchEnabled")
+            .expect("setCrouchEnabled")
+            .param_type(1),
+        Some("Boolean")
     );
 }
 
