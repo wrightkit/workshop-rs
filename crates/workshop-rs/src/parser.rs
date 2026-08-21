@@ -693,10 +693,10 @@ impl Parser<'_> {
         display: &str,
         hero: Option<&str>,
     ) -> bool {
-        if let Some(PathPart::Part(key)) = candidate.path.last()
-            && display == *key
-        {
-            return true;
+        if let Some(PathPart::Part(key)) = candidate.path.last() {
+            if display == *key {
+                return true;
+            }
         }
         if let (Some(hero), Some(PathPart::Part(key))) = (hero, candidate.path.last()) {
             if table::hero_setting_name(hero, key, self.locale.as_str()) == Some(display) {
@@ -706,23 +706,24 @@ impl Parser<'_> {
                 return true;
             }
         }
-        if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(candidate.path))
-            && (candidate.workshop_name.contains("%1$s")
+        if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(candidate.path)) {
+            if candidate.workshop_name.contains("%1$s")
                 || matches!(
                     candidate.path.last(),
                     Some(PathPart::Part("enableAbility1" | "enableAbility2"))
-                ))
-        {
-            return crate::gameplay_data::builtin()
-                .ok()
-                .and_then(|catalog| {
-                    catalog
-                        .query()
-                        .ability_name(hero, slot, None, self.locale.as_str())
-                        .ok()
-                        .map(|name| name == display)
-                })
-                .unwrap_or(false);
+                )
+            {
+                return crate::gameplay_data::builtin()
+                    .ok()
+                    .and_then(|catalog| {
+                        catalog
+                            .query()
+                            .ability_name(hero, slot, None, self.locale.as_str())
+                            .ok()
+                            .map(|name| name == display)
+                    })
+                    .unwrap_or(false);
+            }
         }
         self.settings_name_matches("labels", candidate.workshop_name, display)
     }
@@ -1154,12 +1155,13 @@ impl Parser<'_> {
                         kind: TokenKind::Word(word),
                         ..
                     }) = self.peek()
-                        && self.settings_name_matches("tokens", "disabled", &word)
                     {
-                        self.pos += 1;
-                        let _disabled_condition = self.value()?;
-                        self.expect(TokenKind::Semi, "expected ';' after condition")?;
-                        continue;
+                        if self.settings_name_matches("tokens", "disabled", &word) {
+                            self.pos += 1;
+                            let _disabled_condition = self.value()?;
+                            self.expect(TokenKind::Semi, "expected ';' after condition")?;
+                            continue;
+                        }
                     }
                     let condition = self.value()?;
                     self.expect(TokenKind::Semi, "expected ';' after condition")?;

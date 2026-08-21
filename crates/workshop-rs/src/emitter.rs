@@ -292,9 +292,12 @@ impl Emitter<'_> {
             } else if !matches!(
                 key,
                 "enableAbility1" | "enableAbility2" | "enableAbility3" | "enableSecondaryFire"
-            ) && let Some(slot) = table::ability_slot_for_path(&full)
-            {
-                self.gameplay_setting_name(hero, slot, &table::path_string(&full))?
+            ) {
+                if let Some(slot) = table::ability_slot_for_path(&full) {
+                    self.gameplay_setting_name(hero, slot, &table::path_string(&full))?
+                } else {
+                    self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
+                }
             } else {
                 self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
             }
