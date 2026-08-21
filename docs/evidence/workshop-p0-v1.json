@@ -23,7 +23,7 @@
   "runtimeClassifications": {
     "ai-pve": ["project variable Brigitte remains unknown", "D.Mon settings hero parses canonically but zh-CN settings mapping is missing and emission fails explicitly"],
     "bastion": ["project variable breathPalette remains unknown"],
-    "defend": ["trailing rawWorkshopAction remains opaque", "project-defined Team Deathmatch settings path remains non-emittable"],
+    "defend": ["Team Deathmatch enabled maps parses, emits, reparses, and is semantically equivalent", "trailing rawWorkshopAction remains opaque and emission fails closed"],
     "illari": ["canonical validation, emission, reparse, deterministic emission, and semantic round-trip passed"],
     "rework": ["disabled Is Using Ability 1 is an inactive ordinary condition and is omitted from canonical conditions", "EffectReeval emission and reparse now pass"]
   },
@@ -34,7 +34,7 @@
     },
     "projectDefinedOrEvidenceInsufficient": {
       "status": "preserved-and-visible",
-      "groups": ["AI-PVE custom Workshop Setting labels and project variables", "Bastion custom settings and project variables", "defend gateHealthChase project variable", "rework disabled Is Using Ability 1 project construct"]
+      "groups": ["AI-PVE custom Workshop Setting labels and project variables", "Bastion custom settings and project variables", "defend gateHealthChase project variable"]
     },
     "intentionallyOpaque": {
       "status": "preserved-and-visible",
