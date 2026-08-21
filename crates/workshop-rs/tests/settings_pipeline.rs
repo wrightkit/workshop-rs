@@ -138,6 +138,28 @@ fn mixed_locale_primary_hero_setting_name_is_canonical() {
 }
 
 #[test]
+fn team_deathmatch_enabled_maps_is_canonical() {
+    let text = r#"
+        settings {
+            modes {
+                Team Deathmatch {
+                    enabled maps { }
+                }
+            }
+        }
+    "#;
+    let catalog = Catalog::builtin().unwrap();
+    let program = parser::parse_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("Team Deathmatch enabled maps must parse");
+    let emitted = emitter::emit(&program, &catalog, &Locale::new("en-US"))
+        .expect("Team Deathmatch enabled maps must emit");
+    assert!(emitted.contains("Team Deathmatch"));
+    let reparsed = parser::parse_with_context(&emitted, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("emitted Team Deathmatch settings must reparse");
+    assert!(roundtrip::equivalent(&program, &reparsed));
+}
+
+#[test]
 fn supported_dva_name_parses() {
     let catalog = catalog();
     let source =

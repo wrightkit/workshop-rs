@@ -512,6 +512,28 @@ fn raw_workshop_member_access_and_disabled_groups_parse() {
 }
 
 #[test]
+fn disabled_condition_is_ignored_as_inactive() {
+    let text = r#"
+        rule ("disabled condition") {
+            event { Ongoing - Global; }
+            conditions {
+                disabled Is Using Ability 1(Event Player) == True;
+            }
+            actions { Wait(0.016, Ignore Condition); }
+        }
+    "#;
+    let program = parser::parse_with_context(
+        text,
+        &catalog(),
+        &Locale::new("en-US"),
+        &catalog(),
+    )
+        .expect("disabled conditions must parse");
+    let rule = program.rules.iter().next().expect("rule");
+    assert!(rule.conditions.is_empty());
+}
+
+#[test]
 fn raw_indexed_assignment_lowers_to_explicit_wir_call() {
     let text = r#"
         variables { global: 0: values }

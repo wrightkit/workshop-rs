@@ -488,6 +488,33 @@ fn action_equivalent(
                 && actions_equivalent(a, b, ba, bb)
         }
         (
+            wir::Action::ForPlayerVariable {
+                player: pa,
+                variable: va,
+                start: sa,
+                stop: ea,
+                step: sta,
+                body: ba,
+                ..
+            },
+            wir::Action::ForPlayerVariable {
+                player: pb,
+                variable: vb,
+                start: sb,
+                stop: eb,
+                step: stb,
+                body: bb,
+                ..
+            },
+        ) => {
+            value_equivalent(a, b, *pa, *pb)
+                && name_eq(a.player_variables.get(*va), b.player_variables.get(*vb))
+                && value_equivalent(a, b, *sa, *sb)
+                && value_equivalent(a, b, *ea, *eb)
+                && value_equivalent(a, b, *sta, *stb)
+                && actions_equivalent(a, b, ba, bb)
+        }
+        (
             wir::Action::Call {
                 name: na, args: xa, ..
             },

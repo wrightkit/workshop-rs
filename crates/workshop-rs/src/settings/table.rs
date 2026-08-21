@@ -294,6 +294,15 @@ pub static ENTRIES: &[TableEntry] = &[
     entry!(
         [
             PathPart::Part("gamemodes"),
+            PathPart::Part("tdm"),
+            PathPart::Part("enabledMaps")
+        ],
+        "enabled maps",
+        KeyKind::ListMap
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
             PathPart::Part("assault"),
             PathPart::Part("roleLimit")
         ],
@@ -572,7 +581,7 @@ pub struct NameMap {
 }
 
 /// Game-mode names (evidenced: assault, control, escort, hybrid, skirmish,
-/// ffa, general).
+/// ffa, tdm, general).
 pub static MODE_NAMES: &[NameMap] = &[
     NameMap {
         key: "assault",
@@ -597,6 +606,10 @@ pub static MODE_NAMES: &[NameMap] = &[
     NameMap {
         key: "ffa",
         name: "Deathmatch",
+    },
+    NameMap {
+        key: "tdm",
+        name: "Team Deathmatch",
     },
     NameMap {
         key: "general",

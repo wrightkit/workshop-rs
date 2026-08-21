@@ -36,7 +36,7 @@ const CASES: &[(&str, &str, &str, usize)] = &[
         "rework",
         "en-US",
         "aa32cda640dba41fd99245a7d425d9897b53875d15cf071862197a8e6840258c",
-        1,
+        0,
     ),
 ];
 
