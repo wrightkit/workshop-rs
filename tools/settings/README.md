@@ -16,4 +16,6 @@ cargo run -p workshop-rs --bin workshop-catalog-gen --locked -- check \
 The inventory records the export commit, input SHA-256, counts, and source
 paths. The generator rejects an unexpected source commit and duplicate
 English identities in each exported category. Missing locale mappings remain
-explicit in `zh-cn.json`; they are not filled with guessed translations.
+explicit in `locales.json`; they are not filled with guessed translations.
+Adding a reviewed locale is a data regeneration change: the projection
+declares its locale set and each entry carries the available locale aliases.

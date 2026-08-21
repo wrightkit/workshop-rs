@@ -1,1609 +1,1609 @@
 {
-  "schema": "workshop-p0-residual/v1",
   "artifacts": {
     "ai-pve": [
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "半藏：暴击倍率",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 907,
           "column": 3,
+          "end_column": 15,
           "end_line": 907,
-          "end_column": 15
+          "file": 0,
+          "line": 907
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "半藏：暴击倍率"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "工程抓钩冷却时间",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 894,
           "column": 5,
+          "end_column": 18,
           "end_line": 894,
-          "end_column": 18
+          "file": 0,
+          "line": 894
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "工程抓钩冷却时间"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "巴蒂斯特：暴击倍率",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 908,
           "column": 3,
+          "end_column": 17,
           "end_line": 908,
-          "end_column": 17
+          "file": 0,
+          "line": 908
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "巴蒂斯特：暴击倍率"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "帕拉蒂尼之牙：暴击对护甲造成额外最大生命值伤害 %",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 909,
           "column": 3,
+          "end_column": 32,
           "end_line": 909,
-          "end_column": 32
+          "file": 0,
+          "line": 909
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "帕拉蒂尼之牙：暴击对护甲造成额外最大生命值伤害 %"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "帕拉蒂尼之牙：暴击造成额外最大生命值伤害 %",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 910,
           "column": 3,
+          "end_column": 29,
           "end_line": 910,
-          "end_column": 29
+          "file": 0,
+          "line": 910
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "帕拉蒂尼之牙：暴击造成额外最大生命值伤害 %"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "心脏过载：额外伤害减免",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 911,
           "column": 3,
+          "end_column": 18,
           "end_line": 911,
-          "end_column": 18
+          "file": 0,
+          "line": 911
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "心脏过载：额外伤害减免"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "恐怖扳机：冷却时间",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 912,
           "column": 3,
+          "end_column": 17,
           "end_line": 912,
-          "end_column": 17
+          "file": 0,
+          "line": 912
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "恐怖扳机：冷却时间"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "恐怖扳机：基于灵魂层数造成流血伤害",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 913,
           "column": 3,
+          "end_column": 23,
           "end_line": 913,
-          "end_column": 23
+          "file": 0,
+          "line": 913
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "恐怖扳机：基于灵魂层数造成流血伤害"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "悍猛格挡：伤害吸收倍率",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 914,
           "column": 3,
+          "end_column": 17,
           "end_line": 914,
-          "end_column": 17
+          "file": 0,
+          "line": 914
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "悍猛格挡：伤害吸收倍率"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "感应护盾冷却时间",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 895,
           "column": 5,
+          "end_column": 18,
           "end_line": 895,
-          "end_column": 18
+          "file": 0,
+          "line": 895
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "感应护盾冷却时间"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "收割：每层灵魂减少技能冷却",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 915,
           "column": 3,
+          "end_column": 21,
           "end_line": 915,
-          "end_column": 21
+          "file": 0,
+          "line": 915
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "收割：每层灵魂减少技能冷却"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "斩地巨剑：击倒持续时间",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 916,
           "column": 3,
+          "end_column": 19,
           "end_line": 916,
-          "end_column": 19
+          "file": 0,
+          "line": 916
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "斩地巨剑：击倒持续时间"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "无影脚击退距离",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 917,
           "column": 3,
+          "end_column": 16,
           "end_line": 917,
-          "end_column": 16
+          "file": 0,
+          "line": 917
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "无影脚击退距离"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "桎梏灼日 额外伤害增幅 %",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 918,
           "column": 3,
+          "end_column": 19,
           "end_line": 918,
-          "end_column": 19
+          "file": 0,
+          "line": 918
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "桎梏灼日 额外伤害增幅 %"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "激活持续时间",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 919,
           "column": 3,
+          "end_column": 12,
           "end_line": 919,
-          "end_column": 12
+          "file": 0,
+          "line": 919
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "激活持续时间"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "灾厄馈赠（被动）：基于受到伤害获得终极技能充能 %",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 920,
           "column": 3,
+          "end_column": 31,
           "end_line": 920,
-          "end_column": 31
+          "file": 0,
+          "line": 920
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "灾厄馈赠（被动）：基于受到伤害获得终极技能充能 %"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "禅雅塔：暴击倍率（以下实际数值将被除以100）",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 921,
           "column": 3,
+          "end_column": 31,
           "end_line": 921,
-          "end_column": 31
+          "file": 0,
+          "line": 921
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "禅雅塔：暴击倍率（以下实际数值将被除以100）"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "自定义 AI",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 922,
           "column": 3,
+          "end_column": 14,
           "end_line": 922,
-          "end_column": 14
+          "file": 0,
+          "line": 922
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "自定义 AI"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "艾什：暴击倍率",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 923,
           "column": 3,
+          "end_column": 15,
           "end_line": 923,
-          "end_column": 15
+          "file": 0,
+          "line": 923
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "艾什：暴击倍率"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "诛 （终极技能）额外造成伤害 %",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 906,
           "column": 3,
+          "end_column": 22,
           "end_line": 906,
-          "end_column": 22
+          "file": 0,
+          "line": 906
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "诛 （终极技能）额外造成伤害 %"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "重力坠击冷却时间",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 896,
           "column": 5,
+          "end_column": 18,
           "end_line": 896,
-          "end_column": 18
+          "file": 0,
+          "line": 896
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "重力坠击冷却时间"
       },
       {
+        "classification": "project-defined-construct",
+        "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
-        "sourceCanonicalName": "雾子：暴击倍率",
-        "count": 1,
         "representativeSpan": {
-          "file": 0,
-          "line": 924,
           "column": 3,
+          "end_column": 15,
           "end_line": 924,
-          "end_column": 15
+          "file": 0,
+          "line": 924
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "雾子：暴击倍率"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "Ana_GrenadeDamage",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1199,
           "column": 20,
+          "end_column": 37,
           "end_line": 1199,
-          "end_column": 37
+          "file": 0,
+          "line": 1199
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "Ana_GrenadeDamage"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "AnranBuff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1263,
           "column": 20,
+          "end_column": 29,
           "end_line": 1263,
-          "end_column": 29
+          "file": 0,
+          "line": 1263
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "AnranBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "BaptisteBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1244,
           "column": 20,
+          "end_column": 32,
           "end_line": 1244,
-          "end_column": 32
+          "file": 0,
+          "line": 1244
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "BaptisteBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "BastionBuff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1265,
           "column": 20,
+          "end_column": 31,
           "end_line": 1265,
-          "end_column": 31
+          "file": 0,
+          "line": 1265
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "BastionBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "Brigitte",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1179,
           "column": 20,
+          "end_column": 28,
           "end_line": 1179,
-          "end_column": 28
+          "file": 0,
+          "line": 1179
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "Brigitte"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "CassidyBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1254,
           "column": 20,
+          "end_column": 31,
           "end_line": 1254,
-          "end_column": 31
+          "file": 0,
+          "line": 1254
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "CassidyBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "DmonBuff",
+        "classification": "source-declared-variable",
         "count": 6,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1233,
           "column": 20,
+          "end_column": 28,
           "end_line": 1233,
-          "end_column": 28
+          "file": 0,
+          "line": 1233
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "DmonBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "DominaBuff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1267,
           "column": 20,
+          "end_column": 30,
           "end_line": 1267,
-          "end_column": 30
+          "file": 0,
+          "line": 1267
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "DominaBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "DoomBuff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1231,
           "column": 20,
+          "end_column": 28,
           "end_line": 1231,
-          "end_column": 28
+          "file": 0,
+          "line": 1231
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "DoomBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "EchoBuff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1269,
           "column": 20,
+          "end_column": 28,
           "end_line": 1269,
-          "end_column": 28
+          "file": 0,
+          "line": 1269
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "EchoBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "EmreBuff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1271,
           "column": 20,
+          "end_column": 28,
           "end_line": 1271,
-          "end_column": 28
+          "file": 0,
+          "line": 1271
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "EmreBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "FrejaBuff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1239,
           "column": 20,
+          "end_column": 29,
           "end_line": 1239,
-          "end_column": 29
+          "file": 0,
+          "line": 1239
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "FrejaBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "Genji",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1188,
           "column": 20,
+          "end_column": 25,
           "end_line": 1188,
-          "end_column": 25
+          "file": 0,
+          "line": 1188
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "Genji"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "HanzoBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1243,
           "column": 20,
+          "end_column": 29,
           "end_line": 1243,
-          "end_column": 29
+          "file": 0,
+          "line": 1243
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "HanzoBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "HazardBuff",
+        "classification": "source-declared-variable",
         "count": 3,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1182,
           "column": 20,
+          "end_column": 30,
           "end_line": 1182,
-          "end_column": 30
+          "file": 0,
+          "line": 1182
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "HazardBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "HeadshotDamage",
+        "classification": "source-declared-variable",
         "count": 3,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1191,
           "column": 20,
+          "end_column": 34,
           "end_line": 1191,
-          "end_column": 34
+          "file": 0,
+          "line": 1191
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "HeadshotDamage"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "JetpackCatBuff",
+        "classification": "source-declared-variable",
         "count": 4,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1273,
           "column": 20,
+          "end_column": 34,
           "end_line": 1273,
-          "end_column": 34
+          "file": 0,
+          "line": 1273
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "JetpackCatBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "JunkerQueenBuff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1277,
           "column": 20,
+          "end_column": 35,
           "end_line": 1277,
-          "end_column": 35
+          "file": 0,
+          "line": 1277
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "JunkerQueenBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "JunkratBuff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1256,
           "column": 20,
+          "end_column": 31,
           "end_line": 1256,
-          "end_column": 31
+          "file": 0,
+          "line": 1256
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "JunkratBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "LucioBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1255,
           "column": 20,
+          "end_column": 29,
           "end_line": 1255,
-          "end_column": 29
+          "file": 0,
+          "line": 1255
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "LucioBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "MaugaBuff",
+        "classification": "source-declared-variable",
         "count": 8,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1219,
           "column": 20,
+          "end_column": 29,
           "end_line": 1219,
-          "end_column": 29
+          "file": 0,
+          "line": 1219
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "MaugaBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "MercyBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1181,
           "column": 20,
+          "end_column": 29,
           "end_line": 1181,
-          "end_column": 29
+          "file": 0,
+          "line": 1181
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "MercyBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "MizukiBuff",
+        "classification": "source-declared-variable",
         "count": 3,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1279,
           "column": 20,
+          "end_column": 30,
           "end_line": 1279,
-          "end_column": 30
+          "file": 0,
+          "line": 1279
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "MizukiBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "MoiraBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1258,
           "column": 20,
+          "end_column": 29,
           "end_line": 1258,
-          "end_column": 29
+          "file": 0,
+          "line": 1258
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "MoiraBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "Orisa_Fortify",
+        "classification": "source-declared-variable",
         "count": 3,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1185,
           "column": 20,
+          "end_column": 33,
           "end_line": 1185,
-          "end_column": 33
+          "file": 0,
+          "line": 1185
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "Orisa_Fortify"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "Ram_Annihilation",
+        "classification": "source-declared-variable",
         "count": 7,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1192,
           "column": 20,
+          "end_column": 36,
           "end_line": 1192,
-          "end_column": 36
+          "file": 0,
+          "line": 1192
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "Ram_Annihilation"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "ReaperBuff",
+        "classification": "source-declared-variable",
         "count": 9,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1210,
           "column": 20,
+          "end_column": 30,
           "end_line": 1210,
-          "end_column": 30
+          "file": 0,
+          "line": 1210
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "ReaperBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "ReinhardtBuff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1259,
           "column": 20,
+          "end_column": 33,
           "end_line": 1259,
-          "end_column": 33
+          "file": 0,
+          "line": 1259
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "ReinhardtBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "RoadhogBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1282,
           "column": 20,
+          "end_column": 31,
           "end_line": 1282,
-          "end_column": 31
+          "file": 0,
+          "line": 1282
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "RoadhogBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "S76Buff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1227,
           "column": 20,
+          "end_column": 27,
           "end_line": 1227,
-          "end_column": 27
+          "file": 0,
+          "line": 1227
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "S76Buff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "ShionBuff",
+        "classification": "source-declared-variable",
         "count": 6,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1286,
           "column": 20,
+          "end_column": 29,
           "end_line": 1286,
-          "end_column": 29
+          "file": 0,
+          "line": 1286
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "ShionBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "SierraBuff",
+        "classification": "source-declared-variable",
         "count": 3,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1283,
           "column": 20,
+          "end_column": 30,
           "end_line": 1283,
-          "end_column": 30
+          "file": 0,
+          "line": 1283
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "SierraBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "SigmaBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1229,
           "column": 20,
+          "end_column": 29,
           "end_line": 1229,
-          "end_column": 29
+          "file": 0,
+          "line": 1229
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "SigmaBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "SojournBuff",
+        "classification": "source-declared-variable",
         "count": 6,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1201,
           "column": 20,
+          "end_column": 31,
           "end_line": 1201,
-          "end_column": 31
+          "file": 0,
+          "line": 1201
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "SojournBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "SombraBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1203,
           "column": 20,
+          "end_column": 30,
           "end_line": 1203,
-          "end_column": 30
+          "file": 0,
+          "line": 1203
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "SombraBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "Tracer_Ability",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1204,
           "column": 20,
+          "end_column": 34,
           "end_line": 1204,
-          "end_column": 34
+          "file": 0,
+          "line": 1204
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "Tracer_Ability"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "VendettaBuff",
+        "classification": "source-declared-variable",
         "count": 7,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1247,
           "column": 20,
+          "end_column": 32,
           "end_line": 1247,
-          "end_column": 32
+          "file": 0,
+          "line": 1247
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "VendettaBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "VentureBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1261,
           "column": 20,
+          "end_column": 31,
           "end_line": 1261,
-          "end_column": 31
+          "file": 0,
+          "line": 1261
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "VentureBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "WidowmakerBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1292,
           "column": 20,
+          "end_column": 34,
           "end_line": 1292,
-          "end_column": 34
+          "file": 0,
+          "line": 1292
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "WidowmakerBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "WinstonBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1293,
           "column": 20,
+          "end_column": 31,
           "end_line": 1293,
-          "end_column": 31
+          "file": 0,
+          "line": 1293
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "WinstonBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "WreckingBallBuff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1262,
           "column": 20,
+          "end_column": 36,
           "end_line": 1262,
-          "end_column": 36
+          "file": 0,
+          "line": 1262
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "WreckingBallBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "WuyangBuff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1241,
           "column": 20,
+          "end_column": 30,
           "end_line": 1241,
-          "end_column": 30
+          "file": 0,
+          "line": 1241
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "WuyangBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "ZaryaBuff",
+        "classification": "source-declared-variable",
         "count": 3,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1206,
           "column": 20,
+          "end_column": 29,
           "end_line": 1206,
-          "end_column": 29
+          "file": 0,
+          "line": 1206
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "ZaryaBuff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "brig_repair_pack_state",
+        "classification": "source-declared-variable",
         "count": 3,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 5067,
           "column": 101,
+          "end_column": 123,
           "end_line": 5067,
-          "end_column": 123
+          "file": 0,
+          "line": 5067
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "brig_repair_pack_state"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "brigitte_buff",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 7670,
           "column": 26,
+          "end_column": 39,
           "end_line": 7670,
-          "end_column": 39
+          "file": 0,
+          "line": 7670
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "brigitte_buff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "freja_buff",
+        "classification": "source-declared-variable",
         "count": 11,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 6586,
           "column": 26,
+          "end_column": 36,
           "end_line": 6586,
-          "end_column": 36
+          "file": 0,
+          "line": 6586
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "freja_buff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "heart_steel",
+        "classification": "source-declared-variable",
         "count": 4,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 6004,
           "column": 25,
+          "end_column": 36,
           "end_line": 6004,
-          "end_column": 36
+          "file": 0,
+          "line": 6004
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "heart_steel"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "hero_switch_pvar",
+        "classification": "source-declared-variable",
         "count": 6,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1448,
           "column": 26,
+          "end_column": 42,
           "end_line": 1448,
-          "end_column": 42
+          "file": 0,
+          "line": 1448
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "hero_switch_pvar"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "illari_captive_hud",
+        "classification": "source-declared-variable",
         "count": 5,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 4770,
           "column": 26,
+          "end_column": 44,
           "end_line": 4770,
-          "end_column": 44
+          "file": 0,
+          "line": 4770
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "illari_captive_hud"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "juno_buff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 4016,
           "column": 55,
+          "end_column": 64,
           "end_line": 4016,
-          "end_column": 64
+          "file": 0,
+          "line": 4016
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "juno_buff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "mauga_berserker_soul_id",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 4627,
           "column": 26,
+          "end_column": 49,
           "end_line": 4627,
-          "end_column": 49
+          "file": 0,
+          "line": 4627
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "mauga_berserker_soul_id"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "reaper_buff",
+        "classification": "source-declared-variable",
         "count": 4,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 6385,
           "column": 26,
+          "end_column": 37,
           "end_line": 6385,
-          "end_column": 37
+          "file": 0,
+          "line": 6385
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "reaper_buff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "reinhardt_buff",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 5859,
           "column": 26,
+          "end_column": 40,
           "end_line": 5859,
-          "end_column": 40
+          "file": 0,
+          "line": 5859
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "reinhardt_buff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "reset_pvar",
+        "classification": "source-declared-variable",
         "count": 34,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1420,
           "column": 26,
+          "end_column": 36,
           "end_line": 1420,
-          "end_column": 36
+          "file": 0,
+          "line": 1420
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "reset_pvar"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "shion_buff",
+        "classification": "source-declared-variable",
         "count": 18,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 6729,
           "column": 26,
+          "end_column": 36,
           "end_line": 6729,
-          "end_column": 36
+          "file": 0,
+          "line": 6729
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "shion_buff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "wuyang_buff",
+        "classification": "source-declared-variable",
         "count": 5,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 6936,
           "column": 26,
+          "end_column": 37,
           "end_line": 6936,
-          "end_column": 37
+          "file": 0,
+          "line": 6936
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "wuyang_buff"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "zarya_barrier_shields",
+        "classification": "source-declared-variable",
         "count": 4,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 4160,
           "column": 26,
+          "end_column": 47,
           "end_line": 4160,
-          "end_column": 47
+          "file": 0,
+          "line": 4160
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "zarya_barrier_shields"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "zarya_buff",
+        "classification": "source-declared-variable",
         "count": 8,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 4138,
           "column": 26,
+          "end_column": 36,
           "end_line": 4138,
-          "end_column": 36
+          "file": 0,
+          "line": 4138
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "zarya_buff"
       }
     ],
     "bastion": [
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "经典版地图",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 284,
           "column": 3,
+          "end_column": 13,
           "end_line": 284,
-          "end_column": 13
+          "file": 0,
+          "line": 284
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "经典版地图"
       },
       {
-        "kind": "RawSetting",
-        "sourceCanonicalName": "自动重开时间间隔（小时）",
+        "classification": "project-defined-construct",
         "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "kind": "RawSetting",
         "representativeSpan": {
-          "file": 0,
-          "line": 283,
           "column": 3,
+          "end_column": 18,
           "end_line": 283,
-          "end_column": 18
+          "file": 0,
+          "line": 283
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "自动重开时间间隔（小时）"
       },
       {
+        "classification": "project-defined-construct",
+        "count": 1,
+        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
-        "sourceCanonicalName": "难度",
-        "count": 1,
         "representativeSpan": {
-          "file": 0,
-          "line": 285,
           "column": 3,
+          "end_column": 10,
           "end_line": 285,
-          "end_column": 10
+          "file": 0,
+          "line": 285
         },
-        "classification": "project-defined-setting",
-        "evidence": "settings parser preserved the source span without a canonical settings-table identity"
+        "sourceCanonicalName": "难度"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "anaSleepLimit",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 912,
           "column": 56,
+          "end_column": 69,
           "end_line": 912,
-          "end_column": 69
+          "file": 0,
+          "line": 912
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "anaSleepLimit"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "breathPalette",
+        "classification": "source-declared-variable",
         "count": 5,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 659,
           "column": 38,
+          "end_column": 51,
           "end_line": 659,
-          "end_column": 51
+          "file": 0,
+          "line": 659
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "breathPalette"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "buffEventDesc",
+        "classification": "source-declared-variable",
         "count": 25,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1144,
           "column": 38,
+          "end_column": 51,
           "end_line": 1144,
-          "end_column": 51
+          "file": 0,
+          "line": 1144
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "buffEventDesc"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "buffEventDuration",
+        "classification": "source-declared-variable",
         "count": 25,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1145,
           "column": 38,
+          "end_column": 55,
           "end_line": 1145,
-          "end_column": 55
+          "file": 0,
+          "line": 1145
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "buffEventDuration"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "buffEventName",
+        "classification": "source-declared-variable",
         "count": 25,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1143,
           "column": 38,
+          "end_column": 51,
           "end_line": 1143,
-          "end_column": 51
+          "file": 0,
+          "line": 1143
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "buffEventName"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "buffEventWeight",
+        "classification": "source-declared-variable",
         "count": 30,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1146,
           "column": 38,
+          "end_column": 53,
           "end_line": 1146,
-          "end_column": 53
+          "file": 0,
+          "line": 1146
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "buffEventWeight"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "debuffEventDesc",
+        "classification": "source-declared-variable",
         "count": 19,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1187,
           "column": 38,
+          "end_column": 53,
           "end_line": 1187,
-          "end_column": 53
+          "file": 0,
+          "line": 1187
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "debuffEventDesc"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "debuffEventDuration",
+        "classification": "source-declared-variable",
         "count": 19,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1188,
           "column": 38,
+          "end_column": 57,
           "end_line": 1188,
-          "end_column": 57
+          "file": 0,
+          "line": 1188
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "debuffEventDuration"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "debuffEventName",
+        "classification": "source-declared-variable",
         "count": 19,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1186,
           "column": 38,
+          "end_column": 53,
           "end_line": 1186,
-          "end_column": 53
+          "file": 0,
+          "line": 1186
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "debuffEventName"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "debuffEventWeight",
+        "classification": "source-declared-variable",
         "count": 24,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1189,
           "column": 38,
+          "end_column": 55,
           "end_line": 1189,
-          "end_column": 55
+          "file": 0,
+          "line": 1189
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "debuffEventWeight"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "difficultyText",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1826,
           "column": 38,
+          "end_column": 52,
           "end_line": 1826,
-          "end_column": 52
+          "file": 0,
+          "line": 1826
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "difficultyText"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "dlcTimeChallenge",
+        "classification": "source-declared-variable",
         "count": 9,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 3411,
           "column": 55,
+          "end_column": 71,
           "end_line": 3411,
-          "end_column": 71
+          "file": 0,
+          "line": 3411
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "dlcTimeChallenge"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "eventCount",
+        "classification": "source-declared-variable",
         "count": 3,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 2145,
           "column": 59,
+          "end_column": 69,
           "end_line": 2145,
-          "end_column": 69
+          "file": 0,
+          "line": 2145
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "eventCount"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "eventEffect",
+        "classification": "source-declared-variable",
         "count": 6,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 3205,
           "column": 52,
+          "end_column": 63,
           "end_line": 3205,
-          "end_column": 63
+          "file": 0,
+          "line": 3205
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "eventEffect"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "eventMatchCounters",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 2874,
           "column": 55,
+          "end_column": 73,
           "end_line": 2874,
-          "end_column": 73
+          "file": 0,
+          "line": 2874
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "eventMatchCounters"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "hashTagWeightVerifyState",
+        "classification": "source-declared-variable",
         "count": 5,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1978,
           "column": 38,
+          "end_column": 62,
           "end_line": 1978,
-          "end_column": 62
+          "file": 0,
+          "line": 1978
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "hashTagWeightVerifyState"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "healthId",
+        "classification": "source-declared-variable",
         "count": 8,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 2349,
           "column": 52,
+          "end_column": 60,
           "end_line": 2349,
-          "end_column": 60
+          "file": 0,
+          "line": 2349
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "healthId"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "heart_steel",
+        "classification": "source-declared-variable",
         "count": 28,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 2525,
           "column": 55,
+          "end_column": 66,
           "end_line": 2525,
-          "end_column": 66
+          "file": 0,
+          "line": 2525
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "heart_steel"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "kills",
+        "classification": "source-declared-variable",
         "count": 1,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 6218,
           "column": 41,
+          "end_column": 46,
           "end_line": 6218,
-          "end_column": 46
+          "file": 0,
+          "line": 6218
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "kills"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "mechEventDesc",
+        "classification": "source-declared-variable",
         "count": 23,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1213,
           "column": 38,
+          "end_column": 51,
           "end_line": 1213,
-          "end_column": 51
+          "file": 0,
+          "line": 1213
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "mechEventDesc"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "mechEventDuration",
+        "classification": "source-declared-variable",
         "count": 23,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1214,
           "column": 38,
+          "end_column": 55,
           "end_line": 1214,
-          "end_column": 55
+          "file": 0,
+          "line": 1214
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "mechEventDuration"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "mechEventName",
+        "classification": "source-declared-variable",
         "count": 23,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1212,
           "column": 38,
+          "end_column": 51,
           "end_line": 1212,
-          "end_column": 51
+          "file": 0,
+          "line": 1212
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "mechEventName"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "mechEventWeight",
+        "classification": "source-declared-variable",
         "count": 28,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1215,
           "column": 38,
+          "end_column": 53,
           "end_line": 1215,
-          "end_column": 53
+          "file": 0,
+          "line": 1215
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "mechEventWeight"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "menuTextID",
+        "classification": "source-declared-variable",
         "count": 10,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 7080,
           "column": 52,
+          "end_column": 62,
           "end_line": 7080,
-          "end_column": 62
+          "file": 0,
+          "line": 7080
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "menuTextID"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "phaseHero",
+        "classification": "source-declared-variable",
         "count": 5,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 677,
           "column": 38,
+          "end_column": 47,
           "end_line": 677,
-          "end_column": 47
+          "file": 0,
+          "line": 677
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "phaseHero"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "playerOnceEventState",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 3096,
           "column": 56,
+          "end_column": 76,
           "end_line": 3096,
-          "end_column": 76
+          "file": 0,
+          "line": 3096
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "playerOnceEventState"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "savedData",
+        "classification": "source-declared-variable",
         "count": 15,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1700,
           "column": 42,
+          "end_column": 51,
           "end_line": 1700,
-          "end_column": 51
+          "file": 0,
+          "line": 1700
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "savedData"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "textIDs",
+        "classification": "source-declared-variable",
         "count": 5,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 891,
           "column": 38,
+          "end_column": 45,
           "end_line": 891,
-          "end_column": 45
+          "file": 0,
+          "line": 891
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "textIDs"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "titleColor",
+        "classification": "source-declared-variable",
         "count": 4,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 4727,
           "column": 42,
+          "end_column": 52,
           "end_line": 4727,
-          "end_column": 52
+          "file": 0,
+          "line": 4727
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "titleColor"
       }
     ],
     "defend": [
       {
-        "kind": "OpaqueAction",
-        "sourceCanonicalName": "rawWorkshopAction",
+        "classification": "legacy-opaque-construct",
         "count": 1,
+        "evidence": "the parser preserved a legacy raw construct without a canonical contract",
+        "kind": "OpaqueAction",
         "representativeSpan": {
-          "file": 0,
-          "line": 1383,
           "column": 3,
+          "end_column": 7,
           "end_line": 1383,
-          "end_column": 7
+          "file": 0,
+          "line": 1383
         },
-        "classification": "opaque-legacy-action",
-        "evidence": "parser preserved the raw action, but no canonical action contract is declared"
+        "sourceCanonicalName": "rawWorkshopAction"
       },
       {
-        "kind": "UnknownValue",
-        "sourceCanonicalName": "gateHealthChase",
+        "classification": "source-declared-variable",
         "count": 2,
+        "evidence": "the identifier matches a variable declaration in the parsed source program",
+        "kind": "UnknownValue",
         "representativeSpan": {
-          "file": 0,
-          "line": 1633,
           "column": 32,
+          "end_column": 47,
           "end_line": 1633,
-          "end_column": 47
+          "file": 0,
+          "line": 1633
         },
-        "classification": "undeclared-or-project-defined-value",
-        "evidence": "canonical catalog lookup failed for this value identity at the recorded source span"
+        "sourceCanonicalName": "gateHealthChase"
       }
     ],
     "illari": [],
     "rework": []
-  }
+  },
+  "schema": "workshop-p0-residual/v1"
 }

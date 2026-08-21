@@ -1,0 +1,3563 @@
+{
+  "coverage": {
+    "enums": {
+      "matched": 86,
+      "total": 86
+    },
+    "heroes": {
+      "matched": 52,
+      "total": 52
+    },
+    "labels": {
+      "matched": 233,
+      "total": 233
+    },
+    "maps": {
+      "matched": 2,
+      "total": 2
+    },
+    "modes": {
+      "matched": 7,
+      "total": 7
+    },
+    "teams": {
+      "matched": 3,
+      "total": 3
+    },
+    "tokens": {
+      "matched": 4,
+      "total": 4
+    }
+  },
+  "enums": {
+    "Always Enabled": {
+      "en-US": "Always Enabled",
+      "sources": [
+        "customGameSettings.gamemodes.values.assault.values.tankPassiveHealthBonus",
+        "customGameSettings.gamemodes.general.tankPassiveHealthBonus.values.alwaysEnabled"
+      ],
+      "zh-CN": "始终启用"
+    },
+    "1 Tank 2 Offense 2 Support": {
+      "en-US": "1 Tank 2 Offense 2 Support",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.roleLimit",
+        "customGameSettings.gamemodes.general.roleLimit.values.1Tank2Offense2Support",
+        "customGameSettings.gamemodes.general.tankPassiveHealthBonus.values.1Tank2Offense2Support"
+      ],
+      "zh-CN": "1 重装，2输出，2支援"
+    },
+    "After A Game": {
+      "en-US": "After A Game",
+      "sources": [
+        "customGameSettings.lobby.values.mapRotation",
+        "customGameSettings.lobby.values.returnToLobby",
+        "customGameSettings.lobby.mapRotation.values.afterGame",
+        "customGameSettings.lobby.returnToLobby.values.afterGame",
+        "customGameSettings.lobby.teamBalancing.values.afterGame"
+      ],
+      "zh-CN": "完成比赛后"
+    },
+    "Enabled": {
+      "en-US": "Enabled",
+      "sources": [
+        "customGameSettings.lobby.values.enableMatchVoiceChat",
+        "customGameSettings.gamemodes.general.spawnHealthPacks.values.enabled"
+      ],
+      "zh-CN": "启用"
+    },
+    "Disabled": {
+      "en-US": "Disabled",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.spawnHealthPacks",
+        "customGameSettings.gamemodes.general.spawnHealthPacks.values.disabled",
+        "customGameSettings.gamemodes.general.tankPassiveHealthBonus.values.disabled"
+      ],
+      "zh-CN": "禁用"
+    },
+    "Immediately": {
+      "en-US": "Immediately",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.gameModeStartTrigger",
+        "customGameSettings.gamemodes.general.gamemodeStartTrigger.values.immediately"
+      ],
+      "zh-CN": "即时"
+    },
+    "Manual": {
+      "en-US": "Manual",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.gameModeStartTrigger",
+        "customGameSettings.gamemodes.general.gamemodeStartTrigger.values.manual"
+      ],
+      "zh-CN": "手动"
+    },
+    "Never": {
+      "en-US": "Never",
+      "sources": [
+        "customGameSettings.lobby.values.returnToLobby",
+        "customGameSettings.lobby.returnToLobby.values.never"
+      ],
+      "zh-CN": "从不"
+    },
+    "2 Of Each Role Per Team": {
+      "en-US": "2 Of Each Role Per Team",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.roleLimit.values.2OfEachRolePerTeam",
+        "customGameSettings.gamemodes.general.roleLimit.values.2OfEachRolePerTeam"
+      ],
+      "zh-CN": "每队同一职责最多2名"
+    },
+    "Off": {
+      "en-US": "Off",
+      "sources": [
+        "other.customGameSettings.__off__",
+        "customGameSettings.gamemodes.general.heroLimit.values.off",
+        "customGameSettings.gamemodes.general.roleLimit.values.off",
+        "customGameSettings.gamemodes.elimination.restrictPreviouslyPlayedHeroes.values.off",
+        "customGameSettings.lobby.teamBalancing.values.off"
+      ],
+      "zh-CN": "关闭"
+    },
+    "All Slots Filled": {
+      "en-US": "All Slots Filled",
+      "sources": [
+        "customGameSettings.gamemodes.general.gamemodeStartTrigger.values.allSlotsFilled"
+      ],
+      "zh-CN": "比赛人满后"
+    },
+    "Determined By Mode": {
+      "en-US": "Determined By Mode",
+      "sources": [
+        "customGameSettings.gamemodes.general.spawnHealthPacks.values.modeDependent"
+      ],
+      "zh-CN": "依据比赛模式而定"
+    },
+    "1 Per Team": {
+      "en-US": "1 Per Team",
+      "sources": [
+        "customGameSettings.gamemodes.general.heroLimit.values.1PerTeam"
+      ],
+      "zh-CN": "每队同一英雄最多1名"
+    },
+    "2 Per Team": {
+      "en-US": "2 Per Team",
+      "sources": [
+        "customGameSettings.gamemodes.general.heroLimit.values.2PerTeam"
+      ],
+      "zh-CN": "每队同一英雄最多2名"
+    },
+    "1 Per Game": {
+      "en-US": "1 Per Game",
+      "sources": [
+        "customGameSettings.gamemodes.general.heroLimit.values.1PerGame"
+      ],
+      "zh-CN": "每场同一英雄最多1名"
+    },
+    "2 Per Game": {
+      "en-US": "2 Per Game",
+      "sources": [
+        "customGameSettings.gamemodes.general.heroLimit.values.2PerGame"
+      ],
+      "zh-CN": "每场同一英雄最多2名"
+    },
+    "All": {
+      "en-US": "All",
+      "sources": [
+        "customGameSettings.gamemodes.control.setValidControlPoints.values.all",
+        "customGameSettings.gamemodes.controlAprilFools.setValidControlPoints.values.all",
+        "customGameSettings.gamemodes.ctf.flagCarrierAbilities.values.all",
+        "customGameSettings.gamemodes.skirmish.setValidControlPoints.values.all",
+        "customGameSettings.heroes.TEAM.HERO.weaponsEnabled.values.all"
+      ],
+      "zh-CN": "全部"
+    },
+    "First": {
+      "en-US": "First",
+      "sources": [
+        "customGameSettings.gamemodes.control.setValidControlPoints.values.first",
+        "customGameSettings.gamemodes.controlAprilFools.setValidControlPoints.values.first",
+        "customGameSettings.gamemodes.skirmish.setValidControlPoints.values.first"
+      ],
+      "zh-CN": "第一"
+    },
+    "Second": {
+      "en-US": "Second",
+      "sources": [
+        "customGameSettings.gamemodes.control.setValidControlPoints.values.second",
+        "customGameSettings.gamemodes.controlAprilFools.setValidControlPoints.values.second",
+        "customGameSettings.gamemodes.skirmish.setValidControlPoints.values.second"
+      ],
+      "zh-CN": "第二"
+    },
+    "Third": {
+      "en-US": "Third",
+      "sources": [
+        "customGameSettings.gamemodes.control.setValidControlPoints.values.third",
+        "customGameSettings.gamemodes.controlAprilFools.setValidControlPoints.values.third",
+        "customGameSettings.gamemodes.skirmish.setValidControlPoints.values.third"
+      ],
+      "zh-CN": "第三"
+    },
+    "None": {
+      "en-US": "None",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.flagCarrierAbilities.values.none"
+      ],
+      "zh-CN": "全部禁用"
+    },
+    "Restricted": {
+      "en-US": "Restricted",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.flagCarrierAbilities.values.restricted"
+      ],
+      "zh-CN": "受限制"
+    },
+    "After Round Won": {
+      "en-US": "After Round Won",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.restrictPreviouslyPlayedHeroes.values.afterRoundWon"
+      ],
+      "zh-CN": "回合胜利后"
+    },
+    "After Round Played": {
+      "en-US": "After Round Played",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.restrictPreviouslyPlayedHeroes.values.afterRoundPlayed"
+      ],
+      "zh-CN": "回合结束后"
+    },
+    "Any": {
+      "en-US": "Any",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.heroesAvailable.values.any"
+      ],
+      "zh-CN": "任意"
+    },
+    "Limited": {
+      "en-US": "Limited",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.heroesAvailable.values.limited"
+      ],
+      "zh-CN": "限定"
+    },
+    "Random": {
+      "en-US": "Random",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.heroesAvailable.values.random",
+        "customGameSettings.gamemodes.flashpoint.firstActiveControlPoint.values.random",
+        "customGameSettings.gamemodes.flashpointAprilFools.firstActiveControlPoint.values.random"
+      ],
+      "zh-CN": "随机英雄"
+    },
+    "Random Mirrored": {
+      "en-US": "Random Mirrored",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.heroesAvailable.values.mirroredRandom"
+      ],
+      "zh-CN": "随机英雄（相同）"
+    },
+    "Team Size": {
+      "en-US": "Team Size",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.heroPoolSize.values.teamSize"
+      ],
+      "zh-CN": "队伍人数"
+    },
+    "Team Size +1": {
+      "en-US": "Team Size +1",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.heroPoolSize.values.teamSize+1"
+      ],
+      "zh-CN": "队伍人数+1"
+    },
+    "Team Size +2": {
+      "en-US": "Team Size +2",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.heroPoolSize.values.teamSize+2"
+      ],
+      "zh-CN": "队伍人数+2"
+    },
+    "Team Size +3": {
+      "en-US": "Team Size +3",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.heroPoolSize.values.teamSize+3"
+      ],
+      "zh-CN": "队伍人数+3"
+    },
+    "Fourth": {
+      "en-US": "Fourth",
+      "sources": [
+        "customGameSettings.gamemodes.skirmish.setValidControlPoints.values.fourth"
+      ],
+      "zh-CN": "第四"
+    },
+    "Fifth": {
+      "en-US": "Fifth",
+      "sources": [
+        "customGameSettings.gamemodes.skirmish.setValidControlPoints.values.fifth"
+      ],
+      "zh-CN": "第五"
+    },
+    "NORMAL": {
+      "en-US": "NORMAL",
+      "sources": [
+        "customGameSettings.gamemodes.junkenstein.difficulty.values.normal"
+      ],
+      "zh-CN": "普通"
+    },
+    "HARD": {
+      "en-US": "HARD",
+      "sources": [
+        "customGameSettings.gamemodes.junkenstein.difficulty.values.hard"
+      ],
+      "zh-CN": "困难"
+    },
+    "EXPERT": {
+      "en-US": "EXPERT",
+      "sources": [
+        "customGameSettings.gamemodes.junkenstein.difficulty.values.expert"
+      ],
+      "zh-CN": "专家"
+    },
+    "LEGENDARY": {
+      "en-US": "LEGENDARY",
+      "sources": [
+        "customGameSettings.gamemodes.junkenstein.difficulty.values.legendary"
+      ],
+      "zh-CN": "传奇"
+    },
+    "A": {
+      "en-US": "A",
+      "sources": [
+        "customGameSettings.gamemodes.flashpoint.firstActiveControlPoint.values.a",
+        "customGameSettings.gamemodes.flashpointAprilFools.firstActiveControlPoint.values.a"
+      ],
+      "zh-CN": "A"
+    },
+    "B": {
+      "en-US": "B",
+      "sources": [
+        "customGameSettings.gamemodes.flashpoint.firstActiveControlPoint.values.b",
+        "customGameSettings.gamemodes.flashpointAprilFools.firstActiveControlPoint.values.b"
+      ],
+      "zh-CN": "B"
+    },
+    "C": {
+      "en-US": "C",
+      "sources": [
+        "customGameSettings.gamemodes.flashpoint.firstActiveControlPoint.values.c",
+        "customGameSettings.gamemodes.flashpointAprilFools.firstActiveControlPoint.values.c"
+      ],
+      "zh-CN": "C"
+    },
+    "D": {
+      "en-US": "D",
+      "sources": [
+        "customGameSettings.gamemodes.flashpoint.firstActiveControlPoint.values.d",
+        "customGameSettings.gamemodes.flashpointAprilFools.firstActiveControlPoint.values.d"
+      ],
+      "zh-CN": "D"
+    },
+    "E": {
+      "en-US": "E",
+      "sources": [
+        "customGameSettings.gamemodes.flashpoint.firstActiveControlPoint.values.e",
+        "customGameSettings.gamemodes.flashpointAprilFools.firstActiveControlPoint.values.e"
+      ],
+      "zh-CN": "E"
+    },
+    "After A Mirror Match": {
+      "en-US": "After A Mirror Match",
+      "sources": [
+        "customGameSettings.lobby.mapRotation.values.afterMirrorMatch",
+        "customGameSettings.lobby.returnToLobby.values.afterMirrorMatch",
+        "customGameSettings.lobby.teamBalancing.values.afterMirrorMatch"
+      ],
+      "zh-CN": "攻防轮换后"
+    },
+    "Paused": {
+      "en-US": "Paused",
+      "sources": [
+        "customGameSettings.lobby.mapRotation.values.paused"
+      ],
+      "zh-CN": "暂停轮换"
+    },
+    "Best Available": {
+      "en-US": "Best Available",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.bestAvailable"
+      ],
+      "zh-CN": "最佳设置"
+    },
+    "Argentina": {
+      "en-US": "Argentina",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.argentina"
+      ],
+      "zh-CN": "阿根廷"
+    },
+    "Australia": {
+      "en-US": "Australia",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.australia"
+      ],
+      "zh-CN": "澳大利亚"
+    },
+    "Australia 2": {
+      "en-US": "Australia 2",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.australia2"
+      ],
+      "zh-CN": "澳大利亚 2"
+    },
+    "Australia 3": {
+      "en-US": "Australia 3",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.australia3"
+      ],
+      "zh-CN": "澳大利亚 3"
+    },
+    "Bahrain": {
+      "en-US": "Bahrain",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.bahrain"
+      ],
+      "zh-CN": "巴林"
+    },
+    "Brazil": {
+      "en-US": "Brazil",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.brazil"
+      ],
+      "zh-CN": "巴西"
+    },
+    "Brazil 2": {
+      "en-US": "Brazil 2",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.brazil2"
+      ],
+      "zh-CN": "巴西 2"
+    },
+    "Chile": {
+      "en-US": "Chile",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.chile"
+      ],
+      "zh-CN": "智利"
+    },
+    "China - Beijing": {
+      "en-US": "China - Beijing",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.chinaBeijing"
+      ],
+      "zh-CN": "中国北京"
+    },
+    "China - Hangzhou": {
+      "en-US": "China - Hangzhou",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.chinaHangzhou"
+      ],
+      "zh-CN": "中国杭州"
+    },
+    "China - Hangzhou 2": {
+      "en-US": "China - Hangzhou 2",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.chinaHangzhou2"
+      ],
+      "zh-CN": "中国杭州 2"
+    },
+    "Finland 2": {
+      "en-US": "Finland 2",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.finland2"
+      ],
+      "zh-CN": "芬兰 2"
+    },
+    "France": {
+      "en-US": "France",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.france"
+      ],
+      "zh-CN": "法国"
+    },
+    "Germany": {
+      "en-US": "Germany",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.germany"
+      ],
+      "zh-CN": "德国"
+    },
+    "Germany 2": {
+      "en-US": "Germany 2",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.germany2"
+      ],
+      "zh-CN": "德国 2"
+    },
+    "Ireland": {
+      "en-US": "Ireland",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.ireland"
+      ],
+      "zh-CN": "爱尔兰"
+    },
+    "Japan": {
+      "en-US": "Japan",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.japan"
+      ],
+      "zh-CN": "日本"
+    },
+    "Japan 2": {
+      "en-US": "Japan 2",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.japan2"
+      ],
+      "zh-CN": "日本 2"
+    },
+    "Netherlands": {
+      "en-US": "Netherlands",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.netherlands"
+      ],
+      "zh-CN": "荷兰"
+    },
+    "Peru": {
+      "en-US": "Peru",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.peru"
+      ],
+      "zh-CN": "秘鲁"
+    },
+    "Singapore": {
+      "en-US": "Singapore",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.singapore"
+      ],
+      "zh-CN": "新加坡"
+    },
+    "Singapore 2": {
+      "en-US": "Singapore 2",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.singapore2"
+      ],
+      "zh-CN": "新加坡 2"
+    },
+    "South Korea": {
+      "en-US": "South Korea",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.southKorea"
+      ],
+      "zh-CN": "韩国"
+    },
+    "South Korea 2": {
+      "en-US": "South Korea 2",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.southKorea2"
+      ],
+      "zh-CN": "韩国 2"
+    },
+    "South Korea 3": {
+      "en-US": "South Korea 3",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.southKorea3"
+      ],
+      "zh-CN": "韩国 3"
+    },
+    "Taiwan": {
+      "en-US": "Taiwan",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.taiwan"
+      ],
+      "zh-CN": "中国台湾"
+    },
+    "Taiwan 2": {
+      "en-US": "Taiwan 2",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.taiwan2"
+      ],
+      "zh-CN": "中国台湾 2"
+    },
+    "USA - Central": {
+      "en-US": "USA - Central",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.usCentral"
+      ],
+      "zh-CN": "美国中部"
+    },
+    "USA - East": {
+      "en-US": "USA - East",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.usEast"
+      ],
+      "zh-CN": "美国东部"
+    },
+    "USA - East 2": {
+      "en-US": "USA - East 2",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.usEast2"
+      ],
+      "zh-CN": "美国东部 2"
+    },
+    "USA - Northwest": {
+      "en-US": "USA - Northwest",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.usNorthwest"
+      ],
+      "zh-CN": "美国西北"
+    },
+    "USA - Southwest": {
+      "en-US": "USA - Southwest",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.usSouthwest"
+      ],
+      "zh-CN": "美国西南"
+    },
+    "USA - West": {
+      "en-US": "USA - West",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.usWest"
+      ],
+      "zh-CN": "美国西部"
+    },
+    "USA - West 2": {
+      "en-US": "USA - West 2",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference.values.usWest2"
+      ],
+      "zh-CN": "美国西部 2"
+    },
+    "Caduceus Staff Only": {
+      "en-US": "Caduceus Staff Only",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.weaponsEnabled.values.staff"
+      ],
+      "zh-CN": "仅限天使之杖"
+    },
+    "Caduceus Blaster Only": {
+      "en-US": "Caduceus Blaster Only",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.weaponsEnabled.values.blaster"
+      ],
+      "zh-CN": "仅限天使冲击枪"
+    },
+    "Rivet Gun Only": {
+      "en-US": "Rivet Gun Only",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.weaponsEnabled.values.rivetGun"
+      ],
+      "zh-CN": "仅限铆钉枪"
+    },
+    "Forge Hammer Only": {
+      "en-US": "Forge Hammer Only",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.weaponsEnabled.values.hammer"
+      ],
+      "zh-CN": "仅限锻造锤"
+    },
+    "Healing Blossom Only": {
+      "en-US": "Healing Blossom Only",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.weaponsEnabled.values.healingBlossom"
+      ],
+      "zh-CN": "仅限愈疗灵花"
+    },
+    "Thorn Volley Only": {
+      "en-US": "Thorn Volley Only",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.weaponsEnabled.values.thornVolley"
+      ],
+      "zh-CN": "仅限棘刺箭雨"
+    }
+  },
+  "excluded": [],
+  "heroes": {
+    "Anran": {
+      "en-US": "Anran",
+      "sources": [
+        "heroes.anran"
+      ],
+      "zh-CN": "安燃"
+    },
+    "Ashe": {
+      "en-US": "Ashe",
+      "sources": [
+        "heroes.ashe"
+      ],
+      "zh-CN": "艾什"
+    },
+    "Bastion": {
+      "en-US": "Bastion",
+      "sources": [
+        "heroes.bastion"
+      ],
+      "zh-CN": "堡垒"
+    },
+    "D.Va": {
+      "en-US": "D.Va",
+      "sources": [
+        "heroes.dva"
+      ],
+      "zh-CN": "D.Va"
+    },
+    "Hazard": {
+      "en-US": "Hazard",
+      "sources": [
+        "heroes.hazard"
+      ],
+      "zh-CN": "骇灾"
+    },
+    "Juno": {
+      "en-US": "Juno",
+      "sources": [
+        "heroes.juno"
+      ],
+      "zh-CN": "朱诺"
+    },
+    "Venture": {
+      "en-US": "Venture",
+      "sources": [
+        "heroes.venture"
+      ],
+      "zh-CN": "探奇"
+    },
+    "Doomfist": {
+      "en-US": "Doomfist",
+      "sources": [
+        "heroes.doomfist"
+      ],
+      "zh-CN": "末日铁拳"
+    },
+    "Echo": {
+      "en-US": "Echo",
+      "sources": [
+        "heroes.echo"
+      ],
+      "zh-CN": "回声"
+    },
+    "Mei": {
+      "en-US": "Mei",
+      "sources": [
+        "heroes.mei"
+      ],
+      "zh-CN": "美"
+    },
+    "Moira": {
+      "en-US": "Moira",
+      "sources": [
+        "heroes.moira"
+      ],
+      "zh-CN": "莫伊拉"
+    },
+    "Mauga": {
+      "en-US": "Mauga",
+      "sources": [
+        "heroes.mauga"
+      ],
+      "zh-CN": "毛加"
+    },
+    "Reinhardt": {
+      "en-US": "Reinhardt",
+      "sources": [
+        "heroes.reinhardt"
+      ],
+      "zh-CN": "莱因哈特"
+    },
+    "Wrecking Ball": {
+      "en-US": "Wrecking Ball",
+      "sources": [
+        "heroes.wreckingBall"
+      ],
+      "zh-CN": "破坏球"
+    },
+    "Zenyatta": {
+      "en-US": "Zenyatta",
+      "sources": [
+        "heroes.zenyatta"
+      ],
+      "zh-CN": "禅雅塔"
+    },
+    "Ana": {
+      "en-US": "Ana",
+      "sources": [
+        "heroes.ana"
+      ],
+      "zh-CN": "安娜"
+    },
+    "Baptiste": {
+      "en-US": "Baptiste",
+      "sources": [
+        "heroes.baptiste"
+      ],
+      "zh-CN": "巴蒂斯特"
+    },
+    "Brigitte": {
+      "en-US": "Brigitte",
+      "sources": [
+        "heroes.brigitte"
+      ],
+      "zh-CN": "布丽吉塔"
+    },
+    "Cassidy": {
+      "en-US": "Cassidy",
+      "sources": [
+        "heroes.cassidy"
+      ],
+      "zh-CN": "卡西迪"
+    },
+    "Domina": {
+      "en-US": "Domina",
+      "sources": [
+        "heroes.domina"
+      ],
+      "zh-CN": "金驭"
+    },
+    "Emre": {
+      "en-US": "Emre",
+      "sources": [
+        "heroes.emre"
+      ],
+      "zh-CN": "埃姆雷"
+    },
+    "Freja": {
+      "en-US": "Freja",
+      "sources": [
+        "heroes.freja"
+      ],
+      "zh-CN": "弗蕾娅"
+    },
+    "Genji": {
+      "en-US": "Genji",
+      "sources": [
+        "heroes.genji"
+      ],
+      "zh-CN": "源氏"
+    },
+    "Illari": {
+      "en-US": "Illari",
+      "sources": [
+        "heroes.illari"
+      ],
+      "zh-CN": "伊拉锐"
+    },
+    "Hanzo": {
+      "en-US": "Hanzo",
+      "sources": [
+        "heroes.hanzo"
+      ],
+      "zh-CN": "半藏"
+    },
+    "Jetpack Cat": {
+      "en-US": "Jetpack Cat",
+      "sources": [
+        "heroes.jetpackCat"
+      ],
+      "zh-CN": "飞天猫"
+    },
+    "Junker Queen": {
+      "en-US": "Junker Queen",
+      "sources": [
+        "heroes.junkerQueen"
+      ],
+      "zh-CN": "渣客女王"
+    },
+    "Junkrat": {
+      "en-US": "Junkrat",
+      "sources": [
+        "heroes.junkrat"
+      ],
+      "zh-CN": "狂鼠"
+    },
+    "Kiriko": {
+      "en-US": "Kiriko",
+      "sources": [
+        "heroes.kiriko"
+      ],
+      "zh-CN": "雾子"
+    },
+    "Lúcio": {
+      "en-US": "Lúcio",
+      "sources": [
+        "heroes.lucio"
+      ],
+      "zh-CN": "卢西奥"
+    },
+    "Mercy": {
+      "en-US": "Mercy",
+      "sources": [
+        "heroes.mercy"
+      ],
+      "zh-CN": "天使"
+    },
+    "Mizuki": {
+      "en-US": "Mizuki",
+      "sources": [
+        "heroes.mizuki"
+      ],
+      "zh-CN": "瑞稀"
+    },
+    "Orisa": {
+      "en-US": "Orisa",
+      "sources": [
+        "heroes.orisa"
+      ],
+      "zh-CN": "奥丽莎"
+    },
+    "Pharah": {
+      "en-US": "Pharah",
+      "sources": [
+        "heroes.pharah"
+      ],
+      "zh-CN": "法老之鹰"
+    },
+    "Reaper": {
+      "en-US": "Reaper",
+      "sources": [
+        "heroes.reaper"
+      ],
+      "zh-CN": "死神"
+    },
+    "Roadhog": {
+      "en-US": "Roadhog",
+      "sources": [
+        "heroes.roadhog"
+      ],
+      "zh-CN": "路霸"
+    },
+    "Shion": {
+      "en-US": "Shion",
+      "sources": [
+        "heroes.shion"
+      ],
+      "zh-CN": "死怨"
+    },
+    "Sierra": {
+      "en-US": "Sierra",
+      "sources": [
+        "heroes.sierra"
+      ],
+      "zh-CN": "西拉"
+    },
+    "Sigma": {
+      "en-US": "Sigma",
+      "sources": [
+        "heroes.sigma"
+      ],
+      "zh-CN": "西格玛"
+    },
+    "Sojourn": {
+      "en-US": "Sojourn",
+      "sources": [
+        "heroes.sojourn"
+      ],
+      "zh-CN": "索杰恩"
+    },
+    "Soldier: 76": {
+      "en-US": "Soldier: 76",
+      "sources": [
+        "heroes.soldier"
+      ],
+      "zh-CN": "士兵：76"
+    },
+    "Sombra": {
+      "en-US": "Sombra",
+      "sources": [
+        "heroes.sombra"
+      ],
+      "zh-CN": "黑影"
+    },
+    "Symmetra": {
+      "en-US": "Symmetra",
+      "sources": [
+        "heroes.symmetra"
+      ],
+      "zh-CN": "秩序之光"
+    },
+    "Torbjörn": {
+      "en-US": "Torbjörn",
+      "sources": [
+        "heroes.torbjorn"
+      ],
+      "zh-CN": "托比昂"
+    },
+    "Tracer": {
+      "en-US": "Tracer",
+      "sources": [
+        "heroes.tracer"
+      ],
+      "zh-CN": "猎空"
+    },
+    "Widowmaker": {
+      "en-US": "Widowmaker",
+      "sources": [
+        "heroes.widowmaker"
+      ],
+      "zh-CN": "黑百合"
+    },
+    "Winston": {
+      "en-US": "Winston",
+      "sources": [
+        "heroes.winston"
+      ],
+      "zh-CN": "温斯顿"
+    },
+    "Zarya": {
+      "en-US": "Zarya",
+      "sources": [
+        "heroes.zarya"
+      ],
+      "zh-CN": "查莉娅"
+    },
+    "Ramattra": {
+      "en-US": "Ramattra",
+      "sources": [
+        "heroes.ramattra"
+      ],
+      "zh-CN": "拉玛刹"
+    },
+    "Lifeweaver": {
+      "en-US": "Lifeweaver",
+      "sources": [
+        "heroes.lifeweaver"
+      ],
+      "zh-CN": "生命之梭"
+    },
+    "Wuyang": {
+      "en-US": "Wuyang",
+      "sources": [
+        "heroes.wuyang"
+      ],
+      "zh-CN": "无漾"
+    },
+    "Vendetta": {
+      "en-US": "Vendetta",
+      "sources": [
+        "heroes.vendetta"
+      ],
+      "zh-CN": "斩仇"
+    }
+  },
+  "labels": {
+    "Game Mode Start": {
+      "en-US": "Game Mode Start",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.gameModeStartTrigger",
+        "customGameSettings.gamemodes.general.gamemodeStartTrigger"
+      ],
+      "zh-CN": "游戏模式开始"
+    },
+    "Tank Role Passive Health Bonus": {
+      "en-US": "Tank Role Passive Health Bonus",
+      "sources": [
+        "customGameSettings.gamemodes.values.assault.values.tankPassiveHealthBonus",
+        "customGameSettings.gamemodes.general.tankPassiveHealthBonus"
+      ],
+      "zh-CN": "重装职责被动生命值加成"
+    },
+    "Allow Players Who Are In Queue": {
+      "en-US": "Allow Players Who Are In Queue",
+      "sources": [
+        "customGameSettings.lobby.values.allowPlayersInQueue",
+        "customGameSettings.lobby.allowPlayersInQueue"
+      ],
+      "zh-CN": "队列中的玩家可以加入"
+    },
+    "Map Rotation": {
+      "en-US": "Map Rotation",
+      "sources": [
+        "customGameSettings.lobby.values.mapRotation",
+        "customGameSettings.lobby.mapRotation"
+      ],
+      "zh-CN": "地图轮换"
+    },
+    "Match Voice Chat": {
+      "en-US": "Match Voice Chat",
+      "sources": [
+        "customGameSettings.lobby.values.enableMatchVoiceChat",
+        "customGameSettings.lobby.enableMatchVoiceChat"
+      ],
+      "zh-CN": "比赛语音聊天"
+    },
+    "Max Spectators": {
+      "en-US": "Max Spectators",
+      "sources": [
+        "customGameSettings.lobby.values.spectatorSlots",
+        "customGameSettings.lobby.spectatorSlots"
+      ],
+      "zh-CN": "观战者人数上限"
+    },
+    "Max Team 1 Players": {
+      "en-US": "Max Team 1 Players",
+      "sources": [
+        "customGameSettings.lobby.values.team1Slots"
+      ],
+      "zh-CN": "玩家上限 队伍1"
+    },
+    "Max Team 2 Players": {
+      "en-US": "Max Team 2 Players",
+      "sources": [
+        "customGameSettings.lobby.values.team2Slots"
+      ],
+      "zh-CN": "玩家上限 队伍2"
+    },
+    "Allow Hero Switching": {
+      "en-US": "Allow Hero Switching",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.enableHeroSwitching",
+        "customGameSettings.gamemodes.general.enableHeroSwitching"
+      ],
+      "zh-CN": "允许切换英雄"
+    },
+    "Competitive Rules": {
+      "en-US": "Competitive Rules",
+      "sources": [
+        "customGameSettings.gamemodes.values.assault.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.clash.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.control.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.controlAprilFools.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.escort.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.escortAprilFools.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.flashpoint.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.flashpointAprilFools.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.hybrid.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.hybridAprilFools.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.push.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.values.pushAprilFools.values.enableCompetitiveRules",
+        "customGameSettings.gamemodes.assault.enableCompetitiveRules",
+        "customGameSettings.gamemodes.control.enableCompetitiveRules",
+        "customGameSettings.gamemodes.controlAprilFools.enableCompetitiveRules",
+        "customGameSettings.gamemodes.escort.enableCompetitiveRules",
+        "customGameSettings.gamemodes.escortAprilFools.enableCompetitiveRules",
+        "customGameSettings.gamemodes.hybrid.enableCompetitiveRules",
+        "customGameSettings.gamemodes.hybridAprilFools.enableCompetitiveRules",
+        "customGameSettings.gamemodes.flashpoint.enableCompetitiveRules",
+        "customGameSettings.gamemodes.flashpointAprilFools.enableCompetitiveRules",
+        "customGameSettings.gamemodes.push.enableCompetitiveRules",
+        "customGameSettings.gamemodes.pushAprilFools.enableCompetitiveRules",
+        "customGameSettings.gamemodes.clash.enableCompetitiveRules"
+      ],
+      "zh-CN": "竞技比赛规则"
+    },
+    "Cryo-Freeze": {
+      "en-US": "Cryo-Freeze",
+      "sources": [
+        "heroes.mei.ability1"
+      ],
+      "zh-CN": "急冻"
+    },
+    "Description": {
+      "en-US": "Description",
+      "sources": [
+        "customGameSettings.main.values.description",
+        "customGameSettings.main.description"
+      ],
+      "zh-CN": "描述"
+    },
+    "Health": {
+      "en-US": "Health",
+      "sources": [
+        "constants.Health.NORMAL",
+        "customGameSettings.heroes.values.__generalAndEachHero__.health%",
+        "customGameSettings.heroes.TEAM.health%",
+        "customGameSettings.heroes.TEAM.HERO.health%"
+      ],
+      "zh-CN": "生命值"
+    },
+    "Hero Limit": {
+      "en-US": "Hero Limit",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.heroLimit",
+        "customGameSettings.gamemodes.general.heroLimit"
+      ],
+      "zh-CN": "英雄限制"
+    },
+    "Ice Wall": {
+      "en-US": "Ice Wall",
+      "sources": [
+        "heroes.mei.ability2"
+      ],
+      "zh-CN": "冰墙"
+    },
+    "Limit Roles": {
+      "en-US": "Limit Roles",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.roleLimit",
+        "customGameSettings.gamemodes.general.roleLimit"
+      ],
+      "zh-CN": "职责限制"
+    },
+    "Max FFA Players": {
+      "en-US": "Max FFA Players",
+      "sources": [
+        "customGameSettings.lobby.values.ffaSlots",
+        "customGameSettings.lobby.ffaSlots"
+      ],
+      "zh-CN": "自由混战人数上限"
+    },
+    "Mode Name": {
+      "en-US": "Mode Name",
+      "sources": [
+        "customGameSettings.main.values.modeName",
+        "customGameSettings.main.modeName"
+      ],
+      "zh-CN": "模式名称"
+    },
+    "Spawn Health Packs": {
+      "en-US": "Spawn Health Packs",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.spawnHealthPacks",
+        "customGameSettings.gamemodes.general.spawnHealthPacks"
+      ],
+      "zh-CN": "生成治疗包"
+    },
+    "Swap Teams After Match": {
+      "en-US": "Swap Teams After Match",
+      "sources": [
+        "customGameSettings.lobby.values.swapTeamsAfterMatch",
+        "customGameSettings.lobby.swapTeamsAfterMatch"
+      ],
+      "zh-CN": "比赛结束后转换队伍"
+    },
+    "Return To Lobby": {
+      "en-US": "Return To Lobby",
+      "sources": [
+        "customGameSettings.lobby.values.returnToLobby",
+        "customGameSettings.lobby.returnToLobby"
+      ],
+      "zh-CN": "返回大厅"
+    },
+    "Primary Fire": {
+      "en-US": "Primary Fire",
+      "sources": [
+        "constants.ButtonLiteral.PRIMARY_FIRE",
+        "customGameSettings.heroes.values.__generalAndEachHero__.enablePrimaryFire",
+        "customGameSettings.heroes.TEAM.enablePrimaryFire",
+        "customGameSettings.heroes.TEAM.HERO.enablePrimaryFire"
+      ],
+      "zh-CN": "主要攻击模式"
+    },
+    "Respawn As Random Hero": {
+      "en-US": "Respawn As Random Hero",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.enableRandomHeroes",
+        "customGameSettings.gamemodes.general.enableRandomHeroes"
+      ],
+      "zh-CN": "随机英雄复生"
+    },
+    "Respawn Time Scalar": {
+      "en-US": "Respawn Time Scalar",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.respawnTime%",
+        "customGameSettings.gamemodes.general.respawnTime%"
+      ],
+      "zh-CN": "复生时间"
+    },
+    "Secondary Fire": {
+      "en-US": "Secondary Fire",
+      "sources": [
+        "constants.ButtonLiteral.SECONDARY_FIRE",
+        "customGameSettings.heroes.values.__eachHero__.enableGenericSecondaryFire",
+        "customGameSettings.heroes.TEAM.HERO.enableGenericSecondaryFire"
+      ],
+      "zh-CN": "辅助攻击模式"
+    },
+    "Ultimate Generation - Combat Blizzard": {
+      "en-US": "Ultimate Generation - Combat Blizzard",
+      "sources": [
+        "customGameSettings.heroes.values.__eachHero__.combatUltGen%",
+        "heroes.mei.ultimate"
+      ],
+      "zh-CN": "战斗时终极技能充能速度 暴雪"
+    },
+    "Ultimate Generation - Passive Blizzard": {
+      "en-US": "Ultimate Generation - Passive Blizzard",
+      "sources": [
+        "customGameSettings.heroes.values.__eachHero__.passiveUltGen%",
+        "heroes.mei.ultimate"
+      ],
+      "zh-CN": "终极技能自动充能速度 暴雪"
+    },
+    "disabled heroes": {
+      "en-US": "disabled heroes",
+      "sources": [
+        "customGameSettings.heroes.values.disabledHeroes",
+        "customGameSettings.heroes.TEAM.disabledHeroes"
+      ],
+      "zh-CN": "禁用英雄"
+    },
+    "enabled heroes": {
+      "en-US": "enabled heroes",
+      "sources": [
+        "customGameSettings.heroes.values.enabledHeroes",
+        "customGameSettings.heroes.TEAM.enabledHeroes"
+      ],
+      "zh-CN": "启用英雄"
+    },
+    "enabled maps": {
+      "en-US": "enabled maps",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.enabledMaps",
+        "customGameSettings.gamemodes.general.enabledMaps",
+        "customGameSettings.gamemodes.assault.enabledMaps",
+        "customGameSettings.gamemodes.control.enabledMaps",
+        "customGameSettings.gamemodes.controlAprilFools.enabledMaps",
+        "customGameSettings.gamemodes.escort.enabledMaps",
+        "customGameSettings.gamemodes.escortAprilFools.enabledMaps",
+        "customGameSettings.gamemodes.hybrid.enabledMaps",
+        "customGameSettings.gamemodes.hybridAprilFools.enabledMaps",
+        "customGameSettings.gamemodes.bountyHunter.enabledMaps",
+        "customGameSettings.gamemodes.ctf.enabledMaps",
+        "customGameSettings.gamemodes.elimination.enabledMaps",
+        "customGameSettings.gamemodes.tdm.enabledMaps",
+        "customGameSettings.gamemodes.skirmish.enabledMaps",
+        "customGameSettings.gamemodes.practiceRange.enabledMaps",
+        "customGameSettings.gamemodes.stadiumPracticeRange.enabledMaps",
+        "customGameSettings.gamemodes.junkenstein.enabledMaps",
+        "customGameSettings.gamemodes.flashpoint.enabledMaps",
+        "customGameSettings.gamemodes.flashpointAprilFools.enabledMaps",
+        "customGameSettings.gamemodes.ffa.enabledMaps",
+        "customGameSettings.gamemodes.push.enabledMaps",
+        "customGameSettings.gamemodes.pushAprilFools.enabledMaps",
+        "customGameSettings.gamemodes.clash.enabledMaps"
+      ],
+      "zh-CN": "启用地图"
+    },
+    "Beam Effects": {
+      "en-US": "Beam Effects",
+      "sources": [
+        "customGameSettings.extensions.beamEffects"
+      ],
+      "zh-CN": "光束效果"
+    },
+    "Beam Sounds": {
+      "en-US": "Beam Sounds",
+      "sources": [
+        "customGameSettings.extensions.beamSounds"
+      ],
+      "zh-CN": "光束声音"
+    },
+    "Buff and Debuff Sounds": {
+      "en-US": "Buff and Debuff Sounds",
+      "sources": [
+        "customGameSettings.extensions.buffAndDebuffSounds"
+      ],
+      "zh-CN": "增益效果和减益效果声音"
+    },
+    "Buff Status Effects": {
+      "en-US": "Buff Status Effects",
+      "sources": [
+        "customGameSettings.extensions.buffStatusEffects"
+      ],
+      "zh-CN": "增益状态效果"
+    },
+    "Debuff Status Effects": {
+      "en-US": "Debuff Status Effects",
+      "sources": [
+        "customGameSettings.extensions.debuffStatusEffects"
+      ],
+      "zh-CN": "减益状态效果"
+    },
+    "Energy Explosion Effects": {
+      "en-US": "Energy Explosion Effects",
+      "sources": [
+        "customGameSettings.extensions.energyExplosionEffects"
+      ],
+      "zh-CN": "能量爆炸效果"
+    },
+    "Explosion Sounds": {
+      "en-US": "Explosion Sounds",
+      "sources": [
+        "customGameSettings.extensions.explosionSounds"
+      ],
+      "zh-CN": "爆炸声音"
+    },
+    "Kinetic Explosion Effects": {
+      "en-US": "Kinetic Explosion Effects",
+      "sources": [
+        "customGameSettings.extensions.kineticExplosionEffects"
+      ],
+      "zh-CN": "运动爆炸效果"
+    },
+    "Play More Effects": {
+      "en-US": "Play More Effects",
+      "sources": [
+        "customGameSettings.extensions.playMoreEffects"
+      ],
+      "zh-CN": "播放更多效果"
+    },
+    "Projectiles": {
+      "en-US": "Projectiles",
+      "sources": [
+        "customGameSettings.extensions.projectiles"
+      ],
+      "zh-CN": "弹道"
+    },
+    "Spawn More Dummy Bots": {
+      "en-US": "Spawn More Dummy Bots",
+      "sources": [
+        "customGameSettings.extensions.spawnMoreDummyBots"
+      ],
+      "zh-CN": "生成更多机器人"
+    },
+    "Enemy Health Bars": {
+      "en-US": "Enemy Health Bars",
+      "sources": [
+        "customGameSettings.gamemodes.general.enableEnemyHealthBars"
+      ],
+      "zh-CN": "敌方生命条"
+    },
+    "Health Pack Respawn Time Scalar": {
+      "en-US": "Health Pack Respawn Time Scalar",
+      "sources": [
+        "customGameSettings.gamemodes.general.healthPackRespawnTime%"
+      ],
+      "zh-CN": "急救包刷新时间"
+    },
+    "Kill Cam": {
+      "en-US": "Kill Cam",
+      "sources": [
+        "customGameSettings.gamemodes.general.enableKillCam"
+      ],
+      "zh-CN": "阵亡镜头"
+    },
+    "Kill Feed": {
+      "en-US": "Kill Feed",
+      "sources": [
+        "customGameSettings.gamemodes.general.enableKillFeed"
+      ],
+      "zh-CN": "消灭提示"
+    },
+    "Skins": {
+      "en-US": "Skins",
+      "sources": [
+        "customGameSettings.gamemodes.general.enableSkins"
+      ],
+      "zh-CN": "皮肤"
+    },
+    "Random Hero Role Limit Per Team": {
+      "en-US": "Random Hero Role Limit Per Team",
+      "sources": [
+        "customGameSettings.gamemodes.general.randomHeroRoleLimitPerTeam"
+      ],
+      "zh-CN": "每队随机限定英雄职责"
+    },
+    "Perk Generation": {
+      "en-US": "Perk Generation",
+      "sources": [
+        "customGameSettings.gamemodes.general.perkGeneration%"
+      ],
+      "zh-CN": "威能充能速度"
+    },
+    "Capture Speed Modifier": {
+      "en-US": "Capture Speed Modifier",
+      "sources": [
+        "customGameSettings.gamemodes.assault.captureSpeed%",
+        "customGameSettings.gamemodes.control.captureSpeed%",
+        "customGameSettings.gamemodes.controlAprilFools.captureSpeed%",
+        "customGameSettings.gamemodes.hybrid.captureSpeed%",
+        "customGameSettings.gamemodes.hybridAprilFools.captureSpeed%",
+        "customGameSettings.gamemodes.flashpoint.captureSpeed%",
+        "customGameSettings.gamemodes.flashpointAprilFools.captureSpeed%",
+        "customGameSettings.gamemodes.clash.captureSpeed%"
+      ],
+      "zh-CN": "占领速度"
+    },
+    "Enable Perks": {
+      "en-US": "Enable Perks",
+      "sources": [
+        "customGameSettings.gamemodes.assault.enablePerks",
+        "customGameSettings.gamemodes.control.enablePerks",
+        "customGameSettings.gamemodes.controlAprilFools.enablePerks",
+        "customGameSettings.gamemodes.escort.enablePerks",
+        "customGameSettings.gamemodes.escortAprilFools.enablePerks",
+        "customGameSettings.gamemodes.hybrid.enablePerks",
+        "customGameSettings.gamemodes.hybridAprilFools.enablePerks",
+        "customGameSettings.gamemodes.bountyHunter.enablePerks",
+        "customGameSettings.gamemodes.ctf.enablePerks",
+        "customGameSettings.gamemodes.elimination.enablePerks",
+        "customGameSettings.gamemodes.tdm.enablePerks",
+        "customGameSettings.gamemodes.skirmish.enablePerks",
+        "customGameSettings.gamemodes.practiceRange.enablePerks",
+        "customGameSettings.gamemodes.flashpoint.enablePerks",
+        "customGameSettings.gamemodes.flashpointAprilFools.enablePerks",
+        "customGameSettings.gamemodes.ffa.enablePerks",
+        "customGameSettings.gamemodes.push.enablePerks",
+        "customGameSettings.gamemodes.pushAprilFools.enablePerks",
+        "customGameSettings.gamemodes.clash.enablePerks"
+      ],
+      "zh-CN": "启用威能"
+    },
+    "Limit Valid Control Points": {
+      "en-US": "Limit Valid Control Points",
+      "sources": [
+        "customGameSettings.gamemodes.control.setValidControlPoints",
+        "customGameSettings.gamemodes.controlAprilFools.setValidControlPoints",
+        "customGameSettings.gamemodes.skirmish.setValidControlPoints"
+      ],
+      "zh-CN": "有效控制点选择"
+    },
+    "Score To Win": {
+      "en-US": "Score To Win",
+      "sources": [
+        "customGameSettings.gamemodes.control.scoreToWin",
+        "customGameSettings.gamemodes.controlAprilFools.scoreToWin",
+        "customGameSettings.gamemodes.bountyHunter.scoreToWin",
+        "customGameSettings.gamemodes.ctf.scoreToWin",
+        "customGameSettings.gamemodes.elimination.scoreToWin",
+        "customGameSettings.gamemodes.tdm.scoreToWin",
+        "customGameSettings.gamemodes.flashpoint.scoreToWin",
+        "customGameSettings.gamemodes.flashpointAprilFools.scoreToWin",
+        "customGameSettings.gamemodes.ffa.scoreToWin"
+      ],
+      "zh-CN": "获胜得分"
+    },
+    "Scoring Speed Modifier": {
+      "en-US": "Scoring Speed Modifier",
+      "sources": [
+        "customGameSettings.gamemodes.control.scoringSpeed%",
+        "customGameSettings.gamemodes.controlAprilFools.scoringSpeed%",
+        "customGameSettings.gamemodes.flashpoint.scoringSpeed%",
+        "customGameSettings.gamemodes.flashpointAprilFools.scoringSpeed%"
+      ],
+      "zh-CN": "计分速度"
+    },
+    "Payload Speed Modifier": {
+      "en-US": "Payload Speed Modifier",
+      "sources": [
+        "customGameSettings.gamemodes.escort.payloadSpeed%",
+        "customGameSettings.gamemodes.escortAprilFools.payloadSpeed%",
+        "customGameSettings.gamemodes.hybrid.payloadSpeed%",
+        "customGameSettings.gamemodes.hybridAprilFools.payloadSpeed%"
+      ],
+      "zh-CN": "运载目标速度"
+    },
+    "Base Score for Killing a Bounty Target": {
+      "en-US": "Base Score for Killing a Bounty Target",
+      "sources": [
+        "customGameSettings.gamemodes.bountyHunter.baseScoreForKillingBountyTarget"
+      ],
+      "zh-CN": "消灭狩猎目标基础得分"
+    },
+    "Bounty Increase per Kill as Bounty Target": {
+      "en-US": "Bounty Increase per Kill as Bounty Target",
+      "sources": [
+        "customGameSettings.gamemodes.bountyHunter.bountyIncreasePerKillAsBountyTarget"
+      ],
+      "zh-CN": "狩猎目标每次消灭赏金加值"
+    },
+    "Bounty Target Count": {
+      "en-US": "Bounty Target Count",
+      "sources": [
+        "customGameSettings.gamemodes.bountyHunter.nbBountyTargets"
+      ],
+      "zh-CN": "狩猎目标数量"
+    },
+    "Score per Kill": {
+      "en-US": "Score per Kill",
+      "sources": [
+        "customGameSettings.gamemodes.bountyHunter.scorePerKill"
+      ],
+      "zh-CN": "每次消灭得分"
+    },
+    "Score per Kill as Bounty Target": {
+      "en-US": "Score per Kill as Bounty Target",
+      "sources": [
+        "customGameSettings.gamemodes.bountyHunter.scorePerKillAsBountyTarget"
+      ],
+      "zh-CN": "狩猎目标每次消灭得分"
+    },
+    "Game Length In Minutes": {
+      "en-US": "Game Length In Minutes",
+      "sources": [
+        "customGameSettings.gamemodes.bountyHunter.gameLengthInMn",
+        "customGameSettings.gamemodes.tdm.gameLengthInMn",
+        "customGameSettings.gamemodes.ffa.gameLengthInMn"
+      ],
+      "zh-CN": "比赛时长（分钟）"
+    },
+    "Self Initiated Respawn": {
+      "en-US": "Self Initiated Respawn",
+      "sources": [
+        "customGameSettings.gamemodes.bountyHunter.enableSelfInitiatedRespawn",
+        "customGameSettings.gamemodes.tdm.enableSelfInitiatedRespawn",
+        "customGameSettings.gamemodes.ffa.enableSelfInitiatedRespawn"
+      ],
+      "zh-CN": "主动复生"
+    },
+    "Blitz Flag Locations": {
+      "en-US": "Blitz Flag Locations",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.enableBlitzFlagLocations"
+      ],
+      "zh-CN": "闪电赛旗帜位置"
+    },
+    "Damage Interrupts Flag Interaction": {
+      "en-US": "Damage Interrupts Flag Interaction",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.enableDropFlagOnDmg"
+      ],
+      "zh-CN": "受到伤害打断夺旗"
+    },
+    "Flag Carrier Abilities": {
+      "en-US": "Flag Carrier Abilities",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.flagCarrierAbilities"
+      ],
+      "zh-CN": "旗手技能"
+    },
+    "Flag Dropped Lock Time": {
+      "en-US": "Flag Dropped Lock Time",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.flagDroppedLockTime"
+      ],
+      "zh-CN": "旗帜掉落后锁定时间"
+    },
+    "Flag Pickup Time": {
+      "en-US": "Flag Pickup Time",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.flagPickupTime"
+      ],
+      "zh-CN": "旗帜拾取时间"
+    },
+    "Flag Return Time": {
+      "en-US": "Flag Return Time",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.flagReturnTime"
+      ],
+      "zh-CN": "旗帜归还时间"
+    },
+    "Flag Score Respawn Time": {
+      "en-US": "Flag Score Respawn Time",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.flagScoreRespawnTime"
+      ],
+      "zh-CN": "得分后旗帜刷新时间"
+    },
+    "Game Length Minutes": {
+      "en-US": "Game Length Minutes",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.gameLengthInMn"
+      ],
+      "zh-CN": "比赛时长（分）"
+    },
+    "Respawn Speed Buff Duration": {
+      "en-US": "Respawn Speed Buff Duration",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.respawnSpeedBuffDuration"
+      ],
+      "zh-CN": "复生加速增益时间"
+    },
+    "Team Needs Flag At Base To Score": {
+      "en-US": "Team Needs Flag At Base To Score",
+      "sources": [
+        "customGameSettings.gamemodes.ctf.teamNeedsFlagAtBaseToScore"
+      ],
+      "zh-CN": "得分需我方旗帜在基地中"
+    },
+    "Hero Selection Time": {
+      "en-US": "Hero Selection Time",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.heroSelectionTime"
+      ],
+      "zh-CN": "选择英雄时间"
+    },
+    "Restrict Previously Used Heroes": {
+      "en-US": "Restrict Previously Used Heroes",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.restrictPreviouslyPlayedHeroes"
+      ],
+      "zh-CN": "锁定使用过的英雄"
+    },
+    "Hero Selection": {
+      "en-US": "Hero Selection",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.heroesAvailable"
+      ],
+      "zh-CN": "英雄选择"
+    },
+    "Limited Choice Pool": {
+      "en-US": "Limited Choice Pool",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.heroPoolSize"
+      ],
+      "zh-CN": "英雄池上限"
+    },
+    "Capture Objective Tiebreaker": {
+      "en-US": "Capture Objective Tiebreaker",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.enableTiebreaker"
+      ],
+      "zh-CN": "目标点决胜机制"
+    },
+    "Tiebreaker After Match Time Elapsed": {
+      "en-US": "Tiebreaker After Match Time Elapsed",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.tiebreakerTime"
+      ],
+      "zh-CN": "目标点决胜机制激活时间"
+    },
+    "Time To Capture": {
+      "en-US": "Time To Capture",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.tiebreakerCaptureTime"
+      ],
+      "zh-CN": "占领时间"
+    },
+    "Draw After Match Time Elapsed With No Tiebreaker": {
+      "en-US": "Draw After Match Time Elapsed With No Tiebreaker",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.drawTime"
+      ],
+      "zh-CN": "无目标点决胜机制时平局时限"
+    },
+    "Reveal Heroes": {
+      "en-US": "Reveal Heroes",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.enableWallhack"
+      ],
+      "zh-CN": "显示英雄位置"
+    },
+    "Reveal Heroes After Match Time Elapsed": {
+      "en-US": "Reveal Heroes After Match Time Elapsed",
+      "sources": [
+        "customGameSettings.gamemodes.elimination.wallhackEnabledTime"
+      ],
+      "zh-CN": "比赛开始后显示英雄位置时间"
+    },
+    "Mercy Resurrect Counteracts Kills": {
+      "en-US": "Mercy Resurrect Counteracts Kills",
+      "sources": [
+        "customGameSettings.gamemodes.tdm.enableMercyRezKillCancel"
+      ],
+      "zh-CN": "“天使”重生抵消消灭次数"
+    },
+    "Imbalanced Team Score To Win": {
+      "en-US": "Imbalanced Team Score To Win",
+      "sources": [
+        "customGameSettings.gamemodes.tdm.needsImbalancedTeamScoreToWin"
+      ],
+      "zh-CN": "双方队伍获胜得分差异"
+    },
+    "Team 1 Score To Win": {
+      "en-US": "Team 1 Score To Win",
+      "sources": [
+        "customGameSettings.gamemodes.tdm.team1ScoreToWin"
+      ],
+      "zh-CN": "队伍1获胜所需分数"
+    },
+    "Team 2 Score To Win": {
+      "en-US": "Team 2 Score To Win",
+      "sources": [
+        "customGameSettings.gamemodes.tdm.team2ScoreToWin"
+      ],
+      "zh-CN": "队伍2获胜所需分数"
+    },
+    "Spawn Training Bots": {
+      "en-US": "Spawn Training Bots",
+      "sources": [
+        "customGameSettings.gamemodes.practiceRange.spawnTrainingBots",
+        "customGameSettings.gamemodes.stadiumPracticeRange.spawnTrainingBots"
+      ],
+      "zh-CN": "刷新训练机器人"
+    },
+    "Training Bot Respawn Time Scalar": {
+      "en-US": "Training Bot Respawn Time Scalar",
+      "sources": [
+        "customGameSettings.gamemodes.practiceRange.trainingBotsRespawnTime%",
+        "customGameSettings.gamemodes.stadiumPracticeRange.trainingBotsRespawnTime%"
+      ],
+      "zh-CN": "训练机器人刷新时间"
+    },
+    "Training Partner": {
+      "en-US": "Training Partner",
+      "sources": [
+        "customGameSettings.gamemodes.practiceRange.enableTrainingPartner",
+        "customGameSettings.gamemodes.stadiumPracticeRange.enableTrainingPartner"
+      ],
+      "zh-CN": "训练伙伴"
+    },
+    "Difficulty": {
+      "en-US": "Difficulty",
+      "sources": [
+        "customGameSettings.gamemodes.junkenstein.difficulty"
+      ],
+      "zh-CN": "难度"
+    },
+    "Door Health Scalar": {
+      "en-US": "Door Health Scalar",
+      "sources": [
+        "customGameSettings.gamemodes.junkenstein.doorHealth%"
+      ],
+      "zh-CN": "大门生命值"
+    },
+    "Endless Mode": {
+      "en-US": "Endless Mode",
+      "sources": [
+        "customGameSettings.gamemodes.junkenstein.enableEndless"
+      ],
+      "zh-CN": "无尽模式"
+    },
+    "Control Point A": {
+      "en-US": "Control Point A",
+      "sources": [
+        "customGameSettings.gamemodes.flashpoint.controlPointA",
+        "customGameSettings.gamemodes.flashpointAprilFools.controlPointA"
+      ],
+      "zh-CN": "控制点A"
+    },
+    "Control Point B": {
+      "en-US": "Control Point B",
+      "sources": [
+        "customGameSettings.gamemodes.flashpoint.controlPointB",
+        "customGameSettings.gamemodes.flashpointAprilFools.controlPointB"
+      ],
+      "zh-CN": "控制点B"
+    },
+    "Control Point C": {
+      "en-US": "Control Point C",
+      "sources": [
+        "customGameSettings.gamemodes.flashpoint.controlPointC",
+        "customGameSettings.gamemodes.flashpointAprilFools.controlPointC"
+      ],
+      "zh-CN": "控制点C"
+    },
+    "Control Point D": {
+      "en-US": "Control Point D",
+      "sources": [
+        "customGameSettings.gamemodes.flashpoint.controlPointD",
+        "customGameSettings.gamemodes.flashpointAprilFools.controlPointD"
+      ],
+      "zh-CN": "控制点D"
+    },
+    "Control Point E": {
+      "en-US": "Control Point E",
+      "sources": [
+        "customGameSettings.gamemodes.flashpoint.controlPointE",
+        "customGameSettings.gamemodes.flashpointAprilFools.controlPointE"
+      ],
+      "zh-CN": "控制点E"
+    },
+    "First Active Control Point": {
+      "en-US": "First Active Control Point",
+      "sources": [
+        "customGameSettings.gamemodes.flashpoint.firstActiveControlPoint",
+        "customGameSettings.gamemodes.flashpointAprilFools.firstActiveControlPoint"
+      ],
+      "zh-CN": "首先激活的控制点"
+    },
+    "TS-1 Walk Speed Modifier": {
+      "en-US": "TS-1 Walk Speed Modifier",
+      "sources": [
+        "customGameSettings.gamemodes.push.ts1WalkSpeedModifier%",
+        "customGameSettings.gamemodes.pushAprilFools.ts1WalkSpeedModifier%"
+      ],
+      "zh-CN": "TS-1行走速度"
+    },
+    "TS-1 Push Speed Modifier": {
+      "en-US": "TS-1 Push Speed Modifier",
+      "sources": [
+        "customGameSettings.gamemodes.push.ts1PushSpeedModifier%",
+        "customGameSettings.gamemodes.pushAprilFools.ts1PushSpeedModifier%"
+      ],
+      "zh-CN": "TS-1推进速度"
+    },
+    "Ability Cooldown Time": {
+      "en-US": "Ability Cooldown Time",
+      "sources": [
+        "customGameSettings.heroes.TEAM.abilityCooldown%"
+      ],
+      "zh-CN": "技能冷却时间"
+    },
+    "Ultimate Generation": {
+      "en-US": "Ultimate Generation",
+      "sources": [
+        "customGameSettings.heroes.TEAM.ultGen%"
+      ],
+      "zh-CN": "终极技能充能速度"
+    },
+    "Ultimate Generation - Combat": {
+      "en-US": "Ultimate Generation - Combat",
+      "sources": [
+        "customGameSettings.heroes.TEAM.combatUltGen%"
+      ],
+      "zh-CN": "战斗时终极技能充能速度"
+    },
+    "Ultimate Generation - Passive": {
+      "en-US": "Ultimate Generation - Passive",
+      "sources": [
+        "customGameSettings.heroes.TEAM.passiveUltGen%"
+      ],
+      "zh-CN": "终极技能自动充能速度"
+    },
+    "Ultimate Ability": {
+      "en-US": "Ultimate Ability",
+      "sources": [
+        "customGameSettings.heroes.TEAM.enableUlt"
+      ],
+      "zh-CN": "终极技能"
+    },
+    "Quick Melee": {
+      "en-US": "Quick Melee",
+      "sources": [
+        "customGameSettings.heroes.TEAM.enableMelee",
+        "customGameSettings.heroes.TEAM.HERO.enableMelee"
+      ],
+      "zh-CN": "近身攻击"
+    },
+    "Spawn With Ultimate Ready": {
+      "en-US": "Spawn With Ultimate Ready",
+      "sources": [
+        "customGameSettings.heroes.TEAM.enableSpawningWithUlt",
+        "customGameSettings.heroes.TEAM.HERO.enableSpawningWithUlt"
+      ],
+      "zh-CN": "重生时终极技能充能完毕"
+    },
+    "Ultimate Duration": {
+      "en-US": "Ultimate Duration",
+      "sources": [
+        "customGameSettings.heroes.TEAM.ultDuration%",
+        "customGameSettings.heroes.TEAM.HERO.ultDuration%"
+      ],
+      "zh-CN": "终极技能持续时间"
+    },
+    "Infinite Ultimate Duration": {
+      "en-US": "Infinite Ultimate Duration",
+      "sources": [
+        "customGameSettings.heroes.TEAM.enableInfiniteUlt",
+        "customGameSettings.heroes.TEAM.HERO.enableInfiniteUlt"
+      ],
+      "zh-CN": "终极技能持续时间无限"
+    },
+    "Damage Dealt": {
+      "en-US": "Damage Dealt",
+      "sources": [
+        "customGameSettings.heroes.TEAM.damageDealt%",
+        "customGameSettings.heroes.TEAM.HERO.damageDealt%"
+      ],
+      "zh-CN": "伤害量"
+    },
+    "Damage Received": {
+      "en-US": "Damage Received",
+      "sources": [
+        "customGameSettings.heroes.TEAM.damageReceived%",
+        "customGameSettings.heroes.TEAM.HERO.damageReceived%"
+      ],
+      "zh-CN": "受到伤害量"
+    },
+    "Healing Dealt": {
+      "en-US": "Healing Dealt",
+      "sources": [
+        "customGameSettings.heroes.TEAM.healingDealt%",
+        "customGameSettings.heroes.TEAM.HERO.healingDealt%"
+      ],
+      "zh-CN": "治疗量"
+    },
+    "Healing Received": {
+      "en-US": "Healing Received",
+      "sources": [
+        "customGameSettings.heroes.TEAM.healingReceived%",
+        "customGameSettings.heroes.TEAM.HERO.healingReceived%"
+      ],
+      "zh-CN": "受到治疗量"
+    },
+    "Jump Vertical Speed": {
+      "en-US": "Jump Vertical Speed",
+      "sources": [
+        "customGameSettings.heroes.TEAM.jumpVerticalSpeed%",
+        "customGameSettings.heroes.TEAM.HERO.jumpVerticalSpeed%"
+      ],
+      "zh-CN": "垂直跳跃速度"
+    },
+    "Movement Gravity": {
+      "en-US": "Movement Gravity",
+      "sources": [
+        "customGameSettings.heroes.TEAM.movementGravity%",
+        "customGameSettings.heroes.TEAM.HERO.movementGravity%"
+      ],
+      "zh-CN": "移动重力"
+    },
+    "Movement Speed": {
+      "en-US": "Movement Speed",
+      "sources": [
+        "customGameSettings.heroes.TEAM.movementSpeed%",
+        "customGameSettings.heroes.TEAM.HERO.movementSpeed%"
+      ],
+      "zh-CN": "移动速度"
+    },
+    "Projectile Gravity": {
+      "en-US": "Projectile Gravity",
+      "sources": [
+        "customGameSettings.heroes.TEAM.projectileGravity%",
+        "customGameSettings.heroes.TEAM.HERO.projectileGravity%"
+      ],
+      "zh-CN": "投射物重力"
+    },
+    "Projectile Speed": {
+      "en-US": "Projectile Speed",
+      "sources": [
+        "customGameSettings.heroes.TEAM.projectileSpeed%",
+        "customGameSettings.heroes.TEAM.HERO.projectileSpeed%"
+      ],
+      "zh-CN": "弹道速度"
+    },
+    "Receive Headshots Only": {
+      "en-US": "Receive Headshots Only",
+      "sources": [
+        "customGameSettings.heroes.TEAM.enableHeadshotsOnly",
+        "customGameSettings.heroes.TEAM.HERO.enableHeadshotsOnly"
+      ],
+      "zh-CN": "仅爆头有效"
+    },
+    "Ammunition Clip Size Scalar": {
+      "en-US": "Ammunition Clip Size Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.ammoClipSize%",
+        "customGameSettings.heroes.TEAM.HERO.ammoClipSize%"
+      ],
+      "zh-CN": "弹夹容量倍率"
+    },
+    "No Ammunition Requirement": {
+      "en-US": "No Ammunition Requirement",
+      "sources": [
+        "customGameSettings.heroes.TEAM.enableInfiniteAmmo",
+        "customGameSettings.heroes.TEAM.HERO.enableInfiniteAmmo"
+      ],
+      "zh-CN": "无需装弹"
+    },
+    "Passive Health Regeneration": {
+      "en-US": "Passive Health Regeneration",
+      "sources": [
+        "customGameSettings.heroes.TEAM.passiveHealthRegen",
+        "customGameSettings.heroes.TEAM.HERO.passiveHealthRegen"
+      ],
+      "zh-CN": "被动生命值恢复"
+    },
+    "Role Passives": {
+      "en-US": "Role Passives",
+      "sources": [
+        "customGameSettings.heroes.TEAM.enableRolePassive",
+        "customGameSettings.heroes.TEAM.HERO.enableRolePassive"
+      ],
+      "zh-CN": "职责被动"
+    },
+    "No Automatic Fire": {
+      "en-US": "No Automatic Fire",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.enableAutomaticFire"
+      ],
+      "zh-CN": "禁止自动射击"
+    },
+    "No Scope": {
+      "en-US": "No Scope",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.enableScoping"
+      ],
+      "zh-CN": "禁止开镜狙击"
+    },
+    "Team Balancing": {
+      "en-US": "Team Balancing",
+      "sources": [
+        "customGameSettings.lobby.teamBalancing"
+      ],
+      "zh-CN": "队伍平衡"
+    },
+    "Use Experimental Update If Available": {
+      "en-US": "Use Experimental Update If Available",
+      "sources": [
+        "customGameSettings.lobby.useExperimentalUpdate"
+      ],
+      "zh-CN": "随时安装最新的抢先体验更新"
+    },
+    "Pause Game On Player Disconnect": {
+      "en-US": "Pause Game On Player Disconnect",
+      "sources": [
+        "customGameSettings.lobby.pauseGameOnDisconnect"
+      ],
+      "zh-CN": "玩家断线时暂停游戏"
+    },
+    "Data Center Preference": {
+      "en-US": "Data Center Preference",
+      "sources": [
+        "customGameSettings.lobby.dataCenterPreference"
+      ],
+      "zh-CN": "数据中心设置"
+    },
+    "Minimum Latency milliseconds": {
+      "en-US": "Minimum Latency milliseconds",
+      "sources": [
+        "customGameSettings.lobby.minimumLatencyInNs"
+      ],
+      "zh-CN": "最低延迟（毫秒）"
+    },
+    "Coach Gun Knockback Scalar Enemy": {
+      "en-US": "Coach Gun Knockback Scalar Enemy",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1EnemyKb%"
+      ],
+      "zh-CN": "双筒猎枪击退距离（敌方）"
+    },
+    "Coach Gun Knockback Scalar Self": {
+      "en-US": "Coach Gun Knockback Scalar Self",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1SelfKb%"
+      ],
+      "zh-CN": "双筒猎枪击退距离（自身）"
+    },
+    "Dynamite Fuse Time Scalar": {
+      "en-US": "Dynamite Fuse Time Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2FuseTime%"
+      ],
+      "zh-CN": "延时雷管引爆时间"
+    },
+    "A-36 Tactical Grenade Knockback Scalar": {
+      "en-US": "A-36 Tactical Grenade Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireKb%"
+      ],
+      "zh-CN": "A-36战术榴弹击退倍率"
+    },
+    "Shield Bash Cooldown Time": {
+      "en-US": "Shield Bash Cooldown Time",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.shieldBashCooldown%"
+      ],
+      "zh-CN": "能量盾击冷却时间"
+    },
+    "Shield Bash Knockback Scalar": {
+      "en-US": "Shield Bash Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.shieldBashKb%"
+      ],
+      "zh-CN": "能量盾击击退距离"
+    },
+    "Whip Shot Knockback Scalar": {
+      "en-US": "Whip Shot Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Kb%"
+      ],
+      "zh-CN": "流星飞锤击退距离"
+    },
+    "Spawn Without Mech": {
+      "en-US": "Spawn Without Mech",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.spawnWithoutMech"
+      ],
+      "zh-CN": "无机甲重生"
+    },
+    "Boosters Knockback Scalar": {
+      "en-US": "Boosters Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Kb%"
+      ],
+      "zh-CN": "推进器击退倍率"
+    },
+    "Call Mech Knockback Scalar": {
+      "en-US": "Call Mech Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.callMechKb%"
+      ],
+      "zh-CN": "呼叫机甲击退倍率"
+    },
+    "Self Destruct Knockback Scalar": {
+      "en-US": "Self Destruct Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.selfDestructKb%"
+      ],
+      "zh-CN": "自毁击退倍率"
+    },
+    "Power Block Charge Rate": {
+      "en-US": "Power Block Charge Rate",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1ChargeRate%"
+      ],
+      "zh-CN": "悍猛格挡充能速度"
+    },
+    "Rocket Punch Knockback Scalar": {
+      "en-US": "Rocket Punch Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireKb%"
+      ],
+      "zh-CN": "火箭重拳击退倍率"
+    },
+    "Meteor Strike Knockback Scalar": {
+      "en-US": "Meteor Strike Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ultKb%"
+      ],
+      "zh-CN": "毁天灭地击退倍率"
+    },
+    "Ammunition Regeneration Time Scalar": {
+      "en-US": "Ammunition Regeneration Time Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ammoRegenerationTime%"
+      ],
+      "zh-CN": "弹药恢复时间速率"
+    },
+    "Sonic Repulsors Knockback Scalar": {
+      "en-US": "Sonic Repulsors Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Kb%"
+      ],
+      "zh-CN": "音速斥力场击退倍率"
+    },
+    "Reconstruction Heal Scalar": {
+      "en-US": "Reconstruction Heal Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.passiveHeal%"
+      ],
+      "zh-CN": "护盾重构治疗量倍率"
+    },
+    "Ultimate Barrier Health Scalar Panopticon": {
+      "en-US": "Ultimate Barrier Health Scalar Panopticon",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ultBarrierHealth%"
+      ],
+      "zh-CN": "终极技能屏障生命值倍率（全景牢笼）"
+    },
+    "Cyber Frag Knockback Scalar": {
+      "en-US": "Cyber Frag Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Kb%"
+      ],
+      "zh-CN": "赛博手雷击退倍率"
+    },
+    "Siphon Blaster Duration Scalar": {
+      "en-US": "Siphon Blaster Duration Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Duration%"
+      ],
+      "zh-CN": "虹吸冲击枪持续时间倍率"
+    },
+    "Siphon Blaster Heat Scalar": {
+      "en-US": "Siphon Blaster Heat Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Heat%"
+      ],
+      "zh-CN": "虹吸冲击枪热量倍率"
+    },
+    "Override Protocol Knockback Scalar": {
+      "en-US": "Override Protocol Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ultKb%"
+      ],
+      "zh-CN": "覆盖协议击退倍率"
+    },
+    "Take Aim Duration": {
+      "en-US": "Take Aim Duration",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireDuration%"
+      ],
+      "zh-CN": "瞄准射击持续时间"
+    },
+    "Quick Dash Distance": {
+      "en-US": "Quick Dash Distance",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Distance%"
+      ],
+      "zh-CN": "疾冲距离"
+    },
+    "Updraft Height": {
+      "en-US": "Updraft Height",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Height%"
+      ],
+      "zh-CN": "上升气流高度"
+    },
+    "Lunge Cooldown Time": {
+      "en-US": "Lunge Cooldown Time",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability3Cooldown%"
+      ],
+      "zh-CN": "“跃”冷却时间"
+    },
+    "Lunge Distance Scalar": {
+      "en-US": "Lunge Distance Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability3Distance%"
+      ],
+      "zh-CN": "“跃”距离设置"
+    },
+    "Storm Arrows Quantity": {
+      "en-US": "Storm Arrows Quantity",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Quantity%"
+      ],
+      "zh-CN": "“岚”数量"
+    },
+    "Solar Energy Maximum": {
+      "en-US": "Solar Energy Maximum",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.solarEnergyMax%"
+      ],
+      "zh-CN": "太阳能上限"
+    },
+    "Solar Energy Recharge Rate": {
+      "en-US": "Solar Energy Recharge Rate",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.solarEnergyRecharge%"
+      ],
+      "zh-CN": "太阳能充能速度"
+    },
+    "Biotic Pawjectile Range": {
+      "en-US": "Biotic Pawjectile Range",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireRange%"
+      ],
+      "zh-CN": "生物猫爪弹射程"
+    },
+    "Frenetic Flight Maximum Time": {
+      "en-US": "Frenetic Flight Maximum Time",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireMaximumTime%"
+      ],
+      "zh-CN": "咻咻飞最大时间"
+    },
+    "Frenetic Flight Unlimited Fuel": {
+      "en-US": "Frenetic Flight Unlimited Fuel",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.enablePassiveUnlimitedFuel"
+      ],
+      "zh-CN": "咻咻飞无限燃料"
+    },
+    "Jagged Blade Gracie Cooldown Time": {
+      "en-US": "Jagged Blade Gracie Cooldown Time",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireCooldown%"
+      ],
+      "zh-CN": "锯齿利刃（格雷西）冷却时间"
+    },
+    "Jagged Blade Knockback Scalar": {
+      "en-US": "Jagged Blade Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireKb%"
+      ],
+      "zh-CN": "锯齿利刃击退倍率"
+    },
+    "Jagged Blade Delay Before Automatic Recall": {
+      "en-US": "Jagged Blade Delay Before Automatic Recall",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireRecallDelay%"
+      ],
+      "zh-CN": "锯齿利刃自动召回延迟"
+    },
+    "Concussion Mine Knockback Scalar": {
+      "en-US": "Concussion Mine Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Kb%"
+      ],
+      "zh-CN": "震荡地雷击退倍率"
+    },
+    "Frag Launcher Knockback Scalar": {
+      "en-US": "Frag Launcher Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireKb%"
+      ],
+      "zh-CN": "榴弹发射器击退倍率"
+    },
+    "Swift Step Distance Scalar": {
+      "en-US": "Swift Step Distance Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Distance%"
+      ],
+      "zh-CN": "“瞬”距离倍率"
+    },
+    "Soundwave Knockback Scalar": {
+      "en-US": "Soundwave Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireKb%"
+      ],
+      "zh-CN": "音波击退倍率"
+    },
+    "Incendiary Chaingun": {
+      "en-US": "Incendiary Chaingun",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.enablePrimaryFire"
+      ],
+      "zh-CN": "燃火链式机枪"
+    },
+    "Incendiary Chaingun Ignite Damage": {
+      "en-US": "Incendiary Chaingun Ignite Damage",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireIgniteDamage"
+      ],
+      "zh-CN": "燃火链式机枪点燃伤害"
+    },
+    "Incendiary Chaingun Ignite Duration": {
+      "en-US": "Incendiary Chaingun Ignite Duration",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireIgniteDuration"
+      ],
+      "zh-CN": "燃火链式机枪点燃持续时间"
+    },
+    "Incendiary Chaingun Ignite Rate": {
+      "en-US": "Incendiary Chaingun Ignite Rate",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireIgniteRate"
+      ],
+      "zh-CN": "燃火链式机枪点燃速度"
+    },
+    "Overrun Knockback": {
+      "en-US": "Overrun Knockback",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Kb%"
+      ],
+      "zh-CN": "蛮力冲撞击退"
+    },
+    "Cardiac Overdrive Healing": {
+      "en-US": "Cardiac Overdrive Healing",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Healing%"
+      ],
+      "zh-CN": "心脏过载治疗量"
+    },
+    "Blizzard Freeze Minimum": {
+      "en-US": "Blizzard Freeze Minimum",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ultFreezeMinimum%"
+      ],
+      "zh-CN": "暴雪冰冻最小值"
+    },
+    "Blizzard Freeze Rate Scalar": {
+      "en-US": "Blizzard Freeze Rate Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ultFreezeRate%"
+      ],
+      "zh-CN": "暴雪冰冻敌人的速度"
+    },
+    "Freeze Stacking": {
+      "en-US": "Freeze Stacking",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.enablePrimaryFireFreezeStack"
+      ],
+      "zh-CN": "冰冻叠加"
+    },
+    "Weapon Freeze Duration Scalar": {
+      "en-US": "Weapon Freeze Duration Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireFreezeDuration%"
+      ],
+      "zh-CN": "冰霜枪冰冻敌人的时长"
+    },
+    "Weapon Freeze Minimum": {
+      "en-US": "Weapon Freeze Minimum",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireFreezeMinimum%"
+      ],
+      "zh-CN": "冰霜枪冰冻最小值"
+    },
+    "Weapon Freeze Rate Scalar": {
+      "en-US": "Weapon Freeze Rate Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireFreezeRate%"
+      ],
+      "zh-CN": "冰霜枪冰冻敌人的速度"
+    },
+    "Weapons Enabled": {
+      "en-US": "Weapons Enabled",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.weaponsEnabled"
+      ],
+      "zh-CN": "可用武器"
+    },
+    "Katashiro Return Duration Scalar": {
+      "en-US": "Katashiro Return Duration Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Duration%"
+      ],
+      "zh-CN": "替魂纸人持续时间倍率"
+    },
+    "Biotic Orb Max Damage Scalar": {
+      "en-US": "Biotic Orb Max Damage Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2MaxDamage%"
+      ],
+      "zh-CN": "生化之球伤害最大值"
+    },
+    "Biotic Orb Max Healing Scalar": {
+      "en-US": "Biotic Orb Max Healing Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2MaxHealing%"
+      ],
+      "zh-CN": "生化之球治疗最大值"
+    },
+    "Biotic Energy Maximum": {
+      "en-US": "Biotic Energy Maximum",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireMaximumTime%"
+      ],
+      "zh-CN": "生化能量上限"
+    },
+    "Biotic Energy Recharge Rate": {
+      "en-US": "Biotic Energy Recharge Rate",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireRechargeRate%"
+      ],
+      "zh-CN": "生化能量恢复速度"
+    },
+    "Concussive Blast Knockback Scalar": {
+      "en-US": "Concussive Blast Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Kb%"
+      ],
+      "zh-CN": "震荡冲击击退倍率"
+    },
+    "Hover Jets Unlimited Fuel": {
+      "en-US": "Hover Jets Unlimited Fuel",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.enablePassiveUnlimitedFuel"
+      ],
+      "zh-CN": "悬浮背包无限燃料"
+    },
+    "Hover Jets Vertical Speed Scalar": {
+      "en-US": "Hover Jets Vertical Speed Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.passiveVerticalSpeed%"
+      ],
+      "zh-CN": "悬浮背包垂直速度"
+    },
+    "Jump Jet Acceleration Scalar": {
+      "en-US": "Jump Jet Acceleration Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.passiveMaximumTime%",
+        "customGameSettings.heroes.TEAM.HERO.ability1Acceleration%"
+      ],
+      "zh-CN": "推进背包加速"
+    },
+    "Hover Jets Extra Fuel Scalar": {
+      "en-US": "Hover Jets Extra Fuel Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.passiveExtraFuel%"
+      ],
+      "zh-CN": "悬浮背包额外燃料倍率"
+    },
+    "Hover Jets Recharge Rate": {
+      "en-US": "Hover Jets Recharge Rate",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.passiveRechargeRate%"
+      ],
+      "zh-CN": "悬浮背包充能速度"
+    },
+    "Hover Jets Maximum Time": {
+      "en-US": "Hover Jets Maximum Time",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.passiveMaxTime%"
+      ],
+      "zh-CN": "悬浮背包最长时间"
+    },
+    "Jump Jet Refuel Scalar": {
+      "en-US": "Jump Jet Refuel Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1RefuelScalar"
+      ],
+      "zh-CN": "推进背包燃料补充倍率"
+    },
+    "Rocket Launcher Knockback Scalar": {
+      "en-US": "Rocket Launcher Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireKb%"
+      ],
+      "zh-CN": "火箭发射器击退倍率"
+    },
+    "Block Nemesis Form": {
+      "en-US": "Block Nemesis Form",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireAlternateForm"
+      ],
+      "zh-CN": "铁臂（天罚形态）"
+    },
+    "Charge Knockback Scalar": {
+      "en-US": "Charge Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Kb%"
+      ],
+      "zh-CN": "冲锋击退倍率"
+    },
+    "Rocket Hammer Knockback Scalar": {
+      "en-US": "Rocket Hammer Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireKb%"
+      ],
+      "zh-CN": "火箭重锤击退倍率"
+    },
+    "Whole Hog Knockback Scalar": {
+      "en-US": "Whole Hog Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ultKb%"
+      ],
+      "zh-CN": "鸡飞狗跳击退倍率"
+    },
+    "Evade Distance Scalar": {
+      "en-US": "Evade Distance Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Distance%"
+      ],
+      "zh-CN": "机动闪避距离倍率"
+    },
+    "Joyride Knockback Scalar": {
+      "en-US": "Joyride Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Kb%"
+      ],
+      "zh-CN": "纵情狂飙击退倍率"
+    },
+    "Joyride Duration Scalar": {
+      "en-US": "Joyride Duration Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Duration%"
+      ],
+      "zh-CN": "纵情狂飙持续时间倍率"
+    },
+    "Joyride Speed Scalar": {
+      "en-US": "Joyride Speed Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Speed%"
+      ],
+      "zh-CN": "纵情狂飙速度倍率"
+    },
+    "Tremor Charge Knockback Scalar": {
+      "en-US": "Tremor Charge Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Kb%"
+      ],
+      "zh-CN": "震地手雷击退倍率"
+    },
+    "Accretion Knockback Scalar": {
+      "en-US": "Accretion Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Kb%"
+      ],
+      "zh-CN": "质量吸附击退距离"
+    },
+    "Helix Rockets Knockback Scalar": {
+      "en-US": "Helix Rockets Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireKb%"
+      ],
+      "zh-CN": "螺旋飞弹击退倍率"
+    },
+    "Overload Duration Scalar": {
+      "en-US": "Overload Duration Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Duration%"
+      ],
+      "zh-CN": "热力过载持续时间"
+    },
+    "Jump Pack Acceleration Scalar": {
+      "en-US": "Jump Pack Acceleration Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Acceleration%"
+      ],
+      "zh-CN": "喷射背包加速"
+    },
+    "Jump Pack Knockback Scalar": {
+      "en-US": "Jump Pack Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Kb%"
+      ],
+      "zh-CN": "喷射背包击退倍率"
+    },
+    "Primal Rage Melee Knockback Scalar": {
+      "en-US": "Primal Rage Melee Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ultKb%"
+      ],
+      "zh-CN": "原始暴怒近身攻击击退倍率"
+    },
+    "Roll Always Active": {
+      "en-US": "Roll Always Active",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.enableRollOnly"
+      ],
+      "zh-CN": "动力铁球始终激活"
+    },
+    "Grappling Claw Knockback Scalar": {
+      "en-US": "Grappling Claw Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Kb%"
+      ],
+      "zh-CN": "工程抓钩击退距离"
+    },
+    "Minefield Knockback Scalar": {
+      "en-US": "Minefield Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ultKb%"
+      ],
+      "zh-CN": "地雷禁区击退距离"
+    },
+    "Particle Cannon Secondary Knockback Scalar": {
+      "en-US": "Particle Cannon Secondary Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireKb%"
+      ],
+      "zh-CN": "粒子炮辅助攻击击退倍率"
+    },
+    "Tree of Life Health": {
+      "en-US": "Tree of Life Health",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ultHealth%"
+      ],
+      "zh-CN": "生命之树生命值"
+    },
+    "Rejuvenating Dash Healing": {
+      "en-US": "Rejuvenating Dash Healing",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Health%"
+      ],
+      "zh-CN": "回春疾行治疗量"
+    },
+    "Petal Platform Health": {
+      "en-US": "Petal Platform Health",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireHealth%"
+      ],
+      "zh-CN": "花瓣平台生命值"
+    },
+    "Life Grip and Healing Blossom Range": {
+      "en-US": "Life Grip and Healing Blossom Range",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.primaryFireRange%"
+      ],
+      "zh-CN": "生命之握和愈疗灵花射程"
+    },
+    "Warding Stance Regen Scalar": {
+      "en-US": "Warding Stance Regen Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireRechargeRate%"
+      ],
+      "zh-CN": "招架姿态恢复倍率"
+    },
+    "Whirlwind Dash Distance": {
+      "en-US": "Whirlwind Dash Distance",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Distance%"
+      ],
+      "zh-CN": "旋风疾步距离"
+    },
+    "Soaring Slice Distance": {
+      "en-US": "Soaring Slice Distance",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Distance%"
+      ],
+      "zh-CN": "飞空斩击距离"
+    },
+    "Burrow Duration Scalar": {
+      "en-US": "Burrow Duration Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Duration%"
+      ],
+      "zh-CN": "钻地持续时间倍率"
+    },
+    "Glide Boost Duration Scalar": {
+      "en-US": "Glide Boost Duration Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Duration%"
+      ],
+      "zh-CN": "滑翔推进持续时间倍率"
+    },
+    "Jagged Wall Knockback": {
+      "en-US": "Jagged Wall Knockback",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Kb%"
+      ],
+      "zh-CN": "尖刺墙击退倍率"
+    },
+    "Jagged Wall Health": {
+      "en-US": "Jagged Wall Health",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Health%"
+      ],
+      "zh-CN": "尖刺墙生命值倍率"
+    },
+    "Spike Guard Resource Cost": {
+      "en-US": "Spike Guard Resource Cost",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireCost%"
+      ],
+      "zh-CN": "尖刺护体资源消耗倍率"
+    },
+    "Spike Guard Resource Regeneration": {
+      "en-US": "Spike Guard Resource Regeneration",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireRegen%"
+      ],
+      "zh-CN": "尖刺护体资源恢复倍率"
+    },
+    "Violent Leap Distance": {
+      "en-US": "Violent Leap Distance",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Distance%"
+      ],
+      "zh-CN": "狂跃距离倍率"
+    },
+    "Restorative Stream Drain Rate": {
+      "en-US": "Restorative Stream Drain Rate",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.secondaryFireCost%"
+      ],
+      "zh-CN": "养神泉消耗速度"
+    },
+    "Rushing Torrent Duration Scalar": {
+      "en-US": "Rushing Torrent Duration Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability1Duration%"
+      ],
+      "zh-CN": "飞流步持续时间倍率"
+    },
+    "Guardian Wave Knockback Scalar": {
+      "en-US": "Guardian Wave Knockback Scalar",
+      "sources": [
+        "customGameSettings.heroes.TEAM.HERO.ability2Kb%"
+      ],
+      "zh-CN": "翻江浪击退倍率"
+    },
+    "disabled maps": {
+      "en-US": "disabled maps",
+      "sources": [
+        "customGameSettings.gamemodes.general.disabledMaps",
+        "customGameSettings.gamemodes.assault.disabledMaps",
+        "customGameSettings.gamemodes.control.disabledMaps",
+        "customGameSettings.gamemodes.controlAprilFools.disabledMaps",
+        "customGameSettings.gamemodes.escort.disabledMaps",
+        "customGameSettings.gamemodes.escortAprilFools.disabledMaps",
+        "customGameSettings.gamemodes.hybrid.disabledMaps",
+        "customGameSettings.gamemodes.hybridAprilFools.disabledMaps",
+        "customGameSettings.gamemodes.bountyHunter.disabledMaps",
+        "customGameSettings.gamemodes.ctf.disabledMaps",
+        "customGameSettings.gamemodes.elimination.disabledMaps",
+        "customGameSettings.gamemodes.tdm.disabledMaps",
+        "customGameSettings.gamemodes.skirmish.disabledMaps",
+        "customGameSettings.gamemodes.practiceRange.disabledMaps",
+        "customGameSettings.gamemodes.stadiumPracticeRange.disabledMaps",
+        "customGameSettings.gamemodes.junkenstein.disabledMaps",
+        "customGameSettings.gamemodes.flashpoint.disabledMaps",
+        "customGameSettings.gamemodes.flashpointAprilFools.disabledMaps",
+        "customGameSettings.gamemodes.ffa.disabledMaps",
+        "customGameSettings.gamemodes.push.disabledMaps",
+        "customGameSettings.gamemodes.pushAprilFools.disabledMaps",
+        "customGameSettings.gamemodes.clash.disabledMaps"
+      ],
+      "zh-CN": "禁用地图"
+    }
+  },
+  "maps": {
+    "King's Row Winter": {
+      "en-US": "King's Row Winter",
+      "sources": [
+        "maps.kingsRowWinter"
+      ],
+      "zh-CN": "圣诞节国王大道"
+    },
+    "Workshop Island": {
+      "en-US": "Workshop Island",
+      "sources": [
+        "maps.workshopIsland"
+      ],
+      "zh-CN": "地图工坊岛屿"
+    },
+    "Aatlis": {
+      "en-US": "Aatlis",
+      "sources": [
+        "maps.aatlis"
+      ],
+      "zh-CN": "阿特利斯"
+    },
+    "Ayutthaya": {
+      "en-US": "Ayutthaya",
+      "sources": [
+        "maps.ayutthaya"
+      ],
+      "zh-CN": "阿育陀耶"
+    },
+    "Antarctic Peninsula": {
+      "en-US": "Antarctic Peninsula",
+      "sources": [
+        "maps.antarcticPeninsula"
+      ],
+      "zh-CN": "南极半岛"
+    },
+    "Black Forest": {
+      "en-US": "Black Forest",
+      "sources": [
+        "maps.blackForest"
+      ],
+      "zh-CN": "黑森林"
+    },
+    "Black Forest Winter": {
+      "en-US": "Black Forest Winter",
+      "sources": [
+        "maps.blackForestWinter"
+      ],
+      "zh-CN": "圣诞节黑森林"
+    },
+    "Blizzard World": {
+      "en-US": "Blizzard World",
+      "sources": [
+        "maps.blizzWorld"
+      ],
+      "zh-CN": "暴雪世界"
+    },
+    "Blizzard World Winter": {
+      "en-US": "Blizzard World Winter",
+      "sources": [
+        "maps.blizzWorldWinter"
+      ],
+      "zh-CN": "圣诞节暴雪世界"
+    },
+    "Busan": {
+      "en-US": "Busan",
+      "sources": [
+        "maps.busan"
+      ],
+      "zh-CN": "釜山"
+    },
+    "Busan Downtown Lunar New Year": {
+      "en-US": "Busan Downtown Lunar New Year",
+      "sources": [
+        "maps.busanDowntownLny"
+      ],
+      "zh-CN": "春节釜山城区"
+    },
+    "Busan Sanctuary Lunar New Year": {
+      "en-US": "Busan Sanctuary Lunar New Year",
+      "sources": [
+        "maps.busanSanctuaryLny"
+      ],
+      "zh-CN": "春节釜山寺院"
+    },
+    "Busan Stadium": {
+      "en-US": "Busan Stadium",
+      "sources": [
+        "maps.busanStadium"
+      ],
+      "zh-CN": "釜山体育场"
+    },
+    "Busan Stadium Classic": {
+      "en-US": "Busan Stadium Classic",
+      "sources": [
+        "maps.busanStadiumClassic"
+      ],
+      "zh-CN": "釜山体育场（经典）"
+    },
+    "Castillo": {
+      "en-US": "Castillo",
+      "sources": [
+        "maps.castillo"
+      ],
+      "zh-CN": "城堡"
+    },
+    "Château Guillard": {
+      "en-US": "Château Guillard",
+      "sources": [
+        "maps.chateauGuillard"
+      ],
+      "zh-CN": "吉拉德堡"
+    },
+    "Château Guillard Halloween": {
+      "en-US": "Château Guillard Halloween",
+      "sources": [
+        "maps.chateauGuillardHalloween"
+      ],
+      "zh-CN": "万圣节吉拉德堡"
+    },
+    "Circuit Royal": {
+      "en-US": "Circuit Royal",
+      "sources": [
+        "maps.circuitRoyal"
+      ],
+      "zh-CN": "皇家赛道"
+    },
+    "Colosseo": {
+      "en-US": "Colosseo",
+      "sources": [
+        "maps.colosseo"
+      ],
+      "zh-CN": "斗兽场"
+    },
+    "Dorado": {
+      "en-US": "Dorado",
+      "sources": [
+        "maps.dorado"
+      ],
+      "zh-CN": "多拉多"
+    },
+    "Ecopoint: Antarctica": {
+      "en-US": "Ecopoint: Antarctica",
+      "sources": [
+        "maps.ecopointAntarctica"
+      ],
+      "zh-CN": "生态监测站：南极洲"
+    },
+    "Ecopoint: Antarctica Winter": {
+      "en-US": "Ecopoint: Antarctica Winter",
+      "sources": [
+        "maps.ecopointAntarcticaWinter"
+      ],
+      "zh-CN": "圣诞节生态监测站：南极洲"
+    },
+    "Eichenwalde": {
+      "en-US": "Eichenwalde",
+      "sources": [
+        "maps.eichenwalde"
+      ],
+      "zh-CN": "艾兴瓦尔德"
+    },
+    "Eichenwalde Halloween": {
+      "en-US": "Eichenwalde Halloween",
+      "sources": [
+        "maps.eichenwaldeHalloween"
+      ],
+      "zh-CN": "万圣节艾兴瓦尔德"
+    },
+    "Esperança": {
+      "en-US": "Esperança",
+      "sources": [
+        "maps.esperanca"
+      ],
+      "zh-CN": "埃斯佩兰萨"
+    },
+    "Estádio das Rãs": {
+      "en-US": "Estádio das Rãs",
+      "sources": [
+        "maps.estadioDasRas"
+      ],
+      "zh-CN": "弗格体育场"
+    },
+    "Hanamura": {
+      "en-US": "Hanamura",
+      "sources": [
+        "maps.hanamura"
+      ],
+      "zh-CN": "花村"
+    },
+    "Hanamura Winter": {
+      "en-US": "Hanamura Winter",
+      "sources": [
+        "maps.hanamuraWinter"
+      ],
+      "zh-CN": "圣诞节花村"
+    },
+    "Hanaoka": {
+      "en-US": "Hanaoka",
+      "sources": [
+        "maps.hanaoka"
+      ],
+      "zh-CN": "花冈"
+    },
+    "Havana": {
+      "en-US": "Havana",
+      "sources": [
+        "maps.havana"
+      ],
+      "zh-CN": "哈瓦那"
+    },
+    "Hollywood": {
+      "en-US": "Hollywood",
+      "sources": [
+        "maps.hollywood"
+      ],
+      "zh-CN": "好莱坞"
+    },
+    "Hollywood Halloween": {
+      "en-US": "Hollywood Halloween",
+      "sources": [
+        "maps.hollywoodHalloween"
+      ],
+      "zh-CN": "万圣节好莱坞"
+    },
+    "Horizon Lunar Colony": {
+      "en-US": "Horizon Lunar Colony",
+      "sources": [
+        "maps.horizonLunarColony"
+      ],
+      "zh-CN": "“地平线”月球基地"
+    },
+    "Ilios": {
+      "en-US": "Ilios",
+      "sources": [
+        "maps.ilios"
+      ],
+      "zh-CN": "伊利奥斯"
+    },
+    "Ilios Lighthouse": {
+      "en-US": "Ilios Lighthouse",
+      "sources": [
+        "maps.iliosLighthouse"
+      ],
+      "zh-CN": "伊利奥斯灯塔"
+    },
+    "Ilios Ruins": {
+      "en-US": "Ilios Ruins",
+      "sources": [
+        "maps.iliosRuins"
+      ],
+      "zh-CN": "伊利奥斯废墟"
+    },
+    "Ilios Well": {
+      "en-US": "Ilios Well",
+      "sources": [
+        "maps.iliosWell"
+      ],
+      "zh-CN": "伊利奥斯深井"
+    },
+    "Junkenstein's Revenge": {
+      "en-US": "Junkenstein's Revenge",
+      "sources": [
+        "maps.junkenstein"
+      ],
+      "zh-CN": "怪鼠复仇"
+    },
+    "Junkertown": {
+      "en-US": "Junkertown",
+      "sources": [
+        "maps.junkertown"
+      ],
+      "zh-CN": "渣客镇"
+    },
+    "Kanezaka": {
+      "en-US": "Kanezaka",
+      "sources": [
+        "maps.kanezaka"
+      ],
+      "zh-CN": "铁坂"
+    },
+    "King's Row": {
+      "en-US": "King's Row",
+      "sources": [
+        "maps.kingsRow"
+      ],
+      "zh-CN": "国王大道"
+    },
+    "Lijiang Control Center": {
+      "en-US": "Lijiang Control Center",
+      "sources": [
+        "maps.lijiangControlCenter"
+      ],
+      "zh-CN": "漓江塔控制中心"
+    },
+    "Lijiang Control Center Lunar New Year": {
+      "en-US": "Lijiang Control Center Lunar New Year",
+      "sources": [
+        "maps.lijiangControlCenterLny"
+      ],
+      "zh-CN": "春节漓江塔控制中心"
+    },
+    "Lijiang Garden": {
+      "en-US": "Lijiang Garden",
+      "sources": [
+        "maps.lijiangGarden"
+      ],
+      "zh-CN": "漓江塔庭院"
+    },
+    "Lijiang Garden Lunar New Year": {
+      "en-US": "Lijiang Garden Lunar New Year",
+      "sources": [
+        "maps.lijiangGardenLny"
+      ],
+      "zh-CN": "春节漓江塔庭院"
+    },
+    "Lijiang Night Market": {
+      "en-US": "Lijiang Night Market",
+      "sources": [
+        "maps.lijiangNightMarket"
+      ],
+      "zh-CN": "漓江塔夜市"
+    },
+    "Lijiang Night Market Lunar New Year": {
+      "en-US": "Lijiang Night Market Lunar New Year",
+      "sources": [
+        "maps.lijiangNightMarketLny"
+      ],
+      "zh-CN": "春节漓江塔夜市"
+    },
+    "Lijiang Tower": {
+      "en-US": "Lijiang Tower",
+      "sources": [
+        "maps.lijiangTower"
+      ],
+      "zh-CN": "漓江塔"
+    },
+    "Lijiang Tower Lunar New Year": {
+      "en-US": "Lijiang Tower Lunar New Year",
+      "sources": [
+        "maps.lijiangTowerLny"
+      ],
+      "zh-CN": "春节漓江塔"
+    },
+    "Malevento": {
+      "en-US": "Malevento",
+      "sources": [
+        "maps.malevento"
+      ],
+      "zh-CN": "马莱温多"
+    },
+    "Midtown": {
+      "en-US": "Midtown",
+      "sources": [
+        "maps.midtown"
+      ],
+      "zh-CN": "中城"
+    },
+    "Necropolis": {
+      "en-US": "Necropolis",
+      "sources": [
+        "maps.necropolis"
+      ],
+      "zh-CN": "墓园"
+    },
+    "Neon Junction": {
+      "en-US": "Neon Junction",
+      "sources": [
+        "maps.neonJunction"
+      ],
+      "zh-CN": "霓虹枢纽"
+    },
+    "Nepal": {
+      "en-US": "Nepal",
+      "sources": [
+        "maps.nepal"
+      ],
+      "zh-CN": "尼泊尔"
+    },
+    "Nepal Sanctum": {
+      "en-US": "Nepal Sanctum",
+      "sources": [
+        "maps.nepalSanctum"
+      ],
+      "zh-CN": "尼泊尔圣所"
+    },
+    "Nepal Shrine": {
+      "en-US": "Nepal Shrine",
+      "sources": [
+        "maps.nepalShrine"
+      ],
+      "zh-CN": "尼泊尔圣坛"
+    },
+    "Nepal Village": {
+      "en-US": "Nepal Village",
+      "sources": [
+        "maps.nepalVillage"
+      ],
+      "zh-CN": "尼泊尔村庄"
+    },
+    "Nepal Village Winter": {
+      "en-US": "Nepal Village Winter",
+      "sources": [
+        "maps.nepalVillageWinter"
+      ],
+      "zh-CN": "圣诞节尼泊尔村庄"
+    },
+    "New Junk City": {
+      "en-US": "New Junk City",
+      "sources": [
+        "maps.newJunkCity"
+      ],
+      "zh-CN": "新渣客城"
+    },
+    "New Queen Street": {
+      "en-US": "New Queen Street",
+      "sources": [
+        "maps.newQueenStreet"
+      ],
+      "zh-CN": "新皇后街"
+    },
+    "Numbani": {
+      "en-US": "Numbani",
+      "sources": [
+        "maps.numbani"
+      ],
+      "zh-CN": "努巴尼"
+    },
+    "Oasis": {
+      "en-US": "Oasis",
+      "sources": [
+        "maps.oasis"
+      ],
+      "zh-CN": "绿洲城"
+    },
+    "Oasis City Center": {
+      "en-US": "Oasis City Center",
+      "sources": [
+        "maps.oasisCityCenter"
+      ],
+      "zh-CN": "绿洲城中心"
+    },
+    "Oasis Gardens": {
+      "en-US": "Oasis Gardens",
+      "sources": [
+        "maps.oasisGardens"
+      ],
+      "zh-CN": "绿洲城花园"
+    },
+    "Oasis University": {
+      "en-US": "Oasis University",
+      "sources": [
+        "maps.oasisUniversity"
+      ],
+      "zh-CN": "绿洲城大学"
+    },
+    "Paraíso": {
+      "en-US": "Paraíso",
+      "sources": [
+        "maps.paraiso"
+      ],
+      "zh-CN": "帕拉伊苏"
+    },
+    "Paris": {
+      "en-US": "Paris",
+      "sources": [
+        "maps.paris"
+      ],
+      "zh-CN": "巴黎"
+    },
+    "Petra": {
+      "en-US": "Petra",
+      "sources": [
+        "maps.petra"
+      ],
+      "zh-CN": "佩特拉"
+    },
+    "Practice Range": {
+      "en-US": "Practice Range",
+      "sources": [
+        "maps.practiceRange"
+      ],
+      "zh-CN": "训练靶场"
+    },
+    "Rialto": {
+      "en-US": "Rialto",
+      "sources": [
+        "maps.rialto"
+      ],
+      "zh-CN": "里阿尔托"
+    },
+    "Route 66": {
+      "en-US": "Route 66",
+      "sources": [
+        "maps.route66"
+      ],
+      "zh-CN": "66号公路"
+    },
+    "Runasapi": {
+      "en-US": "Runasapi",
+      "sources": [
+        "maps.runasapi"
+      ],
+      "zh-CN": "鲁纳塞彼"
+    },
+    "Samoa": {
+      "en-US": "Samoa",
+      "sources": [
+        "maps.samoa"
+      ],
+      "zh-CN": "萨摩亚"
+    },
+    "Shambali Monastery": {
+      "en-US": "Shambali Monastery",
+      "sources": [
+        "maps.shambaliMonastery"
+      ],
+      "zh-CN": "香巴里寺院"
+    },
+    "Suravasa": {
+      "en-US": "Suravasa",
+      "sources": [
+        "maps.suravasa"
+      ],
+      "zh-CN": "苏拉瓦萨"
+    },
+    "Sydney Harbour Arena": {
+      "en-US": "Sydney Harbour Arena",
+      "sources": [
+        "maps.sydneyHarbourArena"
+      ],
+      "zh-CN": "悉尼海港竞技场"
+    },
+    "Sydney Harbour Arena Classic": {
+      "en-US": "Sydney Harbour Arena Classic",
+      "sources": [
+        "maps.sydneyHarbourArenaClassic"
+      ],
+      "zh-CN": "悉尼海港竞技场（经典）"
+    },
+    "Temple of Anubis": {
+      "en-US": "Temple of Anubis",
+      "sources": [
+        "maps.templeOfAnubis"
+      ],
+      "zh-CN": "阿努比斯神殿"
+    },
+    "Throne of Anubis": {
+      "en-US": "Throne of Anubis",
+      "sources": [
+        "maps.throneOfAnubis"
+      ],
+      "zh-CN": "阿努比斯王座"
+    },
+    "Volskaya Industries": {
+      "en-US": "Volskaya Industries",
+      "sources": [
+        "maps.volskaya"
+      ],
+      "zh-CN": "沃斯卡娅工业区"
+    },
+    "Watchpoint: Gibraltar": {
+      "en-US": "Watchpoint: Gibraltar",
+      "sources": [
+        "maps.watchpointGibraltar"
+      ],
+      "zh-CN": "监测站：直布罗陀"
+    },
+    "Workshop Chamber": {
+      "en-US": "Workshop Chamber",
+      "sources": [
+        "maps.workshopChamber"
+      ],
+      "zh-CN": "地图工坊室内"
+    },
+    "Workshop Expanse": {
+      "en-US": "Workshop Expanse",
+      "sources": [
+        "maps.workshopExpanse"
+      ],
+      "zh-CN": "地图工坊空地"
+    },
+    "Workshop Expanse Night": {
+      "en-US": "Workshop Expanse Night",
+      "sources": [
+        "maps.workshopExpanseNight"
+      ],
+      "zh-CN": "地图工坊空地（夜间）"
+    },
+    "Workshop Green Screen": {
+      "en-US": "Workshop Green Screen",
+      "sources": [
+        "maps.workshopGreenScreen"
+      ],
+      "zh-CN": "地图工坊绿幕"
+    },
+    "Workshop Island Night": {
+      "en-US": "Workshop Island Night",
+      "sources": [
+        "maps.workshopIslandNight"
+      ],
+      "zh-CN": "地图工坊岛屿（夜间）"
+    }
+  },
+  "modes": {
+    "Assault": {
+      "en-US": "Assault",
+      "sources": [
+        "gamemodes.assault"
+      ],
+      "zh-CN": "攻防作战"
+    },
+    "Control": {
+      "en-US": "Control",
+      "sources": [
+        "gamemodes.control"
+      ],
+      "zh-CN": "占领要点"
+    },
+    "Deathmatch": {
+      "en-US": "Deathmatch",
+      "sources": [
+        "gamemodes.ffa"
+      ],
+      "zh-CN": "死斗"
+    },
+    "Escort": {
+      "en-US": "Escort",
+      "sources": [
+        "gamemodes.escort"
+      ],
+      "zh-CN": "运载目标"
+    },
+    "General": {
+      "en-US": "General",
+      "sources": [
+        "customGameSettings.heroes.teams.allTeams",
+        "customGameSettings.gamemodes.values.general"
+      ],
+      "zh-CN": "综合"
+    },
+    "Hybrid": {
+      "en-US": "Hybrid",
+      "sources": [
+        "gamemodes.hybrid"
+      ],
+      "zh-CN": "攻击护送"
+    },
+    "Skirmish": {
+      "en-US": "Skirmish",
+      "sources": [
+        "gamemodes.skirmish"
+      ],
+      "zh-CN": "突击模式"
+    }
+  },
+  "provenance": {
+    "source": "user-provided workshop-data export (workshop-data.json)",
+    "sourceCommit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
+    "method": "generated current customGameSettings labels, value kinds, enum members, and paths; dynamic hero templates remain resolved through gameplay catalog identities"
+  },
+  "schemaVersion": 2,
+  "teams": {
+    "General": {
+      "en-US": "General",
+      "sources": [
+        "customGameSettings.heroes.teams.allTeams"
+      ],
+      "zh-CN": "综合"
+    },
+    "Team 1": {
+      "en-US": "Team 1",
+      "sources": [
+        "customGameSettings.heroes.teams.team1"
+      ],
+      "zh-CN": "队伍1"
+    },
+    "Team 2": {
+      "en-US": "Team 2",
+      "sources": [
+        "customGameSettings.heroes.teams.team2"
+      ],
+      "zh-CN": "队伍2"
+    }
+  },
+  "tokens": {
+    "No": {
+      "en-US": "No",
+      "sources": [
+        "other.customGameSettings.__no__"
+      ],
+      "zh-CN": "否"
+    },
+    "Off": {
+      "en-US": "Off",
+      "sources": [
+        "other.customGameSettings.__off__"
+      ],
+      "zh-CN": "关闭"
+    },
+    "On": {
+      "en-US": "On",
+      "sources": [
+        "other.customGameSettings.__on__"
+      ],
+      "zh-CN": "开启"
+    },
+    "disabled": {
+      "en-US": "disabled",
+      "sources": [
+        "other.customGameSettings.__disabled__"
+      ],
+      "zh-CN": "禁用"
+    }
+  },
+  "locales": [
+    "en-US",
+    "zh-CN"
+  ],
+  "projection": "multi-locale-settings/v1"
+}

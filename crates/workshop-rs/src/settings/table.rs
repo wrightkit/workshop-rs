@@ -13,9 +13,9 @@ use serde_json::Value;
 use std::sync::OnceLock;
 
 /// Locale-specific settings names generated from the reviewed Workshop data
-/// export. English remains the table's canonical spelling; additional locale
-/// spellings are data, not semantic branches.
-const LOCALE_DATA: &str = include_str!("data/zh-cn.json");
+/// export. The projection contains every reviewed locale as data; adding a
+/// locale changes this file, not the parser or emitter architecture.
+const LOCALE_DATA: &str = include_str!("data/locales.json");
 
 fn locale_data() -> &'static Value {
     static DATA: OnceLock<Value> = OnceLock::new();
@@ -31,11 +31,15 @@ fn locale_data() -> &'static Value {
 /// must preserve the explicit missing-mapping contract.
 pub fn localized_name(locale: &str, section: &str, english: &str) -> Option<&'static str> {
     let data = locale_data();
-    let data_locale = data.get("locale")?.as_str()?;
-    if !data_locale.eq_ignore_ascii_case(locale) {
-        return None;
-    }
-    data.get(section)?.get(english)?.get(data_locale)?.as_str()
+    let aliases = data.get(section)?.get(english)?.as_object()?;
+    aliases.get(locale).and_then(Value::as_str).or_else(|| {
+        aliases.iter().find_map(|(known, value)| {
+            known
+                .eq_ignore_ascii_case(locale)
+                .then(|| value.as_str())
+                .flatten()
+        })
+    })
 }
 
 /// A leaf key kind: how a settings leaf renders and validates.

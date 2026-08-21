@@ -104,8 +104,8 @@ struct ResidualGroup {
     count: usize,
     #[serde(rename = "representativeSpan")]
     representative_span: Option<SpanReport>,
-    classification: &'static str,
-    evidence: &'static str,
+    classification: String,
+    evidence: String,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -118,11 +118,14 @@ struct SpanReport {
 }
 
 fn residual_groups(issues: &[semantic::SemanticIssue]) -> Vec<ResidualGroup> {
-    let mut groups: BTreeMap<(String, String), (usize, Option<SpanReport>)> = BTreeMap::new();
+    let mut groups: BTreeMap<
+        (String, String),
+        (usize, Option<SpanReport>, semantic::ResidualClassification),
+    > = BTreeMap::new();
     for issue in issues {
         let entry = groups
             .entry((format!("{:?}", issue.kind), issue.name.clone()))
-            .or_insert((0, None));
+            .or_insert((0, None, issue.classification));
         entry.0 += 1;
         if entry.1.is_none() {
             entry.1 = issue.span.map(|span| SpanReport {
@@ -134,34 +137,21 @@ fn residual_groups(issues: &[semantic::SemanticIssue]) -> Vec<ResidualGroup> {
             });
         }
     }
-    groups.into_iter().map(|((kind, source_canonical_name), (count, representative_span))| {
-        let (classification, evidence) = match kind.as_str() {
-            "RawSetting" => (
-                "project-defined-setting",
-                "settings parser preserved the source span without a canonical settings-table identity",
-            ),
-            "UnknownValue" => (
-                "undeclared-or-project-defined-value",
-                "canonical catalog lookup failed for this value identity at the recorded source span",
-            ),
-            "UnknownAction" => (
-                "undeclared-or-project-defined-action",
-                "canonical catalog lookup failed for this action identity at the recorded source span",
-            ),
-            "OpaqueAction" => (
-                "opaque-legacy-action",
-                "parser preserved the raw action, but no canonical action contract is declared",
-            ),
-            _ => (
-                "evidence-insufficient",
-                "semantic::inspect reported a residual kind without a canonical contract",
-            ),
-        };
-        ResidualGroup {
-            kind, source_canonical_name, count, representative_span,
-            classification, evidence,
-        }
-    }).collect()
+    groups
+        .into_iter()
+        .map(
+            |((kind, source_canonical_name), (count, representative_span, classification))| {
+                ResidualGroup {
+                    kind,
+                    source_canonical_name,
+                    count,
+                    representative_span,
+                    classification: classification.as_str().to_string(),
+                    evidence: classification.evidence().to_string(),
+                }
+            },
+        )
+        .collect()
 }
 
 #[derive(Debug, serde::Serialize)]

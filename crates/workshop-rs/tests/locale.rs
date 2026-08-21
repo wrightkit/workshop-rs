@@ -26,6 +26,22 @@ fn zh() -> Locale {
     Locale::new("zh-CN")
 }
 
+#[test]
+fn settings_projection_is_multi_locale_data() {
+    assert_eq!(
+        workshop_rs::settings::table::localized_name("zh-CN", "teams", "Team 1"),
+        Some("队伍1")
+    );
+    assert_eq!(
+        workshop_rs::settings::table::localized_name("en-US", "teams", "Team 1"),
+        Some("Team 1")
+    );
+    let projection: serde_json::Value =
+        serde_json::from_str(include_str!("../src/settings/data/locales.json"))
+            .expect("multi-locale settings projection");
+    assert_eq!(projection["locales"], serde_json::json!(["en-US", "zh-CN"]));
+}
+
 const BASIC_RULE: &str = "rule (\"setup\") {
     event {
         Ongoing - Global;

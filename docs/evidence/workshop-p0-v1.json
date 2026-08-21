@@ -22,30 +22,36 @@
     {"id": "rework", "sha256": "aa32cda640dba41fd99245a7d425d9897b53875d15cf071862197a8e6840258c", "locale": "en-US", "observedSemanticResiduals": 0}
   ],
   "hashReconciliation": {
-    "aiPvePrevious": "b040... was an older retained output produced with OverPy 9.7.10 and is not the pinned artifact",
+    "aiPvePrevious": "b0405707d54fd30e20f285ce4a3fdaf9899e3959fb5dd223c898040c63a18773 was recorded by the prior committed manifest under the same pinned source revision and OverPy 9.7.13 toolchain; that historical pairing was incorrect",
     "aiPvePinned": "d9c6460ca550e40083efcc2b57de16360088631970824599a22c0aa2cb7f11f9",
-    "reason": "reacquired from source revision e0c0721 with the manifest-pinned OverPy 9.7.13, Node 22, and pnpm 10.6.3 build; the digest is independently checked after acquisition and is not used as a self-validating expected output"
+    "reason": "reacquired from source revision e0c0721 with the manifest-pinned OverPy 9.7.13, Node 22, and pnpm 10.6.3 build; the digest is independently checked after acquisition and is not used as a self-validating expected output",
+    "historicalManifestCorrection": {
+      "manifestCommit": "b776cf5",
+      "recordedArtifactSha256": "b0405707d54fd30e20f285ce4a3fdaf9899e3959fb5dd223c898040c63a18773",
+      "recordedCompiler": "OverPy 9.7.13 / Node 22 / pnpm 10.6.3",
+      "correction": "The prior manifest really did pair b040 with OverPy 9.7.13. It did not record OverPy 9.7.10. That artifact identity was not reproducible from the recorded source and toolchain; d9c6460 is authoritative because it is the independently SHA-verified output of the exact pinned rebuild."
+    }
   },
   "runtimeClassifications": {
-    "ai-pve": ["OverPy 9.7.13 pinned build output is d9c6460...; project variable Brigitte remains unknown", "D.Mon settings hero parses canonically but zh-CN settings mapping is missing and emission fails explicitly"],
-    "bastion": ["project variable breathPalette remains unknown"],
-    "defend": ["Team Deathmatch enabled maps parses, emits, reparses, and is semantically equivalent", "trailing rawWorkshopAction remains opaque and emission fails closed"],
+    "ai-pve": ["OverPy 9.7.13 pinned build output is d9c6460...; source-declared variables are retained as explicit semantic residuals rather than generic unknown values", "D.Mon settings hero parses canonically but zh-CN settings mapping is missing and emission fails explicitly"],
+    "bastion": ["source-declared variables and project-defined settings are retained as explicit semantic residuals; no generic unknown classification is accepted"],
+    "defend": ["Team Deathmatch enabled maps parses, emits, reparses, and is semantically equivalent", "trailing rawWorkshopAction is classified as legacy-opaque-construct and emission fails closed", "gateHealthChase is cross-referenced to the source global declaration"],
     "illari": ["canonical validation, emission, reparse, deterministic emission, and semantic round-trip passed"],
     "rework": ["disabled Is Using Ability 1 is an inactive ordinary condition and is omitted from canonical conditions", "EffectReeval emission and reparse now pass"]
   },
   "classifications": {
     "ordinaryCurrentConstructs": {
-      "status": "closed",
+      "status": "closed-for-observed-canonical-surface",
       "evidence": ["Hero(D.Va) localized enum regression", "Capture The Flag and Team Deathmatch settings regressions", "canonical percent setting keys and optional percent values in mixed-locale exports", "disabled condition and For Player Variable roundtrip regressions", "Sojourn/Roadhog/Hazard pinned AI-PVE setting aliases", "Modulo/Game Mode/vector catalog reconciliation"]
     },
     "projectDefinedOrEvidenceInsufficient": {
       "status": "preserved-and-visible",
-      "groups": ["AI-PVE custom Workshop Setting labels and project variables", "Bastion custom settings and project variables", "defend gateHealthChase project variable"]
+      "groups": ["AI-PVE custom Workshop Setting labels and source-declared variables", "Bastion custom settings and source-declared variables", "defend gateHealthChase source-declared variable"]
     },
     "intentionallyOpaque": {
       "status": "preserved-and-visible",
       "groups": ["defend rawWorkshopAction at the artifact's trailing End"]
     }
   },
-  "note": "Issue counts are semantic incompleteness counts, not failure counts. Remaining groups are not silently promoted to canonical identities. The durable harness performs canonical validation, semantic inspection, deterministic emission, reparse, and semantic roundtrip equivalence when run against the reacquired artifacts; runtimeClassifications records the remaining project-defined, opaque, and missing-locale cases. Independent QA must still run it with the pinned artifacts before P0 acceptance."
+  "note": "Issue counts are semantic incompleteness counts, not failure counts. Residual groups are classified from parsed source declarations, construct context, and catalog absence; no generic undeclared-or-project-defined classification is accepted. The durable harness performs canonical validation, semantic inspection, deterministic emission, reparse, and semantic roundtrip equivalence when run against the reacquired artifacts; runtimeClassifications records the remaining project-defined, source-declared, legacy-opaque, and missing-locale cases. ordinaryCurrentConstructs is closed only for the observed canonical surface, not for all residual constructs. Independent QA must still run it with the pinned artifacts before P0 acceptance."
 }

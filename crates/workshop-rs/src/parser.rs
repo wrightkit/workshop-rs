@@ -730,7 +730,8 @@ impl Parser<'_> {
     }
 
     fn settings_name_matches(&self, section: &str, english: &str, display: &str) -> bool {
-        table::localized_name(self.locale.as_str(), section, english)
+        let localized = table::localized_name(self.locale.as_str(), section, english);
+        localized
             .is_some_and(|localized| localized == display)
             // Real Workshop exports can mix the selected locale with
             // primary-locale labels when a reviewed mapping is absent.

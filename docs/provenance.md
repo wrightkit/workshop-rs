@@ -65,7 +65,7 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 | Rule event identities and filters (`global`, `eachPlayer`, the nine player events, `subroutine`, `EventTeam`, and `EventPlayer`) | User-provided Workshop export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (`other.events`, `other.eventTeams`, `other.eventPlayers`, and computed `other.eventSlots`), cross-checked against documented raw Workshop event blocks; the canonical WIR keeps existing parameterless `eachPlayer` input and requires the evidenced team/player filters for other filtered events. The `Player` filter's accepted union (`EventPlayer` slot/all or a canonical `Hero`) is represented explicitly by `EventTarget` (classes 1/2). |
 | OSTW-exercised params/spellings and enum domains (CreateEffect, Workshop Setting, Hero/Map/Button/Icon/Operation/Rounding/InworldTextRev, …) | Pinned OSTW v3.4.0 reference probe emissions (P4/P5/P6/P6b) and the protect-ban entry-point reachable closure (class 5). |
 | Parameter metadata (`paramDomains`, `paramDefaults`) | Pinned-reference probe evidence (classes 1/5), never copied from upstream game data. |
-| Settings emission table (`src/settings/table.rs` and generated data files) | Hand-written fixture surface plus the reviewed `workshop-data` export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; generated entries, names, locale mappings, and source paths are committed together, while pinned OverPy 9.7.10 output remains the behavioral check (classes 1/5). |
+| Settings emission table (`src/settings/table.rs` and generated data files) | Hand-written fixture surface plus the reviewed `workshop-data` export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; generated entries, names, locale mappings, and source paths are committed together in the declared multi-locale projection, while pinned OverPy 9.7.10 output remains the behavioral check (classes 1/5). |
 
 ### Locale coverage
 
@@ -79,7 +79,7 @@ license, reviewed) is embedded in the dataset itself and surfaced by
   `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; the export is not committed.
 * The generated settings inventory currently covers labels 233/233, modes
   7/7, maps 2/2, heroes 52/52, enum values 86/86, tokens 4/4, and teams 3/3
-  in `crates/workshop-rs/src/settings/data/zh-cn.json`. Each mapping records
+  in `crates/workshop-rs/src/settings/data/locales.json`. Each mapping records
   its export source paths; settings without a mapping continue to fail
   explicitly.
 

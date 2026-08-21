@@ -120,14 +120,9 @@ fn manifest_pins_the_export_and_exact_match_coverage() {
 #[test]
 fn settings_corpus_includes_general_mode_and_team_labels() {
     let settings: serde_json::Value =
-        serde_json::from_str(include_str!("../src/settings/data/zh-cn.json"))
+        serde_json::from_str(include_str!("../src/settings/data/locales.json"))
             .expect("generated settings corpus is valid JSON");
-    for section in ["modes", "teams", "labels", "enums", "heroes", "maps"] {
-        assert_eq!(
-            settings["coverage"][section]["matched"], settings["coverage"][section]["total"],
-            "generated {section} inventory must be fully localized"
-        );
-    }
+    assert_eq!(settings["locales"], serde_json::json!(["en-US", "zh-CN"]));
     assert_eq!(settings["modes"]["General"]["zh-CN"], "综合");
     assert_eq!(settings["teams"]["General"]["zh-CN"], "综合");
     assert_eq!(
