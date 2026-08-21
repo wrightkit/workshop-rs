@@ -3903,7 +3903,7 @@
       ]
     }
   ],
-  "digest": "966161015ad5c69a7e3c06859ce68a25b87683dd7dc75123a1a1461a7a3c0cf1",
+  "digest": "6f94be86d7547248ef2047e155db1c359d2d45a1d807801d2e9e102db9daa63d",
   "enums": [
     {
       "domain": "Impulse",
@@ -9597,7 +9597,8 @@
       "93 additional value identities are mechanically reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; parameter names/types and reviewed en-US/zh-CN aliases remain data-backed",
       "enum domains/members and action signatures are reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; structural aliases remain owned by the parser",
       "parameter and Value return types for 361 exact-id entries are reconciled from the pinned OverPy static metadata at https://github.com/Zezombye/overpy/tree/d854bf01fc7bbf3b2169f67408c07a8da8989ad6, whose metadata credits the parsed Workshop documentation at https://github.com/arxenix/owws-documentation/blob/master/workshop.json; unmatched or arity-conflicting entries remain evidence-insufficient instead of being inferred",
-      "OverPy metadata is a static cross-check only; it is not treated as a runtime or .NET dependency, and Workshop.codes/OSTW evidence remains required before narrowing entries where this source is absent or disputed",
+      "Workshop.codes structured wiki articles are a direct documentation cross-check for the declared Action/Value properties, including Returns, Parameters, parameter Type, and Default (for example https://workshop.codes/wiki/articles/add, https://workshop.codes/wiki/articles/teleport, and https://workshop.codes/wiki/articles/set-crouch-enabled); entries absent from the reviewed evidence or with source conflicts remain evidence-insufficient instead of being inferred",
+      "OverPy metadata is a static cross-check only; it is not treated as a runtime or .NET dependency",
       "OSTW static Elements.json at https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/tree/817c1db4bace52123f054ffe10d3d8a06052e687 provides an independent cross-check: 210 Action and 250 Value names match the current en-US catalog; its any/any[] declarations keep polymorphic entries evidence-insufficient rather than narrowing them",
       "static type spellings Clip/GamemodeLiteral/HeroLiteral are normalized to the canonical Clipping/Gamemode/Hero enum domains; distance, directionTowards, vector, vectorTowards, getObjectivePosition, charAt, valueInArray, arrayContains, max, and min retain Any parameter contracts where the pinned real-project artifacts demonstrate Workshop polymorphism beyond a narrower static declaration",
       "current vector constants, Game Mode and Modulo values, Gamemode members, Hero and Color domain aliases, and To Nearest alias are reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
