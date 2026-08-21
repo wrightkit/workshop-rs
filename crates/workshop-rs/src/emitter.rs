@@ -112,15 +112,18 @@ impl Emitter<'_> {
             self.out.push('\n');
         }
         if !self.program.global_variables.is_empty() || !self.program.player_variables.is_empty() {
-            self.line(0, "variables {")?;
+            let variables = self.structural("variables")?;
+            self.line(0, &format!("{variables} {{"))?;
             if !self.program.global_variables.is_empty() {
-                self.line(1, "global:")?;
+                let global = self.structural("global")?;
+                self.line(1, &format!("{global}:"))?;
                 for variable in self.program.global_variables.iter() {
                     self.line(2, &format!("{}: {}", variable.index, variable.name))?;
                 }
             }
             if !self.program.player_variables.is_empty() {
-                self.line(1, "player:")?;
+                let player = self.structural("player")?;
+                self.line(1, &format!("{player}:"))?;
                 for variable in self.program.player_variables.iter() {
                     self.line(2, &format!("{}: {}", variable.index, variable.name))?;
                 }
@@ -129,7 +132,8 @@ impl Emitter<'_> {
             self.out.push('\n');
         }
         if !self.program.subroutines.is_empty() {
-            self.line(0, "subroutines {")?;
+            let subroutines = self.structural("subroutines")?;
+            self.line(0, &format!("{subroutines} {{"))?;
             for subroutine in self.program.subroutines.iter() {
                 self.line(1, &format!("{}: {}", subroutine.index, subroutine.name))?;
             }
@@ -155,7 +159,8 @@ impl Emitter<'_> {
     /// carrier, table-driven (fixture-evidenced names). Only runs on
     /// validated programs, so unknown keys cannot reach this point.
     fn emit_settings(&mut self, settings: &SettingsTree) -> Result<()> {
-        self.line(0, "settings {")?;
+        let settings_keyword = self.structural("settings")?;
+        self.line(0, &format!("{settings_keyword} {{"))?;
         for child in &settings.children {
             if let SettingsNode::Workshop { children, .. } = child {
                 self.emit_workshop_settings(children, 1)?;
@@ -189,7 +194,8 @@ impl Emitter<'_> {
     }
 
     fn emit_workshop_settings(&mut self, children: &[SettingsNode], level: usize) -> Result<()> {
-        self.line(level, "workshop {")?;
+        let workshop = self.structural("workshop")?;
+        self.line(level, &format!("{workshop} {{"))?;
         for child in children {
             self.emit_workshop_node(child, level + 1)?;
         }
@@ -514,18 +520,20 @@ impl Emitter<'_> {
 
     fn rule(&mut self, rule: &wir::Rule) -> Result<()> {
         let disabled = if rule.disabled {
-            format!(
-                "{} ",
-                self.setting_name("tokens", "disabled", "token.disabled")?
-            )
+            format!("{} ", self.structural("disabled")?)
         } else {
             String::new()
         };
+        let rule_keyword = self.structural("rule")?;
         self.line(
             0,
-            &format!("{disabled}rule (\"{}\") {{", escape_string(&rule.name)),
+            &format!(
+                "{disabled}{rule_keyword} (\"{}\") {{",
+                escape_string(&rule.name)
+            ),
         )?;
-        self.line(1, "event {")?;
+        let event = self.structural("event")?;
+        self.line(1, &format!("{event} {{"))?;
         match &rule.event {
             wir::Event::Global => {
                 let spelling = self.spelling(Kind::Event, "global")?;
@@ -560,7 +568,8 @@ impl Emitter<'_> {
         }
         self.line(1, "}")?;
         if !rule.conditions.is_empty() {
-            self.line(1, "conditions {")?;
+            let conditions = self.structural("conditions")?;
+            self.line(1, &format!("{conditions} {{"))?;
             for condition in &rule.conditions {
                 let mut text = String::new();
                 // Reference normalization: comparison conditions render
@@ -585,7 +594,8 @@ impl Emitter<'_> {
             self.line(1, "}")?;
         }
         if !rule.actions.is_empty() {
-            self.line(1, "actions {")?;
+            let actions = self.structural("actions")?;
+            self.line(1, &format!("{actions} {{"))?;
             for (index, action) in rule.actions.iter().enumerate() {
                 let rule_final = index + 1 == rule.actions.len();
                 self.action(*action, 2, rule_final)?;
@@ -776,6 +786,7 @@ impl Emitter<'_> {
                 body,
                 ..
             } => {
+                let keyword = self.structural("forPlayerVariable")?;
                 let mut player_text = String::new();
                 let mut start_text = String::new();
                 let mut stop_text = String::new();
@@ -788,7 +799,8 @@ impl Emitter<'_> {
                 self.line(
                     level,
                     &format!(
-                        "For Player Variable({player_text}, {name}, {start_text}, {stop_text}, {step_text});"
+                        "{}({player_text}, {name}, {start_text}, {stop_text}, {step_text});",
+                        keyword
                     ),
                 )?;
                 for action in body {
@@ -1455,6 +1467,10 @@ impl Emitter<'_> {
             id: id.to_string(),
             locale: self.locale.clone(),
         })
+    }
+
+    fn structural(&mut self, id: &str) -> Result<String> {
+        self.spelling(Kind::Structural, id)
     }
 
     /// The localized spelling of a canonical enum member, resolving through

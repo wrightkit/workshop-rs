@@ -450,11 +450,11 @@ fn value_matches_type(
 fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &str) -> bool {
     match (value, expected) {
         (_, "Any" | "Unknown") => true,
-        (wir::Value::Number { .. }, "Number" | "Boolean") => true,
+        (wir::Value::Number { .. }, "Number") => true,
         (wir::Value::String(_), "String" | "Text") => true,
-        (wir::Value::Bool(_), "Boolean" | "Number") => true,
+        (wir::Value::Bool(_), "Boolean") => true,
         (wir::Value::Vector { .. }, "Vector") => true,
-        (wir::Value::Array(_), "Array" | "Object" | "Player" | "Vector") => true,
+        (wir::Value::Array(_), "Array") => true,
         (wir::Value::Enum { value_type, .. }, domain) => {
             matches!(domain, "Any" | "Unknown" | "Object") || value_type == domain
         }
@@ -463,12 +463,7 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
             .and_then(|entry| entry.return_type())
             .is_none_or(|return_type| {
                 return_type.split('|').any(|return_type| {
-                    expected == "Object"
-                        || (expected == "Player" && return_type == "Array")
-                        || (expected == "Vector" && return_type == "Array")
-                        || return_type == expected
-                        || return_type == "Any"
-                        || return_type == "Unknown"
+                    return_type == expected || return_type == "Any" || return_type == "Unknown"
                 })
             }),
         // Null is a valid Workshop placeholder for every value contract;

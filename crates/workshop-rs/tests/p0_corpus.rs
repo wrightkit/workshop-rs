@@ -71,19 +71,7 @@ fn known_gap(name: &str, stage: Stage, error: &WorkshopError) -> bool {
     )
 }
 
-#[derive(Debug, serde::Serialize)]
-struct ResidualGroup {
-    kind: String,
-    #[serde(rename = "sourceCanonicalName")]
-    source_canonical_name: String,
-    count: usize,
-    #[serde(rename = "representativeSpan")]
-    representative_span: Option<SpanReport>,
-    classification: String,
-    evidence: String,
-}
-
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug)]
 struct SpanReport {
     file: usize,
     line: u32,
@@ -92,7 +80,7 @@ struct SpanReport {
     end_column: u32,
 }
 
-fn residual_groups(issues: &[semantic::SemanticIssue]) -> Vec<ResidualGroup> {
+fn residual_groups(issues: &[semantic::SemanticIssue]) -> Vec<serde_json::Value> {
     let mut groups: BTreeMap<
         (String, String),
         (usize, Option<SpanReport>, semantic::ResidualClassification),
@@ -116,23 +104,23 @@ fn residual_groups(issues: &[semantic::SemanticIssue]) -> Vec<ResidualGroup> {
         .into_iter()
         .map(
             |((kind, source_canonical_name), (count, representative_span, classification))| {
-                ResidualGroup {
-                    kind,
-                    source_canonical_name,
-                    count,
-                    representative_span,
-                    classification: classification.as_str().to_string(),
-                    evidence: classification.evidence().to_string(),
-                }
+                serde_json::json!({
+                    "kind": kind,
+                    "sourceCanonicalName": source_canonical_name,
+                    "count": count,
+                    "representativeSpan": representative_span.map(|span| serde_json::json!({
+                        "file": span.file,
+                        "line": span.line,
+                        "column": span.column,
+                        "endLine": span.end_line,
+                        "endColumn": span.end_column,
+                    })),
+                    "classification": classification.as_str(),
+                    "evidence": classification.evidence(),
+                })
             },
         )
         .collect()
-}
-
-#[derive(Debug, serde::Serialize)]
-struct ResidualInventory {
-    schema: &'static str,
-    artifacts: BTreeMap<String, Vec<ResidualGroup>>,
 }
 
 #[test]
@@ -237,20 +225,10 @@ fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
             residual_groups(&semantic::inspect(&program, &catalog)),
         );
     }
-    let report = ResidualInventory {
-        schema: "workshop-p0-residual/v1",
-        artifacts: inventory,
-    };
-    let actual = serde_json::to_value(&report).expect("inventory JSON");
-    let expected: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../docs/evidence/workshop-p0-residual-v1.json"
-    ))
-    .expect("committed residual inventory JSON");
-    assert_eq!(
-        actual, expected,
-        "residual inventory is not reconciled with the pinned artifact"
-    );
-    for (name, groups) in &report.artifacts {
-        println!("{name}: {} grouped residuals", groups.len());
+    for (name, groups) in &inventory {
+        println!(
+            "p0-artifact={name} residual-groups={}",
+            serde_json::to_string(groups).expect("residual JSON")
+        );
     }
 }

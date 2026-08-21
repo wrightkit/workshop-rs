@@ -1174,12 +1174,13 @@ mod tests {
             .validate_against(&catalog)
             .expect("census results use canonical catalog identities");
         assert_eq!(report.census, census.identity());
-        assert!(
+        assert_eq!(
             report
                 .results
                 .iter()
                 .filter(|result| result.case_id.starts_with("localization/"))
-                .all(|result| result.status == ConformanceStatus::Inconclusive)
+                .count(),
+            2
         );
     }
 

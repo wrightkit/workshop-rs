@@ -119,6 +119,19 @@ impl Parser<'_> {
             })
     }
 
+    fn canonical_keyword(&self, spelling: &str) -> String {
+        self.catalog
+            .resolve(Kind::Structural, &self.locale, spelling)
+            .or_else(|| {
+                (self.locale != *self.catalog.primary_locale()).then(|| {
+                    self.catalog
+                        .resolve(Kind::Structural, self.catalog.primary_locale(), spelling)
+                })?
+            })
+            .map(|entry| entry.id.clone())
+            .unwrap_or_else(|| canonical_keyword(spelling).to_string())
+    }
+
     fn resolve_enum_domain_mixed(&self, spelling: &str) -> Option<&str> {
         self.catalog
             .resolve_enum_domain(&self.locale, spelling)
@@ -176,7 +189,7 @@ impl Parser<'_> {
                 }
                 None => break,
             };
-            match canonical_keyword(&phrase) {
+            match self.canonical_keyword(&phrase).as_str() {
                 "settings" => self.settings_section()?,
                 "variables" => self.variables_section()?,
                 "subroutines" => self.subroutines_section()?,
@@ -199,7 +212,8 @@ impl Parser<'_> {
         let mut children = Vec::new();
         while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
             let (display, child_start, _) = self.phrase()?;
-            let name = match canonical_keyword(&display) {
+            let canonical_display = self.canonical_keyword(&display);
+            let name = match canonical_display.as_str() {
                 value
                     if value == "extensions"
                         || display == "扩展"
@@ -916,7 +930,7 @@ impl Parser<'_> {
                 Some(Token {
                     kind: TokenKind::Word(word),
                     ..
-                }) => match canonical_keyword(&word) {
+                }) => match self.canonical_keyword(&word).as_str() {
                     "event" => {
                         if seen_sections.contains(&"event") {
                             return Err(
@@ -1267,23 +1281,23 @@ impl Parser<'_> {
                         actions.push(self.while_group()?);
                         continue;
                     }
-                    match canonical_keyword(&phrase) {
-                        "End" => {
+                    match self.canonical_keyword(&phrase).as_str() {
+                        "end" => {
                             self.pos = saved;
                             return Ok((actions, Stop::End));
                         }
-                        "Else If" => {
+                        "elseIf" => {
                             self.pos = saved;
                             return Ok((actions, Stop::ElseIf));
                         }
-                        "Else" => {
+                        "else" => {
                             self.pos = saved;
                             return Ok((actions, Stop::Else));
                         }
-                        "If" => actions.push(self.if_group()?),
-                        "For Global Variable" => actions.push(self.for_group()?),
-                        "For Player Variable" => actions.push(self.for_player_group()?),
-                        "While" => actions.push(self.while_group()?),
+                        "if" => actions.push(self.if_group()?),
+                        "forGlobalVariable" => actions.push(self.for_group()?),
+                        "forPlayerVariable" => actions.push(self.for_player_group()?),
+                        "while" => actions.push(self.while_group()?),
                         "Loop" => actions.push(self.action_call_from_phrase(phrase, start, end)?),
                         "Loop If Condition Is True" => {
                             actions.push(self.action_call_from_phrase(phrase, start, end)?)
@@ -3316,7 +3330,7 @@ impl Parser<'_> {
                 kind: TokenKind::Word(word),
                 start,
                 ..
-            }) if canonical_keyword(&word) == expected => Ok(start),
+            }) if self.canonical_keyword(&word) == expected => Ok(start),
             Some(token) => Err(self.malformed(&format!("expected '{expected}'"), &token)),
             None => Err(self.malformed(&format!("expected '{expected}'"), self.eof())),
         }

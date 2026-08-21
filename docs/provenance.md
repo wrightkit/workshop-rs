@@ -66,7 +66,7 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 | OSTW-exercised params/spellings and enum domains (CreateEffect, Workshop Setting, Hero/Map/Button/Icon/Operation/Rounding/InworldTextRev, …) | Pinned OSTW v3.4.0 reference probe emissions (P4/P5/P6/P6b) and the protect-ban entry-point reachable closure (class 5). |
 | Parameter metadata (`paramDomains`, `paramDefaults`) | Pinned-reference probe evidence (classes 1/5), never copied from upstream game data. |
 | Action/Value parameter and return signatures | Workshop.codes structured article properties (Returns, Parameters, Type, and Default), cross-checked against the pinned OverPy metadata and static OSTW data; entries without convergent evidence remain explicitly evidence-insufficient. Representative article links are embedded in the catalog provenance. |
-| Workshop.codes snapshot | [`docs/evidence/workshop-codes-signature-v1.json`](evidence/workshop-codes-signature-v1.json) records 240 current Action/Value article URLs, updated-at metadata, and hashes of normalized signature sections without redistributing article text. The snapshot is a partial direct cross-check (120 Action and 120 Value pages), not a claim that every catalog identity has a Workshop.codes article. |
+| Action/Value signature cross-check | Representative Workshop.codes article links remain recorded in the catalog provenance; fetched snapshots and acceptance results are CI evidence, not generator or runtime inputs. |
 | Settings emission table (`src/settings/table.rs` and generated data files) | Hand-written fixture surface plus the reviewed `workshop-data` export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; generated entries, names, locale mappings, and source paths are committed together in the declared multi-locale projection, while pinned OverPy 9.7.10 output remains the behavioral check (classes 1/5). |
 
 ### Locale coverage
@@ -74,7 +74,7 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 * `en-US` is the primary locale and is complete. The committed catalog
   validates that the primary locale is complete.
 * `zh-CN` is an open, evidence-backed locale: the current canonical catalog
-  maps **1218/1237** entries. The 19 unmapped spellings remain explicit and
+  maps **1235/1254** entries. The 19 unmapped spellings remain explicit and
   fail closed; `workshop-catalog-gen check` is the authoritative coverage
   report. The source for the reconciled additions is the user-provided
   `workshop-data/workshop-data.json` export at commit
@@ -99,7 +99,7 @@ declared corpus is therefore complete and contains no silent exclusions.
 
 The `settings.workshop` namespace aliases (`workshop` / `地图工坊`) and the
 Wrecking Ball cooldown labels are pinned from the reacquired AI-PVE and Bastion
-artifacts in `docs/evidence/raw-workshop-p0-v1.json`; they are source-preserving
+artifacts described by `docs/evidence/raw-workshop-p0-v1.json`; they are source-preserving
 custom data or producer aliases, not new builtin gameplay identities.
 
 ## Test fixtures (`crates/workshop-rs/tests/fixtures/`)
