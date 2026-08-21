@@ -134,10 +134,33 @@ fn residual_groups(issues: &[semantic::SemanticIssue]) -> Vec<ResidualGroup> {
             });
         }
     }
-    groups.into_iter().map(|((kind, source_canonical_name), (count, representative_span))| ResidualGroup {
-        kind, source_canonical_name, count, representative_span,
-        classification: "evidence-insufficient: preserved project-defined or opaque surface",
-        evidence: "semantic::inspect output from the pinned raw artifact; fixed issue totals are not a correctness oracle",
+    groups.into_iter().map(|((kind, source_canonical_name), (count, representative_span))| {
+        let (classification, evidence) = match kind.as_str() {
+            "RawSetting" => (
+                "project-defined-setting",
+                "settings parser preserved the source span without a canonical settings-table identity",
+            ),
+            "UnknownValue" => (
+                "undeclared-or-project-defined-value",
+                "canonical catalog lookup failed for this value identity at the recorded source span",
+            ),
+            "UnknownAction" => (
+                "undeclared-or-project-defined-action",
+                "canonical catalog lookup failed for this action identity at the recorded source span",
+            ),
+            "OpaqueAction" => (
+                "opaque-legacy-action",
+                "parser preserved the raw action, but no canonical action contract is declared",
+            ),
+            _ => (
+                "evidence-insufficient",
+                "semantic::inspect reported a residual kind without a canonical contract",
+            ),
+        };
+        ResidualGroup {
+            kind, source_canonical_name, count, representative_span,
+            classification, evidence,
+        }
     }).collect()
 }
 
