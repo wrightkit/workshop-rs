@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "purpose": "Pinned five-artifact P0 semantic census",
   "artifactManifest": "docs/evidence/raw-workshop-p0-v1.json",
-  "workshopRsBaseRevision": "b45406b7a50cefcb179fae08e09d78658e9b5d27",
+  "workshopRsBaseRevision": "ffb77ab7455019fa5d103e620007848b21a19a93",
   "validation": {
     "catalogCheck": "OK 515 entries, 52 enum domains, 2 locale(s)",
     "catalogDigest": "eddaa0cef06ba8bcf82a19036c608d763e8a5bd17d36b08be05145c63672efb2",
