@@ -978,25 +978,20 @@ impl Emitter<'_> {
                 out.push(')');
             }
             wir::Value::Enum { value_type, value } => {
-                // The `.opy`-layer `EffectReeval` domain is the same Workshop
-                // reevaluation domain as `HudReeval` (member ids align); map
-                // it at emission to avoid catalog domain collisions.
-                let catalog_domain = if value_type == "EffectReeval" {
-                    "HudReeval"
-                } else {
-                    value_type
-                };
-                let spelling = self.enum_spelling(catalog_domain, value)?;
-                // Color values use the constructor form; other domains use
-                // bare member spellings (the canonical corpus form). The
+                let spelling = self.enum_spelling(value_type, value)?;
+                // Color, Team, and Hero values use the constructor form;
+                // other domains use bare member spellings (the canonical
+                // corpus form). The
                 // Team/Color spelling collision (`Team 2` is both a Team and
                 // a Team color) is the one ambiguity unpinned by the
                 // catalog's paramDomains, so Team members qualify with the
                 // constructor form and the emitted text reparses
                 // deterministically (round-trip contract; pinned P4
                 // evidence).
-                if value_type == "Color" || value_type == "Team" {
-                    write!(out, "{catalog_domain}({spelling})").unwrap();
+                if matches!(value_type.as_str(), "Color" | "Team")
+                    || (value_type == "Hero" && spelling.contains('.'))
+                {
+                    write!(out, "{value_type}({spelling})").unwrap();
                 } else {
                     out.push_str(&spelling);
                 }
@@ -1045,9 +1040,19 @@ impl Emitter<'_> {
                             span: node.span,
                         });
                     };
-                    out.push('(');
+                    let bare_event_player = self
+                        .program
+                        .values
+                        .get(args[0])
+                        .is_some_and(|node| matches!(node.value, wir::Value::EventPlayer));
+                    if !bare_event_player {
+                        out.push('(');
+                    }
                     self.value(args[0], out)?;
-                    write!(out, ").{member}").unwrap();
+                    if !bare_event_player {
+                        out.push(')');
+                    }
+                    write!(out, ".{member}").unwrap();
                     if let Some(index) = args.get(2) {
                         out.push('[');
                         self.value(*index, out)?;

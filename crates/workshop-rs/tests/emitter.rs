@@ -57,6 +57,24 @@ fn emission_is_byte_stable_and_a_fixed_point() {
 }
 
 #[test]
+fn event_player_member_assignment_emits_action_reparsable_syntax() {
+    let source = r#"rule ("member") {
+        event { Ongoing - Global; }
+        actions { (Event Player).ready = False; }
+    }"#;
+    let program = parser::parse_with_context(source, &catalog(), &en(), &catalog())
+        .expect("member assignment parses");
+    let emitted = emitter::emit(&program, &catalog(), &en()).expect("member assignment emits");
+    assert!(
+        emitted.contains("(Event Player).ready = False;"),
+        "{emitted}"
+    );
+    let reparsed = parser::parse_with_context(&emitted, &catalog(), &en(), &catalog())
+        .expect("emitted member assignment reparses");
+    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
+}
+
+#[test]
 fn every_corpus_program_round_trips_to_equivalent_wir() {
     // Corpus text parses against the catalog context (expected enum domains
     // come from the canonical catalog signatures). `overpy-cake` is the

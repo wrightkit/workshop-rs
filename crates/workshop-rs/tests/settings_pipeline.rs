@@ -124,6 +124,20 @@ fn pinned_ai_hero_setting_aliases_are_canonical() {
 }
 
 #[test]
+fn mixed_locale_primary_hero_setting_name_is_canonical() {
+    let catalog = catalog();
+    let source = "设置 { 英雄 { 队伍1 { D.Mon { 伤害量: 140% } } } }";
+    let program = parser::parse(source, &catalog, &Locale::new("zh-CN"))
+        .expect("primary-locale D.Mon spelling parses in mixed zh-CN output");
+    assert!(
+        program
+            .semantic_issues(&catalog)
+            .iter()
+            .all(|issue| { issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting })
+    );
+}
+
+#[test]
 fn supported_dva_name_parses() {
     let catalog = catalog();
     let source =

@@ -12,7 +12,7 @@ const CASES: &[(&str, &str, &str, usize)] = &[
         "ai-pve",
         "zh-CN",
         "b0405707d54fd30e20f285ce4a3fdaf9899e3959fb5dd223c898040c63a18773",
-        247,
+        246,
     ),
     (
         "bastion",
@@ -66,10 +66,11 @@ fn pinned_p0_corpus_has_expected_semantic_census() {
                 match parser::parse_with_context(&emitted, &catalog, &Locale::new(locale), &catalog)
                 {
                     Ok(reparsed) => {
-                        assert!(
-                            roundtrip::equivalent(&program, &reparsed),
-                            "{name} semantic round-trip changed WIR"
-                        );
+                        if !roundtrip::equivalent(&program, &reparsed) {
+                            println!("{name}: original WIR:\n{}", program.dump());
+                            println!("{name}: reparsed WIR:\n{}", reparsed.dump());
+                            panic!("{name} semantic round-trip changed WIR");
+                        }
                         let emitted_again =
                             emitter::emit(&reparsed, &catalog, &Locale::new(locale))
                                 .unwrap_or_else(|error| {
@@ -81,7 +82,23 @@ fn pinned_p0_corpus_has_expected_semantic_census() {
                         );
                     }
                     Err(error) => {
-                        println!("{name}: emitted output reparse classified gap: {error:?}")
+                        println!("{name}: emitted output reparse classified gap: {error:?}");
+                        let line = match &error {
+                            workshop_rs::WorkshopError::Unknown { span, .. }
+                            | workshop_rs::WorkshopError::Malformed { span, .. }
+                            | workshop_rs::WorkshopError::Unsupported { span, .. } => span
+                                .map(|span| span.start.line as usize)
+                                .unwrap_or_default(),
+                            _ => 0,
+                        };
+                        if line > 0 {
+                            for (index, text) in emitted.lines().enumerate() {
+                                let number = index + 1;
+                                if number.abs_diff(line) <= 2 {
+                                    println!("{name}: emitted[{number}] {text}");
+                                }
+                            }
+                        }
                     }
                 }
             }

@@ -140,10 +140,23 @@ pub fn equivalent(a: &wir::Program, b: &wir::Program) -> bool {
     if subs_a != subs_b {
         return false;
     }
-    if a.rules.len() != b.rules.len() {
+    // Emission intentionally drops pass-only/condition-only rules because
+    // they have no executable behavior. Ignore those presentation-only
+    // source rules when comparing observable semantics.
+    let rules_a: Vec<_> = a
+        .rules
+        .iter()
+        .filter(|rule| !rule.actions.is_empty())
+        .collect();
+    let rules_b: Vec<_> = b
+        .rules
+        .iter()
+        .filter(|rule| !rule.actions.is_empty())
+        .collect();
+    if rules_a.len() != rules_b.len() {
         return false;
     }
-    for (rule_a, rule_b) in a.rules.iter().zip(b.rules.iter()) {
+    for (rule_a, rule_b) in rules_a.into_iter().zip(rules_b) {
         if !rule_equivalent(a, b, rule_a, rule_b) {
             return false;
         }
@@ -586,10 +599,53 @@ fn value_equivalent(
             name_eq(a.subroutines.get(*s1), b.subroutines.get(*s2))
         }
         (wir::Value::EventPlayer, wir::Value::EventPlayer) => true,
+        (wir::Value::PlayerVariable { player, variable }, wir::Value::Call { name, args })
+            if name == "memberAccess" && args.len() == 2 =>
+        {
+            let Some(wir::ValueNode {
+                value: wir::Value::String(member),
+                ..
+            }) = b.values.get(args[1])
+            else {
+                return false;
+            };
+            value_equivalent(a, b, *player, args[0])
+                && a.player_variables
+                    .get(*variable)
+                    .is_some_and(|value| value.name == *member)
+        }
+        (wir::Value::Call { name, args }, wir::Value::PlayerVariable { player, variable })
+            if name == "memberAccess" && args.len() == 2 =>
+        {
+            let Some(wir::ValueNode {
+                value: wir::Value::String(member),
+                ..
+            }) = a.values.get(args[1])
+            else {
+                return false;
+            };
+            value_equivalent(a, b, args[0], *player)
+                && b.player_variables
+                    .get(*variable)
+                    .is_some_and(|value| value.name == *member)
+        }
         (wir::Value::Call { name: n1, args: x1 }, wir::Value::Call { name: n2, args: x2 }) => {
-            n1 == n2 && values_equivalent(a, b, x1, x2)
+            canonical_value_name(n1) == canonical_value_name(n2) && values_equivalent(a, b, x1, x2)
         }
         _ => false,
+    }
+}
+
+fn canonical_value_name(name: &str) -> &str {
+    match name {
+        "+" => "add",
+        "-" => "subtract",
+        "*" => "multiply",
+        "/" => "divide",
+        "len" => "countOf",
+        "abs" => "absoluteValue",
+        "sqrt" => "squareRoot",
+        _ => name,
     }
 }
 

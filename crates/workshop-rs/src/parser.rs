@@ -714,6 +714,11 @@ impl Parser<'_> {
         } else {
             table::localized_name(self.locale.as_str(), section, english)
                 .is_some_and(|localized| localized == display)
+                // Real Workshop exports can mix the selected locale with
+                // primary-locale labels when a reviewed mapping is absent.
+                // Accept that source spelling for parsing, while emission
+                // still fails explicitly if the target mapping is missing.
+                || display == english
         }
     }
 
@@ -1267,7 +1272,14 @@ impl Parser<'_> {
                     // not executable actions.
                     self.pos += 1;
                 }
-                Some(token) => return Err(self.malformed("expected an action", &token)),
+                Some(token) => {
+                    let saved = self.pos;
+                    if let Some(action) = self.member_assignment_action(saved, token.start)? {
+                        actions.push(action);
+                    } else {
+                        return Err(self.malformed("expected an action", &token));
+                    }
+                }
                 None => {
                     return Err(self.malformed("unexpected end of input in actions", self.eof()));
                 }
