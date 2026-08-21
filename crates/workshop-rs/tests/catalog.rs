@@ -317,6 +317,29 @@ fn evidence_backed_signature_types_are_exposed() {
 }
 
 #[test]
+fn documented_action_and_value_signatures_are_inventory_entries() {
+    let catalog = builtin();
+    let indexed = catalog
+        .entry(Kind::Action, "setPlayerVariableAtIndex")
+        .expect("indexed player-variable action");
+    assert_eq!(indexed.params, ["Variable", "Index", "Value"]);
+    assert_eq!(indexed.param_type(0), Some("Player Variable"));
+    assert_eq!(indexed.param_type(2), Some("Object|Array"));
+
+    let custom_string = catalog
+        .entry(Kind::Value, "customString")
+        .expect("custom string");
+    assert_eq!(custom_string.param_count(), 4);
+    assert_eq!(custom_string.required_param_count(), 1);
+    assert_eq!(custom_string.return_type(), Some("String"));
+
+    let array = catalog.entry(Kind::Value, "array").expect("array");
+    assert!(array.variadic);
+    assert_eq!(array.return_type(), Some("Array"));
+    assert_eq!(array.param_type(3), Some("Object|Array"));
+}
+
+#[test]
 fn exercised_enum_domains_resolve_members_to_canonical_identity() {
     let catalog = builtin();
 

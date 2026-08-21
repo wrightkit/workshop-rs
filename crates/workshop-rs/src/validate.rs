@@ -339,19 +339,19 @@ fn validate_call_signature(
     if entry.param_count() == 0 && entry.required_param_count() == 0 {
         return;
     }
-    // Existing WIR callers may intentionally construct a partial generic
-    // call while probing one argument's semantics. Reject the unambiguous
-    // boundary violations (no arguments for a required signature, or too
-    // many arguments) while leaving partial calls available for the explicit
-    // evidence-insufficient path.
-    if (args.is_empty() && entry.required_param_count() > 0) || args.len() > entry.param_count() {
+    // Trailing defaults may make a signature partial, but every supplied
+    // argument is still checked against its declared position.
+    if (args.is_empty() && entry.required_param_count() > 0)
+        || (!entry.variadic && args.len() > entry.param_count())
+    {
         errors.push(WorkshopError::Unsupported {
             message: format!(
-                "{} '{}' expects {}..{} argument(s), got {}",
+                "{} '{}' expects {}..{}{} argument(s), got {}",
                 entry.kind.as_str(),
                 entry.id,
                 entry.required_param_count(),
                 entry.param_count(),
+                if entry.variadic { "+" } else { "" },
                 args.len()
             ),
             span,
@@ -359,24 +359,21 @@ fn validate_call_signature(
         return;
     }
 
-    let complete_signature = args.len() == entry.param_count();
     for (index, arg_id) in args.iter().enumerate() {
-        if complete_signature {
-            if let Some(expected) = entry.param_type(index) {
-                if !value_matches_type(program, catalog, *arg_id, expected) {
-                    let actual = value_type_name(program, catalog, *arg_id);
-                    errors.push(WorkshopError::Unsupported {
-                        message: format!(
-                            "{} '{}' argument {} must have semantic type '{}', got {}",
-                            entry.kind.as_str(),
-                            entry.id,
-                            index + 1,
-                            expected,
-                            actual
-                        ),
-                        span: program.values.get(*arg_id).and_then(|node| node.span),
-                    });
-                }
+        if let Some(expected) = entry.param_type(index) {
+            if !value_matches_type(program, catalog, *arg_id, expected) {
+                let actual = value_type_name(program, catalog, *arg_id);
+                errors.push(WorkshopError::Unsupported {
+                    message: format!(
+                        "{} '{}' argument {} must have semantic type '{}', got {}",
+                        entry.kind.as_str(),
+                        entry.id,
+                        index + 1,
+                        expected,
+                        actual
+                    ),
+                    span: program.values.get(*arg_id).and_then(|node| node.span),
+                });
             }
         }
         let Some(domain) = entry.param_domain(index) else {
@@ -392,20 +389,10 @@ fn validate_call_signature(
             wir::Value::Enum {
                 value_type, value, ..
             } => {
-                let member_is_known = catalog
-                    .enum_spelling(value_type, catalog.primary_locale(), value)
-                    .is_some();
-                if complete_signature {
-                    value_type == domain
-                        && catalog
-                            .enum_spelling(domain, catalog.primary_locale(), value)
-                            .is_some()
-                } else {
-                    // Partial generic calls do not provide enough evidence
-                    // to prove the positional domain, but an explicitly
-                    // unknown enum literal must still fail closed.
-                    member_is_known
-                }
+                value_type == domain
+                    && catalog
+                        .enum_spelling(domain, catalog.primary_locale(), value)
+                        .is_some()
             }
             _ => true,
         };
@@ -450,22 +437,47 @@ fn value_matches_type(
 fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &str) -> bool {
     match (value, expected) {
         (_, "Any" | "Unknown") => true,
-        (wir::Value::Number { .. }, "Number") => true,
+        (wir::Value::Number { .. }, "Number" | "Player Variable" | "Global Variable") => true,
         (wir::Value::String(_), "String" | "Text") => true,
         (wir::Value::Bool(_), "Boolean") => true,
         (wir::Value::Vector { .. }, "Vector") => true,
         (wir::Value::Array(_), "Array") => true,
+        (
+            wir::Value::Number { .. }
+            | wir::Value::String(_)
+            | wir::Value::Bool(_)
+            | wir::Value::Vector { .. },
+            "Object",
+        ) => true,
         (wir::Value::Enum { value_type, .. }, domain) => {
             matches!(domain, "Any" | "Unknown" | "Object") || value_type == domain
         }
-        (wir::Value::Call { name, .. }, expected) => catalog
-            .entry(crate::catalog::Kind::Value, name)
-            .and_then(|entry| entry.return_type())
-            .is_none_or(|return_type| {
-                return_type.split('|').any(|return_type| {
-                    return_type == expected || return_type == "Any" || return_type == "Unknown"
+        (wir::Value::Call { name, .. }, expected) => {
+            if expected == "Operation"
+                && matches!(
+                    name.as_str(),
+                    "add"
+                        | "subtract"
+                        | "multiply"
+                        | "divide"
+                        | "modulo"
+                        | "raiseToPower"
+                        | "appendToArray"
+                        | "removeFromArray"
+                        | "removeFromArrayByIndex"
+                )
+            {
+                return true;
+            }
+            catalog
+                .entry(crate::catalog::Kind::Value, name)
+                .and_then(|entry| entry.return_type())
+                .is_none_or(|return_type| {
+                    return_type
+                        .split('|')
+                        .any(|actual| semantic_types_compatible(actual, expected))
                 })
-            }),
+        }
         // Null is a valid Workshop placeholder for every value contract;
         // its runtime meaning is resolved by the enclosing builtin.
         (wir::Value::Null, _) => true,
@@ -480,6 +492,15 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
         ) => true,
         _ => false,
     }
+}
+
+fn semantic_types_compatible(actual: &str, expected: &str) -> bool {
+    matches!(actual, "Any" | "Unknown")
+        || matches!(expected, "Any" | "Unknown")
+        || actual == expected
+        || actual == "Object"
+        || (expected == "Object" && actual != "Array" && actual != "Void")
+        || (actual == "Object" && expected == "Object")
 }
 
 fn value_type_name(program: &wir::Program, catalog: &Catalog, value_id: wir::ValueId) -> String {

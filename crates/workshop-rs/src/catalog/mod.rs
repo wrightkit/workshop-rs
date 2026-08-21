@@ -120,6 +120,8 @@ pub struct CatalogEntry {
     /// Evidence-backed return type for Value entries. Actions must leave this
     /// unset; an absent value is intentionally evidence-insufficient.
     pub return_type: Option<String>,
+    /// Whether the final declared parameter repeats for additional arguments.
+    pub variadic: bool,
     aliases: HashMap<Locale, Vec<String>>,
 }
 
@@ -160,13 +162,19 @@ impl CatalogEntry {
 
     /// The declared enum domain for an argument position, when one exists.
     pub fn param_domain(&self, index: usize) -> Option<&str> {
-        self.param_domains.get(index).and_then(Option::as_deref)
+        self.param_domains
+            .get(index)
+            .or_else(|| self.variadic.then(|| self.param_domains.last()).flatten())
+            .and_then(Option::as_deref)
     }
 
     /// The evidence-backed semantic type for an argument position, when
     /// available. Enum domains remain exposed separately by `param_domain`.
     pub fn param_type(&self, index: usize) -> Option<&str> {
-        self.param_types.get(index).and_then(Option::as_deref)
+        self.param_types
+            .get(index)
+            .or_else(|| self.variadic.then(|| self.param_types.last()).flatten())
+            .and_then(Option::as_deref)
     }
 
     /// The evidence-backed return type of a Value, when available.
@@ -347,6 +355,8 @@ struct EntryFile {
     param_types: Vec<Option<String>>,
     #[serde(default)]
     return_type: Option<String>,
+    #[serde(default)]
+    variadic: bool,
 }
 
 #[derive(Deserialize)]
@@ -708,6 +718,7 @@ impl Catalog {
             param_defaults: item.param_defaults,
             param_types: item.param_types,
             return_type: item.return_type,
+            variadic: item.variadic,
             aliases,
         });
         Ok(())

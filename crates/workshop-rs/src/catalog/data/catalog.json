@@ -519,7 +519,14 @@
         "zh-CN": "设置地形消灭者玩家"
       },
       "id": "setEnvironmentCreditPlayer",
-      "params": []
+      "paramTypes": [
+        "Player|Array",
+        "Player|Array"
+      ],
+      "params": [
+        "Player",
+        "Player"
+      ]
     },
     {
       "aliases": {
@@ -527,7 +534,24 @@
         "zh-CN": "在索引处修改玩家变量"
       },
       "id": "modifyPlayerVariableAtIndex",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        "Operation",
+        null
+      ],
+      "paramTypes": [
+        "Player Variable",
+        "Number|Boolean",
+        "Operation",
+        "Object|Array"
+      ],
+      "params": [
+        "Variable",
+        "Index",
+        "Operation",
+        "Value"
+      ]
     },
     {
       "aliases": {
@@ -642,7 +666,24 @@
         "zh-CN": "在索引处修改全局变量"
       },
       "id": "modifyGlobalVariableAtIndex",
-      "params": []
+      "paramDomains": [
+        null,
+        null,
+        "Operation",
+        null
+      ],
+      "paramTypes": [
+        "Global Variable",
+        "Number|Boolean",
+        "Operation",
+        "Object|Array"
+      ],
+      "params": [
+        "Variable",
+        "Index",
+        "Operation",
+        "Value"
+      ]
     },
     {
       "aliases": {
@@ -1474,7 +1515,20 @@
         "zh-CN": "生成机器人"
       },
       "id": "createDummyBot",
-      "params": []
+      "paramTypes": [
+        "Hero",
+        "Team",
+        "Number|Boolean",
+        "Vector",
+        "Vector"
+      ],
+      "params": [
+        "Hero",
+        "Team",
+        "Slot",
+        "Position",
+        "Direction"
+      ]
     },
     {
       "aliases": {
@@ -1482,7 +1536,12 @@
         "zh-CN": "根据条件循环"
       },
       "id": "loopIf",
-      "params": []
+      "paramTypes": [
+        "Boolean"
+      ],
+      "params": [
+        "Condition"
+      ]
     },
     {
       "aliases": {
@@ -1499,7 +1558,16 @@
         "zh-CN": "在索引处设置玩家变量"
       },
       "id": "setPlayerVariableAtIndex",
-      "params": []
+      "paramTypes": [
+        "Player Variable",
+        "Number|Boolean",
+        "Object|Array"
+      ],
+      "params": [
+        "Variable",
+        "Index",
+        "Value"
+      ]
     },
     {
       "aliases": {
@@ -1561,7 +1629,12 @@
         "zh-CN": "移除玩家的所有生命值"
       },
       "id": "removeAllHealthPoolsFromPlayer",
-      "params": []
+      "paramTypes": [
+        "Player|Array"
+      ],
+      "params": [
+        "Player"
+      ]
     },
     {
       "aliases": {
@@ -1751,7 +1824,14 @@
         "zh-CN": "根据条件跳过"
       },
       "id": "skipIf",
-      "params": []
+      "paramTypes": [
+        "Boolean",
+        "Number|Boolean"
+      ],
+      "params": [
+        "Condition",
+        "Number"
+      ]
     },
     {
       "aliases": {
@@ -1759,7 +1839,16 @@
         "zh-CN": "在索引处设置全局变量"
       },
       "id": "setGlobalVariableAtIndex",
-      "params": []
+      "paramTypes": [
+        "Global Variable",
+        "Number|Boolean",
+        "Object|Array"
+      ],
+      "params": [
+        "Variable",
+        "Index",
+        "Value"
+      ]
     },
     {
       "aliases": {
@@ -3903,7 +3992,7 @@
       ]
     }
   ],
-  "digest": "eec1cbd6ef00c9edf575262997133f53dda76b19914817842783f26267de6389",
+  "digest": "167aba1a1fe2e409596c8153d2de45576c5083c940abc7b9679559f6145fe9fb",
   "enums": [
     {
       "domain": "Impulse",
@@ -9589,6 +9678,7 @@
     "reviewed": true,
     "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); rule-event identities and EventTeam/EventPlayer filter aliases are transcribed from the user-provided workshop-data export and its Workshop event annotations, cross-checked against documented raw Workshop event forms; migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; zh-CN aliases are generated from the user-provided workshop-data JSON; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; the exact-match corpus and its exclusions are pinned separately in tools/corpus/zh-cn-corpus.json",
     "sourceNotes": [
+      "Action and Value parameter names/order/types/defaults and Value returns reconciled from Workshop.codes structured article Properties and cross-checked with pinned OverPy static metadata; OSTW remains a static-only reference. Variadic array arguments and WIR-normalized indexed-variable actions are represented explicitly; boolean literal aliases are retained only where the reviewed Workshop/OverPy contract permits them.",
       "abort zh-CN retains both 中止 from the reviewed workshop-data export and 中断 observed in the reproducible Bastion c010e1a2d468ec7140f474e334067e5ab8d02d89 build:release/build:main:zh output; the first spelling is emitted deterministically and both are accepted for parsing",
       "disableBuiltinGameModeCompletion zh-CN retains 禁用内置游戏模式完成 from the reviewed workshop-data export and 关闭游戏预设完成条件 observed in the same reproducible Bastion build; the first spelling is emitted deterministically and both are accepted for parsing",
       "value and enum identities added in the Bastion spatial/player/effect slice are cross-checked against workshop-data GUID translations and the reproducible c010e1a2d468ec7140f474e334067e5ab8d02d89 en-US/zh-CN builds; aliases remain data-backed and canonical signatures retain their declared parameter domains",
@@ -10023,8 +10113,8 @@
       },
       "id": "distance",
       "paramTypes": [
-        "Any",
-        "Any"
+        "Vector|Player|Array",
+        "Vector|Player|Array"
       ],
       "params": [
         "Position",
@@ -10313,14 +10403,14 @@
       },
       "id": "add",
       "paramTypes": [
-        "Any",
-        "Any"
+        "Number|Boolean|Vector",
+        "Number|Boolean|Vector"
       ],
       "params": [
         "a",
         "b"
       ],
-      "returnType": "Any"
+      "returnType": "Number|Vector"
     },
     {
       "aliases": {
@@ -10342,9 +10432,13 @@
         "zh-CN": "正在发射辅助攻击"
       },
       "id": "isFiringSecondary",
+      "paramTypes": [
+        "Player"
+      ],
       "params": [
         "Player"
-      ]
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10381,8 +10475,8 @@
       },
       "id": "directionTowards",
       "paramTypes": [
-        "Any",
-        "Any"
+        "Vector|Player|Array",
+        "Vector|Player|Array"
       ],
       "params": [
         "Position",
@@ -10397,14 +10491,14 @@
       },
       "id": "subtract",
       "paramTypes": [
-        "Any",
-        "Any"
+        "Number|Boolean|Vector",
+        "Number|Boolean|Vector"
       ],
       "params": [
         "a",
         "b"
       ],
-      "returnType": "Any"
+      "returnType": "Number|Vector"
     },
     {
       "aliases": {
@@ -10413,14 +10507,14 @@
       },
       "id": "multiply",
       "paramTypes": [
-        "Any",
-        "Any"
+        "Number|Boolean|Vector",
+        "Number|Boolean|Vector"
       ],
       "params": [
         "a",
         "b"
       ],
-      "returnType": "Any"
+      "returnType": "Number|Vector"
     },
     {
       "aliases": {
@@ -10429,14 +10523,14 @@
       },
       "id": "divide",
       "paramTypes": [
-        "Any",
-        "Any"
+        "Number|Boolean|Vector",
+        "Number|Boolean|Vector"
       ],
       "params": [
         "a",
         "b"
       ],
-      "returnType": "Any"
+      "returnType": "Number|Vector"
     },
     {
       "aliases": {
@@ -10461,21 +10555,46 @@
         "en-US": "And",
         "zh-CN": "与"
       },
-      "id": "and"
+      "id": "and",
+      "paramTypes": [
+        "Boolean|Number|Object|Array",
+        "Boolean|Number|Object|Array"
+      ],
+      "params": [
+        "A",
+        "B"
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
         "en-US": "Or",
         "zh-CN": "或"
       },
-      "id": "or"
+      "id": "or",
+      "paramTypes": [
+        "Boolean|Number|Object|Array",
+        "Boolean|Number|Object|Array"
+      ],
+      "params": [
+        "A",
+        "B"
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
         "en-US": "Not",
         "zh-CN": "非"
       },
-      "id": "not"
+      "id": "not",
+      "paramTypes": [
+        "Boolean|Number"
+      ],
+      "params": [
+        "Value"
+      ],
+      "returnType": "Boolean"
     },
     {
       "aliases": {
@@ -10496,14 +10615,32 @@
         "en-US": "Absolute Value",
         "zh-CN": "绝对值"
       },
-      "id": "absoluteValue"
+      "id": "absoluteValue",
+      "paramTypes": [
+        "Number"
+      ],
+      "params": [
+        "Value"
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
         "en-US": "Array",
         "zh-CN": "数组"
       },
-      "id": "array"
+      "id": "array",
+      "paramDefaults": [
+        "null"
+      ],
+      "paramTypes": [
+        "Object|Array"
+      ],
+      "params": [
+        "Value"
+      ],
+      "returnType": "Array",
+      "variadic": true
     },
     {
       "aliases": {
@@ -10512,9 +10649,9 @@
       },
       "id": "vector",
       "paramTypes": [
-        "Any",
-        "Any",
-        "Any"
+        "Number|Boolean",
+        "Number|Boolean",
+        "Number|Boolean"
       ],
       "params": [
         "X",
@@ -10528,7 +10665,26 @@
         "en-US": "Custom String",
         "zh-CN": "自定义字符串"
       },
-      "id": "customString"
+      "id": "customString",
+      "paramDefaults": [
+        null,
+        "null",
+        "null",
+        "null"
+      ],
+      "paramTypes": [
+        "String",
+        "Object|Array",
+        "Object|Array",
+        "Object|Array"
+      ],
+      "params": [
+        "Format",
+        "Replacement 1",
+        "Replacement 2",
+        "Replacement 3"
+      ],
+      "returnType": "String"
     },
     {
       "aliases": {
@@ -10554,7 +10710,7 @@
       "id": "mappedArray",
       "paramTypes": [
         "Array",
-        "Any"
+        "Object|Array"
       ],
       "params": [
         "Array",
@@ -10567,28 +10723,66 @@
         "en-US": "First Of",
         "zh-CN": "首个"
       },
-      "id": "firstOf"
+      "id": "firstOf",
+      "paramTypes": [
+        "Array"
+      ],
+      "params": [
+        "Array"
+      ],
+      "returnType": "Object|Array"
     },
     {
       "aliases": {
         "en-US": "String Replace",
         "zh-CN": "字符串替换"
       },
-      "id": "stringReplace"
+      "id": "stringReplace",
+      "paramTypes": [
+        "String|Array",
+        "String|Array",
+        "String|Array"
+      ],
+      "params": [
+        "String",
+        "Search",
+        "Replacement"
+      ],
+      "returnType": "String"
     },
     {
       "aliases": {
         "en-US": "String Slice",
         "zh-CN": "截取字符串"
       },
-      "id": "stringSlice"
+      "id": "stringSlice",
+      "paramTypes": [
+        "String",
+        "Number",
+        "Number"
+      ],
+      "params": [
+        "String",
+        "Start Index",
+        "Count"
+      ],
+      "returnType": "String"
     },
     {
       "aliases": {
         "en-US": "String Split",
         "zh-CN": "字符串分割"
       },
-      "id": "stringSplit"
+      "id": "stringSplit",
+      "paramTypes": [
+        "String|Array",
+        "String|Array"
+      ],
+      "params": [
+        "String",
+        "Separator"
+      ],
+      "returnType": "Array"
     },
     {
       "aliases": {
@@ -10612,7 +10806,16 @@
         "en-US": "Random Real",
         "zh-CN": "随机实数"
       },
-      "id": "randomReal"
+      "id": "randomReal",
+      "paramTypes": [
+        "Number",
+        "Number"
+      ],
+      "params": [
+        "Min",
+        "Max"
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -10657,7 +10860,18 @@
         "en-US": "If-Then-Else",
         "zh-CN": "If-Then-Else"
       },
-      "id": "ifThenElse"
+      "id": "ifThenElse",
+      "paramTypes": [
+        "Boolean|Number",
+        "Object|Array",
+        "Object|Array"
+      ],
+      "params": [
+        "Condition",
+        "True Value",
+        "False Value"
+      ],
+      "returnType": "Object|Array"
     },
     {
       "aliases": {
@@ -10675,8 +10889,8 @@
       },
       "id": "appendToArray",
       "paramTypes": [
-        "Array",
-        "Any"
+        "Object|Array",
+        "Object|Array"
       ],
       "params": [
         "Array",
@@ -11064,8 +11278,8 @@
       },
       "id": "arrayContains",
       "paramTypes": [
-        "Any",
-        "Any"
+        "Array",
+        "Object|Array"
       ],
       "params": [
         "Array",
@@ -11091,7 +11305,7 @@
       "id": "indexOfArrayValue",
       "paramTypes": [
         "Array",
-        "Any"
+        "Object|Array"
       ],
       "params": [
         "Array",
@@ -11123,7 +11337,7 @@
       "id": "sortedArray",
       "paramTypes": [
         "Array",
-        "Any"
+        "Object|Array"
       ],
       "params": [
         "Array",
@@ -11153,7 +11367,7 @@
       "id": "removeFromArray",
       "paramTypes": [
         "Array",
-        "Any"
+        "Object|Array"
       ],
       "params": [
         "Array",
@@ -11168,14 +11382,14 @@
       },
       "id": "max",
       "paramTypes": [
-        "Any",
-        "Any"
+        "Number|Boolean",
+        "Number|Boolean"
       ],
       "params": [
         "Value",
         "Value"
       ],
-      "returnType": "Any"
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11184,14 +11398,14 @@
       },
       "id": "min",
       "paramTypes": [
-        "Any",
-        "Any"
+        "Number|Boolean",
+        "Number|Boolean"
       ],
       "params": [
         "Value",
         "Value"
       ],
-      "returnType": "Any"
+      "returnType": "Number"
     },
     {
       "aliases": {
@@ -11384,12 +11598,12 @@
       },
       "id": "evaluateOnce",
       "paramTypes": [
-        "Any"
+        "Object|Array"
       ],
       "params": [
         "Value"
       ],
-      "returnType": "Any"
+      "returnType": "Object|Array"
     },
     {
       "aliases": {
@@ -11398,12 +11612,12 @@
       },
       "id": "updateEveryFrame",
       "paramTypes": [
-        "Any"
+        "Object|Array"
       ],
       "params": [
         "Value"
       ],
-      "returnType": "Any"
+      "returnType": "Object|Array"
     },
     {
       "aliases": {

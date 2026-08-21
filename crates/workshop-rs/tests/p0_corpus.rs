@@ -122,6 +122,42 @@ fn residual_groups(issues: &[semantic::SemanticIssue]) -> Vec<serde_json::Value>
         .collect()
 }
 
+fn assert_residual_policy(name: &str, stage: &str, issues: &[semantic::SemanticIssue]) {
+    let unexpected: Vec<_> = issues
+        .iter()
+        .filter(|issue| {
+            !(name == "defend"
+                && issue.kind == semantic::IncompletenessKind::OpaqueAction
+                && issue.name == "rawWorkshopAction"
+                && issue.classification == semantic::ResidualClassification::LegacyOpaque)
+        })
+        .collect();
+    assert!(
+        unexpected.is_empty(),
+        "{name} {stage} has unexplained semantic residuals: {}",
+        serde_json::to_string(&residual_groups(
+            &unexpected.into_iter().cloned().collect::<Vec<_>>()
+        ))
+        .expect("residual JSON")
+    );
+}
+
+fn assert_custom_workshop_settings(name: &str, source: &str, target: &str) {
+    let marker = match name {
+        "ai-pve" => "自定义 AI",
+        "bastion" => "自动重开时间间隔（小时）",
+        _ => return,
+    };
+    assert!(
+        source.contains(marker),
+        "{name} fixture lacks expected custom setting marker"
+    );
+    assert!(
+        target.contains(marker),
+        "{name} locale conversion changed custom setting data"
+    );
+}
+
 #[test]
 fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
     let root =
@@ -140,6 +176,7 @@ fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
         let locale = Locale::new(locale);
         let program = parser::parse_with_context(&source, &catalog, &locale, &catalog)
             .unwrap_or_else(|error| panic!("{name} parse failed: {error:?}"));
+        assert_residual_policy(name, "source-parse", &semantic::inspect(&program, &catalog));
         if let Err(error) = validate::validate_canonical_ids(&program, &catalog) {
             assert!(
                 known_gap(name, Stage::CanonicalValidation, &error),
@@ -167,6 +204,11 @@ fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
         };
         let reparsed = parser::parse_with_context(&emitted, &catalog, &locale, &catalog)
             .unwrap_or_else(|error| panic!("{name} {} failed: {error:?}", Stage::Reparse.as_str()));
+        assert_residual_policy(
+            name,
+            "source-locale-reparse",
+            &semantic::inspect(&reparsed, &catalog),
+        );
         if !roundtrip::equivalent(&program, &reparsed) {
             panic!("{name} semantic round-trip changed WIR");
         }
@@ -205,6 +247,12 @@ fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
         let converted_program =
             parser::parse_with_context(&converted.text, &catalog, &target_locale, &catalog)
                 .unwrap_or_else(|error| panic!("{name} target-locale reparse failed: {error:?}"));
+        assert_residual_policy(
+            name,
+            "target-locale-reparse",
+            &semantic::inspect(&converted_program, &catalog),
+        );
+        assert_custom_workshop_settings(name, &source, &converted.text);
         assert!(
             roundtrip::equivalent(&program, &converted_program),
             "{name} target-locale conversion changed WIR"

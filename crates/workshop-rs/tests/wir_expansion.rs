@@ -115,6 +115,36 @@ fn build_surface_program() -> wir::Program {
         },
         Some(s(5, 41, 47)),
     ));
+    let beam_type = program.values.push(ValueNode::new(
+        Value::Enum {
+            value_type: "Beam".into(),
+            value: "GRAPPLE".into(),
+        },
+        Some(s(5, 35, 40)),
+    ));
+    let start_position = program.values.push(ValueNode::new(
+        Value::Vector {
+            x: zero,
+            y: zero,
+            z: zero,
+        },
+        Some(s(5, 48, 55)),
+    ));
+    let end_position = program.values.push(ValueNode::new(
+        Value::Vector {
+            x: one,
+            y: one,
+            z: one,
+        },
+        Some(s(5, 56, 63)),
+    ));
+    let effect_reeval = program.values.push(ValueNode::new(
+        Value::Enum {
+            value_type: "EffectReeval".into(),
+            value: "NONE".into(),
+        },
+        Some(s(5, 64, 68)),
+    ));
     let all_teams = program.values.push(ValueNode::new(
         Value::Enum {
             value_type: "Team".into(),
@@ -159,7 +189,14 @@ fn build_surface_program() -> wir::Program {
     });
     let beam = program.actions.push(Action::Call {
         name: "createBeamEffect".into(),
-        args: vec![players, yellow],
+        args: vec![
+            players,
+            beam_type,
+            start_position,
+            end_position,
+            yellow,
+            effect_reeval,
+        ],
         span: Some(s(6, 5, 25)),
     });
     let for_action = program.actions.push(Action::ForGlobalVariable {
