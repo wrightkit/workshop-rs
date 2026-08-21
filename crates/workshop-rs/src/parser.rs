@@ -207,6 +207,17 @@ impl Parser<'_> {
                 {
                     "extensions"
                 }
+                value
+                    if value == "workshop"
+                        || table::localized_name(
+                            self.locale.as_str(),
+                            "namespaces",
+                            "workshop",
+                        )
+                        .is_some_and(|name| name == display) =>
+                {
+                    "workshop"
+                }
                 value => value,
             };
             self.expect(TokenKind::LBrace, "expected '{' after settings group")?;
@@ -228,6 +239,10 @@ impl Parser<'_> {
                 "extensions" => SettingsNode::Group {
                     name: "extensions".to_string(),
                     children: self.settings_members(&[PathPart::Part("extensions")], None)?,
+                    span: Some(self.settings_span(child_start)),
+                },
+                "workshop" => SettingsNode::Workshop {
+                    children: self.settings_opaque_members()?,
                     span: Some(self.settings_span(child_start)),
                 },
                 _ => self.settings_opaque_group(name, child_start)?,

@@ -95,6 +95,11 @@ Element` are not declared Workshop identities: they are legacy/provider syntax
 sugar represented by the corresponding canonical Workshop identities. The
 declared corpus is therefore complete and contains no silent exclusions.
 
+The `settings.workshop` namespace aliases (`workshop` / `地图工坊`) and the
+Wrecking Ball cooldown labels are pinned from the reacquired AI-PVE and Bastion
+artifacts in `docs/evidence/raw-workshop-p0-v1.json`; they are source-preserving
+custom data or producer aliases, not new builtin gameplay identities.
+
 ## Test fixtures (`crates/workshop-rs/tests/fixtures/`)
 
 The corpus Workshop texts and settings sections were extracted from the

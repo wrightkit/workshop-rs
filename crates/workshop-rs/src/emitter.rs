@@ -157,6 +157,10 @@ impl Emitter<'_> {
     fn emit_settings(&mut self, settings: &SettingsTree) -> Result<()> {
         self.line(0, "settings {")?;
         for child in &settings.children {
+            if let SettingsNode::Workshop { children, .. } = child {
+                self.emit_workshop_settings(children, 1)?;
+                continue;
+            }
             let SettingsNode::Group { name, children, .. } = child else {
                 return Err(self.malformed("settings block children must be groups"));
             };
@@ -182,6 +186,37 @@ impl Emitter<'_> {
         }
         self.line(0, "}")?;
         Ok(())
+    }
+
+    fn emit_workshop_settings(&mut self, children: &[SettingsNode], level: usize) -> Result<()> {
+        self.line(level, "workshop {")?;
+        for child in children {
+            self.emit_workshop_node(child, level + 1)?;
+        }
+        self.line(level, "}")?;
+        Ok(())
+    }
+
+    fn emit_workshop_node(&mut self, node: &SettingsNode, level: usize) -> Result<()> {
+        match node {
+            SettingsNode::Group { name, children, .. } => {
+                self.line(level, &format!("{name} {{"))?;
+                for child in children {
+                    self.emit_workshop_node(child, level + 1)?;
+                }
+                self.line(level, "}")?;
+                Ok(())
+            }
+            SettingsNode::Workshop { children, .. } => self.emit_workshop_settings(children, level),
+            SettingsNode::Raw { name, value, .. } => {
+                if value.is_empty() {
+                    self.line(level, name)
+                } else {
+                    self.line(level, &format!("{name}: {value}"))
+                }
+            }
+            _ => Err(self.malformed("settings.workshop contains a typed builtin setting")),
+        }
     }
 
     /// Emit the `modes { <Mode> { ... } }` block of a gamemodes group.

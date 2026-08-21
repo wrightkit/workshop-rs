@@ -114,6 +114,12 @@ pub struct CatalogEntry {
     /// resolved when a call omits the argument. See the catalog data
     /// provenance for the value syntax and evidence.
     pub param_defaults: Vec<Option<String>>,
+    /// Evidence-backed semantic type per parameter position. `None` means
+    /// the available sources do not prove a narrower type.
+    pub param_types: Vec<Option<String>>,
+    /// Evidence-backed return type for Value entries. Actions must leave this
+    /// unset; an absent value is intentionally evidence-insufficient.
+    pub return_type: Option<String>,
     aliases: HashMap<Locale, Vec<String>>,
 }
 
@@ -155,6 +161,17 @@ impl CatalogEntry {
     /// The declared enum domain for an argument position, when one exists.
     pub fn param_domain(&self, index: usize) -> Option<&str> {
         self.param_domains.get(index).and_then(Option::as_deref)
+    }
+
+    /// The evidence-backed semantic type for an argument position, when
+    /// available. Enum domains remain exposed separately by `param_domain`.
+    pub fn param_type(&self, index: usize) -> Option<&str> {
+        self.param_types.get(index).and_then(Option::as_deref)
+    }
+
+    /// The evidence-backed return type of a Value, when available.
+    pub fn return_type(&self) -> Option<&str> {
+        self.return_type.as_deref()
     }
 }
 
@@ -326,6 +343,10 @@ struct EntryFile {
     /// evidence, never copied from upstream game data.
     #[serde(default)]
     param_defaults: Vec<Option<String>>,
+    #[serde(default)]
+    param_types: Vec<Option<String>>,
+    #[serde(default)]
+    return_type: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -685,6 +706,8 @@ impl Catalog {
             params: item.params,
             param_domains: item.param_domains,
             param_defaults: item.param_defaults,
+            param_types: item.param_types,
+            return_type: item.return_type,
             aliases,
         });
         Ok(())
@@ -703,6 +726,20 @@ impl Catalog {
             if entry.param_defaults.len() > entry.params.len() {
                 return Err(CatalogError::validation(format!(
                     "{} '{}' declares more param defaults than params",
+                    entry.kind.as_str(),
+                    entry.id
+                )));
+            }
+            if entry.param_types.len() > entry.params.len() {
+                return Err(CatalogError::validation(format!(
+                    "{} '{}' declares more param types than params",
+                    entry.kind.as_str(),
+                    entry.id
+                )));
+            }
+            if entry.kind != Kind::Value && entry.return_type.is_some() {
+                return Err(CatalogError::validation(format!(
+                    "{} '{}' declares a return type but is not a value",
                     entry.kind.as_str(),
                     entry.id
                 )));

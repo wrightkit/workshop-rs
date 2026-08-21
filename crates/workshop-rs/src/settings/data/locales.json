@@ -29,6 +29,12 @@
       "total": 4
     }
   },
+  "namespaces": {
+    "workshop": {
+      "en-US": "workshop",
+      "zh-CN": "地图工坊"
+    }
+  },
   "enums": {
     "Always Enabled": {
       "en-US": "Always Enabled",

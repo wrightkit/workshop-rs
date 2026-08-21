@@ -273,6 +273,13 @@ fn check_settings(settings: &IrSettings, program: &Program) -> Result<(), IrErro
 
 fn check_settings_node(node: &IrSettingsNode, program: &Program) -> Result<(), IrError> {
     match node {
+        IrSettingsNode::Workshop { children, span } => {
+            check_span(*span, program)?;
+            for child in children {
+                check_settings_node(child, program)?;
+            }
+            Ok(())
+        }
         IrSettingsNode::Group { children, span, .. } => {
             check_span(*span, program)?;
             for child in children {

@@ -87,6 +87,7 @@ pub fn inspect(program: &Program, catalog: &Catalog) -> Vec<SemanticIssue> {
 
 fn inspect_setting(node: &SettingsNode, issues: &mut Vec<SemanticIssue>) {
     match node {
+        SettingsNode::Workshop { .. } => {}
         SettingsNode::Group { children, .. } => {
             for child in children {
                 inspect_setting(child, issues);

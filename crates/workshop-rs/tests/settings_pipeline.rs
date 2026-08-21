@@ -4,7 +4,7 @@
 use std::path::{Path, PathBuf};
 
 use workshop_rs::catalog::{Catalog, Locale};
-use workshop_rs::{convert, emitter, parser, roundtrip};
+use workshop_rs::{convert, emitter, parser, roundtrip, semantic};
 
 fn fixture_path(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -233,4 +233,60 @@ fn unknown_settings_list_members_remain_semantically_incomplete() {
         issue.kind == workshop_rs::semantic::IncompletenessKind::RawSetting
             && issue.name == "enabledMaps"
     }));
+}
+
+#[test]
+fn workshop_namespace_preserves_custom_settings_without_residuals() {
+    let source = r#"settings {
+ workshop {
+  AI-PVE {
+   Custom Label: "Keep this"
+   Custom Number: 42
+  }
+ }
+}"#;
+    let catalog = Catalog::builtin().expect("catalog");
+    let locale = Locale::new("en-US");
+    let program = parser::parse(source, &catalog, &locale).expect("custom settings parse");
+    assert!(
+        semantic::inspect(&program, &catalog).is_empty(),
+        "issues: {:?}, settings: {:?}",
+        semantic::inspect(&program, &catalog),
+        program.settings
+    );
+    let emitted = emitter::emit(&program, &catalog, &locale).expect("custom settings emit");
+    let reparsed = parser::parse(&emitted, &catalog, &locale).expect("custom settings reparse");
+    assert!(roundtrip::equivalent(&program, &reparsed));
+    assert!(emitted.contains("Custom Label: \"Keep this\""));
+    assert!(emitted.contains("Custom Number: 42"));
+}
+
+#[test]
+fn localized_workshop_namespace_is_known() {
+    assert_eq!(
+        workshop_rs::settings::table::localized_name("zh-CN", "namespaces", "workshop"),
+        Some("地图工坊")
+    );
+    let source = "settings { 地图工坊 { 自定义: 1 } }";
+    let catalog = Catalog::builtin().expect("catalog");
+    let program = parser::parse(source, &catalog, &Locale::new("zh-CN")).expect("parse");
+    assert!(
+        semantic::inspect(&program, &catalog).is_empty(),
+        "issues: {:?}, settings: {:?}",
+        semantic::inspect(&program, &catalog),
+        program.settings
+    );
+}
+
+#[test]
+fn localized_wrecking_ball_settings_aliases_are_known() {
+    let source = "settings { heroes { 综合 { 破坏球 {\n工程抓钩冷却时间: 80%\n感应护盾冷却时间: 80%\n重力坠击冷却时间: 75%\n} } } }";
+    let catalog = Catalog::builtin().expect("catalog");
+    let program = parser::parse(source, &catalog, &Locale::new("zh-CN")).expect("parse");
+    assert!(
+        semantic::inspect(&program, &catalog).is_empty(),
+        "issues: {:?}, settings: {:?}",
+        semantic::inspect(&program, &catalog),
+        program.settings
+    );
 }

@@ -300,6 +300,18 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
 }
 
 #[test]
+fn evidence_backed_signature_types_are_exposed() {
+    let catalog = builtin();
+    assert_eq!(
+        catalog
+            .entry(Kind::Value, "getMaxHealth")
+            .expect("getMaxHealth")
+            .return_type(),
+        Some("Number")
+    );
+}
+
+#[test]
 fn exercised_enum_domains_resolve_members_to_canonical_identity() {
     let catalog = builtin();
 

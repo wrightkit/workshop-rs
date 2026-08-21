@@ -185,6 +185,12 @@ fn nodes_equivalent(
             .zip(right)
             .all(|(left, right)| match (left, right) {
                 (
+                    crate::settings::SettingsNode::Workshop { children: left, .. },
+                    crate::settings::SettingsNode::Workshop {
+                        children: right, ..
+                    },
+                ) => nodes_equivalent(left, right),
+                (
                     crate::settings::SettingsNode::Group {
                         name: left_name,
                         children: left_children,

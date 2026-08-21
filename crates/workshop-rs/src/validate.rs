@@ -361,6 +361,22 @@ fn validate_call_signature(
 
     let complete_signature = args.len() == entry.param_count();
     for (index, arg_id) in args.iter().enumerate() {
+        if let Some(expected) = entry.param_type(index) {
+            if !value_matches_type(program, catalog, *arg_id, expected) {
+                let actual = value_type_name(program, catalog, *arg_id);
+                errors.push(WorkshopError::Unsupported {
+                    message: format!(
+                        "{} '{}' argument {} must have semantic type '{}', got {}",
+                        entry.kind.as_str(),
+                        entry.id,
+                        index + 1,
+                        expected,
+                        actual
+                    ),
+                    span: program.values.get(*arg_id).and_then(|node| node.span),
+                });
+            }
+        }
         let Some(domain) = entry.param_domain(index) else {
             continue;
         };
@@ -412,5 +428,63 @@ fn validate_call_signature(
                 span: node.span,
             });
         }
+    }
+}
+
+fn value_matches_type(
+    program: &wir::Program,
+    catalog: &Catalog,
+    value_id: wir::ValueId,
+    expected: &str,
+) -> bool {
+    let Some(node) = program.values.get(value_id) else {
+        return false;
+    };
+    match (&node.value, expected) {
+        (_, "Any" | "Unknown") => true,
+        (wir::Value::Number { .. }, "Number") => true,
+        (wir::Value::String(_), "String" | "Text") => true,
+        (wir::Value::Bool(_), "Boolean") => true,
+        (wir::Value::Vector { .. }, "Vector") => true,
+        (wir::Value::Array(_), "Array") => true,
+        (wir::Value::Enum { value_type, .. }, domain) => value_type == domain,
+        (wir::Value::Call { name, .. }, expected) => catalog
+            .entry(crate::catalog::Kind::Value, name)
+            .and_then(|entry| entry.return_type())
+            .is_some_and(|return_type| return_type == expected),
+        // Variables and other runtime expressions are intentionally accepted
+        // only for broad contracts; their value is not statically knowable.
+        (
+            wir::Value::GlobalVariable(_)
+            | wir::Value::PlayerVariable { .. }
+            | wir::Value::Subroutine(_)
+            | wir::Value::EventPlayer
+            | wir::Value::Null,
+            _,
+        ) => matches!(expected, "Any" | "Object" | "Player" | "Variable"),
+        _ => false,
+    }
+}
+
+fn value_type_name(program: &wir::Program, catalog: &Catalog, value_id: wir::ValueId) -> String {
+    let Some(node) = program.values.get(value_id) else {
+        return "missing".to_string();
+    };
+    match &node.value {
+        wir::Value::Number { .. } => "Number".to_string(),
+        wir::Value::String(_) => "String".to_string(),
+        wir::Value::Bool(_) => "Boolean".to_string(),
+        wir::Value::Vector { .. } => "Vector".to_string(),
+        wir::Value::Array(_) => "Array".to_string(),
+        wir::Value::Enum { value_type, .. } => value_type.clone(),
+        wir::Value::Call { name, .. } => catalog
+            .entry(crate::catalog::Kind::Value, name)
+            .and_then(|entry| entry.return_type())
+            .unwrap_or("dynamic")
+            .to_string(),
+        wir::Value::Null => "Null".to_string(),
+        wir::Value::GlobalVariable(_) | wir::Value::PlayerVariable { .. } => "Variable".to_string(),
+        wir::Value::Subroutine(_) => "Subroutine".to_string(),
+        wir::Value::EventPlayer => "Player".to_string(),
     }
 }

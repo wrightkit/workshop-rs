@@ -7,4 +7,13 @@
   { "hero": "hazard", "key": "secondaryFireCost%", "locale": "zh-CN", "display": "尖刺护体资源消耗" }
   ,{ "hero": "mei", "key": "enableSecondaryFire", "locale": "en-US", "display": "Secondary Fire" }
   ,{ "hero": "mei", "key": "enableSecondaryFire", "locale": "zh-CN", "display": "辅助攻击模式" }
+  ,{ "hero": "wreckingBall", "key": "ability1Cooldown%", "locale": "zh-CN", "display": "工程抓钩冷却时间" }
+  ,{ "hero": "wreckingBall", "key": "ability2Cooldown%", "locale": "zh-CN", "display": "感应护盾冷却时间" }
+  ,{ "hero": "wreckingBall", "key": "ability3Cooldown%", "locale": "zh-CN", "display": "重力坠击冷却时间" }
+  ,{ "hero": "hammond", "key": "ability1Cooldown%", "locale": "zh-CN", "display": "工程抓钩冷却时间" }
+  ,{ "hero": "hammond", "key": "ability2Cooldown%", "locale": "zh-CN", "display": "感应护盾冷却时间" }
+  ,{ "hero": "hammond", "key": "ability3Cooldown%", "locale": "zh-CN", "display": "重力坠击冷却时间" }
+  ,{ "hero": "hammond", "key": "ability1Cooldown%", "locale": "en-US", "display": "Grappling Claw Cooldown Time" }
+  ,{ "hero": "hammond", "key": "ability2Cooldown%", "locale": "en-US", "display": "Adaptive Shield Cooldown Time" }
+  ,{ "hero": "hammond", "key": "ability3Cooldown%", "locale": "en-US", "display": "Piledriver Cooldown Time" }
 ]
