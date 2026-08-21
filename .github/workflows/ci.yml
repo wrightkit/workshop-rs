@@ -46,3 +46,23 @@ jobs:
         run: cargo test --locked --workspace --all-targets
       - name: Catalog check
         run: cargo run --locked -p workshop-rs --bin workshop-catalog-gen -- check
+
+  p0-dogfood:
+    name: five real-project dogfood
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Run pinned real-project harness
+        shell: bash
+        run: |
+          set -o pipefail
+          cargo test --locked -p workshop-rs --test p0_corpus -- --nocapture 2>&1 | tee p0-dogfood.log
+      - name: Upload dogfood log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p0-dogfood-log
+          path: p0-dogfood.log

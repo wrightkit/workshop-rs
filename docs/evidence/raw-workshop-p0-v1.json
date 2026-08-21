@@ -2,7 +2,7 @@
   "schema": "raw-workshop-p0-corpus/v1",
   "purpose": "Durable provenance and rerun manifest for workshop-rs#47 and wright#189",
   "reference_compiler_policy": "Generated artifacts are accepted only with the pinned command and toolchain below; direct raw artifacts are fetched verbatim from the pinned Git blob.",
-  "redistribution": "The five source artifacts are not redistributed by workshop-rs. A rerun must fetch them from the pinned GitHub URL, verify sha256, and keep them outside the repository unless the source license is reviewed.",
+  "redistribution": "The five pinned Workshop source inputs are vendored under crates/workshop-rs/tests/fixtures/real-projects; CI verifies their SHA-256 and emits acceptance evidence only in logs/artifacts.",
   "historicalManifestCorrections": [
     {
       "manifestCommit": "b776cf5",
@@ -18,58 +18,63 @@
       "repository": "Teakowa/Overwatch-AI-PVE",
       "revision": "e0c0721e827fb60ff9ed9c48fd78221ed7d9ebfc",
       "source_path": "generated release output (source revision; output path is produced by pnpm run build:release)",
+      "source_fixture": "crates/workshop-rs/tests/fixtures/real-projects/ai-pve.ow",
       "artifact_sha256": "d9c6460ca550e40083efcc2b57de16360088631970824599a22c0aa2cb7f11f9",
       "locale": "zh-CN",
       "acquisition": "checkout the pinned revision; install the repository lockfile; run pnpm run build:release; select the zh-CN raw Workshop output",
       "reference_compiler": {"overpy": "9.7.13", "node": "22", "pnpm": "10.6.3"},
-      "license_handling": "Repository metadata requires maintainer review; do not redistribute the generated artifact."
+      "license_handling": "Vendored as a user-authorized compatibility-test input; source metadata is retained for provenance."
     },
     {
       "id": "bastion-en-US",
       "repository": "OWBastion/Bastion",
       "revision": "c010e1a2d468ec7140f474e334067e5ab8d02d89",
       "source_path": "generated release output (source revision; output path is produced by pnpm run build:main:en)",
+      "source_fixture": "crates/workshop-rs/tests/fixtures/real-projects/bastion.ow",
       "artifact_sha256": "44e453ddf7f373be65aea82d019abd45dd60f5ecb57c8d1607d3576a8bc60259",
       "locale": "en-US",
       "acquisition": "checkout the pinned revision; install the repository lockfile; run pnpm run build:main:en; select the en-US raw Workshop output",
       "reference_compiler": {"overpy": "9.7.10", "node": "24", "pnpm": "11.10.0"},
-      "license_handling": "Repository metadata says Apache-2.0, but the generated artifact carries additional attribution/noncommercial text; maintainer review is required and redistribution is not assumed."
+      "license_handling": "Vendored as a user-authorized compatibility-test input; source metadata is retained for provenance."
     },
     {
       "id": "defend-the-castle-en-US",
       "repository": "ShuriZma/defendTheCastleExtended",
       "revision": "3bf36a6fded71faa207be271bd3ed2cf7d03650d",
       "source_path": "latest.ow",
-      "artifact_url": "https://github.com/ShuriZma/defendTheCastleExtended/blob/3bf36a6fded71faa207be271bd3ed2cf7d03650d/latest.ow",
+      "source_fixture": "crates/workshop-rs/tests/fixtures/real-projects/defend.ow",
+      "artifact_url": "https://raw.githubusercontent.com/ShuriZma/defendTheCastleExtended/3bf36a6fded71faa207be271bd3ed2cf7d03650d/latest.ow",
       "artifact_sha256": "06a956b650313ee2d6e24ec989f907244dc4444579bdba27c580b031de97b268",
       "locale": "en-US",
       "acquisition": "download the raw Git blob at artifact_url and verify sha256",
       "reference_compiler": null,
-      "license_handling": "GitHub metadata is NOASSERTION; do not redistribute the artifact."
+      "license_handling": "Vendored as a user-authorized compatibility-test input; source metadata is retained for provenance."
     },
     {
       "id": "illari-zh-CN",
       "repository": "BYOUINZAKA/ow_project",
       "revision": "6891a1bff7529c93e2af536fe2c472cce84ceb5b",
       "source_path": "illari.ow",
-      "artifact_url": "https://github.com/BYOUINZAKA/ow_project/blob/6891a1bff7529c93e2af536fe2c472cce84ceb5b/illari.ow",
+      "source_fixture": "crates/workshop-rs/tests/fixtures/real-projects/illari.ow",
+      "artifact_url": "https://raw.githubusercontent.com/BYOUINZAKA/ow_project/6891a1bff7529c93e2af536fe2c472cce84ceb5b/illari.ow",
       "artifact_sha256": "f3aff73b9e677730bddc9c85b04c2bd38439bb7a4ba4fa2e80dc28db2e4a0860",
       "locale": "zh-CN",
       "acquisition": "download the raw Git blob at artifact_url and verify sha256",
       "reference_compiler": null,
-      "license_handling": "GitHub metadata is NOASSERTION; do not redistribute the artifact."
+      "license_handling": "Vendored as a user-authorized compatibility-test input; source metadata is retained for provenance."
     },
     {
       "id": "overwatch-rework-en-US",
       "repository": "wisehhong/Overwatch-Rework",
       "revision": "349b801ad5d81cf53701ae4312bb36d94a2f6009",
       "source_path": "doomfist.ow (selected raw mode artifact)",
-      "artifact_url": "https://github.com/wisehhong/Overwatch-Rework/blob/349b801ad5d81cf53701ae4312bb36d94a2f6009/doomfist.ow",
+      "source_fixture": "crates/workshop-rs/tests/fixtures/real-projects/rework.ow",
+      "artifact_url": "https://raw.githubusercontent.com/wisehhong/Overwatch-Rework/349b801ad5d81cf53701ae4312bb36d94a2f6009/doomfist.ow",
       "artifact_sha256": "aa32cda640dba41fd99245a7d425d9897b53875d15cf071862197a8e6840258c",
       "locale": "en-US",
       "acquisition": "download the raw Git blob at artifact_url and verify sha256",
       "reference_compiler": null,
-      "license_handling": "GitHub metadata is NOASSERTION; do not redistribute the artifact."
+      "license_handling": "Vendored as a user-authorized compatibility-test input; source metadata is retained for provenance."
     }
   ]
 }

@@ -1,5 +1,4 @@
-//! Re-runnable P0 corpus gate. The source artifacts remain external because
-//! their repository licenses do not permit redistribution here.
+//! Re-runnable P0 corpus gate over the pinned, repository-owned source inputs.
 
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
@@ -124,10 +123,9 @@ fn residual_groups(issues: &[semantic::SemanticIssue]) -> Vec<serde_json::Value>
 }
 
 #[test]
-#[ignore = "requires externally reacquired artifacts; run with WRIGHTKIT_P0_ARTIFACT_DIR"]
 fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
-    let root = std::env::var("WRIGHTKIT_P0_ARTIFACT_DIR")
-        .expect("set WRIGHTKIT_P0_ARTIFACT_DIR to reacquired artifacts");
+    let root =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/real-projects");
     let catalog = Catalog::builtin().expect("built-in catalog");
     let mut inventory = BTreeMap::new();
     for (name, locale, expected_sha) in CASES {

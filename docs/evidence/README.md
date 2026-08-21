@@ -1,13 +1,11 @@
 # P0 corpus evidence
 
 `raw-workshop-p0-v1.json` pins the five source repositories, revisions, raw
-artifact SHA-256 values, and reacquisition commands. The raw files are not
-redistributed. CI reacquires them into a private workspace and runs the
-required five-project semantic gate:
+artifact SHA-256 values, and vendored fixture paths. CI runs the required
+five-project semantic gate directly against those local source inputs:
 
 ```sh
-WRIGHTKIT_P0_ARTIFACT_DIR=/path/to/reacquired-artifacts \
-  cargo test -p workshop-rs --locked --test p0_corpus -- --ignored --nocapture
+cargo test -p workshop-rs --locked --test p0_corpus -- --nocapture
 ```
 
 The test verifies each artifact digest, canonical validation, deterministic

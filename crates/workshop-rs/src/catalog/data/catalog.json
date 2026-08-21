@@ -195,7 +195,7 @@
       ],
       "paramTypes": [
         "Team",
-        "Number"
+        "Number|Boolean"
       ],
       "params": [
         "Team",
@@ -820,7 +820,7 @@
       "paramTypes": [
         "Player|Array",
         "Button",
-        "Number"
+        "Number|Boolean"
       ],
       "params": [
         "Object",
@@ -1179,7 +1179,7 @@
         "Number",
         "Object",
         "HudPosition",
-        "Number",
+        "Number|Boolean",
         "Color",
         "Color",
         "ProgressHudReeval",
@@ -1549,7 +1549,7 @@
         null
       ],
       "paramTypes": [
-        "Number"
+        "Number|Boolean"
       ],
       "params": [
         "Number"
@@ -1637,12 +1637,12 @@
       ],
       "paramTypes": [
         "Player|Array",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number",
-        "Number"
+        "Number|Boolean",
+        "Number|Boolean",
+        "Number|Boolean",
+        "Number|Boolean",
+        "Number|Boolean",
+        "Number|Boolean"
       ],
       "params": [
         "Object",
@@ -2065,11 +2065,11 @@
       ],
       "paramTypes": [
         "Player|Array",
-        "Object",
-        "Object",
-        "Object",
+        "Object|String",
+        "Object|String",
+        "Object|String",
         "HudPosition",
-        "Number",
+        "Number|Boolean",
         "Color",
         "Color",
         "Color",
@@ -2171,7 +2171,7 @@
       "id": "setGravity",
       "paramTypes": [
         "Player|Array",
-        "Number"
+        "Number|Boolean"
       ],
       "params": [
         "Player",
@@ -2231,7 +2231,7 @@
       "id": "setUltCharge",
       "paramTypes": [
         "Player|Array",
-        "Number"
+        "Number|Boolean"
       ],
       "params": [
         "player",
@@ -2268,7 +2268,7 @@
       "paramTypes": [
         "Variable",
         "Any",
-        "Number",
+        "Number|Boolean",
         "ChaseRateReeval"
       ],
       "params": [
@@ -2469,7 +2469,7 @@
       },
       "id": "skip",
       "paramTypes": [
-        "Number"
+        "Number|Boolean"
       ],
       "params": [
         "Value"
@@ -3903,7 +3903,7 @@
       ]
     }
   ],
-  "digest": "2583cad5ce3e0249f6851074ead0f2e12027f8ff956ee326d13388ede4b826ba",
+  "digest": "eec1cbd6ef00c9edf575262997133f53dda76b19914817842783f26267de6389",
   "enums": [
     {
       "domain": "Impulse",
@@ -9983,8 +9983,8 @@
       },
       "id": "randomInteger",
       "paramTypes": [
-        "Number",
-        "Number"
+        "Number|Boolean",
+        "Number|Boolean"
       ],
       "params": [
         "Min",
@@ -10082,8 +10082,8 @@
       "id": "slice",
       "paramTypes": [
         "Array",
-        "Number",
-        "Number"
+        "Number|Boolean",
+        "Number|Boolean"
       ],
       "params": [
         "Array",
@@ -10367,7 +10367,7 @@
       },
       "id": "isUsingUltimate",
       "paramTypes": [
-        "Player"
+        "Player|Array"
       ],
       "params": [
         "Player"
@@ -10635,7 +10635,7 @@
       },
       "id": "hasSpawned",
       "paramTypes": [
-        "Player"
+        "Player|Array"
       ],
       "params": [
         "Player"
@@ -10783,7 +10783,7 @@
       },
       "id": "getPosition",
       "paramTypes": [
-        "Player"
+        "Player|Array"
       ],
       "params": [
         "player"
@@ -11091,7 +11091,7 @@
       "id": "indexOfArrayValue",
       "paramTypes": [
         "Array",
-        "Object"
+        "Any"
       ],
       "params": [
         "Array",
@@ -11123,7 +11123,7 @@
       "id": "sortedArray",
       "paramTypes": [
         "Array",
-        "Object"
+        "Any"
       ],
       "params": [
         "Array",
@@ -11168,14 +11168,14 @@
       },
       "id": "max",
       "paramTypes": [
-        "Number",
-        "Number"
+        "Any",
+        "Any"
       ],
       "params": [
         "Value",
         "Value"
       ],
-      "returnType": "Number"
+      "returnType": "Any"
     },
     {
       "aliases": {
@@ -11184,14 +11184,14 @@
       },
       "id": "min",
       "paramTypes": [
-        "Number",
-        "Number"
+        "Any",
+        "Any"
       ],
       "params": [
         "Value",
         "Value"
       ],
-      "returnType": "Number"
+      "returnType": "Any"
     },
     {
       "aliases": {
