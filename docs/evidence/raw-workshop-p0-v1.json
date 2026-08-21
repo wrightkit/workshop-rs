@@ -9,7 +9,7 @@
       "repository": "Teakowa/Overwatch-AI-PVE",
       "revision": "e0c0721e827fb60ff9ed9c48fd78221ed7d9ebfc",
       "source_path": "generated release output (source revision; output path is produced by pnpm run build:release)",
-      "artifact_sha256": "b0405707d54fd30e20f285ce4a3fdaf9899e3959fb5dd223c898040c63a18773",
+      "artifact_sha256": "d9c6460ca550e40083efcc2b57de16360088631970824599a22c0aa2cb7f11f9",
       "locale": "zh-CN",
       "acquisition": "checkout the pinned revision; install the repository lockfile; run pnpm run build:release; select the zh-CN raw Workshop output",
       "reference_compiler": {"overpy": "9.7.13", "node": "22", "pnpm": "10.6.3"},

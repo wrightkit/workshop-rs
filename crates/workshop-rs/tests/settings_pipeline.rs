@@ -160,6 +160,25 @@ fn team_deathmatch_enabled_maps_is_canonical() {
 }
 
 #[test]
+fn canonical_percent_setting_keys_parse_from_mixed_locale_exports() {
+    let text = r#"
+        settings {
+            heroes {
+                General {
+                    Roadhog {
+                        secondaryFireRechargeRate%: 150
+                        secondaryFireCooldown%: 480
+                    }
+                }
+            }
+        }
+    "#;
+    let catalog = Catalog::builtin().unwrap();
+    parser::parse_with_context(text, &catalog, &Locale::new("zh-CN"), &catalog)
+        .expect("canonical percent setting keys must parse");
+}
+
+#[test]
 fn supported_dva_name_parses() {
     let catalog = catalog();
     let source =

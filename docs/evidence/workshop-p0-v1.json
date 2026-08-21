@@ -14,14 +14,14 @@
     "requiredChecks": ["parse", "canonical validation", "semantic inspection", "deterministic emission", "reparse", "semantic roundtrip equivalence"]
   },
   "artifacts": [
-    {"id": "ai-pve", "sha256": "b0405707d54fd30e20f285ce4a3fdaf9899e3959fb5dd223c898040c63a18773", "locale": "zh-CN", "issues": 246},
+    {"id": "ai-pve", "sha256": "d9c6460ca550e40083efcc2b57de16360088631970824599a22c0aa2cb7f11f9", "locale": "zh-CN", "issues": 246},
     {"id": "bastion", "sha256": "44e453ddf7f373be65aea82d019abd45dd60f5ecb57c8d1607d3576a8bc60259", "locale": "en-US", "issues": 396},
     {"id": "defend", "sha256": "06a956b650313ee2d6e24ec989f907244dc4444579bdba27c580b031de97b268", "locale": "en-US", "issues": 3},
     {"id": "illari", "sha256": "f3aff73b9e677730bddc9c85b04c2bd38439bb7a4ba4fa2e80dc28db2e4a0860", "locale": "zh-CN", "issues": 0},
     {"id": "rework", "sha256": "aa32cda640dba41fd99245a7d425d9897b53875d15cf071862197a8e6840258c", "locale": "en-US", "issues": 0}
   ],
   "runtimeClassifications": {
-    "ai-pve": ["project variable Brigitte remains unknown", "D.Mon settings hero parses canonically but zh-CN settings mapping is missing and emission fails explicitly"],
+    "ai-pve": ["OverPy 9.7.13 pinned build output is d9c6460...; project variable Brigitte remains unknown", "D.Mon settings hero parses canonically but zh-CN settings mapping is missing and emission fails explicitly"],
     "bastion": ["project variable breathPalette remains unknown"],
     "defend": ["Team Deathmatch enabled maps parses, emits, reparses, and is semantically equivalent", "trailing rawWorkshopAction remains opaque and emission fails closed"],
     "illari": ["canonical validation, emission, reparse, deterministic emission, and semantic round-trip passed"],
@@ -30,7 +30,7 @@
   "classifications": {
     "ordinaryCurrentConstructs": {
       "status": "closed",
-      "evidence": ["Hero(D.Va) localized enum regression", "Capture The Flag and Team Deathmatch settings regressions", "disabled condition and For Player Variable roundtrip regressions", "Sojourn/Roadhog/Hazard pinned AI-PVE setting aliases", "Modulo/Game Mode/vector catalog reconciliation"]
+      "evidence": ["Hero(D.Va) localized enum regression", "Capture The Flag and Team Deathmatch settings regressions", "canonical percent setting keys and optional percent values in mixed-locale exports", "disabled condition and For Player Variable roundtrip regressions", "Sojourn/Roadhog/Hazard pinned AI-PVE setting aliases", "Modulo/Game Mode/vector catalog reconciliation"]
     },
     "projectDefinedOrEvidenceInsufficient": {
       "status": "preserved-and-visible",

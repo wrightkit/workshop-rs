@@ -11,7 +11,7 @@ const CASES: &[(&str, &str, &str, usize)] = &[
     (
         "ai-pve",
         "zh-CN",
-        "b0405707d54fd30e20f285ce4a3fdaf9899e3959fb5dd223c898040c63a18773",
+        "d9c6460ca550e40083efcc2b57de16360088631970824599a22c0aa2cb7f11f9",
         246,
     ),
     (

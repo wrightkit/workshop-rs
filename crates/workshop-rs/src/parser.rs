@@ -480,7 +480,7 @@ impl Parser<'_> {
             }),
             KeyKind::Percent => Ok(SettingsNode::Number {
                 name: name.to_string(),
-                value: self.settings_number(true)?,
+                value: self.settings_number_percent()?,
                 span,
             }),
             KeyKind::Bool => Ok(SettingsNode::Bool {
@@ -604,6 +604,20 @@ impl Parser<'_> {
         Ok(value)
     }
 
+    fn settings_number_percent(&mut self) -> Result<f64> {
+        let value = self.settings_number(false)?;
+        if matches!(
+            self.peek(),
+            Some(Token {
+                kind: TokenKind::Op(op),
+                ..
+            }) if op == "%"
+        ) {
+            self.pos += 1;
+        }
+        Ok(value)
+    }
+
     fn settings_bool(&mut self) -> Result<bool> {
         let token = self
             .next()
@@ -679,6 +693,11 @@ impl Parser<'_> {
         display: &str,
         hero: Option<&str>,
     ) -> bool {
+        if let Some(PathPart::Part(key)) = candidate.path.last()
+            && display == *key
+        {
+            return true;
+        }
         if let (Some(hero), Some(PathPart::Part(key))) = (hero, candidate.path.last()) {
             if table::hero_setting_name(hero, key, self.locale.as_str()) == Some(display) {
                 return true;
@@ -2969,7 +2988,7 @@ impl Parser<'_> {
                     kind: TokenKind::Op(op),
                     start,
                     end,
-                } if op == "-" => ("-".to_string(), start, end),
+                } if matches!(op.as_str(), "-" | "%") => (op.clone(), start, end),
                 _ => break,
             };
             if word_start.line != line {
@@ -2980,7 +2999,11 @@ impl Parser<'_> {
             self.pos += 1;
         }
         Ok((
-            words.join(" ").replace(" .", ".").replace(". ", "."),
+            words
+                .join(" ")
+                .replace(" .", ".")
+                .replace(". ", ".")
+                .replace(" %", "%"),
             start,
             end,
         ))
