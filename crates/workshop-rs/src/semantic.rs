@@ -204,12 +204,29 @@ fn inspect_value(
     catalog: &Catalog,
     issues: &mut Vec<SemanticIssue>,
 ) {
-    if let Value::Call { name, .. } = &node.value {
+    if let Value::Call { name, args } = &node.value {
         // These names are canonical WIR helpers rather than Workshop
         // builtins: memberAccess preserves dynamic receiver properties, and
         // infix operators are lowered to their source spelling for emission.
-        let canonical_helper =
-            matches!(name.as_str(), "memberAccess" | "+" | "-" | "*" | "/" | "%");
+        let canonical_helper = matches!(
+            name.as_str(),
+            "memberAccess"
+                | "+"
+                | "-"
+                | "*"
+                | "/"
+                | "%"
+                | "add"
+                | "subtract"
+                | "multiply"
+                | "divide"
+                | "modulo"
+                | "raiseToPower"
+                | "appendToArray"
+                | "removeFromArray"
+                | "removeFromArrayByIndex"
+        ) && (args.is_empty()
+            || matches!(name.as_str(), "memberAccess" | "+" | "-" | "*" | "/" | "%"));
         if canonical_helper {
             return;
         }

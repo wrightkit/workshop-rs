@@ -185,7 +185,17 @@ impl EnumMember {
 #[derive(Debug, Clone)]
 pub struct EnumDomain {
     pub domain: String,
+    aliases: HashMap<Locale, Vec<String>>,
     pub members: Vec<EnumMember>,
+}
+
+impl EnumDomain {
+    pub fn spelling(&self, locale: &Locale) -> Option<&str> {
+        self.aliases
+            .get(locale)
+            .and_then(|spellings| spellings.first())
+            .map(String::as_str)
+    }
 }
 
 /// Target-format metadata recorded in the catalog.
@@ -787,6 +797,7 @@ impl Catalog {
             .insert(domain.domain.clone(), domain_index);
         self.enums.push(EnumDomain {
             domain: domain.domain,
+            aliases: domain_aliases,
             members,
         });
         Ok(())

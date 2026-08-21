@@ -74,6 +74,34 @@ fn localized_hero_call_resolves_dotted_member() {
     assert!(program.values.iter().any(|value| matches!(value.value, wir::Value::Enum { ref value_type, ref value } if value_type == "Hero" && value == "DVA")));
 }
 
+#[test]
+fn indexed_variable_actions_resolve_declared_names_as_variables() {
+    let source = r##"variables {
+    global: 0: Brigitte
+}
+
+rule ("indexed") {
+    event { Ongoing - Global; }
+    actions {
+        Set Global Variable At Index(Brigitte, 1, 2);
+    }
+}
+"##;
+    let catalog = catalog();
+    let program = parser::parse_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("indexed global variable action parses");
+    let action = program.actions.iter().next().expect("indexed action");
+    let wir::Action::Call { args, .. } = action else {
+        panic!("expected generic indexed-variable action");
+    };
+    assert!(matches!(
+        program.values.get(args[0]).map(|node| &node.value),
+        Some(wir::Value::GlobalVariable(_))
+    ));
+    validate::validate_canonical_ids(&program, &catalog)
+        .expect("declared indexed variable is canonical WIR");
+}
+
 const CORPUS_FIXTURES: &[&str] = &[
     "basic-rule",
     "control-flow",
@@ -650,5 +678,5 @@ fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
             "missing documented collision: {expected:?}"
         );
     }
-    assert_eq!(collisions.len(), 47, "the catalog collision census changed");
+    assert_eq!(collisions.len(), 50, "the catalog collision census changed");
 }

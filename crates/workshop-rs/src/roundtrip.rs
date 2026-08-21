@@ -207,7 +207,7 @@ fn nodes_equivalent(
                         value: right_value,
                         ..
                     },
-                ) => left_name == right_name && left_value == right_value,
+                ) => left_name == right_name && float_equivalent(*left_value, *right_value),
                 (
                     crate::settings::SettingsNode::Bool {
                         name: left_name,
@@ -259,8 +259,28 @@ fn nodes_equivalent(
                             .zip(right_elements)
                             .all(|(left, right)| left.value == right.value)
                 }
+                (
+                    crate::settings::SettingsNode::Raw {
+                        name: left_name,
+                        value: left_value,
+                        ..
+                    },
+                    crate::settings::SettingsNode::Raw {
+                        name: right_name,
+                        value: right_value,
+                        ..
+                    },
+                ) => left_name == right_name && left_value == right_value,
                 _ => false,
             })
+}
+
+fn float_equivalent(left: f64, right: f64) -> bool {
+    if left == right {
+        return true;
+    }
+    let scale = left.abs().max(right.abs()).max(1.0);
+    (left - right).abs() <= f64::EPSILON * scale * 4.0
 }
 
 fn rule_equivalent(

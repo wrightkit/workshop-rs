@@ -1,1609 +1,377 @@
 {
+  "schema": "workshop-p0-residual/v1",
   "artifacts": {
     "ai-pve": [
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "半藏：暴击倍率",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 907,
           "column": 3,
-          "end_column": 15,
           "end_line": 907,
-          "file": 0,
-          "line": 907
+          "end_column": 15
         },
-        "sourceCanonicalName": "半藏：暴击倍率"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "工程抓钩冷却时间",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 894,
           "column": 5,
-          "end_column": 18,
           "end_line": 894,
-          "file": 0,
-          "line": 894
+          "end_column": 18
         },
-        "sourceCanonicalName": "工程抓钩冷却时间"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "巴蒂斯特：暴击倍率",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 908,
           "column": 3,
-          "end_column": 17,
           "end_line": 908,
-          "file": 0,
-          "line": 908
+          "end_column": 17
         },
-        "sourceCanonicalName": "巴蒂斯特：暴击倍率"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "帕拉蒂尼之牙：暴击对护甲造成额外最大生命值伤害 %",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 909,
           "column": 3,
-          "end_column": 32,
           "end_line": 909,
-          "file": 0,
-          "line": 909
+          "end_column": 32
         },
-        "sourceCanonicalName": "帕拉蒂尼之牙：暴击对护甲造成额外最大生命值伤害 %"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "帕拉蒂尼之牙：暴击造成额外最大生命值伤害 %",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 910,
           "column": 3,
-          "end_column": 29,
           "end_line": 910,
-          "file": 0,
-          "line": 910
+          "end_column": 29
         },
-        "sourceCanonicalName": "帕拉蒂尼之牙：暴击造成额外最大生命值伤害 %"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "心脏过载：额外伤害减免",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 911,
           "column": 3,
-          "end_column": 18,
           "end_line": 911,
-          "file": 0,
-          "line": 911
+          "end_column": 18
         },
-        "sourceCanonicalName": "心脏过载：额外伤害减免"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "恐怖扳机：冷却时间",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 912,
           "column": 3,
-          "end_column": 17,
           "end_line": 912,
-          "file": 0,
-          "line": 912
+          "end_column": 17
         },
-        "sourceCanonicalName": "恐怖扳机：冷却时间"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "恐怖扳机：基于灵魂层数造成流血伤害",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 913,
           "column": 3,
-          "end_column": 23,
           "end_line": 913,
-          "file": 0,
-          "line": 913
+          "end_column": 23
         },
-        "sourceCanonicalName": "恐怖扳机：基于灵魂层数造成流血伤害"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "悍猛格挡：伤害吸收倍率",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 914,
           "column": 3,
-          "end_column": 17,
           "end_line": 914,
-          "file": 0,
-          "line": 914
+          "end_column": 17
         },
-        "sourceCanonicalName": "悍猛格挡：伤害吸收倍率"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "感应护盾冷却时间",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 895,
           "column": 5,
-          "end_column": 18,
           "end_line": 895,
-          "file": 0,
-          "line": 895
+          "end_column": 18
         },
-        "sourceCanonicalName": "感应护盾冷却时间"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "收割：每层灵魂减少技能冷却",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 915,
           "column": 3,
-          "end_column": 21,
           "end_line": 915,
-          "file": 0,
-          "line": 915
+          "end_column": 21
         },
-        "sourceCanonicalName": "收割：每层灵魂减少技能冷却"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "斩地巨剑：击倒持续时间",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 916,
           "column": 3,
-          "end_column": 19,
           "end_line": 916,
-          "file": 0,
-          "line": 916
+          "end_column": 19
         },
-        "sourceCanonicalName": "斩地巨剑：击倒持续时间"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "无影脚击退距离",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 917,
           "column": 3,
-          "end_column": 16,
           "end_line": 917,
-          "file": 0,
-          "line": 917
+          "end_column": 16
         },
-        "sourceCanonicalName": "无影脚击退距离"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "桎梏灼日 额外伤害增幅 %",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 918,
           "column": 3,
-          "end_column": 19,
           "end_line": 918,
-          "file": 0,
-          "line": 918
+          "end_column": 19
         },
-        "sourceCanonicalName": "桎梏灼日 额外伤害增幅 %"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "激活持续时间",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 919,
           "column": 3,
-          "end_column": 12,
           "end_line": 919,
-          "file": 0,
-          "line": 919
+          "end_column": 12
         },
-        "sourceCanonicalName": "激活持续时间"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "灾厄馈赠（被动）：基于受到伤害获得终极技能充能 %",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 920,
           "column": 3,
-          "end_column": 31,
           "end_line": 920,
-          "file": 0,
-          "line": 920
+          "end_column": 31
         },
-        "sourceCanonicalName": "灾厄馈赠（被动）：基于受到伤害获得终极技能充能 %"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "禅雅塔：暴击倍率（以下实际数值将被除以100）",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 921,
           "column": 3,
-          "end_column": 31,
           "end_line": 921,
-          "file": 0,
-          "line": 921
+          "end_column": 31
         },
-        "sourceCanonicalName": "禅雅塔：暴击倍率（以下实际数值将被除以100）"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "自定义 AI",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 922,
           "column": 3,
-          "end_column": 14,
           "end_line": 922,
-          "file": 0,
-          "line": 922
+          "end_column": 14
         },
-        "sourceCanonicalName": "自定义 AI"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "艾什：暴击倍率",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 923,
           "column": 3,
-          "end_column": 15,
           "end_line": 923,
-          "file": 0,
-          "line": 923
+          "end_column": 15
         },
-        "sourceCanonicalName": "艾什：暴击倍率"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "诛 （终极技能）额外造成伤害 %",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 906,
           "column": 3,
-          "end_column": 22,
           "end_line": 906,
-          "file": 0,
-          "line": 906
+          "end_column": 22
         },
-        "sourceCanonicalName": "诛 （终极技能）额外造成伤害 %"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "重力坠击冷却时间",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 896,
           "column": 5,
-          "end_column": 18,
           "end_line": 896,
-          "file": 0,
-          "line": 896
+          "end_column": 18
         },
-        "sourceCanonicalName": "重力坠击冷却时间"
-      },
-      {
         "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
+      },
+      {
         "kind": "RawSetting",
+        "sourceCanonicalName": "雾子：暴击倍率",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 924,
           "column": 3,
-          "end_column": 15,
           "end_line": 924,
-          "file": 0,
-          "line": 924
+          "end_column": 15
         },
-        "sourceCanonicalName": "雾子：暴击倍率"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 37,
-          "end_line": 1199,
-          "file": 0,
-          "line": 1199
-        },
-        "sourceCanonicalName": "Ana_GrenadeDamage"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 29,
-          "end_line": 1263,
-          "file": 0,
-          "line": 1263
-        },
-        "sourceCanonicalName": "AnranBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 32,
-          "end_line": 1244,
-          "file": 0,
-          "line": 1244
-        },
-        "sourceCanonicalName": "BaptisteBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 31,
-          "end_line": 1265,
-          "file": 0,
-          "line": 1265
-        },
-        "sourceCanonicalName": "BastionBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 28,
-          "end_line": 1179,
-          "file": 0,
-          "line": 1179
-        },
-        "sourceCanonicalName": "Brigitte"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 31,
-          "end_line": 1254,
-          "file": 0,
-          "line": 1254
-        },
-        "sourceCanonicalName": "CassidyBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 6,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 28,
-          "end_line": 1233,
-          "file": 0,
-          "line": 1233
-        },
-        "sourceCanonicalName": "DmonBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 30,
-          "end_line": 1267,
-          "file": 0,
-          "line": 1267
-        },
-        "sourceCanonicalName": "DominaBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 28,
-          "end_line": 1231,
-          "file": 0,
-          "line": 1231
-        },
-        "sourceCanonicalName": "DoomBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 28,
-          "end_line": 1269,
-          "file": 0,
-          "line": 1269
-        },
-        "sourceCanonicalName": "EchoBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 28,
-          "end_line": 1271,
-          "file": 0,
-          "line": 1271
-        },
-        "sourceCanonicalName": "EmreBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 29,
-          "end_line": 1239,
-          "file": 0,
-          "line": 1239
-        },
-        "sourceCanonicalName": "FrejaBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 25,
-          "end_line": 1188,
-          "file": 0,
-          "line": 1188
-        },
-        "sourceCanonicalName": "Genji"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 29,
-          "end_line": 1243,
-          "file": 0,
-          "line": 1243
-        },
-        "sourceCanonicalName": "HanzoBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 3,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 30,
-          "end_line": 1182,
-          "file": 0,
-          "line": 1182
-        },
-        "sourceCanonicalName": "HazardBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 3,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 34,
-          "end_line": 1191,
-          "file": 0,
-          "line": 1191
-        },
-        "sourceCanonicalName": "HeadshotDamage"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 4,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 34,
-          "end_line": 1273,
-          "file": 0,
-          "line": 1273
-        },
-        "sourceCanonicalName": "JetpackCatBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 35,
-          "end_line": 1277,
-          "file": 0,
-          "line": 1277
-        },
-        "sourceCanonicalName": "JunkerQueenBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 31,
-          "end_line": 1256,
-          "file": 0,
-          "line": 1256
-        },
-        "sourceCanonicalName": "JunkratBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 29,
-          "end_line": 1255,
-          "file": 0,
-          "line": 1255
-        },
-        "sourceCanonicalName": "LucioBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 8,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 29,
-          "end_line": 1219,
-          "file": 0,
-          "line": 1219
-        },
-        "sourceCanonicalName": "MaugaBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 29,
-          "end_line": 1181,
-          "file": 0,
-          "line": 1181
-        },
-        "sourceCanonicalName": "MercyBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 3,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 30,
-          "end_line": 1279,
-          "file": 0,
-          "line": 1279
-        },
-        "sourceCanonicalName": "MizukiBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 29,
-          "end_line": 1258,
-          "file": 0,
-          "line": 1258
-        },
-        "sourceCanonicalName": "MoiraBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 3,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 33,
-          "end_line": 1185,
-          "file": 0,
-          "line": 1185
-        },
-        "sourceCanonicalName": "Orisa_Fortify"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 7,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 36,
-          "end_line": 1192,
-          "file": 0,
-          "line": 1192
-        },
-        "sourceCanonicalName": "Ram_Annihilation"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 9,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 30,
-          "end_line": 1210,
-          "file": 0,
-          "line": 1210
-        },
-        "sourceCanonicalName": "ReaperBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 33,
-          "end_line": 1259,
-          "file": 0,
-          "line": 1259
-        },
-        "sourceCanonicalName": "ReinhardtBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 31,
-          "end_line": 1282,
-          "file": 0,
-          "line": 1282
-        },
-        "sourceCanonicalName": "RoadhogBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 27,
-          "end_line": 1227,
-          "file": 0,
-          "line": 1227
-        },
-        "sourceCanonicalName": "S76Buff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 6,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 29,
-          "end_line": 1286,
-          "file": 0,
-          "line": 1286
-        },
-        "sourceCanonicalName": "ShionBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 3,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 30,
-          "end_line": 1283,
-          "file": 0,
-          "line": 1283
-        },
-        "sourceCanonicalName": "SierraBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 29,
-          "end_line": 1229,
-          "file": 0,
-          "line": 1229
-        },
-        "sourceCanonicalName": "SigmaBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 6,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 31,
-          "end_line": 1201,
-          "file": 0,
-          "line": 1201
-        },
-        "sourceCanonicalName": "SojournBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 30,
-          "end_line": 1203,
-          "file": 0,
-          "line": 1203
-        },
-        "sourceCanonicalName": "SombraBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 34,
-          "end_line": 1204,
-          "file": 0,
-          "line": 1204
-        },
-        "sourceCanonicalName": "Tracer_Ability"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 7,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 32,
-          "end_line": 1247,
-          "file": 0,
-          "line": 1247
-        },
-        "sourceCanonicalName": "VendettaBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 31,
-          "end_line": 1261,
-          "file": 0,
-          "line": 1261
-        },
-        "sourceCanonicalName": "VentureBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 34,
-          "end_line": 1292,
-          "file": 0,
-          "line": 1292
-        },
-        "sourceCanonicalName": "WidowmakerBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 31,
-          "end_line": 1293,
-          "file": 0,
-          "line": 1293
-        },
-        "sourceCanonicalName": "WinstonBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 36,
-          "end_line": 1262,
-          "file": 0,
-          "line": 1262
-        },
-        "sourceCanonicalName": "WreckingBallBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 30,
-          "end_line": 1241,
-          "file": 0,
-          "line": 1241
-        },
-        "sourceCanonicalName": "WuyangBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 3,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 20,
-          "end_column": 29,
-          "end_line": 1206,
-          "file": 0,
-          "line": 1206
-        },
-        "sourceCanonicalName": "ZaryaBuff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 3,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 101,
-          "end_column": 123,
-          "end_line": 5067,
-          "file": 0,
-          "line": 5067
-        },
-        "sourceCanonicalName": "brig_repair_pack_state"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 39,
-          "end_line": 7670,
-          "file": 0,
-          "line": 7670
-        },
-        "sourceCanonicalName": "brigitte_buff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 11,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 36,
-          "end_line": 6586,
-          "file": 0,
-          "line": 6586
-        },
-        "sourceCanonicalName": "freja_buff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 4,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 25,
-          "end_column": 36,
-          "end_line": 6004,
-          "file": 0,
-          "line": 6004
-        },
-        "sourceCanonicalName": "heart_steel"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 6,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 42,
-          "end_line": 1448,
-          "file": 0,
-          "line": 1448
-        },
-        "sourceCanonicalName": "hero_switch_pvar"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 5,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 44,
-          "end_line": 4770,
-          "file": 0,
-          "line": 4770
-        },
-        "sourceCanonicalName": "illari_captive_hud"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 55,
-          "end_column": 64,
-          "end_line": 4016,
-          "file": 0,
-          "line": 4016
-        },
-        "sourceCanonicalName": "juno_buff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 49,
-          "end_line": 4627,
-          "file": 0,
-          "line": 4627
-        },
-        "sourceCanonicalName": "mauga_berserker_soul_id"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 4,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 37,
-          "end_line": 6385,
-          "file": 0,
-          "line": 6385
-        },
-        "sourceCanonicalName": "reaper_buff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 40,
-          "end_line": 5859,
-          "file": 0,
-          "line": 5859
-        },
-        "sourceCanonicalName": "reinhardt_buff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 34,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 36,
-          "end_line": 1420,
-          "file": 0,
-          "line": 1420
-        },
-        "sourceCanonicalName": "reset_pvar"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 18,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 36,
-          "end_line": 6729,
-          "file": 0,
-          "line": 6729
-        },
-        "sourceCanonicalName": "shion_buff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 5,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 37,
-          "end_line": 6936,
-          "file": 0,
-          "line": 6936
-        },
-        "sourceCanonicalName": "wuyang_buff"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 4,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 47,
-          "end_line": 4160,
-          "file": 0,
-          "line": 4160
-        },
-        "sourceCanonicalName": "zarya_barrier_shields"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 8,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 26,
-          "end_column": 36,
-          "end_line": 4138,
-          "file": 0,
-          "line": 4138
-        },
-        "sourceCanonicalName": "zarya_buff"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       }
     ],
     "bastion": [
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "经典版地图",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 284,
           "column": 3,
-          "end_column": 13,
           "end_line": 284,
-          "file": 0,
-          "line": 284
+          "end_column": 13
         },
-        "sourceCanonicalName": "经典版地图"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       },
       {
-        "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
         "kind": "RawSetting",
+        "sourceCanonicalName": "自动重开时间间隔（小时）",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 283,
           "column": 3,
-          "end_column": 18,
           "end_line": 283,
-          "file": 0,
-          "line": 283
+          "end_column": 18
         },
-        "sourceCanonicalName": "自动重开时间间隔（小时）"
-      },
-      {
         "classification": "project-defined-construct",
-        "count": 1,
-        "evidence": "source settings or construct was preserved without a canonical catalog identity",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
+      },
+      {
         "kind": "RawSetting",
+        "sourceCanonicalName": "难度",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 285,
           "column": 3,
-          "end_column": 10,
           "end_line": 285,
-          "file": 0,
-          "line": 285
+          "end_column": 10
         },
-        "sourceCanonicalName": "难度"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 56,
-          "end_column": 69,
-          "end_line": 912,
-          "file": 0,
-          "line": 912
-        },
-        "sourceCanonicalName": "anaSleepLimit"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 5,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 51,
-          "end_line": 659,
-          "file": 0,
-          "line": 659
-        },
-        "sourceCanonicalName": "breathPalette"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 25,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 51,
-          "end_line": 1144,
-          "file": 0,
-          "line": 1144
-        },
-        "sourceCanonicalName": "buffEventDesc"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 25,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 55,
-          "end_line": 1145,
-          "file": 0,
-          "line": 1145
-        },
-        "sourceCanonicalName": "buffEventDuration"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 25,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 51,
-          "end_line": 1143,
-          "file": 0,
-          "line": 1143
-        },
-        "sourceCanonicalName": "buffEventName"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 30,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 53,
-          "end_line": 1146,
-          "file": 0,
-          "line": 1146
-        },
-        "sourceCanonicalName": "buffEventWeight"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 19,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 53,
-          "end_line": 1187,
-          "file": 0,
-          "line": 1187
-        },
-        "sourceCanonicalName": "debuffEventDesc"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 19,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 57,
-          "end_line": 1188,
-          "file": 0,
-          "line": 1188
-        },
-        "sourceCanonicalName": "debuffEventDuration"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 19,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 53,
-          "end_line": 1186,
-          "file": 0,
-          "line": 1186
-        },
-        "sourceCanonicalName": "debuffEventName"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 24,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 55,
-          "end_line": 1189,
-          "file": 0,
-          "line": 1189
-        },
-        "sourceCanonicalName": "debuffEventWeight"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 52,
-          "end_line": 1826,
-          "file": 0,
-          "line": 1826
-        },
-        "sourceCanonicalName": "difficultyText"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 9,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 55,
-          "end_column": 71,
-          "end_line": 3411,
-          "file": 0,
-          "line": 3411
-        },
-        "sourceCanonicalName": "dlcTimeChallenge"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 3,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 59,
-          "end_column": 69,
-          "end_line": 2145,
-          "file": 0,
-          "line": 2145
-        },
-        "sourceCanonicalName": "eventCount"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 6,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 52,
-          "end_column": 63,
-          "end_line": 3205,
-          "file": 0,
-          "line": 3205
-        },
-        "sourceCanonicalName": "eventEffect"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 55,
-          "end_column": 73,
-          "end_line": 2874,
-          "file": 0,
-          "line": 2874
-        },
-        "sourceCanonicalName": "eventMatchCounters"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 5,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 62,
-          "end_line": 1978,
-          "file": 0,
-          "line": 1978
-        },
-        "sourceCanonicalName": "hashTagWeightVerifyState"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 8,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 52,
-          "end_column": 60,
-          "end_line": 2349,
-          "file": 0,
-          "line": 2349
-        },
-        "sourceCanonicalName": "healthId"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 28,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 55,
-          "end_column": 66,
-          "end_line": 2525,
-          "file": 0,
-          "line": 2525
-        },
-        "sourceCanonicalName": "heart_steel"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 1,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 41,
-          "end_column": 46,
-          "end_line": 6218,
-          "file": 0,
-          "line": 6218
-        },
-        "sourceCanonicalName": "kills"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 23,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 51,
-          "end_line": 1213,
-          "file": 0,
-          "line": 1213
-        },
-        "sourceCanonicalName": "mechEventDesc"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 23,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 55,
-          "end_line": 1214,
-          "file": 0,
-          "line": 1214
-        },
-        "sourceCanonicalName": "mechEventDuration"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 23,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 51,
-          "end_line": 1212,
-          "file": 0,
-          "line": 1212
-        },
-        "sourceCanonicalName": "mechEventName"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 28,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 53,
-          "end_line": 1215,
-          "file": 0,
-          "line": 1215
-        },
-        "sourceCanonicalName": "mechEventWeight"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 10,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 52,
-          "end_column": 62,
-          "end_line": 7080,
-          "file": 0,
-          "line": 7080
-        },
-        "sourceCanonicalName": "menuTextID"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 5,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 47,
-          "end_line": 677,
-          "file": 0,
-          "line": 677
-        },
-        "sourceCanonicalName": "phaseHero"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 56,
-          "end_column": 76,
-          "end_line": 3096,
-          "file": 0,
-          "line": 3096
-        },
-        "sourceCanonicalName": "playerOnceEventState"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 15,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 42,
-          "end_column": 51,
-          "end_line": 1700,
-          "file": 0,
-          "line": 1700
-        },
-        "sourceCanonicalName": "savedData"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 5,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 38,
-          "end_column": 45,
-          "end_line": 891,
-          "file": 0,
-          "line": 891
-        },
-        "sourceCanonicalName": "textIDs"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 4,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 42,
-          "end_column": 52,
-          "end_line": 4727,
-          "file": 0,
-          "line": 4727
-        },
-        "sourceCanonicalName": "titleColor"
+        "classification": "project-defined-construct",
+        "evidence": "source settings or construct was preserved without a canonical catalog identity"
       }
     ],
     "defend": [
       {
-        "classification": "legacy-opaque-construct",
-        "count": 1,
-        "evidence": "the parser preserved a legacy raw construct without a canonical contract",
         "kind": "OpaqueAction",
+        "sourceCanonicalName": "rawWorkshopAction",
+        "count": 1,
         "representativeSpan": {
+          "file": 0,
+          "line": 1383,
           "column": 3,
-          "end_column": 7,
           "end_line": 1383,
-          "file": 0,
-          "line": 1383
+          "end_column": 7
         },
-        "sourceCanonicalName": "rawWorkshopAction"
-      },
-      {
-        "classification": "source-declared-variable",
-        "count": 2,
-        "evidence": "the identifier matches a variable declaration in the parsed source program",
-        "kind": "UnknownValue",
-        "representativeSpan": {
-          "column": 32,
-          "end_column": 47,
-          "end_line": 1633,
-          "file": 0,
-          "line": 1633
-        },
-        "sourceCanonicalName": "gateHealthChase"
+        "classification": "legacy-opaque-construct",
+        "evidence": "the parser preserved a legacy raw construct without a canonical contract"
       }
     ],
     "illari": [],
     "rework": []
-  },
-  "schema": "workshop-p0-residual/v1"
+  }
 }

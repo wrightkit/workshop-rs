@@ -217,8 +217,25 @@ fn validate_value(
             // Comparison operators are represented as call names (`==`, `<`,
             // …) following the `Compare(a, op, b)` convention, so both value
             // and operator identities are valid call names.
-            let canonical_helper =
-                matches!(name.as_str(), "memberAccess" | "+" | "-" | "*" | "/" | "%");
+            let canonical_helper = matches!(
+                name.as_str(),
+                "memberAccess"
+                    | "+"
+                    | "-"
+                    | "*"
+                    | "/"
+                    | "%"
+                    | "add"
+                    | "subtract"
+                    | "multiply"
+                    | "divide"
+                    | "modulo"
+                    | "raiseToPower"
+                    | "appendToArray"
+                    | "removeFromArray"
+                    | "removeFromArrayByIndex"
+            ) && (args.is_empty()
+                || matches!(name.as_str(), "memberAccess" | "+" | "-" | "*" | "/" | "%"));
             let known = canonical_helper
                 || catalog.entry(Kind::Value, name).is_some()
                 || catalog.entry(Kind::Operator, name).is_some();
@@ -247,8 +264,10 @@ fn validate_value(
                         span: node.span,
                     });
                 }
-            } else if let Some(entry) = catalog.entry(Kind::Value, name) {
-                validate_call_signature(entry, args, node.span, program, catalog, errors);
+            } else if !canonical_helper {
+                if let Some(entry) = catalog.entry(Kind::Value, name) {
+                    validate_call_signature(entry, args, node.span, program, catalog, errors);
+                }
             }
             for arg in args {
                 validate_value(program, catalog, *arg, errors);

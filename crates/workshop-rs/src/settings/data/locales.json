@@ -700,6 +700,13 @@
       ],
       "zh-CN": "D.Va"
     },
+    "D.Mon": {
+      "en-US": "D.Mon",
+      "sources": [
+        "heroes.dmon"
+      ],
+      "zh-CN": "D.Mon"
+    },
     "Hazard": {
       "en-US": "Hazard",
       "sources": [

@@ -988,10 +988,11 @@ pub fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str> {
 
 /// Resolve an evidence-backed hero-specific setting label.
 pub fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static str> {
-    GENERATED_HERO_SETTING_NAMES
+    let generated = GENERATED_HERO_SETTING_NAMES
         .iter()
         .find(|entry| entry.hero == hero && entry.key == key)
-        .and_then(|entry| entry.localized(locale))
+        .and_then(|entry| entry.localized(locale));
+    generated
         .or_else(|| {
             hero_setting_aliases()
                 .iter()
@@ -1001,6 +1002,22 @@ pub fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static
                         && alias.locale.eq_ignore_ascii_case(locale)
                 })
                 .map(|alias| alias.display.as_str())
+        })
+        .or_else(|| {
+            if locale.eq_ignore_ascii_case("en-US") {
+                GENERATED_HERO_SETTING_NAMES
+                    .iter()
+                    .find(|entry| entry.hero == hero && entry.key == key)
+                    .filter(|entry| {
+                        entry.locales.iter().any(|(known, value)| {
+                            known.eq_ignore_ascii_case(locale)
+                                && (value.trim().is_empty() || value.starts_with(' '))
+                        })
+                    })
+                    .map(|entry| entry.key)
+            } else {
+                None
+            }
         })
 }
 

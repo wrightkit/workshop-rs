@@ -6,10 +6,10 @@
   "residualInventory": "docs/evidence/workshop-p0-residual-v1.json",
   "validation": {
     "catalogCheck": "OK 515 entries, 52 enum domains, 2 locale(s)",
-    "catalogDigest": "eddaa0cef06ba8bcf82a19036c608d763e8a5bd17d36b08be05145c63672efb2",
+    "catalogDigest": "4f10e49f42882b6871182cb28868abab287e6cf0b0836e768316620c3780c818",
     "localeCoverage": {
-      "en-US": "1237/1237",
-      "zh-CN": "1218/1237"
+      "en-US": "1242/1242",
+      "zh-CN": "1223/1242"
     },
     "semanticCommand": "WRIGHTKIT_P0_ARTIFACT_DIR=/path/to/reacquired-artifacts cargo test -p workshop-rs --locked --test p0_corpus -- --ignored --nocapture",
     "requiredChecks": ["parse", "canonical validation", "semantic inspection", "deterministic emission", "reparse", "semantic roundtrip equivalence"]

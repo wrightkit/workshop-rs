@@ -4,7 +4,9 @@ impl GeneratedHeroSettingName {
     pub fn localized(&self, locale: &str) -> Option<&'static str> {
         self.locales
             .iter()
-            .find(|(known, value)| known.eq_ignore_ascii_case(locale) && !value.is_empty())
+            .find(|(known, value)| {
+                known.eq_ignore_ascii_case(locale) && !value.trim().is_empty() && !value.starts_with(' ')
+            })
             .map(|(_, value)| *value)
     }
 }

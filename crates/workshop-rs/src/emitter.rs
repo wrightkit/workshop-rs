@@ -57,11 +57,31 @@ pub fn emit_with_options(
     locale: &Locale,
     options: &EmitOptions,
 ) -> Result<EmitOutput> {
+    emit_with_options_inner(program, catalog, locale, options, false)
+}
+
+pub(crate) fn emit_with_options_for_conversion(
+    program: &wir::Program,
+    catalog: &Catalog,
+    locale: &Locale,
+    options: &EmitOptions,
+) -> Result<EmitOutput> {
+    emit_with_options_inner(program, catalog, locale, options, true)
+}
+
+fn emit_with_options_inner(
+    program: &wir::Program,
+    catalog: &Catalog,
+    locale: &Locale,
+    options: &EmitOptions,
+    force_hero_constructors: bool,
+) -> Result<EmitOutput> {
     let mut emitter = Emitter {
         program,
         catalog,
         locale: locale.clone(),
         fallback: options.fallback_locale.clone(),
+        force_hero_constructors,
         fallback_ids: Vec::new(),
         out: String::new(),
     };
@@ -80,6 +100,7 @@ struct Emitter<'a> {
     fallback: Option<Locale>,
     /// Canonical ids emitted with a fallback-locale spelling.
     fallback_ids: Vec<String>,
+    force_hero_constructors: bool,
     out: String,
 }
 
@@ -115,18 +136,11 @@ impl Emitter<'_> {
             self.line(0, "}")?;
             self.out.push('\n');
         }
-        // Rules with no actions are dropped, matching the pinned oracle
-        // (pass-only and condition-without-actions rules emit nothing).
-        let mut emitted_rules = 0;
-        for rule in self.program.rules.iter() {
-            if rule.actions.is_empty() {
-                continue;
-            }
+        for (emitted_rules, rule) in self.program.rules.iter().enumerate() {
             if emitted_rules > 0 {
                 self.out.push('\n');
             }
             self.rule(rule)?;
-            emitted_rules += 1;
         }
         // The oracle's raw artifact ends with a trailing blank line (the
         // committed snapshots strip it via the acquisition normalizer; the
@@ -464,7 +478,18 @@ impl Emitter<'_> {
     }
 
     fn rule(&mut self, rule: &wir::Rule) -> Result<()> {
-        self.line(0, &format!("rule (\"{}\") {{", escape_string(&rule.name)))?;
+        let disabled = if rule.disabled {
+            format!(
+                "{} ",
+                self.setting_name("tokens", "disabled", "token.disabled")?
+            )
+        } else {
+            String::new()
+        };
+        self.line(
+            0,
+            &format!("{disabled}rule (\"{}\") {{", escape_string(&rule.name)),
+        )?;
         self.line(1, "event {")?;
         match &rule.event {
             wir::Event::Global => {
@@ -867,7 +892,36 @@ impl Emitter<'_> {
                     self.line(level, &format!("{spelling};"))?;
                 } else {
                     let mut args_text = String::new();
-                    self.args(args, &mut args_text)?;
+                    for (index, arg) in args.iter().enumerate() {
+                        if index > 0 {
+                            args_text.push_str(", ");
+                        }
+                        let variable_position = match name.as_str() {
+                            "setGlobalVariableAtIndex" | "modifyGlobalVariableAtIndex" => {
+                                index == 0
+                            }
+                            "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex" => {
+                                index == 1
+                            }
+                            _ => false,
+                        };
+                        if variable_position {
+                            if let Some(node) = self.program.values.get(*arg) {
+                                match &node.value {
+                                    wir::Value::GlobalVariable(variable) => {
+                                        args_text.push_str(&self.global_name(*variable)?);
+                                        continue;
+                                    }
+                                    wir::Value::PlayerVariable { variable, .. } => {
+                                        args_text.push_str(&self.player_name(*variable)?);
+                                        continue;
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                        self.value(*arg, &mut args_text)?;
+                    }
                     self.line(level, &format!("{spelling}({args_text});"))?;
                 }
             }
@@ -991,10 +1045,23 @@ impl Emitter<'_> {
                 // constructor form and the emitted text reparses
                 // deterministically (round-trip contract; pinned P4
                 // evidence).
-                if matches!(value_type.as_str(), "Color" | "Team")
-                    || (value_type == "Hero" && spelling.contains('.'))
+                if matches!(value_type.as_str(), "Color" | "Map" | "Team")
+                    || value_type == "Hero"
+                        && (spelling.contains('.')
+                            || self.locale != *self.catalog.primary_locale()
+                            || (self.force_hero_constructors
+                                && self
+                                    .program
+                                    .global_variables
+                                    .iter()
+                                    .any(|variable| variable.name == spelling)))
                 {
-                    write!(out, "{value_type}({spelling})").unwrap();
+                    let domain = self
+                        .catalog
+                        .enum_domain(value_type)
+                        .and_then(|entry| entry.spelling(&self.locale))
+                        .unwrap_or(value_type);
+                    write!(out, "{domain}({spelling})").unwrap();
                 } else {
                     out.push_str(&spelling);
                 }

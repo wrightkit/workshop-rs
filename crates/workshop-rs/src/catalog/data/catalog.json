@@ -679,7 +679,9 @@
         "zh-CN": "停止追踪全局变量 "
       },
       "id": "stopChasingGlobalVariable",
-      "params": []
+      "params": [
+        "Variable"
+      ]
     },
     {
       "aliases": {
@@ -783,7 +785,7 @@
       "id": "setFacing",
       "paramDomains": [
         null,
-        null,
+        "Vector",
         "Relativity"
       ],
       "params": [
@@ -899,7 +901,7 @@
       "id": "startAcceleration",
       "paramDomains": [
         null,
-        null,
+        "Vector",
         null,
         null,
         "Relativity",
@@ -922,7 +924,7 @@
       "id": "progressBarHud",
       "paramDomains": [
         null,
-        null,
+        "Vector",
         null,
         "HudPosition",
         null,
@@ -2207,7 +2209,7 @@
       "id": "startThrottleInDirection",
       "paramDomains": [
         null,
-        null,
+        "Vector",
         null,
         "Relativity",
         "Throttle",
@@ -2639,7 +2641,7 @@
         null,
         null,
         null,
-        null
+        "Vector"
       ],
       "params": [
         "Object",
@@ -2988,7 +2990,7 @@
         "Projectile",
         null,
         null,
-        null,
+        "Vector",
         "Relativity",
         "ModifyHealth",
         "Team",
@@ -3035,7 +3037,7 @@
         "Projectile",
         null,
         null,
-        null,
+        "Vector",
         "Relativity",
         "ModifyHealth",
         "Team",
@@ -3083,7 +3085,7 @@
         "Projectile",
         null,
         null,
-        null,
+        "Vector",
         null,
         "ProjectileEffectReeval"
       ],
@@ -3098,7 +3100,7 @@
       ]
     }
   ],
-  "digest": "eddaa0cef06ba8bcf82a19036c608d763e8a5bd17d36b08be05145c63672efb2",
+  "digest": "4f10e49f42882b6871182cb28868abab287e6cf0b0836e768316620c3780c818",
   "enums": [
     {
       "domain": "Impulse",
@@ -4157,6 +4159,41 @@
             "zh-CN": "上"
           },
           "id": "UP"
+        },
+        {
+          "aliases": {
+            "en-US": "Down",
+            "zh-CN": "下"
+          },
+          "id": "DOWN"
+        },
+        {
+          "aliases": {
+            "en-US": "Left",
+            "zh-CN": "左"
+          },
+          "id": "LEFT"
+        },
+        {
+          "aliases": {
+            "en-US": "Right",
+            "zh-CN": "右"
+          },
+          "id": "RIGHT"
+        },
+        {
+          "aliases": {
+            "en-US": "Forward",
+            "zh-CN": "前"
+          },
+          "id": "FORWARD"
+        },
+        {
+          "aliases": {
+            "en-US": "Backward",
+            "zh-CN": "后"
+          },
+          "id": "BACKWARD"
         }
       ]
     },
@@ -5722,7 +5759,10 @@
         },
         {
           "aliases": {
-            "en-US": "Jinyu",
+            "en-US": [
+              "Jinyu",
+              "Domina"
+            ],
             "zh-CN": "金驭"
           },
           "id": "JINYU"
@@ -6029,6 +6069,10 @@
       ]
     },
     {
+      "aliases": {
+        "en-US": "Map",
+        "zh-CN": "地图"
+      },
       "domain": "Map",
       "members": [
         {
@@ -6209,7 +6253,10 @@
         {
           "aliases": {
             "en-US": "Route 66",
-            "zh-CN": "66号公路"
+            "zh-CN": [
+              "66号公路",
+              "66 号公路"
+            ]
           },
           "id": "ROUTE_66"
         },

@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use workshop_rs::{
     WorkshopError,
     catalog::{Catalog, Locale},
-    emitter, parser, roundtrip, semantic, validate,
+    convert, emitter, parser, roundtrip, semantic, validate,
 };
 
 const CASES: &[(&str, &str, &str)] = &[
@@ -42,6 +42,7 @@ enum Stage {
     CanonicalValidation,
     Emission,
     Reparse,
+    LocaleConversion,
 }
 
 impl Stage {
@@ -50,50 +51,24 @@ impl Stage {
             Stage::CanonicalValidation => "canonical-validation",
             Stage::Emission => "emission",
             Stage::Reparse => "reparse",
+            Stage::LocaleConversion => "locale-conversion",
         }
     }
 }
 
 fn known_gap(name: &str, stage: Stage, error: &WorkshopError) -> bool {
-    match (name, stage, error) {
-        (
-            "ai-pve",
-            Stage::CanonicalValidation,
-            WorkshopError::Unknown {
-                kind: "value",
-                spelling,
-                ..
-            },
-        ) if spelling == "Brigitte" => true,
-        (
-            "ai-pve",
-            Stage::Emission,
-            WorkshopError::MissingMapping {
-                kind: "setting",
-                id,
-                ..
-            },
-        ) if id == "hero.dmon" => true,
-        (
-            "bastion",
-            Stage::CanonicalValidation | Stage::Emission,
-            WorkshopError::Unknown {
-                kind: "value",
-                spelling,
-                ..
-            },
-        ) if spelling == "breathPalette" => true,
+    matches!(
+        (name, stage, error),
         (
             "defend",
-            Stage::CanonicalValidation | Stage::Emission,
+            Stage::CanonicalValidation | Stage::Emission | Stage::LocaleConversion,
             WorkshopError::Unknown {
                 kind: "action",
                 spelling,
                 ..
             },
-        ) if spelling == "rawWorkshopAction" => true,
-        _ => false,
-    }
+        ) if spelling == "rawWorkshopAction"
+    )
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -206,15 +181,56 @@ fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
         };
         let reparsed = parser::parse_with_context(&emitted, &catalog, &locale, &catalog)
             .unwrap_or_else(|error| panic!("{name} {} failed: {error:?}", Stage::Reparse.as_str()));
-        assert!(
-            roundtrip::equivalent(&program, &reparsed),
-            "{name} semantic round-trip changed WIR"
-        );
+        if !roundtrip::equivalent(&program, &reparsed) {
+            panic!("{name} semantic round-trip changed WIR");
+        }
         let emitted_again = emitter::emit(&reparsed, &catalog, &locale)
             .unwrap_or_else(|error| panic!("{name} deterministic re-emission failed: {error:?}"));
         assert_eq!(
             emitted, emitted_again,
             "{name} emission is not deterministic"
+        );
+        let target_locale = if locale.as_str() == "en-US" {
+            Locale::new("zh-CN")
+        } else {
+            Locale::new("en-US")
+        };
+        let converted = match convert::convert(
+            &source,
+            &catalog,
+            &locale,
+            &target_locale,
+            &convert::ConvertOptions::default(),
+        ) {
+            Ok(converted) => converted,
+            Err(error) => {
+                assert!(
+                    known_gap(name, Stage::LocaleConversion, &error),
+                    "{name} locale conversion failed outside known gaps: {error:?}"
+                );
+                println!("{name}: known locale conversion gap: {error:?}");
+                inventory.insert(
+                    name.to_string(),
+                    residual_groups(&semantic::inspect(&program, &catalog)),
+                );
+                continue;
+            }
+        };
+        let converted_program =
+            parser::parse_with_context(&converted.text, &catalog, &target_locale, &catalog)
+                .unwrap_or_else(|error| panic!("{name} target-locale reparse failed: {error:?}"));
+        assert!(
+            roundtrip::equivalent(&program, &converted_program),
+            "{name} target-locale conversion changed WIR"
+        );
+        let converted_back = emitter::emit(&converted_program, &catalog, &locale)
+            .unwrap_or_else(|error| panic!("{name} reverse locale emission failed: {error:?}"));
+        let converted_back_program =
+            parser::parse_with_context(&converted_back, &catalog, &locale, &catalog)
+                .unwrap_or_else(|error| panic!("{name} reverse locale reparse failed: {error:?}"));
+        assert!(
+            roundtrip::equivalent(&program, &converted_back_program),
+            "{name} reverse locale conversion changed WIR"
         );
         inventory.insert(
             name.to_string(),
