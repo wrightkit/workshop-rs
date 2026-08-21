@@ -522,12 +522,7 @@ fn disabled_condition_is_ignored_as_inactive() {
             actions { Wait(0.016, Ignore Condition); }
         }
     "#;
-    let program = parser::parse_with_context(
-        text,
-        &catalog(),
-        &Locale::new("en-US"),
-        &catalog(),
-    )
+    let program = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
         .expect("disabled conditions must parse");
     let rule = program.rules.iter().next().expect("rule");
     assert!(rule.conditions.is_empty());
