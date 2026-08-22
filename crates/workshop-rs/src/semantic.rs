@@ -10,7 +10,7 @@ use crate::settings::table;
 use crate::source::Span;
 use crate::wir::{Action, Program, Value};
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IncompletenessKind {
     RawSetting,
     UnknownAction,
