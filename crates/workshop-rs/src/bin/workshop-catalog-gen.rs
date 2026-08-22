@@ -707,10 +707,13 @@ mod corpus {
                     .get("id")
                     .and_then(Value::as_str)
                     .ok_or_else(|| "catalog entry without id".to_string())?;
-                let en = en_alias(entry)?;
-                let candidates = match index.match_spelling(en) {
-                    Ok(candidates) => Ok(candidates),
-                    Err(reason) => confirmed_identity_match(&export, kind, id).ok_or(reason),
+                let aliases = en_aliases(entry)?;
+                let (en, candidates) = match match_en_aliases(index, &aliases) {
+                    Ok((candidates, en)) => (en, Ok(candidates)),
+                    Err(reason) => (
+                        aliases[0],
+                        confirmed_identity_match(&export, kind, id).ok_or(reason),
+                    ),
                 };
                 match candidates {
                     Ok(candidates) => {
@@ -771,42 +774,34 @@ mod corpus {
                     .get("id")
                     .and_then(Value::as_str)
                     .ok_or_else(|| "enum member without id".to_string())?;
-                let en = en_alias(member)?;
-                match index.match_spelling(en) {
-                    Ok(candidates) => {
-                        members_matched += 1;
-                        let zh = candidates[0].zh_cn.clone();
-                        matches.push(Match {
-                            kind: "enum member".to_string(),
-                            id: format!("{domain_name}.{id}"),
-                            en: en.to_string(),
-                            zh: zh.clone(),
-                            sources: candidates.iter().map(|c| c.key.clone()).collect(),
-                        });
-                    }
+                let aliases = en_aliases(member)?;
+                let (en, candidates) = match match_en_aliases(index, &aliases) {
+                    Ok((candidates, en)) => (en, candidates),
                     Err(reason) => {
                         let full_id = format!("{domain_name}.{id}");
                         match confirmed_identity_match(&export, "enum member", &full_id) {
-                            Some(candidates) => {
-                                members_matched += 1;
-                                let zh = candidates[0].zh_cn.clone();
-                                matches.push(Match {
+                            Some(candidates) => (aliases[0], candidates),
+                            None => {
+                                excluded.push(Exclusion {
                                     kind: "enum member".to_string(),
                                     id: full_id,
-                                    en: en.to_string(),
-                                    zh,
-                                    sources: candidates.iter().map(|c| c.key.clone()).collect(),
+                                    en: aliases[0].to_string(),
+                                    reason,
                                 });
+                                continue;
                             }
-                            None => excluded.push(Exclusion {
-                                kind: "enum member".to_string(),
-                                id: full_id,
-                                en: en.to_string(),
-                                reason,
-                            }),
                         }
                     }
-                }
+                };
+                members_matched += 1;
+                let zh = candidates[0].zh_cn.clone();
+                matches.push(Match {
+                    kind: "enum member".to_string(),
+                    id: format!("{domain_name}.{id}"),
+                    en: en.to_string(),
+                    zh: zh.clone(),
+                    sources: candidates.iter().map(|c| c.key.clone()).collect(),
+                });
             }
         }
         coverage.push(("enums".to_string(), members_matched, members_total));
@@ -884,12 +879,53 @@ mod corpus {
     }
 
     /// The en-US alias of a catalog entry/member.
-    fn en_alias(entry: &Value) -> Result<&str, String> {
-        entry
+    /// The en-US alias spellings of a catalog entry or enum member. A single
+    /// string alias is a one-element list; an array lists alternative en-US
+    /// spellings that are each eligible for exact export matching.
+    fn en_aliases(entry: &Value) -> Result<Vec<&str>, String> {
+        let alias = entry
             .get("aliases")
             .and_then(|aliases| aliases.get("en-US"))
-            .and_then(Value::as_str)
-            .ok_or_else(|| format!("catalog entry '{}' without en-US alias", entry))
+            .ok_or_else(|| format!("catalog entry '{}' without en-US alias", entry))?;
+        match alias {
+            Value::String(spelling) => Ok(vec![spelling.as_str()]),
+            Value::Array(spellings) => {
+                let spellings = spellings
+                    .iter()
+                    .map(Value::as_str)
+                    .collect::<Option<Vec<&str>>>()
+                    .ok_or_else(|| {
+                        format!("catalog entry '{}' with non-string en-US alias", entry)
+                    })?;
+                if spellings.is_empty() {
+                    return Err(format!(
+                        "catalog entry '{}' with empty en-US aliases",
+                        entry
+                    ));
+                }
+                Ok(spellings)
+            }
+            _ => Err(format!(
+                "catalog entry '{}' with non-string en-US alias",
+                entry
+            )),
+        }
+    }
+
+    /// Try every en-US alias spelling in order against the index; returns the
+    /// first exact match with the alias that matched, or the last miss reason.
+    fn match_en_aliases<'a>(
+        index: &Index,
+        aliases: &'a [&'a str],
+    ) -> Result<(Vec<Candidate>, &'a str), String> {
+        let mut reason = "no en-US alias spellings".to_string();
+        for &en in aliases {
+            match index.match_spelling(en) {
+                Ok(candidates) => return Ok((candidates, en)),
+                Err(miss) => reason = miss,
+            }
+        }
+        Err(reason)
     }
 
     /// Canonical (sorted-key, pretty) JSON serialization, byte-idempotent.
@@ -1388,8 +1424,40 @@ mod corpus {
 
     #[cfg(test)]
     mod tests {
-        use super::set_zh_alias;
+        use super::{Index, en_aliases, match_en_aliases, set_zh_alias};
         use serde_json::json;
+
+        #[test]
+        fn en_aliases_accepts_scalar_and_array_spellings() {
+            let scalar = json!({"aliases": {"en-US": "Nearest"}});
+            assert_eq!(
+                en_aliases(&scalar).expect("scalar alias is accepted"),
+                vec!["Nearest"]
+            );
+
+            let array = json!({"aliases": {"en-US": ["Jinyu", "Domina"]}});
+            assert_eq!(
+                en_aliases(&array).expect("alias array is accepted"),
+                vec!["Jinyu", "Domina"]
+            );
+
+            assert!(en_aliases(&json!({"aliases": {"zh-CN": "至最近"}})).is_err());
+            assert!(en_aliases(&json!({"aliases": {"en-US": []}})).is_err());
+            assert!(en_aliases(&json!({"aliases": {"en-US": 7}})).is_err());
+        }
+
+        #[test]
+        fn match_en_aliases_returns_the_first_exact_match() {
+            let mut index = Index::default();
+            index.add_translations("heroes.domina", "Domina", "多美娜", Default::default());
+
+            let (candidates, en) = match_en_aliases(&index, &["Jinyu", "Domina"])
+                .expect("second alias matches the export spelling");
+            assert_eq!(en, "Domina");
+            assert_eq!(candidates[0].zh_cn, "多美娜");
+
+            assert!(match_en_aliases(&index, &["Jinyu"]).is_err());
+        }
 
         #[test]
         fn corpus_merge_preserves_and_extends_reviewed_alias_arrays() {

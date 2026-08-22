@@ -79,11 +79,16 @@ license, reviewed) is embedded in the dataset itself and surfaced by
   report. The source for the reconciled additions is the user-provided
   `workshop-data/workshop-data.json` export at commit
   `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; the export is not committed.
-* The generated settings inventory currently covers labels 233/233, modes
-  7/7, maps 2/2, heroes 52/52, enum values 86/86, tokens 4/4, and teams 3/3
-  in `crates/workshop-rs/src/settings/data/locales.json`. Each mapping records
-  its export source paths; settings without a mapping continue to fail
-  explicitly.
+* The settings locale corpus
+  `crates/workshop-rs/src/settings/data/locales.json` records its `coverage`
+  header from the last full corpus pipeline run (labels 233/233, modes 7/7,
+  maps 2/2, heroes 52/52, enum values 86/86, tokens 4/4, teams 3/3). The
+  heroes and maps sections have since grown through reviewed additions beyond
+  that recorded coverage; the header is machine-written, understates the
+  committed sections until the next `workshop-catalog-gen corpus` run with a
+  current export, and must not be hand-refreshed (repository `AGENTS.md`).
+  Each mapping records its export source paths; settings without a mapping
+  continue to fail explicitly.
 
 All committed zh-CN spellings come from the JSON evidence through the corpus
 pipeline. The confirmed legacy mappings use the export identities/GUIDs for
