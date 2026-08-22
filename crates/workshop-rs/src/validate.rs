@@ -437,7 +437,7 @@ fn value_matches_type(
 fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &str) -> bool {
     match (value, expected) {
         (_, "Any" | "Unknown") => true,
-        (wir::Value::Number { .. }, "Number" | "Player Variable" | "Global Variable") => true,
+        (wir::Value::Number { .. }, "Number") => true,
         (wir::Value::String(_), "String" | "Text") => true,
         (wir::Value::Bool(_), "Boolean") => true,
         (wir::Value::Vector { .. }, "Vector") => true,
@@ -481,15 +481,24 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
         // Null is a valid Workshop placeholder for every value contract;
         // its runtime meaning is resolved by the enclosing builtin.
         (wir::Value::Null, _) => true,
+        (wir::Value::GlobalVariable(_), "Global Variable") => true,
+        (wir::Value::PlayerVariable { .. }, "Player Variable") => true,
+        (wir::Value::Subroutine(_), "Subroutine") => true,
+        (wir::Value::EventPlayer, "Player") => true,
         // Variables and other runtime expressions are intentionally accepted
-        // only for broad contracts; their value is not statically knowable.
+        // for value contracts whose runtime contents are not statically
+        // knowable, but their statically known reference category must not be
+        // coerced into another variable/reference category.
         (
             wir::Value::GlobalVariable(_)
             | wir::Value::PlayerVariable { .. }
             | wir::Value::Subroutine(_)
             | wir::Value::EventPlayer,
-            _,
-        ) => true,
+            expected,
+        ) => !matches!(
+            expected,
+            "Global Variable" | "Player Variable" | "Subroutine"
+        ),
         _ => false,
     }
 }

@@ -389,6 +389,27 @@ fn canonical_validation_enforces_literal_types_and_value_return_types() {
 }
 
 #[test]
+fn canonical_validation_rejects_incompatible_variable_reference_types() {
+    let catalog = catalog();
+    let source = r#"variables {
+    global: 0: g
+    player: 0: p
+}
+rule ("type") { event { Ongoing - Global; } actions {
+    Set Player Variable At Index(1, 0, 1);
+} }"#;
+    let program = parser::parse_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("parser preserves the incompatible indexed-variable call");
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("a number is not a player-variable reference");
+    assert!(
+        error
+            .to_string()
+            .contains("must have semantic type 'Player Variable'")
+    );
+}
+
+#[test]
 fn current_loop_action_resolves_to_canonical_generic_wir() {
     let catalog = catalog();
     let source = r#"rule ("loop") { event { Ongoing - Global; } actions { Loop; } }"#;
