@@ -1,4 +1,4 @@
-settings
+设置
 {
 	modes
 	{

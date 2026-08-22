@@ -12,6 +12,7 @@ use workshop_rs::catalog::{Catalog, Kind, Locale};
 use workshop_rs::convert::{self, ConvertOptions};
 use workshop_rs::emitter::{self, EmitOptions};
 use workshop_rs::parser;
+use workshop_rs::settings::SettingsNode;
 
 fn builtin() -> Catalog {
     Catalog::builtin().expect("built-in catalog")
@@ -23,6 +24,22 @@ fn en() -> Locale {
 
 fn zh() -> Locale {
     Locale::new("zh-CN")
+}
+
+#[test]
+fn settings_projection_is_multi_locale_data() {
+    assert_eq!(
+        workshop_rs::settings::table::localized_name("zh-CN", "teams", "Team 1"),
+        Some("队伍1")
+    );
+    assert_eq!(
+        workshop_rs::settings::table::localized_name("en-US", "teams", "Team 1"),
+        Some("Team 1")
+    );
+    let projection: serde_json::Value =
+        serde_json::from_str(include_str!("../src/settings/data/locales.json"))
+            .expect("multi-locale settings projection");
+    assert_eq!(projection["locales"], serde_json::json!(["en-US", "zh-CN"]));
 }
 
 const BASIC_RULE: &str = "rule (\"setup\") {
@@ -88,7 +105,13 @@ fn opt_in_fallback_emits_with_recorded_fallback_ids() {
     );
     assert_eq!(
         output.fallback_ids,
-        vec!["global".to_string(), "disableInspector".to_string()],
+        vec![
+            "rule".to_string(),
+            "event".to_string(),
+            "global".to_string(),
+            "actions".to_string(),
+            "disableInspector".to_string(),
+        ],
         "the unsupported target locale records the fallback identity"
     );
 }
@@ -185,7 +208,10 @@ fn synthetic_catalog() -> Catalog {
         "target": { "game": "test", "format": "test", "surface": "test" },
         "provenance": { "generator": "test", "generatorVersion": "0", "source": "synthetic test data", "license": "MIT", "reviewed": true },
         "structural": [
-            { "id": "if", "aliases": { "en-US": "If", "xx-YY": "Synthetic If" } }
+            { "id": "if", "aliases": { "en-US": "If", "xx-YY": "Synthetic If" } },
+            { "id": "rule", "aliases": { "en-US": "rule", "xx-YY": "SyntheticRule" } },
+            { "id": "event", "aliases": { "en-US": "event", "xx-YY": "SyntheticEvent" } },
+            { "id": "actions", "aliases": { "en-US": "actions", "xx-YY": "SyntheticActions" } }
         ],
         "actions": [
             { "id": "disableInspector", "aliases": { "en-US": "Disable Inspector Recording", "xx-YY": "Synthetic Disable" } },
@@ -215,11 +241,11 @@ const SYNTHETIC_SOURCE: &str = "rule (\"r\") {
 }
 ";
 
-const SYNTHETIC_TARGET: &str = "rule (\"r\") {
-    event {
+const SYNTHETIC_TARGET: &str = "SyntheticRule (\"r\") {
+    SyntheticEvent {
         Synthetic Global Event;
     }
-    actions {
+    SyntheticActions {
         Synthetic Wait(1, Synthetic Ignore);
         Synthetic Disable;
     }
@@ -323,4 +349,41 @@ fn catalog_spelling_lookup_distinguishes_mapped_and_unmapped_locales() {
             .is_none(),
         "en-US spellings never resolve in zh-CN"
     );
+}
+
+#[test]
+fn current_settings_inventory_resolves_extensions_and_hero_keys() {
+    let source = r#"settings
+{
+	heroes
+	{
+		队伍1
+		{
+			半藏
+			{
+				伤害量: 100%
+			}
+		}
+	}
+	扩展
+	{
+		生成更多机器人
+	}
+}
+"#;
+    let catalog = builtin();
+    let program = parser::parse_with_context(source, &catalog, &zh(), &catalog).expect("parses");
+    fn assert_no_raw(nodes: &[SettingsNode]) {
+        for node in nodes {
+            assert!(
+                !matches!(node, SettingsNode::Raw { .. }),
+                "raw setting: {}",
+                node.name()
+            );
+            if let SettingsNode::Group { children, .. } = node {
+                assert_no_raw(children);
+            }
+        }
+    }
+    assert_no_raw(&program.settings.expect("settings").children);
 }

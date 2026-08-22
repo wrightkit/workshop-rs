@@ -135,11 +135,18 @@ fn locales_lists_declared_locales_with_coverage() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     let lines: Vec<&str> = stdout.lines().collect();
     assert_eq!(lines.len(), 2);
-    for (line, locale) in lines.iter().zip(["en-us", "zh-cn"]) {
+    for (line, (locale, expected)) in lines
+        .iter()
+        .zip([("en-us", None), ("zh-cn", Some(("1235", "1254")))])
+    {
         let (reported_locale, coverage) = line.split_once(' ').expect("locale coverage line");
         let (mapped, total) = coverage.split_once('/').expect("mapped/total coverage");
         assert_eq!(reported_locale, locale);
-        assert_eq!(mapped, total, "{line}");
+        if let Some((expected_mapped, expected_total)) = expected {
+            assert_eq!((mapped, total), (expected_mapped, expected_total), "{line}");
+        } else {
+            assert_eq!(mapped, total, "{line}");
+        }
     }
 }
 
@@ -346,7 +353,7 @@ fn corpus_runs_full_and_minimized_cases_with_visible_gap() {
     );
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(
-        stdout.contains("real-project/overpy-cake/full: KnownGap"),
+        stdout.contains("real-project/overpy-cake/full: Matched"),
         "{stdout}"
     );
     assert!(
@@ -354,7 +361,7 @@ fn corpus_runs_full_and_minimized_cases_with_visible_gap() {
         "{stdout}"
     );
     assert!(
-        stdout.contains("matched=1") && stdout.contains("known-gap=1"),
+        stdout.contains("matched=2") && stdout.contains("known-gap=0"),
         "{stdout}"
     );
 
@@ -362,7 +369,7 @@ fn corpus_runs_full_and_minimized_cases_with_visible_gap() {
     assert!(output.status.success());
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect("valid report");
     assert_eq!(report["results"].as_array().unwrap().len(), 2);
-    assert_eq!(report["summary"]["known-gap"], 1);
+    assert_eq!(report["summary"]["known-gap"], 0);
 }
 
 #[test]

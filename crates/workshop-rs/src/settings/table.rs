@@ -8,13 +8,14 @@
 //! (LICENSE-BOUNDARY policy). Additions to the table (e.g. the acquired
 //! candidate snapshots) are data-only.
 
+use serde::Deserialize;
 use serde_json::Value;
 use std::sync::OnceLock;
 
 /// Locale-specific settings names generated from the reviewed Workshop data
-/// export. English remains the table's canonical spelling; additional locale
-/// spellings are data, not semantic branches.
-const LOCALE_DATA: &str = include_str!("data/zh-cn.json");
+/// export. The projection contains every reviewed locale as data; adding a
+/// locale changes this file, not the parser or emitter architecture.
+const LOCALE_DATA: &str = include_str!("data/locales.json");
 
 fn locale_data() -> &'static Value {
     static DATA: OnceLock<Value> = OnceLock::new();
@@ -30,16 +31,22 @@ fn locale_data() -> &'static Value {
 /// must preserve the explicit missing-mapping contract.
 pub fn localized_name(locale: &str, section: &str, english: &str) -> Option<&'static str> {
     let data = locale_data();
-    let data_locale = data.get("locale")?.as_str()?;
-    if !data_locale.eq_ignore_ascii_case(locale) {
-        return None;
-    }
-    data.get(section)?.get(english)?.get(data_locale)?.as_str()
+    let aliases = data.get(section)?.get(english)?.as_object()?;
+    aliases.get(locale).and_then(Value::as_str).or_else(|| {
+        aliases.iter().find_map(|(known, value)| {
+            known
+                .eq_ignore_ascii_case(locale)
+                .then(|| value.as_str())
+                .flatten()
+        })
+    })
 }
 
 /// A leaf key kind: how a settings leaf renders and validates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KeyKind {
+    /// A presence-only extension setting.
+    Flag,
     /// A quoted string (`Description: "..."`).
     String,
     /// A boolean rendered `On`/`Off`.
@@ -265,7 +272,34 @@ pub static ENTRIES: &[TableEntry] = &[
     entry!(
         [
             PathPart::Part("gamemodes"),
+            PathPart::Part("assault"),
+            PathPart::Part("disabledMaps")
+        ],
+        "disabled maps",
+        KeyKind::ListMap
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
+            PathPart::Part("skirmish"),
+            PathPart::Part("disabledMaps")
+        ],
+        "disabled maps",
+        KeyKind::ListMap
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
             PathPart::Part("ffa"),
+            PathPart::Part("enabledMaps")
+        ],
+        "enabled maps",
+        KeyKind::ListMap
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
+            PathPart::Part("tdm"),
             PathPart::Part("enabledMaps")
         ],
         "enabled maps",
@@ -310,6 +344,15 @@ pub static ENTRIES: &[TableEntry] = &[
     entry!(
         [
             PathPart::Part("gamemodes"),
+            PathPart::Part("general"),
+            PathPart::Part("roleLimit")
+        ],
+        "Limit Roles",
+        KeyKind::Enum("roleLimit")
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
             PathPart::Part("assault"),
             PathPart::Part("enableCompetitiveRules")
         ],
@@ -344,6 +387,24 @@ pub static ENTRIES: &[TableEntry] = &[
         KeyKind::Bool
     ),
     // gamemodes.general
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
+            PathPart::Part("general"),
+            PathPart::Part("enableCompetitiveRules")
+        ],
+        "Competitive Rules",
+        KeyKind::Bool
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
+            PathPart::Part("general"),
+            PathPart::Part("enablePerks")
+        ],
+        "Enable Perks",
+        KeyKind::Bool
+    ),
     entry!(
         [
             PathPart::Part("gamemodes"),
@@ -392,6 +453,24 @@ pub static ENTRIES: &[TableEntry] = &[
     entry!(
         [
             PathPart::Part("gamemodes"),
+            PathPart::Part("assault"),
+            PathPart::Part("gameModeStartTrigger")
+        ],
+        "Game Mode Start",
+        KeyKind::Enum("gameModeStartTrigger")
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
+            PathPart::Part("assault"),
+            PathPart::Part("tankPassiveHealthBonus")
+        ],
+        "Tank Role Passive Health Bonus",
+        KeyKind::Enum("tankPassiveHealthBonus")
+    ),
+    entry!(
+        [
+            PathPart::Part("gamemodes"),
             PathPart::Part("general"),
             PathPart::Part("spawnHealthPacks")
         ],
@@ -412,6 +491,15 @@ pub static ENTRIES: &[TableEntry] = &[
         [
             PathPart::Part("heroes"),
             PathPart::Team,
+            PathPart::Part("disabledHeroes")
+        ],
+        "disabled heroes",
+        KeyKind::ListHero
+    ),
+    entry!(
+        [
+            PathPart::Part("heroes"),
+            PathPart::Part("general"),
             PathPart::Part("disabledHeroes")
         ],
         "disabled heroes",
@@ -498,7 +586,7 @@ pub struct NameMap {
 }
 
 /// Game-mode names (evidenced: assault, control, escort, hybrid, skirmish,
-/// ffa, general).
+/// ffa, tdm, general).
 pub static MODE_NAMES: &[NameMap] = &[
     NameMap {
         key: "assault",
@@ -525,6 +613,10 @@ pub static MODE_NAMES: &[NameMap] = &[
         name: "Deathmatch",
     },
     NameMap {
+        key: "tdm",
+        name: "Team Deathmatch",
+    },
+    NameMap {
         key: "general",
         name: "General",
     },
@@ -545,12 +637,40 @@ pub static MAP_NAMES: &[NameMap] = &[
 /// Hero names inside hero lists and hero-config groups.
 pub static HERO_NAMES: &[NameMap] = &[
     NameMap {
+        key: "anran",
+        name: "Anran",
+    },
+    NameMap {
+        key: "ana",
+        name: "Ana",
+    },
+    NameMap {
         key: "ashe",
         name: "Ashe",
     },
     NameMap {
         key: "bastion",
         name: "Bastion",
+    },
+    NameMap {
+        key: "baptiste",
+        name: "Baptiste",
+    },
+    NameMap {
+        key: "brigitte",
+        name: "Brigitte",
+    },
+    NameMap {
+        key: "cassidy",
+        name: "Cassidy",
+    },
+    NameMap {
+        key: "dmon",
+        name: "D.Mon",
+    },
+    NameMap {
+        key: "domina",
+        name: "Domina",
     },
     NameMap {
         key: "dva",
@@ -565,6 +685,22 @@ pub static HERO_NAMES: &[NameMap] = &[
         name: "Echo",
     },
     NameMap {
+        key: "emre",
+        name: "Emre",
+    },
+    NameMap {
+        key: "freja",
+        name: "Freja",
+    },
+    NameMap {
+        key: "genji",
+        name: "Genji",
+    },
+    NameMap {
+        key: "hanzo",
+        name: "Hanzo",
+    },
+    NameMap {
         key: "moira",
         name: "Moira",
     },
@@ -577,6 +713,134 @@ pub static HERO_NAMES: &[NameMap] = &[
         name: "Wrecking Ball",
     },
     NameMap {
+        key: "hazard",
+        name: "Hazard",
+    },
+    NameMap {
+        key: "illari",
+        name: "Illari",
+    },
+    NameMap {
+        key: "juno",
+        name: "Juno",
+    },
+    NameMap {
+        key: "jetpackCat",
+        name: "Jetpack Cat",
+    },
+    NameMap {
+        key: "junkerQueen",
+        name: "Junker Queen",
+    },
+    NameMap {
+        key: "junkrat",
+        name: "Junkrat",
+    },
+    NameMap {
+        key: "kiriko",
+        name: "Kiriko",
+    },
+    NameMap {
+        key: "lucio",
+        name: "Lúcio",
+    },
+    NameMap {
+        key: "mauga",
+        name: "Mauga",
+    },
+    NameMap {
+        key: "mercy",
+        name: "Mercy",
+    },
+    NameMap {
+        key: "mizuki",
+        name: "Mizuki",
+    },
+    NameMap {
+        key: "orisa",
+        name: "Orisa",
+    },
+    NameMap {
+        key: "pharah",
+        name: "Pharah",
+    },
+    NameMap {
+        key: "reaper",
+        name: "Reaper",
+    },
+    NameMap {
+        key: "roadhog",
+        name: "Roadhog",
+    },
+    NameMap {
+        key: "shion",
+        name: "Shion",
+    },
+    NameMap {
+        key: "sierra",
+        name: "Sierra",
+    },
+    NameMap {
+        key: "sigma",
+        name: "Sigma",
+    },
+    NameMap {
+        key: "ramattra",
+        name: "Ramattra",
+    },
+    NameMap {
+        key: "lifeweaver",
+        name: "Lifeweaver",
+    },
+    NameMap {
+        key: "sojourn",
+        name: "Sojourn",
+    },
+    NameMap {
+        key: "soldier",
+        name: "Soldier: 76",
+    },
+    NameMap {
+        key: "sombra",
+        name: "Sombra",
+    },
+    NameMap {
+        key: "symmetra",
+        name: "Symmetra",
+    },
+    NameMap {
+        key: "torbjorn",
+        name: "Torbjörn",
+    },
+    NameMap {
+        key: "tracer",
+        name: "Tracer",
+    },
+    NameMap {
+        key: "venture",
+        name: "Venture",
+    },
+    NameMap {
+        key: "widowmaker",
+        name: "Widowmaker",
+    },
+    NameMap {
+        key: "winston",
+        name: "Winston",
+    },
+    NameMap {
+        key: "wuyang",
+        name: "Wuyang",
+    },
+    NameMap {
+        key: "wreckingBall",
+        name: "Wrecking Ball",
+    },
+    NameMap {
+        key: "zarya",
+        name: "Zarya",
+    },
+    NameMap {
         key: "zenyatta",
         name: "Zenyatta",
     },
@@ -585,6 +849,10 @@ pub static HERO_NAMES: &[NameMap] = &[
         name: "Mei",
     },
 ];
+
+include!("data/generated_map_entries.rs");
+include!("data/generated_hero_entries.rs");
+include!("data/generated_mode_entries.rs");
 
 /// Team names inside `heroes` (evidenced: allTeams).
 pub static TEAM_NAMES: &[NameMap] = &[
@@ -609,6 +877,9 @@ pub struct EnumMember {
     pub member: &'static str,
     pub name: &'static str,
 }
+
+include!("data/generated_entries.rs");
+include!("data/generated_hero_settings.rs");
 
 /// Enum member names per domain. `roleLimit` has exactly one evidenced
 /// member ("2OfEachRolePerTeam", pixelart + broken-weapons); "off" appears
@@ -657,6 +928,21 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         name: "2 Of Each Role Per Team",
     },
     EnumMember {
+        domain: "roleLimit",
+        member: "1Tank2Offense2Support",
+        name: "1 Tank 2 Offense 2 Support",
+    },
+    EnumMember {
+        domain: "tankPassiveHealthBonus",
+        member: "alwaysEnabled",
+        name: "Always Enabled",
+    },
+    EnumMember {
+        domain: "tankPassiveHealthBonus",
+        member: "disabled",
+        name: "Disabled",
+    },
+    EnumMember {
         domain: "heroLimit",
         member: "off",
         name: "Off",
@@ -665,9 +951,14 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
 
 /// Look up a settings leaf entry by its exact path.
 pub fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
-    ENTRIES.iter().find(|entry| {
+    entries().find(|entry| {
         entry.path.len() == path.len() && entry.path.iter().zip(path.iter()).all(|(a, b)| a == b)
     })
+}
+
+/// Iterate the reviewed hand-written and generated settings inventory.
+pub fn entries() -> impl Iterator<Item = &'static TableEntry> {
+    ENTRIES.iter().chain(GENERATED_ENTRIES.iter())
 }
 
 /// Map the existing hero-settings leaf keys to canonical gameplay slots.
@@ -675,10 +966,87 @@ pub fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
 /// from the gameplay catalog by the parser/emitter when a hero context exists.
 pub fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str> {
     match path.last() {
-        Some(PathPart::Part("enableAbility1")) => Some("ability1"),
-        Some(PathPart::Part("enableAbility2")) => Some("ability2"),
+        Some(PathPart::Part("ability1Cooldown%" | "enableAbility1")) => Some("ability1"),
+        Some(PathPart::Part("ability2Cooldown%" | "enableAbility2")) => Some("ability2"),
+        Some(PathPart::Part("ability3Cooldown%" | "enableAbility3")) => Some("ability3"),
+        Some(PathPart::Part(
+            "secondaryFireCooldown%"
+            | "secondaryFireEnergyChargeRate%"
+            | "secondaryFireMaximumTime%"
+            | "secondaryFireRechargeRate%"
+            | "enableSecondaryFire"
+            | "enableGenericSecondaryFire",
+        )) => Some("secondaryFire"),
+        Some(PathPart::Part("combatUltGen%" | "passiveUltGen%" | "ultGen%" | "enableUlt")) => {
+            Some("ultimate")
+        }
+        Some(PathPart::Part("enablePassive")) => Some("passive"),
+        Some(PathPart::Part("enableAutomaticFire" | "enableScoping")) => Some("primaryFire"),
         _ => None,
     }
+}
+
+/// Resolve an evidence-backed hero-specific setting label.
+pub fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static str> {
+    let generated = GENERATED_HERO_SETTING_NAMES
+        .iter()
+        .find(|entry| entry.hero == hero && entry.key == key)
+        .and_then(|entry| entry.localized(locale));
+    generated
+        .or_else(|| {
+            hero_setting_aliases()
+                .iter()
+                .find(|alias| {
+                    alias.hero == hero
+                        && alias.key == key
+                        && alias.locale.eq_ignore_ascii_case(locale)
+                })
+                .map(|alias| alias.display.as_str())
+        })
+        .or_else(|| {
+            if locale.eq_ignore_ascii_case("en-US") {
+                GENERATED_HERO_SETTING_NAMES
+                    .iter()
+                    .find(|entry| entry.hero == hero && entry.key == key)
+                    .filter(|entry| {
+                        entry.locales.iter().any(|(known, value)| {
+                            known.eq_ignore_ascii_case(locale)
+                                && (value.trim().is_empty() || value.starts_with(' '))
+                        })
+                    })
+                    .map(|entry| entry.key)
+            } else {
+                None
+            }
+        })
+}
+
+#[derive(Deserialize)]
+struct HeroSettingAlias {
+    hero: String,
+    key: String,
+    locale: String,
+    display: String,
+}
+
+fn hero_setting_aliases() -> &'static [HeroSettingAlias] {
+    static ALIASES: OnceLock<Vec<HeroSettingAlias>> = OnceLock::new();
+    ALIASES.get_or_init(|| {
+        serde_json::from_str(include_str!("data/hero_setting_aliases.json"))
+            .expect("hero setting alias data is valid JSON")
+    })
+}
+
+/// Reviewed producer aliases observed in the pinned AI-PVE artifact. These
+/// labels omit the export's `倍率` suffix or use the producer's shorter
+/// ability label, but identify the same canonical setting path.
+pub fn hero_setting_alias(hero: &str, key: &str, locale: &str, display: &str) -> bool {
+    hero_setting_aliases().iter().any(|alias| {
+        alias.hero == hero
+            && alias.key == key
+            && alias.locale.eq_ignore_ascii_case(locale)
+            && alias.display == display
+    })
 }
 
 fn name_in(maps: &[NameMap], key: &str) -> Option<&'static str> {
@@ -687,17 +1055,17 @@ fn name_in(maps: &[NameMap], key: &str) -> Option<&'static str> {
 
 /// The localized name of a game mode.
 pub fn mode_name(key: &str) -> Option<&'static str> {
-    name_in(MODE_NAMES, key)
+    name_in(MODE_NAMES, key).or_else(|| name_in(GENERATED_MODE_NAMES, key))
 }
 
 /// The localized name of a map.
 pub fn map_name(key: &str) -> Option<&'static str> {
-    name_in(MAP_NAMES, key)
+    name_in(MAP_NAMES, key).or_else(|| name_in(GENERATED_MAP_NAMES, key))
 }
 
 /// The localized name of a hero.
 pub fn hero_name(key: &str) -> Option<&'static str> {
-    name_in(HERO_NAMES, key)
+    name_in(HERO_NAMES, key).or_else(|| name_in(GENERATED_HERO_NAMES, key))
 }
 
 /// The localized name of a team.
@@ -711,6 +1079,12 @@ pub fn enum_name(domain: &str, member: &str) -> Option<&'static str> {
         .iter()
         .find(|m| m.domain == domain && m.member == member)
         .map(|m| m.name)
+        .or_else(|| {
+            GENERATED_ENUM_MEMBERS
+                .iter()
+                .find(|m| m.domain == domain && m.member == member)
+                .map(|m| m.name)
+        })
 }
 
 /// A human-readable rendering of a path (diagnostics).

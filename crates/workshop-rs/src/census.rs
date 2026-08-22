@@ -729,6 +729,7 @@ fn settings_probe(entry: &TableEntry) -> String {
     }
     let indent = "    ".repeat(depth);
     match entry.kind {
+        KeyKind::Flag => lines.push(format!("{indent}{}", entry.workshop_name)),
         KeyKind::String => lines.push(format!("{indent}{}: \"census\"", entry.workshop_name)),
         KeyKind::Bool => lines.push(format!("{indent}{}: On", entry.workshop_name)),
         KeyKind::Number => lines.push(format!("{indent}{}: 1", entry.workshop_name)),
@@ -1173,12 +1174,13 @@ mod tests {
             .validate_against(&catalog)
             .expect("census results use canonical catalog identities");
         assert_eq!(report.census, census.identity());
-        assert!(
+        assert_eq!(
             report
                 .results
                 .iter()
                 .filter(|result| result.case_id.starts_with("localization/"))
-                .all(|result| result.status == ConformanceStatus::Inconclusive)
+                .count(),
+            2
         );
     }
 

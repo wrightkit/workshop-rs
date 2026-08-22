@@ -1,0 +1,2709 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "commit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
+    "commitDate": "2026-08-12T15:26:38Z",
+    "sha256": "e6a80867407d9c432dbbafe43b0d7121b9fb2de969eff8f15be114bf18e1a717"
+  },
+  "counts": {
+    "actions": 225,
+    "values": 267,
+    "gamemodes": 35,
+    "maps": 90,
+    "heroes": 53,
+    "settingsGroups": 6
+  },
+  "entries": {
+    "values": [
+      {
+        "id": ".charAt",
+        "en-US": "Char In String",
+        "source": "data.values..charAt",
+        "zh-CN": "字符串中字符"
+      },
+      {
+        "id": ".concat",
+        "en-US": "Append To Array",
+        "source": "data.values..concat",
+        "zh-CN": "添加至数组"
+      },
+      {
+        "id": ".exclude",
+        "en-US": "Remove From Array",
+        "source": "data.values..exclude",
+        "zh-CN": "从数组中移除"
+      },
+      {
+        "id": ".getAbilityCharge",
+        "en-US": "Ability Charge",
+        "source": "data.values..getAbilityCharge",
+        "zh-CN": "技能充能"
+      },
+      {
+        "id": ".getAbilityCooldown",
+        "en-US": "Ability Cooldown",
+        "source": "data.values..getAbilityCooldown",
+        "zh-CN": "技能冷却时间"
+      },
+      {
+        "id": ".getAbilityResource",
+        "en-US": "Ability Resource",
+        "source": "data.values..getAbilityResource",
+        "zh-CN": "技能资源"
+      },
+      {
+        "id": ".getAllowedHeroes",
+        "en-US": "Allowed Heroes",
+        "source": "data.values..getAllowedHeroes",
+        "zh-CN": "可用英雄"
+      },
+      {
+        "id": ".getAltitude",
+        "en-US": "Altitude Of",
+        "source": "data.values..getAltitude",
+        "zh-CN": "高度"
+      },
+      {
+        "id": ".getAmmo",
+        "en-US": "Ammo",
+        "source": "data.values..getAmmo",
+        "zh-CN": "弹药"
+      },
+      {
+        "id": ".getCurrentWeapon",
+        "en-US": "Weapon",
+        "source": "data.values..getCurrentWeapon",
+        "zh-CN": "武器"
+      },
+      {
+        "id": ".getEyePosition",
+        "en-US": "Eye Position",
+        "source": "data.values..getEyePosition",
+        "zh-CN": "眼睛位置"
+      },
+      {
+        "id": ".getFacingDirection",
+        "en-US": "Facing Direction Of",
+        "source": "data.values..getFacingDirection",
+        "zh-CN": "面朝方向"
+      },
+      {
+        "id": ".getHealth",
+        "en-US": "Health",
+        "source": "data.values..getHealth",
+        "zh-CN": "生命值"
+      },
+      {
+        "id": ".getHealthOfType",
+        "en-US": "Health Of Type",
+        "source": "data.values..getHealthOfType",
+        "zh-CN": "类型的生命值"
+      },
+      {
+        "id": ".getHero",
+        "en-US": "Hero Of",
+        "source": "data.values..getHero",
+        "zh-CN": "所用英雄"
+      },
+      {
+        "id": ".getHeroOfDuplication",
+        "en-US": "Hero Being Duplicated",
+        "source": "data.values..getHeroOfDuplication",
+        "zh-CN": "正在复制的英雄"
+      },
+      {
+        "id": ".getHeroStatistic",
+        "en-US": "Player Hero Stat",
+        "source": "data.values..getHeroStatistic",
+        "zh-CN": "玩家英雄数据"
+      },
+      {
+        "id": ".getHorizontalFacingAngle",
+        "en-US": "Horizontal Facing Angle Of",
+        "source": "data.values..getHorizontalFacingAngle",
+        "zh-CN": "水平朝向角度"
+      },
+      {
+        "id": ".getHorizontalSpeed",
+        "en-US": "Horizontal Speed Of",
+        "source": "data.values..getHorizontalSpeed",
+        "zh-CN": "水平速度"
+      },
+      {
+        "id": ".getMaxAmmo",
+        "en-US": "Max Ammo",
+        "source": "data.values..getMaxAmmo",
+        "zh-CN": "最大弹药"
+      },
+      {
+        "id": ".getMaxHealth",
+        "en-US": "Max Health",
+        "source": "data.values..getMaxHealth",
+        "zh-CN": "最大生命值"
+      },
+      {
+        "id": ".getMaxHealthOfType",
+        "en-US": "Max Health Of Type",
+        "source": "data.values..getMaxHealthOfType",
+        "zh-CN": "类型的最大生命值"
+      },
+      {
+        "id": ".getNormalizedHealth",
+        "en-US": "Normalized Health",
+        "source": "data.values..getNormalizedHealth",
+        "zh-CN": "标准化生命值"
+      },
+      {
+        "id": ".getNumberOfDeaths",
+        "en-US": "Number Of Deaths",
+        "source": "data.values..getNumberOfDeaths",
+        "zh-CN": "死亡数"
+      },
+      {
+        "id": ".getNumberOfElims",
+        "en-US": "Number Of Eliminations",
+        "source": "data.values..getNumberOfElims",
+        "zh-CN": "消灭数"
+      },
+      {
+        "id": ".getNumberOfFinalBlows",
+        "en-US": "Number Of Final Blows",
+        "source": "data.values..getNumberOfFinalBlows",
+        "zh-CN": "最后一击数"
+      },
+      {
+        "id": ".getPlayerClosestToReticle",
+        "en-US": "Player Closest To Reticle",
+        "source": "data.values..getPlayerClosestToReticle",
+        "zh-CN": "距离准星最近的玩家"
+      },
+      {
+        "id": ".getPlayersInViewAngle",
+        "en-US": "Players in View Angle",
+        "source": "data.values..getPlayersInViewAngle",
+        "zh-CN": "视角中的玩家"
+      },
+      {
+        "id": ".getPosition",
+        "en-US": "Position Of",
+        "source": "data.values..getPosition",
+        "zh-CN": "所选位置"
+      },
+      {
+        "id": ".getScore",
+        "en-US": "Score Of",
+        "source": "data.values..getScore",
+        "zh-CN": "分数"
+      },
+      {
+        "id": ".getSlot",
+        "en-US": "Slot Of",
+        "source": "data.values..getSlot",
+        "zh-CN": "栏位"
+      },
+      {
+        "id": ".getSpeed",
+        "en-US": "Speed Of",
+        "source": "data.values..getSpeed",
+        "zh-CN": "速度"
+      },
+      {
+        "id": ".getSpeedInDirection",
+        "en-US": "Speed Of In Direction",
+        "source": "data.values..getSpeedInDirection",
+        "zh-CN": "指定方向速度"
+      },
+      {
+        "id": ".getStatistic",
+        "en-US": "Player Stat",
+        "source": "data.values..getStatistic",
+        "zh-CN": "玩家数据"
+      },
+      {
+        "id": ".getTeam",
+        "en-US": "Team Of",
+        "source": "data.values..getTeam",
+        "zh-CN": "所在队伍"
+      },
+      {
+        "id": ".getThrottle",
+        "en-US": "Throttle Of",
+        "source": "data.values..getThrottle",
+        "zh-CN": "阈值"
+      },
+      {
+        "id": ".getUltCharge",
+        "en-US": "Ultimate Charge Percent",
+        "source": "data.values..getUltCharge",
+        "zh-CN": "终极技能充能百分比"
+      },
+      {
+        "id": ".getVelocity",
+        "en-US": "Velocity Of",
+        "source": "data.values..getVelocity",
+        "zh-CN": "速率"
+      },
+      {
+        "id": ".getVerticalFacingAngle",
+        "en-US": "Vertical Facing Angle Of",
+        "source": "data.values..getVerticalFacingAngle",
+        "zh-CN": "垂直朝向角度"
+      },
+      {
+        "id": ".getVerticalSpeed",
+        "en-US": "Vertical Speed Of",
+        "source": "data.values..getVerticalSpeed",
+        "zh-CN": "垂直速度"
+      },
+      {
+        "id": ".hasSpawned",
+        "en-US": "Has Spawned",
+        "source": "data.values..hasSpawned",
+        "zh-CN": "已重生"
+      },
+      {
+        "id": ".hasStatus",
+        "en-US": "Has Status",
+        "source": "data.values..hasStatus",
+        "zh-CN": "具有状态"
+      },
+      {
+        "id": ".index",
+        "en-US": "Index Of Array Value",
+        "source": "data.values..index",
+        "zh-CN": "数组值的索引"
+      },
+      {
+        "id": ".isAlive",
+        "en-US": "Is Alive",
+        "source": "data.values..isAlive",
+        "zh-CN": "存活"
+      },
+      {
+        "id": ".isCommunicating",
+        "en-US": "Is Communicating",
+        "source": "data.values..isCommunicating",
+        "zh-CN": "正在交流"
+      },
+      {
+        "id": ".isCommunicatingAnything",
+        "en-US": "Is Communicating Any",
+        "source": "data.values..isCommunicatingAnything",
+        "zh-CN": "正在与人交流"
+      },
+      {
+        "id": ".isCommunicatingEmote",
+        "en-US": "Is Communicating Any Emote",
+        "source": "data.values..isCommunicatingEmote",
+        "zh-CN": "正在使用表情交流"
+      },
+      {
+        "id": ".isCommunicatingSpray",
+        "en-US": "Is Communicating Any Spray",
+        "source": "data.values..isCommunicatingSpray",
+        "zh-CN": "正在使用喷漆交流"
+      },
+      {
+        "id": ".isCommunicatingVoiceline",
+        "en-US": "Is Communicating Any Voice line",
+        "source": "data.values..isCommunicatingVoiceline",
+        "zh-CN": "正在使用语音交流"
+      },
+      {
+        "id": ".isCrouching",
+        "en-US": "Is Crouching",
+        "source": "data.values..isCrouching",
+        "zh-CN": "正在蹲下"
+      },
+      {
+        "id": ".isDead",
+        "en-US": "Is Dead",
+        "source": "data.values..isDead",
+        "zh-CN": "死亡"
+      },
+      {
+        "id": ".isDummy",
+        "en-US": "Is Dummy Bot",
+        "source": "data.values..isDummy",
+        "zh-CN": "是否是机器人"
+      },
+      {
+        "id": ".isDuplicatingAHero",
+        "en-US": "Is Duplicating",
+        "source": "data.values..isDuplicatingAHero",
+        "zh-CN": "正在人格复制"
+      },
+      {
+        "id": ".isFiringPrimaryFire",
+        "en-US": "Is Firing Primary",
+        "source": "data.values..isFiringPrimaryFire",
+        "zh-CN": "正在使用主要武器"
+      },
+      {
+        "id": ".isFiringSecondaryFire",
+        "en-US": "Is Firing Secondary",
+        "source": "data.values..isFiringSecondaryFire",
+        "zh-CN": "正在使用辅助武器"
+      },
+      {
+        "id": ".isHoldingButton",
+        "en-US": "Is Button Held",
+        "source": "data.values..isHoldingButton",
+        "zh-CN": "按钮被按下"
+      },
+      {
+        "id": ".isInAir",
+        "en-US": "Is In Air",
+        "source": "data.values..isInAir",
+        "zh-CN": "正在空中"
+      },
+      {
+        "id": ".isInAlternateForm",
+        "en-US": "Is In Alternate Form",
+        "source": "data.values..isInAlternateForm",
+        "zh-CN": "处于非初始状态"
+      },
+      {
+        "id": ".isInSpawnRoom",
+        "en-US": "Is In Spawn Room",
+        "source": "data.values..isInSpawnRoom",
+        "zh-CN": "在重生室中"
+      },
+      {
+        "id": ".isInViewAngle",
+        "en-US": "Is In View Angle",
+        "source": "data.values..isInViewAngle",
+        "zh-CN": "在视野内"
+      },
+      {
+        "id": ".isJumping",
+        "en-US": "Is Jumping",
+        "source": "data.values..isJumping",
+        "zh-CN": "正在跳跃"
+      },
+      {
+        "id": ".isMeleeing",
+        "en-US": "Is Meleeing",
+        "source": "data.values..isMeleeing",
+        "zh-CN": "正在近战攻击"
+      },
+      {
+        "id": ".isMoving",
+        "en-US": "Is Moving",
+        "source": "data.values..isMoving",
+        "zh-CN": "正在移动"
+      },
+      {
+        "id": ".isOnFire",
+        "en-US": "Is Portrait On Fire",
+        "source": "data.values..isOnFire",
+        "zh-CN": "头像火力全开"
+      },
+      {
+        "id": ".isOnGround",
+        "en-US": "Is On Ground",
+        "source": "data.values..isOnGround",
+        "zh-CN": "在地面上"
+      },
+      {
+        "id": ".isOnObjective",
+        "en-US": "Is On Objective",
+        "source": "data.values..isOnObjective",
+        "zh-CN": "在目标点上"
+      },
+      {
+        "id": ".isOnWall",
+        "en-US": "Is On Wall",
+        "source": "data.values..isOnWall",
+        "zh-CN": "在墙上"
+      },
+      {
+        "id": ".isReloading",
+        "en-US": "Is Reloading",
+        "source": "data.values..isReloading",
+        "zh-CN": "正在装填"
+      },
+      {
+        "id": ".isStanding",
+        "en-US": "Is Standing",
+        "source": "data.values..isStanding",
+        "zh-CN": "正在站立"
+      },
+      {
+        "id": ".isUsingAbility1",
+        "en-US": "Is Using Ability 1",
+        "source": "data.values..isUsingAbility1",
+        "zh-CN": "正在使用技能 1"
+      },
+      {
+        "id": ".isUsingAbility2",
+        "en-US": "Is Using Ability 2",
+        "source": "data.values..isUsingAbility2",
+        "zh-CN": "正在使用技能 2"
+      },
+      {
+        "id": ".isUsingUltimate",
+        "en-US": "Is Using Ultimate",
+        "source": "data.values..isUsingUltimate",
+        "zh-CN": "正在使用终极技能"
+      },
+      {
+        "id": ".last",
+        "en-US": "Last Of",
+        "source": "data.values..last",
+        "zh-CN": "最后"
+      },
+      {
+        "id": ".replace",
+        "en-US": "String Replace",
+        "source": "data.values..replace",
+        "zh-CN": "字符串替换"
+      },
+      {
+        "id": ".slice",
+        "en-US": "Array Slice",
+        "source": "data.values..slice",
+        "zh-CN": "数组分割"
+      },
+      {
+        "id": ".split",
+        "en-US": "String Split",
+        "source": "data.values..split",
+        "zh-CN": "字符串分割"
+      },
+      {
+        "id": ".strIndex",
+        "en-US": "Index Of String Char",
+        "source": "data.values..strIndex",
+        "zh-CN": "字符串字符索引"
+      },
+      {
+        "id": ".substring",
+        "en-US": "String Slice",
+        "source": "data.values..substring",
+        "zh-CN": "截取字符串"
+      },
+      {
+        "id": "Vector.BACKWARD",
+        "en-US": "Backward",
+        "source": "data.values.Vector.BACKWARD",
+        "zh-CN": "后"
+      },
+      {
+        "id": "Vector.DOWN",
+        "en-US": "Down",
+        "source": "data.values.Vector.DOWN",
+        "zh-CN": "下"
+      },
+      {
+        "id": "Vector.FORWARD",
+        "en-US": "Forward",
+        "source": "data.values.Vector.FORWARD",
+        "zh-CN": "前"
+      },
+      {
+        "id": "Vector.LEFT",
+        "en-US": "Left",
+        "source": "data.values.Vector.LEFT",
+        "zh-CN": "左"
+      },
+      {
+        "id": "Vector.RIGHT",
+        "en-US": "Right",
+        "source": "data.values.Vector.RIGHT",
+        "zh-CN": "右"
+      },
+      {
+        "id": "Vector.UP",
+        "en-US": "Up",
+        "source": "data.values.Vector.UP",
+        "zh-CN": "上"
+      },
+      {
+        "id": "__add__",
+        "en-US": "Add",
+        "source": "data.values.__add__",
+        "zh-CN": "加"
+      },
+      {
+        "id": "__all__",
+        "en-US": "Is True For All",
+        "source": "data.values.__all__",
+        "zh-CN": "对全部为“真”"
+      },
+      {
+        "id": "__and__",
+        "en-US": "And",
+        "source": "data.values.__and__",
+        "zh-CN": "与"
+      },
+      {
+        "id": "__any__",
+        "en-US": "Is True For Any",
+        "source": "data.values.__any__",
+        "zh-CN": "对任意为“真”"
+      },
+      {
+        "id": "__arrayContains__",
+        "en-US": "Array Contains",
+        "source": "data.values.__arrayContains__",
+        "zh-CN": "数组包含"
+      },
+      {
+        "id": "__array__",
+        "en-US": "Array",
+        "source": "data.values.__array__",
+        "zh-CN": "数组"
+      },
+      {
+        "id": "__button__",
+        "en-US": "Button",
+        "source": "data.values.__button__",
+        "zh-CN": "按钮"
+      },
+      {
+        "id": "__color__",
+        "en-US": "Color",
+        "source": "data.values.__color__",
+        "zh-CN": "颜色"
+      },
+      {
+        "id": "__compare__",
+        "en-US": "Compare",
+        "source": "data.values.__compare__",
+        "zh-CN": "比较"
+      },
+      {
+        "id": "__currentArrayElement__",
+        "en-US": "Current Array Element",
+        "source": "data.values.__currentArrayElement__",
+        "zh-CN": "当前数组元素"
+      },
+      {
+        "id": "__currentArrayIndex__",
+        "en-US": "Current Array Index",
+        "source": "data.values.__currentArrayIndex__",
+        "zh-CN": "当前数组索引"
+      },
+      {
+        "id": "__customString__",
+        "en-US": "Custom String",
+        "source": "data.values.__customString__",
+        "zh-CN": "自定义字符串"
+      },
+      {
+        "id": "__divide__",
+        "en-US": "Divide",
+        "source": "data.values.__divide__",
+        "zh-CN": "除"
+      },
+      {
+        "id": "__emptyArray__",
+        "en-US": "Empty Array",
+        "source": "data.values.__emptyArray__",
+        "zh-CN": "空数组"
+      },
+      {
+        "id": "__filteredArray__",
+        "en-US": "Filtered Array",
+        "source": "data.values.__filteredArray__",
+        "zh-CN": "已过滤的数组"
+      },
+      {
+        "id": "__firstOf__",
+        "en-US": "First Of",
+        "source": "data.values.__firstOf__",
+        "zh-CN": "首个"
+      },
+      {
+        "id": "__gamemode__",
+        "en-US": "Game Mode",
+        "source": "data.values.__gamemode__",
+        "zh-CN": "游戏模式"
+      },
+      {
+        "id": "__getCurrentMap__",
+        "en-US": "Current Map",
+        "source": "data.values.__getCurrentMap__",
+        "zh-CN": "当前地图"
+      },
+      {
+        "id": "__globalVar__",
+        "en-US": "Global Variable",
+        "source": "data.values.__globalVar__",
+        "zh-CN": "全局变量"
+      },
+      {
+        "id": "__global__",
+        "en-US": "Global",
+        "source": "data.values.__global__",
+        "zh-CN": "全局"
+      },
+      {
+        "id": "__hero__",
+        "en-US": "Hero",
+        "source": "data.values.__hero__",
+        "zh-CN": "英雄"
+      },
+      {
+        "id": "__ifThenElse__",
+        "en-US": "If-Then-Else",
+        "source": "data.values.__ifThenElse__",
+        "zh-CN": "If-Then-Else"
+      },
+      {
+        "id": "__localizedString__",
+        "en-US": "String",
+        "source": "data.values.__localizedString__",
+        "zh-CN": "字符串"
+      },
+      {
+        "id": "__map__",
+        "en-US": "Map",
+        "source": "data.values.__map__",
+        "zh-CN": "地图"
+      },
+      {
+        "id": "__mappedArray__",
+        "en-US": "Mapped Array",
+        "source": "data.values.__mappedArray__",
+        "zh-CN": "映射的数组"
+      },
+      {
+        "id": "__modulo__",
+        "en-US": "Modulo",
+        "source": "data.values.__modulo__",
+        "zh-CN": "余数"
+      },
+      {
+        "id": "__multiply__",
+        "en-US": "Multiply",
+        "source": "data.values.__multiply__",
+        "zh-CN": "乘"
+      },
+      {
+        "id": "__not__",
+        "en-US": "Not",
+        "source": "data.values.__not__",
+        "zh-CN": "非"
+      },
+      {
+        "id": "__number__",
+        "en-US": "Number",
+        "source": "data.values.__number__",
+        "zh-CN": "数字"
+      },
+      {
+        "id": "__or__",
+        "en-US": "Or",
+        "source": "data.values.__or__",
+        "zh-CN": "或"
+      },
+      {
+        "id": "__playerVar__",
+        "en-US": "Player Variable",
+        "source": "data.values.__playerVar__",
+        "zh-CN": "玩家变量"
+      },
+      {
+        "id": "__raiseToPower__",
+        "en-US": "Raise To Power",
+        "source": "data.values.__raiseToPower__",
+        "zh-CN": "乘方"
+      },
+      {
+        "id": "__round__",
+        "en-US": "Round To Integer",
+        "source": "data.values.__round__",
+        "zh-CN": "取整"
+      },
+      {
+        "id": "__sortedArray__",
+        "en-US": "Sorted Array",
+        "source": "data.values.__sortedArray__",
+        "zh-CN": "已排序的数组"
+      },
+      {
+        "id": "__subtract__",
+        "en-US": "Subtract",
+        "source": "data.values.__subtract__",
+        "zh-CN": "减"
+      },
+      {
+        "id": "__team__",
+        "en-US": "Team",
+        "source": "data.values.__team__",
+        "zh-CN": "队伍"
+      },
+      {
+        "id": "__valueInArray__",
+        "en-US": "Value In Array",
+        "source": "data.values.__valueInArray__",
+        "zh-CN": "数组中的值"
+      },
+      {
+        "id": "__xComponentOf__",
+        "en-US": "X Component Of",
+        "source": "data.values.__xComponentOf__",
+        "zh-CN": "X方向分量"
+      },
+      {
+        "id": "__yComponentOf__",
+        "en-US": "Y Component Of",
+        "source": "data.values.__yComponentOf__",
+        "zh-CN": "Y方向分量"
+      },
+      {
+        "id": "__zComponentOf__",
+        "en-US": "Z Component Of",
+        "source": "data.values.__zComponentOf__",
+        "zh-CN": "Z方向分量"
+      },
+      {
+        "id": "abilityIconString",
+        "en-US": "Ability Icon String",
+        "source": "data.values.abilityIconString",
+        "zh-CN": "技能图标字符串"
+      },
+      {
+        "id": "abs",
+        "en-US": "Absolute Value",
+        "source": "data.values.abs",
+        "zh-CN": "绝对值"
+      },
+      {
+        "id": "acos",
+        "en-US": "Arccosine In Radians",
+        "source": "data.values.acos",
+        "zh-CN": "以弧度为单位的反余弦值"
+      },
+      {
+        "id": "acosDeg",
+        "en-US": "Arccosine In Degrees",
+        "source": "data.values.acosDeg",
+        "zh-CN": "以角度为单位的反余弦值"
+      },
+      {
+        "id": "angleBetweenVectors",
+        "en-US": "Angle Between Vectors",
+        "source": "data.values.angleBetweenVectors",
+        "zh-CN": "矢量间夹角"
+      },
+      {
+        "id": "angleDifference",
+        "en-US": "Angle Difference",
+        "source": "data.values.angleDifference",
+        "zh-CN": "角度差"
+      },
+      {
+        "id": "asin",
+        "en-US": "Arcsine In Radians",
+        "source": "data.values.asin",
+        "zh-CN": "以弧度为单位的反正弦值"
+      },
+      {
+        "id": "asinDeg",
+        "en-US": "Arcsine In Degrees",
+        "source": "data.values.asinDeg",
+        "zh-CN": "以角度为单位的反正弦值"
+      },
+      {
+        "id": "atan2",
+        "en-US": "Arctangent In Radians",
+        "source": "data.values.atan2",
+        "zh-CN": "以弧度为单位的反正切值"
+      },
+      {
+        "id": "atan2Deg",
+        "en-US": "Arctangent In Degrees",
+        "source": "data.values.atan2Deg",
+        "zh-CN": "以角度为单位的反正切值"
+      },
+      {
+        "id": "attacker",
+        "en-US": "Attacker",
+        "source": "data.values.attacker",
+        "zh-CN": "攻击方"
+      },
+      {
+        "id": "cos",
+        "en-US": "Cosine From Radians",
+        "source": "data.values.cos",
+        "zh-CN": "弧度的余弦值"
+      },
+      {
+        "id": "cosDeg",
+        "en-US": "Cosine From Degrees",
+        "source": "data.values.cosDeg",
+        "zh-CN": "角度的余弦值"
+      },
+      {
+        "id": "createWorkshopSettingBool",
+        "en-US": "Workshop Setting Toggle",
+        "source": "data.values.createWorkshopSettingBool",
+        "zh-CN": "地图工坊设置开关"
+      },
+      {
+        "id": "createWorkshopSettingEnum",
+        "en-US": "Workshop Setting Combo",
+        "source": "data.values.createWorkshopSettingEnum",
+        "zh-CN": "地图工坊设置组合"
+      },
+      {
+        "id": "createWorkshopSettingFloat",
+        "en-US": "Workshop Setting Real",
+        "source": "data.values.createWorkshopSettingFloat",
+        "zh-CN": "地图工坊设置实数"
+      },
+      {
+        "id": "createWorkshopSettingHero",
+        "en-US": "Workshop Setting Hero",
+        "source": "data.values.createWorkshopSettingHero",
+        "zh-CN": "地图工坊设置英雄"
+      },
+      {
+        "id": "createWorkshopSettingInt",
+        "en-US": "Workshop Setting Integer",
+        "source": "data.values.createWorkshopSettingInt",
+        "zh-CN": "地图工坊设置整数"
+      },
+      {
+        "id": "crossProduct",
+        "en-US": "Cross Product",
+        "source": "data.values.crossProduct",
+        "zh-CN": "矢量积"
+      },
+      {
+        "id": "directionFromAngles",
+        "en-US": "Direction From Angles",
+        "source": "data.values.directionFromAngles",
+        "zh-CN": "与此角度的相对方向"
+      },
+      {
+        "id": "directionTowards",
+        "en-US": "Direction Towards",
+        "source": "data.values.directionTowards",
+        "zh-CN": "方向"
+      },
+      {
+        "id": "distance",
+        "en-US": "Distance Between",
+        "source": "data.values.distance",
+        "zh-CN": "相距距离"
+      },
+      {
+        "id": "dotProduct",
+        "en-US": "Dot Product",
+        "source": "data.values.dotProduct",
+        "zh-CN": "标量积"
+      },
+      {
+        "id": "entityExists",
+        "en-US": "Entity Exists",
+        "source": "data.values.entityExists",
+        "zh-CN": "实体存在"
+      },
+      {
+        "id": "evalOnce",
+        "en-US": "Evaluate Once",
+        "source": "data.values.evalOnce",
+        "zh-CN": "单次赋值"
+      },
+      {
+        "id": "eventAbility",
+        "en-US": "Event Ability",
+        "source": "data.values.eventAbility",
+        "zh-CN": "事件技能"
+      },
+      {
+        "id": "eventDamage",
+        "en-US": "Event Damage",
+        "source": "data.values.eventDamage",
+        "zh-CN": "事件伤害"
+      },
+      {
+        "id": "eventDirection",
+        "en-US": "Event Direction",
+        "source": "data.values.eventDirection",
+        "zh-CN": "事件方向"
+      },
+      {
+        "id": "eventHealing",
+        "en-US": "Event Healing",
+        "source": "data.values.eventHealing",
+        "zh-CN": "事件治疗"
+      },
+      {
+        "id": "eventPlayer",
+        "en-US": "Event Player",
+        "source": "data.values.eventPlayer",
+        "zh-CN": "事件玩家"
+      },
+      {
+        "id": "eventWasCriticalHit",
+        "en-US": "Event Was Critical Hit",
+        "source": "data.values.eventWasCriticalHit",
+        "zh-CN": "事件暴击"
+      },
+      {
+        "id": "eventWasEnvironment",
+        "en-US": "Event Was Environment",
+        "source": "data.values.eventWasEnvironment",
+        "zh-CN": "事件为环境事件"
+      },
+      {
+        "id": "eventWasHealthPack",
+        "en-US": "Event Was Health Pack",
+        "source": "data.values.eventWasHealthPack",
+        "zh-CN": "事件为急救包"
+      },
+      {
+        "id": "false",
+        "en-US": "False",
+        "source": "data.values.false",
+        "zh-CN": "假"
+      },
+      {
+        "id": "getAllHeroes",
+        "en-US": "All Heroes",
+        "source": "data.values.getAllHeroes",
+        "zh-CN": "全部英雄"
+      },
+      {
+        "id": "getAverageServerLoad",
+        "en-US": "Server Load Average",
+        "source": "data.values.getAverageServerLoad",
+        "zh-CN": "服务器负载平均值"
+      },
+      {
+        "id": "getCapturePercentage",
+        "en-US": "Point Capture Percentage",
+        "source": "data.values.getCapturePercentage",
+        "zh-CN": "目标点占领百分比"
+      },
+      {
+        "id": "getClosestPlayer",
+        "en-US": "Closest Player To",
+        "source": "data.values.getClosestPlayer",
+        "zh-CN": "距离最近的玩家"
+      },
+      {
+        "id": "getControlScorePercentage",
+        "en-US": "Control Mode Scoring Percentage",
+        "source": "data.values.getControlScorePercentage",
+        "zh-CN": "占领要点模式得分百分比"
+      },
+      {
+        "id": "getControlScoringTeam",
+        "en-US": "Control Mode Scoring Team",
+        "source": "data.values.getControlScoringTeam",
+        "zh-CN": "占领要点模式正在得分的队伍"
+      },
+      {
+        "id": "getCurrentGamemode",
+        "en-US": "Current Game Mode",
+        "source": "data.values.getCurrentGamemode",
+        "zh-CN": "当前游戏模式"
+      },
+      {
+        "id": "getCurrentObjective",
+        "en-US": "Objective Index",
+        "source": "data.values.getCurrentObjective",
+        "zh-CN": "对象索引"
+      },
+      {
+        "id": "getDamageHeroes",
+        "en-US": "All Damage Heroes",
+        "source": "data.values.getDamageHeroes",
+        "zh-CN": "所有输出英雄"
+      },
+      {
+        "id": "getDeadPlayers",
+        "en-US": "All Dead Players",
+        "source": "data.values.getDeadPlayers",
+        "zh-CN": "所有死亡玩家"
+      },
+      {
+        "id": "getFarthestPlayer",
+        "en-US": "Farthest Player From",
+        "source": "data.values.getFarthestPlayer",
+        "zh-CN": "距离最远的玩家"
+      },
+      {
+        "id": "getFlagCarrier",
+        "en-US": "Player Carrying Flag",
+        "source": "data.values.getFlagCarrier",
+        "zh-CN": "携带旗帜的玩家"
+      },
+      {
+        "id": "getFlagPosition",
+        "en-US": "Flag Position",
+        "source": "data.values.getFlagPosition",
+        "zh-CN": "旗帜位置"
+      },
+      {
+        "id": "getLastAssistId",
+        "en-US": "Last Assist ID",
+        "source": "data.values.getLastAssistId",
+        "zh-CN": "上一个助攻ID"
+      },
+      {
+        "id": "getLastCreatedEntity",
+        "en-US": "Last Created Entity",
+        "source": "data.values.getLastCreatedEntity",
+        "zh-CN": "最后创建的实体"
+      },
+      {
+        "id": "getLastCreatedHealthPool",
+        "en-US": "Last Created Health Pool",
+        "source": "data.values.getLastCreatedHealthPool",
+        "zh-CN": "最后创建的生命池"
+      },
+      {
+        "id": "getLastCreatedText",
+        "en-US": "Last Text ID",
+        "source": "data.values.getLastCreatedText",
+        "zh-CN": "上一个文本ID"
+      },
+      {
+        "id": "getLastDamageModification",
+        "en-US": "Last Damage Modification ID",
+        "source": "data.values.getLastDamageModification",
+        "zh-CN": "上一个伤害调整ID"
+      },
+      {
+        "id": "getLastDamageOverTimeId",
+        "en-US": "Last Damage Over Time ID",
+        "source": "data.values.getLastDamageOverTimeId",
+        "zh-CN": "上一个持续伤害效果ID"
+      },
+      {
+        "id": "getLastHealingModification",
+        "en-US": "Last Healing Modification ID",
+        "source": "data.values.getLastHealingModification",
+        "zh-CN": "上一个治疗调整ID"
+      },
+      {
+        "id": "getLastHealingOverTimeId",
+        "en-US": "Last Heal Over Time ID",
+        "source": "data.values.getLastHealingOverTimeId",
+        "zh-CN": "上一个持续治疗效果ID"
+      },
+      {
+        "id": "getLivingPlayers",
+        "en-US": "All Living Players",
+        "source": "data.values.getLivingPlayers",
+        "zh-CN": "所有存活玩家"
+      },
+      {
+        "id": "getMatchRound",
+        "en-US": "Match Round",
+        "source": "data.values.getMatchRound",
+        "zh-CN": "比赛回合"
+      },
+      {
+        "id": "getMatchTime",
+        "en-US": "Match Time",
+        "source": "data.values.getMatchTime",
+        "zh-CN": "比赛时间"
+      },
+      {
+        "id": "getNumberOfAssistIds",
+        "en-US": "Assist Count",
+        "source": "data.values.getNumberOfAssistIds",
+        "zh-CN": "助攻数量"
+      },
+      {
+        "id": "getNumberOfDamageModificationIds",
+        "en-US": "Damage Modification Count",
+        "source": "data.values.getNumberOfDamageModificationIds",
+        "zh-CN": "伤害调整数量"
+      },
+      {
+        "id": "getNumberOfDamageOverTimeIds",
+        "en-US": "Damage Over Time Count",
+        "source": "data.values.getNumberOfDamageOverTimeIds",
+        "zh-CN": "持续伤害数量"
+      },
+      {
+        "id": "getNumberOfDeadPlayers",
+        "en-US": "Number Of Dead Players",
+        "source": "data.values.getNumberOfDeadPlayers",
+        "zh-CN": "死亡玩家数量"
+      },
+      {
+        "id": "getNumberOfEntityIds",
+        "en-US": "Entity Count",
+        "source": "data.values.getNumberOfEntityIds",
+        "zh-CN": "实体数量"
+      },
+      {
+        "id": "getNumberOfHealingModificationIds",
+        "en-US": "Healing Modification Count",
+        "source": "data.values.getNumberOfHealingModificationIds",
+        "zh-CN": "治疗调整数量"
+      },
+      {
+        "id": "getNumberOfHealingOverTimeIds",
+        "en-US": "Heal Over Time Count",
+        "source": "data.values.getNumberOfHealingOverTimeIds",
+        "zh-CN": "持续治疗数量"
+      },
+      {
+        "id": "getNumberOfHeroes",
+        "en-US": "Number Of Heroes",
+        "source": "data.values.getNumberOfHeroes",
+        "zh-CN": "英雄数量"
+      },
+      {
+        "id": "getNumberOfLivingPlayers",
+        "en-US": "Number Of Living Players",
+        "source": "data.values.getNumberOfLivingPlayers",
+        "zh-CN": "存活玩家数量"
+      },
+      {
+        "id": "getNumberOfPlayers",
+        "en-US": "Number Of Players",
+        "source": "data.values.getNumberOfPlayers",
+        "zh-CN": "玩家数量"
+      },
+      {
+        "id": "getNumberOfPlayersOnObjective",
+        "en-US": "Number Of Players On Objective",
+        "source": "data.values.getNumberOfPlayersOnObjective",
+        "zh-CN": "目标点上玩家数量"
+      },
+      {
+        "id": "getNumberOfSlots",
+        "en-US": "Number Of Slots",
+        "source": "data.values.getNumberOfSlots",
+        "zh-CN": "栏位数量"
+      },
+      {
+        "id": "getNumberOfTextIds",
+        "en-US": "Text Count",
+        "source": "data.values.getNumberOfTextIds",
+        "zh-CN": "文本数量"
+      },
+      {
+        "id": "getObjectivePosition",
+        "en-US": "Objective Position",
+        "source": "data.values.getObjectivePosition",
+        "zh-CN": "目标位置"
+      },
+      {
+        "id": "getOppositeTeam",
+        "en-US": "Opposite Team Of",
+        "source": "data.values.getOppositeTeam",
+        "zh-CN": "对方队伍"
+      },
+      {
+        "id": "getPayloadPosition",
+        "en-US": "Payload Position",
+        "source": "data.values.getPayloadPosition",
+        "zh-CN": "运载目标位置"
+      },
+      {
+        "id": "getPayloadProgressPercentage",
+        "en-US": "Payload Progress Percentage",
+        "source": "data.values.getPayloadProgressPercentage",
+        "zh-CN": "运载目标进度百分比"
+      },
+      {
+        "id": "getPeakServerLoad",
+        "en-US": "Server Load Peak",
+        "source": "data.values.getPeakServerLoad",
+        "zh-CN": "服务器负载峰值"
+      },
+      {
+        "id": "getPlayers",
+        "en-US": "All Players",
+        "source": "data.values.getPlayers",
+        "zh-CN": "所有玩家"
+      },
+      {
+        "id": "getPlayersInRadius",
+        "en-US": "Players Within Radius",
+        "source": "data.values.getPlayersInRadius",
+        "zh-CN": "范围内玩家"
+      },
+      {
+        "id": "getPlayersInSlot",
+        "en-US": "Players In Slot",
+        "source": "data.values.getPlayersInSlot",
+        "zh-CN": "此栏位的玩家"
+      },
+      {
+        "id": "getPlayersNotOnObjective",
+        "en-US": "All Players Not On Objective",
+        "source": "data.values.getPlayersNotOnObjective",
+        "zh-CN": "所有目标点外玩家"
+      },
+      {
+        "id": "getPlayersOnHero",
+        "en-US": "Players On Hero",
+        "source": "data.values.getPlayersOnHero",
+        "zh-CN": "选择英雄的玩家"
+      },
+      {
+        "id": "getPlayersOnObjective",
+        "en-US": "All Players On Objective",
+        "source": "data.values.getPlayersOnObjective",
+        "zh-CN": "所有目标点内玩家"
+      },
+      {
+        "id": "getServerLoad",
+        "en-US": "Server Load",
+        "source": "data.values.getServerLoad",
+        "zh-CN": "服务器负载"
+      },
+      {
+        "id": "getSpawnPoints",
+        "en-US": "Spawn Points",
+        "source": "data.values.getSpawnPoints",
+        "zh-CN": "重生点"
+      },
+      {
+        "id": "getSupportHeroes",
+        "en-US": "All Support Heroes",
+        "source": "data.values.getSupportHeroes",
+        "zh-CN": "所有支援英雄"
+      },
+      {
+        "id": "getTankHeroes",
+        "en-US": "All Tank Heroes",
+        "source": "data.values.getTankHeroes",
+        "zh-CN": "所有重装英雄"
+      },
+      {
+        "id": "getTotalTimeElapsed",
+        "en-US": "Total Time Elapsed",
+        "source": "data.values.getTotalTimeElapsed",
+        "zh-CN": "总计消耗时间"
+      },
+      {
+        "id": "healee",
+        "en-US": "Healee",
+        "source": "data.values.healee",
+        "zh-CN": "受治疗者"
+      },
+      {
+        "id": "healer",
+        "en-US": "Healer",
+        "source": "data.values.healer",
+        "zh-CN": "治疗者"
+      },
+      {
+        "id": "heroIcon",
+        "en-US": "Hero Icon String",
+        "source": "data.values.heroIcon",
+        "zh-CN": "英雄图标字符串"
+      },
+      {
+        "id": "horizontalAngleOfDirection",
+        "en-US": "Horizontal Angle From Direction",
+        "source": "data.values.horizontalAngleOfDirection",
+        "zh-CN": "与此方向的水平角度"
+      },
+      {
+        "id": "horizontalAngleTowards",
+        "en-US": "Horizontal Angle Towards",
+        "source": "data.values.horizontalAngleTowards",
+        "zh-CN": "水平方向夹角"
+      },
+      {
+        "id": "hostPlayer",
+        "en-US": "Host Player",
+        "source": "data.values.hostPlayer",
+        "zh-CN": "主机玩家"
+      },
+      {
+        "id": "iconString",
+        "en-US": "Icon String",
+        "source": "data.values.iconString",
+        "zh-CN": "图标字符串"
+      },
+      {
+        "id": "inputBindingString",
+        "en-US": "Input Binding String",
+        "source": "data.values.inputBindingString",
+        "zh-CN": "输入绑定字符串"
+      },
+      {
+        "id": "isAssemblingHeroes",
+        "en-US": "Is Assembling Heroes",
+        "source": "data.values.isAssemblingHeroes",
+        "zh-CN": "正在集结英雄"
+      },
+      {
+        "id": "isControlPointLocked",
+        "en-US": "Is Control Mode Point Locked",
+        "source": "data.values.isControlPointLocked",
+        "zh-CN": "占领要点模式占领点解锁"
+      },
+      {
+        "id": "isFlagAtBase",
+        "en-US": "Is Flag At Base",
+        "source": "data.values.isFlagAtBase",
+        "zh-CN": "旗帜是否在基地中"
+      },
+      {
+        "id": "isFlagBeingCarried",
+        "en-US": "Is Flag Being Carried",
+        "source": "data.values.isFlagBeingCarried",
+        "zh-CN": "是否有人携带旗帜"
+      },
+      {
+        "id": "isGameInProgress",
+        "en-US": "Is Game In Progress",
+        "source": "data.values.isGameInProgress",
+        "zh-CN": "游戏正在进行中"
+      },
+      {
+        "id": "isHeroBeingPlayed",
+        "en-US": "Is Hero Being Played",
+        "source": "data.values.isHeroBeingPlayed",
+        "zh-CN": "正在使用英雄"
+      },
+      {
+        "id": "isInLoS",
+        "en-US": "Is In Line of Sight",
+        "source": "data.values.isInLoS",
+        "zh-CN": "在视线内"
+      },
+      {
+        "id": "isInSetup",
+        "en-US": "Is In Setup",
+        "source": "data.values.isInSetup",
+        "zh-CN": "正在设置"
+      },
+      {
+        "id": "isInSuddenDeath",
+        "en-US": "Is CTF Mode In Sudden Death",
+        "source": "data.values.isInSuddenDeath",
+        "zh-CN": "在夺旗模式中开始绝杀局"
+      },
+      {
+        "id": "isMatchBetweenRounds",
+        "en-US": "Is Between Rounds",
+        "source": "data.values.isMatchBetweenRounds",
+        "zh-CN": "处于回合之间"
+      },
+      {
+        "id": "isMatchComplete",
+        "en-US": "Is Match Complete",
+        "source": "data.values.isMatchComplete",
+        "zh-CN": "比赛结束"
+      },
+      {
+        "id": "isObjectiveComplete",
+        "en-US": "Is Objective Complete",
+        "source": "data.values.isObjectiveComplete",
+        "zh-CN": "目标是否完成"
+      },
+      {
+        "id": "isTeamOnDefense",
+        "en-US": "Is Team On Defense",
+        "source": "data.values.isTeamOnDefense",
+        "zh-CN": "正在防守"
+      },
+      {
+        "id": "isTeamOnOffense",
+        "en-US": "Is Team On Offense",
+        "source": "data.values.isTeamOnOffense",
+        "zh-CN": "作为进攻队伍"
+      },
+      {
+        "id": "isWaitingForPlayers",
+        "en-US": "Is Waiting For Players",
+        "source": "data.values.isWaitingForPlayers",
+        "zh-CN": "正在等待玩家"
+      },
+      {
+        "id": "len",
+        "en-US": "Count Of",
+        "source": "data.values.len",
+        "zh-CN": "数量"
+      },
+      {
+        "id": "localPlayer",
+        "en-US": "Local Player",
+        "source": "data.values.localPlayer",
+        "zh-CN": "本地玩家"
+      },
+      {
+        "id": "localVector",
+        "en-US": "Local Vector Of",
+        "source": "data.values.localVector",
+        "zh-CN": "本地矢量"
+      },
+      {
+        "id": "magnitude",
+        "en-US": "Magnitude Of",
+        "source": "data.values.magnitude",
+        "zh-CN": "幅值"
+      },
+      {
+        "id": "max",
+        "en-US": "Max",
+        "source": "data.values.max",
+        "zh-CN": "较大"
+      },
+      {
+        "id": "min",
+        "en-US": "Min",
+        "source": "data.values.min",
+        "zh-CN": "较小"
+      },
+      {
+        "id": "nearestWalkablePosition",
+        "en-US": "Nearest Walkable Position",
+        "source": "data.values.nearestWalkablePosition",
+        "zh-CN": "最近的可行走位置"
+      },
+      {
+        "id": "normalize",
+        "en-US": "Normalize",
+        "source": "data.values.normalize",
+        "zh-CN": "归一化"
+      },
+      {
+        "id": "null",
+        "en-US": "Null",
+        "source": "data.values.null",
+        "zh-CN": "空"
+      },
+      {
+        "id": "random.choice",
+        "en-US": "Random Value In Array",
+        "source": "data.values.random.choice",
+        "zh-CN": "数组随机取值"
+      },
+      {
+        "id": "random.randint",
+        "en-US": "Random Integer",
+        "source": "data.values.random.randint",
+        "zh-CN": "随机整数"
+      },
+      {
+        "id": "random.shuffle",
+        "en-US": "Randomized Array",
+        "source": "data.values.random.shuffle",
+        "zh-CN": "随机数组"
+      },
+      {
+        "id": "random.uniform",
+        "en-US": "Random Real",
+        "source": "data.values.random.uniform",
+        "zh-CN": "随机实数"
+      },
+      {
+        "id": "raycastHitNormal",
+        "en-US": "Ray Cast Hit Normal",
+        "source": "data.values.raycastHitNormal",
+        "zh-CN": "射线命中法线"
+      },
+      {
+        "id": "raycastHitPlayer",
+        "en-US": "Ray Cast Hit Player",
+        "source": "data.values.raycastHitPlayer",
+        "zh-CN": "射线命中玩家"
+      },
+      {
+        "id": "raycastHitPosition",
+        "en-US": "Ray Cast Hit Position",
+        "source": "data.values.raycastHitPosition",
+        "zh-CN": "射线命中位置"
+      },
+      {
+        "id": "rgb",
+        "en-US": "Custom Color",
+        "source": "data.values.rgb",
+        "zh-CN": "自定义颜色"
+      },
+      {
+        "id": "sin",
+        "en-US": "Sine From Radians",
+        "source": "data.values.sin",
+        "zh-CN": "弧度的正弦值"
+      },
+      {
+        "id": "sinDeg",
+        "en-US": "Sine From Degrees",
+        "source": "data.values.sinDeg",
+        "zh-CN": "角度的正弦值"
+      },
+      {
+        "id": "sqrt",
+        "en-US": "Square Root",
+        "source": "data.values.sqrt",
+        "zh-CN": "平方根"
+      },
+      {
+        "id": "strContains",
+        "en-US": "String Contains",
+        "source": "data.values.strContains",
+        "zh-CN": "字符串包含"
+      },
+      {
+        "id": "strLen",
+        "en-US": "String Length",
+        "source": "data.values.strLen",
+        "zh-CN": "字符串长度"
+      },
+      {
+        "id": "tan",
+        "en-US": "Tangent From Radians",
+        "source": "data.values.tan",
+        "zh-CN": "弧度的正切值"
+      },
+      {
+        "id": "tanDeg",
+        "en-US": "Tangent From Degrees",
+        "source": "data.values.tanDeg",
+        "zh-CN": "角度的正切值"
+      },
+      {
+        "id": "teamScore",
+        "en-US": "Team Score",
+        "source": "data.values.teamScore",
+        "zh-CN": "团队得分"
+      },
+      {
+        "id": "true",
+        "en-US": "True",
+        "source": "data.values.true",
+        "zh-CN": "真"
+      },
+      {
+        "id": "updateEveryFrame",
+        "en-US": "Update Every Frame",
+        "source": "data.values.updateEveryFrame",
+        "zh-CN": "逐帧更新"
+      },
+      {
+        "id": "vect",
+        "en-US": "Vector",
+        "source": "data.values.vect",
+        "zh-CN": "矢量"
+      },
+      {
+        "id": "vectorTowards",
+        "en-US": "Vector Towards",
+        "source": "data.values.vectorTowards",
+        "zh-CN": "向量"
+      },
+      {
+        "id": "verticalAngleOfDirection",
+        "en-US": "Vertical Angle From Direction",
+        "source": "data.values.verticalAngleOfDirection",
+        "zh-CN": "与此方向的垂直角度"
+      },
+      {
+        "id": "verticalAngleTowards",
+        "en-US": "Vertical Angle Towards",
+        "source": "data.values.verticalAngleTowards",
+        "zh-CN": "垂直方向夹角"
+      },
+      {
+        "id": "victim",
+        "en-US": "Victim",
+        "source": "data.values.victim",
+        "zh-CN": "被攻击方"
+      },
+      {
+        "id": "worldVector",
+        "en-US": "World Vector Of",
+        "source": "data.values.worldVector",
+        "zh-CN": "地图矢量"
+      }
+    ],
+    "gamemodes": [
+      {
+        "id": "assault",
+        "en-US": "Assault",
+        "source": "data.gamemodes.assault",
+        "zh-CN": "攻防作战"
+      },
+      {
+        "id": "assaultBalancedOverwatch",
+        "en-US": "Assault Balanced Overwatch",
+        "source": "data.gamemodes.assaultBalancedOverwatch"
+      },
+      {
+        "id": "bountyHunter",
+        "en-US": "Bounty Hunter",
+        "source": "data.gamemodes.bountyHunter",
+        "zh-CN": "赏金猎手"
+      },
+      {
+        "id": "clash",
+        "en-US": "Clash",
+        "source": "data.gamemodes.clash",
+        "zh-CN": "攻防阵线"
+      },
+      {
+        "id": "control",
+        "en-US": "Control",
+        "source": "data.gamemodes.control",
+        "zh-CN": "占领要点"
+      },
+      {
+        "id": "controlAprilFools",
+        "en-US": "Control April Fools",
+        "source": "data.gamemodes.controlAprilFools"
+      },
+      {
+        "id": "controlBalancedOverwatch",
+        "en-US": "Control Balanced Overwatch",
+        "source": "data.gamemodes.controlBalancedOverwatch"
+      },
+      {
+        "id": "controlCommunity",
+        "en-US": "Control Community",
+        "source": "data.gamemodes.controlCommunity"
+      },
+      {
+        "id": "ctf",
+        "en-US": "Capture The Flag",
+        "source": "data.gamemodes.ctf",
+        "zh-CN": "勇夺锦旗"
+      },
+      {
+        "id": "elimination",
+        "en-US": "Elimination",
+        "source": "data.gamemodes.elimination",
+        "zh-CN": "决斗先锋"
+      },
+      {
+        "id": "escort",
+        "en-US": "Escort",
+        "source": "data.gamemodes.escort",
+        "zh-CN": "运载目标"
+      },
+      {
+        "id": "escortAprilFools",
+        "en-US": "Escort April Fools",
+        "source": "data.gamemodes.escortAprilFools"
+      },
+      {
+        "id": "escortBalancedOverwatch",
+        "en-US": "Escort Balanced Overwatch",
+        "source": "data.gamemodes.escortBalancedOverwatch"
+      },
+      {
+        "id": "escortCommunity",
+        "en-US": "Escort Community",
+        "source": "data.gamemodes.escortCommunity"
+      },
+      {
+        "id": "ffa",
+        "en-US": "Deathmatch",
+        "source": "data.gamemodes.ffa",
+        "zh-CN": "死斗"
+      },
+      {
+        "id": "flashpoint",
+        "en-US": "Flashpoint",
+        "source": "data.gamemodes.flashpoint",
+        "zh-CN": "闪点作战"
+      },
+      {
+        "id": "flashpointAprilFools",
+        "en-US": "Flashpoint April Fools",
+        "source": "data.gamemodes.flashpointAprilFools"
+      },
+      {
+        "id": "freezethawElimination",
+        "en-US": "Freezethaw Elimination",
+        "source": "data.gamemodes.freezethawElimination",
+        "zh-CN": "融冰决斗"
+      },
+      {
+        "id": "hybrid",
+        "en-US": "Hybrid",
+        "source": "data.gamemodes.hybrid",
+        "zh-CN": "攻击护送"
+      },
+      {
+        "id": "hybridAprilFools",
+        "en-US": "Hybrid April Fools",
+        "source": "data.gamemodes.hybridAprilFools"
+      },
+      {
+        "id": "hybridBalancedOverwatch",
+        "en-US": "Hybrid Balanced Overwatch",
+        "source": "data.gamemodes.hybridBalancedOverwatch"
+      },
+      {
+        "id": "hybridCommunity",
+        "en-US": "Hybrid Community",
+        "source": "data.gamemodes.hybridCommunity"
+      },
+      {
+        "id": "junkenstein",
+        "en-US": "Junkenstein's Revenge",
+        "source": "data.gamemodes.junkenstein",
+        "zh-CN": "怪鼠复仇"
+      },
+      {
+        "id": "lucioball",
+        "en-US": "Lúcioball",
+        "source": "data.gamemodes.lucioball",
+        "zh-CN": "动感斗球"
+      },
+      {
+        "id": "meisSnowballOffensive",
+        "en-US": "Mei's Snowball Offensive",
+        "source": "data.gamemodes.meisSnowballOffensive",
+        "zh-CN": "雪球攻势"
+      },
+      {
+        "id": "practiceRange",
+        "en-US": "Practice Range",
+        "source": "data.gamemodes.practiceRange",
+        "zh-CN": "训练靶场"
+      },
+      {
+        "id": "push",
+        "en-US": "Push",
+        "source": "data.gamemodes.push",
+        "zh-CN": "机动推进"
+      },
+      {
+        "id": "pushAprilFools",
+        "en-US": "Push April Fools",
+        "source": "data.gamemodes.pushAprilFools"
+      },
+      {
+        "id": "pushBalancedOverwatch",
+        "en-US": "Push Balanced Overwatch",
+        "source": "data.gamemodes.pushBalancedOverwatch"
+      },
+      {
+        "id": "pushCommunity",
+        "en-US": "Push Community",
+        "source": "data.gamemodes.pushCommunity"
+      },
+      {
+        "id": "skirmish",
+        "en-US": "Skirmish",
+        "source": "data.gamemodes.skirmish",
+        "zh-CN": "突击模式"
+      },
+      {
+        "id": "snowballFfa",
+        "en-US": "Snowball Deathmatch",
+        "source": "data.gamemodes.snowballFfa",
+        "zh-CN": "雪球死斗"
+      },
+      {
+        "id": "stadiumPracticeRange",
+        "en-US": "Stadium Practice Range",
+        "source": "data.gamemodes.stadiumPracticeRange",
+        "zh-CN": "决斗领域"
+      },
+      {
+        "id": "tdm",
+        "en-US": "Team Deathmatch",
+        "source": "data.gamemodes.tdm",
+        "zh-CN": "团队死斗"
+      },
+      {
+        "id": "yetiHunter",
+        "en-US": "Yeti Hunter",
+        "source": "data.gamemodes.yetiHunter",
+        "zh-CN": "雪域狩猎"
+      }
+    ],
+    "maps": [
+      {
+        "id": "aatlis",
+        "en-US": "Aatlis",
+        "source": "data.maps.aatlis",
+        "zh-CN": "阿特利斯"
+      },
+      {
+        "id": "antarcticPeninsula",
+        "en-US": "Antarctic Peninsula",
+        "source": "data.maps.antarcticPeninsula",
+        "zh-CN": "南极半岛"
+      },
+      {
+        "id": "arenaVictoriae",
+        "en-US": "Arena Victoriae",
+        "source": "data.maps.arenaVictoriae"
+      },
+      {
+        "id": "ayutthaya",
+        "en-US": "Ayutthaya",
+        "source": "data.maps.ayutthaya",
+        "zh-CN": "阿育陀耶"
+      },
+      {
+        "id": "blackForest",
+        "en-US": "Black Forest",
+        "source": "data.maps.blackForest",
+        "zh-CN": "黑森林"
+      },
+      {
+        "id": "blackForestWinter",
+        "en-US": "Black Forest Winter",
+        "source": "data.maps.blackForestWinter",
+        "zh-CN": "圣诞节黑森林"
+      },
+      {
+        "id": "blizzWorld",
+        "en-US": "Blizzard World",
+        "source": "data.maps.blizzWorld",
+        "zh-CN": "暴雪世界"
+      },
+      {
+        "id": "blizzWorldWinter",
+        "en-US": "Blizzard World Winter",
+        "source": "data.maps.blizzWorldWinter",
+        "zh-CN": "圣诞节暴雪世界"
+      },
+      {
+        "id": "busan",
+        "en-US": "Busan",
+        "source": "data.maps.busan",
+        "zh-CN": "釜山"
+      },
+      {
+        "id": "busanDowntownLny",
+        "en-US": "Busan Downtown Lunar New Year",
+        "source": "data.maps.busanDowntownLny",
+        "zh-CN": "春节釜山城区"
+      },
+      {
+        "id": "busanSanctuaryLny",
+        "en-US": "Busan Sanctuary Lunar New Year",
+        "source": "data.maps.busanSanctuaryLny",
+        "zh-CN": "春节釜山寺院"
+      },
+      {
+        "id": "busanStadium",
+        "en-US": "Busan Stadium",
+        "source": "data.maps.busanStadium",
+        "zh-CN": "釜山体育场"
+      },
+      {
+        "id": "busanStadiumClassic",
+        "en-US": "Busan Stadium Classic",
+        "source": "data.maps.busanStadiumClassic",
+        "zh-CN": "釜山体育场（经典）"
+      },
+      {
+        "id": "castillo",
+        "en-US": "Castillo",
+        "source": "data.maps.castillo",
+        "zh-CN": "城堡"
+      },
+      {
+        "id": "chateauGuillard",
+        "en-US": "Château Guillard",
+        "source": "data.maps.chateauGuillard",
+        "zh-CN": "吉拉德堡"
+      },
+      {
+        "id": "chateauGuillardHalloween",
+        "en-US": "Château Guillard Halloween",
+        "source": "data.maps.chateauGuillardHalloween",
+        "zh-CN": "万圣节吉拉德堡"
+      },
+      {
+        "id": "circuitRoyal",
+        "en-US": "Circuit Royal",
+        "source": "data.maps.circuitRoyal",
+        "zh-CN": "皇家赛道"
+      },
+      {
+        "id": "colosseo",
+        "en-US": "Colosseo",
+        "source": "data.maps.colosseo",
+        "zh-CN": "斗兽场"
+      },
+      {
+        "id": "dorado",
+        "en-US": "Dorado",
+        "source": "data.maps.dorado",
+        "zh-CN": "多拉多"
+      },
+      {
+        "id": "ecopointAntarctica",
+        "en-US": "Ecopoint: Antarctica",
+        "source": "data.maps.ecopointAntarctica",
+        "zh-CN": "生态监测站：南极洲"
+      },
+      {
+        "id": "ecopointAntarcticaWinter",
+        "en-US": "Ecopoint: Antarctica Winter",
+        "source": "data.maps.ecopointAntarcticaWinter",
+        "zh-CN": "圣诞节生态监测站：南极洲"
+      },
+      {
+        "id": "eichenwalde",
+        "en-US": "Eichenwalde",
+        "source": "data.maps.eichenwalde",
+        "zh-CN": "艾兴瓦尔德"
+      },
+      {
+        "id": "eichenwaldeHalloween",
+        "en-US": "Eichenwalde Halloween",
+        "source": "data.maps.eichenwaldeHalloween",
+        "zh-CN": "万圣节艾兴瓦尔德"
+      },
+      {
+        "id": "esperanca",
+        "en-US": "Esperança",
+        "source": "data.maps.esperanca",
+        "zh-CN": "埃斯佩兰萨"
+      },
+      {
+        "id": "estadioDasRas",
+        "en-US": "Estádio das Rãs",
+        "source": "data.maps.estadioDasRas",
+        "zh-CN": "弗格体育场"
+      },
+      {
+        "id": "gogadoro",
+        "en-US": "Gogadoro",
+        "source": "data.maps.gogadoro"
+      },
+      {
+        "id": "hanamura",
+        "en-US": "Hanamura",
+        "source": "data.maps.hanamura",
+        "zh-CN": "花村"
+      },
+      {
+        "id": "hanamuraWinter",
+        "en-US": "Hanamura Winter",
+        "source": "data.maps.hanamuraWinter",
+        "zh-CN": "圣诞节花村"
+      },
+      {
+        "id": "hanaoka",
+        "en-US": "Hanaoka",
+        "source": "data.maps.hanaoka",
+        "zh-CN": "花冈"
+      },
+      {
+        "id": "havana",
+        "en-US": "Havana",
+        "source": "data.maps.havana",
+        "zh-CN": "哈瓦那"
+      },
+      {
+        "id": "hollywood",
+        "en-US": "Hollywood",
+        "source": "data.maps.hollywood",
+        "zh-CN": "好莱坞"
+      },
+      {
+        "id": "hollywoodHalloween",
+        "en-US": "Hollywood Halloween",
+        "source": "data.maps.hollywoodHalloween",
+        "zh-CN": "万圣节好莱坞"
+      },
+      {
+        "id": "horizonLunarColony",
+        "en-US": "Horizon Lunar Colony",
+        "source": "data.maps.horizonLunarColony",
+        "zh-CN": "“地平线”月球基地"
+      },
+      {
+        "id": "ilios",
+        "en-US": "Ilios",
+        "source": "data.maps.ilios",
+        "zh-CN": "伊利奥斯"
+      },
+      {
+        "id": "iliosLighthouse",
+        "en-US": "Ilios Lighthouse",
+        "source": "data.maps.iliosLighthouse",
+        "zh-CN": "伊利奥斯灯塔"
+      },
+      {
+        "id": "iliosRuins",
+        "en-US": "Ilios Ruins",
+        "source": "data.maps.iliosRuins",
+        "zh-CN": "伊利奥斯废墟"
+      },
+      {
+        "id": "iliosWell",
+        "en-US": "Ilios Well",
+        "source": "data.maps.iliosWell",
+        "zh-CN": "伊利奥斯深井"
+      },
+      {
+        "id": "junkenstein",
+        "en-US": "Junkenstein's Revenge",
+        "source": "data.maps.junkenstein",
+        "zh-CN": "怪鼠复仇"
+      },
+      {
+        "id": "junkertown",
+        "en-US": "Junkertown",
+        "source": "data.maps.junkertown",
+        "zh-CN": "渣客镇"
+      },
+      {
+        "id": "kanezaka",
+        "en-US": "Kanezaka",
+        "source": "data.maps.kanezaka",
+        "zh-CN": "铁坂"
+      },
+      {
+        "id": "kingsRow",
+        "en-US": "King's Row",
+        "source": "data.maps.kingsRow",
+        "zh-CN": "国王大道"
+      },
+      {
+        "id": "kingsRowWinter",
+        "en-US": "King's Row Winter",
+        "source": "data.maps.kingsRowWinter",
+        "zh-CN": "圣诞节国王大道"
+      },
+      {
+        "id": "lijiangControlCenter",
+        "en-US": "Lijiang Control Center",
+        "source": "data.maps.lijiangControlCenter",
+        "zh-CN": "漓江塔控制中心"
+      },
+      {
+        "id": "lijiangControlCenterLny",
+        "en-US": "Lijiang Control Center Lunar New Year",
+        "source": "data.maps.lijiangControlCenterLny",
+        "zh-CN": "春节漓江塔控制中心"
+      },
+      {
+        "id": "lijiangGarden",
+        "en-US": "Lijiang Garden",
+        "source": "data.maps.lijiangGarden",
+        "zh-CN": "漓江塔庭院"
+      },
+      {
+        "id": "lijiangGardenLny",
+        "en-US": "Lijiang Garden Lunar New Year",
+        "source": "data.maps.lijiangGardenLny",
+        "zh-CN": "春节漓江塔庭院"
+      },
+      {
+        "id": "lijiangNightMarket",
+        "en-US": "Lijiang Night Market",
+        "source": "data.maps.lijiangNightMarket",
+        "zh-CN": "漓江塔夜市"
+      },
+      {
+        "id": "lijiangNightMarketLny",
+        "en-US": "Lijiang Night Market Lunar New Year",
+        "source": "data.maps.lijiangNightMarketLny",
+        "zh-CN": "春节漓江塔夜市"
+      },
+      {
+        "id": "lijiangTower",
+        "en-US": "Lijiang Tower",
+        "source": "data.maps.lijiangTower",
+        "zh-CN": "漓江塔"
+      },
+      {
+        "id": "lijiangTowerLny",
+        "en-US": "Lijiang Tower Lunar New Year",
+        "source": "data.maps.lijiangTowerLny",
+        "zh-CN": "春节漓江塔"
+      },
+      {
+        "id": "malevento",
+        "en-US": "Malevento",
+        "source": "data.maps.malevento",
+        "zh-CN": "马莱温多"
+      },
+      {
+        "id": "midtown",
+        "en-US": "Midtown",
+        "source": "data.maps.midtown",
+        "zh-CN": "中城"
+      },
+      {
+        "id": "necropolis",
+        "en-US": "Necropolis",
+        "source": "data.maps.necropolis",
+        "zh-CN": "墓园"
+      },
+      {
+        "id": "neonJunction",
+        "en-US": "Neon Junction",
+        "source": "data.maps.neonJunction",
+        "zh-CN": "霓虹枢纽"
+      },
+      {
+        "id": "nepal",
+        "en-US": "Nepal",
+        "source": "data.maps.nepal",
+        "zh-CN": "尼泊尔"
+      },
+      {
+        "id": "nepalSanctum",
+        "en-US": "Nepal Sanctum",
+        "source": "data.maps.nepalSanctum",
+        "zh-CN": "尼泊尔圣所"
+      },
+      {
+        "id": "nepalShrine",
+        "en-US": "Nepal Shrine",
+        "source": "data.maps.nepalShrine",
+        "zh-CN": "尼泊尔圣坛"
+      },
+      {
+        "id": "nepalVillage",
+        "en-US": "Nepal Village",
+        "source": "data.maps.nepalVillage",
+        "zh-CN": "尼泊尔村庄"
+      },
+      {
+        "id": "nepalVillageWinter",
+        "en-US": "Nepal Village Winter",
+        "source": "data.maps.nepalVillageWinter",
+        "zh-CN": "圣诞节尼泊尔村庄"
+      },
+      {
+        "id": "newJunkCity",
+        "en-US": "New Junk City",
+        "source": "data.maps.newJunkCity",
+        "zh-CN": "新渣客城"
+      },
+      {
+        "id": "newQueenStreet",
+        "en-US": "New Queen Street",
+        "source": "data.maps.newQueenStreet",
+        "zh-CN": "新皇后街"
+      },
+      {
+        "id": "numbani",
+        "en-US": "Numbani",
+        "source": "data.maps.numbani",
+        "zh-CN": "努巴尼"
+      },
+      {
+        "id": "oasis",
+        "en-US": "Oasis",
+        "source": "data.maps.oasis",
+        "zh-CN": "绿洲城"
+      },
+      {
+        "id": "oasisCityCenter",
+        "en-US": "Oasis City Center",
+        "source": "data.maps.oasisCityCenter",
+        "zh-CN": "绿洲城中心"
+      },
+      {
+        "id": "oasisGardens",
+        "en-US": "Oasis Gardens",
+        "source": "data.maps.oasisGardens",
+        "zh-CN": "绿洲城花园"
+      },
+      {
+        "id": "oasisUniversity",
+        "en-US": "Oasis University",
+        "source": "data.maps.oasisUniversity",
+        "zh-CN": "绿洲城大学"
+      },
+      {
+        "id": "paraiso",
+        "en-US": "Paraíso",
+        "source": "data.maps.paraiso",
+        "zh-CN": "帕拉伊苏"
+      },
+      {
+        "id": "paris",
+        "en-US": "Paris",
+        "source": "data.maps.paris",
+        "zh-CN": "巴黎"
+      },
+      {
+        "id": "petra",
+        "en-US": "Petra",
+        "source": "data.maps.petra",
+        "zh-CN": "佩特拉"
+      },
+      {
+        "id": "placeLacroix",
+        "en-US": "Place Lacroix",
+        "source": "data.maps.placeLacroix"
+      },
+      {
+        "id": "practiceRange",
+        "en-US": "Practice Range",
+        "source": "data.maps.practiceRange",
+        "zh-CN": "训练靶场"
+      },
+      {
+        "id": "redwoodDam",
+        "en-US": "Redwood Dam",
+        "source": "data.maps.redwoodDam"
+      },
+      {
+        "id": "rialto",
+        "en-US": "Rialto",
+        "source": "data.maps.rialto",
+        "zh-CN": "里阿尔托"
+      },
+      {
+        "id": "route66",
+        "en-US": "Route 66",
+        "source": "data.maps.route66",
+        "zh-CN": "66号公路"
+      },
+      {
+        "id": "runasapi",
+        "en-US": "Runasapi",
+        "source": "data.maps.runasapi",
+        "zh-CN": "鲁纳塞彼"
+      },
+      {
+        "id": "samoa",
+        "en-US": "Samoa",
+        "source": "data.maps.samoa",
+        "zh-CN": "萨摩亚"
+      },
+      {
+        "id": "shambaliMonastery",
+        "en-US": "Shambali Monastery",
+        "source": "data.maps.shambaliMonastery",
+        "zh-CN": "香巴里寺院"
+      },
+      {
+        "id": "suravasa",
+        "en-US": "Suravasa",
+        "source": "data.maps.suravasa",
+        "zh-CN": "苏拉瓦萨"
+      },
+      {
+        "id": "sydneyHarbourArena",
+        "en-US": "Sydney Harbour Arena",
+        "source": "data.maps.sydneyHarbourArena",
+        "zh-CN": "悉尼海港竞技场"
+      },
+      {
+        "id": "sydneyHarbourArenaClassic",
+        "en-US": "Sydney Harbour Arena Classic",
+        "source": "data.maps.sydneyHarbourArenaClassic",
+        "zh-CN": "悉尼海港竞技场（经典）"
+      },
+      {
+        "id": "templeOfAnubis",
+        "en-US": "Temple of Anubis",
+        "source": "data.maps.templeOfAnubis",
+        "zh-CN": "阿努比斯神殿"
+      },
+      {
+        "id": "throneOfAnubis",
+        "en-US": "Throne of Anubis",
+        "source": "data.maps.throneOfAnubis",
+        "zh-CN": "阿努比斯王座"
+      },
+      {
+        "id": "volskaya",
+        "en-US": "Volskaya Industries",
+        "source": "data.maps.volskaya",
+        "zh-CN": "沃斯卡娅工业区"
+      },
+      {
+        "id": "watchpointGibraltar",
+        "en-US": "Watchpoint: Gibraltar",
+        "source": "data.maps.watchpointGibraltar",
+        "zh-CN": "监测站：直布罗陀"
+      },
+      {
+        "id": "workshopChamber",
+        "en-US": "Workshop Chamber",
+        "source": "data.maps.workshopChamber",
+        "zh-CN": "地图工坊室内"
+      },
+      {
+        "id": "workshopExpanse",
+        "en-US": "Workshop Expanse",
+        "source": "data.maps.workshopExpanse",
+        "zh-CN": "地图工坊空地"
+      },
+      {
+        "id": "workshopExpanseNight",
+        "en-US": "Workshop Expanse Night",
+        "source": "data.maps.workshopExpanseNight",
+        "zh-CN": "地图工坊空地（夜间）"
+      },
+      {
+        "id": "workshopGreenScreen",
+        "en-US": "Workshop Green Screen",
+        "source": "data.maps.workshopGreenScreen",
+        "zh-CN": "地图工坊绿幕"
+      },
+      {
+        "id": "workshopIsland",
+        "en-US": "Workshop Island",
+        "source": "data.maps.workshopIsland",
+        "zh-CN": "地图工坊岛屿"
+      },
+      {
+        "id": "workshopIslandNight",
+        "en-US": "Workshop Island Night",
+        "source": "data.maps.workshopIslandNight",
+        "zh-CN": "地图工坊岛屿（夜间）"
+      }
+    ],
+    "heroes": [
+      {
+        "id": "ana",
+        "en-US": "Ana",
+        "source": "data.heroes.ana",
+        "zh-CN": "安娜"
+      },
+      {
+        "id": "anran",
+        "en-US": "Anran",
+        "source": "data.heroes.anran",
+        "zh-CN": "安燃"
+      },
+      {
+        "id": "ashe",
+        "en-US": "Ashe",
+        "source": "data.heroes.ashe",
+        "zh-CN": "艾什"
+      },
+      {
+        "id": "baptiste",
+        "en-US": "Baptiste",
+        "source": "data.heroes.baptiste",
+        "zh-CN": "巴蒂斯特"
+      },
+      {
+        "id": "bastion",
+        "en-US": "Bastion",
+        "source": "data.heroes.bastion",
+        "zh-CN": "堡垒"
+      },
+      {
+        "id": "brigitte",
+        "en-US": "Brigitte",
+        "source": "data.heroes.brigitte",
+        "zh-CN": "布丽吉塔"
+      },
+      {
+        "id": "cassidy",
+        "en-US": "Cassidy",
+        "source": "data.heroes.cassidy",
+        "zh-CN": "卡西迪"
+      },
+      {
+        "id": "dmon",
+        "en-US": "D.Mon",
+        "source": "data.heroes.dmon"
+      },
+      {
+        "id": "domina",
+        "en-US": "Domina",
+        "source": "data.heroes.domina",
+        "zh-CN": "金驭"
+      },
+      {
+        "id": "doomfist",
+        "en-US": "Doomfist",
+        "source": "data.heroes.doomfist",
+        "zh-CN": "末日铁拳"
+      },
+      {
+        "id": "dva",
+        "en-US": "D.Va",
+        "source": "data.heroes.dva",
+        "zh-CN": "D.Va"
+      },
+      {
+        "id": "echo",
+        "en-US": "Echo",
+        "source": "data.heroes.echo",
+        "zh-CN": "回声"
+      },
+      {
+        "id": "emre",
+        "en-US": "Emre",
+        "source": "data.heroes.emre",
+        "zh-CN": "埃姆雷"
+      },
+      {
+        "id": "freja",
+        "en-US": "Freja",
+        "source": "data.heroes.freja",
+        "zh-CN": "弗蕾娅"
+      },
+      {
+        "id": "genji",
+        "en-US": "Genji",
+        "source": "data.heroes.genji",
+        "zh-CN": "源氏"
+      },
+      {
+        "id": "hanzo",
+        "en-US": "Hanzo",
+        "source": "data.heroes.hanzo",
+        "zh-CN": "半藏"
+      },
+      {
+        "id": "hazard",
+        "en-US": "Hazard",
+        "source": "data.heroes.hazard",
+        "zh-CN": "骇灾"
+      },
+      {
+        "id": "illari",
+        "en-US": "Illari",
+        "source": "data.heroes.illari",
+        "zh-CN": "伊拉锐"
+      },
+      {
+        "id": "jetpackCat",
+        "en-US": "Jetpack Cat",
+        "source": "data.heroes.jetpackCat",
+        "zh-CN": "飞天猫"
+      },
+      {
+        "id": "junkerQueen",
+        "en-US": "Junker Queen",
+        "source": "data.heroes.junkerQueen",
+        "zh-CN": "渣客女王"
+      },
+      {
+        "id": "junkrat",
+        "en-US": "Junkrat",
+        "source": "data.heroes.junkrat",
+        "zh-CN": "狂鼠"
+      },
+      {
+        "id": "juno",
+        "en-US": "Juno",
+        "source": "data.heroes.juno",
+        "zh-CN": "朱诺"
+      },
+      {
+        "id": "kiriko",
+        "en-US": "Kiriko",
+        "source": "data.heroes.kiriko",
+        "zh-CN": "雾子"
+      },
+      {
+        "id": "lifeweaver",
+        "en-US": "Lifeweaver",
+        "source": "data.heroes.lifeweaver",
+        "zh-CN": "生命之梭"
+      },
+      {
+        "id": "lucio",
+        "en-US": "Lúcio",
+        "source": "data.heroes.lucio",
+        "zh-CN": "卢西奥"
+      },
+      {
+        "id": "mauga",
+        "en-US": "Mauga",
+        "source": "data.heroes.mauga",
+        "zh-CN": "毛加"
+      },
+      {
+        "id": "mei",
+        "en-US": "Mei",
+        "source": "data.heroes.mei",
+        "zh-CN": "美"
+      },
+      {
+        "id": "mercy",
+        "en-US": "Mercy",
+        "source": "data.heroes.mercy",
+        "zh-CN": "天使"
+      },
+      {
+        "id": "mizuki",
+        "en-US": "Mizuki",
+        "source": "data.heroes.mizuki",
+        "zh-CN": "瑞稀"
+      },
+      {
+        "id": "moira",
+        "en-US": "Moira",
+        "source": "data.heroes.moira",
+        "zh-CN": "莫伊拉"
+      },
+      {
+        "id": "orisa",
+        "en-US": "Orisa",
+        "source": "data.heroes.orisa",
+        "zh-CN": "奥丽莎"
+      },
+      {
+        "id": "pharah",
+        "en-US": "Pharah",
+        "source": "data.heroes.pharah",
+        "zh-CN": "法老之鹰"
+      },
+      {
+        "id": "ramattra",
+        "en-US": "Ramattra",
+        "source": "data.heroes.ramattra",
+        "zh-CN": "拉玛刹"
+      },
+      {
+        "id": "reaper",
+        "en-US": "Reaper",
+        "source": "data.heroes.reaper",
+        "zh-CN": "死神"
+      },
+      {
+        "id": "reinhardt",
+        "en-US": "Reinhardt",
+        "source": "data.heroes.reinhardt",
+        "zh-CN": "莱因哈特"
+      },
+      {
+        "id": "roadhog",
+        "en-US": "Roadhog",
+        "source": "data.heroes.roadhog",
+        "zh-CN": "路霸"
+      },
+      {
+        "id": "shion",
+        "en-US": "Shion",
+        "source": "data.heroes.shion",
+        "zh-CN": "死怨"
+      },
+      {
+        "id": "sierra",
+        "en-US": "Sierra",
+        "source": "data.heroes.sierra",
+        "zh-CN": "西拉"
+      },
+      {
+        "id": "sigma",
+        "en-US": "Sigma",
+        "source": "data.heroes.sigma",
+        "zh-CN": "西格玛"
+      },
+      {
+        "id": "sojourn",
+        "en-US": "Sojourn",
+        "source": "data.heroes.sojourn",
+        "zh-CN": "索杰恩"
+      },
+      {
+        "id": "soldier",
+        "en-US": "Soldier: 76",
+        "source": "data.heroes.soldier",
+        "zh-CN": "士兵：76"
+      },
+      {
+        "id": "sombra",
+        "en-US": "Sombra",
+        "source": "data.heroes.sombra",
+        "zh-CN": "黑影"
+      },
+      {
+        "id": "symmetra",
+        "en-US": "Symmetra",
+        "source": "data.heroes.symmetra",
+        "zh-CN": "秩序之光"
+      },
+      {
+        "id": "torbjorn",
+        "en-US": "Torbjörn",
+        "source": "data.heroes.torbjorn",
+        "zh-CN": "托比昂"
+      },
+      {
+        "id": "tracer",
+        "en-US": "Tracer",
+        "source": "data.heroes.tracer",
+        "zh-CN": "猎空"
+      },
+      {
+        "id": "vendetta",
+        "en-US": "Vendetta",
+        "source": "data.heroes.vendetta",
+        "zh-CN": "斩仇"
+      },
+      {
+        "id": "venture",
+        "en-US": "Venture",
+        "source": "data.heroes.venture",
+        "zh-CN": "探奇"
+      },
+      {
+        "id": "widowmaker",
+        "en-US": "Widowmaker",
+        "source": "data.heroes.widowmaker",
+        "zh-CN": "黑百合"
+      },
+      {
+        "id": "winston",
+        "en-US": "Winston",
+        "source": "data.heroes.winston",
+        "zh-CN": "温斯顿"
+      },
+      {
+        "id": "wreckingBall",
+        "en-US": "Wrecking Ball",
+        "source": "data.heroes.wreckingBall",
+        "zh-CN": "破坏球"
+      },
+      {
+        "id": "wuyang",
+        "en-US": "Wuyang",
+        "source": "data.heroes.wuyang",
+        "zh-CN": "无漾"
+      },
+      {
+        "id": "zarya",
+        "en-US": "Zarya",
+        "source": "data.heroes.zarya",
+        "zh-CN": "查莉娅"
+      },
+      {
+        "id": "zenyatta",
+        "en-US": "Zenyatta",
+        "source": "data.heroes.zenyatta",
+        "zh-CN": "禅雅塔"
+      }
+    ]
+  },
+  "settingsGroups": [
+    {
+      "en-US": "extensions",
+      "source": "data.customGameSettings.extensions",
+      "zh-CN": "扩展"
+    },
+    {
+      "en-US": "heroes",
+      "source": "data.customGameSettings.heroes",
+      "zh-CN": "英雄"
+    },
+    {
+      "en-US": "lobby",
+      "source": "data.customGameSettings.lobby",
+      "zh-CN": "大厅"
+    },
+    {
+      "en-US": "main",
+      "source": "data.customGameSettings.main",
+      "zh-CN": "主程序"
+    },
+    {
+      "en-US": "modes",
+      "source": "data.customGameSettings.gamemodes",
+      "zh-CN": "模式"
+    },
+    {
+      "en-US": "workshop",
+      "source": "data.customGameSettings.workshop",
+      "zh-CN": "地图工坊"
+    }
+  ]
+}

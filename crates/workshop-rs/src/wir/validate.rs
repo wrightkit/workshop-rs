@@ -103,6 +103,10 @@ fn check_action(program: &Program, id: super::ActionId) -> Result<(), IrError> {
             }
             check_value(program, *value)
         }
+        Action::AssignMember { target, value, .. } => {
+            check_value(program, *target)?;
+            check_value(program, *value)
+        }
         Action::CallSubroutine { subroutine, .. } => {
             if !program.subroutines.contains(*subroutine) {
                 return Err(dangling("subroutine", subroutine.index()));
@@ -216,6 +220,11 @@ fn check_value(program: &Program, id: super::ValueId) -> Result<(), IrError> {
                 return Err(dangling("global variable", variable.index()));
             }
         }
+        Value::Subroutine(subroutine) => {
+            if !program.subroutines.contains(*subroutine) {
+                return Err(dangling("subroutine", subroutine.index()));
+            }
+        }
         Value::Call { args, .. } => {
             for arg in args {
                 check_value(program, *arg)?;
@@ -264,6 +273,13 @@ fn check_settings(settings: &IrSettings, program: &Program) -> Result<(), IrErro
 
 fn check_settings_node(node: &IrSettingsNode, program: &Program) -> Result<(), IrError> {
     match node {
+        IrSettingsNode::Workshop { children, span } => {
+            check_span(*span, program)?;
+            for child in children {
+                check_settings_node(child, program)?;
+            }
+            Ok(())
+        }
         IrSettingsNode::Group { children, span, .. } => {
             check_span(*span, program)?;
             for child in children {
@@ -273,6 +289,7 @@ fn check_settings_node(node: &IrSettingsNode, program: &Program) -> Result<(), I
         }
         IrSettingsNode::Number { span, .. }
         | IrSettingsNode::Bool { span, .. }
+        | IrSettingsNode::Flag { span, .. }
         | IrSettingsNode::String { span, .. }
         | IrSettingsNode::Raw { span, .. } => check_span(*span, program),
         IrSettingsNode::List { elements, span, .. } => {

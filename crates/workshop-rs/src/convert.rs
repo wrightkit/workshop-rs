@@ -64,7 +64,7 @@ pub fn convert_with_context(
     let emit_options = EmitOptions {
         fallback_locale: options.fallback_locale.clone(),
     };
-    let output = emitter::emit_with_options(&program, catalog, to, &emit_options)?;
+    let output = emitter::emit_with_options_for_conversion(&program, catalog, to, &emit_options)?;
     Ok(Conversion {
         text: output.text,
         fallback_ids: output.fallback_ids,

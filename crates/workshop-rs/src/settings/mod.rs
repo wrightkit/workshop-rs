@@ -22,6 +22,11 @@ pub struct Settings {
 /// One member of a settings group.
 #[derive(Debug, Clone)]
 pub enum SettingsNode {
+    /// User-authored mode data under `settings.workshop`.
+    Workshop {
+        children: Vec<SettingsNode>,
+        span: Option<Span>,
+    },
     Group {
         name: String,
         children: Vec<SettingsNode>,
@@ -37,6 +42,8 @@ pub enum SettingsNode {
         value: bool,
         span: Option<Span>,
     },
+    /// A presence-only Workshop extension setting (for example `Beam Effects`).
+    Flag { name: String, span: Option<Span> },
     String {
         name: String,
         value: String,
@@ -68,9 +75,11 @@ impl SettingsNode {
     /// The source span of this node, if any.
     pub fn span(&self) -> Option<Span> {
         match self {
-            SettingsNode::Group { span, .. }
+            SettingsNode::Workshop { span, .. }
+            | SettingsNode::Group { span, .. }
             | SettingsNode::Number { span, .. }
             | SettingsNode::Bool { span, .. }
+            | SettingsNode::Flag { span, .. }
             | SettingsNode::String { span, .. }
             | SettingsNode::List { span, .. }
             | SettingsNode::Raw { span, .. } => *span,
@@ -80,9 +89,11 @@ impl SettingsNode {
     /// The key name of this node.
     pub fn name(&self) -> &str {
         match self {
+            SettingsNode::Workshop { .. } => "workshop",
             SettingsNode::Group { name, .. }
             | SettingsNode::Number { name, .. }
             | SettingsNode::Bool { name, .. }
+            | SettingsNode::Flag { name, .. }
             | SettingsNode::String { name, .. }
             | SettingsNode::List { name, .. }
             | SettingsNode::Raw { name, .. } => name,

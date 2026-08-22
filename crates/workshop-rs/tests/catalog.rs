@@ -25,13 +25,11 @@ fn builtin_catalog_loads_and_declares_en_us_and_zh_cn() {
         catalog.locale_coverage(&en()).mapped,
         catalog.locale_coverage(&en()).total
     );
-    // zh-CN is the evidence-backed corpus locale and is complete for the
-    // canonical entries consumed by the raw-project corpus.
+    // zh-CN is an evidence-backed locale whose missing spellings remain
+    // explicit as the canonical surface grows.
     assert!(catalog.supports(&Locale::new("zh-CN")));
-    assert_eq!(
-        catalog.locale_coverage(&Locale::new("zh-CN")).mapped,
-        catalog.locale_coverage(&Locale::new("zh-CN")).total
-    );
+    let zh = catalog.locale_coverage(&Locale::new("zh-CN"));
+    assert!(zh.mapped > 0 && zh.mapped < zh.total);
 }
 
 #[test]
@@ -66,6 +64,28 @@ fn localized_spelling_resolves_to_canonical_id_and_back() {
 }
 
 #[test]
+fn reviewed_locale_alias_conflicts_resolve_to_one_canonical_identity() {
+    let catalog = builtin();
+    for spelling in ["中止", "中断"] {
+        let entry = catalog
+            .resolve(Kind::Action, &Locale::new("zh-CN"), spelling)
+            .expect("reviewed alias resolves");
+        assert_eq!(entry.id, "abort");
+    }
+    assert_eq!(
+        catalog.spelling(Kind::Action, &Locale::new("zh-CN"), "abort"),
+        Some("中止")
+    );
+    assert_eq!(
+        catalog
+            .entry(Kind::Action, "abort")
+            .expect("abort entry")
+            .spellings(&Locale::new("zh-CN")),
+        &["中止".to_string(), "中断".to_string()]
+    );
+}
+
+#[test]
 fn enums_resolve_members_to_canonical_identity() {
     let catalog = builtin();
     assert_eq!(
@@ -83,6 +103,29 @@ fn enums_resolve_members_to_canonical_identity() {
     assert_eq!(
         catalog.resolve_enum_member("Wait", &en(), "Ignore Condition"),
         Some(("Wait".to_string(), "IGNORE_CONDITION".to_string()))
+    );
+}
+
+#[test]
+fn localized_enum_domains_and_real_project_values_resolve_canonically() {
+    let catalog = builtin();
+    let zh = Locale::new("zh-CN");
+    assert_eq!(catalog.resolve_enum_domain(&zh, "按钮"), Some("Button"));
+    assert_eq!(
+        catalog.resolve_enum_member("Button", &zh, "技能1"),
+        Some(("Button".to_string(), "ABILITY_1".to_string()))
+    );
+    assert_eq!(
+        catalog
+            .resolve(Kind::Value, &zh, "射线命中位置")
+            .map(|entry| entry.id.as_str()),
+        Some("raycastHitPosition")
+    );
+    assert_eq!(
+        catalog
+            .resolve(Kind::Value, &zh, "空")
+            .map(|entry| entry.id.as_str()),
+        Some("null")
     );
 }
 
@@ -254,6 +297,46 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
             .resolve(Kind::Value, &en(), "Workshop Setting Combo")
             .is_some()
     );
+}
+
+#[test]
+fn evidence_backed_signature_types_are_exposed() {
+    let catalog = builtin();
+    let max_health = catalog
+        .entry(Kind::Value, "getMaxHealth")
+        .expect("getMaxHealth");
+    assert_eq!(max_health.param_type(0), Some("Player"));
+    assert_eq!(max_health.return_type(), Some("Number"));
+    assert_eq!(
+        catalog
+            .entry(Kind::Action, "setCrouchEnabled")
+            .expect("setCrouchEnabled")
+            .param_type(1),
+        Some("Boolean")
+    );
+}
+
+#[test]
+fn documented_action_and_value_signatures_are_inventory_entries() {
+    let catalog = builtin();
+    let indexed = catalog
+        .entry(Kind::Action, "setPlayerVariableAtIndex")
+        .expect("indexed player-variable action");
+    assert_eq!(indexed.params, ["Variable", "Index", "Value"]);
+    assert_eq!(indexed.param_type(0), Some("Player Variable"));
+    assert_eq!(indexed.param_type(2), Some("Object|Array"));
+
+    let custom_string = catalog
+        .entry(Kind::Value, "customString")
+        .expect("custom string");
+    assert_eq!(custom_string.param_count(), 4);
+    assert_eq!(custom_string.required_param_count(), 1);
+    assert_eq!(custom_string.return_type(), Some("String"));
+
+    let array = catalog.entry(Kind::Value, "array").expect("array");
+    assert!(array.variadic);
+    assert_eq!(array.return_type(), Some("Array"));
+    assert_eq!(array.param_type(3), Some("Object|Array"));
 }
 
 #[test]

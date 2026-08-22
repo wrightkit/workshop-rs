@@ -2,7 +2,7 @@
 
 use crate::source::Span;
 
-use super::{Action, Event, EventTarget, EventTeam, PlayerEventKind, Program, Value};
+use super::{Action, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Program, Value};
 
 /// Render a deterministic, human-readable dump of the workshop program.
 pub(crate) fn dump(program: &Program) -> String {
@@ -188,6 +188,26 @@ fn render_action(program: &Program, id: super::ActionId, out: &mut String, level
                 variable.index(),
             ));
             out.push_str(&format!(" {} ", op.as_str()));
+            render_value(program, *value, out);
+            out.push_str(&format!("{}\n", span_suffix(*span)));
+        }
+        Action::AssignMember {
+            target,
+            op,
+            value,
+            span,
+        } => {
+            out.push_str(&format!("{}assignMember ", indent(level)));
+            render_value(program, *target, out);
+            out.push_str(match op {
+                None => " = ",
+                Some(ModifyOp::Add) => " += ",
+                Some(ModifyOp::Subtract) => " -= ",
+                Some(ModifyOp::Multiply) => " *= ",
+                Some(ModifyOp::Divide) => " /= ",
+                Some(ModifyOp::Modulo) => " %= ",
+                Some(_) => " <unsupported> ",
+            });
             render_value(program, *value, out);
             out.push_str(&format!("{}\n", span_suffix(*span)));
         }
@@ -377,6 +397,13 @@ fn render_value(program: &Program, id: super::ValueId, out: &mut String) {
                 variable.index(),
             ));
         }
+        Value::Subroutine(subroutine) => out.push_str(
+            &program
+                .subroutines
+                .get(*subroutine)
+                .map(|value| value.name.clone())
+                .unwrap_or_else(|| format!("<dangling subroutine {}>", subroutine.index())),
+        ),
         Value::EventPlayer => out.push_str("eventPlayer"),
         Value::Call { name, args } => {
             out.push_str(name);

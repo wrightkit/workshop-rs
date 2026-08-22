@@ -296,6 +296,9 @@ pub enum Value {
         player: ValueId,
         variable: PlayerVarId,
     },
+    /// A declared Workshop subroutine referenced by a generic action such as
+    /// `Start Rule`. The identity is source-owned, not a catalog builtin.
+    Subroutine(SubroutineId),
     EventPlayer,
     /// A function call over workshop values.
     Call {
@@ -345,6 +348,15 @@ pub enum Action {
         span: Option<Span>,
         /// The exact span of the modified variable identifier.
         target_span: Option<Span>,
+    },
+    /// Assignment to a dynamic Workshop object member, optionally through an
+    /// indexed `memberAccess` value. This is source semantics, not a builtin
+    /// catalog action; the emitter preserves the member-assignment syntax.
+    AssignMember {
+        target: ValueId,
+        op: Option<ModifyOp>,
+        value: ValueId,
+        span: Option<Span>,
     },
     CallSubroutine {
         subroutine: SubroutineId,
@@ -408,6 +420,7 @@ impl Action {
             | Action::ModifyGlobalVariable { span, .. }
             | Action::SetPlayerVariable { span, .. }
             | Action::ModifyPlayerVariable { span, .. }
+            | Action::AssignMember { span, .. }
             | Action::CallSubroutine { span, .. }
             | Action::If { span, .. }
             | Action::While { span, .. }

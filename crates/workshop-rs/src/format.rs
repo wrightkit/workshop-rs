@@ -18,8 +18,10 @@ pub fn format_number(value: f64) -> String {
     if value == 0.0 {
         return "0".to_string();
     }
-    if value.fract() == 0.0 && value.abs() < 1e15 {
-        return format!("{}", value as i64);
+    let rounded = value.round();
+    let near_integer = (value - rounded).abs() <= f64::EPSILON * value.abs().max(1.0) * 4.0;
+    if near_integer && rounded.abs() < 1e15 {
+        return format!("{}", rounded as i64);
     }
     truncate_significant(&format!("{value}"), 16)
 }

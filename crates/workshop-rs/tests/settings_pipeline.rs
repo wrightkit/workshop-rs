@@ -4,7 +4,7 @@
 use std::path::{Path, PathBuf};
 
 use workshop_rs::catalog::{Catalog, Locale};
-use workshop_rs::{convert, emitter, parser, roundtrip};
+use workshop_rs::{convert, emitter, parser, roundtrip, semantic};
 
 fn fixture_path(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -98,6 +98,87 @@ fn supported_apostrophe_map_name_parses() {
 }
 
 #[test]
+fn generated_capture_the_flag_settings_surface_is_canonical() {
+    let catalog = catalog();
+    let source = "settings { modes { Capture The Flag { enabled maps { Ayutthaya } Flag Score Respawn Time: 15 Flag Return Time: 4 Flag Dropped Lock Time: 5 } } }";
+    let program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("parses");
+    assert!(
+        program
+            .semantic_issues(&catalog)
+            .iter()
+            .all(|issue| { issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting })
+    );
+}
+
+#[test]
+fn pinned_ai_hero_setting_aliases_are_canonical() {
+    let catalog = catalog();
+    let source = "设置 { 英雄 { 综合 { 索杰恩 { 充能速度 充能射击: 200% } 路霸 { 呼吸器充能速度: 150% } 骇灾 { 尖刺护体资源恢复: 150% 尖刺护体资源消耗: 50% } } } }";
+    let program = parser::parse(source, &catalog, &Locale::new("zh-CN")).expect("parses");
+    assert!(
+        program
+            .semantic_issues(&catalog)
+            .iter()
+            .all(|issue| { issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting })
+    );
+}
+
+#[test]
+fn mixed_locale_primary_hero_setting_name_is_canonical() {
+    let catalog = catalog();
+    let source = "设置 { 英雄 { 队伍1 { D.Mon { 伤害量: 140% } } } }";
+    let program = parser::parse(source, &catalog, &Locale::new("zh-CN"))
+        .expect("primary-locale D.Mon spelling parses in mixed zh-CN output");
+    assert!(
+        program
+            .semantic_issues(&catalog)
+            .iter()
+            .all(|issue| { issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting })
+    );
+}
+
+#[test]
+fn team_deathmatch_enabled_maps_is_canonical() {
+    let text = r#"
+        settings {
+            modes {
+                Team Deathmatch {
+                    enabled maps { }
+                }
+            }
+        }
+    "#;
+    let catalog = Catalog::builtin().unwrap();
+    let program = parser::parse_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("Team Deathmatch enabled maps must parse");
+    let emitted = emitter::emit(&program, &catalog, &Locale::new("en-US"))
+        .expect("Team Deathmatch enabled maps must emit");
+    assert!(emitted.contains("Team Deathmatch"));
+    let reparsed = parser::parse_with_context(&emitted, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("emitted Team Deathmatch settings must reparse");
+    assert!(roundtrip::equivalent(&program, &reparsed));
+}
+
+#[test]
+fn canonical_percent_setting_keys_parse_from_mixed_locale_exports() {
+    let text = r#"
+        settings {
+            heroes {
+                General {
+                    Roadhog {
+                        secondaryFireRechargeRate%: 150
+                        secondaryFireCooldown%: 480
+                    }
+                }
+            }
+        }
+    "#;
+    let catalog = Catalog::builtin().unwrap();
+    parser::parse_with_context(text, &catalog, &Locale::new("zh-CN"), &catalog)
+        .expect("canonical percent setting keys must parse");
+}
+
+#[test]
 fn supported_dva_name_parses() {
     let catalog = catalog();
     let source =
@@ -122,4 +203,90 @@ fn hero_ability_names_resolve_through_gameplay_catalog_in_both_locales() {
     let back = emitter::emit(&reparsed, &catalog, &en).expect("English ability names re-emit");
     assert!(back.contains("Cryo-Freeze: Off"));
     assert!(back.contains("Ice Wall: On"));
+}
+
+#[test]
+fn disabled_maps_is_a_known_symmetric_settings_list() {
+    let catalog = catalog();
+    let source = "settings { modes { disabled Skirmish { disabled maps {\nKing's Row Winter\nWorkshop Island\n} } } }";
+    let program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("parses");
+    let issues = program.semantic_issues(&catalog);
+    assert!(
+        issues
+            .iter()
+            .all(|issue| issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting),
+        "known disabled-map settings must not remain raw: {issues:?}"
+    );
+    let emitted = emitter::emit(&program, &catalog, &Locale::new("en-US")).expect("emits");
+    assert!(emitted.contains("disabled Skirmish"));
+    assert!(emitted.contains("disabled maps"));
+    assert!(emitted.contains("King's Row Winter"));
+    assert!(emitted.contains("Workshop Island"));
+}
+
+#[test]
+fn unknown_settings_list_members_remain_semantically_incomplete() {
+    let catalog = catalog();
+    let source = "settings { modes { Skirmish { enabled maps { Future Map } } } }";
+    let program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("preserves");
+    assert!(program.semantic_issues(&catalog).iter().any(|issue| {
+        issue.kind == workshop_rs::semantic::IncompletenessKind::RawSetting
+            && issue.name == "enabledMaps"
+    }));
+}
+
+#[test]
+fn workshop_namespace_preserves_custom_settings_without_residuals() {
+    let source = r#"settings {
+ workshop {
+  AI-PVE {
+   Custom Label: "Keep this"
+   Custom Number: 42
+  }
+ }
+}"#;
+    let catalog = Catalog::builtin().expect("catalog");
+    let locale = Locale::new("en-US");
+    let program = parser::parse(source, &catalog, &locale).expect("custom settings parse");
+    assert!(
+        semantic::inspect(&program, &catalog).is_empty(),
+        "issues: {:?}, settings: {:?}",
+        semantic::inspect(&program, &catalog),
+        program.settings
+    );
+    let emitted = emitter::emit(&program, &catalog, &locale).expect("custom settings emit");
+    let reparsed = parser::parse(&emitted, &catalog, &locale).expect("custom settings reparse");
+    assert!(roundtrip::equivalent(&program, &reparsed));
+    assert!(emitted.contains("Custom Label: \"Keep this\""));
+    assert!(emitted.contains("Custom Number: 42"));
+}
+
+#[test]
+fn localized_workshop_namespace_is_known() {
+    assert_eq!(
+        workshop_rs::settings::table::localized_name("zh-CN", "namespaces", "workshop"),
+        Some("地图工坊")
+    );
+    let source = "settings { 地图工坊 { 自定义: 1 } }";
+    let catalog = Catalog::builtin().expect("catalog");
+    let program = parser::parse(source, &catalog, &Locale::new("zh-CN")).expect("parse");
+    assert!(
+        semantic::inspect(&program, &catalog).is_empty(),
+        "issues: {:?}, settings: {:?}",
+        semantic::inspect(&program, &catalog),
+        program.settings
+    );
+}
+
+#[test]
+fn localized_wrecking_ball_settings_aliases_are_known() {
+    let source = "settings { heroes { 综合 { 破坏球 {\n工程抓钩冷却时间: 80%\n感应护盾冷却时间: 80%\n重力坠击冷却时间: 75%\n} } } }";
+    let catalog = Catalog::builtin().expect("catalog");
+    let program = parser::parse(source, &catalog, &Locale::new("zh-CN")).expect("parse");
+    assert!(
+        semantic::inspect(&program, &catalog).is_empty(),
+        "issues: {:?}, settings: {:?}",
+        semantic::inspect(&program, &catalog),
+        program.settings
+    );
 }

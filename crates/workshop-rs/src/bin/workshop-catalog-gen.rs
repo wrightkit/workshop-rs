@@ -51,7 +51,7 @@ const DEFAULT_FILE: &str = "crates/workshop-rs/src/catalog/data/catalog.json";
 const DEFAULT_OUT_DIR: &str = "tools/corpus";
 
 /// The default settings locale corpus output file.
-const DEFAULT_SETTINGS_OUT: &str = "crates/workshop-rs/src/settings/data/zh-cn.json";
+const DEFAULT_SETTINGS_OUT: &str = "crates/workshop-rs/src/settings/data/locales.json";
 
 /// The environment variable naming the Workshop data export path.
 const EXPORT_ENV: &str = "WORKSHOP_DATA_EXPORT";
@@ -213,11 +213,12 @@ mod corpus {
     use serde_json::{Map, Value};
 
     /// A match candidate inside the export: the export key (for provenance)
-    /// and the zh-CN spelling.
+    /// and every reviewed locale spelling.
     #[derive(Debug, Clone)]
     struct Candidate {
         key: String,
         zh_cn: String,
+        locales: std::collections::BTreeMap<String, String>,
     }
 
     /// An exact-en-US-spelling index over a slice of the export.
@@ -227,14 +228,21 @@ mod corpus {
     }
 
     impl Index {
-        fn add(&mut self, key: &str, en: &str, zh: &str) {
+        fn add_translations(&mut self, key: &str, en: &str, zh: &str, locales: Map<String, Value>) {
             if !en.is_empty() && !zh.is_empty() {
+                let aliases = locales
+                    .into_iter()
+                    .filter_map(|(locale, value)| {
+                        value.as_str().map(|value| (locale, value.to_string()))
+                    })
+                    .collect();
                 self.by_en
                     .entry(en.to_string())
                     .or_default()
                     .push(Candidate {
                         key: key.to_string(),
                         zh_cn: zh.to_string(),
+                        locales: aliases,
                     });
             }
         }
@@ -276,7 +284,12 @@ mod corpus {
             let en = translations.get("en-US").and_then(Value::as_str);
             let zh = translations.get("zh-CN").and_then(Value::as_str);
             if let (Some(en), Some(zh)) = (en, zh) {
-                index.add(key, en, zh);
+                index.add_translations(
+                    key,
+                    en,
+                    zh,
+                    translations.as_object().cloned().unwrap_or_default(),
+                );
             }
         }
         index
@@ -297,7 +310,12 @@ mod corpus {
             let en = entry.get("en-US").and_then(Value::as_str);
             let zh = entry.get("zh-CN").and_then(Value::as_str);
             if let (Some(en), Some(zh)) = (en, zh) {
-                index.add(&format!("data.{section}.{id}"), en, zh);
+                index.add_translations(
+                    &format!("data.{section}.{id}"),
+                    en,
+                    zh,
+                    entry.clone().as_object().cloned().unwrap_or_default(),
+                );
             }
         }
         index
@@ -319,7 +337,12 @@ mod corpus {
             let en = entry.get("en-US").and_then(Value::as_str);
             let zh = entry.get("zh-CN").and_then(Value::as_str);
             if let (Some(en), Some(zh)) = (en, zh) {
-                index.add(&format!("data.{parent}.{section}.{id}"), en, zh);
+                index.add_translations(
+                    &format!("data.{parent}.{section}.{id}"),
+                    en,
+                    zh,
+                    entry.clone().as_object().cloned().unwrap_or_default(),
+                );
             }
         }
         index
@@ -450,9 +473,19 @@ mod corpus {
         } else {
             export_zh_cn
         };
+        let mut locales = translations.as_object()?.clone();
+        if kind == "operator" {
+            locales.insert("zh-CN".to_string(), Value::String(id.to_string()));
+        }
         Some(vec![Candidate {
             key: key.to_string(),
             zh_cn: zh_cn.to_string(),
+            locales: locales
+                .into_iter()
+                .filter_map(|(locale, value)| {
+                    value.as_str().map(|value| (locale, value.to_string()))
+                })
+                .collect(),
         }])
     }
 
@@ -510,7 +543,7 @@ mod corpus {
         // (the mode header's `disabled` prefix instead) and are excluded.
         let mut labels: Vec<(String, String)> = Vec::new();
         let mut seen = std::collections::HashSet::new();
-        for entry in table::ENTRIES {
+        for entry in table::entries() {
             if matches!(entry.path.last(), Some(table::PathPart::Part("enabled"))) {
                 continue;
             }
@@ -523,14 +556,17 @@ mod corpus {
         }
         let modes = table::MODE_NAMES
             .iter()
+            .chain(table::GENERATED_MODE_NAMES.iter())
             .map(|m| (format!("mode.{}.name", m.key), m.name.to_string()))
             .collect();
         let maps = table::MAP_NAMES
             .iter()
+            .chain(table::GENERATED_MAP_NAMES.iter())
             .map(|m| (format!("map.{}.name", m.key), m.name.to_string()))
             .collect();
         let heroes = table::HERO_NAMES
             .iter()
+            .chain(table::GENERATED_HERO_NAMES.iter())
             .map(|m| (format!("hero.{}.name", m.key), m.name.to_string()))
             .collect();
         let teams = table::TEAM_NAMES
@@ -539,6 +575,7 @@ mod corpus {
             .collect();
         let enums = table::ENUM_MEMBERS
             .iter()
+            .chain(table::GENERATED_ENUM_MEMBERS.iter())
             .map(|m| {
                 (
                     format!("enum.{}.{}", m.domain, m.member),
@@ -780,6 +817,8 @@ mod corpus {
         // --- merge zh-CN aliases into the catalog data -----------------------
         let merged = merge_zh_aliases(&catalog, &matches)?;
         let merged_text = canonical_json(&merged)?;
+        Catalog::load_unverified(&merged_text)
+            .map_err(|error| format!("merged catalog is invalid: {error}"))?;
         std::fs::write(catalog_file, &merged_text)
             .map_err(|error| format!("cannot write {}: {error}", catalog_file.display()))?;
 
@@ -920,16 +959,31 @@ mod corpus {
         Ok(merged)
     }
 
-    /// Set (or verify) the zh-CN alias of one catalog entry.
+    /// Set (or extend) the reviewed zh-CN aliases of one catalog entry.
     fn set_zh_alias(entry: &mut Value, zh: &str) -> Result<(), String> {
         let Some(aliases) = entry.get_mut("aliases").and_then(Value::as_object_mut) else {
             return Err("catalog entry without aliases object".to_string());
         };
-        match aliases.get("zh-CN") {
-            Some(existing) if existing.as_str() == Some(zh) => {}
+        match aliases.remove("zh-CN") {
+            Some(Value::String(existing)) if existing == zh => {
+                aliases.insert("zh-CN".to_string(), Value::String(existing));
+            }
+            Some(Value::String(existing)) => {
+                aliases.insert(
+                    "zh-CN".to_string(),
+                    Value::Array(vec![Value::String(existing), Value::String(zh.to_string())]),
+                );
+            }
+            Some(Value::Array(existing)) => {
+                let mut existing = existing;
+                if !existing.iter().any(|alias| alias.as_str() == Some(zh)) {
+                    existing.push(Value::String(zh.to_string()));
+                }
+                aliases.insert("zh-CN".to_string(), Value::Array(existing));
+            }
             Some(existing) => {
                 return Err(format!(
-                    "catalog already declares zh-CN '{existing}' but the corpus yields '{zh}'"
+                    "catalog declares invalid zh-CN aliases value {existing}"
                 ));
             }
             None => {
@@ -990,7 +1044,7 @@ mod corpus {
             serde_json::json!({ "matched": total_matched, "total": total_entries }),
         );
         serde_json::json!({
-            "schemaVersion": 1,
+            "schemaVersion": 2,
             "locale": "zh-CN",
             "generator": "workshop-catalog-gen corpus",
             "generatorVersion": env!("CARGO_PKG_VERSION"),
@@ -1065,27 +1119,13 @@ mod corpus {
                 match index.match_spelling(export_en) {
                     Ok(candidates) => {
                         matched += 1;
-                        entries.insert(
-                            en.clone(),
-                            serde_json::json!({
-                                "en-US": en,
-                                "zh-CN": candidates[0].zh_cn,
-                                "sources": candidates.iter().map(|c| c.key.clone()).collect::<Vec<_>>(),
-                            }),
-                        );
+                        entries.insert(en.clone(), settings_entry(&candidates)?);
                     }
                     Err(reason) => {
                         match confirmed_settings_identity_match(export, surface_id, en) {
                             Some(candidates) => {
                                 matched += 1;
-                                entries.insert(
-                                    en.clone(),
-                                    serde_json::json!({
-                                        "en-US": en,
-                                        "zh-CN": candidates[0].zh_cn,
-                                        "sources": candidates.iter().map(|c| c.key.clone()).collect::<Vec<_>>(),
-                                    }),
-                                );
+                                entries.insert(en.clone(), settings_entry(&candidates)?);
                             }
                             None => excluded.push(serde_json::json!({
                                 "surface": surface_id,
@@ -1130,9 +1170,19 @@ mod corpus {
             }
         }
 
+        let locales: std::collections::BTreeSet<String> = entries
+            .values()
+            .flat_map(Value::as_object)
+            .flat_map(|section| section.values())
+            .flat_map(Value::as_object)
+            .flat_map(|entry| entry.keys())
+            .filter(|key| key.as_str() != "sources")
+            .cloned()
+            .collect();
+
         Ok(serde_json::json!({
             "schemaVersion": 1,
-            "locale": "zh-CN",
+            "locales": locales,
             "provenance": {
                 "generator": "workshop-catalog-gen corpus",
                 "generatorVersion": env!("CARGO_PKG_VERSION"),
@@ -1140,7 +1190,7 @@ mod corpus {
                 "commit": meta.get("commit").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
-                "method": "exact en-US spelling match between the declared settings surface (settings::table) and the export's customGameSettings/gamemodes/maps/heroes labels and other.customGameSettings tokens; the two hero Ultimate Generation labels are composed only from exact export template and Blizzard hero identity/GUID matches; entries without an accepted match keep fail-explicit behavior (ADR-0001 Decision 7); the mode-header 'disabled' prefix maps the export's __disabled__ token and follows the fixture-evidenced en-US emission format",
+                "method": "exact en-US spelling match between the declared settings surface (settings::table) and every locale translation carried by the export's customGameSettings/gamemodes/maps/heroes labels and other.customGameSettings tokens; the two hero Ultimate Generation labels are composed per reviewed locale from exact export templates and hero identities; entries without an accepted match keep fail-explicit behavior (ADR-0001 Decision 7)",
                 "sourceReview": "reviewed: workshop-rs commits its own settings mapping data; the user-provided JSON is build input only and is not redistributed",
             },
             "labels": labels,
@@ -1153,6 +1203,40 @@ mod corpus {
             "excluded": excluded,
             "coverage": coverage,
         }))
+    }
+
+    fn settings_entry(candidates: &[Candidate]) -> Result<Value, String> {
+        let mut aliases = Map::new();
+        for candidate in candidates {
+            for (locale, value) in &candidate.locales {
+                if let Some(previous) = aliases.get(locale).and_then(Value::as_str) {
+                    if previous != value {
+                        return Err(format!(
+                            "ambiguous localized settings alias for {locale}: {previous:?} vs {value:?}"
+                        ));
+                    }
+                } else {
+                    aliases.insert(locale.clone(), Value::String(value.clone()));
+                }
+            }
+        }
+        if aliases.get("en-US").and_then(Value::as_str).is_none()
+            || aliases.get("zh-CN").and_then(Value::as_str).is_none()
+        {
+            return Err(
+                "settings match lacks the required primary or reviewed zh-CN alias".to_string(),
+            );
+        }
+        aliases.insert(
+            "sources".to_string(),
+            Value::Array(
+                candidates
+                    .iter()
+                    .map(|candidate| Value::String(candidate.key.clone()))
+                    .collect(),
+            ),
+        );
+        Ok(Value::Object(aliases))
     }
 
     /// Resolve the two hero settings labels whose English surface expands a
@@ -1215,15 +1299,36 @@ mod corpus {
             return None;
         }
         let hero_zh = hero_translations.get("zh-CN")?.as_str()?;
-        let zh = template_zh.replace("%1$s", hero_zh);
+        let mut template_locales = template_translations.as_object()?.clone();
+        let hero_locales = hero_translations.as_object()?.clone();
+        for (locale, value) in &mut template_locales {
+            if let Some(template) = value.as_str() {
+                if let Some(hero_name) = hero_locales.get(locale).and_then(Value::as_str) {
+                    *value = Value::String(template.replace("%1$s", hero_name));
+                }
+            }
+        }
+        let zh = template_locales.get("zh-CN")?.as_str()?.to_string();
         Some(vec![
             Candidate {
                 key: template_key.to_string(),
-                zh_cn: zh.clone(),
+                zh_cn: zh,
+                locales: template_locales
+                    .into_iter()
+                    .filter_map(|(locale, value)| {
+                        value.as_str().map(|value| (locale, value.to_string()))
+                    })
+                    .collect(),
             },
             Candidate {
                 key: hero_key.to_string(),
                 zh_cn: hero_zh.to_string(),
+                locales: hero_locales
+                    .into_iter()
+                    .filter_map(|(locale, value)| {
+                        value.as_str().map(|value| (locale, value.to_string()))
+                    })
+                    .collect(),
             },
         ])
     }
@@ -1279,5 +1384,37 @@ mod corpus {
                 .to_string(),
         );
         lines
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::set_zh_alias;
+        use serde_json::json;
+
+        #[test]
+        fn corpus_merge_preserves_and_extends_reviewed_alias_arrays() {
+            let mut entry = json!({
+                "aliases": {"zh-CN": ["中止", "中断"]}
+            });
+
+            set_zh_alias(&mut entry, "中断").expect("existing reviewed alias is accepted");
+            set_zh_alias(&mut entry, "中止条件").expect("new corpus alias is appended");
+
+            assert_eq!(
+                entry["aliases"]["zh-CN"],
+                json!(["中止", "中断", "中止条件"])
+            );
+        }
+
+        #[test]
+        fn corpus_merge_promotes_a_scalar_conflict_to_reviewed_aliases() {
+            let mut entry = json!({
+                "aliases": {"zh-CN": "中止"}
+            });
+
+            set_zh_alias(&mut entry, "中断").expect("conflicting corpus alias is retained");
+
+            assert_eq!(entry["aliases"]["zh-CN"], json!(["中止", "中断"]));
+        }
     }
 }

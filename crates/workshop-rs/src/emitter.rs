@@ -57,11 +57,31 @@ pub fn emit_with_options(
     locale: &Locale,
     options: &EmitOptions,
 ) -> Result<EmitOutput> {
+    emit_with_options_inner(program, catalog, locale, options, false)
+}
+
+pub(crate) fn emit_with_options_for_conversion(
+    program: &wir::Program,
+    catalog: &Catalog,
+    locale: &Locale,
+    options: &EmitOptions,
+) -> Result<EmitOutput> {
+    emit_with_options_inner(program, catalog, locale, options, true)
+}
+
+fn emit_with_options_inner(
+    program: &wir::Program,
+    catalog: &Catalog,
+    locale: &Locale,
+    options: &EmitOptions,
+    force_hero_constructors: bool,
+) -> Result<EmitOutput> {
     let mut emitter = Emitter {
         program,
         catalog,
         locale: locale.clone(),
         fallback: options.fallback_locale.clone(),
+        force_hero_constructors,
         fallback_ids: Vec::new(),
         out: String::new(),
     };
@@ -80,6 +100,7 @@ struct Emitter<'a> {
     fallback: Option<Locale>,
     /// Canonical ids emitted with a fallback-locale spelling.
     fallback_ids: Vec<String>,
+    force_hero_constructors: bool,
     out: String,
 }
 
@@ -91,15 +112,18 @@ impl Emitter<'_> {
             self.out.push('\n');
         }
         if !self.program.global_variables.is_empty() || !self.program.player_variables.is_empty() {
-            self.line(0, "variables {")?;
+            let variables = self.structural("variables")?;
+            self.line(0, &format!("{variables} {{"))?;
             if !self.program.global_variables.is_empty() {
-                self.line(1, "global:")?;
+                let global = self.structural("global")?;
+                self.line(1, &format!("{global}:"))?;
                 for variable in self.program.global_variables.iter() {
                     self.line(2, &format!("{}: {}", variable.index, variable.name))?;
                 }
             }
             if !self.program.player_variables.is_empty() {
-                self.line(1, "player:")?;
+                let player = self.structural("player")?;
+                self.line(1, &format!("{player}:"))?;
                 for variable in self.program.player_variables.iter() {
                     self.line(2, &format!("{}: {}", variable.index, variable.name))?;
                 }
@@ -108,25 +132,19 @@ impl Emitter<'_> {
             self.out.push('\n');
         }
         if !self.program.subroutines.is_empty() {
-            self.line(0, "subroutines {")?;
+            let subroutines = self.structural("subroutines")?;
+            self.line(0, &format!("{subroutines} {{"))?;
             for subroutine in self.program.subroutines.iter() {
                 self.line(1, &format!("{}: {}", subroutine.index, subroutine.name))?;
             }
             self.line(0, "}")?;
             self.out.push('\n');
         }
-        // Rules with no actions are dropped, matching the pinned oracle
-        // (pass-only and condition-without-actions rules emit nothing).
-        let mut emitted_rules = 0;
-        for rule in self.program.rules.iter() {
-            if rule.actions.is_empty() {
-                continue;
-            }
+        for (emitted_rules, rule) in self.program.rules.iter().enumerate() {
             if emitted_rules > 0 {
                 self.out.push('\n');
             }
             self.rule(rule)?;
-            emitted_rules += 1;
         }
         // The oracle's raw artifact ends with a trailing blank line (the
         // committed snapshots strip it via the acquisition normalizer; the
@@ -141,8 +159,13 @@ impl Emitter<'_> {
     /// carrier, table-driven (fixture-evidenced names). Only runs on
     /// validated programs, so unknown keys cannot reach this point.
     fn emit_settings(&mut self, settings: &SettingsTree) -> Result<()> {
-        self.line(0, "settings {")?;
+        let settings_keyword = self.structural("settings")?;
+        self.line(0, &format!("{settings_keyword} {{"))?;
         for child in &settings.children {
+            if let SettingsNode::Workshop { children, .. } = child {
+                self.emit_workshop_settings(children, 1)?;
+                continue;
+            }
             let SettingsNode::Group { name, children, .. } = child else {
                 return Err(self.malformed("settings block children must be groups"));
             };
@@ -156,11 +179,50 @@ impl Emitter<'_> {
                 }
                 "gamemodes" => self.emit_modes(children)?,
                 "heroes" => self.emit_heroes(children)?,
+                "extensions" => {
+                    self.line(1, "extensions {")?;
+                    for member in children {
+                        self.settings_member(member, 2, &[PathPart::Part("extensions")], None)?;
+                    }
+                    self.line(1, "}")?;
+                }
                 _ => self.emit_opaque_group(children, name, 1)?,
             }
         }
         self.line(0, "}")?;
         Ok(())
+    }
+
+    fn emit_workshop_settings(&mut self, children: &[SettingsNode], level: usize) -> Result<()> {
+        let workshop = self.structural("workshop")?;
+        self.line(level, &format!("{workshop} {{"))?;
+        for child in children {
+            self.emit_workshop_node(child, level + 1)?;
+        }
+        self.line(level, "}")?;
+        Ok(())
+    }
+
+    fn emit_workshop_node(&mut self, node: &SettingsNode, level: usize) -> Result<()> {
+        match node {
+            SettingsNode::Group { name, children, .. } => {
+                self.line(level, &format!("{name} {{"))?;
+                for child in children {
+                    self.emit_workshop_node(child, level + 1)?;
+                }
+                self.line(level, "}")?;
+                Ok(())
+            }
+            SettingsNode::Workshop { children, .. } => self.emit_workshop_settings(children, level),
+            SettingsNode::Raw { name, value, .. } => {
+                if value.is_empty() {
+                    self.line(level, name)
+                } else {
+                    self.line(level, &format!("{name}: {value}"))
+                }
+            }
+            _ => Err(self.malformed("settings.workshop contains a typed builtin setting")),
+        }
     }
 
     /// Emit the `modes { <Mode> { ... } }` block of a gamemodes group.
@@ -273,13 +335,36 @@ impl Emitter<'_> {
                 table::path_string(&full)
             ))
         })?;
-        let display_name =
-            if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(&full)) {
-                self.gameplay_setting_name(hero, slot, &table::path_string(&full))?
+        let display_name = if let (Some(hero), Some(key)) = (
+            hero,
+            full.last().and_then(|part| match part {
+                PathPart::Part(key) => Some(*key),
+                _ => None,
+            }),
+        ) {
+            if let Some(name) = table::hero_setting_name(hero, key, self.locale.as_str()) {
+                name.to_string()
+            } else if !matches!(
+                key,
+                "enableAbility1" | "enableAbility2" | "enableAbility3" | "enableSecondaryFire"
+            ) {
+                if let Some(slot) = table::ability_slot_for_path(&full) {
+                    self.gameplay_setting_name(hero, slot, &table::path_string(&full))?
+                } else {
+                    self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
+                }
             } else {
                 self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
-            };
+            }
+        } else if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(&full)) {
+            self.gameplay_setting_name(hero, slot, &table::path_string(&full))?
+        } else {
+            self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
+        };
         match (node, &entry.kind) {
+            (SettingsNode::Flag { .. }, KeyKind::Flag) => {
+                self.line(level, &display_name)?;
+            }
             (SettingsNode::String { value, .. }, KeyKind::String) => {
                 self.line(
                     level,
@@ -434,8 +519,21 @@ impl Emitter<'_> {
     }
 
     fn rule(&mut self, rule: &wir::Rule) -> Result<()> {
-        self.line(0, &format!("rule (\"{}\") {{", escape_string(&rule.name)))?;
-        self.line(1, "event {")?;
+        let disabled = if rule.disabled {
+            format!("{} ", self.structural("disabled")?)
+        } else {
+            String::new()
+        };
+        let rule_keyword = self.structural("rule")?;
+        self.line(
+            0,
+            &format!(
+                "{disabled}{rule_keyword} (\"{}\") {{",
+                escape_string(&rule.name)
+            ),
+        )?;
+        let event = self.structural("event")?;
+        self.line(1, &format!("{event} {{"))?;
         match &rule.event {
             wir::Event::Global => {
                 let spelling = self.spelling(Kind::Event, "global")?;
@@ -470,7 +568,8 @@ impl Emitter<'_> {
         }
         self.line(1, "}")?;
         if !rule.conditions.is_empty() {
-            self.line(1, "conditions {")?;
+            let conditions = self.structural("conditions")?;
+            self.line(1, &format!("{conditions} {{"))?;
             for condition in &rule.conditions {
                 let mut text = String::new();
                 // Reference normalization: comparison conditions render
@@ -495,7 +594,8 @@ impl Emitter<'_> {
             self.line(1, "}")?;
         }
         if !rule.actions.is_empty() {
-            self.line(1, "actions {")?;
+            let actions = self.structural("actions")?;
+            self.line(1, &format!("{actions} {{"))?;
             for (index, action) in rule.actions.iter().enumerate() {
                 let rule_final = index + 1 == rule.actions.len();
                 self.action(*action, 2, rule_final)?;
@@ -686,6 +786,7 @@ impl Emitter<'_> {
                 body,
                 ..
             } => {
+                let keyword = self.structural("forPlayerVariable")?;
                 let mut player_text = String::new();
                 let mut start_text = String::new();
                 let mut stop_text = String::new();
@@ -698,7 +799,8 @@ impl Emitter<'_> {
                 self.line(
                     level,
                     &format!(
-                        "For Player Variable({player_text}, {name}, {start_text}, {stop_text}, {step_text});"
+                        "{}({player_text}, {name}, {start_text}, {stop_text}, {step_text});",
+                        keyword
                     ),
                 )?;
                 for action in body {
@@ -716,6 +818,36 @@ impl Emitter<'_> {
             }
             wir::Action::Print { message, .. } => {
                 self.emit_hud_text(*message, level, false)?;
+            }
+            wir::Action::AssignMember {
+                target, op, value, ..
+            } => {
+                let mut target_text = String::new();
+                let mut value_text = String::new();
+                self.value(*target, &mut target_text)?;
+                self.value(*value, &mut value_text)?;
+                let operator = match op {
+                    None => "=".to_string(),
+                    Some(op) => {
+                        let token = match op {
+                            wir::ModifyOp::Add => "+",
+                            wir::ModifyOp::Subtract => "-",
+                            wir::ModifyOp::Multiply => "*",
+                            wir::ModifyOp::Divide => "/",
+                            wir::ModifyOp::Modulo => "%",
+                            _ => {
+                                return Err(WorkshopError::Unsupported {
+                                    message: format!(
+                                        "unsupported member assignment operator {op:?}"
+                                    ),
+                                    span: None,
+                                });
+                            }
+                        };
+                        format!("{token}=")
+                    }
+                };
+                self.line(level, &format!("{target_text} {operator} {value_text};"))?;
             }
             wir::Action::Call { name, args, .. } => {
                 // The chase family dispatches on the first argument's
@@ -763,6 +895,35 @@ impl Emitter<'_> {
                     self.args(args, &mut args_text)?;
                     return self.line(level, &format!("{spelling}({args_text});"));
                 }
+                if name == "stopChasingPlayerVariable" {
+                    let Some((player, variable)) = args.first().and_then(|id| {
+                        self.program
+                            .values
+                            .get(*id)
+                            .and_then(|node| match &node.value {
+                                wir::Value::PlayerVariable { player, variable } => {
+                                    Some((*player, *variable))
+                                }
+                                _ => None,
+                            })
+                    }) else {
+                        return Err(WorkshopError::Malformed {
+                            message: "Stop Chasing Player Variable requires a player variable"
+                                .into(),
+                            span: None,
+                        });
+                    };
+                    let spelling = self.spelling(Kind::Action, name)?;
+                    let mut player_text = String::new();
+                    self.value(player, &mut player_text)?;
+                    return self.line(
+                        level,
+                        &format!(
+                            "{spelling}({player_text}, {});",
+                            self.player_name(variable)?
+                        ),
+                    );
+                }
                 // Native `.opy` action names map to canonical catalog ids at
                 // emission (presentation concern).
                 let canonical = match name.as_str() {
@@ -778,7 +939,36 @@ impl Emitter<'_> {
                     self.line(level, &format!("{spelling};"))?;
                 } else {
                     let mut args_text = String::new();
-                    self.args(args, &mut args_text)?;
+                    for (index, arg) in args.iter().enumerate() {
+                        if index > 0 {
+                            args_text.push_str(", ");
+                        }
+                        let variable_position = match name.as_str() {
+                            "setGlobalVariableAtIndex" | "modifyGlobalVariableAtIndex" => {
+                                index == 0
+                            }
+                            "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex" => {
+                                index == 1
+                            }
+                            _ => false,
+                        };
+                        if variable_position {
+                            if let Some(node) = self.program.values.get(*arg) {
+                                match &node.value {
+                                    wir::Value::GlobalVariable(variable) => {
+                                        args_text.push_str(&self.global_name(*variable)?);
+                                        continue;
+                                    }
+                                    wir::Value::PlayerVariable { variable, .. } => {
+                                        args_text.push_str(&self.player_name(*variable)?);
+                                        continue;
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                        self.value(*arg, &mut args_text)?;
+                    }
                     self.line(level, &format!("{spelling}({args_text});"))?;
                 }
             }
@@ -892,25 +1082,33 @@ impl Emitter<'_> {
                 out.push(')');
             }
             wir::Value::Enum { value_type, value } => {
-                // The `.opy`-layer `EffectReeval` domain is the same Workshop
-                // reevaluation domain as `HudReeval` (member ids align); map
-                // it at emission to avoid catalog domain collisions.
-                let catalog_domain = if value_type == "EffectReeval" {
-                    "HudReeval"
-                } else {
-                    value_type
-                };
-                let spelling = self.enum_spelling(catalog_domain, value)?;
-                // Color values use the constructor form; other domains use
-                // bare member spellings (the canonical corpus form). The
+                let spelling = self.enum_spelling(value_type, value)?;
+                // Color, Team, and Hero values use the constructor form;
+                // other domains use bare member spellings (the canonical
+                // corpus form). The
                 // Team/Color spelling collision (`Team 2` is both a Team and
                 // a Team color) is the one ambiguity unpinned by the
                 // catalog's paramDomains, so Team members qualify with the
                 // constructor form and the emitted text reparses
                 // deterministically (round-trip contract; pinned P4
                 // evidence).
-                if value_type == "Color" || value_type == "Team" {
-                    write!(out, "{catalog_domain}({spelling})").unwrap();
+                if matches!(value_type.as_str(), "Color" | "Map" | "Team")
+                    || value_type == "Hero"
+                        && (spelling.contains('.')
+                            || self.locale != *self.catalog.primary_locale()
+                            || (self.force_hero_constructors
+                                && self
+                                    .program
+                                    .global_variables
+                                    .iter()
+                                    .any(|variable| variable.name == spelling)))
+                {
+                    let domain = self
+                        .catalog
+                        .enum_domain(value_type)
+                        .and_then(|entry| entry.spelling(&self.locale))
+                        .unwrap_or(value_type);
+                    write!(out, "{domain}({spelling})").unwrap();
                 } else {
                     out.push_str(&spelling);
                 }
@@ -928,8 +1126,57 @@ impl Emitter<'_> {
                 let name = self.player_name(*variable)?;
                 write!(out, ".{name}").unwrap();
             }
+            wir::Value::Subroutine(subroutine) => {
+                let name = self
+                    .program
+                    .subroutines
+                    .get(*subroutine)
+                    .map(|value| value.name.clone())
+                    .ok_or_else(|| WorkshopError::Malformed {
+                        message: format!("dangling subroutine value {subroutine}"),
+                        span: None,
+                    })?;
+                out.push_str(&name);
+            }
             wir::Value::EventPlayer => out.push_str(&self.spelling(Kind::Value, "eventPlayer")?),
             wir::Value::Call { name, args } => {
+                if name == "memberAccess" {
+                    if args.len() < 2 || args.len() > 3 {
+                        return Err(WorkshopError::Malformed {
+                            message: "memberAccess expects two or three arguments".to_string(),
+                            span: node.span,
+                        });
+                    }
+                    let Some(wir::ValueNode {
+                        value: wir::Value::String(member),
+                        ..
+                    }) = self.program.values.get(args[1])
+                    else {
+                        return Err(WorkshopError::Malformed {
+                            message: "memberAccess member must be a string".to_string(),
+                            span: node.span,
+                        });
+                    };
+                    let bare_event_player = self
+                        .program
+                        .values
+                        .get(args[0])
+                        .is_some_and(|node| matches!(node.value, wir::Value::EventPlayer));
+                    if !bare_event_player {
+                        out.push('(');
+                    }
+                    self.value(args[0], out)?;
+                    if !bare_event_player {
+                        out.push(')');
+                    }
+                    write!(out, ".{member}").unwrap();
+                    if let Some(index) = args.get(2) {
+                        out.push('[');
+                        self.value(*index, out)?;
+                        out.push(']');
+                    }
+                    return Ok(());
+                }
                 if is_comparison_operator(name) {
                     // Canonical form: Compare(a, op, b).
                     if args.len() != 2 {
@@ -1220,6 +1467,10 @@ impl Emitter<'_> {
             id: id.to_string(),
             locale: self.locale.clone(),
         })
+    }
+
+    fn structural(&mut self, id: &str) -> Result<String> {
+        self.spelling(Kind::Structural, id)
     }
 
     /// The localized spelling of a canonical enum member, resolving through

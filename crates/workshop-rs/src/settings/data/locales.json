@@ -29,6 +29,12 @@
       "total": 4
     }
   },
+  "namespaces": {
+    "workshop": {
+      "en-US": "workshop",
+      "zh-CN": "地图工坊"
+    }
+  },
   "enums": {
     "Always Enabled": {
       "en-US": "Always Enabled",
@@ -2847,7 +2853,6 @@
       "zh-CN": "禁用地图"
     }
   },
-  "locale": "zh-CN",
   "maps": {
     "King's Row Winter": {
       "en-US": "King's Row Winter",
@@ -3509,7 +3514,7 @@
     "sourceCommit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
     "method": "generated current customGameSettings labels, value kinds, enum members, and paths; dynamic hero templates remain resolved through gameplay catalog identities"
   },
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "teams": {
     "General": {
       "en-US": "General",
@@ -3562,5 +3567,10 @@
       ],
       "zh-CN": "禁用"
     }
-  }
+  },
+  "locales": [
+    "en-US",
+    "zh-CN"
+  ],
+  "projection": "multi-locale-settings/v1"
 }

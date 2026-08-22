@@ -24,6 +24,84 @@ fn catalog() -> Catalog {
     Catalog::builtin().expect("built-in catalog")
 }
 
+#[test]
+fn colonated_enum_members_resolve_from_signature_domains() {
+    let source = r#"variables
+{
+    global:
+        0: icon
+}
+rule("colonated enum")
+{
+    event
+    {
+        Ongoing - Global;
+    }
+    actions
+    {
+        Set Global Variable(icon, Icon String(Arrow: Up));
+    }
+}
+"#;
+    let program = parser::parse_with_context(source, &catalog(), &Locale::new("en-US"), &catalog())
+        .expect("Arrow: Up resolves through Icon");
+    assert!(program
+        .values
+        .iter()
+        .any(|value| matches!(value.value, wir::Value::Enum { ref value_type, ref value } if value_type == "Icon" && value == "ARROW_UP")));
+}
+
+#[test]
+fn localized_hero_call_resolves_dotted_member() {
+    assert_eq!(
+        catalog().resolve_enum_domain(&Locale::new("zh-CN"), "英雄"),
+        Some("Hero")
+    );
+    let source = r#"规则("hero")
+{
+    event
+    {
+        持续 - 全局;
+    }
+    actions
+    {
+        设置全局变量(x, 英雄(D.Va));
+    }
+}
+"#;
+    let program = parser::parse_with_context(source, &catalog(), &Locale::new("zh-CN"), &catalog())
+        .expect("localized Hero(D.Va) resolves");
+    assert!(program.values.iter().any(|value| matches!(value.value, wir::Value::Enum { ref value_type, ref value } if value_type == "Hero" && value == "DVA")));
+}
+
+#[test]
+fn indexed_variable_actions_resolve_declared_names_as_variables() {
+    let source = r##"variables {
+    global: 0: Brigitte
+}
+
+rule ("indexed") {
+    event { Ongoing - Global; }
+    actions {
+        Set Global Variable At Index(Brigitte, 1, 2);
+    }
+}
+"##;
+    let catalog = catalog();
+    let program = parser::parse_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("indexed global variable action parses");
+    let action = program.actions.iter().next().expect("indexed action");
+    let wir::Action::Call { args, .. } = action else {
+        panic!("expected generic indexed-variable action");
+    };
+    assert!(matches!(
+        program.values.get(args[0]).map(|node| &node.value),
+        Some(wir::Value::GlobalVariable(_))
+    ));
+    validate::validate_canonical_ids(&program, &catalog)
+        .expect("declared indexed variable is canonical WIR");
+}
+
 const CORPUS_FIXTURES: &[&str] = &[
     "basic-rule",
     "control-flow",
@@ -79,6 +157,34 @@ fn every_corpus_workshop_text_parses_to_valid_wir() {
             }
         }
     }
+}
+
+#[test]
+fn member_assignment_lowers_to_source_semantic_wir() {
+    let text = r#"rule ("member") { event { Ongoing - Global; } actions {
+        All Players(All Teams).abilityHUD[17] = True;
+        Global.botOrisaChild.botDoesUniqueBehaviour = False;
+        Event Player.beamID.uppercutMomentum += 1;
+    } }"#;
+    let catalog = catalog();
+    let program = parser::parse_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("member assignments parse");
+    assert!(
+        program
+            .actions
+            .iter()
+            .any(|action| matches!(action, wir::Action::AssignMember { op: None, .. }))
+    );
+    assert!(program.actions.iter().any(|action| matches!(
+        action,
+        wir::Action::AssignMember {
+            op: Some(wir::ModifyOp::Add),
+            ..
+        }
+    )));
+    assert!(!program.actions.iter().any(
+        |action| matches!(action, wir::Action::Call { name, .. } if name == "rawWorkshopAction")
+    ));
 }
 
 #[test]
@@ -225,6 +331,103 @@ fn unknown_spelling_is_reported_as_unknown() {
         "unknown action must be Unknown: {error}"
     );
     assert!(error.to_string().contains("Totally Unknown Thing"));
+}
+
+#[test]
+fn canonical_validation_enforces_declared_arity_and_enum_domain() {
+    let catalog = catalog();
+    let arity = r#"rule ("arity") { event { Ongoing - Global; } actions { Wait(); } }"#;
+    let program = parser::parse_with_context(arity, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("parser preserves the call for canonical validation");
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("missing required signature argument must be rejected");
+    assert!(
+        error
+            .to_string()
+            .contains("action 'wait' expects 1..2 argument(s), got 0")
+    );
+
+    let wrong_domain = r#"rule ("domain") { event { Ongoing - Global; } actions { Set Invisible(All Players(All Teams), Color(White)); } }"#;
+    let program =
+        parser::parse_with_context(wrong_domain, &catalog, &Locale::new("en-US"), &catalog)
+            .expect("parser preserves the call for canonical validation");
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("wrong enum domain must be rejected");
+    assert!(
+        error
+            .to_string()
+            .contains("action 'setInvisibility' argument 2")
+    );
+}
+
+#[test]
+fn canonical_validation_enforces_literal_types_and_value_return_types() {
+    let catalog = catalog();
+    let wrong_literal = r#"rule ("type") { event { Ongoing - Global; } actions { Set Crouch Enabled(All Players(All Teams), Color(White)); } }"#;
+    let program =
+        parser::parse_with_context(wrong_literal, &catalog, &Locale::new("en-US"), &catalog)
+            .expect("parser preserves a typed call for canonical validation");
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("a Color is not a Boolean action parameter");
+    assert!(
+        error
+            .to_string()
+            .contains("must have semantic type 'Boolean'")
+    );
+
+    let wrong_return = r#"rule ("return") { event { Ongoing - Global; } actions { Teleport(Event Player, Max Health(Event Player)); } }"#;
+    let program =
+        parser::parse_with_context(wrong_return, &catalog, &Locale::new("en-US"), &catalog)
+            .expect("parser preserves a value-returning call for canonical validation");
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("a Number Value return is not a Vector action parameter");
+    assert!(
+        error
+            .to_string()
+            .contains("must have semantic type 'Vector'")
+    );
+}
+
+#[test]
+fn canonical_validation_rejects_incompatible_variable_reference_types() {
+    let catalog = catalog();
+    let source = r#"variables {
+    global: 0: g
+    player: 0: p
+}
+rule ("type") { event { Ongoing - Global; } actions {
+    Set Player Variable At Index(1, 0, 1);
+} }"#;
+    let program = parser::parse_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("parser preserves the incompatible indexed-variable call");
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("a number is not a player-variable reference");
+    assert!(
+        error
+            .to_string()
+            .contains("must have semantic type 'Player Variable'")
+    );
+}
+
+#[test]
+fn current_loop_action_resolves_to_canonical_generic_wir() {
+    let catalog = catalog();
+    let source = r#"rule ("loop") { event { Ongoing - Global; } actions { Loop; } }"#;
+    let program = parser::parse_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("declared Loop action parses");
+    let rule = program.rules.get(wir::RuleId::from_index(0)).expect("rule");
+    let action = program.actions.get(rule.actions[0]).expect("action");
+    assert!(matches!(
+        action,
+        wir::Action::Call { name, args, .. } if name == "loop" && args.is_empty()
+    ));
+    validate::validate_canonical_ids(&program, &catalog).expect("Loop has canonical identity");
+    assert!(
+        workshop_rs::semantic::inspect(&program, &catalog)
+            .iter()
+            .all(|issue| issue.name != "rawWorkshopAction"),
+        "declared Loop must not use the opaque action path"
+    );
 }
 
 #[test]
@@ -386,6 +589,23 @@ fn raw_workshop_member_access_and_disabled_groups_parse() {
 }
 
 #[test]
+fn disabled_condition_is_ignored_as_inactive() {
+    let text = r#"
+        rule ("disabled condition") {
+            event { Ongoing - Global; }
+            conditions {
+                disabled Is Using Ability 1(Event Player) == True;
+            }
+            actions { Wait(0.016, Ignore Condition); }
+        }
+    "#;
+    let program = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+        .expect("disabled conditions must parse");
+    let rule = program.rules.iter().next().expect("rule");
+    assert!(rule.conditions.is_empty());
+}
+
+#[test]
 fn raw_indexed_assignment_lowers_to_explicit_wir_call() {
     let text = r#"
         variables { global: 0: values }
@@ -426,73 +646,86 @@ fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
         .into_iter()
         .filter(|(_, domains)| domains.len() > 1)
         .collect();
-    assert_eq!(
-        collisions,
-        vec![
-            (
-                "All".to_string(),
-                vec![
-                    "EventTeam".to_string(),
-                    "EventPlayer".to_string(),
-                    "Invis".to_string()
-                ]
-            ),
-            (
-                "None".to_string(),
-                vec![
-                    "FacingReeval".to_string(),
-                    "ChaseTimeReeval".to_string(),
-                    "ChaseRateReeval".to_string(),
-                    "Invis".to_string(),
-                    "ThrottleReeval".to_string(),
-                    "EffectReeval".to_string()
-                ]
-            ),
-            (
-                "Team 1".to_string(),
-                vec![
-                    "Color".to_string(),
-                    "Team".to_string(),
-                    "EventTeam".to_string()
-                ]
-            ),
-            (
-                "Team 2".to_string(),
-                vec![
-                    "Color".to_string(),
-                    "Team".to_string(),
-                    "EventTeam".to_string()
-                ]
-            ),
-            (
-                "Up".to_string(),
-                vec!["Vector".to_string(), "Rounding".to_string()]
-            ),
-            (
-                "Visible To".to_string(),
-                vec![
-                    "HudReeval".to_string(),
-                    "EffectReeval".to_string(),
-                    "InworldTextReeval".to_string()
-                ]
-            ),
-            (
-                "Visible To String and Color".to_string(),
-                vec!["HudReeval".to_string(), "InworldTextReeval".to_string()]
-            ),
-            (
-                "Visible To and Color".to_string(),
-                vec![
-                    "HudReeval".to_string(),
-                    "EffectReeval".to_string(),
-                    "InworldTextReeval".to_string()
-                ]
-            ),
-            (
-                "Visible To and String".to_string(),
-                vec!["HudReeval".to_string(), "InworldTextReeval".to_string()]
-            ),
-        ],
-        "the declared catalog's cross-domain member-spelling collisions"
-    );
+    let documented_legacy = vec![
+        (
+            "All".to_string(),
+            vec![
+                "EventTeam".to_string(),
+                "EventPlayer".to_string(),
+                "Invis".to_string(),
+            ],
+        ),
+        (
+            "Healing Dealt".to_string(),
+            vec!["Stat".to_string(), "HeroStat".to_string()],
+        ),
+        (
+            "None".to_string(),
+            vec![
+                "FacingReeval".to_string(),
+                "ChaseTimeReeval".to_string(),
+                "ChaseRateReeval".to_string(),
+                "Invis".to_string(),
+                "ThrottleReeval".to_string(),
+                "EffectReeval".to_string(),
+            ],
+        ),
+        (
+            "Team 1".to_string(),
+            vec![
+                "Color".to_string(),
+                "Team".to_string(),
+                "EventTeam".to_string(),
+            ],
+        ),
+        (
+            "Team 2".to_string(),
+            vec![
+                "Color".to_string(),
+                "Team".to_string(),
+                "EventTeam".to_string(),
+            ],
+        ),
+        (
+            "Up".to_string(),
+            vec!["Vector".to_string(), "Rounding".to_string()],
+        ),
+        (
+            "Visible To".to_string(),
+            vec![
+                "HudReeval".to_string(),
+                "EffectReeval".to_string(),
+                "InworldTextReeval".to_string(),
+            ],
+        ),
+        (
+            "Visible To String and Color".to_string(),
+            vec!["HudReeval".to_string(), "InworldTextReeval".to_string()],
+        ),
+        (
+            "Visible To and Color".to_string(),
+            vec![
+                "HudReeval".to_string(),
+                "EffectReeval".to_string(),
+                "InworldTextReeval".to_string(),
+            ],
+        ),
+        (
+            "Visible To and Position".to_string(),
+            vec!["InworldTextReeval".to_string(), "IconReeval".to_string()],
+        ),
+        (
+            "Visible To and String".to_string(),
+            vec!["HudReeval".to_string(), "InworldTextReeval".to_string()],
+        ),
+    ];
+    for expected in documented_legacy {
+        assert!(
+            collisions.iter().any(|(spelling, domains)| {
+                spelling == &expected.0 && expected.1.iter().all(|domain| domains.contains(domain))
+            }),
+            "missing documented collision: {expected:?}"
+        );
+    }
+    assert_eq!(collisions.len(), 50, "the catalog collision census changed");
 }

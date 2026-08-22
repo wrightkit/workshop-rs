@@ -6,6 +6,7 @@
 
 use crate::catalog::{Catalog, Kind};
 use crate::settings::SettingsNode;
+use crate::settings::table;
 use crate::source::Span;
 use crate::wir::{Action, Program, Value};
 
@@ -17,11 +18,53 @@ pub enum IncompletenessKind {
     OpaqueAction,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ResidualClassification {
+    ProjectDefinedConstruct,
+    SourceDeclaredVariable,
+    ProducerExtension,
+    LegacyOpaque,
+    UnresolvedIdentifier,
+}
+
+impl ResidualClassification {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::ProjectDefinedConstruct => "project-defined-construct",
+            Self::SourceDeclaredVariable => "source-declared-variable",
+            Self::ProducerExtension => "producer-extension",
+            Self::LegacyOpaque => "legacy-opaque-construct",
+            Self::UnresolvedIdentifier => "truly-unresolved-identifier",
+        }
+    }
+
+    pub fn evidence(self) -> &'static str {
+        match self {
+            Self::ProjectDefinedConstruct => {
+                "source settings or construct was preserved without a canonical catalog identity"
+            }
+            Self::SourceDeclaredVariable => {
+                "the identifier matches a variable declaration in the parsed source program"
+            }
+            Self::ProducerExtension => {
+                "the source uses an action-shaped identity outside the canonical catalog and no declaration resolves it"
+            }
+            Self::LegacyOpaque => {
+                "the parser preserved a legacy raw construct without a canonical contract"
+            }
+            Self::UnresolvedIdentifier => {
+                "the identifier matches neither a source declaration nor a canonical catalog identity"
+            }
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SemanticIssue {
     pub kind: IncompletenessKind,
     pub name: String,
     pub span: Option<Span>,
+    pub classification: ResidualClassification,
 }
 
 /// Report preserved or catalog-unknown constructs that must not be treated as
@@ -37,13 +80,14 @@ pub fn inspect(program: &Program, catalog: &Catalog) -> Vec<SemanticIssue> {
         inspect_action(action, program, catalog, &mut issues);
     }
     for value in program.values.iter() {
-        inspect_value(value, catalog, &mut issues);
+        inspect_value(value, program, catalog, &mut issues);
     }
     issues
 }
 
 fn inspect_setting(node: &SettingsNode, issues: &mut Vec<SemanticIssue>) {
     match node {
+        SettingsNode::Workshop { .. } => {}
         SettingsNode::Group { children, .. } => {
             for child in children {
                 inspect_setting(child, issues);
@@ -53,11 +97,35 @@ fn inspect_setting(node: &SettingsNode, issues: &mut Vec<SemanticIssue>) {
             kind: IncompletenessKind::RawSetting,
             name: name.clone(),
             span: *span,
+            classification: ResidualClassification::ProjectDefinedConstruct,
         }),
+        SettingsNode::List {
+            name,
+            elements,
+            span,
+        } => {
+            let known = match name.as_str() {
+                "enabledMaps" | "disabledMaps" => elements
+                    .iter()
+                    .all(|element| table::map_name(&element.value).is_some()),
+                "enabledHeroes" | "disabledHeroes" => elements
+                    .iter()
+                    .all(|element| table::hero_name(&element.value).is_some()),
+                _ => true,
+            };
+            if !known {
+                issues.push(SemanticIssue {
+                    kind: IncompletenessKind::RawSetting,
+                    name: name.clone(),
+                    span: *span,
+                    classification: ResidualClassification::ProjectDefinedConstruct,
+                });
+            }
+        }
         SettingsNode::Number { .. }
         | SettingsNode::Bool { .. }
-        | SettingsNode::String { .. }
-        | SettingsNode::List { .. } => {}
+        | SettingsNode::Flag { .. }
+        | SettingsNode::String { .. } => {}
     }
 }
 
@@ -77,10 +145,16 @@ fn inspect_action(
                 None
             };
             if let Some(kind) = kind {
+                let classification = if kind == IncompletenessKind::OpaqueAction {
+                    ResidualClassification::LegacyOpaque
+                } else {
+                    ResidualClassification::ProducerExtension
+                };
                 issues.push(SemanticIssue {
                     kind,
                     name: name.clone(),
                     span: *span,
+                    classification,
                 });
             }
         }
@@ -105,6 +179,7 @@ fn inspect_action(
         | Action::ModifyGlobalVariable { .. }
         | Action::SetPlayerVariable { .. }
         | Action::ModifyPlayerVariable { .. }
+        | Action::AssignMember { .. }
         | Action::CallSubroutine { .. }
         | Action::Debug { .. }
         | Action::Print { .. } => {}
@@ -124,8 +199,38 @@ fn inspect_action_id(
     }
 }
 
-fn inspect_value(node: &crate::wir::ValueNode, catalog: &Catalog, issues: &mut Vec<SemanticIssue>) {
-    if let Value::Call { name, .. } = &node.value {
+fn inspect_value(
+    node: &crate::wir::ValueNode,
+    program: &Program,
+    catalog: &Catalog,
+    issues: &mut Vec<SemanticIssue>,
+) {
+    if let Value::Call { name, args } = &node.value {
+        // These names are canonical WIR helpers rather than Workshop
+        // builtins: memberAccess preserves dynamic receiver properties, and
+        // infix operators are lowered to their source spelling for emission.
+        let canonical_helper = matches!(
+            name.as_str(),
+            "memberAccess"
+                | "+"
+                | "-"
+                | "*"
+                | "/"
+                | "%"
+                | "add"
+                | "subtract"
+                | "multiply"
+                | "divide"
+                | "modulo"
+                | "raiseToPower"
+                | "appendToArray"
+                | "removeFromArray"
+                | "removeFromArrayByIndex"
+        ) && (args.is_empty()
+            || matches!(name.as_str(), "memberAccess" | "+" | "-" | "*" | "/" | "%"));
+        if canonical_helper {
+            return;
+        }
         if catalog.entry(Kind::Value, name).is_none()
             && catalog.entry(Kind::Operator, name).is_none()
         {
@@ -133,6 +238,19 @@ fn inspect_value(node: &crate::wir::ValueNode, catalog: &Catalog, issues: &mut V
                 kind: IncompletenessKind::UnknownValue,
                 name: name.clone(),
                 span: node.span,
+                classification: if program
+                    .global_variables
+                    .iter()
+                    .any(|variable| variable.name == *name)
+                    || program
+                        .player_variables
+                        .iter()
+                        .any(|variable| variable.name == *name)
+                {
+                    ResidualClassification::SourceDeclaredVariable
+                } else {
+                    ResidualClassification::UnresolvedIdentifier
+                },
             });
         }
     }
@@ -196,5 +314,17 @@ mod tests {
                 .iter()
                 .any(|issue| issue.kind == IncompletenessKind::UnknownValue)
         );
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IncompletenessKind::RawSetting
+                && issue.classification == ResidualClassification::ProjectDefinedConstruct
+        }));
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IncompletenessKind::OpaqueAction
+                && issue.classification == ResidualClassification::LegacyOpaque
+        }));
+        assert!(issues.iter().any(|issue| {
+            issue.kind == IncompletenessKind::UnknownValue
+                && issue.classification == ResidualClassification::UnresolvedIdentifier
+        }));
     }
 }

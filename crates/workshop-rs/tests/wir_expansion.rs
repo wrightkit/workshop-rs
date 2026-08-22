@@ -11,6 +11,45 @@ fn catalog() -> Catalog {
     Catalog::builtin().expect("built-in catalog")
 }
 
+#[test]
+fn member_access_has_a_canonical_shape_contract() {
+    let catalog = catalog();
+    let mut program = wir::Program::default();
+    let receiver = program
+        .values
+        .push(ValueNode::new(Value::EventPlayer, None));
+    let member = program.values.push(ValueNode::new(
+        Value::Number {
+            value: 1.0,
+            text: "1".into(),
+        },
+        None,
+    ));
+    let access = program.values.push(ValueNode::new(
+        Value::Call {
+            name: "memberAccess".into(),
+            args: vec![receiver, member],
+        },
+        None,
+    ));
+    program.rules.push(wir::Rule {
+        name: "member-contract".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: Event::Global,
+        conditions: vec![access],
+        actions: vec![],
+    });
+    let error =
+        validate::validate_canonical_ids(&program, &catalog).expect_err("invalid memberAccess");
+    assert!(
+        error
+            .to_string()
+            .contains("memberAccess member must be a string")
+    );
+}
+
 fn span(file: workshop_rs::ids::Id<SourceFile>, line: u32, col: u32, end_col: u32) -> Span {
     Span::new(file, Position::new(line, col), Position::new(line, end_col))
 }
@@ -76,6 +115,36 @@ fn build_surface_program() -> wir::Program {
         },
         Some(s(5, 41, 47)),
     ));
+    let beam_type = program.values.push(ValueNode::new(
+        Value::Enum {
+            value_type: "Beam".into(),
+            value: "GRAPPLE".into(),
+        },
+        Some(s(5, 35, 40)),
+    ));
+    let start_position = program.values.push(ValueNode::new(
+        Value::Vector {
+            x: zero,
+            y: zero,
+            z: zero,
+        },
+        Some(s(5, 48, 55)),
+    ));
+    let end_position = program.values.push(ValueNode::new(
+        Value::Vector {
+            x: one,
+            y: one,
+            z: one,
+        },
+        Some(s(5, 56, 63)),
+    ));
+    let effect_reeval = program.values.push(ValueNode::new(
+        Value::Enum {
+            value_type: "EffectReeval".into(),
+            value: "NONE".into(),
+        },
+        Some(s(5, 64, 68)),
+    ));
     let all_teams = program.values.push(ValueNode::new(
         Value::Enum {
             value_type: "Team".into(),
@@ -120,7 +189,14 @@ fn build_surface_program() -> wir::Program {
     });
     let beam = program.actions.push(Action::Call {
         name: "createBeamEffect".into(),
-        args: vec![players, yellow],
+        args: vec![
+            players,
+            beam_type,
+            start_position,
+            end_position,
+            yellow,
+            effect_reeval,
+        ],
         span: Some(s(6, 5, 25)),
     });
     let for_action = program.actions.push(Action::ForGlobalVariable {

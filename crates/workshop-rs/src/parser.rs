@@ -7,6 +7,7 @@
 //! as distinct structured diagnostics with source spans.
 
 use std::collections::HashMap;
+use std::sync::OnceLock;
 
 use crate::settings::table::{self, KeyKind, PathPart};
 use crate::settings::{Settings, SettingsListElement, SettingsNode};
@@ -103,6 +104,71 @@ struct Parser<'a> {
 }
 
 impl Parser<'_> {
+    fn resolve_entry(&self, kind: Kind, spelling: &str) -> Option<crate::catalog::CatalogEntry> {
+        self.catalog
+            .resolve(kind, &self.locale, spelling)
+            .cloned()
+            .or_else(|| {
+                if self.locale != *self.catalog.primary_locale() {
+                    self.catalog
+                        .resolve(kind, self.catalog.primary_locale(), spelling)
+                        .cloned()
+                } else {
+                    None
+                }
+            })
+    }
+
+    fn canonical_keyword(&self, spelling: &str) -> String {
+        self.catalog
+            .resolve(Kind::Structural, &self.locale, spelling)
+            .or_else(|| {
+                (self.locale != *self.catalog.primary_locale()).then(|| {
+                    self.catalog
+                        .resolve(Kind::Structural, self.catalog.primary_locale(), spelling)
+                })?
+            })
+            .map(|entry| entry.id.clone())
+            .unwrap_or_else(|| canonical_keyword(spelling).to_string())
+    }
+
+    fn resolve_enum_domain_mixed(&self, spelling: &str) -> Option<&str> {
+        self.catalog
+            .resolve_enum_domain(&self.locale, spelling)
+            .or_else(|| {
+                if self.locale != *self.catalog.primary_locale() {
+                    self.catalog
+                        .resolve_enum_domain(self.catalog.primary_locale(), spelling)
+                } else {
+                    None
+                }
+            })
+    }
+
+    fn resolve_enum_member_mixed(&self, domain: &str, spelling: &str) -> Option<(String, String)> {
+        let alternate = (!spelling.contains(": ") && spelling.contains(':'))
+            .then(|| spelling.replacen(':', ": ", 1));
+        self.catalog
+            .resolve_enum_member(domain, &self.locale, spelling)
+            .or_else(|| {
+                alternate.as_deref().and_then(|spelling| {
+                    self.catalog
+                        .resolve_enum_member(domain, &self.locale, spelling)
+                })
+            })
+            .or_else(|| {
+                if self.locale != *self.catalog.primary_locale() {
+                    self.catalog.resolve_enum_member(
+                        domain,
+                        self.catalog.primary_locale(),
+                        alternate.as_deref().unwrap_or(spelling),
+                    )
+                } else {
+                    None
+                }
+            })
+    }
+
     fn program(mut self) -> Result<wir::Program> {
         let file = self.target.files.push(SourceFile::new("workshop.txt"));
         // Re-point synthetic spans at the real file id by keeping a helper.
@@ -123,7 +189,7 @@ impl Parser<'_> {
                 }
                 None => break,
             };
-            match canonical_keyword(&phrase) {
+            match self.canonical_keyword(&phrase).as_str() {
                 "settings" => self.settings_section()?,
                 "variables" => self.variables_section()?,
                 "subroutines" => self.subroutines_section()?,
@@ -146,7 +212,28 @@ impl Parser<'_> {
         let mut children = Vec::new();
         while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
             let (display, child_start, _) = self.phrase()?;
-            let name = canonical_keyword(&display);
+            let canonical_display = self.canonical_keyword(&display);
+            let name = match canonical_display.as_str() {
+                value
+                    if value == "extensions"
+                        || display == "扩展"
+                        || self.settings_name_matches("labels", "Extensions", &display) =>
+                {
+                    "extensions"
+                }
+                value
+                    if value == "workshop"
+                        || table::localized_name(
+                            self.locale.as_str(),
+                            "namespaces",
+                            "workshop",
+                        )
+                        .is_some_and(|name| name == display) =>
+                {
+                    "workshop"
+                }
+                value => value,
+            };
             self.expect(TokenKind::LBrace, "expected '{' after settings group")?;
             let node = match name {
                 "main" | "lobby" => SettingsNode::Group {
@@ -163,6 +250,15 @@ impl Parser<'_> {
                 },
                 "modes" => self.settings_modes(child_start)?,
                 "heroes" => self.settings_heroes(child_start)?,
+                "extensions" => SettingsNode::Group {
+                    name: "extensions".to_string(),
+                    children: self.settings_members(&[PathPart::Part("extensions")], None)?,
+                    span: Some(self.settings_span(child_start)),
+                },
+                "workshop" => SettingsNode::Workshop {
+                    children: self.settings_opaque_members()?,
+                    span: Some(self.settings_span(child_start)),
+                },
                 _ => self.settings_opaque_group(name, child_start)?,
             };
             children.push(node);
@@ -198,7 +294,12 @@ impl Parser<'_> {
             }
             let (display, mode_start, _) = self.phrase_on_line()?;
             let mode = self
-                .resolve_settings_name(table::MODE_NAMES, "modes", &display)
+                .resolve_settings_name_extended(
+                    table::MODE_NAMES,
+                    table::GENERATED_MODE_NAMES,
+                    "modes",
+                    &display,
+                )
                 .ok();
             self.expect(TokenKind::LBrace, "expected '{' after game mode")?;
             let mut mode_children = if let Some(mode) = mode {
@@ -233,18 +334,28 @@ impl Parser<'_> {
     fn settings_heroes(&mut self, start: Position) -> Result<SettingsNode> {
         let mut teams = Vec::new();
         while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
-            let (team_display, team_start, _) = self.phrase_on_line()?;
+            let (team_display, team_start, _) = self.phrase_on_line_with_colon()?;
             let team = self.resolve_settings_name(table::TEAM_NAMES, "teams", &team_display)?;
             self.expect(TokenKind::LBrace, "expected '{' after team settings group")?;
             let mut team_children = Vec::new();
             while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
-                let (display, child_start, child_end) = self.phrase_on_line()?;
+                let (display, child_start, child_end) = self.phrase_on_line_with_colon()?;
                 if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace))
                     && self
-                        .resolve_settings_name(table::HERO_NAMES, "heroes", &display)
+                        .resolve_settings_name_extended(
+                            table::HERO_NAMES,
+                            table::GENERATED_HERO_NAMES,
+                            "heroes",
+                            &display,
+                        )
                         .is_ok()
                 {
-                    let hero = self.resolve_settings_name(table::HERO_NAMES, "heroes", &display)?;
+                    let hero = self.resolve_settings_name_extended(
+                        table::HERO_NAMES,
+                        table::GENERATED_HERO_NAMES,
+                        "heroes",
+                        &display,
+                    )?;
                     self.expect(TokenKind::LBrace, "expected '{' after hero settings group")?;
                     let children = self.settings_members(
                         &[PathPart::Part("heroes"), PathPart::Team, PathPart::Hero],
@@ -302,7 +413,7 @@ impl Parser<'_> {
         path: &[PathPart<'static>],
         hero: Option<&str>,
     ) -> Result<SettingsNode> {
-        let entry = table::ENTRIES.iter().find(|candidate| {
+        let entry = table::entries().find(|candidate| {
             candidate.path.len() == path.len() + 1
                 && candidate.path[..path.len()]
                     .iter()
@@ -328,10 +439,35 @@ impl Parser<'_> {
                 let (value, value_start, value_end) = self.phrase_on_line()?;
                 let canonical = match entry.kind {
                     KeyKind::ListMap => self
-                        .resolve_settings_name(table::MAP_NAMES, "maps", &value)
+                        .resolve_settings_name_extended(
+                            table::MAP_NAMES,
+                            table::GENERATED_MAP_NAMES,
+                            "maps",
+                            &value,
+                        )
+                        .or_else(|_| {
+                            value
+                                .split_whitespace()
+                                .next()
+                                .and_then(|name| {
+                                    self.resolve_settings_name_extended(
+                                        table::MAP_NAMES,
+                                        table::GENERATED_MAP_NAMES,
+                                        "maps",
+                                        name,
+                                    )
+                                    .ok()
+                                })
+                                .ok_or_else(|| self.unknown("setting", &value))
+                        })
                         .unwrap_or(value.as_str()),
                     KeyKind::ListHero => self
-                        .resolve_settings_name(table::HERO_NAMES, "heroes", &value)
+                        .resolve_settings_name_extended(
+                            table::HERO_NAMES,
+                            table::GENERATED_HERO_NAMES,
+                            "heroes",
+                            &value,
+                        )
                         .unwrap_or(value.as_str()),
                     _ => {
                         return Err(
@@ -351,10 +487,17 @@ impl Parser<'_> {
                 span: Some(Span::new(self.file(), start, self.previous_span().1)),
             });
         }
+        if matches!(entry.kind, KeyKind::Flag) {
+            return Ok(SettingsNode::Flag {
+                name: name.to_string(),
+                span: Some(Span::new(self.file(), start, self.previous_span().1)),
+            });
+        }
         self.expect(TokenKind::Colon, "expected ':' after settings key")?;
         let end = self.previous_span().1;
         let span = Some(Span::new(self.file(), start, end));
         match entry.kind {
+            KeyKind::Flag => unreachable!("presence-only settings returned before ':'"),
             KeyKind::String => Ok(SettingsNode::String {
                 name: name.to_string(),
                 value: self.expect_string("expected a settings string")?,
@@ -367,7 +510,7 @@ impl Parser<'_> {
             }),
             KeyKind::Percent => Ok(SettingsNode::Number {
                 name: name.to_string(),
-                value: self.settings_number(true)?,
+                value: self.settings_number_percent()?,
                 span,
             }),
             KeyKind::Bool => Ok(SettingsNode::Bool {
@@ -447,7 +590,15 @@ impl Parser<'_> {
         if parts.is_empty() {
             return Err(self.malformed("expected an identifier", &first));
         }
-        Ok((parts.join(" ").replace(" : ", ":"), start, end))
+        Ok((
+            parts
+                .join(" ")
+                .replace(" : ", ":")
+                .replace(" .", ".")
+                .replace(". ", "."),
+            start,
+            end,
+        ))
     }
 
     fn raw_settings_line(&mut self) -> Result<String> {
@@ -483,6 +634,20 @@ impl Parser<'_> {
         Ok(value)
     }
 
+    fn settings_number_percent(&mut self) -> Result<f64> {
+        let value = self.settings_number(false)?;
+        if matches!(
+            self.peek(),
+            Some(Token {
+                kind: TokenKind::Op(op),
+                ..
+            }) if op == "%"
+        ) {
+            self.pos += 1;
+        }
+        Ok(value)
+    }
+
     fn settings_bool(&mut self) -> Result<bool> {
         let token = self
             .next()
@@ -512,6 +677,15 @@ impl Parser<'_> {
                     && self.settings_name_matches("enums", member.name, &display)
             })
             .map(|member| member.member.to_string())
+            .or_else(|| {
+                table::GENERATED_ENUM_MEMBERS
+                    .iter()
+                    .find(|member| {
+                        member.domain == domain
+                            && self.settings_name_matches("enums", member.name, &display)
+                    })
+                    .map(|member| member.member.to_string())
+            })
             .ok_or_else(|| self.unknown("settings enum", &display))
     }
 
@@ -528,34 +702,71 @@ impl Parser<'_> {
             .ok_or_else(|| self.unknown("setting", display))
     }
 
+    fn resolve_settings_name_extended(
+        &self,
+        names: &[table::NameMap],
+        generated: &[table::NameMap],
+        section: &str,
+        display: &str,
+    ) -> Result<&'static str> {
+        names
+            .iter()
+            .chain(generated.iter())
+            .find(|candidate| self.settings_name_matches(section, candidate.name, display))
+            .map(|candidate| candidate.key)
+            .ok_or_else(|| self.unknown("setting", display))
+    }
+
     fn settings_name_matches_for_path(
         &self,
         candidate: &table::TableEntry,
         display: &str,
         hero: Option<&str>,
     ) -> bool {
+        if let Some(PathPart::Part(key)) = candidate.path.last() {
+            if display == *key {
+                return true;
+            }
+        }
+        if let (Some(hero), Some(PathPart::Part(key))) = (hero, candidate.path.last()) {
+            if table::hero_setting_name(hero, key, self.locale.as_str()) == Some(display) {
+                return true;
+            }
+            if table::hero_setting_alias(hero, key, self.locale.as_str(), display) {
+                return true;
+            }
+        }
         if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(candidate.path)) {
-            return crate::gameplay_data::builtin()
-                .ok()
-                .and_then(|catalog| {
-                    catalog
-                        .query()
-                        .ability_name(hero, slot, None, self.locale.as_str())
-                        .ok()
-                        .map(|name| name == display)
-                })
-                .unwrap_or(false);
+            if candidate.workshop_name.contains("%1$s")
+                || matches!(
+                    candidate.path.last(),
+                    Some(PathPart::Part("enableAbility1" | "enableAbility2"))
+                )
+            {
+                return crate::gameplay_data::builtin()
+                    .ok()
+                    .and_then(|catalog| {
+                        catalog
+                            .query()
+                            .ability_name(hero, slot, None, self.locale.as_str())
+                            .ok()
+                            .map(|name| name == display)
+                    })
+                    .unwrap_or(false);
+            }
         }
         self.settings_name_matches("labels", candidate.workshop_name, display)
     }
 
     fn settings_name_matches(&self, section: &str, english: &str, display: &str) -> bool {
-        if self.locale == Locale::new("en-US") {
-            display == english
-        } else {
-            table::localized_name(self.locale.as_str(), section, english)
-                .is_some_and(|localized| localized == display)
-        }
+        let localized = table::localized_name(self.locale.as_str(), section, english);
+        localized
+            .is_some_and(|localized| localized == display)
+            // Real Workshop exports can mix the selected locale with
+            // primary-locale labels when a reviewed mapping is absent.
+            // Accept that source spelling for parsing, while emission
+            // still fails explicitly if the target mapping is missing.
+            || display == english
     }
 
     fn settings_span(&self, start: Position) -> Span {
@@ -719,7 +930,7 @@ impl Parser<'_> {
                 Some(Token {
                     kind: TokenKind::Word(word),
                     ..
-                }) => match canonical_keyword(&word) {
+                }) => match self.canonical_keyword(&word).as_str() {
                     "event" => {
                         if seen_sections.contains(&"event") {
                             return Err(
@@ -892,8 +1103,7 @@ impl Parser<'_> {
             });
         }
         let team_member = self
-            .catalog
-            .resolve_enum_member("EventTeam", &self.locale, parameters[0])
+            .resolve_enum_member_mixed("EventTeam", parameters[0])
             .map(|(_, member)| member);
         let team = match team_member.as_deref() {
             Some("ALL") => EventTeam::All,
@@ -902,8 +1112,7 @@ impl Parser<'_> {
             _ => return Err(self.unknown("event team", parameters[0])),
         };
         let target = if let Some((_, member)) =
-            self.catalog
-                .resolve_enum_member("EventPlayer", &self.locale, parameters[1])
+            self.resolve_enum_member_mixed("EventPlayer", parameters[1])
         {
             if member == "ALL" {
                 EventTarget::All
@@ -969,6 +1178,18 @@ impl Parser<'_> {
                         self.pos += 1;
                         continue;
                     }
+                    if let Some(Token {
+                        kind: TokenKind::Word(word),
+                        ..
+                    }) = self.peek()
+                    {
+                        if self.settings_name_matches("tokens", "disabled", &word) {
+                            self.pos += 1;
+                            let _disabled_condition = self.value()?;
+                            self.expect(TokenKind::Semi, "expected ';' after condition")?;
+                            continue;
+                        }
+                    }
                     let condition = self.value()?;
                     self.expect(TokenKind::Semi, "expected ';' after condition")?;
                     conditions.push(condition);
@@ -1023,38 +1244,24 @@ impl Parser<'_> {
                     }
                     let saved = self.pos;
                     let (phrase, start, end) = self.phrase()?;
-                    if canonical_keyword(&phrase) == "disabled While" {
-                        actions.push(self.while_group()?);
-                        continue;
-                    }
-                    if canonical_keyword(&phrase) == "disabled If" {
-                        actions.push(self.if_group()?);
-                        continue;
-                    }
-                    if canonical_keyword(&phrase) == "disabled Abort" {
-                        actions.push(self.action_call_from_phrase(
-                            "Abort If".to_string(),
-                            start,
-                            end,
-                        )?);
-                        continue;
-                    }
-                    if canonical_keyword(&phrase) == "disabled Wait Until" {
-                        actions.push(self.action_call_from_phrase(
-                            "Wait Until".to_string(),
-                            start,
-                            end,
-                        )?);
-                        continue;
-                    }
-                    if let Some(rest) = phrase.strip_prefix("disabled ") {
-                        if self
-                            .catalog
-                            .resolve(Kind::Action, &self.locale, rest)
-                            .is_some()
-                        {
+                    if let Some(rest) = self.disabled_action_rest(&phrase) {
+                        if let Some(structural) = self.resolve_entry(Kind::Structural, rest) {
+                            match structural.id.as_str() {
+                                "while" => {
+                                    actions.push(self.while_group()?);
+                                    continue;
+                                }
+                                "if" => {
+                                    actions.push(self.if_group()?);
+                                    continue;
+                                }
+                                _ => {}
+                            }
+                        }
+                        if self.resolve_entry(Kind::Action, rest).is_some() {
+                            let canonical = rest;
                             actions.push(self.action_call_from_phrase(
-                                rest.to_string(),
+                                canonical.to_string(),
                                 start,
                                 end,
                             )?);
@@ -1074,24 +1281,24 @@ impl Parser<'_> {
                         actions.push(self.while_group()?);
                         continue;
                     }
-                    match canonical_keyword(&phrase) {
-                        "End" => {
+                    match self.canonical_keyword(&phrase).as_str() {
+                        "end" => {
                             self.pos = saved;
                             return Ok((actions, Stop::End));
                         }
-                        "Else If" => {
+                        "elseIf" => {
                             self.pos = saved;
                             return Ok((actions, Stop::ElseIf));
                         }
-                        "Else" => {
+                        "else" => {
                             self.pos = saved;
                             return Ok((actions, Stop::Else));
                         }
-                        "If" => actions.push(self.if_group()?),
-                        "For Global Variable" => actions.push(self.for_group()?),
-                        "For Player Variable" => actions.push(self.for_player_group()?),
-                        "While" => actions.push(self.while_group()?),
-                        "Loop" => actions.push(self.opaque_action()?),
+                        "if" => actions.push(self.if_group()?),
+                        "forGlobalVariable" => actions.push(self.for_group()?),
+                        "forPlayerVariable" => actions.push(self.for_player_group()?),
+                        "while" => actions.push(self.while_group()?),
+                        "Loop" => actions.push(self.action_call_from_phrase(phrase, start, end)?),
                         "Loop If Condition Is True" => {
                             actions.push(self.action_call_from_phrase(phrase, start, end)?)
                         }
@@ -1118,12 +1325,30 @@ impl Parser<'_> {
                     // not executable actions.
                     self.pos += 1;
                 }
-                Some(token) => return Err(self.malformed("expected an action", &token)),
+                Some(token) => {
+                    let saved = self.pos;
+                    if let Some(action) = self.member_assignment_action(saved, token.start)? {
+                        actions.push(action);
+                    } else {
+                        return Err(self.malformed("expected an action", &token));
+                    }
+                }
                 None => {
                     return Err(self.malformed("unexpected end of input in actions", self.eof()));
                 }
             }
         }
+    }
+
+    /// Return the action spelling after the locale-declared disabled
+    /// modifier. The modifier itself is settings/catalog data, not a parser
+    /// branch for a fixed pair of client locales.
+    fn disabled_action_rest<'a>(&self, phrase: &'a str) -> Option<&'a str> {
+        if let Some(rest) = phrase.strip_prefix("disabled ") {
+            return Some(rest);
+        }
+        let localized = table::localized_name(self.locale.as_str(), "tokens", "disabled")?;
+        phrase.strip_prefix(localized)?.strip_prefix(' ')
     }
 
     fn assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
@@ -1171,8 +1396,7 @@ impl Parser<'_> {
                 })));
             }
             let Some(operator) = self.assignment_operator() else {
-                self.pos = saved;
-                return Ok(None);
+                return self.member_assignment_action(saved, start);
             };
             let variable = self.global_by_name(&name)?;
             let value = self.value()?;
@@ -1196,17 +1420,32 @@ impl Parser<'_> {
             })));
         }
 
-        if !matches!(canonical_keyword(&first), "Event" | "event")
-            || !matches!(
-                self.peek_at(1).map(|token| token.kind),
-                Some(TokenKind::Word(word))
-                    if matches!(canonical_keyword(&word), "Player" | "player")
-            )
-        {
+        let first_canonical = canonical_keyword(&first);
+        let is_event_player = first_canonical == "Event Player"
+            || (matches!(first_canonical, "Event" | "event")
+                && matches!(
+                    self.peek_at(1).map(|token| token.kind),
+                    Some(TokenKind::Word(word))
+                        if matches!(canonical_keyword(&word), "Player" | "player")
+                ));
+        if !is_event_player {
+            // Object/member assignments use the same value grammar as member
+            // reads (`receiver.member` and `receiver.member[index]`). Keep
+            // this source-level form distinct from catalog actions: the
+            // receiver and member are dynamic Workshop values, not a builtin
+            // identity. Global and Event Player assignments are handled by
+            // their dedicated variable paths above and below.
+            if !matches!(first_canonical, "Event" | "event") {
+                return self.member_assignment_action(saved, start);
+            }
             return Ok(None);
         }
 
-        self.pos += 2;
+        if first_canonical == "Event Player" {
+            self.pos += 1;
+        } else {
+            self.pos += 2;
+        }
         let event_player = self.target.values.push(ValueNode::new(
             Value::EventPlayer,
             Some(Span::new(self.file(), start, self.previous_span().1)),
@@ -1246,8 +1485,7 @@ impl Parser<'_> {
             })));
         }
         let Some(operator) = self.assignment_operator() else {
-            self.pos = saved;
-            return Ok(None);
+            return self.member_assignment_action(saved, start);
         };
         let value = self.value()?;
         self.expect(TokenKind::Semi, "expected ';' after assignment")?;
@@ -1269,6 +1507,34 @@ impl Parser<'_> {
                 span,
                 target_span,
             },
+        })))
+    }
+
+    fn member_assignment_action(
+        &mut self,
+        saved: usize,
+        start: Position,
+    ) -> Result<Option<wir::ActionId>> {
+        self.pos = saved;
+        if !self.line_has_assignment() {
+            return Ok(None);
+        }
+        let target = self.value()?;
+        let Some(operator) = self.assignment_operator() else {
+            self.pos = saved;
+            return Ok(None);
+        };
+        let value = self.value()?;
+        self.expect(TokenKind::Semi, "expected ';' after member assignment")?;
+        let op = match operator {
+            AssignmentOperator::Set => None,
+            AssignmentOperator::Modify(op) => Some(op),
+        };
+        Ok(Some(self.target.actions.push(Action::AssignMember {
+            target,
+            op,
+            value,
+            span: Some(Span::new(self.file(), start, self.previous_span().1)),
         })))
     }
 
@@ -1586,19 +1852,15 @@ impl Parser<'_> {
             None => {
                 // Generic action call; the argument list is optional.
                 let Some(action) = self
-                    .catalog
-                    .resolve(Kind::Action, &self.locale, &phrase)
-                    .or_else(|| {
-                        self.catalog
-                            .resolve(Kind::Action, &self.locale, &format!("{phrase} "))
-                    })
+                    .resolve_entry(Kind::Action, &phrase)
+                    .or_else(|| self.resolve_entry(Kind::Action, &format!("{phrase} ")))
                     .or_else(|| {
                         let alias = match phrase.as_str() {
                             "Set Player Allowed Heroes" => "Set Allowed Heroes",
                             "设置技能充能" => "设置终极技能充能",
                             _ => return None,
                         };
-                        self.catalog.resolve(Kind::Action, &self.locale, alias)
+                        self.resolve_entry(Kind::Action, alias)
                     })
                 else {
                     return Err(WorkshopError::Unknown {
@@ -1664,6 +1926,45 @@ impl Parser<'_> {
                         return Ok(self.target.actions.push(Action::Call {
                             name: canonical.to_string(),
                             args,
+                            span: Some(Span::new(self.file(), start, end)),
+                        }));
+                    }
+                    "startRule" => {
+                        self.expect(TokenKind::LParen, "expected '('")?;
+                        let (name, _, _) = self.phrase()?;
+                        let subroutine = self.subroutine_by_name(&name)?;
+                        self.expect(TokenKind::Comma, "expected ',' after subroutine")?;
+                        let saved = self.expected_domain;
+                        self.expected_domain = self.context.expected_domain(action.id.as_str(), 1);
+                        let behavior = self.value()?;
+                        self.expected_domain = saved;
+                        self.expect(TokenKind::RParen, "expected ')'")?;
+                        self.expect(TokenKind::Semi, "expected ';' after action")?;
+                        let subroutine_value = self
+                            .target
+                            .values
+                            .push(ValueNode::new(Value::Subroutine(subroutine), None));
+                        return Ok(self.target.actions.push(Action::Call {
+                            name: action.id.clone(),
+                            args: vec![subroutine_value, behavior],
+                            span: Some(Span::new(self.file(), start, end)),
+                        }));
+                    }
+                    "stopChasingPlayerVariable" => {
+                        self.expect(TokenKind::LParen, "expected '('")?;
+                        let player = self.value()?;
+                        self.expect(TokenKind::Comma, "expected ',' after player")?;
+                        let (name, _, _) = self.phrase()?;
+                        let variable = self.player_by_name(&name)?;
+                        self.expect(TokenKind::RParen, "expected ')'")?;
+                        self.expect(TokenKind::Semi, "expected ';' after action")?;
+                        let player_variable = self.target.values.push(ValueNode::new(
+                            Value::PlayerVariable { player, variable },
+                            None,
+                        ));
+                        return Ok(self.target.actions.push(Action::Call {
+                            name: action.id.clone(),
+                            args: vec![player_variable],
                             span: Some(Span::new(self.file(), start, end)),
                         }));
                     }
@@ -1804,14 +2105,27 @@ impl Parser<'_> {
                     ));
                     continue;
                 }
-                if is_comparison(&op)
-                    || matches!(op.as_str(), "and" | "or" | "+" | "-" | "*" | "/" | "%")
+                let compound_assignment = matches!(
+                    self.peek_at(1).map(|token| token.kind),
+                    Some(TokenKind::Op(equal)) if equal == "="
+                );
+                if !compound_assignment
+                    && (is_comparison(&op)
+                        || matches!(op.as_str(), "and" | "or" | "+" | "-" | "*" | "/" | "%"))
                 {
                     self.pos += 1;
                     let right = self.primary()?;
+                    let name = match op.as_str() {
+                        "+" => "add",
+                        "-" => "subtract",
+                        "*" => "multiply",
+                        "/" => "divide",
+                        "%" => "modulo",
+                        _ => op.as_str(),
+                    };
                     value = self.target.values.push(ValueNode::new(
                         Value::Call {
-                            name: op,
+                            name: name.to_string(),
                             args: vec![value, right],
                         },
                         Some(Span::new(self.file(), start, end)),
@@ -1965,10 +2279,33 @@ impl Parser<'_> {
             Some(Token {
                 kind: TokenKind::Word(word),
                 ..
-            }) if word == "Event" => {
+            }) if matches!(canonical_keyword(&word), "Event" | "event" | "Event Player") => {
                 let (start, _) = self.span_here();
                 self.pos += 1;
-                if matches!(self.peek(), Some(Token { kind: TokenKind::Word(next), .. }) if matches!(canonical_keyword(&next), "Player" | "player"))
+                if canonical_keyword(&word) == "Event Player" {
+                    let player = self.target.values.push(ValueNode::new(
+                        Value::EventPlayer,
+                        Some(Span::new(self.file(), start, self.previous_span().1)),
+                    ));
+                    if matches!(
+                        self.peek(),
+                        Some(Token {
+                            kind: TokenKind::Dot,
+                            ..
+                        })
+                    ) {
+                        self.pos += 1;
+                        let (name, name_start, name_end) = self.phrase()?;
+                        let variable = self.player_by_name(&name)?;
+                        return Ok(self.target.values.push(ValueNode::new(
+                            Value::PlayerVariable { player, variable },
+                            Some(Span::new(self.file(), name_start, name_end)),
+                        )));
+                    }
+                    return Ok(player);
+                }
+                if canonical_keyword(&word) != "Event Player"
+                    && matches!(self.peek(), Some(Token { kind: TokenKind::Word(next), .. }) if matches!(canonical_keyword(&next), "Player" | "player"))
                 {
                     self.pos += 1;
                     let player = self.target.values.push(ValueNode::new(
@@ -1993,7 +2330,7 @@ impl Parser<'_> {
                     return Ok(player);
                 }
                 self.pos -= 1;
-                let (phrase, start, end) = self.phrase_with_dots()?;
+                let (phrase, start, end) = self.phrase()?;
                 if matches!(
                     self.peek(),
                     Some(Token {
@@ -2077,8 +2414,13 @@ impl Parser<'_> {
                             value: Value::EventPlayer,
                             ..
                         })
-                    ) {
-                        let variable = self.player_by_name(&name)?;
+                    ) || self.players.contains_key(&name)
+                    {
+                        let variable = self
+                            .players
+                            .get(&name)
+                            .copied()
+                            .unwrap_or(self.player_by_name(&name)?);
                         Ok(self.target.values.push(ValueNode::new(
                             Value::PlayerVariable {
                                 player: inner,
@@ -2116,7 +2458,7 @@ impl Parser<'_> {
                 }
             }
             _ => {
-                let (phrase, start, end) = self.phrase_with_dots()?;
+                let (phrase, start, end) = self.phrase()?;
                 match canonical_keyword(&phrase) {
                     "True" | "真" => Ok(self.push_bool(true, start, end)),
                     "False" | "假" => Ok(self.push_bool(false, start, end)),
@@ -2153,10 +2495,11 @@ impl Parser<'_> {
         // A value function wins over an enum domain of the same spelling
         // (e.g. `Vector(x, y, z)` is the value function; `Vector` as an enum
         // domain only appears through bare members like `Up`).
-        let prefer_enum =
-            canonical_keyword(phrase) == "Hero" && self.catalog.enum_domain("Hero").is_some();
+        let prefer_enum = self.catalog.enum_domain("Hero").is_some()
+            && (canonical_keyword(phrase) == "Hero"
+                || self.resolve_enum_domain_mixed(phrase) == Some("Hero"));
         if !prefer_enum {
-            if let Some(entry) = self.catalog.resolve(Kind::Value, &self.locale, phrase) {
+            if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
                 self.expect(TokenKind::LParen, "expected '(' after value name")?;
                 if entry.id == "compare" {
                     // Compare(a, op, b) -> Call(op, [a, b]). The operands are
@@ -2213,17 +2556,19 @@ impl Parser<'_> {
                 )));
             }
         }
-        if let Some(domain) = self
-            .catalog
-            .enum_domain(phrase)
-            .or_else(|| self.catalog.enum_domain(canonical_keyword(phrase)))
+        if let Some(domain_name) = self
+            .resolve_enum_domain_mixed(phrase)
+            .or_else(|| self.resolve_enum_domain_mixed(canonical_keyword(phrase)))
         {
+            let domain = self
+                .catalog
+                .enum_domain(domain_name)
+                .expect("resolved enum domain must exist");
             // Enum call: `Color(Yellow)`.
             self.expect(TokenKind::LParen, "expected '('")?;
             let (member_phrase, _, _) = self.enum_member_phrase()?;
             let member = self
-                .catalog
-                .resolve_enum_member(&domain.domain, &self.locale, &member_phrase)
+                .resolve_enum_member_mixed(&domain.domain, &member_phrase)
                 .unwrap_or_else(|| (domain.domain.clone(), member_phrase.clone()));
             self.expect(TokenKind::RParen, "expected ')' after enum member")?;
             return Ok(self.target.values.push(ValueNode::new(
@@ -2263,6 +2608,35 @@ impl Parser<'_> {
         start: Position,
         end: Position,
     ) -> Result<wir::ValueId> {
+        // Some enum members use a colon in their Workshop spelling (for
+        // example `Arrow: Up`). `phrase()` intentionally stops at the colon
+        // for ordinary identifiers, so complete the member only when the
+        // enclosing signature has already declared an enum domain.
+        if !matches!(phrase, "None" | "无" | "True" | "真" | "False" | "假")
+            && matches!(self.peek().map(|token| token.kind), Some(TokenKind::Colon))
+        {
+            let saved = self.pos;
+            self.pos += 1;
+            let (suffix, _, suffix_end) = self.phrase()?;
+            let owned_phrase = format!("{phrase}: {suffix}");
+            let recognized = self
+                .expected_domain
+                .and_then(|domain| self.resolve_enum_member_mixed(domain, &owned_phrase))
+                .or_else(|| self.resolve_enum_member_mixed("Hero", &owned_phrase));
+            if recognized.is_some() {
+                return self.bare_member_resolved(&owned_phrase, start, suffix_end);
+            }
+            self.pos = saved;
+        }
+        self.bare_member_resolved(phrase, start, end)
+    }
+
+    fn bare_member_resolved(
+        &mut self,
+        phrase: &str,
+        start: Position,
+        end: Position,
+    ) -> Result<wir::ValueId> {
         match (matches!(phrase, "None" | "无"), self.expected_domain) {
             (true, Some(expected))
                 if matches!(
@@ -2284,10 +2658,21 @@ impl Parser<'_> {
             }
             _ => {}
         }
-        if let Some((value_type, value)) =
-            self.catalog
-                .resolve_enum_member("Team", &self.locale, phrase)
-        {
+        if let Some(variable) = self.globals.get(phrase).copied() {
+            return Ok(self.target.values.push(ValueNode::new(
+                Value::GlobalVariable(variable),
+                Some(Span::new(self.file(), start, end)),
+            )));
+        }
+        if let Some(expected) = self.expected_domain {
+            if let Some((value_type, value)) = self.resolve_enum_member_mixed(expected, phrase) {
+                return Ok(self.target.values.push(ValueNode::new(
+                    Value::Enum { value_type, value },
+                    Some(Span::new(self.file(), start, end)),
+                )));
+            }
+        }
+        if let Some((value_type, value)) = self.resolve_enum_member_mixed("Team", phrase) {
             return Ok(self.target.values.push(ValueNode::new(
                 Value::Enum { value_type, value },
                 Some(Span::new(self.file(), start, end)),
@@ -2302,28 +2687,50 @@ impl Parser<'_> {
                 Some(Span::new(self.file(), start, end)),
             )));
         }
+        if self
+            .call_stack
+            .last()
+            .is_some_and(|call| call == "createHudText")
+        {
+            if let Some((value_type, value)) = self.resolve_enum_member_mixed("HudPosition", phrase)
+            {
+                return Ok(self.target.values.push(ValueNode::new(
+                    Value::Enum { value_type, value },
+                    Some(Span::new(self.file(), start, end)),
+                )));
+            }
+        }
         if (self.expected_domain.is_none()
-            && matches!(phrase, "Up" | "上")
+            && matches!(
+                phrase,
+                "Up" | "上" | "Down" | "下" | "Left" | "左" | "Right" | "右"
+            )
             && (self
                 .call_stack
                 .last()
-                .is_some_and(|call| call == "multiply")
+                .is_some_and(|call| matches!(call.as_str(), "multiply" | "add"))
                 || self.call_stack.is_empty()
                 || self
                     .call_stack
                     .iter()
                     .any(|call| call == "startAcceleration")
                 || self.call_stack.iter().any(|call| {
-                    call == "Ray Cast Hit Position"
+                    call == "raycastHitPosition"
                         || call == "Direction Towards"
                         || call == "directionTowards"
                 })))
             || (matches!(self.expected_domain, Some("Position")) && matches!(phrase, "Up" | "上"))
         {
+            let value = match phrase {
+                "Left" | "左" => "LEFT",
+                "Right" | "右" => "RIGHT",
+                "Down" | "下" => "DOWN",
+                _ => "UP",
+            };
             return Ok(self.target.values.push(ValueNode::new(
                 Value::Enum {
                     value_type: "Vector".to_string(),
-                    value: "UP".to_string(),
+                    value: value.to_string(),
                 },
                 Some(Span::new(self.file(), start, end)),
             )));
@@ -2373,7 +2780,13 @@ impl Parser<'_> {
             });
         }
         // A bare value constant (e.g. Empty Array).
-        if let Some(entry) = self.catalog.resolve(Kind::Value, &self.locale, phrase) {
+        if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
+            if entry.id == "null" {
+                return Ok(self.target.values.push(ValueNode::new(
+                    Value::Null,
+                    Some(Span::new(self.file(), start, end)),
+                )));
+            }
             return Ok(self.target.values.push(ValueNode::new(
                 Value::Call {
                     name: entry.id.clone(),
@@ -2402,15 +2815,98 @@ impl Parser<'_> {
         }
         self.call_stack.push(call_id.to_string());
         let mut arg_index = 0usize;
+        let mut raw_modify_operator = false;
         loop {
-            // Each argument is parsed with the domain its position expects
-            // per the enclosing call's canonical signature (#111); nested
-            // calls override the expectation for their own arguments.
-            let saved = self.expected_domain;
-            self.expected_domain = self.context.expected_domain(call_id, arg_index);
-            let arg = self.value();
-            self.expected_domain = saved;
-            args.push(arg?);
+            // Indexed variable actions carry a project-local variable name,
+            // not a Workshop value expression. Resolve it through the symbol
+            // table so names such as `Brigitte` remain variable identities.
+            if matches!(
+                call_id,
+                "setGlobalVariableAtIndex" | "modifyGlobalVariableAtIndex"
+            ) && arg_index == 0
+            {
+                let (name, start, end) = self.phrase()?;
+                let variable = self.global_by_name(&name)?;
+                args.push(self.target.values.push(ValueNode::new(
+                    Value::GlobalVariable(variable),
+                    Some(Span::new(self.file(), start, end)),
+                )));
+            } else if matches!(
+                call_id,
+                "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex"
+            ) && arg_index == 1
+            {
+                let saved = self.pos;
+                let (name, start, end) = self.phrase()?;
+                if let Some(variable) = self.players.get(&name).copied() {
+                    let player = args[0];
+                    args[0] = self.target.values.push(ValueNode::new(
+                        Value::PlayerVariable { player, variable },
+                        Some(Span::new(self.file(), start, end)),
+                    ));
+                } else {
+                    self.pos = saved;
+                    let saved_domain = self.expected_domain;
+                    self.expected_domain = self.context.expected_domain(call_id, arg_index);
+                    let arg = self.value();
+                    self.expected_domain = saved_domain;
+                    args.push(arg?);
+                }
+            } else if matches!(
+                call_id,
+                "modifyGlobalVariableAtIndex" | "modifyPlayerVariableAtIndex"
+            ) && {
+                let operator_position = arg_index == 2 || arg_index == 3 && raw_modify_operator;
+                let saved = self.pos;
+                let is_operator = operator_position && self.modify_op().is_ok();
+                self.pos = saved;
+                is_operator
+            } {
+                let operator = self.modify_op()?;
+                let name = match operator {
+                    ModifyOp::Add => "add",
+                    ModifyOp::Subtract => "subtract",
+                    ModifyOp::Multiply => "multiply",
+                    ModifyOp::Divide => "divide",
+                    ModifyOp::Modulo => "modulo",
+                    ModifyOp::RaiseToPower => "raiseToPower",
+                    ModifyOp::AppendToArray => "appendToArray",
+                    ModifyOp::RemoveFromArray => "removeFromArray",
+                    ModifyOp::RemoveFromArrayByIndex => "removeFromArrayByIndex",
+                };
+                args.push(self.target.values.push(ValueNode::new(
+                    Value::Call {
+                        name: name.to_string(),
+                        args: Vec::new(),
+                    },
+                    None,
+                )));
+            } else {
+                if matches!(
+                    call_id,
+                    "modifyGlobalVariableAtIndex" | "modifyPlayerVariableAtIndex"
+                ) && arg_index == 2
+                {
+                    let saved = self.pos;
+                    raw_modify_operator = self.modify_op().is_err();
+                    self.pos = saved;
+                }
+                // Each argument is parsed with the domain its position expects
+                // per the enclosing call's canonical signature (#111); nested
+                // calls override the expectation for their own arguments.
+                let saved = self.expected_domain;
+                self.expected_domain =
+                    self.context
+                        .expected_domain(call_id, arg_index)
+                        .or_else(|| {
+                            (matches!(call_id, "array" | "randomValueInArray"))
+                                .then_some(saved)
+                                .flatten()
+                        });
+                let arg = self.value();
+                self.expected_domain = saved;
+                args.push(arg?);
+            }
             arg_index += 1;
             match self.peek() {
                 Some(Token {
@@ -2676,7 +3172,7 @@ impl Parser<'_> {
                     kind: TokenKind::Op(op),
                     start,
                     end,
-                } if op == "-" => ("-".to_string(), start, end),
+                } if matches!(op.as_str(), "-" | "%") => (op.clone(), start, end),
                 _ => break,
             };
             if word_start.line != line {
@@ -2687,21 +3183,43 @@ impl Parser<'_> {
             self.pos += 1;
         }
         Ok((
-            words.join(" ").replace(" .", ".").replace(". ", "."),
+            words
+                .join(" ")
+                .replace(" .", ".")
+                .replace(". ", ".")
+                .replace(" : ", ":")
+                .replace(" %", "%"),
             start,
             end,
         ))
     }
 
-    fn phrase_with_dots(&mut self) -> Result<(String, Position, Position)> {
-        let (first, start, mut end) = self.phrase()?;
-        let mut phrase = first;
-        while matches!(self.peek().map(|token| token.kind), Some(TokenKind::Dot)) {
-            self.pos += 1;
-            let (part, _, part_end) = self.phrase()?;
-            phrase.push('.');
-            phrase.push_str(&part);
-            end = part_end;
+    fn phrase_on_line_with_colon(&mut self) -> Result<(String, Position, Position)> {
+        let (mut phrase, start, mut end) = self.phrase_on_line()?;
+        if matches!(
+            self.peek(),
+            Some(Token {
+                kind: TokenKind::Colon,
+                ..
+            })
+        ) {
+            let colon_pos = self.pos;
+            self.next();
+            let (rest, _, rest_end) = self.phrase_on_line()?;
+            if matches!(
+                self.peek(),
+                Some(Token {
+                    kind: TokenKind::LBrace,
+                    ..
+                })
+            ) {
+                phrase.push(':');
+                phrase.push(' ');
+                phrase.push_str(&rest);
+                end = rest_end;
+            } else {
+                self.pos = colon_pos;
+            }
         }
         Ok((phrase, start, end))
     }
@@ -2727,7 +3245,15 @@ impl Parser<'_> {
         if parts.is_empty() {
             return Err(self.malformed("expected an enum member", &first));
         }
-        Ok((parts.join(" ").replace(" : ", ":"), start, end))
+        Ok((
+            parts
+                .join(" ")
+                .replace(" : ", ":")
+                .replace(" .", ".")
+                .replace(". ", "."),
+            start,
+            end,
+        ))
     }
 
     /// Read a text line (tokens until `;`), joining words and dashes into
@@ -2804,7 +3330,7 @@ impl Parser<'_> {
                 kind: TokenKind::Word(word),
                 start,
                 ..
-            }) if canonical_keyword(&word) == expected => Ok(start),
+            }) if self.canonical_keyword(&word) == expected => Ok(start),
             Some(token) => Err(self.malformed(&format!("expected '{expected}'"), &token)),
             None => Err(self.malformed(&format!("expected '{expected}'"), self.eof())),
         }
@@ -2893,31 +3419,15 @@ fn is_comparison(op: &str) -> bool {
 }
 
 fn canonical_keyword(keyword: &str) -> &str {
-    match keyword {
-        "设置" => "settings",
-        "变量" => "variables",
-        "子程序" => "subroutines",
-        "规则" => "rule",
-        "事件" => "event",
-        "条件" => "conditions",
-        "动作" => "actions",
-        "主程序" => "main",
-        "大厅" => "lobby",
-        "模式" => "modes",
-        "英雄" => "heroes",
-        "地图" => "Map",
-        "循环" => "Loop",
-        "For 玩家变量" => "For Player Variable",
-        "如条件为“真”则循环" => "Loop If Condition Is True",
-        "全局" => "global",
-        "玩家" => "player",
-        "事件玩家" => "Event Player",
-        "禁用" => "disabled",
-        "结束" => "End",
-        "否则如果" => "Else If",
-        "否则" => "Else",
-        other => other,
-    }
+    static KEYWORDS: OnceLock<HashMap<String, String>> = OnceLock::new();
+    KEYWORDS
+        .get_or_init(|| {
+            serde_json::from_str(include_str!("structural_keywords.json"))
+                .expect("structural keyword data is valid JSON")
+        })
+        .get(keyword)
+        .map(String::as_str)
+        .unwrap_or(keyword)
 }
 
 fn raw_token_text(kind: &TokenKind) -> String {

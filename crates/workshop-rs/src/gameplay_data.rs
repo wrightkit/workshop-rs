@@ -5,6 +5,7 @@
 //! dataset-digest verification; query and calculation APIs remain separate.
 
 use sha2::{Digest, Sha256};
+use std::sync::OnceLock;
 
 use crate::gameplay::{GameplayCatalog, GameplayDataError, GameplayDatasetIdentity, Hero};
 
@@ -42,7 +43,8 @@ pub fn load(json: &str) -> Result<GameplayCatalog, GameplayDataError> {
 
 /// Load the checked-in gameplay dataset.
 pub fn builtin() -> Result<GameplayCatalog, GameplayDataError> {
-    load(GAMEPLAY_DATA)
+    static DATA: OnceLock<Result<GameplayCatalog, GameplayDataError>> = OnceLock::new();
+    DATA.get_or_init(|| load(GAMEPLAY_DATA)).clone()
 }
 
 /// Compute the deterministic SHA-256 identity of a gameplay dataset.

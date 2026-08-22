@@ -140,10 +140,23 @@ pub fn equivalent(a: &wir::Program, b: &wir::Program) -> bool {
     if subs_a != subs_b {
         return false;
     }
-    if a.rules.len() != b.rules.len() {
+    // Emission intentionally drops pass-only/condition-only rules because
+    // they have no executable behavior. Ignore those presentation-only
+    // source rules when comparing observable semantics.
+    let rules_a: Vec<_> = a
+        .rules
+        .iter()
+        .filter(|rule| !rule.actions.is_empty())
+        .collect();
+    let rules_b: Vec<_> = b
+        .rules
+        .iter()
+        .filter(|rule| !rule.actions.is_empty())
+        .collect();
+    if rules_a.len() != rules_b.len() {
         return false;
     }
-    for (rule_a, rule_b) in a.rules.iter().zip(b.rules.iter()) {
+    for (rule_a, rule_b) in rules_a.into_iter().zip(rules_b) {
         if !rule_equivalent(a, b, rule_a, rule_b) {
             return false;
         }
@@ -172,6 +185,12 @@ fn nodes_equivalent(
             .zip(right)
             .all(|(left, right)| match (left, right) {
                 (
+                    crate::settings::SettingsNode::Workshop { children: left, .. },
+                    crate::settings::SettingsNode::Workshop {
+                        children: right, ..
+                    },
+                ) => nodes_equivalent(left, right),
+                (
                     crate::settings::SettingsNode::Group {
                         name: left_name,
                         children: left_children,
@@ -194,7 +213,7 @@ fn nodes_equivalent(
                         value: right_value,
                         ..
                     },
-                ) => left_name == right_name && left_value == right_value,
+                ) => left_name == right_name && float_equivalent(*left_value, *right_value),
                 (
                     crate::settings::SettingsNode::Bool {
                         name: left_name,
@@ -207,6 +226,14 @@ fn nodes_equivalent(
                         ..
                     },
                 ) => left_name == right_name && left_value == right_value,
+                (
+                    crate::settings::SettingsNode::Flag {
+                        name: left_name, ..
+                    },
+                    crate::settings::SettingsNode::Flag {
+                        name: right_name, ..
+                    },
+                ) => left_name == right_name,
                 (
                     crate::settings::SettingsNode::String {
                         name: left_name,
@@ -238,8 +265,28 @@ fn nodes_equivalent(
                             .zip(right_elements)
                             .all(|(left, right)| left.value == right.value)
                 }
+                (
+                    crate::settings::SettingsNode::Raw {
+                        name: left_name,
+                        value: left_value,
+                        ..
+                    },
+                    crate::settings::SettingsNode::Raw {
+                        name: right_name,
+                        value: right_value,
+                        ..
+                    },
+                ) => left_name == right_name && left_value == right_value,
                 _ => false,
             })
+}
+
+fn float_equivalent(left: f64, right: f64) -> bool {
+    if left == right {
+        return true;
+    }
+    let scale = left.abs().max(right.abs()).max(1.0);
+    (left - right).abs() <= f64::EPSILON * scale * 4.0
 }
 
 fn rule_equivalent(
@@ -401,6 +448,20 @@ fn action_equivalent(
                 && value_equivalent(a, b, *x, *y)
         }
         (
+            wir::Action::AssignMember {
+                target: ta,
+                op: oa,
+                value: xa,
+                ..
+            },
+            wir::Action::AssignMember {
+                target: tb,
+                op: ob,
+                value: xb,
+                ..
+            },
+        ) => oa == ob && value_equivalent(a, b, *ta, *tb) && value_equivalent(a, b, *xa, *xb),
+        (
             wir::Action::CallSubroutine { subroutine: sa, .. },
             wir::Action::CallSubroutine { subroutine: sb, .. },
         ) => name_eq(a.subroutines.get(*sa), b.subroutines.get(*sb)),
@@ -450,6 +511,33 @@ fn action_equivalent(
                 && value_equivalent(a, b, *sa, *sb)
                 && value_equivalent(a, b, *ea, *eb)
                 && value_equivalent(a, b, *pa, *pb)
+                && actions_equivalent(a, b, ba, bb)
+        }
+        (
+            wir::Action::ForPlayerVariable {
+                player: pa,
+                variable: va,
+                start: sa,
+                stop: ea,
+                step: sta,
+                body: ba,
+                ..
+            },
+            wir::Action::ForPlayerVariable {
+                player: pb,
+                variable: vb,
+                start: sb,
+                stop: eb,
+                step: stb,
+                body: bb,
+                ..
+            },
+        ) => {
+            value_equivalent(a, b, *pa, *pb)
+                && name_eq(a.player_variables.get(*va), b.player_variables.get(*vb))
+                && value_equivalent(a, b, *sa, *sb)
+                && value_equivalent(a, b, *ea, *eb)
+                && value_equivalent(a, b, *sta, *stb)
                 && actions_equivalent(a, b, ba, bb)
         }
         (
@@ -560,11 +648,57 @@ fn value_equivalent(
             value_equivalent(a, b, *p1, *p2)
                 && name_eq(a.player_variables.get(*v1), b.player_variables.get(*v2))
         }
+        (wir::Value::Subroutine(s1), wir::Value::Subroutine(s2)) => {
+            name_eq(a.subroutines.get(*s1), b.subroutines.get(*s2))
+        }
         (wir::Value::EventPlayer, wir::Value::EventPlayer) => true,
+        (wir::Value::PlayerVariable { player, variable }, wir::Value::Call { name, args })
+            if name == "memberAccess" && args.len() == 2 =>
+        {
+            let Some(wir::ValueNode {
+                value: wir::Value::String(member),
+                ..
+            }) = b.values.get(args[1])
+            else {
+                return false;
+            };
+            value_equivalent(a, b, *player, args[0])
+                && a.player_variables
+                    .get(*variable)
+                    .is_some_and(|value| value.name == *member)
+        }
+        (wir::Value::Call { name, args }, wir::Value::PlayerVariable { player, variable })
+            if name == "memberAccess" && args.len() == 2 =>
+        {
+            let Some(wir::ValueNode {
+                value: wir::Value::String(member),
+                ..
+            }) = a.values.get(args[1])
+            else {
+                return false;
+            };
+            value_equivalent(a, b, args[0], *player)
+                && b.player_variables
+                    .get(*variable)
+                    .is_some_and(|value| value.name == *member)
+        }
         (wir::Value::Call { name: n1, args: x1 }, wir::Value::Call { name: n2, args: x2 }) => {
-            n1 == n2 && values_equivalent(a, b, x1, x2)
+            canonical_value_name(n1) == canonical_value_name(n2) && values_equivalent(a, b, x1, x2)
         }
         _ => false,
+    }
+}
+
+fn canonical_value_name(name: &str) -> &str {
+    match name {
+        "+" => "add",
+        "-" => "subtract",
+        "*" => "multiply",
+        "/" => "divide",
+        "len" => "countOf",
+        "abs" => "absoluteValue",
+        "sqrt" => "squareRoot",
+        _ => name,
     }
 }
 
