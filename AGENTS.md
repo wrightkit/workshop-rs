@@ -111,5 +111,10 @@ provenance-backed evidence.
 
 - Use focused branches and PRs; never push directly to `main`.
 - Keep commits scoped and avoid unrelated repository changes.
+- Review-time verification results, including hashes, residual counts, and
+  pass/fail status, must come from the test/CI run under review. Never hand-write
+  or manually refresh a committed evidence/result file; put results in the PR
+  description and CI logs/artifacts. Committed fixtures and provenance/input
+  manifests are allowed only as reproducible, machine-validated inputs.
 - Never commit credentials, private runtime data, or unreviewed third-party
   material.
