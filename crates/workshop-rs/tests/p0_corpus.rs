@@ -158,6 +158,103 @@ fn assert_custom_workshop_settings(name: &str, source: &str, target: &str) {
     );
 }
 
+fn assert_target_locale_spellings(
+    name: &str,
+    source_locale: &Locale,
+    target_locale: &Locale,
+    source: &str,
+    target: &str,
+    canonical_dump: &str,
+    catalog: &Catalog,
+) {
+    let canonical_uses = |identity: &str| {
+        canonical_dump
+            .split(|character: char| !character.is_ascii_alphanumeric())
+            .any(|token| token == identity)
+    };
+    for kind in [
+        workshop_rs::catalog::Kind::Structural,
+        workshop_rs::catalog::Kind::Action,
+        workshop_rs::catalog::Kind::Value,
+        workshop_rs::catalog::Kind::Event,
+        workshop_rs::catalog::Kind::Operator,
+        workshop_rs::catalog::Kind::Setting,
+    ] {
+        for entry in catalog.entries_of(kind) {
+            let Some(source_spelling) = entry.spelling(source_locale) else {
+                continue;
+            };
+            let Some(target_spelling) = entry.spelling(target_locale) else {
+                continue;
+            };
+            let used = if kind == workshop_rs::catalog::Kind::Structural {
+                entry.id != "workshop" && source.contains(source_spelling)
+            } else {
+                canonical_uses(&entry.id)
+            };
+            if source_spelling != target_spelling && used {
+                let target_spelling_present = target.contains(target_spelling)
+                    || (matches!(entry.id.as_str(), "chaseAtRate" | "chaseOverTime")
+                        && catalog
+                            .spelling(
+                                workshop_rs::catalog::Kind::Action,
+                                target_locale,
+                                if entry.id == "chaseAtRate" {
+                                    "chasePlayerVariableAtRate"
+                                } else {
+                                    "chasePlayerVariableOverTime"
+                                },
+                            )
+                            .is_some_and(|spelling| target.contains(spelling)));
+                assert!(
+                    target_spelling_present,
+                    "{name} target locale omitted {kind:?} '{}' spelling '{}', source spelling '{}' remains the only evidence",
+                    entry.id, target_spelling, source_spelling
+                );
+            }
+        }
+    }
+    for domain in catalog.enum_domains() {
+        if let (Some(source_spelling), Some(target_spelling)) = (
+            domain.spelling(source_locale),
+            domain.spelling(target_locale),
+        ) {
+            if source_spelling != target_spelling
+                && canonical_uses(&domain.domain)
+                && source.contains(source_spelling)
+            {
+                assert!(
+                    target.contains(target_spelling),
+                    "{name} target locale omitted enum domain '{}' spelling '{}', source spelling '{}' remains the only evidence",
+                    domain.domain,
+                    target_spelling,
+                    source_spelling
+                );
+            }
+        }
+        for member in &domain.members {
+            if let (Some(source_spelling), Some(target_spelling)) = (
+                member.spelling(source_locale),
+                member.spelling(target_locale),
+            ) {
+                if source_spelling != target_spelling
+                    && canonical_uses(&member.member)
+                    && source.contains(source_spelling)
+                {
+                    assert!(
+                        target.contains(target_spelling),
+                        "{name} target locale omitted enum member '{}.{}' spelling '{}', source spelling '{}' remains the only evidence",
+                        domain.domain,
+                        member.member,
+                        target_spelling,
+                        source_spelling
+                    );
+                }
+            }
+        }
+    }
+}
+
 #[test]
 fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
     let root =
@@ -253,6 +350,15 @@ fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
             &semantic::inspect(&converted_program, &catalog),
         );
         assert_custom_workshop_settings(name, &source, &converted.text);
+        assert_target_locale_spellings(
+            name,
+            &locale,
+            &target_locale,
+            &source,
+            &converted.text,
+            &program.dump(),
+            &catalog,
+        );
         assert!(
             roundtrip::equivalent(&program, &converted_program),
             "{name} target-locale conversion changed WIR"
