@@ -15,7 +15,7 @@ The repository is MIT-licensed. Committed mapping data is workshop-rs-owned,
 with the source evidence and generation method recorded here. The input JSON
 is a build-time evidence artifact and is not redistributed by workshop-rs.
 
-## Hero gameplay data (`src/data/gameplay.json`)
+## Hero gameplay data (`crates/workshop-rs/src/data/gameplay.json`)
 
 The gameplay dataset is a workshop-rs-owned, MIT-compatible projection of the
 user-provided `workshop-data/workshop-data.json` export. Its source is pinned
@@ -46,7 +46,7 @@ values remain absent unless supported by a current explicit source. The
 loader verifies the separate gameplay dataset identity and deterministic
 SHA-256 digest; it does not alter the Workshop catalog identity.
 
-## Catalog data (`src/catalog/data/catalog.json`)
+## Catalog data (`crates/workshop-rs/src/catalog/data/catalog.json`)
 
 The catalog dataset is WrightKit-authored data with recorded provenance,
 transferred to `workshop-rs` on 2026-08-16 as the canonical Workshop catalog
