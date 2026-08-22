@@ -75,6 +75,73 @@ fn localized_hero_call_resolves_dotted_member() {
 }
 
 #[test]
+fn dotted_localized_catalog_effect_resolves_as_one_member() {
+    let source = r#"rule("effect")
+{
+    event
+    {
+        持续 - 全局;
+    }
+    actions
+    {
+        播放效果(所有玩家(所有队伍), D.Va自毁爆炸效果, 颜色(白色), 事件玩家, 1);
+    }
+}
+"#;
+    let catalog = catalog();
+    let program = parser::parse_with_context(source, &catalog, &Locale::new("zh-CN"), &catalog)
+        .expect("dotted localized effect alias resolves");
+    assert!(program.values.iter().any(|value| matches!(
+        value.value,
+        wir::Value::Enum { ref value_type, ref value }
+            if value_type == "DynamicEffect" && value == "DVA_SELF_DESTRUCT_EXPLOSION"
+    )));
+    assert!(program.semantic_issues(&catalog).is_empty());
+}
+
+#[test]
+fn dotted_english_catalog_effect_resolves_as_one_member() {
+    let source = r#"rule("effect")
+{
+    event { Ongoing - Global; }
+    actions { Play Effect(All Players(All Teams), DVa Self Destruct Explosion Effect, Color(White), Event Player, 1); }
+}
+"#;
+    let catalog = catalog();
+    let program = parser::parse_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("English effect alias resolves");
+    assert!(program.values.iter().any(|value| matches!(
+        value.value,
+        wir::Value::Enum { ref value_type, ref value }
+            if value_type == "DynamicEffect" && value == "DVA_SELF_DESTRUCT_EXPLOSION"
+    )));
+    assert!(program.semantic_issues(&catalog).is_empty());
+}
+
+#[test]
+fn unresolved_dotted_value_remains_a_source_located_issue() {
+    let source = r#"rule("effect")
+{
+    event { 持续 - 全局; }
+    actions { 播放效果(所有玩家(所有队伍), D.Va不存在效果, 颜色(白色), 事件玩家, 1); }
+}
+"#;
+    let catalog = catalog();
+    let program = parser::parse_with_context(source, &catalog, &Locale::new("zh-CN"), &catalog)
+        .expect("unresolved dotted value remains parseable");
+    let issues = program.semantic_issues(&catalog);
+    let issue = issues
+        .iter()
+        .find(|issue| issue.kind == workshop_rs::semantic::IncompletenessKind::UnknownValue)
+        .expect("unknown dotted prefix is reported");
+    assert_eq!(issue.name, "D");
+    assert!(
+        issue.span.is_some(),
+        "unknown dotted input keeps its source span"
+    );
+}
+
+#[test]
 fn indexed_variable_actions_resolve_declared_names_as_variables() {
     let source = r##"variables {
     global: 0: Brigitte

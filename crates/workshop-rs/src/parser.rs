@@ -2458,6 +2458,9 @@ impl Parser<'_> {
                 }
             }
             _ => {
+                if let Some((phrase, start, end)) = self.catalog_phrase_with_dot() {
+                    return self.bare_member_resolved(&phrase, start, end);
+                }
                 let (phrase, start, end) = self.phrase()?;
                 match canonical_keyword(&phrase) {
                     "True" | "真" => Ok(self.push_bool(true, start, end)),
@@ -2484,6 +2487,49 @@ impl Parser<'_> {
                 }
             }
         }
+    }
+
+    /// Consume a dotted phrase only when the complete spelling is a reviewed
+    /// catalog value or enum member. Dots otherwise remain member-access
+    /// syntax, and unresolved dotted identifiers keep the existing diagnostic
+    /// path instead of being accepted as catalog names.
+    fn catalog_phrase_with_dot(&mut self) -> Option<(String, Position, Position)> {
+        let first = self.peek()?;
+        if !matches!(first.kind, TokenKind::Word(_)) {
+            return None;
+        }
+        let start = first.start;
+        let mut end = first.end;
+        let mut parts = Vec::new();
+        let mut has_dot = false;
+        let mut index = self.pos;
+        while let Some(token) = self.tokens.get(index) {
+            match &token.kind {
+                TokenKind::Word(word) => parts.push(word.clone()),
+                TokenKind::Number { text, .. } => parts.push(text.clone()),
+                TokenKind::Dot => {
+                    has_dot = true;
+                    parts.push(".".to_string());
+                }
+                _ => break,
+            }
+            end = token.end;
+            index += 1;
+        }
+        if !has_dot {
+            return None;
+        }
+        let phrase = parts.join(" ").replace(" .", ".").replace(". ", ".");
+        let known_value = self.resolve_entry(Kind::Value, &phrase).is_some();
+        let known_member = !self
+            .catalog
+            .bare_member_matches(&self.locale, &phrase)
+            .is_empty();
+        if !known_value && !known_member {
+            return None;
+        }
+        self.pos = index;
+        Some((phrase, start, end))
     }
 
     fn call_or_enum(
