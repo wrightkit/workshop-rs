@@ -66,6 +66,7 @@ workshop-rs-cli locales
 workshop-rs-cli version --json
 workshop-rs-cli census [--json]
 workshop-rs-cli corpus manifest.json [--json]
+workshop-rs-cli seasonal-diff previous.json current.json [--json]
 ```
 
 Exit codes: `0` success, `1` parse/emit/conversion/catalog failure, `2` usage
