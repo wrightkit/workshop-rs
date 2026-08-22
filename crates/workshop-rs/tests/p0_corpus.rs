@@ -3,72 +3,11 @@
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use workshop_rs::{
-    WorkshopError,
     catalog::{Catalog, Locale},
-    convert, emitter, parser, roundtrip, semantic, validate,
+    convert, emitter,
+    p0::{P0_EXPECTATION, P0CaseExpectation, P0Stage},
+    parser, roundtrip, semantic, validate,
 };
-
-const CASES: &[(&str, &str, &str)] = &[
-    (
-        "ai-pve",
-        "zh-CN",
-        "d9c6460ca550e40083efcc2b57de16360088631970824599a22c0aa2cb7f11f9",
-    ),
-    (
-        "bastion",
-        "en-US",
-        "44e453ddf7f373be65aea82d019abd45dd60f5ecb57c8d1607d3576a8bc60259",
-    ),
-    (
-        "defend",
-        "en-US",
-        "06a956b650313ee2d6e24ec989f907244dc4444579bdba27c580b031de97b268",
-    ),
-    (
-        "illari",
-        "zh-CN",
-        "f3aff73b9e677730bddc9c85b04c2bd38439bb7a4ba4fa2e80dc28db2e4a0860",
-    ),
-    (
-        "rework",
-        "en-US",
-        "aa32cda640dba41fd99245a7d425d9897b53875d15cf071862197a8e6840258c",
-    ),
-];
-
-#[derive(Debug, Clone, Copy)]
-enum Stage {
-    CanonicalValidation,
-    Emission,
-    Reparse,
-    LocaleConversion,
-}
-
-impl Stage {
-    fn as_str(self) -> &'static str {
-        match self {
-            Stage::CanonicalValidation => "canonical-validation",
-            Stage::Emission => "emission",
-            Stage::Reparse => "reparse",
-            Stage::LocaleConversion => "locale-conversion",
-        }
-    }
-}
-
-fn known_gap(name: &str, stage: Stage, error: &WorkshopError) -> bool {
-    matches!(
-        (name, stage, error),
-        (
-            "defend",
-            Stage::CanonicalValidation | Stage::Emission | Stage::LocaleConversion,
-            WorkshopError::Unknown {
-                kind: "action",
-                spelling,
-                ..
-            },
-        ) if spelling == "rawWorkshopAction"
-    )
-}
 
 #[derive(Debug)]
 struct SpanReport {
@@ -122,19 +61,19 @@ fn residual_groups(issues: &[semantic::SemanticIssue]) -> Vec<serde_json::Value>
         .collect()
 }
 
-fn assert_residual_policy(name: &str, stage: &str, issues: &[semantic::SemanticIssue]) {
+fn assert_residual_policy(
+    case: &P0CaseExpectation,
+    stage: &str,
+    issues: &[semantic::SemanticIssue],
+) {
     let unexpected: Vec<_> = issues
         .iter()
-        .filter(|issue| {
-            !(name == "defend"
-                && issue.kind == semantic::IncompletenessKind::OpaqueAction
-                && issue.name == "rawWorkshopAction"
-                && issue.classification == semantic::ResidualClassification::LegacyOpaque)
-        })
+        .filter(|issue| !case.admits_residual(issue))
         .collect();
     assert!(
         unexpected.is_empty(),
-        "{name} {stage} has unexplained semantic residuals: {}",
+        "{} {stage} has unexplained semantic residuals: {}",
+        case.id,
         serde_json::to_string(&residual_groups(
             &unexpected.into_iter().cloned().collect::<Vec<_>>()
         ))
@@ -257,63 +196,67 @@ fn assert_target_locale_spellings(
 
 #[test]
 fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
-    let root =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/real-projects");
     let catalog = Catalog::builtin().expect("built-in catalog");
     let mut inventory = BTreeMap::new();
-    for (name, locale, expected_sha) in CASES {
-        let path = std::path::Path::new(&root).join(format!("{name}.ow"));
+    for case in P0_EXPECTATION.cases {
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(case.source_fixture);
         let bytes = std::fs::read(&path).unwrap_or_else(|error| panic!("{path:?}: {error}"));
         assert_eq!(
             format!("{:x}", Sha256::digest(&bytes)),
-            *expected_sha,
-            "pinned digest mismatch for {name}"
+            case.source_sha256,
+            "pinned digest mismatch for {}",
+            case.id
         );
         let source = String::from_utf8(bytes).expect("artifact is UTF-8 Workshop text");
-        let locale = Locale::new(locale);
+        let locale = Locale::new(case.locale);
         let program = parser::parse_with_context(&source, &catalog, &locale, &catalog)
-            .unwrap_or_else(|error| panic!("{name} parse failed: {error:?}"));
-        assert_residual_policy(name, "source-parse", &semantic::inspect(&program, &catalog));
+            .unwrap_or_else(|error| panic!("{} parse failed: {error:?}", case.id));
+        assert_residual_policy(case, "source-parse", &semantic::inspect(&program, &catalog));
         if let Err(error) = validate::validate_canonical_ids(&program, &catalog) {
             assert!(
-                known_gap(name, Stage::CanonicalValidation, &error),
-                "{name} canonical validation failed outside known gaps: {error:?}"
+                case.admits_gap(P0Stage::CanonicalValidation, &error),
+                "{} canonical validation failed outside known gaps: {error:?}",
+                case.id
             );
             println!(
-                "{name}: known {} gap: {error:?}",
-                Stage::CanonicalValidation.as_str()
+                "{}: known {} gap: {error:?}",
+                case.id,
+                P0Stage::CanonicalValidation.as_str()
             );
         }
         let emitted = match emitter::emit(&program, &catalog, &locale) {
             Ok(text) => text,
             Err(error) => {
                 assert!(
-                    known_gap(name, Stage::Emission, &error),
-                    "{name} emission failed outside known gaps: {error:?}"
+                    case.admits_gap(P0Stage::Emission, &error),
+                    "{} emission failed outside known gaps: {error:?}",
+                    case.id
                 );
-                println!("{name}: known emission gap: {error:?}");
+                println!("{}: known emission gap: {error:?}", case.id);
                 inventory.insert(
-                    name.to_string(),
+                    case.id.to_string(),
                     residual_groups(&semantic::inspect(&program, &catalog)),
                 );
                 continue;
             }
         };
         let reparsed = parser::parse_with_context(&emitted, &catalog, &locale, &catalog)
-            .unwrap_or_else(|error| panic!("{name} {} failed: {error:?}", Stage::Reparse.as_str()));
+            .unwrap_or_else(|error| panic!("{} reparse failed: {error:?}", case.id));
         assert_residual_policy(
-            name,
+            case,
             "source-locale-reparse",
             &semantic::inspect(&reparsed, &catalog),
         );
         if !roundtrip::equivalent(&program, &reparsed) {
-            panic!("{name} semantic round-trip changed WIR");
+            panic!("{} semantic round-trip changed WIR", case.id);
         }
-        let emitted_again = emitter::emit(&reparsed, &catalog, &locale)
-            .unwrap_or_else(|error| panic!("{name} deterministic re-emission failed: {error:?}"));
+        let emitted_again = emitter::emit(&reparsed, &catalog, &locale).unwrap_or_else(|error| {
+            panic!("{} deterministic re-emission failed: {error:?}", case.id)
+        });
         assert_eq!(
             emitted, emitted_again,
-            "{name} emission is not deterministic"
+            "{} emission is not deterministic",
+            case.id
         );
         let target_locale = if locale.as_str() == "en-US" {
             Locale::new("zh-CN")
@@ -330,12 +273,13 @@ fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
             Ok(converted) => converted,
             Err(error) => {
                 assert!(
-                    known_gap(name, Stage::LocaleConversion, &error),
-                    "{name} locale conversion failed outside known gaps: {error:?}"
+                    case.admits_gap(P0Stage::LocaleConversion, &error),
+                    "{} locale conversion failed outside known gaps: {error:?}",
+                    case.id
                 );
-                println!("{name}: known locale conversion gap: {error:?}");
+                println!("{}: known locale conversion gap: {error:?}", case.id);
                 inventory.insert(
-                    name.to_string(),
+                    case.id.to_string(),
                     residual_groups(&semantic::inspect(&program, &catalog)),
                 );
                 continue;
@@ -343,15 +287,17 @@ fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
         };
         let converted_program =
             parser::parse_with_context(&converted.text, &catalog, &target_locale, &catalog)
-                .unwrap_or_else(|error| panic!("{name} target-locale reparse failed: {error:?}"));
+                .unwrap_or_else(|error| {
+                    panic!("{} target-locale reparse failed: {error:?}", case.id)
+                });
         assert_residual_policy(
-            name,
+            case,
             "target-locale-reparse",
             &semantic::inspect(&converted_program, &catalog),
         );
-        assert_custom_workshop_settings(name, &source, &converted.text);
+        assert_custom_workshop_settings(case.id, &source, &converted.text);
         assert_target_locale_spellings(
-            name,
+            case.id,
             &locale,
             &target_locale,
             &source,
@@ -361,19 +307,25 @@ fn pinned_p0_corpus_has_explicit_stage_and_residual_gates() {
         );
         assert!(
             roundtrip::equivalent(&program, &converted_program),
-            "{name} target-locale conversion changed WIR"
+            "{} target-locale conversion changed WIR",
+            case.id
         );
-        let converted_back = emitter::emit(&converted_program, &catalog, &locale)
-            .unwrap_or_else(|error| panic!("{name} reverse locale emission failed: {error:?}"));
+        let converted_back =
+            emitter::emit(&converted_program, &catalog, &locale).unwrap_or_else(|error| {
+                panic!("{} reverse locale emission failed: {error:?}", case.id)
+            });
         let converted_back_program =
             parser::parse_with_context(&converted_back, &catalog, &locale, &catalog)
-                .unwrap_or_else(|error| panic!("{name} reverse locale reparse failed: {error:?}"));
+                .unwrap_or_else(|error| {
+                    panic!("{} reverse locale reparse failed: {error:?}", case.id)
+                });
         assert!(
             roundtrip::equivalent(&program, &converted_back_program),
-            "{name} reverse locale conversion changed WIR"
+            "{} reverse locale conversion changed WIR",
+            case.id
         );
         inventory.insert(
-            name.to_string(),
+            case.id.to_string(),
             residual_groups(&semantic::inspect(&program, &catalog)),
         );
     }

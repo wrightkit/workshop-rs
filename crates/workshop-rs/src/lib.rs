@@ -44,6 +44,7 @@ pub mod gameplay_query;
 pub mod ids;
 pub mod lexer;
 pub mod live_capture;
+pub mod p0;
 pub mod parser;
 pub mod roundtrip;
 pub mod semantic;
