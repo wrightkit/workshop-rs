@@ -47,22 +47,81 @@ jobs:
       - name: Catalog check
         run: cargo run --locked -p workshop-rs --bin workshop-catalog-gen -- check
 
-  p0-dogfood:
-    name: five real-project dogfood
+  real-project-scenarios:
+    name: five real-project scenarios
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-      - name: Run pinned real-project harness
+      - name: Run real-project scenarios and publish summary
         shell: bash
         run: |
-          set -o pipefail
-          cargo test --locked -p workshop-rs --test p0_corpus -- --nocapture 2>&1 | tee p0-dogfood.log
-      - name: Upload dogfood log
+          set -Eeuo pipefail
+
+          artifact_dir="real-project-scenarios"
+          mkdir -p "$artifact_dir"
+          : > "$artifact_dir/all.log"
+          : > "$artifact_dir/results.tsv"
+          : > "$artifact_dir/summary.md"
+
+          summary_path="${GITHUB_STEP_SUMMARY:-$artifact_dir/summary.md}"
+          : > "$summary_path"
+
+          write_summary() {
+            printf '%s\n' "$1" >> "$summary_path"
+            if [[ "$summary_path" != "$artifact_dir/summary.md" ]]; then
+              printf '%s\n' "$1" >> "$artifact_dir/summary.md"
+            fi
+          }
+
+          write_summary '## Real-project scenarios'
+          write_summary ''
+          write_summary '| Scenario | Status | Test result | Log |'
+          write_summary '| --- | --- | --- | --- |'
+
+          overall_status=0
+          run_scenario() {
+            scenario="$1"
+            test_target="$2"
+            log_path="$artifact_dir/$scenario.log"
+
+            set +e
+            cargo test --locked -p workshop-rs --test "$test_target" pinned_real_projects -- --nocapture 2>&1 | tee "$log_path"
+            scenario_status=${PIPESTATUS[0]}
+            set -e
+
+            result_line="$(grep -E '^test result:' "$log_path" | tail -1 || true)"
+            if [[ "$scenario_status" -eq 0 ]]; then
+              status='✅ PASS'
+            else
+              status='❌ FAIL'
+              overall_status=1
+            fi
+            if [[ -z "$result_line" ]]; then
+              result_line='no final test-result line'
+            fi
+
+            printf '%s\t%s\t%s\n' "$scenario" "$scenario_status" "$result_line" >> "$artifact_dir/results.tsv"
+            write_summary "| \`$scenario\` | $status | \`$result_line\` | \`$scenario.log\` |"
+
+            {
+              printf '\n===== %s =====\n' "$scenario"
+              cat "$log_path"
+            } >> "$artifact_dir/all.log"
+          }
+
+          run_scenario parser parser
+          run_scenario emitter emitter
+          run_scenario locale locale
+
+          write_summary ''
+          write_summary "Detailed logs and machine-readable results are in the \`real-project-scenarios\` artifact."
+          exit "$overall_status"
+      - name: Upload scenario data for agents
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: p0-dogfood-log
-          path: p0-dogfood.log
+          name: real-project-scenarios
+          path: real-project-scenarios/
