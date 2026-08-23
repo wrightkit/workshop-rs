@@ -571,7 +571,9 @@ All 255 canonical Workshop values and expressions are supported:
 | `Position Of` | ✅ Supported | Returns: `Vector`; Parameters: (player: Player|Array). |
 | `Random Integer` | ✅ Supported | Returns: `Number`; Parameters: (Min: Number|Boolean, Max: Number|Boolean). |
 | `Random Real` | ✅ Supported | Returns: `Number`; Parameters: (Min: Number, Max: Number). |
+| `Raise To Power` (Value) | 🚧 Coming soon | External Value contract: returns `Number`; parameters: (Value: Number, Value: Number). This is separate from the supported operator and variable-modification operation above. |
 | `Random Value In Array` | ✅ Supported | Returns: `Any`; Parameters: (Array: Array). |
+| `Randomized Array` | 🚧 Coming soon | External Value contract: returns `Array`; parameters: (Array: Array). |
 | `Ray Cast Hit Normal` | ✅ Supported | Returns: `Vector`; Parameters: (Position: Vector, Position: Vector, Player: Array, Player: Array, Boolean: Boolean). |
 | `Ray Cast Hit Player` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector, Position: Vector, Player: Array, Player: Array, Boolean: Boolean). |
 | `Ray Cast Hit Position` | ✅ Supported | Returns: `Vector`; Parameters: (Start Position: Vector, End Position: Vector, Players To Include: Array, Players To Exclude: Array, Include Player Owned Objects: Boolean). |
@@ -595,6 +597,7 @@ All 255 canonical Workshop values and expressions are supported:
 | `String Replace` | ✅ Supported | Returns: `String`; Parameters: (String: String|Array, Search: String|Array, Replacement: String|Array). |
 | `String Slice` | ✅ Supported | Returns: `String`; Parameters: (String: String, Start Index: Number, Count: Number). |
 | `String Split` | ✅ Supported | Returns: `Array`; Parameters: (String: String|Array, Separator: String|Array). |
+| `String` | 🚧 Coming soon | External Value contract: `String(String, {0}, {1}, {2})`; `Custom String` remains supported. |
 | `Subtract` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector, b: Number|Boolean|Vector). |
 | `Tangent From Degrees` | ✅ Supported | Returns: `Number`; Parameters: (Number: Number). |
 | `Tangent From Radians` | ✅ Supported | Returns: `Number`; Parameters: (Number: Number). |
