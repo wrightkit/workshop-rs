@@ -5,6 +5,7 @@
 use std::path::{Path, PathBuf};
 
 use workshop_rs::catalog::{Catalog, Locale};
+use workshop_rs::convert;
 use workshop_rs::parser;
 use workshop_rs::validate;
 use workshop_rs::wir;
@@ -448,7 +449,10 @@ fn canonical_validation_enforces_declared_arity_and_enum_domain() {
 fn remaining_value_contracts_are_canonical_and_type_checked() {
     let catalog = catalog();
     let source = r#"rule ("values") { event { Ongoing - Global; } actions {
-        Set Global Variable(probe, String(Custom String("probe"), Event Player, Null, Null));
+        Set Global Variable(probe, String());
+        Set Global Variable(probe, String("Hello"));
+        Set Global Variable(probe, String(Hello, Null));
+        Set Global Variable(probe, String("Hello", Null, Null, Null));
         Set Global Variable(probe, Randomized Array(Array(1, 2)));
         Set Global Variable(probe, Raise To Power(2, 3));
     } }"#;
@@ -460,6 +464,20 @@ fn remaining_value_contracts_are_canonical_and_type_checked() {
     program
         .validate()
         .expect("the three Value signatures validate");
+    let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale)
+        .expect("localized String emits through its dedicated path");
+    assert!(emitted.contains("String()"));
+    assert!(emitted.contains("String(\"Hello\")"));
+    assert!(emitted.contains("String(\"Hello\", Null)"));
+    assert!(emitted.contains("String(\"Hello\", Null, Null, Null)"));
+    let zh = Locale::new("zh-CN");
+    let converted = convert::convert(source, &catalog, &locale, &zh, &Default::default())
+        .expect("String converts to zh-CN");
+    assert!(converted.text.contains("字符串(\"Hello\")"));
+    let converted_back =
+        convert::convert(&converted.text, &catalog, &zh, &locale, &Default::default())
+            .expect("String converts back to en-US");
+    assert!(converted_back.text.contains("String(\"Hello\")"));
     for expected in ["string", "randomizedArray", "raiseToPower"] {
         assert!(program.values.iter().any(|node| matches!(
             &node.value,
@@ -468,7 +486,9 @@ fn remaining_value_contracts_are_canonical_and_type_checked() {
     }
 
     for source in [
-        r#"rule ("wrong-string") { event { Ongoing - Global; } actions { Set Global Variable(probe, String(1, Null, Null, Null)); } }"#,
+        r#"rule ("wrong-string-literal") { event { Ongoing - Global; } actions { Set Global Variable(probe, String(1, Null, Null, Null)); } }"#,
+        r#"rule ("wrong-string-bool") { event { Ongoing - Global; } actions { Set Global Variable(probe, String(True)); } }"#,
+        r#"rule ("wrong-string-expression") { event { Ongoing - Global; } actions { Set Global Variable(probe, String(Custom String("probe"), Null)); } }"#,
         r#"rule ("wrong-array") { event { Ongoing - Global; } actions { Set Global Variable(probe, Randomized Array(1)); } }"#,
         r#"rule ("wrong-power") { event { Ongoing - Global; } actions { Set Global Variable(probe, Raise To Power(1, Custom String("wrong"))); } }"#,
     ] {

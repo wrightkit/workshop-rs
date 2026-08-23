@@ -1236,7 +1236,18 @@ impl Emitter<'_> {
                 // `format` (frontend) and `customString` (parsed ws text) are
                 // the same node.
                 let is_custom_string = canonical == Some("customString") || name == "customString";
-                if args.is_empty() {
+                if name == "string" {
+                    out.push_str(&spelling);
+                    out.push('(');
+                    if let Some(first) = args.first() {
+                        self.localized_string_value(*first, out)?;
+                        if args.len() > 1 {
+                            out.push_str(", ");
+                            self.args(&args[1..], out)?;
+                        }
+                    }
+                    out.push(')');
+                } else if args.is_empty() {
                     // Constants (e.g. Empty Array) emit as bare spellings.
                     out.push_str(&spelling);
                 } else if is_custom_string {
@@ -1284,6 +1295,23 @@ impl Emitter<'_> {
                 }
             }
         }
+        Ok(())
+    }
+
+    fn localized_string_value(&self, id: wir::ValueId, out: &mut String) -> Result<()> {
+        let Some(node) = self.program.values.get(id) else {
+            return Err(WorkshopError::Malformed {
+                message: format!("dangling value {id}"),
+                span: None,
+            });
+        };
+        let wir::Value::String(value) = &node.value else {
+            return Err(WorkshopError::Unsupported {
+                message: "value 'string' argument 1 must be localized string text".to_string(),
+                span: node.span,
+            });
+        };
+        write!(out, "\"{}\"", escape_value_string(value)).unwrap();
         Ok(())
     }
 

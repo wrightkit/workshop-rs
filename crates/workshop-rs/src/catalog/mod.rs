@@ -345,10 +345,10 @@ struct EntryFile {
     param_domains: Vec<Option<String>>,
     /// Default value per parameter position (parallel to `params`),
     /// resolved when a call omits the argument. `None` means no default is
-    /// declared. Default value syntax: `null`, a numeric literal,
-    /// `Domain.MEMBER` (builtin enum member), or a catalog value id resolved
-    /// as a zero-argument call. Every default is pinned-reference probe
-    /// evidence, never copied from upstream game data.
+    /// declared. Default value syntax: `null`, a numeric literal, localized
+    /// string text, `Domain.MEMBER` (builtin enum member), or a catalog value
+    /// id resolved as a zero-argument call. Every default is pinned-reference
+    /// probe evidence, never copied from upstream game data.
     #[serde(default)]
     param_defaults: Vec<Option<String>>,
     #[serde(default)]

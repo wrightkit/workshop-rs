@@ -3992,7 +3992,7 @@
       ]
     }
   ],
-  "digest": "f3c8037271684c157cf78d84bb74566dc81395037a6a0e40ad4437a3fb95a877",
+  "digest": "844c73a1304b3eb5c5d5c6b39a207386e05e24bbcc35dd9ae26dad3333ad8d5a",
   "enums": [
     {
       "domain": "Impulse",
@@ -10692,6 +10692,12 @@
         "zh-CN": "字符串"
       },
       "id": "string",
+      "paramDefaults": [
+        "Hello",
+        "null",
+        "null",
+        "null"
+      ],
       "paramTypes": [
         "String",
         "Object|Array",

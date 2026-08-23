@@ -360,6 +360,19 @@ fn validate_call_signature(
     }
 
     for (index, arg_id) in args.iter().enumerate() {
+        if entry.id == "string"
+            && index == 0
+            && !matches!(
+                program.values.get(*arg_id).map(|node| &node.value),
+                Some(wir::Value::String(_))
+            )
+        {
+            errors.push(WorkshopError::Unsupported {
+                message: "value 'string' argument 1 must be localized string text".to_string(),
+                span: program.values.get(*arg_id).and_then(|node| node.span),
+            });
+            continue;
+        }
         if let Some(expected) = entry.param_type(index) {
             if !value_matches_type(program, catalog, *arg_id, expected) {
                 let actual = value_type_name(program, catalog, *arg_id);
