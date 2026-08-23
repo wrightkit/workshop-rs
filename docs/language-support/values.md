@@ -2,7 +2,7 @@
 
 [← Back to Language Support Matrix](../language-support.md)
 
-This document inventories all **255 canonical Workshop values and expressions** supported by `workshop-rs`.
+This document inventories canonical Workshop values and expressions in `workshop-rs`.
 
 | Feature | Status | Notes |
 | --- | --- | --- |
@@ -109,7 +109,6 @@ This document inventories all **255 canonical Workshop values and expressions** 
 | `Is Assembling Heroes` | ✅ Supported | Returns: `Boolean`. |
 | `Is Between Rounds` | ✅ Supported | Returns: `Boolean`. |
 | `Is Button Held` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player, Button: Button). |
-| `Is CTF Mode In Sudden Death` | ✅ Supported | Returns: `Boolean`. |
 | `Is Communicating` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player, Comms: Comms). |
 | `Is Communicating Any` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player). |
 | `Is Communicating Any Emote` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player). |
@@ -117,6 +116,7 @@ This document inventories all **255 canonical Workshop values and expressions** 
 | `Is Communicating Any Voice line` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player). |
 | `Is Control Mode Point Locked` | ✅ Supported | Returns: `Boolean`. |
 | `Is Crouching` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player). |
+| `Is CTF Mode In Sudden Death` | ✅ Supported | Returns: `Boolean`. |
 | `Is Dead` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player). |
 | `Is Dummy Bot` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player). |
 | `Is Duplicating` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player). |
@@ -200,14 +200,16 @@ This document inventories all **255 canonical Workshop values and expressions** 
 | `Player Hero Stat` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player, Hero: Hero, Statistic: HeroStat). |
 | `Player Stat` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player, Statistic: Stat). |
 | `Players In Slot` | ✅ Supported | Returns: `Player|Array`; Parameters: (Number: Number, Team: Team). |
+| `Players in View Angle` | ✅ Supported | Returns: `Array`; Parameters: (Player: Player, Team: Team, ViewAngle: Number). |
 | `Players On Hero` | ✅ Supported | Returns: `Array`; Parameters: (Hero: Hero, Team: Team). |
 | `Players Within Radius` | ✅ Supported | Returns: `Array`; Parameters: (center: Vector, radius: Number, team: Team, losCheck: LosCheck). |
-| `Players in View Angle` | ✅ Supported | Returns: `Array`; Parameters: (Player: Player, Team: Team, ViewAngle: Number). |
 | `Point Capture Percentage` | ✅ Supported | Returns: `Number`. |
 | `Position Of` | ✅ Supported | Returns: `Vector`; Parameters: (player: Player|Array). |
+| `Raise To Power` (Value) | 🚧 Coming soon | External Value contract: returns `Number`; parameters: (Value: Number, Value: Number). This is separate from the supported operator and variable-modification operation above. |
 | `Random Integer` | ✅ Supported | Returns: `Number`; Parameters: (Min: Number|Boolean, Max: Number|Boolean). |
 | `Random Real` | ✅ Supported | Returns: `Number`; Parameters: (Min: Number, Max: Number). |
 | `Random Value In Array` | ✅ Supported | Returns: `Any`; Parameters: (Array: Array). |
+| `Randomized Array` | 🚧 Coming soon | External Value contract: returns `Array`; parameters: (Array: Array). |
 | `Ray Cast Hit Normal` | ✅ Supported | Returns: `Vector`; Parameters: (Position: Vector, Position: Vector, Player: Array, Player: Array, Boolean: Boolean). |
 | `Ray Cast Hit Player` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector, Position: Vector, Player: Array, Player: Array, Boolean: Boolean). |
 | `Ray Cast Hit Position` | ✅ Supported | Returns: `Vector`; Parameters: (Start Position: Vector, End Position: Vector, Players To Include: Array, Players To Exclude: Array, Include Player Owned Objects: Boolean). |
@@ -226,6 +228,7 @@ This document inventories all **255 canonical Workshop values and expressions** 
 | `Speed Of` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player). |
 | `Speed Of In Direction` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player, Direction: Vector). |
 | `Square Root` | ✅ Supported | Returns: `Number`; Parameters: (value: Number). |
+| `String` | 🚧 Coming soon | External Value contract: `String(String, {0}, {1}, {2})`; `Custom String` remains supported. |
 | `String Contains` | ✅ Supported | Returns: `Boolean`; Parameters: (String: String, String: String). |
 | `String Length` | ✅ Supported | Returns: `Number`; Parameters: (String: String). |
 | `String Replace` | ✅ Supported | Returns: `String`; Parameters: (String: String|Array, Search: String|Array, Replacement: String|Array). |

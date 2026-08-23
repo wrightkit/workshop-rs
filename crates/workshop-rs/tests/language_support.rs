@@ -272,10 +272,22 @@ fn test_language_support_covers_complete_catalog_inventory() {
         "Locale `zh-CN` missing from strings.md"
     );
 
-    // 9. Specific highlighted capabilities from issue requirements
+    // 9. Specific highlighted capabilities from issue requirements and native audit (#86)
     assert!(
         operators_content.contains("`Raise To Power`"),
         "Raise To Power must be explicitly present and identifiable in operators.md"
+    );
+    assert!(
+        values_content.contains("`Raise To Power` (Value)"),
+        "Raise To Power (Value) coming soon contract missing from values.md"
+    );
+    assert!(
+        values_content.contains("`Randomized Array`"),
+        "Randomized Array coming soon contract missing from values.md"
+    );
+    assert!(
+        values_content.contains("`String` | 🚧 Coming soon"),
+        "String value coming soon contract missing from values.md"
     );
 }
 
