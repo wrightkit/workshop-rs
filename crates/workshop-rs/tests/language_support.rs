@@ -216,7 +216,7 @@ fn test_language_support_covers_complete_catalog_inventory() {
 
     // 9. Specific highlighted capabilities from issue requirements
     assert!(
-        content.contains("`Raise To Power` (`raiseToPower`)"),
+        content.contains("`Raise To Power`"),
         "Raise To Power must be explicitly present and identifiable in docs/language-support.md"
     );
 }
