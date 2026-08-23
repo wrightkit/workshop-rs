@@ -1,6 +1,16 @@
 # Audited Enum Leaf Inventory
 
-This fixture is an independently reviewed expected set for exhaustive conformance.
+This fixture is the checked-in expected set for exhaustive conformance. It is
+not generated at test runtime and the test never reads `catalog.json` to build
+the expected set.
+
+Provenance: the #86 language-support audit records 52 supported domains and
+their member counts/examples. The 52-domain, 727-leaf expected set was
+reconciled against the pinned external Workshop-data export at revision
+`d854bf01fc7bbf3b2169f67408c07a8da8989ad6`, which is also recorded in the
+catalog provenance. The fixture is the durable reviewed snapshot; the
+conformance test compares the implementation catalog against it and reports
+missing or extra canonical members.
 
 | Domain | Member |
 | --- | --- |
