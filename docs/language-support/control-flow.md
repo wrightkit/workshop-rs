@@ -38,4 +38,4 @@
 | `Abort If` | ✅ Supported | Terminates rule action execution if condition evaluates to true. |
 | `Abort If Condition Is True` | ✅ Supported | Terminates rule execution if all rule conditions are currently true. |
 | `Abort If Condition Is False` | ✅ Supported | Terminates rule execution if any rule condition is currently false. |
-| `Return` | ✅ Supported | Returns from a subroutine execution rule. |
+| `Return` | 🚧 Coming soon | The audited contract is recorded, but the native parser/WIR surface does not yet represent a return action. |
