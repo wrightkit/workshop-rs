@@ -21,8 +21,18 @@ belong in documentation.
 ## Workshop language support
 
 - [Language support matrix](language-support.md): the single authoritative
-  support-status matrix for all Workshop actions, values, events, enums,
-  operators, custom-game settings, strings, locales, and semantic capabilities.
+  index and status matrix for all Workshop language capabilities, linking to
+  component inventories in [`language-support/`](language-support/):
+  - [Program Structure & Variables](language-support/structure.md)
+  - [Events & Event Filters](language-support/events.md)
+  - [Conditions & Control Flow](language-support/control-flow.md)
+  - [Operators & Variable Modifications](language-support/operators.md)
+  - [Actions Inventory](language-support/actions.md)
+  - [Values Inventory](language-support/values.md)
+  - [Enumerated Domains](language-support/enums.md)
+  - [Custom-Game Settings](language-support/settings.md)
+  - [Strings & Localization](language-support/strings.md)
+  - [Tooling & Semantic Capabilities](language-support/tooling.md)
 
 ## Architecture and ownership
 
