@@ -8,6 +8,8 @@ use workshop_rs::emitter;
 use workshop_rs::parser;
 use workshop_rs::wir;
 
+mod common;
+
 fn corpus_path(fixture_id: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/corpus")
@@ -40,6 +42,51 @@ fn en() -> Locale {
 fn without_spans(dump: &str) -> String {
     let re = regex::Regex::new(r" @\d+:\d+:\d+-\d+:\d+").unwrap();
     re.replace_all(dump, "").into_owned()
+}
+
+#[test]
+fn pinned_real_projects_emit_deterministically_and_reparse() {
+    let catalog = catalog();
+    for case in common::cases() {
+        let (source, locale) = common::source(case);
+        let program = parser::parse_with_context(&source, &catalog, &locale, &catalog)
+            .unwrap_or_else(|error| panic!("{} parse failed: {error:?}", case.id));
+        common::assert_residual_policy(case, "source-parse", &program.semantic_issues(&catalog));
+
+        if let Err(error) = workshop_rs::validate::validate_canonical_ids(&program, &catalog) {
+            common::assert_gap(case, workshop_rs::p0::P0Stage::CanonicalValidation, &error);
+            println!("{}: known canonical-validation gap: {error:?}", case.id);
+        }
+
+        let emitted = match emitter::emit(&program, &catalog, &locale) {
+            Ok(text) => text,
+            Err(error) => {
+                common::assert_gap(case, workshop_rs::p0::P0Stage::Emission, &error);
+                println!("{}: known emission gap: {error:?}", case.id);
+                continue;
+            }
+        };
+        let reparsed = parser::parse_with_context(&emitted, &catalog, &locale, &catalog)
+            .unwrap_or_else(|error| panic!("{} reparse failed: {error:?}", case.id));
+        common::assert_residual_policy(
+            case,
+            "source-locale-reparse",
+            &reparsed.semantic_issues(&catalog),
+        );
+        assert!(
+            workshop_rs::roundtrip::equivalent(&program, &reparsed),
+            "{} semantic round-trip changed WIR",
+            case.id
+        );
+        let emitted_again = emitter::emit(&reparsed, &catalog, &locale).unwrap_or_else(|error| {
+            panic!("{} deterministic re-emission failed: {error:?}", case.id)
+        });
+        assert_eq!(
+            emitted, emitted_again,
+            "{} emission is not deterministic",
+            case.id
+        );
+    }
 }
 
 #[test]

@@ -48,9 +48,9 @@ catalog data change and must be recorded here.
 
 ## P0 real-project source inputs
 
-The five pinned real-project Workshop outputs used by the required P0 dogfood
-gate are vendored under `real-projects/`. Their source repositories, revisions,
-local paths, locales, and SHA-256 values are recorded in
+The five pinned real-project Workshop outputs used by the required real-project
+scenario gate are vendored under `real-projects/`. Their source repositories,
+revisions, local paths, locales, and SHA-256 values are recorded in
 `docs/evidence/raw-workshop-p0-v1.json`. They are source inputs, not acceptance
 reports; residual classifications and pass/fail results are emitted by CI.
 
