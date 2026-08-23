@@ -93,18 +93,22 @@ let converted = convert(
 )?;
 ```
 
-## Current support
+## Language support
 
-| Capability | Status | Notes |
-| --- | --- | --- |
-| Raw Workshop parser & WIR | ✅ Supported | CST-to-WIR frontend, settings blocks, validation |
-| Deterministic localized emitter | ✅ Supported | Formatted Workshop text emission for declared locales |
-| Locale conversion (`en-US` ↔ `zh-CN`) | ✅ Supported | Declared canonical surface with explicit missing-mapping behavior |
-| Workshop catalog & signatures | ✅ Supported | Canonical identities for actions, values, events, enums, operators, and settings |
-| Hero gameplay/query domain | ✅ Supported | Reviewed hero/ability topology and query APIs |
-| Offline census & conformance | ✅ Supported | Sharded census, real-project regressions, seasonal-drift tooling |
-| Consumer-specific edge contracts | 🟡 Expanding | Added when real `opy-rs` / `del-rs` / Wright integration evidence proves a canonical Workshop capability is missing |
-| Additional client locales | ⏳ Not yet | Admitted only through reviewed provenance-compatible evidence |
+`workshop-rs` maintains a complete, human-readable language support matrix that serves as the single authoritative source of truth for declared Workshop language capabilities.
+
+See [`docs/language-support.md`](docs/language-support.md) for the complete capability matrix across:
+- **Program structure & rules** (settings, variables, subroutines, rules, conditions, actions, disabled modifiers)
+- **Variables & subroutines** (global and player variable declaration, read, write, indexed modify, subroutine calls and events)
+- **Events & event filters** (14 canonical rule events and all filter parameters)
+- **Conditions & control flow** (branching, loops, jumps, aborts, waits)
+- **Operators & variable modifications** (comparison operators, arithmetic operations, array modifications)
+- **Actions inventory** (all 219 canonical Workshop actions)
+- **Values inventory** (all 255 canonical Workshop values)
+- **Enumerated domains** (all 52 enum domains)
+- **Custom-game settings** (lobby, modes, heroes, extensions, and custom workshop settings)
+- **Strings & localization** (`Custom String`, `en-US`, `zh-CN`, bidirectional conversion)
+- **Tooling & semantic capabilities** (parsing, validation, emission, conversion, hero gameplay query APIs)
 
 The canonical Workshop baseline is intentionally independent of any single
 source-language compiler. Consumer-driven additions must remain generic

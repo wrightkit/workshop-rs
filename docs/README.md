@@ -8,6 +8,7 @@ canonical Workshop semantic core.
 ## Documentation model
 
 ```text
+language-support.md          authoritative Workshop language support matrix
 implementation-role.md       standalone implementation and consumer relationship
   └─ docs/adr/               accepted point-in-time architecture decisions
       └─ living references   catalog, gameplay, provenance, conformance, release
@@ -16,6 +17,12 @@ implementation-role.md       standalone implementation and consumer relationship
 
 GitHub issues/PRs own active execution scope and sequencing; durable contracts
 belong in documentation.
+
+## Workshop language support
+
+- [Language support matrix](language-support.md): the single authoritative
+  support-status matrix for all Workshop actions, values, events, enums,
+  operators, custom-game settings, strings, locales, and semantic capabilities.
 
 ## Architecture and ownership
 
@@ -66,6 +73,7 @@ belong in documentation.
 
 | Contract | Primary document |
 | --- | --- |
+| Workshop language support status | [`language-support.md`](language-support.md) |
 | Repository/consumer role | [`implementation-role.md`](implementation-role.md) |
 | Catalog & semantic boundaries | [`adr/0001-catalog-boundaries.md`](adr/0001-catalog-boundaries.md) |
 | Provenance & evidence | [`provenance.md`](provenance.md) |
