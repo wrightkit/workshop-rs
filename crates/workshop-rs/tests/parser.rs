@@ -445,6 +445,43 @@ fn canonical_validation_enforces_declared_arity_and_enum_domain() {
 }
 
 #[test]
+fn remaining_value_contracts_are_canonical_and_type_checked() {
+    let catalog = catalog();
+    let source = r#"rule ("values") { event { Ongoing - Global; } actions {
+        Set Global Variable(probe, String(Custom String("probe"), Event Player, Null, Null));
+        Set Global Variable(probe, Randomized Array(Array(1, 2)));
+        Set Global Variable(probe, Raise To Power(2, 3));
+    } }"#;
+    let locale = Locale::new("en-US");
+    let program = parser::parse_with_context(source, &catalog, &locale, &catalog)
+        .expect("the three declared Value contracts parse");
+    validate::validate_canonical_ids(&program, &catalog)
+        .expect("the three Values resolve to canonical ids");
+    program
+        .validate()
+        .expect("the three Value signatures validate");
+    for expected in ["string", "randomizedArray", "raiseToPower"] {
+        assert!(program.values.iter().any(|node| matches!(
+            &node.value,
+            wir::Value::Call { name, .. } if name == expected
+        )));
+    }
+
+    for source in [
+        r#"rule ("wrong-string") { event { Ongoing - Global; } actions { Set Global Variable(probe, String(1, Null, Null, Null)); } }"#,
+        r#"rule ("wrong-array") { event { Ongoing - Global; } actions { Set Global Variable(probe, Randomized Array(1)); } }"#,
+        r#"rule ("wrong-power") { event { Ongoing - Global; } actions { Set Global Variable(probe, Raise To Power(1, Custom String("wrong"))); } }"#,
+    ] {
+        let program = parser::parse_with_context(source, &catalog, &locale, &catalog)
+            .expect("invalid Value input remains parseable for canonical validation");
+        assert!(
+            validate::validate_canonical_ids(&program, &catalog).is_err(),
+            "invalid Value signature must be rejected"
+        );
+    }
+}
+
+#[test]
 fn canonical_validation_enforces_literal_types_and_value_return_types() {
     let catalog = catalog();
     let wrong_literal = r#"rule ("type") { event { Ongoing - Global; } actions { Set Crouch Enabled(All Players(All Teams), Color(White)); } }"#;

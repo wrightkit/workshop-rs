@@ -3992,7 +3992,7 @@
       ]
     }
   ],
-  "digest": "167aba1a1fe2e409596c8153d2de45576c5083c940abc7b9679559f6145fe9fb",
+  "digest": "f3c8037271684c157cf78d84bb74566dc81395037a6a0e40ad4437a3fb95a877",
   "enums": [
     {
       "domain": "Impulse",
@@ -10688,6 +10688,26 @@
     },
     {
       "aliases": {
+        "en-US": "String",
+        "zh-CN": "字符串"
+      },
+      "id": "string",
+      "paramTypes": [
+        "String",
+        "Object|Array",
+        "Object|Array",
+        "Object|Array"
+      ],
+      "params": [
+        "String",
+        "{0}",
+        "{1}",
+        "{2}"
+      ],
+      "returnType": "String"
+    },
+    {
+      "aliases": {
         "en-US": "Value In Array",
         "zh-CN": "数组中的值"
       },
@@ -10830,6 +10850,36 @@
         "Array"
       ],
       "returnType": "Any"
+    },
+    {
+      "aliases": {
+        "en-US": "Randomized Array",
+        "zh-CN": "随机数组"
+      },
+      "id": "randomizedArray",
+      "paramTypes": [
+        "Array"
+      ],
+      "params": [
+        "Array"
+      ],
+      "returnType": "Array"
+    },
+    {
+      "aliases": {
+        "en-US": "Raise To Power",
+        "zh-CN": "乘方"
+      },
+      "id": "raiseToPower",
+      "paramTypes": [
+        "Number",
+        "Number"
+      ],
+      "params": [
+        "Value",
+        "Value"
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {

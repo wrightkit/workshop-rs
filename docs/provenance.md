@@ -74,7 +74,7 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 * `en-US` is the primary locale and is complete. The committed catalog
   validates that the primary locale is complete.
 * `zh-CN` is an open, evidence-backed locale: the current canonical catalog
-  maps **1235/1254** entries. The 19 unmapped spellings remain explicit and
+  maps **1238/1257** entries. The 19 unmapped spellings remain explicit and
   fail closed; `workshop-catalog-gen check` is the authoritative coverage
   report. The source for the reconciled additions is the user-provided
   `workshop-data/workshop-data.json` export at commit
