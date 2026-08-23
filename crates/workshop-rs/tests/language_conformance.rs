@@ -15,6 +15,17 @@ const SUPPORTED: &str = "✅ Supported";
 struct InventoryRow {
     name: String,
     supported: bool,
+    notes: String,
+}
+
+struct DocumentedParameter {
+    label: String,
+    value_type: Option<String>,
+}
+
+struct DocumentedContract {
+    return_type: Option<String>,
+    parameters: Vec<DocumentedParameter>,
 }
 
 #[test]
@@ -44,9 +55,12 @@ fn audited_catalog_features_have_individual_conformance_cases() {
                 continue;
             };
             documented.insert(entry.id.clone());
+            if matches!(kind, Kind::Action | Kind::Value) {
+                assert_documented_contract(&case_id, kind, entry, row, &mut failures);
+            }
             let source = match kind {
-                Kind::Action => call_program_source(&catalog, entry, false),
-                Kind::Value => call_program_source(&catalog, entry, true),
+                Kind::Action => call_program_source(&catalog, entry, row, false),
+                Kind::Value => call_program_source(&catalog, entry, row, true),
                 Kind::Event => event_source(entry),
                 Kind::Operator => operator_source(&catalog, entry),
                 _ => unreachable!(),
@@ -67,19 +81,63 @@ fn audited_catalog_features_have_individual_conformance_cases() {
 
     let enum_rows = inventory_rows("enums.md");
     let enum_failure_start = failures.len();
+    let audited_members = audited_enum_members();
+    let audited_domains = audited_members
+        .iter()
+        .map(|(domain, _)| domain.clone())
+        .collect::<BTreeSet<_>>();
+    let documented_domains = enum_rows
+        .iter()
+        .filter(|row| row.supported)
+        .map(|row| row.name.clone())
+        .collect::<BTreeSet<_>>();
+    for domain in documented_domains.difference(&audited_domains) {
+        failures.push(format!(
+            "Constants/{domain}: supported documented domain has no audited member inventory"
+        ));
+    }
+    for domain in audited_domains.difference(&documented_domains) {
+        failures.push(format!(
+            "Constants/{domain}: audited member inventory has no supported documented row"
+        ));
+    }
     let mut enum_domains = BTreeSet::new();
-    for row in enum_rows.iter().filter(|row| row.supported) {
-        let case_id = format!("Constants/{}", slug(&row.name));
-        let Some(domain) = catalog.enum_domain(&row.name) else {
+    let mut expected_by_domain = BTreeMap::<String, BTreeSet<String>>::new();
+    for (domain, member) in &audited_members {
+        expected_by_domain
+            .entry(domain.clone())
+            .or_default()
+            .insert(member.clone());
+    }
+    for (domain_name, expected_members) in &expected_by_domain {
+        let case_id = format!("Constants/{}", slug(domain_name));
+        let Some(domain) = catalog.enum_domain(domain_name) else {
             failures.push(format!(
                 "{case_id}: audited enum domain is absent from the catalog"
             ));
             continue;
         };
         enum_domains.insert(domain.domain.clone());
-        for member in &domain.members {
-            let member_id = format!("{case_id}/{}", slug(&member.member));
-            let source = enum_source(&catalog, &domain.domain, &member.member);
+        let actual_members = domain
+            .members
+            .iter()
+            .map(|member| member.member.clone())
+            .collect::<BTreeSet<_>>();
+        for member in expected_members.difference(&actual_members) {
+            failures.push(format!(
+                "{case_id}/{}: audited enum member is absent from the catalog",
+                slug(member)
+            ));
+        }
+        for member in actual_members.difference(expected_members) {
+            failures.push(format!(
+                "{case_id}/{}: catalog enum member has no audited inventory row",
+                slug(member)
+            ));
+        }
+        for member in expected_members {
+            let member_id = format!("{case_id}/{}", slug(member));
+            let source = enum_source(&catalog, domain_name, member);
             run_enum_case(&member_id, &source, &catalog, &mut failures);
         }
     }
@@ -116,17 +174,66 @@ fn audited_catalog_features_have_individual_conformance_cases() {
 }
 
 #[test]
-fn representative_invalid_inputs_preserve_diagnostic_boundaries() {
+fn documented_signatures_reject_wrong_arity_and_concrete_types() {
     let catalog = Catalog::builtin().expect("builtin catalog");
     let mut failures = Vec::new();
 
-    let wrong_arity = program_source(
+    for (kind, path, category, value) in [
+        (Kind::Action, "actions.md", "Actions", false),
+        (Kind::Value, "values.md", "Values", true),
+    ] {
+        for row in inventory_rows(path).into_iter().filter(|row| row.supported) {
+            let Some(entry) = catalog.resolve(kind, &Locale::new(EN_US), &row.name) else {
+                continue;
+            };
+            if entry.id == "__forPlayerVariable__" {
+                continue;
+            }
+            let contract = documented_contract(&row.notes);
+            if !entry.variadic && !contract.parameters.is_empty() {
+                let source = call_program_source_variant(&catalog, entry, &row, value, true, None);
+                expect_rejection(
+                    &format!("invalid/{category}/{}-extra-argument", slug(&row.name)),
+                    &source,
+                    &catalog,
+                    &mut failures,
+                );
+            }
+            for (index, parameter) in contract.parameters.iter().enumerate() {
+                let Some(value_type) = parameter.value_type.as_deref() else {
+                    continue;
+                };
+                if !is_concrete_type(value_type) {
+                    continue;
+                }
+                let source = call_program_source_variant(
+                    &catalog,
+                    entry,
+                    &row,
+                    value,
+                    false,
+                    Some((index, incompatible_argument(value_type))),
+                );
+                expect_rejection(
+                    &format!(
+                        "invalid/{category}/{}/parameter-{index}-type",
+                        slug(&row.name)
+                    ),
+                    &source,
+                    &catalog,
+                    &mut failures,
+                );
+            }
+        }
+    }
+
+    let wrong_domain = program_source(
         "Set Invisible(All Players(All Teams), Color(White));",
         false,
     );
     expect_rejection(
         "invalid/category-wrong-enum-domain",
-        &wrong_arity,
+        &wrong_domain,
         &catalog,
         &mut failures,
     );
@@ -141,9 +248,6 @@ fn representative_invalid_inputs_preserve_diagnostic_boundaries() {
         &catalog,
         &mut failures,
     );
-
-    let wrong_arity = program_source("Wait();", false);
-    expect_rejection("invalid/arity-wait", &wrong_arity, &catalog, &mut failures);
 
     assert!(
         failures.is_empty(),
@@ -175,16 +279,18 @@ fn run_structural_cases(
             "actions" => program_source("Wait(1, Ignore Condition);", false),
             "disabled" => disabled_rule_source(),
             "global" | "Global Variable" => variables_source(),
-            "Set Global Variable" | "Modify Global Variable" => variables_source(),
-            "Set Global Variable At Index" | "Modify Global Variable At Index" => {
-                variables_source()
-            }
+            "Set Global Variable" => variables_source(),
+            "Modify Global Variable" => modify_global_variable_source(),
+            "Set Global Variable At Index" => indexed_global_variable_source(false),
+            "Modify Global Variable At Index" => indexed_global_variable_source(true),
             "player" | "Player Variable" => player_variables_source(),
-            "Set Player Variable" | "Modify Player Variable" => player_variables_source(),
-            "Set Player Variable At Index" | "Modify Player Variable At Index" => {
-                player_variables_source()
-            }
-            "Call Subroutine" | "Start Rule" | "Subroutine" => subroutines_source(),
+            "Set Player Variable" => player_variables_source(),
+            "Modify Player Variable" => modify_player_variable_source(),
+            "Set Player Variable At Index" => indexed_player_variable_source(false),
+            "Modify Player Variable At Index" => indexed_player_variable_source(true),
+            "Call Subroutine" => call_subroutine_source(),
+            "Start Rule" => start_rule_source(),
+            "Subroutine" => subroutines_source(),
             other => {
                 failures.push(format!("Structure/{}: no source generator", slug(other)));
                 continue;
@@ -228,13 +334,15 @@ fn run_settings_cases(
         .filter(|row| row.supported)
         .map(|row| row.name)
         .collect::<BTreeSet<_>>();
-    let count = supported_sections.len();
-    run_case(
-        "Settings/pixelart",
-        include_str!("fixtures/settings/pixelart.settings.ws"),
-        catalog,
-        failures,
-    );
+    let mut count = 0;
+    for section in supported_sections {
+        let Some(source) = settings_section_source(&section) else {
+            failures.push(format!("Settings/{section}: no source fixture"));
+            continue;
+        };
+        count += 1;
+        run_case(&format!("Settings/{section}"), source, catalog, failures);
+    }
     summaries.insert("Settings", (count, failures.len() - failure_start));
 }
 
@@ -431,7 +539,23 @@ fn expect_rejection(case_id: &str, source: &str, catalog: &Catalog, failures: &m
     }
 }
 
-fn call_program_source(catalog: &Catalog, entry: &CatalogEntry, value: bool) -> String {
+fn call_program_source(
+    catalog: &Catalog,
+    entry: &CatalogEntry,
+    row: &InventoryRow,
+    value: bool,
+) -> String {
+    call_program_source_variant(catalog, entry, row, value, false, None)
+}
+
+fn call_program_source_variant(
+    catalog: &Catalog,
+    entry: &CatalogEntry,
+    row: &InventoryRow,
+    value: bool,
+    extra_argument: bool,
+    override_argument: Option<(usize, String)>,
+) -> String {
     let spelling = entry.spelling(&Locale::new(EN_US)).unwrap_or(&entry.id);
     if entry.id == "__forPlayerVariable__" {
         return program_source(
@@ -439,14 +563,24 @@ fn call_program_source(catalog: &Catalog, entry: &CatalogEntry, value: bool) -> 
             false,
         );
     }
-    let args = (0..entry.params.len())
-        .map(|index| sample_argument(catalog, entry, index))
-        .collect::<Vec<_>>()
-        .join(", ");
-    let call = if entry.params.is_empty() {
+    let contract = documented_contract(&row.notes);
+    let mut args = contract
+        .parameters
+        .iter()
+        .map(|parameter| sample_argument(catalog, parameter.value_type.as_deref().unwrap_or("Any")))
+        .collect::<Vec<_>>();
+    if let Some((index, argument)) = override_argument {
+        if let Some(slot) = args.get_mut(index) {
+            *slot = argument;
+        }
+    }
+    if extra_argument {
+        args.push("True".to_string());
+    }
+    let call = if args.is_empty() {
         spelling.to_string()
     } else {
-        format!("{spelling}({args})")
+        format!("{spelling}({})", args.join(", "))
     };
     if value {
         call_program_source_text(&format!("Set Global Variable(probe, {call});"))
@@ -528,20 +662,7 @@ fn enum_source(catalog: &Catalog, domain: &str, member: &str) -> String {
     )
 }
 
-fn sample_argument(catalog: &Catalog, entry: &CatalogEntry, index: usize) -> String {
-    let parameter_type = entry.param_type(index).unwrap_or("Any");
-    if let Some(domain) = entry.param_domain(index) {
-        if parameter_type == "Any" || parameter_type == domain || parameter_type.contains(domain) {
-            if let Some(enum_domain) = catalog.enum_domain(domain) {
-                if let Some(member) = enum_domain.members.first() {
-                    return catalog
-                        .enum_spelling(domain, &Locale::new(EN_US), &member.member)
-                        .unwrap_or(&member.member)
-                        .to_string();
-                }
-            }
-        }
-    }
+fn sample_argument(catalog: &Catalog, parameter_type: &str) -> String {
     if let Some(enum_domain) = catalog.enum_domain(parameter_type) {
         if parameter_type == "Vector" {
             return "Vector(0, 0, 0)".to_string();
@@ -599,6 +720,18 @@ fn sample_argument(catalog: &Catalog, entry: &CatalogEntry, index: usize) -> Str
     }
 }
 
+fn is_concrete_type(value_type: &str) -> bool {
+    !value_type.contains('|') && !matches!(value_type, "Any" | "Object" | "Array")
+}
+
+fn incompatible_argument(value_type: &str) -> String {
+    if value_type == "String" {
+        "1".to_string()
+    } else {
+        "Custom String(\"wrong type\")".to_string()
+    }
+}
+
 fn value_spelling(catalog: &Catalog, id: &str, fallback: &str) -> String {
     catalog
         .spelling(Kind::Value, &Locale::new(EN_US), id)
@@ -626,12 +759,51 @@ fn variables_source() -> String {
     program_source("Set Global Variable(probe, 1);", false)
 }
 
+fn modify_global_variable_source() -> String {
+    program_source("Modify Global Variable(probe, Add, 1);", false)
+}
+
+fn indexed_global_variable_source(modify: bool) -> String {
+    let action = if modify {
+        "Modify Global Variable At Index(probe, 0, Add, 1);"
+    } else {
+        "Set Global Variable At Index(probe, 0, 1);"
+    };
+    program_source(action, false)
+}
+
 fn player_variables_source() -> String {
     program_source("Set Player Variable(Event Player, probe, 1);", false)
 }
 
+fn modify_player_variable_source() -> String {
+    program_source(
+        "Modify Player Variable(Event Player, probe, Add, 1);",
+        false,
+    )
+}
+
+fn indexed_player_variable_source(modify: bool) -> String {
+    let action = if modify {
+        "Modify Player Variable At Index(Event Player, probe, 0, Add, 1);"
+    } else {
+        "Set Player Variable At Index(Event Player, probe, 0, 1);"
+    };
+    program_source(action, false)
+}
+
 fn subroutines_source() -> String {
     "subroutines {\n    0: probe\n}\n\nrule (\"probe\") {\n    event {\n        Subroutine;\n        probe;\n    }\n    actions {\n        Call Subroutine(probe);\n        Start Rule(probe, Restart Rule);\n    }\n}\n"
+        .to_string()
+}
+
+fn call_subroutine_source() -> String {
+    "subroutines {\n    0: probe\n}\n\nrule (\"probe\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Call Subroutine(probe);\n    }\n}\n"
+        .to_string()
+}
+
+fn start_rule_source() -> String {
+    "subroutines {\n    0: probe\n}\n\nrule (\"probe\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Start Rule(probe, Restart Rule);\n    }\n}\n"
         .to_string()
 }
 
@@ -677,6 +849,24 @@ fn control_flow_action(name: &str) -> Option<String> {
     Some(program_source(action, false))
 }
 
+fn settings_section_source(section: &str) -> Option<&'static str> {
+    match section {
+        "main" => Some(
+            "settings {\n    main {\n        Mode Name: \"probe\"\n        Description: \"probe\"\n    }\n}\n",
+        ),
+        "lobby" => Some("settings {\n    lobby {\n        Max Spectators: 1\n    }\n}\n"),
+        "modes" => Some(include_str!("fixtures/settings/pixelart.settings.ws")),
+        "heroes" => Some(
+            "settings {\n    heroes {\n        General {\n            D.Va {\n                Primary Fire: Off\n            }\n        }\n    }\n}\n",
+        ),
+        "extensions" => Some("settings {\n    extensions {\n        Beam Effects\n    }\n}\n"),
+        "workshop" => Some(
+            "settings {\n    workshop {\n        AI-PVE {\n            Custom Label: \"probe\"\n        }\n    }\n}\n",
+        ),
+        _ => None,
+    }
+}
+
 fn settings_source() -> String {
     include_str!("fixtures/settings/pixelart.settings.ws").to_string()
 }
@@ -702,7 +892,129 @@ fn inventory_rows(file: &str) -> Vec<InventoryRow> {
             Some(InventoryRow {
                 name,
                 supported: cells[1].contains(SUPPORTED),
+                notes: cells
+                    .get(2..)
+                    .unwrap_or_default()
+                    .join("|")
+                    .trim()
+                    .to_string(),
             })
+        })
+        .collect()
+}
+
+fn documented_contract(notes: &str) -> DocumentedContract {
+    let return_type = notes
+        .strip_prefix("Returns: ")
+        .and_then(|rest| rest.split(';').next())
+        .map(strip_code_ticks)
+        .filter(|value| !value.is_empty());
+    let parameters = notes
+        .find("Parameters: (")
+        .and_then(|start| {
+            let contents = &notes[start + "Parameters: (".len()..];
+            let end = contents.find(')')?;
+            Some(contents[..end].to_string())
+        })
+        .map(|contents| {
+            if contents.is_empty() {
+                return Vec::new();
+            }
+            contents
+                .split(", ")
+                .map(|parameter| {
+                    let (label, value_type) = parameter
+                        .rsplit_once(": ")
+                        .map_or((parameter, None), |(label, value_type)| {
+                            (label, Some(strip_code_ticks(value_type)))
+                        });
+                    DocumentedParameter {
+                        label: label.to_string(),
+                        value_type,
+                    }
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    DocumentedContract {
+        return_type,
+        parameters,
+    }
+}
+
+fn strip_code_ticks(value: &str) -> String {
+    let value = value.trim().trim_end_matches('.').trim();
+    value
+        .strip_prefix('`')
+        .and_then(|value| value.strip_suffix('`'))
+        .unwrap_or(value)
+        .to_string()
+}
+
+fn assert_documented_contract(
+    case_id: &str,
+    kind: Kind,
+    entry: &CatalogEntry,
+    row: &InventoryRow,
+    failures: &mut Vec<String>,
+) {
+    let contract = documented_contract(&row.notes);
+    if entry.params.len() != contract.parameters.len() {
+        failures.push(format!(
+            "{case_id}: documented parameter count {} differs from catalog {}",
+            contract.parameters.len(),
+            entry.params.len()
+        ));
+    }
+    for (index, parameter) in contract.parameters.iter().enumerate() {
+        if let Some(value_type) = parameter.value_type.as_deref() {
+            if entry.param_type(index) != Some(value_type) {
+                failures.push(format!(
+                    "{case_id}: documented parameter {index} type {value_type:?} differs from catalog {:?}",
+                    entry.param_type(index)
+                ));
+            }
+        } else if entry.params.get(index).map(String::as_str) != Some(parameter.label.as_str()) {
+            failures.push(format!(
+                "{case_id}: documented parameter {index} label {:?} differs from catalog {:?}",
+                parameter.label,
+                entry.params.get(index)
+            ));
+        }
+    }
+    match kind {
+        Kind::Value if entry.return_type() != contract.return_type.as_deref() => {
+            failures.push(format!(
+                "{case_id}: documented return type {:?} differs from catalog {:?}",
+                contract.return_type,
+                entry.return_type()
+            ))
+        }
+        Kind::Value if contract.return_type.is_none() => failures.push(format!(
+            "{case_id}: supported value has no documented return type"
+        )),
+        _ => {}
+    }
+}
+
+fn audited_enum_members() -> Vec<(String, String)> {
+    include_str!("fixtures/audited-enum-members.md")
+        .lines()
+        .filter_map(|line| {
+            let cells = line
+                .trim()
+                .strip_prefix('|')?
+                .strip_suffix('|')?
+                .split('|')
+                .map(str::trim)
+                .collect::<Vec<_>>();
+            if cells.len() < 2
+                || cells[0].eq_ignore_ascii_case("Domain")
+                || cells[0].chars().all(|character| character == '-')
+            {
+                return None;
+            }
+            Some((strip_code_ticks(cells[0]), strip_code_ticks(cells[1])))
         })
         .collect()
 }
