@@ -14,6 +14,8 @@ use workshop_rs::emitter::{self, EmitOptions};
 use workshop_rs::parser;
 use workshop_rs::settings::SettingsNode;
 
+mod common;
+
 fn builtin() -> Catalog {
     Catalog::builtin().expect("built-in catalog")
 }
@@ -24,6 +26,72 @@ fn en() -> Locale {
 
 fn zh() -> Locale {
     Locale::new("zh-CN")
+}
+
+#[test]
+fn pinned_real_projects_convert_between_supported_locales() {
+    let catalog = builtin();
+    for case in common::cases() {
+        let (source, source_locale) = common::source(case);
+        let target_locale = common::target_locale(&source_locale);
+        let program = parser::parse_with_context(&source, &catalog, &source_locale, &catalog)
+            .unwrap_or_else(|error| panic!("{} parse failed: {error:?}", case.id));
+        common::assert_residual_policy(case, "source-parse", &program.semantic_issues(&catalog));
+        let converted = match convert::convert(
+            &source,
+            &catalog,
+            &source_locale,
+            &target_locale,
+            &ConvertOptions::default(),
+        ) {
+            Ok(converted) => converted,
+            Err(error) => {
+                common::assert_gap(case, workshop_rs::p0::P0Stage::LocaleConversion, &error);
+                println!("{}: known locale conversion gap: {error:?}", case.id);
+                continue;
+            }
+        };
+        let converted_program =
+            parser::parse_with_context(&converted.text, &catalog, &target_locale, &catalog)
+                .unwrap_or_else(|error| {
+                    panic!("{} target-locale reparse failed: {error:?}", case.id)
+                });
+        common::assert_residual_policy(
+            case,
+            "target-locale-reparse",
+            &converted_program.semantic_issues(&catalog),
+        );
+        common::assert_custom_workshop_settings(case.id, &source, &converted.text);
+        common::assert_target_locale_spellings(
+            case.id,
+            &source_locale,
+            &target_locale,
+            &source,
+            &converted.text,
+            &program.dump(),
+            &catalog,
+        );
+        assert!(
+            workshop_rs::roundtrip::equivalent(&program, &converted_program),
+            "{} target-locale conversion changed WIR",
+            case.id
+        );
+        let converted_back =
+            workshop_rs::emitter::emit(&converted_program, &catalog, &source_locale)
+                .unwrap_or_else(|error| {
+                    panic!("{} reverse locale emission failed: {error:?}", case.id)
+                });
+        let converted_back_program =
+            parser::parse_with_context(&converted_back, &catalog, &source_locale, &catalog)
+                .unwrap_or_else(|error| {
+                    panic!("{} reverse locale reparse failed: {error:?}", case.id)
+                });
+        assert!(
+            workshop_rs::roundtrip::equivalent(&program, &converted_back_program),
+            "{} reverse locale conversion changed WIR",
+            case.id
+        );
+    }
 }
 
 #[test]

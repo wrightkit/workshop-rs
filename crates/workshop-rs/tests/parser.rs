@@ -9,6 +9,8 @@ use workshop_rs::parser;
 use workshop_rs::validate;
 use workshop_rs::wir;
 
+mod common;
+
 fn fixture_path(fixture_id: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/corpus")
@@ -22,6 +24,21 @@ fn corpus_workshop_text(fixture_id: &str) -> String {
 
 fn catalog() -> Catalog {
     Catalog::builtin().expect("built-in catalog")
+}
+
+#[test]
+fn pinned_real_projects_parse_with_expected_semantic_residuals() {
+    let catalog = catalog();
+    for case in common::cases() {
+        let (source, locale) = common::source(case);
+        let program = parser::parse_with_context(&source, &catalog, &locale, &catalog)
+            .unwrap_or_else(|error| panic!("{} parse failed: {error:?}", case.id));
+        common::assert_residual_policy(case, "source-parse", &program.semantic_issues(&catalog));
+        if let Err(error) = validate::validate_canonical_ids(&program, &catalog) {
+            common::assert_gap(case, workshop_rs::p0::P0Stage::CanonicalValidation, &error);
+            println!("{}: known canonical-validation gap: {error:?}", case.id);
+        }
+    }
 }
 
 #[test]
