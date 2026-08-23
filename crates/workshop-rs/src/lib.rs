@@ -35,6 +35,7 @@ pub mod census;
 pub mod conformance;
 pub mod convert;
 pub mod detect;
+pub mod element_count;
 pub mod emitter;
 mod error;
 pub mod format;
