@@ -1057,6 +1057,13 @@ impl Emitter<'_> {
                 // handled in the call arm below.
                 self.emit_string_value(value, out)?;
             }
+            wir::Value::LocalizedString(id) => {
+                out.push_str(&self.spelling(Kind::Value, "string")?);
+                out.push('(');
+                let spelling = self.localized_string_spelling(id)?;
+                write!(out, "\"{}\"", escape_value_string(&spelling)).unwrap();
+                out.push(')');
+            }
             wir::Value::Bool(true) => out.push_str("True"),
             wir::Value::Bool(false) => out.push_str("False"),
             wir::Value::Null => out.push_str("Null"),
@@ -1298,20 +1305,21 @@ impl Emitter<'_> {
         Ok(())
     }
 
-    fn localized_string_value(&self, id: wir::ValueId, out: &mut String) -> Result<()> {
+    fn localized_string_value(&mut self, id: wir::ValueId, out: &mut String) -> Result<()> {
         let Some(node) = self.program.values.get(id) else {
             return Err(WorkshopError::Malformed {
                 message: format!("dangling value {id}"),
                 span: None,
             });
         };
-        let wir::Value::String(value) = &node.value else {
+        let wir::Value::LocalizedString(id) = &node.value else {
             return Err(WorkshopError::Unsupported {
                 message: "value 'string' argument 1 must be localized string text".to_string(),
                 span: node.span,
             });
         };
-        write!(out, "\"{}\"", escape_value_string(value)).unwrap();
+        let spelling = self.localized_string_spelling(id)?;
+        write!(out, "\"{}\"", escape_value_string(&spelling)).unwrap();
         Ok(())
     }
 
@@ -1494,6 +1502,31 @@ impl Emitter<'_> {
             kind: kind.as_str(),
             id: id.to_string(),
             locale: self.locale.clone(),
+        })
+    }
+
+    fn localized_string_spelling(&mut self, id: &str) -> Result<String> {
+        if let Some(spelling) = self.catalog.localized_string_spelling(&self.locale, id) {
+            return Ok(spelling.to_string());
+        }
+        if let Some(fallback) = &self.fallback {
+            if let Some(spelling) = self.catalog.localized_string_spelling(fallback, id) {
+                self.fallback_ids.push(format!("localizedString.{id}"));
+                return Ok(spelling.to_string());
+            }
+        }
+        if self.catalog.localized_strings().any(|entry| entry.id == id) {
+            return Err(WorkshopError::MissingMapping {
+                kind: "localized string",
+                id: id.to_string(),
+                locale: self.locale.clone(),
+            });
+        }
+        Err(WorkshopError::Unknown {
+            kind: "localized string",
+            spelling: id.to_string(),
+            locale: self.locale.clone(),
+            span: None,
         })
     }
 

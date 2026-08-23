@@ -7,7 +7,7 @@
 | Feature | Status | Notes |
 | --- | --- | --- |
 | `Custom String` format strings | ✅ Supported | Format strings with up to 3 interpolation placeholders (`{0}`, `{1}`, `{2}`) and recursive formatting. |
-| `String` (Built-in localized string values) | ✅ Supported | Four-argument localized string values with three object/array substitutions; `Custom String` format strings remain fully supported. |
+| `String` (Built-in localized string values) | ✅ Supported | Localized preset identities with 0–4 supplied arguments; the preset defaults to `Hello` and replacement arguments default to `Null`, while unsupported preset text is rejected. `Custom String` format strings remain fully supported. |
 
 ## Client Locales
 

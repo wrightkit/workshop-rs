@@ -359,6 +359,7 @@ fn render_value(program: &Program, id: super::ValueId, out: &mut String) {
     match value {
         Value::Number { value, .. } => out.push_str(&format_number(*value)),
         Value::String(value) => out.push_str(&format!("{:?}", value)),
+        Value::LocalizedString(value) => out.push_str(&format!("localized:{value}")),
         Value::Bool(value) => out.push_str(if *value { "true" } else { "false" }),
         Value::Null => out.push_str("null"),
         Value::Array(elements) => {

@@ -473,7 +473,7 @@ fn remaining_value_contracts_are_canonical_and_type_checked() {
     let zh = Locale::new("zh-CN");
     let converted = convert::convert(source, &catalog, &locale, &zh, &Default::default())
         .expect("String converts to zh-CN");
-    assert!(converted.text.contains("字符串(\"Hello\")"));
+    assert!(converted.text.contains("字符串(\"问候\")"));
     let converted_back =
         convert::convert(&converted.text, &catalog, &zh, &locale, &Default::default())
             .expect("String converts back to en-US");
@@ -489,11 +489,13 @@ fn remaining_value_contracts_are_canonical_and_type_checked() {
         r#"rule ("wrong-string-literal") { event { Ongoing - Global; } actions { Set Global Variable(probe, String(1, Null, Null, Null)); } }"#,
         r#"rule ("wrong-string-bool") { event { Ongoing - Global; } actions { Set Global Variable(probe, String(True)); } }"#,
         r#"rule ("wrong-string-expression") { event { Ongoing - Global; } actions { Set Global Variable(probe, String(Custom String("probe"), Null)); } }"#,
+        r#"rule ("unknown-string-preset") { event { Ongoing - Global; } actions { Set Global Variable(probe, String("Not A Preset")); } }"#,
         r#"rule ("wrong-array") { event { Ongoing - Global; } actions { Set Global Variable(probe, Randomized Array(1)); } }"#,
         r#"rule ("wrong-power") { event { Ongoing - Global; } actions { Set Global Variable(probe, Raise To Power(1, Custom String("wrong"))); } }"#,
     ] {
-        let program = parser::parse_with_context(source, &catalog, &locale, &catalog)
-            .expect("invalid Value input remains parseable for canonical validation");
+        let Ok(program) = parser::parse_with_context(source, &catalog, &locale, &catalog) else {
+            continue;
+        };
         assert!(
             validate::validate_canonical_ids(&program, &catalog).is_err(),
             "invalid Value signature must be rejected"

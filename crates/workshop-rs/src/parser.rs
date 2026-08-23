@@ -3006,10 +3006,7 @@ impl Parser<'_> {
         if matches!(token.kind, TokenKind::String(_)) {
             let span = Some(Span::new(self.file(), token.start, token.end));
             let content = self.expect_string("expected a localized string")?;
-            return Ok(self
-                .target
-                .values
-                .push(ValueNode::new(Value::String(content), span)));
+            return self.localized_string_literal(content, span);
         }
 
         // Workshop.codes presents the preset form as `String(Hello, ...)`,
@@ -3032,9 +3029,25 @@ impl Parser<'_> {
         }
 
         let (text, start, end) = self.phrase()?;
+        self.localized_string_literal(text, Some(Span::new(self.file(), start, end)))
+    }
+
+    fn localized_string_literal(
+        &mut self,
+        text: String,
+        span: Option<Span>,
+    ) -> Result<wir::ValueId> {
+        let Some(entry) = self.catalog.resolve_localized_string(&self.locale, &text) else {
+            return Err(WorkshopError::Unknown {
+                kind: "localized string",
+                spelling: text,
+                locale: self.locale.clone(),
+                span,
+            });
+        };
         Ok(self.target.values.push(ValueNode::new(
-            Value::String(text),
-            Some(Span::new(self.file(), start, end)),
+            Value::LocalizedString(entry.id.clone()),
+            span,
         )))
     }
 
