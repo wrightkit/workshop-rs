@@ -3992,7 +3992,7 @@
       ]
     }
   ],
-  "digest": "167aba1a1fe2e409596c8153d2de45576c5083c940abc7b9679559f6145fe9fb",
+  "digest": "4a4ad444069253758d1b6970f000226851c089a14d8393a7e3d9ebb23df9387a",
   "enums": [
     {
       "domain": "Impulse",
@@ -9557,6 +9557,22 @@
     "en-US",
     "zh-CN"
   ],
+  "localizedStrings": [
+    {
+      "aliases": {
+        "en-US": "Hello",
+        "zh-CN": "问候"
+      },
+      "id": "hello"
+    },
+    {
+      "aliases": {
+        "en-US": "Goodbye",
+        "zh-CN": "再见"
+      },
+      "id": "goodbye"
+    }
+  ],
   "operators": [
     {
       "aliases": {
@@ -9690,6 +9706,7 @@
       "Workshop.codes structured wiki articles are a direct documentation cross-check for the declared Action/Value properties, including Returns, Parameters, parameter Type, and Default (for example https://workshop.codes/wiki/articles/add, https://workshop.codes/wiki/articles/teleport, and https://workshop.codes/wiki/articles/set-crouch-enabled); entries absent from the reviewed evidence or with source conflicts remain evidence-insufficient instead of being inferred",
       "Representative Workshop.codes article links are retained as a source cross-check; fetched snapshots and acceptance results are CI evidence, not generator or runtime inputs",
       "OverPy metadata is a static cross-check only; it is not treated as a runtime or .NET dependency",
+      "localized String preset identities hello/goodbye and their en-US/zh-CN aliases are reviewed against OverPy localizedStrings.ts and the existing Workshop Comms aliases; unsupported preset text remains an explicit unknown",
       "OSTW static Elements.json at https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/tree/817c1db4bace52123f054ffe10d3d8a06052e687 provides an independent cross-check: 210 Action and 250 Value names match the current en-US catalog; its any/any[] declarations keep polymorphic entries evidence-insufficient rather than narrowing them",
       "static type spellings Clip/GamemodeLiteral/HeroLiteral are normalized to the canonical Clipping/Gamemode/Hero enum domains; distance, directionTowards, vector, vectorTowards, getObjectivePosition, charAt, valueInArray, arrayContains, max, and min retain Any parameter contracts where the pinned real-project artifacts demonstrate Workshop polymorphism beyond a narrower static declaration",
       "current vector constants, Game Mode and Modulo values, Gamemode members, Hero and Color domain aliases, and To Nearest alias are reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
@@ -10688,6 +10705,32 @@
     },
     {
       "aliases": {
+        "en-US": "String",
+        "zh-CN": "字符串"
+      },
+      "id": "string",
+      "paramDefaults": [
+        "Hello",
+        "null",
+        "null",
+        "null"
+      ],
+      "paramTypes": [
+        "String",
+        "Object|Array",
+        "Object|Array",
+        "Object|Array"
+      ],
+      "params": [
+        "String",
+        "{0}",
+        "{1}",
+        "{2}"
+      ],
+      "returnType": "String"
+    },
+    {
+      "aliases": {
         "en-US": "Value In Array",
         "zh-CN": "数组中的值"
       },
@@ -10830,6 +10873,36 @@
         "Array"
       ],
       "returnType": "Any"
+    },
+    {
+      "aliases": {
+        "en-US": "Randomized Array",
+        "zh-CN": "随机数组"
+      },
+      "id": "randomizedArray",
+      "paramTypes": [
+        "Array"
+      ],
+      "params": [
+        "Array"
+      ],
+      "returnType": "Array"
+    },
+    {
+      "aliases": {
+        "en-US": "Raise To Power",
+        "zh-CN": "乘方"
+      },
+      "id": "raiseToPower",
+      "paramTypes": [
+        "Number",
+        "Number"
+      ],
+      "params": [
+        "Value",
+        "Value"
+      ],
+      "returnType": "Number"
     },
     {
       "aliases": {

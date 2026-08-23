@@ -2866,7 +2866,9 @@ impl Parser<'_> {
             // Indexed variable actions carry a project-local variable name,
             // not a Workshop value expression. Resolve it through the symbol
             // table so names such as `Brigitte` remain variable identities.
-            if matches!(
+            if call_id == "string" && arg_index == 0 {
+                args.push(self.localized_string_argument()?);
+            } else if matches!(
                 call_id,
                 "setGlobalVariableAtIndex" | "modifyGlobalVariableAtIndex"
             ) && arg_index == 0
@@ -2995,6 +2997,58 @@ impl Parser<'_> {
         }
         self.call_stack.pop();
         Ok(args)
+    }
+
+    fn localized_string_argument(&mut self) -> Result<wir::ValueId> {
+        let Some(token) = self.peek() else {
+            return Err(self.malformed("expected a localized string", self.eof()));
+        };
+        if matches!(token.kind, TokenKind::String(_)) {
+            let span = Some(Span::new(self.file(), token.start, token.end));
+            let content = self.expect_string("expected a localized string")?;
+            return self.localized_string_literal(content, span);
+        }
+
+        // Workshop.codes presents the preset form as `String(Hello, ...)`,
+        // while independent decompilers emit quoted text. Preserve both raw
+        // spellings as a localized-string literal, but leave known expressions
+        // on the normal path so validation can reject them precisely.
+        let saved = self.pos;
+        let (phrase, _, _) = self.phrase()?;
+        let expression_like = self.resolve_entry(Kind::Value, &phrase).is_some()
+            || matches!(
+                self.canonical_keyword(&phrase).as_str(),
+                "True" | "False" | "真" | "假"
+            )
+            || self
+                .peek()
+                .is_some_and(|token| matches!(&token.kind, TokenKind::LParen | TokenKind::Dot));
+        self.pos = saved;
+        if expression_like || !matches!(token.kind, TokenKind::Word(_)) {
+            return self.value();
+        }
+
+        let (text, start, end) = self.phrase()?;
+        self.localized_string_literal(text, Some(Span::new(self.file(), start, end)))
+    }
+
+    fn localized_string_literal(
+        &mut self,
+        text: String,
+        span: Option<Span>,
+    ) -> Result<wir::ValueId> {
+        let Some(entry) = self.catalog.resolve_localized_string(&self.locale, &text) else {
+            return Err(WorkshopError::Unknown {
+                kind: "localized string",
+                spelling: text,
+                locale: self.locale.clone(),
+                span,
+            });
+        };
+        Ok(self.target.values.push(ValueNode::new(
+            Value::LocalizedString(entry.id.clone()),
+            span,
+        )))
     }
 
     fn opaque_value_args(&mut self) -> Result<Vec<wir::ValueId>> {

@@ -318,6 +318,7 @@ fn validate_value(
         }
         wir::Value::Number { .. }
         | wir::Value::String(_)
+        | wir::Value::LocalizedString(_)
         | wir::Value::Bool(_)
         | wir::Value::Null
         | wir::Value::GlobalVariable(_)
@@ -360,6 +361,19 @@ fn validate_call_signature(
     }
 
     for (index, arg_id) in args.iter().enumerate() {
+        if entry.id == "string"
+            && index == 0
+            && !matches!(
+                program.values.get(*arg_id).map(|node| &node.value),
+                Some(wir::Value::LocalizedString(_))
+            )
+        {
+            errors.push(WorkshopError::Unsupported {
+                message: "value 'string' argument 1 must be localized string text".to_string(),
+                span: program.values.get(*arg_id).and_then(|node| node.span),
+            });
+            continue;
+        }
         if let Some(expected) = entry.param_type(index) {
             if !value_matches_type(program, catalog, *arg_id, expected) {
                 let actual = value_type_name(program, catalog, *arg_id);
@@ -438,13 +452,14 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
     match (value, expected) {
         (_, "Any" | "Unknown") => true,
         (wir::Value::Number { .. }, "Number") => true,
-        (wir::Value::String(_), "String" | "Text") => true,
+        (wir::Value::String(_) | wir::Value::LocalizedString(_), "String" | "Text") => true,
         (wir::Value::Bool(_), "Boolean") => true,
         (wir::Value::Vector { .. }, "Vector") => true,
         (wir::Value::Array(_), "Array") => true,
         (
             wir::Value::Number { .. }
             | wir::Value::String(_)
+            | wir::Value::LocalizedString(_)
             | wir::Value::Bool(_)
             | wir::Value::Vector { .. },
             "Object",
@@ -518,7 +533,7 @@ fn value_type_name(program: &wir::Program, catalog: &Catalog, value_id: wir::Val
     };
     match &node.value {
         wir::Value::Number { .. } => "Number".to_string(),
-        wir::Value::String(_) => "String".to_string(),
+        wir::Value::String(_) | wir::Value::LocalizedString(_) => "String".to_string(),
         wir::Value::Bool(_) => "Boolean".to_string(),
         wir::Value::Vector { .. } => "Vector".to_string(),
         wir::Value::Array(_) => "Array".to_string(),

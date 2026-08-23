@@ -125,6 +125,33 @@ pub struct CatalogEntry {
     aliases: HashMap<Locale, Vec<String>>,
 }
 
+/// A locale-independent identity for a preset used by the Workshop `String`
+/// value. Unlike a custom `Value::String`, this identity must resolve through
+/// reviewed client-locale aliases before it can be parsed or emitted.
+#[derive(Debug, Clone)]
+pub struct LocalizedStringEntry {
+    pub id: String,
+    aliases: HashMap<Locale, Vec<String>>,
+}
+
+impl LocalizedStringEntry {
+    /// The deterministic emitted spelling in `locale`, when mapped.
+    pub fn spelling(&self, locale: &Locale) -> Option<&str> {
+        self.aliases
+            .get(locale)
+            .and_then(|spellings| spellings.first())
+            .map(String::as_str)
+    }
+
+    /// All reviewed spellings accepted for this locale.
+    pub fn spellings(&self, locale: &Locale) -> &[String] {
+        self.aliases
+            .get(locale)
+            .map(Vec::as_slice)
+            .unwrap_or_default()
+    }
+}
+
 impl CatalogEntry {
     /// The localized spelling of this builtin in `locale`, when declared.
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
@@ -246,8 +273,9 @@ pub struct Provenance {
     pub source_notes: Vec<String>,
 }
 
-/// Per-locale mapping coverage: how many canonical entries (builtins and
-/// enum members) carry a mapping for the locale out of the declared total.
+/// Per-locale mapping coverage: how many canonical entries (builtins,
+/// localized preset identities, and enum members) carry a mapping for the
+/// locale out of the declared total.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct LocaleCoverage {
     pub locale: Locale,
@@ -295,9 +323,12 @@ pub struct Catalog {
     /// present (ADR-0001 `catalog-version`).
     catalog_digest: Option<String>,
     entries: Vec<CatalogEntry>,
+    localized_strings: Vec<LocalizedStringEntry>,
     enums: Vec<EnumDomain>,
     by_id: HashMap<(Kind, String), usize>,
     alias_to_entry: HashMap<(Kind, Locale, String), usize>,
+    localized_string_by_id: HashMap<String, usize>,
+    localized_string_alias: HashMap<(Locale, String), usize>,
     enum_by_domain: HashMap<String, usize>,
     enum_alias_to_domain: HashMap<(Locale, String), String>,
     enum_alias_to_member: HashMap<(String, Locale, String), (usize, usize)>,
@@ -329,6 +360,8 @@ struct CatalogFile {
     #[serde(default)]
     settings: Vec<EntryFile>,
     #[serde(default)]
+    localized_strings: Vec<LocalizedStringFile>,
+    #[serde(default)]
     enums: Vec<EnumFile>,
 }
 
@@ -345,10 +378,10 @@ struct EntryFile {
     param_domains: Vec<Option<String>>,
     /// Default value per parameter position (parallel to `params`),
     /// resolved when a call omits the argument. `None` means no default is
-    /// declared. Default value syntax: `null`, a numeric literal,
-    /// `Domain.MEMBER` (builtin enum member), or a catalog value id resolved
-    /// as a zero-argument call. Every default is pinned-reference probe
-    /// evidence, never copied from upstream game data.
+    /// declared. Default value syntax: `null`, a numeric literal, localized
+    /// string text, `Domain.MEMBER` (builtin enum member), or a catalog value
+    /// id resolved as a zero-argument call. Every default is pinned-reference
+    /// probe evidence, never copied from upstream game data.
     #[serde(default)]
     param_defaults: Vec<Option<String>>,
     #[serde(default)]
@@ -357,6 +390,12 @@ struct EntryFile {
     return_type: Option<String>,
     #[serde(default)]
     variadic: bool,
+}
+
+#[derive(Deserialize)]
+struct LocalizedStringFile {
+    id: String,
+    aliases: HashMap<String, AliasFile>,
 }
 
 #[derive(Deserialize)]
@@ -443,9 +482,12 @@ impl Catalog {
             catalog_version: file.version.unwrap_or_else(|| "dev".to_string()),
             catalog_digest: file.digest,
             entries: Vec::new(),
+            localized_strings: Vec::new(),
             enums: Vec::new(),
             by_id: HashMap::new(),
             alias_to_entry: HashMap::new(),
+            localized_string_by_id: HashMap::new(),
+            localized_string_alias: HashMap::new(),
             enum_by_domain: HashMap::new(),
             enum_alias_to_domain: HashMap::new(),
             enum_alias_to_member: HashMap::new(),
@@ -462,6 +504,9 @@ impl Catalog {
             for item in items {
                 catalog.insert_entry(kind, item)?;
             }
+        }
+        for item in file.localized_strings {
+            catalog.insert_localized_string(item)?;
         }
         for domain in file.enums {
             catalog.insert_enum(domain)?;
@@ -525,16 +570,22 @@ impl Catalog {
     }
 
     /// The mapping coverage of one declared locale: mapped entries out of the
-    /// declared total (builtins and enum members). The primary locale is
+    /// declared total (builtins, localized preset identities, and enum members).
+    /// The primary locale is
     /// always complete; other locales may be partially covered.
     pub fn locale_coverage(&self, locale: &Locale) -> LocaleCoverage {
         let member_total: usize = self.enums.iter().map(|domain| domain.members.len()).sum();
-        let total = self.entries.len() + member_total;
+        let total = self.entries.len() + self.localized_strings.len() + member_total;
         let mapped = self
             .entries
             .iter()
             .filter(|entry| entry.aliases.contains_key(locale))
             .count()
+            + self
+                .localized_strings
+                .iter()
+                .filter(|entry| entry.aliases.contains_key(locale))
+                .count()
             + self
                 .enums
                 .iter()
@@ -578,6 +629,29 @@ impl Catalog {
     /// Every entry of a kind, in catalog order.
     pub fn entries_of(&self, kind: Kind) -> impl Iterator<Item = &CatalogEntry> {
         self.entries.iter().filter(move |entry| entry.kind == kind)
+    }
+
+    /// Resolve a localized preset spelling to its stable identity.
+    pub fn resolve_localized_string(
+        &self,
+        locale: &Locale,
+        spelling: &str,
+    ) -> Option<&LocalizedStringEntry> {
+        self.localized_string_alias
+            .get(&(locale.clone(), spelling.to_string()))
+            .map(|index| &self.localized_strings[*index])
+    }
+
+    /// Resolve the emitted spelling of a localized preset identity.
+    pub fn localized_string_spelling(&self, locale: &Locale, id: &str) -> Option<&str> {
+        self.localized_strings
+            .get(*self.localized_string_by_id.get(id)?)
+            .and_then(|entry| entry.spelling(locale))
+    }
+
+    /// Every reviewed localized preset identity, in catalog order.
+    pub fn localized_strings(&self) -> impl Iterator<Item = &LocalizedStringEntry> {
+        self.localized_strings.iter()
     }
 
     /// The total number of builtin entries.
@@ -719,6 +793,50 @@ impl Catalog {
             param_types: item.param_types,
             return_type: item.return_type,
             variadic: item.variadic,
+            aliases,
+        });
+        Ok(())
+    }
+
+    fn insert_localized_string(&mut self, item: LocalizedStringFile) -> Result<()> {
+        if self.localized_string_by_id.contains_key(&item.id) {
+            return Err(CatalogError::validation(format!(
+                "duplicate localized string id '{}'",
+                item.id
+            )));
+        }
+        let index = self.localized_strings.len();
+        let mut aliases = HashMap::new();
+        for (locale_str, alias_file) in item.aliases {
+            let locale = Locale::new(&locale_str);
+            if !self.locales.contains(&locale) {
+                return Err(CatalogError::validation(format!(
+                    "localized string '{}' declares alias for undeclared locale '{}'",
+                    item.id, locale
+                )));
+            }
+            let spellings = alias_file.into_spellings(&item.id, locale.as_str())?;
+            for spelling in &spellings {
+                let key = (locale.clone(), spelling.clone());
+                if self.localized_string_alias.contains_key(&key) {
+                    return Err(CatalogError::validation(format!(
+                        "duplicate localized string alias '{spelling}' for locale '{locale}'"
+                    )));
+                }
+                self.localized_string_alias.insert(key, index);
+            }
+            aliases.insert(locale, spellings);
+        }
+        let primary = self.locales[0].clone();
+        if !aliases.contains_key(&primary) {
+            return Err(CatalogError::validation(format!(
+                "localized string '{}' is missing a '{}' alias",
+                item.id, primary
+            )));
+        }
+        self.localized_string_by_id.insert(item.id.clone(), index);
+        self.localized_strings.push(LocalizedStringEntry {
+            id: item.id,
             aliases,
         });
         Ok(())

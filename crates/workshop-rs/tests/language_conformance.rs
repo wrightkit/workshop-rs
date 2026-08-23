@@ -258,6 +258,29 @@ fn documented_signatures_reject_wrong_arity_and_concrete_types() {
 }
 
 #[test]
+fn aggregate_values_count_matches_supported_inventory() {
+    let supported = inventory_rows("values.md")
+        .into_iter()
+        .filter(|row| row.supported)
+        .count();
+    let matrix = std::fs::read_to_string(
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/language-support.md"),
+    )
+    .expect("language support matrix exists");
+    let line = matrix
+        .lines()
+        .find(|line| line.starts_with("| [Values Inventory]"))
+        .expect("values inventory row exists");
+    let declared = line
+        .split(" supported values & expressions")
+        .next()
+        .and_then(|prefix| prefix.split_whitespace().last())
+        .and_then(|value| value.parse::<usize>().ok())
+        .expect("values inventory row declares a numeric aggregate count");
+    assert_eq!(declared, supported);
+}
+
+#[test]
 fn audited_action_value_inventory_explicitly_has_no_defaults_or_optional_arguments() {
     let catalog = Catalog::builtin().expect("builtin catalog");
     let mut documented_rows = 0;
@@ -608,6 +631,9 @@ fn call_program_source_variant(
         .iter()
         .map(|parameter| sample_argument(catalog, parameter.value_type.as_deref().unwrap_or("Any")))
         .collect::<Vec<_>>();
+    if entry.id == "string" {
+        args[0] = "\"Hello\"".to_string();
+    }
     if let Some((index, argument)) = override_argument {
         if let Some(slot) = args.get_mut(index) {
             *slot = argument;

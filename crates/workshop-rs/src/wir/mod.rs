@@ -278,6 +278,8 @@ pub enum Value {
         text: String,
     },
     String(String),
+    /// A reviewed localized Workshop preset-string identity.
+    LocalizedString(String),
     Bool(bool),
     Null,
     Array(Vec<ValueId>),

@@ -64,6 +64,25 @@ fn localized_spelling_resolves_to_canonical_id_and_back() {
 }
 
 #[test]
+fn localized_string_presets_resolve_and_translate_by_identity() {
+    let catalog = builtin();
+    let zh = Locale::new("zh-CN");
+    let preset = catalog
+        .resolve_localized_string(&en(), "Hello")
+        .expect("reviewed Hello preset resolves");
+    assert_eq!(preset.id, "hello");
+    assert_eq!(
+        catalog.localized_string_spelling(&zh, "hello"),
+        Some("问候")
+    );
+    assert!(
+        catalog
+            .resolve_localized_string(&en(), "Not A Preset")
+            .is_none()
+    );
+}
+
+#[test]
 fn reviewed_locale_alias_conflicts_resolve_to_one_canonical_identity() {
     let catalog = builtin();
     for spelling in ["中止", "中断"] {

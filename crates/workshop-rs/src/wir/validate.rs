@@ -232,6 +232,7 @@ fn check_value(program: &Program, id: super::ValueId) -> Result<(), IrError> {
         }
         Value::Number { .. }
         | Value::String(_)
+        | Value::LocalizedString(_)
         | Value::Bool(_)
         | Value::Null
         | Value::Enum { .. }
