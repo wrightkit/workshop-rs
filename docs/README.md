@@ -39,6 +39,9 @@ belong in documentation.
 - [Implementation role](implementation-role.md): standalone Workshop
   implementation identity, canonical ownership, dependency direction from
   `opy-rs` / `del-rs` / Wright, and consumer-driven evolution rules.
+- [Canonical action layout](action-layout.md): native Workshop action-width
+  queries for validated WIR sequences, including structured action expansion
+  and explicit layout errors.
 - [ADR-0001: Workshop Catalog, Locale, Provenance, and Version Boundaries](adr/0001-catalog-boundaries.md):
   semantic-code/catalog separation, locale-independent identities,
   missing-mapping behavior, and version identity.

@@ -14,7 +14,8 @@
 //!   validated Workshop IR;
 //! * [`wir`] — the Workshop IR model (locale-independent semantic
 //!   representation) with its arena/source/settings support;
-//! * [`emitter`] — deterministic localized Workshop emission, failing
+//! * [`emitter`] — deterministic localized Workshop emission and canonical
+//!   native action-layout queries, failing
 //!   explicitly on missing target-locale mappings (opt-in fallback);
 //! * [`detect`] — Workshop client-language detection and explicit override;
 //! * [`validate`] — catalog-backed validation of canonical builtin references;
