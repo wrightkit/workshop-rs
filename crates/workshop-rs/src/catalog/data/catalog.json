@@ -2480,7 +2480,8 @@
       "paramDomains": [
         null,
         null,
-        "Status"
+        "Status",
+        null
       ],
       "paramTypes": [
         "Player|Array",
@@ -2801,6 +2802,10 @@
         null,
         "Hero"
       ],
+      "paramTypes": [
+        "Player|Array",
+        "Hero"
+      ],
       "params": [
         "Player",
         "Hero"
@@ -2812,6 +2817,12 @@
         "zh-CN": "停止强制玩家选择英雄"
       },
       "id": "stopForcingHero",
+      "paramDomains": [
+        null
+      ],
+      "paramTypes": [
+        "Player|Array"
+      ],
       "params": [
         "Player"
       ]
@@ -2822,6 +2833,24 @@
         "zh-CN": "开始限制阈值"
       },
       "id": "forceThrottle",
+      "paramDomains": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Number|Boolean",
+        "Number|Boolean",
+        "Number|Boolean",
+        "Number|Boolean",
+        "Number|Boolean",
+        "Number|Boolean"
+      ],
       "params": [
         "Player",
         "MoveSpeed",
@@ -3172,6 +3201,12 @@
         "zh-CN": "停止追踪全局变量"
       },
       "id": "stopChasingVariable",
+      "paramDomains": [
+        null
+      ],
+      "paramTypes": [
+        "Variable"
+      ],
       "params": [
         "Variable"
       ]
@@ -3992,7 +4027,7 @@
       ]
     }
   ],
-  "digest": "e3a0c15bd30fd59ec933114bccce5feaeb5c8a77bb34497b185e5a36dab41d34",
+  "digest": "ba22304296aafc2aa715ea9c47aa8ccf4065576f268af4eb3d9a99d03124f7d6",
   "enums": [
     {
       "domain": "Impulse",
