@@ -450,6 +450,8 @@ pub enum ModifyOp {
     Multiply,
     Divide,
     Modulo,
+    Min,
+    Max,
     RaiseToPower,
     AppendToArray,
     RemoveFromArray,
@@ -465,10 +467,29 @@ impl ModifyOp {
             ModifyOp::Multiply => "Multiply",
             ModifyOp::Divide => "Divide",
             ModifyOp::Modulo => "Modulo",
+            ModifyOp::Min => "Min",
+            ModifyOp::Max => "Max",
             ModifyOp::RaiseToPower => "RaiseToPower",
             ModifyOp::AppendToArray => "AppendToArray",
             ModifyOp::RemoveFromArray => "RemoveFromArray",
             ModifyOp::RemoveFromArrayByIndex => "RemoveFromArrayByIndex",
+        }
+    }
+
+    /// The canonical catalog identity for this modification operation.
+    pub fn catalog_id(self) -> &'static str {
+        match self {
+            ModifyOp::Add => "add",
+            ModifyOp::Subtract => "subtract",
+            ModifyOp::Multiply => "multiply",
+            ModifyOp::Divide => "divide",
+            ModifyOp::Modulo => "modulo",
+            ModifyOp::Min => "min",
+            ModifyOp::Max => "max",
+            ModifyOp::RaiseToPower => "raiseToPower",
+            ModifyOp::AppendToArray => "appendToArray",
+            ModifyOp::RemoveFromArray => "removeFromArray",
+            ModifyOp::RemoveFromArrayByIndex => "removeFromArrayByIndex",
         }
     }
 }

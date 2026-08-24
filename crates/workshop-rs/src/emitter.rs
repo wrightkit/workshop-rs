@@ -835,6 +835,8 @@ impl Emitter<'_> {
                             wir::ModifyOp::Multiply => "*",
                             wir::ModifyOp::Divide => "/",
                             wir::ModifyOp::Modulo => "%",
+                            wir::ModifyOp::Min => "min",
+                            wir::ModifyOp::Max => "max",
                             _ => {
                                 return Err(WorkshopError::Unsupported {
                                     message: format!(
@@ -1462,18 +1464,7 @@ impl Emitter<'_> {
     /// The localized spelling of a modify operator, resolved through the
     /// catalog (fallback-aware).
     fn modify_op_spelling(&mut self, op: wir::ModifyOp) -> Result<String> {
-        let id = match op {
-            wir::ModifyOp::Add => "add",
-            wir::ModifyOp::Subtract => "subtract",
-            wir::ModifyOp::Multiply => "multiply",
-            wir::ModifyOp::Divide => "divide",
-            wir::ModifyOp::Modulo => "modulo",
-            wir::ModifyOp::RaiseToPower => "raiseToPower",
-            wir::ModifyOp::AppendToArray => "appendToArray",
-            wir::ModifyOp::RemoveFromArray => "removeFromArray",
-            wir::ModifyOp::RemoveFromArrayByIndex => "removeFromArrayByIndex",
-        };
-        self.spelling(Kind::Operator, id)
+        self.spelling(Kind::Operator, op.catalog_id())
     }
 
     /// The localized spelling of a canonical builtin id, resolving through

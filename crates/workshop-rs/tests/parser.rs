@@ -770,6 +770,94 @@ fn raw_indexed_assignment_lowers_to_explicit_wir_call() {
 }
 
 #[test]
+fn min_max_modifications_lower_for_global_player_and_indexed_forms() {
+    // OverPy's canonical min=/max= forms and the raw Workshop actions both
+    // denote the same Workshop modification operation (workshop-rs#95).
+    let text = r#"
+        variables {
+            global: 0: g
+            player: 0: p
+        }
+        rule ("min-max") {
+            event { Ongoing - Global; }
+            actions {
+                Global.g min= 1;
+                Event Player.p max= 2;
+                Global.g[0] min= 3;
+                Event Player.p[1] max= 4;
+                Modify Global Variable(g, Min, 5);
+                Modify Player Variable(Event Player, p, Max, 6);
+                Modify Global Variable At Index(g, 0, Min, 7);
+                Modify Player Variable At Index(Event Player, p, 1, Max, 8);
+            }
+        }
+    "#;
+    let catalog = catalog();
+    let program = parser::parse_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("min/max forms parse");
+    validate::validate_canonical_ids(&program, &catalog).expect("min/max ids validate");
+
+    let direct: Vec<_> = program
+        .actions
+        .iter()
+        .filter_map(|action| match action {
+            wir::Action::ModifyGlobalVariable { op, .. }
+            | wir::Action::ModifyPlayerVariable { op, .. } => Some(*op),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        direct,
+        [
+            wir::ModifyOp::Min,
+            wir::ModifyOp::Max,
+            wir::ModifyOp::Min,
+            wir::ModifyOp::Max,
+        ]
+    );
+
+    let indexed: Vec<_> = program
+        .actions
+        .iter()
+        .filter_map(|action| match action {
+            wir::Action::Call { name, args, .. }
+                if matches!(
+                    name.as_str(),
+                    "modifyGlobalVariableAtIndex" | "modifyPlayerVariableAtIndex"
+                ) =>
+            {
+                Some((name.as_str(), args[2]))
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(indexed.len(), 4);
+    assert!(indexed.iter().all(|(_, id)| matches!(
+        program.values.get(*id),
+        Some(wir::ValueNode {
+            value: wir::Value::Call { name, args },
+            ..
+        }) if args.is_empty() && matches!(name.as_str(), "min" | "max")
+    )));
+}
+
+#[test]
+fn unsupported_named_assignment_operator_is_rejected() {
+    let text = r#"
+        rule ("unsupported") {
+            event { Ongoing - Global; }
+            actions { Global.g median= 1; }
+        }
+    "#;
+    let error = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+        .expect_err("unsupported named assignment must fail");
+    assert!(matches!(
+        error,
+        workshop_rs::WorkshopError::Unsupported { .. }
+    ));
+}
+
+#[test]
 fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
     // Systematic collision check: scan the declared catalog for member
     // spellings shared by more than one enum domain (en-US) and assert the

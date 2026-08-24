@@ -222,6 +222,8 @@ fn inspect_value(
                 | "multiply"
                 | "divide"
                 | "modulo"
+                | "min"
+                | "max"
                 | "raiseToPower"
                 | "appendToArray"
                 | "removeFromArray"

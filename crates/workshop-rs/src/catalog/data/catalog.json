@@ -3992,7 +3992,7 @@
       ]
     }
   ],
-  "digest": "174a4ebc3f1250485ea55605ebb885016d84897368f65f1ad3818f9789728060",
+  "digest": "e3a0c15bd30fd59ec933114bccce5feaeb5c8a77bb34497b185e5a36dab41d34",
   "enums": [
     {
       "domain": "Impulse",
@@ -9657,6 +9657,20 @@
         "zh-CN": "余数"
       },
       "id": "modulo"
+    },
+    {
+      "aliases": {
+        "en-US": "Min",
+        "zh-CN": "较小"
+      },
+      "id": "min"
+    },
+    {
+      "aliases": {
+        "en-US": "Max",
+        "zh-CN": "较大"
+      },
+      "id": "max"
     },
     {
       "aliases": {

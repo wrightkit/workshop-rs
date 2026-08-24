@@ -21,6 +21,8 @@
 | `Append To Array` | ✅ Supported | Array variable modification operation. |
 | `Divide` | ✅ Supported | Arithmetic operator and variable modification operation. |
 | `Modulo` | ✅ Supported | Arithmetic operator and variable modification operation. |
+| `Min` | ✅ Supported | Variable modification operation that clamps the variable to the lower value. |
+| `Max` | ✅ Supported | Variable modification operation that clamps the variable to the higher value. |
 | `Multiply` | ✅ Supported | Arithmetic operator and variable modification operation. |
 | `Raise To Power` | ✅ Supported | Arithmetic operator and variable modification operation. |
 | `Remove From Array` | ✅ Supported | Array variable modification operation. |

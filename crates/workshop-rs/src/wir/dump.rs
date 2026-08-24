@@ -206,6 +206,8 @@ fn render_action(program: &Program, id: super::ActionId, out: &mut String, level
                 Some(ModifyOp::Multiply) => " *= ",
                 Some(ModifyOp::Divide) => " /= ",
                 Some(ModifyOp::Modulo) => " %= ",
+                Some(ModifyOp::Min) => " min= ",
+                Some(ModifyOp::Max) => " max= ",
                 Some(_) => " <unsupported> ",
             });
             render_value(program, *value, out);
