@@ -59,7 +59,7 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 
 | Entry group | Evidence class |
 | --- | --- |
-| en-US spellings of the M5 P0 surface | Transcribed from the Wright compatibility corpus workshop snapshots (pinned OverPy 9.7.10 en-US reference emissions) and the Wright M5 support matrix — classes 1/5 (reproducible behavior; upstream reference emission). |
+| en-US spellings of the supported Workshop surface | Transcribed from the Wright compatibility corpus workshop snapshots (pinned OverPy 9.7.10 en-US reference emissions) and the Wright support matrix — classes 1/5 (reproducible behavior; upstream reference emission). |
 | `squareRoot`, receiver-call action/value spellings (`setMoveSpeed`, `isAlive`, …) | Pinned OverPy 9.7.10 en-US emission surface for the `.opy` forms (class 5). |
 | Chase family spellings (`Chase Global Variable Over Time`, `Chase Player Variable At Rate`, …) and their expected enum domains (`ChaseTimeReeval`, `ChaseRateReeval`) | Wright-authored OPY semantic manifest probe data (#109/#110), migrated into the canonical catalog so the standalone core resolves ambiguous bare members without any Wright tooling dependency (classes 1/5; canonical signature data is catalog-owned per ADR-0001 Decision 1). |
 | Rule event identities and filters (`global`, `eachPlayer`, the nine player events, `subroutine`, `EventTeam`, and `EventPlayer`) | User-provided Workshop export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (`other.events`, `other.eventTeams`, `other.eventPlayers`, and computed `other.eventSlots`), cross-checked against documented raw Workshop event blocks; the canonical WIR keeps existing parameterless `eachPlayer` input and requires the evidenced team/player filters for other filtered events. The `Player` filter's accepted union (`EventPlayer` slot/all or a canonical `Hero`) is represented explicitly by `EventTarget` (classes 1/2). |
@@ -104,7 +104,7 @@ declared corpus is therefore complete and contains no silent exclusions.
 
 The `settings.workshop` namespace aliases (`workshop` / `地图工坊`) and the
 Wrecking Ball cooldown labels are pinned from the reacquired AI-PVE and Bastion
-artifacts described by `docs/evidence/raw-workshop-p0-v1.json`; they are source-preserving
+artifacts described by `docs/evidence/raw-workshop-real-projects-v1.json`; they are source-preserving
 custom data or producer aliases, not new builtin gameplay identities.
 
 ## Test fixtures (`crates/workshop-rs/tests/fixtures/`)

@@ -3992,7 +3992,7 @@
       ]
     }
   ],
-  "digest": "4a4ad444069253758d1b6970f000226851c089a14d8393a7e3d9ebb23df9387a",
+  "digest": "174a4ebc3f1250485ea55605ebb885016d84897368f65f1ad3818f9789728060",
   "enums": [
     {
       "domain": "Impulse",
@@ -9882,7 +9882,7 @@
   "target": {
     "format": "vanilla Workshop text",
     "game": "Overwatch 2",
-    "surface": "M5 P0 set, documented in docs/provenance.md (mirrors wright docs/workshop/support-matrix.md)"
+    "surface": "Supported Workshop set, documented in docs/provenance.md (mirrors wright docs/workshop/support-matrix.md)"
   },
   "values": [
     {

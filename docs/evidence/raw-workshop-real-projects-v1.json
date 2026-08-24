@@ -1,5 +1,5 @@
 {
-  "schema": "raw-workshop-p0-corpus/v1",
+  "schema": "raw-workshop-real-projects/v1",
   "purpose": "Durable provenance and rerun manifest for workshop-rs#47 and wright#189",
   "reference_compiler_policy": "Generated artifacts are accepted only with the pinned command and toolchain below; direct raw artifacts are fetched verbatim from the pinned Git blob.",
   "redistribution": "The five pinned Workshop source inputs are vendored under crates/workshop-rs/tests/fixtures/real-projects; CI verifies their SHA-256 and emits acceptance evidence only in logs/artifacts.",

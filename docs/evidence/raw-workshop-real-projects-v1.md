@@ -1,6 +1,6 @@
-# Raw Workshop P0 rerun procedure
+# Raw Workshop real-project conformance rerun procedure
 
-The machine-readable manifest in `raw-workshop-p0-v1.json` is the durable
+The machine-readable manifest in `raw-workshop-real-projects-v1.json` is the durable
 corpus record for workshop-rs#47 and wright#189. It pins the source repository,
 revision, path or generated-output procedure, artifact digest, locale, build
 toolchain, reference compiler where applicable, and redistribution boundary.
