@@ -1,6 +1,6 @@
 # Real-project evidence
 
-`raw-workshop-p0-v1.json` pins the five source repositories, revisions, raw
+`raw-workshop-real-projects-v1.json` pins the five source repositories, revisions, raw
 artifact SHA-256 values, and vendored fixture paths. The evidence is exercised
 by the parser, emitter, and locale scenario tests against those local source
 inputs:

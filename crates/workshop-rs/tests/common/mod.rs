@@ -4,7 +4,7 @@ use sha2::{Digest, Sha256};
 use workshop_rs::{
     WorkshopError,
     catalog::{Catalog, Locale},
-    p0::{P0CaseExpectation, P0Stage},
+    real_projects::{RealProjectCaseExpectation, RealProjectStage},
     semantic,
 };
 
@@ -17,11 +17,11 @@ struct SpanReport {
     end_column: u32,
 }
 
-pub(crate) fn cases() -> &'static [P0CaseExpectation] {
-    workshop_rs::p0::P0_EXPECTATION.cases
+pub(crate) fn cases() -> &'static [RealProjectCaseExpectation] {
+    workshop_rs::real_projects::REAL_PROJECT_EXPECTATION.cases
 }
 
-pub(crate) fn source(case: &P0CaseExpectation) -> (String, Locale) {
+pub(crate) fn source(case: &RealProjectCaseExpectation) -> (String, Locale) {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(case.source_fixture);
     let bytes = std::fs::read(&path).unwrap_or_else(|error| panic!("{path:?}: {error}"));
     assert_eq!(
@@ -43,7 +43,7 @@ pub(crate) fn target_locale(source_locale: &Locale) -> Locale {
 }
 
 pub(crate) fn assert_residual_policy(
-    case: &P0CaseExpectation,
+    case: &RealProjectCaseExpectation,
     stage: &str,
     issues: &[semantic::SemanticIssue],
 ) {
@@ -69,7 +69,11 @@ pub(crate) fn assert_residual_policy(
     );
 }
 
-pub(crate) fn assert_gap(case: &P0CaseExpectation, stage: P0Stage, error: &WorkshopError) {
+pub(crate) fn assert_gap(
+    case: &RealProjectCaseExpectation,
+    stage: RealProjectStage,
+    error: &WorkshopError,
+) {
     assert!(
         case.admits_gap(stage, error),
         "{} {} failed outside known gaps: {error:?}",

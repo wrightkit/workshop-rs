@@ -1,4 +1,4 @@
-//! WIR expansion and canonical-identity tests (#31): the M5 P0 surface is
+//! WIR expansion and canonical-identity tests (#31): the supported Workshop surface is
 //! representable in Workshop IR, and catalog-backed validation rejects
 //! unknown or locale-tainted builtin references deterministically.
 
