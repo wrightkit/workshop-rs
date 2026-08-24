@@ -96,8 +96,8 @@ This document inventories all **219 canonical Workshop actions** supported by `w
 | `Enable Text Chat` | ✅ Supported | Parameters: (Object: Player|Array). |
 | `Enable Voice Chat` | ✅ Supported | Parameters: (Object: Player|Array). |
 | `For Player Variable` | ✅ Supported | Parameters: (Player: Player, PlayerVariable: Variable, Number: Number, Number: Number, Number: Number). |
-| `Force Player Hero` | ✅ Supported | Parameters: (Player, Hero). |
-| `Force Throttle` | ✅ Supported | Parameters: (Player, MoveSpeed, InAirSpeed, SpectatorSpeed, GrappleBoost, JumpPower, MoveSpeed). |
+| `Force Player Hero` | ✅ Supported | Parameters: (Player: Player|Array, Hero: Hero). |
+| `Force Throttle` | ✅ Supported | Parameters: (Player: Player|Array, MoveSpeed: Number|Boolean, InAirSpeed: Number|Boolean, SpectatorSpeed: Number|Boolean, GrappleBoost: Number|Boolean, JumpPower: Number|Boolean, MoveSpeed: Number|Boolean). |
 | `Go To Assemble Heroes` | ✅ Supported | No parameters. |
 | `Heal` | ✅ Supported | Parameters: (Object: Player|Array, Player: Player, Number: Number). |
 | `Kill` | ✅ Supported | Parameters: (Object: Player|Array, Player: Player). |
@@ -202,12 +202,12 @@ This document inventories all **219 canonical Workshop actions** supported by `w
 | `Stop Camera` | ✅ Supported | Parameters: (Player: Player|Array). |
 | `Stop Chasing Global Variable` | ✅ Supported | Parameters: (Variable: Variable). |
 | `Stop Chasing Player Variable` | ✅ Supported | Parameters: (Player: Player|Array, PlayerVariable: Variable). |
-| `Stop Chasing Variable` | ✅ Supported | Parameters: (Variable). |
+| `Stop Chasing Variable` | ✅ Supported | Parameters: (Variable: Variable). |
 | `Stop Damage Modification` | ✅ Supported | Parameters: (DamageModificationId: DamageModificationId). |
 | `Stop Damage Over Time` | ✅ Supported | Parameters: (DotId: DotId). |
 | `Stop Facing` | ✅ Supported | Parameters: (Object: Player|Array). |
 | `Stop Forcing Dummy Bot Name` | ✅ Supported | Parameters: (Object: Player|Array). |
-| `Stop Forcing Hero` | ✅ Supported | Parameters: (Player). |
+| `Stop Forcing Hero` | ✅ Supported | Parameters: (Player: Player|Array). |
 | `Stop Forcing Player Outlines` | ✅ Supported | Parameters: (Object: Player|Array, Object: Player|Array). |
 | `Stop Forcing Player Position` | ✅ Supported | Parameters: (Object: Player|Array). |
 | `Stop Forcing Player To Be Hero` | ✅ Supported | Parameters: (Object: Player|Array). |
