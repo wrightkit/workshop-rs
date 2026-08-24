@@ -359,6 +359,22 @@ fn documented_action_and_value_signatures_are_inventory_entries() {
 }
 
 #[test]
+fn min_max_are_canonical_operator_identities() {
+    let catalog = builtin();
+    for (id, en_spelling, zh_spelling) in [("min", "Min", "较小"), ("max", "Max", "较大")] {
+        let entry = catalog.entry(Kind::Operator, id).expect(id);
+        assert_eq!(entry.spelling(&en()), Some(en_spelling));
+        assert_eq!(entry.spelling(&Locale::new("zh-CN")), Some(zh_spelling));
+        assert_eq!(
+            catalog
+                .resolve(Kind::Operator, &en(), en_spelling)
+                .map(|entry| entry.id.as_str()),
+            Some(id)
+        );
+    }
+}
+
+#[test]
 fn exercised_enum_domains_resolve_members_to_canonical_identity() {
     let catalog = builtin();
 

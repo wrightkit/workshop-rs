@@ -1376,7 +1376,7 @@ impl Parser<'_> {
                     TokenKind::RBracket,
                     "expected ']' after global variable index",
                 )?;
-                let _operator = self.assignment_operator().ok_or_else(|| {
+                let operator = self.assignment_operator()?.ok_or_else(|| {
                     self.malformed(
                         "expected assignment after global variable index",
                         self.peek().as_ref().unwrap_or(self.eof()),
@@ -1389,13 +1389,11 @@ impl Parser<'_> {
                 ));
                 let value = self.value()?;
                 self.expect(TokenKind::Semi, "expected ';' after indexed assignment")?;
-                return Ok(Some(self.target.actions.push(Action::Call {
-                    name: "setGlobalVariableAtIndex".to_string(),
-                    args: vec![target, index, value],
-                    span: Some(Span::new(self.file(), start, self.previous_span().1)),
-                })));
+                return Ok(Some(self.indexed_assignment_action(
+                    true, target, index, operator, value, start,
+                )));
             }
-            let Some(operator) = self.assignment_operator() else {
+            let Some(operator) = self.assignment_operator()? else {
                 return self.member_assignment_action(saved, start);
             };
             let variable = self.global_by_name(&name)?;
@@ -1463,7 +1461,7 @@ impl Parser<'_> {
                 TokenKind::RBracket,
                 "expected ']' after player variable index",
             )?;
-            let _operator = self.assignment_operator().ok_or_else(|| {
+            let operator = self.assignment_operator()?.ok_or_else(|| {
                 self.malformed(
                     "expected assignment after player variable index",
                     self.peek().as_ref().unwrap_or(self.eof()),
@@ -1478,13 +1476,16 @@ impl Parser<'_> {
                 },
                 Some(Span::new(self.file(), target_start, target_end)),
             ));
-            return Ok(Some(self.target.actions.push(Action::Call {
-                name: "setPlayerVariableAtIndex".to_string(),
-                args: vec![variable_value, index, value],
-                span: Some(Span::new(self.file(), start, self.previous_span().1)),
-            })));
+            return Ok(Some(self.indexed_assignment_action(
+                false,
+                variable_value,
+                index,
+                operator,
+                value,
+                start,
+            )));
         }
-        let Some(operator) = self.assignment_operator() else {
+        let Some(operator) = self.assignment_operator()? else {
             return self.member_assignment_action(saved, start);
         };
         let value = self.value()?;
@@ -1520,7 +1521,7 @@ impl Parser<'_> {
             return Ok(None);
         }
         let target = self.value()?;
-        let Some(operator) = self.assignment_operator() else {
+        let Some(operator) = self.assignment_operator()? else {
             self.pos = saved;
             return Ok(None);
         };
@@ -1538,14 +1539,88 @@ impl Parser<'_> {
         })))
     }
 
-    fn assignment_operator(&mut self) -> Option<AssignmentOperator> {
-        let operator = match self.peek()?.kind {
-            TokenKind::Op(operator) => operator,
-            _ => return None,
+    fn indexed_assignment_action(
+        &mut self,
+        global: bool,
+        variable: wir::ValueId,
+        index: wir::ValueId,
+        operator: AssignmentOperator,
+        value: wir::ValueId,
+        start: Position,
+    ) -> wir::ActionId {
+        let (name, args) = match operator {
+            AssignmentOperator::Set => (
+                if global {
+                    "setGlobalVariableAtIndex"
+                } else {
+                    "setPlayerVariableAtIndex"
+                },
+                vec![variable, index, value],
+            ),
+            AssignmentOperator::Modify(op) => (
+                if global {
+                    "modifyGlobalVariableAtIndex"
+                } else {
+                    "modifyPlayerVariableAtIndex"
+                },
+                vec![
+                    variable,
+                    index,
+                    self.target.values.push(ValueNode::new(
+                        Value::Call {
+                            name: op.catalog_id().to_string(),
+                            args: Vec::new(),
+                        },
+                        None,
+                    )),
+                    value,
+                ],
+            ),
+        };
+        self.target.actions.push(Action::Call {
+            name: name.to_string(),
+            args,
+            span: Some(Span::new(self.file(), start, self.previous_span().1)),
+        })
+    }
+
+    fn assignment_operator(&mut self) -> Result<Option<AssignmentOperator>> {
+        let Some(token) = self.peek() else {
+            return Ok(None);
+        };
+        if let TokenKind::Word(word) = &token.kind {
+            let op = match word.as_str() {
+                "min" => ModifyOp::Min,
+                "max" => ModifyOp::Max,
+                _ => {
+                    if matches!(self.peek_at(1).map(|token| token.kind), Some(TokenKind::Op(equal)) if equal == "=")
+                    {
+                        return Err(WorkshopError::Unsupported {
+                            message: format!("unsupported assignment operator '{word}='"),
+                            span: Some(Span::new(
+                                self.file(),
+                                token.start,
+                                self.peek_at(1).unwrap().end,
+                            )),
+                        });
+                    }
+                    return Ok(None);
+                }
+            };
+            if !matches!(self.peek_at(1).map(|token| token.kind), Some(TokenKind::Op(equal)) if equal == "=")
+            {
+                return Ok(None);
+            }
+            self.pos += 2;
+            return Ok(Some(AssignmentOperator::Modify(op)));
+        }
+        let operator = match &token.kind {
+            TokenKind::Op(operator) => operator.clone(),
+            _ => return Ok(None),
         };
         if operator == "=" {
             self.pos += 1;
-            return Some(AssignmentOperator::Set);
+            return Ok(Some(AssignmentOperator::Set));
         }
         let op = match operator.as_str() {
             "+" => ModifyOp::Add,
@@ -1553,14 +1628,14 @@ impl Parser<'_> {
             "*" => ModifyOp::Multiply,
             "/" => ModifyOp::Divide,
             "%" => ModifyOp::Modulo,
-            _ => return None,
+            _ => return Ok(None),
         };
         if !matches!(self.peek_at(1).map(|token| token.kind), Some(TokenKind::Op(equal)) if equal == "=")
         {
-            return None;
+            return Ok(None);
         }
         self.pos += 2;
-        Some(AssignmentOperator::Modify(op))
+        Ok(Some(AssignmentOperator::Modify(op)))
     }
 
     fn opaque_action(&mut self) -> Result<wir::ActionId> {
@@ -2015,6 +2090,8 @@ impl Parser<'_> {
             "multiply" => ModifyOp::Multiply,
             "divide" => ModifyOp::Divide,
             "modulo" => ModifyOp::Modulo,
+            "min" => ModifyOp::Min,
+            "max" => ModifyOp::Max,
             "raiseToPower" => ModifyOp::RaiseToPower,
             "appendToArray" => ModifyOp::AppendToArray,
             "removeFromArray" | "removeFromArrayByValue" => ModifyOp::RemoveFromArray,
@@ -2911,17 +2988,7 @@ impl Parser<'_> {
                 is_operator
             } {
                 let operator = self.modify_op()?;
-                let name = match operator {
-                    ModifyOp::Add => "add",
-                    ModifyOp::Subtract => "subtract",
-                    ModifyOp::Multiply => "multiply",
-                    ModifyOp::Divide => "divide",
-                    ModifyOp::Modulo => "modulo",
-                    ModifyOp::RaiseToPower => "raiseToPower",
-                    ModifyOp::AppendToArray => "appendToArray",
-                    ModifyOp::RemoveFromArray => "removeFromArray",
-                    ModifyOp::RemoveFromArrayByIndex => "removeFromArrayByIndex",
-                };
+                let name = operator.catalog_id();
                 args.push(self.target.values.push(ValueNode::new(
                     Value::Call {
                         name: name.to_string(),
@@ -3104,10 +3171,16 @@ impl Parser<'_> {
     }
 
     fn line_has_assignment(&self) -> bool {
-        self.tokens[self.pos..]
+        let tokens: Vec<_> = self.tokens[self.pos..]
             .iter()
             .take_while(|token| !matches!(token.kind, TokenKind::Semi | TokenKind::RBrace))
-            .any(|token| matches!(&token.kind, TokenKind::Op(op) if matches!(op.as_str(), "=" | "+=" | "-=" | "*=" | "/=" | "%=")))
+            .collect();
+        tokens.iter().any(|token| {
+            matches!(&token.kind, TokenKind::Op(op) if matches!(op.as_str(), "=" | "+=" | "-=" | "*=" | "/=" | "%="))
+        }) || tokens.windows(2).any(|window| {
+            matches!(&window[0].kind, TokenKind::Word(_))
+                && matches!(&window[1].kind, TokenKind::Op(op) if op == "=")
+        })
     }
 
     fn push_bool(&mut self, value: bool, start: Position, end: Position) -> wir::ValueId {
@@ -3204,6 +3277,12 @@ impl Parser<'_> {
                     end: word_end,
                     ..
                 } => {
+                    if matches!(
+                        self.peek_at(1).map(|token| token.kind),
+                        Some(TokenKind::Op(equal)) if equal == "="
+                    ) {
+                        break;
+                    }
                     words.push(word.clone());
                     end = word_end;
                     self.pos += 1;

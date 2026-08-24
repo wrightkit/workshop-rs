@@ -130,6 +130,33 @@ fn event_player_member_assignment_emits_action_reparsable_syntax() {
 }
 
 #[test]
+fn min_max_operations_emit_and_round_trip_in_zh_cn() {
+    let source = r#"
+        variables {
+            global: 0: g
+            player: 0: p
+        }
+        rule ("min-max") {
+            event { Ongoing - Global; }
+            actions {
+                Modify Global Variable(g, Min, 1);
+                Modify Player Variable(Event Player, p, Max, 2);
+                Modify Global Variable At Index(g, 0, Min, 3);
+                Modify Player Variable At Index(Event Player, p, 1, Max, 4);
+            }
+        }
+    "#;
+    let catalog = catalog();
+    let program = parser::parse_with_context(source, &catalog, &en(), &catalog).unwrap();
+    let emitted = emitter::emit(&program, &catalog, &Locale::new("zh-CN")).unwrap();
+    assert!(emitted.contains("较小"), "{emitted}");
+    assert!(emitted.contains("较大"), "{emitted}");
+    let reparsed =
+        parser::parse_with_context(&emitted, &catalog, &Locale::new("zh-CN"), &catalog).unwrap();
+    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
+}
+
+#[test]
 fn every_corpus_program_round_trips_to_equivalent_wir() {
     // Corpus text parses against the catalog context (expected enum domains
     // come from the canonical catalog signatures). `overpy-cake` is the

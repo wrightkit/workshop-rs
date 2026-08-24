@@ -538,6 +538,8 @@ fn is_canonical_helper(name: &str) -> bool {
             | "multiply"
             | "divide"
             | "modulo"
+            | "min"
+            | "max"
             | "raiseToPower"
             | "appendToArray"
             | "removeFromArray"
