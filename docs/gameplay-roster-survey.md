@@ -3,8 +3,8 @@
 This survey pins the roster evidence used by ADR-0002. It is a data-scope
 survey, not a claim that every row has a balance fact. The source is the
 user-provided `workshop-data` export at commit
-`d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date 2026-08-12). The export
-records Workshop-facing
+`d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date 2026-08-12), whose
+`meta.topLevelKeyCounts.heroes` is 53. The export records Workshop-facing
 canonical hero and logical-slot topology plus localized/display names; unsupported gameplay
 facts remain absent until separately evidenced.
 

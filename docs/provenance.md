@@ -79,10 +79,12 @@ license, reviewed) is embedded in the dataset itself and surfaced by
   `workshop-data/workshop-data.json` export at commit
   `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; the export is not committed.
 * The settings locale corpus
-  `crates/workshop-rs/src/settings/data/locales.json` records coverage in its
-  machine-owned `coverage` header. The header must not be hand-refreshed;
-  regenerate it through `workshop-catalog-gen corpus` with a current export
-  according to repository `AGENTS.md`.
+  `crates/workshop-rs/src/settings/data/locales.json` has a machine-written
+  `coverage` header from an earlier full corpus pipeline run. The heroes and
+  maps sections have since grown through reviewed additions beyond that
+  recorded coverage; the header understates the committed sections until the
+  next `workshop-catalog-gen corpus` run with a current export, and must not be
+  hand-refreshed (repository `AGENTS.md`).
   Each mapping records its export source paths; settings without a mapping
   continue to fail explicitly.
 

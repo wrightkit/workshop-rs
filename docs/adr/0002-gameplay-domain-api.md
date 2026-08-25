@@ -51,7 +51,7 @@ The complete row-by-row survey is pinned in
 [`docs/gameplay-roster-survey.md`](../gameplay-roster-survey.md). The
 user-provided `workshop-data` export at commit
 `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date 2026-08-12) contains
-hero identities and logical-slot records with localized/display names. Its topology categories
+53 hero identities and logical-slot records with localized/display names. Its topology categories
 include:
 
 | Shape | Evidence examples | API consequence |
