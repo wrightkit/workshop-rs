@@ -5,7 +5,7 @@ corpus record for workshop-rs#47 and wright#189. It pins the source repository,
 revision, path or generated-output procedure, artifact digest, locale, build
 toolchain, reference compiler where applicable, and redistribution boundary.
 
-The five pinned Workshop source inputs are committed under
+The pinned Workshop source inputs are committed under
 `crates/workshop-rs/tests/fixtures/real-projects/`. A rerun uses those local
 files and verifies their recorded SHA-256 before running the required harness.
 The source revisions, acquisition procedures, and toolchains remain in the
