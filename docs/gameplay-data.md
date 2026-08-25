@@ -25,11 +25,10 @@ The committed dataset identity is version `2026-08-12` with digest
 
 ## Evidence and known gaps
 
-The current dataset is an identity/naming and kit-topology dataset: it contains
-all 53 hero identities, their role facts, and all 201 named ability slots
-declared by the pinned export. It also contains six official-detail variant
-records for Bastion, D.Va, and Ramattra, for 207 ability records total. The
-embedded projection currently has nine keyword-bearing abilities and six
+The current dataset is an identity/naming and kit-topology dataset containing
+hero identities, role facts, and named ability slots declared by the pinned
+export. It also contains official-detail variant records for Bastion, D.Va,
+and Ramattra. The embedded projection includes keyword-bearing abilities and
 variants. Every hero and ability name is linked to
 `workshop-data/workshop-data.json` at commit
 `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date 2026-08-12).
