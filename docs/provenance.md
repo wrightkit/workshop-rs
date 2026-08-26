@@ -23,9 +23,9 @@ to commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date
 2026-08-12). The export is used only for hero identity, localized naming, and
 declared named ability-slot topology; no OverPy or OSTW data is copied.
 
-The committed projection contains 53 heroes, 53 role facts, and 201
-export-declared named ability slots, plus six official-detail variant records
-for Bastion, D.Va, and Ramattra. Each hero/ability name fact and export record
+The committed projection contains hero identities, role facts, and
+export-declared named ability slots, plus official-detail variant records for
+Bastion, D.Va, and Ramattra. Each hero/ability name fact and export record
 carries the export path as an `EvidenceRef`. Each role fact carries its
 official Blizzard hero-detail URL and access date 2026-08-18 as separate
 evidence.
@@ -62,7 +62,7 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 | en-US spellings of the supported Workshop surface | Transcribed from the Wright compatibility corpus workshop snapshots (pinned OverPy 9.7.10 en-US reference emissions) and the Wright support matrix — classes 1/5 (reproducible behavior; upstream reference emission). |
 | `squareRoot`, receiver-call action/value spellings (`setMoveSpeed`, `isAlive`, …) | Pinned OverPy 9.7.10 en-US emission surface for the `.opy` forms (class 5). |
 | Chase family spellings (`Chase Global Variable Over Time`, `Chase Player Variable At Rate`, …) and their expected enum domains (`ChaseTimeReeval`, `ChaseRateReeval`) | Wright-authored OPY semantic manifest probe data (#109/#110), migrated into the canonical catalog so the standalone core resolves ambiguous bare members without any Wright tooling dependency (classes 1/5; canonical signature data is catalog-owned per ADR-0001 Decision 1). |
-| Rule event identities and filters (`global`, `eachPlayer`, the nine player events, `subroutine`, `EventTeam`, and `EventPlayer`) | User-provided Workshop export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (`other.events`, `other.eventTeams`, `other.eventPlayers`, and computed `other.eventSlots`), cross-checked against documented raw Workshop event blocks; the canonical WIR keeps existing parameterless `eachPlayer` input and requires the evidenced team/player filters for other filtered events. The `Player` filter's accepted union (`EventPlayer` slot/all or a canonical `Hero`) is represented explicitly by `EventTarget` (classes 1/2). |
+| Rule event identities and filters (`global`, `eachPlayer`, player events, `subroutine`, `EventTeam`, and `EventPlayer`) | User-provided Workshop export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (`other.events`, `other.eventTeams`, `other.eventPlayers`, and computed `other.eventSlots`), cross-checked against documented raw Workshop event blocks; the canonical WIR keeps existing parameterless `eachPlayer` input and requires the evidenced team/player filters for other filtered events. The `Player` filter's accepted union (`EventPlayer` slot/all or a canonical `Hero`) is represented explicitly by `EventTarget` (classes 1/2). |
 | OSTW-exercised params/spellings and enum domains (CreateEffect, Workshop Setting, Hero/Map/Button/Icon/Operation/Rounding/InworldTextRev, …) | Pinned OSTW v3.4.0 reference probe emissions (P4/P5/P6/P6b) and the protect-ban entry-point reachable closure (class 5). |
 | Parameter metadata (`paramDomains`, `paramDefaults`) | Pinned-reference probe evidence (classes 1/5), never copied from upstream game data. |
 | Action/Value parameter and return signatures | Workshop.codes structured article properties (Returns, Parameters, Type, and Default), cross-checked against the pinned OverPy metadata and static OSTW data; entries without convergent evidence remain explicitly evidence-insufficient. Representative article links are embedded in the catalog provenance. |
@@ -73,20 +73,18 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 
 * `en-US` is the primary locale and is complete. The committed catalog
   validates that the primary locale is complete.
-* `zh-CN` is an open, evidence-backed locale: the current canonical catalog
-  maps **1240/1259** entries. The 19 unmapped spellings remain explicit and
-  fail closed; `workshop-catalog-gen check` is the authoritative coverage
-  report. The source for the reconciled additions is the user-provided
+* `zh-CN` is an open, evidence-backed locale. Unmapped spellings remain
+  explicit and fail closed; `workshop-catalog-gen check` is the authoritative
+  coverage report. The source for the reconciled additions is the user-provided
   `workshop-data/workshop-data.json` export at commit
   `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; the export is not committed.
 * The settings locale corpus
-  `crates/workshop-rs/src/settings/data/locales.json` records its `coverage`
-  header from the last full corpus pipeline run (labels 233/233, modes 7/7,
-  maps 2/2, heroes 52/52, enum values 86/86, tokens 4/4, teams 3/3). The
-  heroes and maps sections have since grown through reviewed additions beyond
-  that recorded coverage; the header is machine-written, understates the
-  committed sections until the next `workshop-catalog-gen corpus` run with a
-  current export, and must not be hand-refreshed (repository `AGENTS.md`).
+  `crates/workshop-rs/src/settings/data/locales.json` has a machine-written
+  `coverage` header from an earlier full corpus pipeline run. The heroes and
+  maps sections have since grown through reviewed additions beyond that
+  recorded coverage; the header understates the committed sections until the
+  next `workshop-catalog-gen corpus` run with a current export, and must not be
+  hand-refreshed (repository `AGENTS.md`).
   Each mapping records its export source paths; settings without a mapping
   continue to fail explicitly.
 

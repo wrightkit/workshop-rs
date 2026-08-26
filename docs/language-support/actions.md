@@ -2,7 +2,7 @@
 
 [← Back to Language Support Matrix](../language-support.md)
 
-This document inventories all **219 canonical Workshop actions** supported by `workshop-rs`.
+This document inventories the canonical Workshop actions supported by `workshop-rs`.
 
 | Feature | Status | Notes |
 | --- | --- | --- |

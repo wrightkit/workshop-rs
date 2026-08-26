@@ -20,12 +20,12 @@ Every capability in this document and its referenced sub-documents uses one of t
 | Surface Area | Status | Scope / Capabilities | Specification & Inventory |
 | --- | --- | --- | --- |
 | [Program Structure & Variables](language-support/structure.md) | ✅ Supported | `settings`, `variables`, `subroutines`, `rule`, `disabled` modifiers, global & player variables | [`structure.md`](language-support/structure.md) |
-| [Events & Event Filters](language-support/events.md) | ✅ Supported | 14 canonical rule events (`global`, `eachPlayer`, knockback, damage, healing, etc.), Team & Player filters | [`events.md`](language-support/events.md) |
+| [Events & Event Filters](language-support/events.md) | ✅ Supported | Canonical rule events (`global`, `eachPlayer`, knockback, damage, healing, etc.), Team & Player filters | [`events.md`](language-support/events.md) |
 | [Conditions & Control Flow](language-support/control-flow.md) | ✅ Supported | Conditions, `If`, `Else If`, `Else`, `End`, `While`, `For`, `Loop`, `Skip`, `Wait`, `Abort`, `Return` | [`control-flow.md`](language-support/control-flow.md) |
 | [Operators & Variable Modifications](language-support/operators.md) | ✅ Supported | Comparison operators (`==`, `!=`, etc.), arithmetic (`Add`, `Subtract`, `Raise To Power`), array modifications | [`operators.md`](language-support/operators.md) |
-| [Actions Inventory](language-support/actions.md) | ✅ Supported | Complete inventory of all 219 canonical Workshop actions with parameter signatures | [`actions.md`](language-support/actions.md) |
-| [Values Inventory](language-support/values.md) | ✅ Supported | 258 supported values & expressions | [`values.md`](language-support/values.md) |
-| [Enumerated Domains](language-support/enums.md) | ✅ Supported | Complete inventory of all 52 canonical enum domains (`Button`, `Color`, `Hero`, `Map`, `Gamemode`, etc.) | [`enums.md`](language-support/enums.md) |
+| [Actions Inventory](language-support/actions.md) | ✅ Supported | Complete inventory of canonical Workshop actions with parameter signatures | [`actions.md`](language-support/actions.md) |
+| [Values Inventory](language-support/values.md) | ✅ Supported | Supported values & expressions | [`values.md`](language-support/values.md) |
+| [Enumerated Domains](language-support/enums.md) | ✅ Supported | Complete inventory of canonical enum domains (`Button`, `Color`, `Hero`, `Map`, `Gamemode`, etc.) | [`enums.md`](language-support/enums.md) |
 | [Custom-Game Settings](language-support/settings.md) | ✅ Supported | `main`, `lobby`, `modes`, `heroes`, `extensions`, and `workshop` settings blocks | [`settings.md`](language-support/settings.md) |
 | [Strings & Localization](language-support/strings.md) | ✅ Supported | `Custom String`, `String`, preset strings, `en-US`, `zh-CN`, bidirectional conversion (additional locales remain `🚧 Coming soon`) | [`strings.md`](language-support/strings.md) |
 | [Tooling & Semantic Capabilities](language-support/tooling.md) | ✅ Supported | Parsing, validation, deterministic emission, conversion, hero gameplay query APIs, offline census | [`tooling.md`](language-support/tooling.md) |
