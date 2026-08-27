@@ -19,21 +19,24 @@ is separate and can represent global, mode, team, hero, and hero-plus-logical
 ability-slot targets. The table's wildcard hero entries are projected as
 definitions whose applicability is resolved against the reviewed hero-setting
 data. A known hero without a reviewed key is `NotApplicable`; an unknown hero
-is `Unknown`.
+is `Unknown`. `gamemodes.general` is a literal Workshop settings group and
+therefore has a global/no semantic target, not a mode target.
 
 `SettingValueDomain` records the value kind and an optional effective numeric
 range. The current reviewed table does not contain enough independent evidence
 to assign numeric or percent bounds to its entries, so those bounds are
 explicitly unknown (`None`) until #110 or a separately reviewed evidence update
-establishes them. `NumericBounds::effective` supports evidenced Workshop
-clamping while preserving the authored value in `EffectiveNumber`; the
-source-preserving `SettingsNode::Number` remains unchanged.
+establishes them. Unknown bounds do not produce an effective value. Validated
+`NumericBounds` supports evidenced Workshop clamping while preserving the
+authored value in `EffectiveNumber`; the source-preserving
+`SettingsNode::Number` remains unchanged.
 
 Locale names are presentation metadata resolved through the existing generated
-locale projection. Provenance identifies the reviewed settings table and
-generated settings data. Unknown/raw settings continue to be carried by
-`SettingsNode::Raw`; the schema does not turn missing evidence into a guessed
-definition.
+locale projection, with the primary `en-US` spelling retained directly. Each
+definition reports whether its evidence comes from pinned raw Workshop
+fixtures or the reviewed `workshop-data` export. Unknown/raw settings continue
+to be carried by `SettingsNode::Raw`; the schema does not turn missing evidence
+into a guessed definition.
 
 ## Consequences
 

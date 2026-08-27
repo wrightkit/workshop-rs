@@ -87,7 +87,10 @@ pub enum SettingTargetKind {
     Mode,
     Team,
     Hero,
-    HeroAbility { slot: String },
+    HeroAbility {
+        slot: LogicalSlot,
+        variant: Option<AbilityVariant>,
+    },
 }
 
 /// The result of asking whether a definition applies to a target.
@@ -98,21 +101,50 @@ pub enum Applicability {
     Unknown,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NumericBoundsError {
+    NonFinite,
+    Reversed,
+}
+
 /// Evidence-backed effective numeric bounds. `None` means the current
 /// reviewed evidence does not establish that bound.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct NumericBounds {
-    pub min: Option<f64>,
-    pub max: Option<f64>,
+    min: Option<f64>,
+    max: Option<f64>,
 }
 
 impl NumericBounds {
-    pub const fn new(min: Option<f64>, max: Option<f64>) -> Self {
-        Self { min, max }
+    pub const fn unknown() -> Self {
+        Self {
+            min: None,
+            max: None,
+        }
+    }
+
+    pub fn new(min: Option<f64>, max: Option<f64>) -> Result<Self, NumericBoundsError> {
+        if min.is_some_and(|value| !value.is_finite())
+            || max.is_some_and(|value| !value.is_finite())
+        {
+            return Err(NumericBoundsError::NonFinite);
+        }
+        if min.zip(max).is_some_and(|(min, max)| min > max) {
+            return Err(NumericBoundsError::Reversed);
+        }
+        Ok(Self { min, max })
+    }
+
+    pub fn min(&self) -> Option<f64> {
+        self.min
+    }
+
+    pub fn max(&self) -> Option<f64> {
+        self.max
     }
 
     pub fn effective(&self, authored: f64) -> Option<EffectiveNumber> {
-        if !authored.is_finite() {
+        if !authored.is_finite() || self.min.is_none() && self.max.is_none() {
             return None;
         }
         let mut effective = authored;
@@ -163,21 +195,32 @@ impl SettingValueDomain {
 /// Locale-facing names associated with a canonical setting concept.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SettingPresentation {
-    pub english_name: String,
+    pub english_name: &'static str,
     pub locale_section: &'static str,
 }
 
 impl SettingPresentation {
     pub fn localized_name(&self, locale: &str) -> Option<&'static str> {
-        table::localized_name(locale, self.locale_section, &self.english_name)
+        if locale.eq_ignore_ascii_case("en-US") {
+            Some(self.english_name)
+        } else {
+            table::localized_name(locale, self.locale_section, self.english_name)
+        }
     }
 }
 
 /// Provenance shared by the reviewed table projection.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SettingProvenance {
+    pub kind: SettingEvidenceKind,
     pub source: &'static str,
     pub reviewed: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SettingEvidenceKind {
+    RawWorkshopFixture,
+    WorkshopDataExport,
 }
 
 /// One canonical semantic definition projected from an existing table entry.
@@ -216,9 +259,10 @@ impl SettingDefinition {
             TargetPattern::Mode(_) => SettingTargetKind::Mode,
             TargetPattern::Team(_) => SettingTargetKind::Team,
             TargetPattern::Hero { .. } => SettingTargetKind::Hero,
-            TargetPattern::HeroAbility { slot, .. } => {
-                SettingTargetKind::HeroAbility { slot: slot.clone() }
-            }
+            TargetPattern::HeroAbility { slot, .. } => SettingTargetKind::HeroAbility {
+                slot: slot.clone(),
+                variant: None,
+            },
         }
     }
 
@@ -280,13 +324,14 @@ impl SettingDefinition {
                 } else {
                     match table::hero_setting_is_evidenced(actual_hero.as_str(), self.key) {
                         Some(true) => Applicability::Applicable,
-                        Some(false) => Applicability::NotApplicable,
-                        None => Applicability::Unknown,
+                        Some(false) | None => Applicability::NotApplicable,
                     }
                 }
             }
             (
-                TargetPattern::HeroAbility { team, hero, slot },
+                TargetPattern::HeroAbility {
+                    team, hero, slot, ..
+                },
                 SettingTarget::HeroAbility {
                     team: actual_team,
                     hero: actual_hero,
@@ -298,7 +343,7 @@ impl SettingDefinition {
                     || hero
                         .as_deref()
                         .is_some_and(|expected| expected != actual_hero.as_str())
-                    || slot != actual_slot.as_str()
+                    || slot.as_str() != actual_slot.as_str()
                 {
                     return Applicability::NotApplicable;
                 }
@@ -333,7 +378,8 @@ enum TargetPattern {
     HeroAbility {
         team: Option<String>,
         hero: Option<String>,
-        slot: String,
+        slot: LogicalSlot,
+        variant: Option<AbilityVariant>,
     },
 }
 
@@ -375,11 +421,20 @@ impl SettingDefinition {
             target,
             domain,
             presentation: SettingPresentation {
-                english_name: entry.workshop_name.to_string(),
+                english_name: entry.workshop_name,
                 locale_section: "labels",
             },
             provenance: SettingProvenance {
-                source: "reviewed workshop-rs settings table and generated settings data",
+                kind: if table::is_generated_entry(entry) {
+                    SettingEvidenceKind::WorkshopDataExport
+                } else {
+                    SettingEvidenceKind::RawWorkshopFixture
+                },
+                source: if table::is_generated_entry(entry) {
+                    "workshop-data/workshop-data.json"
+                } else {
+                    "pinned raw Workshop settings fixtures"
+                },
                 reviewed: true,
             },
         }
@@ -399,6 +454,7 @@ fn scope_for(path: &[PathPart<'_>]) -> SettingScope {
 
 fn target_for(path: &[PathPart<'_>]) -> TargetPattern {
     match path {
+        [PathPart::Part("gamemodes"), PathPart::Part("general"), ..] => TargetPattern::Global,
         [PathPart::Part("gamemodes"), PathPart::Part(mode), ..] => {
             TargetPattern::Mode(Some((*mode).to_string()))
         }
@@ -430,7 +486,8 @@ fn target_for_hero(path: &[PathPart<'_>], team: Option<String>) -> TargetPattern
         Some(slot) => TargetPattern::HeroAbility {
             team,
             hero: None,
-            slot,
+            slot: LogicalSlot::new(slot),
+            variant: None,
         },
         None => TargetPattern::Hero { team, hero: None },
     }
@@ -439,6 +496,9 @@ fn target_for_hero(path: &[PathPart<'_>], team: Option<String>) -> TargetPattern
 fn semantic_ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str> {
     match path.last() {
         Some(PathPart::Part("enablePrimaryFire")) => Some("primaryFire"),
+        Some(PathPart::Part(key)) if key.starts_with("ability1") => Some("ability1"),
+        Some(PathPart::Part(key)) if key.starts_with("ability2") => Some("ability2"),
+        Some(PathPart::Part(key)) if key.starts_with("ability3") => Some("ability3"),
         _ => table::ability_slot_for_path(path),
     }
 }
@@ -448,8 +508,8 @@ fn domain_for(kind: KeyKind) -> SettingValueDomain {
         KeyKind::Flag => SettingValueDomain::PresenceOnly,
         KeyKind::String => SettingValueDomain::String,
         KeyKind::Bool => SettingValueDomain::Boolean,
-        KeyKind::Number => SettingValueDomain::Number(NumericBounds::new(None, None)),
-        KeyKind::Percent => SettingValueDomain::Percent(NumericBounds::new(None, None)),
+        KeyKind::Number => SettingValueDomain::Number(NumericBounds::unknown()),
+        KeyKind::Percent => SettingValueDomain::Percent(NumericBounds::unknown()),
         KeyKind::Enum(domain) => SettingValueDomain::Enum {
             domain: domain.to_string(),
         },
@@ -470,14 +530,34 @@ fn canonical_id(scope: SettingScope, key: &str, path: &[PathPart<'_>]) -> String
     let concept = match (scope, key, semantic_ability_slot_for_path(path)) {
         (
             SettingScope::Heroes,
-            "enablePrimaryFire" | "enableSecondaryFire" | "enableAbility1" | "enableAbility2",
+            "enablePrimaryFire"
+            | "enableSecondaryFire"
+            | "enableAbility1"
+            | "enableAbility2"
+            | "enableAbility3"
+            | "enableUlt"
+            | "enablePassive",
             Some(_),
-        ) => "ability.enabled",
-        (SettingScope::Heroes, key, Some(_)) if key.contains("Cooldown") => "ability.cooldown",
-        (SettingScope::Heroes, "passiveUltGen%", _) => "hero.ultimateGeneration.passive",
-        (SettingScope::Heroes, "combatUltGen%", _) => "hero.ultimateGeneration.combat",
-        (SettingScope::Heroes, key, _) => key.trim_end_matches('%'),
-        (_, key, _) => key.trim_end_matches('%'),
+        ) => "ability.enabled".to_string(),
+        (SettingScope::Heroes, "passiveUltGen%", _) => {
+            "ability.ultimateGeneration.passive".to_string()
+        }
+        (SettingScope::Heroes, "combatUltGen%", _) => {
+            "ability.ultimateGeneration.combat".to_string()
+        }
+        (SettingScope::Heroes, "ultGen%", _) => "ability.ultimateGeneration".to_string(),
+        (SettingScope::Heroes, key, Some(_)) => ability_concept(key),
+        (SettingScope::Heroes, key, _) => key.trim_end_matches('%').to_string(),
+        (_, key, _) => key.trim_end_matches('%').to_string(),
     };
     format!("setting.{prefix}.{concept}")
+}
+
+fn ability_concept(key: &str) -> String {
+    let key = key.trim_end_matches('%');
+    let suffix = ["ability1", "ability2", "ability3", "secondaryFire"]
+        .iter()
+        .find_map(|prefix| key.strip_prefix(prefix))
+        .unwrap_or(key);
+    format!("ability.{}", suffix.trim_start_matches('_'))
 }

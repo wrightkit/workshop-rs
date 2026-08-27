@@ -961,6 +961,12 @@ pub fn entries() -> impl Iterator<Item = &'static TableEntry> {
     ENTRIES.iter().chain(GENERATED_ENTRIES.iter())
 }
 
+pub fn is_generated_entry(entry: &TableEntry) -> bool {
+    GENERATED_ENTRIES
+        .iter()
+        .any(|candidate| std::ptr::eq(candidate, entry))
+}
+
 /// Map the existing hero-settings leaf keys to canonical gameplay slots.
 /// The setting tree remains the owner of the keys; display names are resolved
 /// from the gameplay catalog by the parser/emitter when a hero context exists.

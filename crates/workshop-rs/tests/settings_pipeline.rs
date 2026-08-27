@@ -6,8 +6,8 @@ use std::path::{Path, PathBuf};
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::gameplay::{AbilityVariant, HeroId, LogicalSlot, hero_ids, slots};
 use workshop_rs::settings::{
-    Applicability, NumericBounds, SettingScope, SettingTarget, SettingTargetKind,
-    SettingValueDomain, TeamId, definitions,
+    Applicability, NumericBounds, SettingEvidenceKind, SettingScope, SettingTarget,
+    SettingTargetKind, SettingValueDomain, TeamId, definitions,
 };
 use workshop_rs::{convert, emitter, parser, roundtrip, semantic};
 
@@ -324,7 +324,8 @@ fn settings_schema_projects_workshop_facts_without_display_names_in_ids() {
     assert_eq!(
         hero_ability.target_kind(),
         SettingTargetKind::HeroAbility {
-            slot: "primaryFire".to_string()
+            slot: LogicalSlot::from(slots::PRIMARY_FIRE),
+            variant: None,
         }
     );
 }
@@ -382,8 +383,71 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
 
 #[test]
 fn settings_schema_preserves_authored_value_when_effective_value_is_clamped() {
-    let domain = SettingValueDomain::Percent(NumericBounds::new(Some(0.0), Some(500.0)));
+    let domain = SettingValueDomain::Percent(
+        NumericBounds::new(Some(0.0), Some(500.0)).expect("valid bounds"),
+    );
     let effective = domain.effective_number(650.0).expect("finite number");
     assert_eq!(effective.authored, 650.0);
     assert_eq!(effective.effective, 500.0);
+}
+
+#[test]
+fn settings_schema_rejects_unknown_or_invalid_numeric_bounds() {
+    let definitions: Vec<_> = definitions().collect();
+    let percent = definitions
+        .iter()
+        .find(|definition| matches!(definition.domain(), SettingValueDomain::Percent(_)))
+        .expect("percent definition");
+    assert!(percent.effective_number(650.0).is_none());
+    assert!(NumericBounds::new(Some(f64::NAN), Some(1.0)).is_err());
+    assert!(NumericBounds::new(Some(2.0), Some(1.0)).is_err());
+}
+
+#[test]
+fn settings_schema_normalizes_concept_ids_and_group_targets() {
+    let definitions: Vec<_> = definitions().collect();
+    for suffix in ["ability1EnemyKb%", "ability2FuseTime%", "enableAbility3"] {
+        let definition = definitions
+            .iter()
+            .find(|definition| definition.path().ends_with(suffix))
+            .expect("projected ability setting");
+        assert!(!definition.id().as_str().contains("ability1"));
+        assert!(!definition.id().as_str().contains("ability2"));
+    }
+
+    let general = definitions
+        .iter()
+        .find(|definition| definition.path() == "gamemodes.general.heroLimit")
+        .expect("general mode-group setting");
+    assert_eq!(general.target_kind(), SettingTargetKind::Global);
+    assert_eq!(
+        general.applicability(&SettingTarget::Global),
+        Applicability::Applicable
+    );
+}
+
+#[test]
+fn settings_schema_preserves_locale_and_evidence_provenance() {
+    let definitions: Vec<_> = definitions().collect();
+    let main = definitions
+        .iter()
+        .find(|definition| definition.path() == "main.description")
+        .expect("main definition");
+    assert_eq!(
+        main.presentation().localized_name("en-US"),
+        Some("Description")
+    );
+    assert_eq!(
+        main.provenance().kind,
+        SettingEvidenceKind::RawWorkshopFixture
+    );
+
+    let generated = definitions
+        .iter()
+        .find(|definition| definition.path() == "extensions.beamEffects")
+        .expect("generated definition");
+    assert_eq!(
+        generated.provenance().kind,
+        SettingEvidenceKind::WorkshopDataExport
+    );
 }

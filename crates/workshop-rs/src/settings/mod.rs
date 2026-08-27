@@ -12,9 +12,9 @@ pub mod schema;
 pub mod table;
 
 pub use schema::{
-    Applicability, EffectiveNumber, NumericBounds, SettingDefinition, SettingId,
-    SettingPresentation, SettingProvenance, SettingScope, SettingTarget, SettingTargetKind,
-    SettingValueDomain, TeamId, definition, definitions,
+    Applicability, EffectiveNumber, NumericBounds, NumericBoundsError, SettingDefinition,
+    SettingEvidenceKind, SettingId, SettingPresentation, SettingProvenance, SettingScope,
+    SettingTarget, SettingTargetKind, SettingValueDomain, TeamId, definition, definitions,
 };
 
 use crate::source::Span;
