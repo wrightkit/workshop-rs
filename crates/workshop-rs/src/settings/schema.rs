@@ -7,7 +7,7 @@
 use std::fmt;
 
 use crate::gameplay::{AbilityVariant, HeroId, LogicalSlot};
-use crate::gameplay_data;
+use crate::{gameplay::GameplayDataError, gameplay_data};
 
 use super::table::{self, KeyKind, PathPart, TableEntry};
 
@@ -35,6 +35,13 @@ impl fmt::Display for SettingId {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter.write_str(self.as_str())
     }
+}
+
+/// Whether a definition has a reviewed canonical concept identity.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SettingIdentity {
+    Known(SettingId),
+    Unknown,
 }
 
 /// The Workshop-native section that owns a setting.
@@ -73,6 +80,11 @@ pub enum SettingTarget {
         team: Option<TeamId>,
         hero: HeroId,
     },
+    TeamAbility {
+        team: Option<TeamId>,
+        slot: LogicalSlot,
+        variant: Option<AbilityVariant>,
+    },
     HeroAbility {
         team: Option<TeamId>,
         hero: HeroId,
@@ -88,6 +100,10 @@ pub enum SettingTargetKind {
     Global,
     Mode,
     Team,
+    TeamAbility {
+        slot: LogicalSlot,
+        variant: Option<AbilityVariant>,
+    },
     Hero,
     HeroAbility {
         slot: LogicalSlot,
@@ -234,7 +250,7 @@ pub enum SettingEvidenceKind {
 /// One canonical semantic definition projected from an existing table entry.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SettingDefinition {
-    id: SettingId,
+    identity: SettingIdentity,
     scope: SettingScope,
     path: String,
     key: &'static str,
@@ -245,8 +261,15 @@ pub struct SettingDefinition {
 }
 
 impl SettingDefinition {
-    pub fn id(&self) -> &SettingId {
-        &self.id
+    pub fn identity(&self) -> &SettingIdentity {
+        &self.identity
+    }
+
+    pub fn id(&self) -> Option<&SettingId> {
+        match &self.identity {
+            SettingIdentity::Known(id) => Some(id),
+            SettingIdentity::Unknown => None,
+        }
     }
 
     pub fn scope(&self) -> SettingScope {
@@ -266,6 +289,10 @@ impl SettingDefinition {
             TargetPattern::Global => SettingTargetKind::Global,
             TargetPattern::Mode(_) => SettingTargetKind::Mode,
             TargetPattern::Team(_) => SettingTargetKind::Team,
+            TargetPattern::TeamAbility { slot, variant, .. } => SettingTargetKind::TeamAbility {
+                slot: slot.clone(),
+                variant: variant.clone(),
+            },
             TargetPattern::Hero { .. } => SettingTargetKind::Hero,
             TargetPattern::HeroAbility { slot, variant, .. } => SettingTargetKind::HeroAbility {
                 slot: slot.clone(),
@@ -282,7 +309,7 @@ impl SettingDefinition {
     pub fn localized_name(&self, locale: &str, target: &SettingTarget) -> Option<&'static str> {
         match target {
             SettingTarget::Hero { hero, .. } | SettingTarget::HeroAbility { hero, .. } => {
-                if self.applicability(target) == Applicability::NotApplicable {
+                if self.applicability(target).ok()? == Applicability::NotApplicable {
                     None
                 } else {
                     table::hero_setting_name(hero.as_str(), self.key, locale)
@@ -298,8 +325,11 @@ impl SettingDefinition {
     }
 
     /// Query effective applicability without exposing table deduplication.
-    pub fn applicability(&self, target: &SettingTarget) -> Applicability {
-        match (&self.target, target) {
+    pub fn applicability(
+        &self,
+        target: &SettingTarget,
+    ) -> Result<Applicability, GameplayDataError> {
+        Ok(match (&self.target, target) {
             (TargetPattern::Global, SettingTarget::Global) => Applicability::Applicable,
             (TargetPattern::Mode(expected), SettingTarget::Mode(actual)) => {
                 if expected
@@ -315,6 +345,27 @@ impl SettingDefinition {
                 if expected
                     .as_deref()
                     .is_none_or(|expected| expected == actual.as_str())
+                {
+                    Applicability::Applicable
+                } else {
+                    Applicability::NotApplicable
+                }
+            }
+            (
+                TargetPattern::TeamAbility {
+                    team,
+                    slot,
+                    variant: expected_variant,
+                },
+                SettingTarget::TeamAbility {
+                    team: actual_team,
+                    slot: actual_slot,
+                    variant: actual_variant,
+                },
+            ) => {
+                if team_matches(team.as_deref(), actual_team.as_ref())
+                    && slot == actual_slot
+                    && expected_variant.as_ref() == actual_variant.as_ref()
                 {
                     Applicability::Applicable
                 } else {
@@ -361,9 +412,9 @@ impl SettingDefinition {
                         .as_ref()
                         .is_some_and(|expected| Some(expected) != target_variant(target))
                 {
-                    return Applicability::NotApplicable;
+                    return Ok(Applicability::NotApplicable);
                 }
-                match hero_ability_exists(actual_hero, actual_slot, target_variant(target)) {
+                match hero_ability_exists(actual_hero, actual_slot, target_variant(target))? {
                     None => Applicability::Unknown,
                     Some(false) => Applicability::NotApplicable,
                     Some(true) => Applicability::Unknown,
@@ -371,7 +422,7 @@ impl SettingDefinition {
             }
             (TargetPattern::Unknown, _) => Applicability::Unknown,
             _ => Applicability::NotApplicable,
-        }
+        })
     }
 
     pub fn effective_number(&self, authored: f64) -> Option<EffectiveNumber> {
@@ -384,6 +435,11 @@ enum TargetPattern {
     Global,
     Mode(Option<String>),
     Team(Option<String>),
+    TeamAbility {
+        team: Option<String>,
+        slot: LogicalSlot,
+        variant: Option<AbilityVariant>,
+    },
     Hero {
         team: Option<String>,
         hero: Option<String>,
@@ -412,13 +468,18 @@ fn hero_ability_exists(
     hero: &HeroId,
     slot: &LogicalSlot,
     variant: Option<&AbilityVariant>,
-) -> Option<bool> {
-    gameplay_data::builtin().ok().and_then(|catalog| {
-        catalog.hero(hero).and_then(|hero| match variant {
-            Some(variant) => Some(hero.ability_variant(slot, variant).is_ok()),
-            None => (!hero.abilities_in_slot(slot).is_empty()).then_some(true),
+) -> Result<Option<bool>, GameplayDataError> {
+    gameplay_data::builtin_ref()
+        .map_err(Clone::clone)
+        .map(|catalog| {
+            catalog.hero(hero).and_then(|hero| {
+                if let Some(variant) = variant {
+                    Some(hero.ability_variant(slot, variant).is_ok())
+                } else {
+                    (!hero.abilities_in_slot(slot).is_empty()).then_some(true)
+                }
+            })
         })
-    })
 }
 
 /// Project all currently reviewed table entries into the canonical semantic
@@ -446,11 +507,11 @@ impl SettingDefinition {
         let target = target_for(entry.path);
         let path = table::path_string(entry.path);
         let domain = domain_for(entry.kind);
-        let id = SettingId::new(canonical_id(scope, key, entry.path));
-        let reviewed =
-            !id.as_str().contains(".custom.") && !matches!(&target, TargetPattern::Unknown);
+        let identity = canonical_id(scope, key, entry.path)
+            .map(SettingIdentity::Known)
+            .unwrap_or(SettingIdentity::Unknown);
         Self {
-            id,
+            identity,
             scope,
             path,
             key,
@@ -471,7 +532,7 @@ impl SettingDefinition {
                 } else {
                     "pinned raw Workshop settings fixtures"
                 },
-                reviewed,
+                reviewed: true,
             },
         }
     }
@@ -505,15 +566,26 @@ fn target_for(path: &[PathPart<'_>]) -> TargetPattern {
             PathPart::Hero,
             ..,
         ] => target_for_hero(path, Some((*team).to_string())),
-        [PathPart::Part("heroes"), PathPart::Team, ..] => TargetPattern::Team(None),
+        [PathPart::Part("heroes"), PathPart::Team, ..] => target_for_team(path, None),
         [PathPart::Part("heroes"), PathPart::Part(team), ..] => {
-            TargetPattern::Team(Some((*team).to_string()))
+            target_for_team(path, Some((*team).to_string()))
         }
         [
             PathPart::Part("main" | "lobby" | "extensions" | "workshop"),
             ..,
         ] => TargetPattern::Global,
         _ => TargetPattern::Unknown,
+    }
+}
+
+fn target_for_team(path: &[PathPart<'_>], team: Option<String>) -> TargetPattern {
+    match semantic_ability_slot_for_path(path) {
+        Some(slot) => TargetPattern::TeamAbility {
+            team,
+            slot: LogicalSlot::new(slot),
+            variant: None,
+        },
+        None => TargetPattern::Team(team),
     }
 }
 
@@ -559,7 +631,7 @@ fn domain_for(kind: KeyKind) -> SettingValueDomain {
     }
 }
 
-fn canonical_id(scope: SettingScope, key: &str, path: &[PathPart<'_>]) -> String {
+fn canonical_id(scope: SettingScope, key: &str, path: &[PathPart<'_>]) -> Option<SettingId> {
     let prefix = match scope {
         SettingScope::Main => "main",
         SettingScope::Lobby => "lobby",
@@ -569,14 +641,13 @@ fn canonical_id(scope: SettingScope, key: &str, path: &[PathPart<'_>]) -> String
         SettingScope::Workshop => "workshop",
         SettingScope::Unknown => "unknown",
     };
-    let concept = if matches!(scope, SettingScope::Heroes)
-        && semantic_ability_slot_for_path(path).is_some()
+    if matches!(scope, SettingScope::Unknown)
+        || matches!(scope, SettingScope::Heroes) && semantic_ability_slot_for_path(path).is_some()
     {
-        format!("ability.custom.{}", key.trim_end_matches('%'))
-    } else if matches!(scope, SettingScope::Unknown) {
-        "unknown".to_string()
-    } else {
-        key.trim_end_matches('%').to_string()
-    };
-    format!("setting.{prefix}.{concept}")
+        return None;
+    }
+    Some(SettingId::new(format!(
+        "setting.{prefix}.{}",
+        key.trim_end_matches('%')
+    )))
 }

@@ -6,8 +6,8 @@ use std::path::{Path, PathBuf};
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::gameplay::{AbilityVariant, HeroId, LogicalSlot, hero_ids, slots};
 use workshop_rs::settings::{
-    Applicability, NumericBounds, SettingEvidenceKind, SettingScope, SettingTarget,
-    SettingTargetKind, SettingValueDomain, TeamId, definitions,
+    Applicability, NumericBounds, SettingEvidenceKind, SettingIdentity, SettingScope,
+    SettingTarget, SettingTargetKind, SettingValueDomain, TeamId, definitions,
 };
 use workshop_rs::{convert, emitter, parser, roundtrip, semantic};
 
@@ -312,20 +312,16 @@ fn settings_schema_projects_workshop_facts_without_display_names_in_ids() {
             "zh-CN",
             &SettingTarget::HeroAbility {
                 team: None,
-                hero: HeroId::from(hero_ids::ANA),
+                hero: HeroId::from(hero_ids::MAUGA),
                 slot: LogicalSlot::from(slots::PRIMARY_FIRE),
                 variant: None,
             },
         ),
-        Some("主要攻击模式")
+        Some("燃火链式机枪")
     );
-    assert!(!hero_ability.provenance().reviewed);
-    assert!(
-        hero_ability
-            .id()
-            .as_str()
-            .contains("setting.hero.ability.custom.")
-    );
+    assert!(hero_ability.provenance().reviewed);
+    assert!(hero_ability.id().is_none());
+    assert!(matches!(hero_ability.identity(), SettingIdentity::Unknown));
     assert_eq!(
         hero_ability.target_kind(),
         SettingTargetKind::HeroAbility {
@@ -375,7 +371,10 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         slot: LogicalSlot::from(slots::ABILITY_3),
         variant: Some(AbilityVariant::new("missing")),
     };
-    assert_eq!(ability3.applicability(&ana), Applicability::NotApplicable);
+    assert_eq!(
+        ability3.applicability(&ana).expect("applicability"),
+        Applicability::NotApplicable
+    );
     assert_eq!(ability3.localized_name("en-US", &ana), None);
 
     let unknown = SettingTarget::HeroAbility {
@@ -384,7 +383,10 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         slot: LogicalSlot::from(slots::ABILITY_3),
         variant: None,
     };
-    assert_eq!(ability3.applicability(&unknown), Applicability::Unknown);
+    assert_eq!(
+        ability3.applicability(&unknown).expect("applicability"),
+        Applicability::Unknown
+    );
 
     let ashe_only = definitions
         .iter()
@@ -397,7 +399,9 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         variant: None,
     };
     assert_eq!(
-        ashe_only.applicability(&ana_ability1),
+        ashe_only
+            .applicability(&ana_ability1)
+            .expect("applicability"),
         Applicability::Unknown
     );
 
@@ -412,12 +416,14 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         })
         .expect("ability 1 setting");
     assert_eq!(
-        ability1.applicability(&SettingTarget::HeroAbility {
-            team: None,
-            hero: HeroId::from(hero_ids::ANA),
-            slot: LogicalSlot::from(slots::ABILITY_1),
-            variant: Some(AbilityVariant::new("missing")),
-        }),
+        ability1
+            .applicability(&SettingTarget::HeroAbility {
+                team: None,
+                hero: HeroId::from(hero_ids::MAUGA),
+                slot: LogicalSlot::from(slots::ABILITY_1),
+                variant: Some(AbilityVariant::new("missing")),
+            })
+            .expect("applicability"),
         Applicability::NotApplicable
     );
 
@@ -432,12 +438,14 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         })
         .expect("generic primary-fire setting");
     assert_eq!(
-        primary.applicability(&SettingTarget::HeroAbility {
-            team: None,
-            hero: HeroId::from(hero_ids::ANA),
-            slot: LogicalSlot::from(slots::PRIMARY_FIRE),
-            variant: None,
-        }),
+        primary
+            .applicability(&SettingTarget::HeroAbility {
+                team: None,
+                hero: HeroId::from(hero_ids::MAUGA),
+                slot: LogicalSlot::from(slots::PRIMARY_FIRE),
+                variant: None,
+            })
+            .expect("applicability"),
         Applicability::Unknown
     );
 
@@ -446,10 +454,12 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         .find(|definition| definition.path().ends_with("health%"))
         .expect("hero health setting");
     assert_eq!(
-        health.applicability(&SettingTarget::Hero {
-            team: None,
-            hero: HeroId::new("futureHero"),
-        }),
+        health
+            .applicability(&SettingTarget::Hero {
+                team: None,
+                hero: HeroId::new("futureHero"),
+            })
+            .expect("applicability"),
         Applicability::Unknown
     );
 }
@@ -503,13 +513,8 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
             .iter()
             .find(|definition| definition.path().ends_with(suffix))
             .expect("projected ability setting");
-        assert!(
-            definition
-                .id()
-                .as_str()
-                .contains("setting.hero.ability.custom.")
-        );
-        assert!(!definition.provenance().reviewed);
+        assert!(definition.id().is_none());
+        assert!(definition.provenance().reviewed);
     }
     let automatic_fire = definitions
         .iter()
@@ -519,7 +524,9 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
         .iter()
         .find(|definition| definition.path().ends_with("enableScoping"))
         .expect("scoping setting");
-    assert_ne!(automatic_fire.id(), scoping.id());
+    assert!(automatic_fire.id().is_none());
+    assert!(scoping.id().is_none());
+    assert_ne!(automatic_fire.path(), scoping.path());
 
     let general = definitions
         .iter()
@@ -527,7 +534,37 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
         .expect("general mode-group setting");
     assert_eq!(general.target_kind(), SettingTargetKind::Global);
     assert_eq!(
-        general.applicability(&SettingTarget::Global),
+        general
+            .applicability(&SettingTarget::Global)
+            .expect("applicability"),
+        Applicability::Applicable
+    );
+
+    let team_primary = definitions
+        .iter()
+        .find(|definition| {
+            definition.path().ends_with("enablePrimaryFire")
+                && matches!(
+                    definition.target_kind(),
+                    SettingTargetKind::TeamAbility { .. }
+                )
+        })
+        .expect("team primary-fire setting");
+    assert_eq!(
+        team_primary.target_kind(),
+        SettingTargetKind::TeamAbility {
+            slot: LogicalSlot::from(slots::PRIMARY_FIRE),
+            variant: None,
+        }
+    );
+    assert_eq!(
+        team_primary
+            .applicability(&SettingTarget::TeamAbility {
+                team: Some(TeamId::new("allTeams")),
+                slot: LogicalSlot::from(slots::PRIMARY_FIRE),
+                variant: None,
+            })
+            .expect("applicability"),
         Applicability::Applicable
     );
 }

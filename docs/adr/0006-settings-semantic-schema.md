@@ -16,10 +16,11 @@ identity; hero and logical ability-slot information is represented by
 `SettingScope` follows the existing Workshop settings sections: `Main`,
 `Lobby`, `GameModes`, `Heroes`, `Extensions`, and `Workshop`. `SettingTarget`
 is separate and can represent global, mode, team, hero, and hero-plus-logical
-ability-slot targets. The table's wildcard hero entries are projected as
-definitions whose applicability is resolved against the reviewed hero-setting
-data. A known hero without explicit applicability evidence is `Unknown`; an
-unknown hero is `Unknown`. Gameplay kit topology is checked first for hero-ability targets;
+ability-slot targets, including team/common hero ability slots. The table's
+wildcard hero entries are projected as definitions whose applicability is
+resolved against gameplay topology and explicit applicability evidence. A
+known hero without explicit applicability evidence is `Unknown`; an unknown
+hero is `Unknown`. Gameplay kit topology is checked first for hero-ability targets;
 missing slots or variants are `NotApplicable`. The current settings projection
 has no complete independent applicability matrix, so a topology-valid target
 without explicit applicability evidence remains `Unknown`. Locale label quality
