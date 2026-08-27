@@ -4,6 +4,11 @@
 use std::path::{Path, PathBuf};
 
 use workshop_rs::catalog::{Catalog, Locale};
+use workshop_rs::gameplay::{AbilityVariant, HeroId, LogicalSlot, hero_ids, slots};
+use workshop_rs::settings::{
+    Applicability, NumericBounds, SettingScope, SettingTarget, SettingTargetKind,
+    SettingValueDomain, TeamId, definitions,
+};
 use workshop_rs::{convert, emitter, parser, roundtrip, semantic};
 
 fn fixture_path(name: &str) -> PathBuf {
@@ -289,4 +294,96 @@ fn localized_wrecking_ball_settings_aliases_are_known() {
         semantic::inspect(&program, &catalog),
         program.settings
     );
+}
+
+#[test]
+fn settings_schema_projects_workshop_facts_without_display_names_in_ids() {
+    let definitions: Vec<_> = definitions().collect();
+    let hero_ability = definitions
+        .iter()
+        .find(|definition| {
+            definition.id().as_str() == "setting.hero.ability.enabled"
+                && definition.presentation().english_name == "Primary Fire"
+        })
+        .expect("hero ability definition");
+    assert_eq!(hero_ability.presentation().english_name, "Primary Fire");
+    assert_eq!(
+        hero_ability.localized_name(
+            "zh-CN",
+            &SettingTarget::HeroAbility {
+                team: None,
+                hero: HeroId::from(hero_ids::ANA),
+                slot: LogicalSlot::from(slots::PRIMARY_FIRE),
+                variant: None,
+            },
+        ),
+        Some("主要攻击模式")
+    );
+    assert!(hero_ability.provenance().reviewed);
+    assert!(!hero_ability.id().as_str().contains("Primary"));
+    assert_eq!(
+        hero_ability.target_kind(),
+        SettingTargetKind::HeroAbility {
+            slot: "primaryFire".to_string()
+        }
+    );
+}
+
+#[test]
+fn settings_schema_exposes_normal_enum_and_list_domains() {
+    let definitions: Vec<_> = definitions().collect();
+    let description = definitions
+        .iter()
+        .find(|definition| definition.path() == "main.description")
+        .expect("main description definition");
+    assert_eq!(description.scope(), SettingScope::Main);
+    assert_eq!(description.target_kind(), SettingTargetKind::Global);
+    assert!(matches!(description.domain(), SettingValueDomain::String));
+
+    let role_limit = definitions
+        .iter()
+        .find(|definition| definition.path().ends_with("roleLimit"))
+        .expect("role limit definition");
+    assert!(matches!(
+        role_limit.domain(),
+        SettingValueDomain::Enum { domain } if domain == "roleLimit"
+    ));
+
+    let enabled_maps = definitions
+        .iter()
+        .find(|definition| definition.path().ends_with("enabledMaps"))
+        .expect("enabled maps definition");
+    assert!(matches!(enabled_maps.domain(), SettingValueDomain::MapList));
+}
+
+#[test]
+fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
+    let definitions: Vec<_> = definitions().collect();
+    let ability3 = definitions
+        .iter()
+        .find(|definition| definition.path().ends_with("enableAbility3"))
+        .expect("ability 3 definition");
+    let ana = SettingTarget::HeroAbility {
+        team: Some(TeamId::new("allTeams")),
+        hero: HeroId::from(hero_ids::ANA),
+        slot: LogicalSlot::from(slots::ABILITY_3),
+        variant: Some(AbilityVariant::new("missing")),
+    };
+    assert_eq!(ability3.applicability(&ana), Applicability::NotApplicable);
+
+    let unknown = SettingTarget::HeroAbility {
+        team: None,
+        hero: HeroId::new("futureHero"),
+        slot: LogicalSlot::from(slots::ABILITY_3),
+        variant: None,
+    };
+    assert_eq!(ability3.applicability(&unknown), Applicability::Unknown);
+}
+
+#[test]
+fn settings_schema_preserves_authored_value_when_effective_value_is_clamped() {
+    let domain = SettingValueDomain::Percent(NumericBounds::new(Some(0.0), Some(500.0)));
+    let effective = domain.effective_number(650.0).expect("finite number");
+    assert_eq!(effective.authored, 650.0);
+    assert_eq!(effective.effective, 500.0);
 }

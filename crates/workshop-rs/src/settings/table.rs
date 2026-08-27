@@ -1021,6 +1021,21 @@ pub fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static
         })
 }
 
+/// Whether the generated hero-settings evidence contains a usable localized
+/// label for this hero/key pair. This deliberately does not use the parser's
+/// compatibility fallback for blank export labels.
+pub fn hero_setting_is_evidenced(hero: &str, key: &str) -> Option<bool> {
+    GENERATED_HERO_SETTING_NAMES
+        .iter()
+        .find(|entry| entry.hero == hero && entry.key == key)
+        .map(|entry| {
+            entry
+                .locales
+                .iter()
+                .any(|(_, value)| !value.trim().is_empty() && !value.starts_with(' '))
+        })
+}
+
 #[derive(Deserialize)]
 struct HeroSettingAlias {
     hero: String,

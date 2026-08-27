@@ -1,0 +1,48 @@
+# ADR-0006: Canonical typed Workshop settings semantics
+
+## Status
+
+Accepted for the #109 foundation; full catalog population remains #110 and
+ergonomic query/edit APIs remain #111.
+
+## Decision
+
+`workshop-rs` exposes typed setting facts through `settings::schema`.
+`SettingId` is an open, locale-independent identity for a Workshop setting
+concept. A concrete hero or ability display label is never required in that
+identity; hero and logical ability-slot information is represented by
+`SettingTarget` and effective applicability.
+
+`SettingScope` follows the existing Workshop settings sections: `Main`,
+`Lobby`, `GameModes`, `Heroes`, `Extensions`, and `Workshop`. `SettingTarget`
+is separate and can represent global, mode, team, hero, and hero-plus-logical
+ability-slot targets. The table's wildcard hero entries are projected as
+definitions whose applicability is resolved against the reviewed hero-setting
+data. A known hero without a reviewed key is `NotApplicable`; an unknown hero
+is `Unknown`.
+
+`SettingValueDomain` records the value kind and an optional effective numeric
+range. The current reviewed table does not contain enough independent evidence
+to assign numeric or percent bounds to its entries, so those bounds are
+explicitly unknown (`None`) until #110 or a separately reviewed evidence update
+establishes them. `NumericBounds::effective` supports evidenced Workshop
+clamping while preserving the authored value in `EffectiveNumber`; the
+source-preserving `SettingsNode::Number` remains unchanged.
+
+Locale names are presentation metadata resolved through the existing generated
+locale projection. Provenance identifies the reviewed settings table and
+generated settings data. Unknown/raw settings continue to be carried by
+`SettingsNode::Raw`; the schema does not turn missing evidence into a guessed
+definition.
+
+## Consequences
+
+The existing `TableEntry` inventory remains the parser/emitter source and the
+schema is a single semantic projection of it, avoiding a parallel settings
+framework. #110 can replace or extend the projection with generated catalog
+data without changing the public semantic boundary. #111 can build query/edit
+operations on definitions and source-preserving occurrences without inventing
+another identity, scope, target, domain, or provenance model.
+
+No UI step metadata, source-language carrier parsing, per-hero Rust structs, or
+consumer-side applicability hacks are part of this contract.
