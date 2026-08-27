@@ -302,7 +302,7 @@ fn settings_schema_projects_workshop_facts_without_display_names_in_ids() {
     let hero_ability = definitions
         .iter()
         .find(|definition| {
-            definition.id().as_str() == "setting.hero.ability.enabled"
+            definition.path().ends_with("enablePrimaryFire")
                 && definition.presentation().english_name == "Primary Fire"
         })
         .expect("hero ability definition");
@@ -319,8 +319,13 @@ fn settings_schema_projects_workshop_facts_without_display_names_in_ids() {
         ),
         Some("主要攻击模式")
     );
-    assert!(hero_ability.provenance().reviewed);
-    assert!(!hero_ability.id().as_str().contains("Primary"));
+    assert!(!hero_ability.provenance().reviewed);
+    assert!(
+        hero_ability
+            .id()
+            .as_str()
+            .contains("setting.hero.ability.custom.")
+    );
     assert_eq!(
         hero_ability.target_kind(),
         SettingTargetKind::HeroAbility {
@@ -371,6 +376,7 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         variant: Some(AbilityVariant::new("missing")),
     };
     assert_eq!(ability3.applicability(&ana), Applicability::NotApplicable);
+    assert_eq!(ability3.localized_name("en-US", &ana), None);
 
     let unknown = SettingTarget::HeroAbility {
         team: None,
@@ -392,7 +398,47 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
     };
     assert_eq!(
         ashe_only.applicability(&ana_ability1),
+        Applicability::Unknown
+    );
+
+    let ability1 = definitions
+        .iter()
+        .find(|definition| {
+            definition.path().ends_with("enableAbility1")
+                && matches!(
+                    definition.target_kind(),
+                    SettingTargetKind::HeroAbility { .. }
+                )
+        })
+        .expect("ability 1 setting");
+    assert_eq!(
+        ability1.applicability(&SettingTarget::HeroAbility {
+            team: None,
+            hero: HeroId::from(hero_ids::ANA),
+            slot: LogicalSlot::from(slots::ABILITY_1),
+            variant: Some(AbilityVariant::new("missing")),
+        }),
         Applicability::NotApplicable
+    );
+
+    let primary = definitions
+        .iter()
+        .find(|definition| {
+            definition.path().ends_with("enablePrimaryFire")
+                && matches!(
+                    definition.target_kind(),
+                    SettingTargetKind::HeroAbility { .. }
+                )
+        })
+        .expect("generic primary-fire setting");
+    assert_eq!(
+        primary.applicability(&SettingTarget::HeroAbility {
+            team: None,
+            hero: HeroId::from(hero_ids::ANA),
+            slot: LogicalSlot::from(slots::PRIMARY_FIRE),
+            variant: None,
+        }),
+        Applicability::Unknown
     );
 
     let health = definitions
@@ -440,110 +486,40 @@ fn settings_schema_rejects_unknown_or_invalid_numeric_bounds() {
 #[test]
 fn settings_schema_normalizes_concept_ids_and_group_targets() {
     let definitions: Vec<_> = definitions().collect();
-    for (suffix, id) in [
-        ("ability1Acceleration%", "setting.hero.ability.acceleration"),
-        ("ability1ChargeRate%", "setting.hero.ability.chargeRate"),
-        ("ability1Cooldown%", "setting.hero.ability.cooldown"),
-        ("ability1Distance%", "setting.hero.ability.distance"),
-        ("ability1Duration%", "setting.hero.ability.duration"),
-        ("ability1EnemyKb%", "setting.hero.ability.enemyKnockback"),
-        ("ability1Health%", "setting.hero.ability.health"),
-        ("ability1Heat%", "setting.hero.ability.heat"),
-        ("ability1Kb%", "setting.hero.ability.knockback"),
-        ("ability1MaxTime%", "setting.hero.ability.maximumTime"),
-        ("ability1RechargeRate%", "setting.hero.ability.rechargeRate"),
-        ("ability1RefuelScalar", "setting.hero.ability.refuelScalar"),
-        ("ability1SelfKb%", "setting.hero.ability.selfKnockback"),
-        ("ability2Cooldown%", "setting.hero.ability.cooldown"),
-        ("ability2Distance%", "setting.hero.ability.distance"),
-        ("ability2Duration%", "setting.hero.ability.duration"),
-        ("ability2FuseTime%", "setting.hero.ability.fuseTime"),
-        ("ability2Healing%", "setting.hero.ability.healing"),
-        ("ability2Health%", "setting.hero.ability.health"),
-        ("ability2Height%", "setting.hero.ability.height"),
-        ("ability2Kb%", "setting.hero.ability.knockback"),
-        ("ability2MaxDamage%", "setting.hero.ability.maximumDamage"),
-        ("ability2MaxHealing%", "setting.hero.ability.maximumHealing"),
-        ("ability2Quantity%", "setting.hero.ability.quantity"),
-        ("ability2Speed%", "setting.hero.ability.speed"),
-        ("ability3Cooldown%", "setting.hero.ability.cooldown"),
-        ("ability3Distance%", "setting.hero.ability.distance"),
-        ("ability3Kb%", "setting.hero.ability.knockback"),
-        (
-            "secondaryFireAlternateForm",
-            "setting.hero.ability.alternateForm",
-        ),
-        ("secondaryFireCooldown%", "setting.hero.ability.cooldown"),
-        ("secondaryFireCost%", "setting.hero.ability.resourceCost"),
-        ("secondaryFireDuration%", "setting.hero.ability.duration"),
-        (
-            "secondaryFireEnergyChargeRate%",
-            "setting.hero.ability.energyChargeRate",
-        ),
-        ("secondaryFireHealth%", "setting.hero.ability.health"),
-        ("secondaryFireKb%", "setting.hero.ability.knockback"),
-        (
-            "secondaryFireMaximumTime%",
-            "setting.hero.ability.maximumTime",
-        ),
-        (
-            "secondaryFireMovementSpeedPenalty%",
-            "setting.hero.ability.movementSpeedPenalty",
-        ),
-        (
-            "secondaryFireRecallDelay%",
-            "setting.hero.ability.recallDelay",
-        ),
-        (
-            "secondaryFireRechargeRate%",
-            "setting.hero.ability.rechargeRate",
-        ),
-        ("secondaryFireRegen%", "setting.hero.ability.regeneration"),
-        ("enableGenericSecondaryFire", "setting.hero.ability.enabled"),
-        (
-            "enablePassiveUnlimitedFuel",
-            "setting.hero.ability.passiveUnlimitedFuel",
-        ),
-        (
-            "enablePrimaryFireFreezeStack",
-            "setting.hero.ability.primaryFireFreezeStack",
-        ),
-        ("enablePrimaryFire", "setting.hero.ability.enabled"),
-        ("enableSecondaryFire", "setting.hero.ability.enabled"),
-        ("enableAbility1", "setting.hero.ability.enabled"),
-        ("enableAbility2", "setting.hero.ability.enabled"),
-        ("enableAbility3", "setting.hero.ability.enabled"),
-        ("enableUlt", "setting.hero.ability.enabled"),
-        ("enablePassive", "setting.hero.ability.enabled"),
-        ("enableAutomaticFire", "setting.hero.ability.enabled"),
-        ("enableScoping", "setting.hero.ability.enabled"),
-        (
-            "passiveUltGen%",
-            "setting.hero.ability.ultimateGeneration.passive",
-        ),
-        (
-            "combatUltGen%",
-            "setting.hero.ability.ultimateGeneration.combat",
-        ),
-        ("ultGen%", "setting.hero.ability.ultimateGeneration"),
+    for suffix in [
+        "ability1EnemyKb%",
+        "ability2FuseTime%",
+        "secondaryFireRechargeRate%",
+        "enableGenericSecondaryFire",
+        "enableAutomaticFire",
+        "enableScoping",
+        "enablePassiveUnlimitedFuel",
+        "enablePrimaryFireFreezeStack",
+        "passiveUltGen%",
+        "combatUltGen%",
+        "ultGen%",
     ] {
         let definition = definitions
             .iter()
             .find(|definition| definition.path().ends_with(suffix))
             .expect("projected ability setting");
-        assert_eq!(definition.id().as_str(), id);
+        assert!(
+            definition
+                .id()
+                .as_str()
+                .contains("setting.hero.ability.custom.")
+        );
+        assert!(!definition.provenance().reviewed);
     }
-    assert!(
-        definitions
-            .iter()
-            .filter(|definition| {
-                matches!(
-                    definition.target_kind(),
-                    SettingTargetKind::HeroAbility { .. }
-                )
-            })
-            .all(|definition| !definition.id().as_str().contains("custom."))
-    );
+    let automatic_fire = definitions
+        .iter()
+        .find(|definition| definition.path().ends_with("enableAutomaticFire"))
+        .expect("automatic-fire setting");
+    let scoping = definitions
+        .iter()
+        .find(|definition| definition.path().ends_with("enableScoping"))
+        .expect("scoping setting");
+    assert_ne!(automatic_fire.id(), scoping.id());
 
     let general = definitions
         .iter()

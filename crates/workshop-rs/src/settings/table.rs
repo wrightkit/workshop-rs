@@ -1027,19 +1027,6 @@ pub fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static
         })
 }
 
-/// Whether the generated hero-settings evidence contains a usable localized
-/// label for this hero/key pair. This deliberately does not use the parser's
-/// compatibility fallback for blank export labels.
-/// Applicability evidence from the reviewed producer export. This is a
-/// semantic projection of the export's supported/placeholder row marker, not
-/// a query about whether a requested locale has a usable display label.
-pub fn hero_setting_applicability(hero: &str, key: &str) -> Option<bool> {
-    GENERATED_HERO_SETTING_NAMES
-        .iter()
-        .find(|entry| entry.hero == hero && entry.key == key)
-        .map(GeneratedHeroSettingName::is_applicable)
-}
-
 #[derive(Deserialize)]
 struct HeroSettingAlias {
     hero: String,

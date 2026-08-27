@@ -18,10 +18,12 @@ identity; hero and logical ability-slot information is represented by
 is separate and can represent global, mode, team, hero, and hero-plus-logical
 ability-slot targets. The table's wildcard hero entries are projected as
 definitions whose applicability is resolved against the reviewed hero-setting
-data. A known hero without a reviewed key is `NotApplicable`; an unknown hero
-is `Unknown`. The reviewed export's supported/placeholder row marker is
-represented as applicability evidence separately from locale lookup. Locale
-label quality never changes applicability. `gamemodes.general` is a literal
+data. A known hero without explicit applicability evidence is `Unknown`; an
+unknown hero is `Unknown`. Gameplay kit topology is checked first for hero-ability targets;
+missing slots or variants are `NotApplicable`. The current settings projection
+has no complete independent applicability matrix, so a topology-valid target
+without explicit applicability evidence remains `Unknown`. Locale label quality
+never changes applicability. `gamemodes.general` is a literal
 Workshop settings group and therefore has a global/no semantic target, not a
 mode target.
 
@@ -43,10 +45,11 @@ fixtures or the reviewed `workshop-data` export. Unknown/raw settings continue
 to be carried by `SettingsNode::Raw`; the schema does not turn missing evidence
 into a guessed definition.
 
-The currently projected hero ability suffixes use an explicit reviewed
-vocabulary for canonical concept IDs. An unreviewed future suffix is isolated
-under `ability.custom.*` until its identity is deliberately mapped; it cannot
-silently become a canonical path-derived ID.
+The currently projected hero ability settings do not yet have reviewed concept
+identities. They are isolated under `setting.hero.ability.custom.*` and marked
+as semantically unreviewed until #110 supplies the canonical typed catalog.
+Different controls therefore cannot be silently collapsed into one guessed
+concept, and no path-derived ID is presented as canonical.
 
 ## Consequences
 

@@ -7,6 +7,7 @@
 use std::fmt;
 
 use crate::gameplay::{AbilityVariant, HeroId, LogicalSlot};
+use crate::gameplay_data;
 
 use super::table::{self, KeyKind, PathPart, TableEntry};
 
@@ -45,6 +46,7 @@ pub enum SettingScope {
     Heroes,
     Extensions,
     Workshop,
+    Unknown,
 }
 
 /// An open team identity used by hero settings structure.
@@ -91,6 +93,7 @@ pub enum SettingTargetKind {
         slot: LogicalSlot,
         variant: Option<AbilityVariant>,
     },
+    Unknown,
 }
 
 /// The result of asking whether a definition applies to a target.
@@ -268,6 +271,7 @@ impl SettingDefinition {
                 slot: slot.clone(),
                 variant: variant.clone(),
             },
+            TargetPattern::Unknown => SettingTargetKind::Unknown,
         }
     }
 
@@ -278,8 +282,12 @@ impl SettingDefinition {
     pub fn localized_name(&self, locale: &str, target: &SettingTarget) -> Option<&'static str> {
         match target {
             SettingTarget::Hero { hero, .. } | SettingTarget::HeroAbility { hero, .. } => {
-                table::hero_setting_name(hero.as_str(), self.key, locale)
-                    .or_else(|| self.presentation.localized_name(locale))
+                if self.applicability(target) == Applicability::NotApplicable {
+                    None
+                } else {
+                    table::hero_setting_name(hero.as_str(), self.key, locale)
+                        .or_else(|| self.presentation.localized_name(locale))
+                }
             }
             _ => self.presentation.localized_name(locale),
         }
@@ -326,18 +334,16 @@ impl SettingDefinition {
                         .is_some_and(|expected| expected != actual_hero.as_str())
                 {
                     Applicability::NotApplicable
-                } else if table::hero_name(actual_hero.as_str()).is_none() {
-                    Applicability::Unknown
                 } else {
-                    match table::hero_setting_applicability(actual_hero.as_str(), self.key) {
-                        Some(true) => Applicability::Applicable,
-                        Some(false) | None => Applicability::NotApplicable,
-                    }
+                    Applicability::Unknown
                 }
             }
             (
                 TargetPattern::HeroAbility {
-                    team, hero, slot, ..
+                    team,
+                    hero,
+                    slot,
+                    variant: expected_variant,
                 },
                 SettingTarget::HeroAbility {
                     team: actual_team,
@@ -351,19 +357,19 @@ impl SettingDefinition {
                         .as_deref()
                         .is_some_and(|expected| expected != actual_hero.as_str())
                     || slot.as_str() != actual_slot.as_str()
+                    || expected_variant
+                        .as_ref()
+                        .is_some_and(|expected| Some(expected) != target_variant(target))
                 {
                     return Applicability::NotApplicable;
                 }
-                if table::hero_name(actual_hero.as_str()).is_none() {
-                    Applicability::Unknown
-                } else {
-                    match table::hero_setting_applicability(actual_hero.as_str(), self.key) {
-                        Some(true) => Applicability::Applicable,
-                        Some(false) => Applicability::NotApplicable,
-                        None => Applicability::NotApplicable,
-                    }
+                match hero_ability_exists(actual_hero, actual_slot, target_variant(target)) {
+                    None => Applicability::Unknown,
+                    Some(false) => Applicability::NotApplicable,
+                    Some(true) => Applicability::Unknown,
                 }
             }
+            (TargetPattern::Unknown, _) => Applicability::Unknown,
             _ => Applicability::NotApplicable,
         }
     }
@@ -388,10 +394,31 @@ enum TargetPattern {
         slot: LogicalSlot,
         variant: Option<AbilityVariant>,
     },
+    Unknown,
 }
 
 fn team_matches(expected: Option<&str>, actual: Option<&TeamId>) -> bool {
     expected.is_none_or(|expected| actual.is_some_and(|actual| actual.as_str() == expected))
+}
+
+fn target_variant(target: &SettingTarget) -> Option<&AbilityVariant> {
+    match target {
+        SettingTarget::HeroAbility { variant, .. } => variant.as_ref(),
+        _ => None,
+    }
+}
+
+fn hero_ability_exists(
+    hero: &HeroId,
+    slot: &LogicalSlot,
+    variant: Option<&AbilityVariant>,
+) -> Option<bool> {
+    gameplay_data::builtin().ok().and_then(|catalog| {
+        catalog.hero(hero).and_then(|hero| match variant {
+            Some(variant) => Some(hero.ability_variant(slot, variant).is_ok()),
+            None => (!hero.abilities_in_slot(slot).is_empty()).then_some(true),
+        })
+    })
 }
 
 /// Project all currently reviewed table entries into the canonical semantic
@@ -420,6 +447,8 @@ impl SettingDefinition {
         let path = table::path_string(entry.path);
         let domain = domain_for(entry.kind);
         let id = SettingId::new(canonical_id(scope, key, entry.path));
+        let reviewed =
+            !id.as_str().contains(".custom.") && !matches!(&target, TargetPattern::Unknown);
         Self {
             id,
             scope,
@@ -442,7 +471,7 @@ impl SettingDefinition {
                 } else {
                     "pinned raw Workshop settings fixtures"
                 },
-                reviewed: true,
+                reviewed,
             },
         }
     }
@@ -455,7 +484,8 @@ fn scope_for(path: &[PathPart<'_>]) -> SettingScope {
         Some(PathPart::Part("gamemodes")) => SettingScope::GameModes,
         Some(PathPart::Part("heroes")) => SettingScope::Heroes,
         Some(PathPart::Part("extensions")) => SettingScope::Extensions,
-        _ => SettingScope::Workshop,
+        Some(PathPart::Part("workshop")) => SettingScope::Workshop,
+        _ => SettingScope::Unknown,
     }
 }
 
@@ -483,7 +513,7 @@ fn target_for(path: &[PathPart<'_>]) -> TargetPattern {
             PathPart::Part("main" | "lobby" | "extensions" | "workshop"),
             ..,
         ] => TargetPattern::Global,
-        _ => TargetPattern::Global,
+        _ => TargetPattern::Unknown,
     }
 }
 
@@ -537,79 +567,16 @@ fn canonical_id(scope: SettingScope, key: &str, path: &[PathPart<'_>]) -> String
         SettingScope::Heroes => "hero",
         SettingScope::Extensions => "extension",
         SettingScope::Workshop => "workshop",
+        SettingScope::Unknown => "unknown",
     };
-    let concept = match (scope, key, semantic_ability_slot_for_path(path)) {
-        (
-            SettingScope::Heroes,
-            "enablePrimaryFire"
-            | "enableSecondaryFire"
-            | "enableAbility1"
-            | "enableAbility2"
-            | "enableAbility3"
-            | "enableUlt"
-            | "enablePassive"
-            | "enableAutomaticFire"
-            | "enableScoping",
-            Some(_),
-        ) => "ability.enabled".to_string(),
-        (SettingScope::Heroes, "enableGenericSecondaryFire", Some(_)) => {
-            "ability.enabled".to_string()
-        }
-        (SettingScope::Heroes, "enablePassiveUnlimitedFuel", Some(_)) => {
-            "ability.passiveUnlimitedFuel".to_string()
-        }
-        (SettingScope::Heroes, "enablePrimaryFireFreezeStack", Some(_)) => {
-            "ability.primaryFireFreezeStack".to_string()
-        }
-        (SettingScope::Heroes, "passiveUltGen%", _) => {
-            "ability.ultimateGeneration.passive".to_string()
-        }
-        (SettingScope::Heroes, "combatUltGen%", _) => {
-            "ability.ultimateGeneration.combat".to_string()
-        }
-        (SettingScope::Heroes, "ultGen%", _) => "ability.ultimateGeneration".to_string(),
-        (SettingScope::Heroes, key, Some(_)) => ability_concept(key),
-        (SettingScope::Heroes, key, _) => key.trim_end_matches('%').to_string(),
-        (_, key, _) => key.trim_end_matches('%').to_string(),
+    let concept = if matches!(scope, SettingScope::Heroes)
+        && semantic_ability_slot_for_path(path).is_some()
+    {
+        format!("ability.custom.{}", key.trim_end_matches('%'))
+    } else if matches!(scope, SettingScope::Unknown) {
+        "unknown".to_string()
+    } else {
+        key.trim_end_matches('%').to_string()
     };
     format!("setting.{prefix}.{concept}")
-}
-
-fn ability_concept(key: &str) -> String {
-    let key = key.trim_end_matches('%');
-    let suffix = ["ability1", "ability2", "ability3", "secondaryFire"]
-        .iter()
-        .find_map(|prefix| key.strip_prefix(prefix))
-        .unwrap_or(key);
-    let concept = match suffix {
-        "Acceleration" => "acceleration",
-        "ChargeRate" => "chargeRate",
-        "Cooldown" => "cooldown",
-        "Distance" => "distance",
-        "Duration" => "duration",
-        "EnemyKb" => "enemyKnockback",
-        "FuseTime" => "fuseTime",
-        "Healing" => "healing",
-        "Health" => "health",
-        "Heat" => "heat",
-        "Height" => "height",
-        "Kb" => "knockback",
-        "MaxDamage" => "maximumDamage",
-        "MaxHealing" => "maximumHealing",
-        "MaxTime" => "maximumTime",
-        "Quantity" => "quantity",
-        "RechargeRate" => "rechargeRate",
-        "RefuelScalar" => "refuelScalar",
-        "SelfKb" => "selfKnockback",
-        "Speed" => "speed",
-        "AlternateForm" => "alternateForm",
-        "Cost" => "resourceCost",
-        "EnergyChargeRate" => "energyChargeRate",
-        "MaximumTime" => "maximumTime",
-        "MovementSpeedPenalty" => "movementSpeedPenalty",
-        "RecallDelay" => "recallDelay",
-        "Regen" => "regeneration",
-        other => return format!("ability.custom.{other}"),
-    };
-    format!("ability.{concept}")
 }

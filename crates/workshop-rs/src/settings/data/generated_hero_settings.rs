@@ -1,15 +1,8 @@
-// Generated from the reviewed workshop-data hero settings export. In this
-// projection, an empty/placeholder localized value is the producer's explicit
-// applicability marker for a hero/key row; it is not a locale completeness
-// check. Locale resolution must use `localized` below instead.
+// Generated from the reviewed workshop-data hero settings export. This
+// projection is locale presentation data only; absence or emptiness is not an
+// applicability fact. Applicability requires reviewed semantic evidence.
 pub struct GeneratedHeroSettingName { pub hero: &'static str, pub key: &'static str, pub locales: &'static [(&'static str, &'static str)] }
 impl GeneratedHeroSettingName {
-    pub fn is_applicable(&self) -> bool {
-        self.locales
-            .iter()
-            .any(|(_, value)| !value.trim().is_empty() && !value.starts_with(' '))
-    }
-
     pub fn localized(&self, locale: &str) -> Option<&'static str> {
         self.locales
             .iter()
