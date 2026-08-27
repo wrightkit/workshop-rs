@@ -379,6 +379,33 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         variant: None,
     };
     assert_eq!(ability3.applicability(&unknown), Applicability::Unknown);
+
+    let ashe_only = definitions
+        .iter()
+        .find(|definition| definition.path().ends_with("ability1EnemyKb%"))
+        .expect("Ashe-only ability setting");
+    let ana_ability1 = SettingTarget::HeroAbility {
+        team: None,
+        hero: HeroId::from(hero_ids::ANA),
+        slot: LogicalSlot::from(slots::ABILITY_1),
+        variant: None,
+    };
+    assert_eq!(
+        ashe_only.applicability(&ana_ability1),
+        Applicability::NotApplicable
+    );
+
+    let health = definitions
+        .iter()
+        .find(|definition| definition.path().ends_with("health%"))
+        .expect("hero health setting");
+    assert_eq!(
+        health.applicability(&SettingTarget::Hero {
+            team: None,
+            hero: HeroId::new("futureHero"),
+        }),
+        Applicability::Unknown
+    );
 }
 
 #[test]
@@ -389,6 +416,13 @@ fn settings_schema_preserves_authored_value_when_effective_value_is_clamped() {
     let effective = domain.effective_number(650.0).expect("finite number");
     assert_eq!(effective.authored, 650.0);
     assert_eq!(effective.effective, 500.0);
+
+    let lower_bounded = NumericBounds::new(Some(0.0), None).expect("valid lower bound");
+    assert!(lower_bounded.effective(1000.0).is_none());
+    assert_eq!(lower_bounded.effective(-1.0).unwrap().effective, 0.0);
+    let upper_bounded = NumericBounds::new(None, Some(500.0)).expect("valid upper bound");
+    assert!(upper_bounded.effective(-1.0).is_none());
+    assert_eq!(upper_bounded.effective(1000.0).unwrap().effective, 500.0);
 }
 
 #[test]
@@ -406,14 +440,110 @@ fn settings_schema_rejects_unknown_or_invalid_numeric_bounds() {
 #[test]
 fn settings_schema_normalizes_concept_ids_and_group_targets() {
     let definitions: Vec<_> = definitions().collect();
-    for suffix in ["ability1EnemyKb%", "ability2FuseTime%", "enableAbility3"] {
+    for (suffix, id) in [
+        ("ability1Acceleration%", "setting.hero.ability.acceleration"),
+        ("ability1ChargeRate%", "setting.hero.ability.chargeRate"),
+        ("ability1Cooldown%", "setting.hero.ability.cooldown"),
+        ("ability1Distance%", "setting.hero.ability.distance"),
+        ("ability1Duration%", "setting.hero.ability.duration"),
+        ("ability1EnemyKb%", "setting.hero.ability.enemyKnockback"),
+        ("ability1Health%", "setting.hero.ability.health"),
+        ("ability1Heat%", "setting.hero.ability.heat"),
+        ("ability1Kb%", "setting.hero.ability.knockback"),
+        ("ability1MaxTime%", "setting.hero.ability.maximumTime"),
+        ("ability1RechargeRate%", "setting.hero.ability.rechargeRate"),
+        ("ability1RefuelScalar", "setting.hero.ability.refuelScalar"),
+        ("ability1SelfKb%", "setting.hero.ability.selfKnockback"),
+        ("ability2Cooldown%", "setting.hero.ability.cooldown"),
+        ("ability2Distance%", "setting.hero.ability.distance"),
+        ("ability2Duration%", "setting.hero.ability.duration"),
+        ("ability2FuseTime%", "setting.hero.ability.fuseTime"),
+        ("ability2Healing%", "setting.hero.ability.healing"),
+        ("ability2Health%", "setting.hero.ability.health"),
+        ("ability2Height%", "setting.hero.ability.height"),
+        ("ability2Kb%", "setting.hero.ability.knockback"),
+        ("ability2MaxDamage%", "setting.hero.ability.maximumDamage"),
+        ("ability2MaxHealing%", "setting.hero.ability.maximumHealing"),
+        ("ability2Quantity%", "setting.hero.ability.quantity"),
+        ("ability2Speed%", "setting.hero.ability.speed"),
+        ("ability3Cooldown%", "setting.hero.ability.cooldown"),
+        ("ability3Distance%", "setting.hero.ability.distance"),
+        ("ability3Kb%", "setting.hero.ability.knockback"),
+        (
+            "secondaryFireAlternateForm",
+            "setting.hero.ability.alternateForm",
+        ),
+        ("secondaryFireCooldown%", "setting.hero.ability.cooldown"),
+        ("secondaryFireCost%", "setting.hero.ability.resourceCost"),
+        ("secondaryFireDuration%", "setting.hero.ability.duration"),
+        (
+            "secondaryFireEnergyChargeRate%",
+            "setting.hero.ability.energyChargeRate",
+        ),
+        ("secondaryFireHealth%", "setting.hero.ability.health"),
+        ("secondaryFireKb%", "setting.hero.ability.knockback"),
+        (
+            "secondaryFireMaximumTime%",
+            "setting.hero.ability.maximumTime",
+        ),
+        (
+            "secondaryFireMovementSpeedPenalty%",
+            "setting.hero.ability.movementSpeedPenalty",
+        ),
+        (
+            "secondaryFireRecallDelay%",
+            "setting.hero.ability.recallDelay",
+        ),
+        (
+            "secondaryFireRechargeRate%",
+            "setting.hero.ability.rechargeRate",
+        ),
+        ("secondaryFireRegen%", "setting.hero.ability.regeneration"),
+        ("enableGenericSecondaryFire", "setting.hero.ability.enabled"),
+        (
+            "enablePassiveUnlimitedFuel",
+            "setting.hero.ability.passiveUnlimitedFuel",
+        ),
+        (
+            "enablePrimaryFireFreezeStack",
+            "setting.hero.ability.primaryFireFreezeStack",
+        ),
+        ("enablePrimaryFire", "setting.hero.ability.enabled"),
+        ("enableSecondaryFire", "setting.hero.ability.enabled"),
+        ("enableAbility1", "setting.hero.ability.enabled"),
+        ("enableAbility2", "setting.hero.ability.enabled"),
+        ("enableAbility3", "setting.hero.ability.enabled"),
+        ("enableUlt", "setting.hero.ability.enabled"),
+        ("enablePassive", "setting.hero.ability.enabled"),
+        ("enableAutomaticFire", "setting.hero.ability.enabled"),
+        ("enableScoping", "setting.hero.ability.enabled"),
+        (
+            "passiveUltGen%",
+            "setting.hero.ability.ultimateGeneration.passive",
+        ),
+        (
+            "combatUltGen%",
+            "setting.hero.ability.ultimateGeneration.combat",
+        ),
+        ("ultGen%", "setting.hero.ability.ultimateGeneration"),
+    ] {
         let definition = definitions
             .iter()
             .find(|definition| definition.path().ends_with(suffix))
             .expect("projected ability setting");
-        assert!(!definition.id().as_str().contains("ability1"));
-        assert!(!definition.id().as_str().contains("ability2"));
+        assert_eq!(definition.id().as_str(), id);
     }
+    assert!(
+        definitions
+            .iter()
+            .filter(|definition| {
+                matches!(
+                    definition.target_kind(),
+                    SettingTargetKind::HeroAbility { .. }
+                )
+            })
+            .all(|definition| !definition.id().as_str().contains("custom."))
+    );
 
     let general = definitions
         .iter()

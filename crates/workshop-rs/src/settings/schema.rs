@@ -147,6 +147,11 @@ impl NumericBounds {
         if !authored.is_finite() || self.min.is_none() && self.max.is_none() {
             return None;
         }
+        match (self.min, self.max) {
+            (Some(min), None) if authored >= min => return None,
+            (None, Some(max)) if authored <= max => return None,
+            _ => {}
+        }
         let mut effective = authored;
         if let Some(min) = self.min {
             effective = effective.max(min);
@@ -259,9 +264,9 @@ impl SettingDefinition {
             TargetPattern::Mode(_) => SettingTargetKind::Mode,
             TargetPattern::Team(_) => SettingTargetKind::Team,
             TargetPattern::Hero { .. } => SettingTargetKind::Hero,
-            TargetPattern::HeroAbility { slot, .. } => SettingTargetKind::HeroAbility {
+            TargetPattern::HeroAbility { slot, variant, .. } => SettingTargetKind::HeroAbility {
                 slot: slot.clone(),
-                variant: None,
+                variant: variant.clone(),
             },
         }
     }
@@ -321,8 +326,10 @@ impl SettingDefinition {
                         .is_some_and(|expected| expected != actual_hero.as_str())
                 {
                     Applicability::NotApplicable
+                } else if table::hero_name(actual_hero.as_str()).is_none() {
+                    Applicability::Unknown
                 } else {
-                    match table::hero_setting_is_evidenced(actual_hero.as_str(), self.key) {
+                    match table::hero_setting_applicability(actual_hero.as_str(), self.key) {
                         Some(true) => Applicability::Applicable,
                         Some(false) | None => Applicability::NotApplicable,
                     }
@@ -350,10 +357,10 @@ impl SettingDefinition {
                 if table::hero_name(actual_hero.as_str()).is_none() {
                     Applicability::Unknown
                 } else {
-                    match table::hero_setting_is_evidenced(actual_hero.as_str(), self.key) {
+                    match table::hero_setting_applicability(actual_hero.as_str(), self.key) {
                         Some(true) => Applicability::Applicable,
                         Some(false) => Applicability::NotApplicable,
-                        None => Applicability::Unknown,
+                        None => Applicability::NotApplicable,
                     }
                 }
             }
@@ -496,9 +503,13 @@ fn target_for_hero(path: &[PathPart<'_>], team: Option<String>) -> TargetPattern
 fn semantic_ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str> {
     match path.last() {
         Some(PathPart::Part("enablePrimaryFire")) => Some("primaryFire"),
+        Some(PathPart::Part("enableGenericSecondaryFire")) => Some("secondaryFire"),
+        Some(PathPart::Part("enablePassiveUnlimitedFuel")) => Some("passive"),
+        Some(PathPart::Part("enablePrimaryFireFreezeStack")) => Some("primaryFire"),
         Some(PathPart::Part(key)) if key.starts_with("ability1") => Some("ability1"),
         Some(PathPart::Part(key)) if key.starts_with("ability2") => Some("ability2"),
         Some(PathPart::Part(key)) if key.starts_with("ability3") => Some("ability3"),
+        Some(PathPart::Part(key)) if key.starts_with("secondaryFire") => Some("secondaryFire"),
         _ => table::ability_slot_for_path(path),
     }
 }
@@ -536,9 +547,20 @@ fn canonical_id(scope: SettingScope, key: &str, path: &[PathPart<'_>]) -> String
             | "enableAbility2"
             | "enableAbility3"
             | "enableUlt"
-            | "enablePassive",
+            | "enablePassive"
+            | "enableAutomaticFire"
+            | "enableScoping",
             Some(_),
         ) => "ability.enabled".to_string(),
+        (SettingScope::Heroes, "enableGenericSecondaryFire", Some(_)) => {
+            "ability.enabled".to_string()
+        }
+        (SettingScope::Heroes, "enablePassiveUnlimitedFuel", Some(_)) => {
+            "ability.passiveUnlimitedFuel".to_string()
+        }
+        (SettingScope::Heroes, "enablePrimaryFireFreezeStack", Some(_)) => {
+            "ability.primaryFireFreezeStack".to_string()
+        }
         (SettingScope::Heroes, "passiveUltGen%", _) => {
             "ability.ultimateGeneration.passive".to_string()
         }
@@ -559,5 +581,35 @@ fn ability_concept(key: &str) -> String {
         .iter()
         .find_map(|prefix| key.strip_prefix(prefix))
         .unwrap_or(key);
-    format!("ability.{}", suffix.trim_start_matches('_'))
+    let concept = match suffix {
+        "Acceleration" => "acceleration",
+        "ChargeRate" => "chargeRate",
+        "Cooldown" => "cooldown",
+        "Distance" => "distance",
+        "Duration" => "duration",
+        "EnemyKb" => "enemyKnockback",
+        "FuseTime" => "fuseTime",
+        "Healing" => "healing",
+        "Health" => "health",
+        "Heat" => "heat",
+        "Height" => "height",
+        "Kb" => "knockback",
+        "MaxDamage" => "maximumDamage",
+        "MaxHealing" => "maximumHealing",
+        "MaxTime" => "maximumTime",
+        "Quantity" => "quantity",
+        "RechargeRate" => "rechargeRate",
+        "RefuelScalar" => "refuelScalar",
+        "SelfKb" => "selfKnockback",
+        "Speed" => "speed",
+        "AlternateForm" => "alternateForm",
+        "Cost" => "resourceCost",
+        "EnergyChargeRate" => "energyChargeRate",
+        "MaximumTime" => "maximumTime",
+        "MovementSpeedPenalty" => "movementSpeedPenalty",
+        "RecallDelay" => "recallDelay",
+        "Regen" => "regeneration",
+        other => return format!("ability.custom.{other}"),
+    };
+    format!("ability.{concept}")
 }
