@@ -375,6 +375,18 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         ability3.applicability(&ana).expect("applicability"),
         Applicability::NotApplicable
     );
+    let ana_missing_slot_without_variant = SettingTarget::HeroAbility {
+        team: Some(TeamId::new("allTeams")),
+        hero: HeroId::from(hero_ids::ANA),
+        slot: LogicalSlot::from(slots::ABILITY_3),
+        variant: None,
+    };
+    assert_eq!(
+        ability3
+            .applicability(&ana_missing_slot_without_variant)
+            .expect("applicability"),
+        Applicability::NotApplicable
+    );
     assert_eq!(
         ability3
             .localized_name("en-US", &ana)

@@ -961,7 +961,7 @@ pub fn entries() -> impl Iterator<Item = &'static TableEntry> {
     ENTRIES.iter().chain(GENERATED_ENTRIES.iter())
 }
 
-pub fn is_generated_entry(entry: &TableEntry) -> bool {
+pub(crate) fn is_generated_entry(entry: &TableEntry) -> bool {
     GENERATED_ENTRIES
         .iter()
         .any(|candidate| std::ptr::eq(candidate, entry))

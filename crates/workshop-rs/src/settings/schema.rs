@@ -513,12 +513,9 @@ fn hero_ability_exists(
     gameplay_data::builtin_ref()
         .map_err(Clone::clone)
         .map(|catalog| {
-            catalog.hero(hero).and_then(|hero| {
-                if let Some(variant) = variant {
-                    Some(hero.ability_variant(slot, variant).is_ok())
-                } else {
-                    (!hero.abilities_in_slot(slot).is_empty()).then_some(true)
-                }
+            catalog.hero(hero).map(|hero| match variant {
+                Some(variant) => hero.ability_variant(slot, variant).is_ok(),
+                None => !hero.abilities_in_slot(slot).is_empty(),
             })
         })
 }
