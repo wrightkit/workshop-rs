@@ -1162,9 +1162,8 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
     let mut errors = Vec::new();
     errors.extend(validate_raw_projection(table::raw_entries()));
     errors.extend(validate_enum_projection(
-        table::ENUM_MEMBERS
-            .iter()
-            .chain(table::GENERATED_ENUM_MEMBERS.iter()),
+        table::ENUM_MEMBERS.iter(),
+        table::GENERATED_ENUM_MEMBERS.iter(),
         &reconciliation::data().enum_member_mappings,
     ));
     let mut paths = HashSet::new();
@@ -1298,7 +1297,8 @@ fn key_kind_matches(kind: KeyKind, expected: &reconciliation::EntryContract) -> 
 /// both stale enum projections and conflicting duplicate spellings that the
 /// lookup helper would otherwise hide.
 fn validate_enum_projection(
-    entries: impl IntoIterator<Item = &'static table::EnumMember>,
+    fixture_entries: impl IntoIterator<Item = &'static table::EnumMember>,
+    generated_entries: impl IntoIterator<Item = &'static table::EnumMember>,
     mappings: &[reconciliation::EnumMemberMapping],
 ) -> Vec<String> {
     use std::collections::{HashMap, HashSet};
@@ -1312,12 +1312,7 @@ fn validate_enum_projection(
     let mut errors = Vec::new();
     let mut members = HashMap::new();
     let mut names = HashMap::new();
-    let mut generated = Vec::new();
-    for member in entries {
-        generated.push(member);
-    }
-    let fixture_count = table::ENUM_MEMBERS.len();
-    for member in generated.iter().take(fixture_count).copied() {
+    for member in fixture_entries {
         if !domains.contains(member.domain) {
             errors.push(format!("orphaned settings enum domain: {}", member.domain));
         }
@@ -1344,7 +1339,7 @@ fn validate_enum_projection(
         .map(|member| ((member.domain, member.member), member))
         .collect();
     let mut mapped_sources = HashSet::new();
-    for member in generated.into_iter().skip(fixture_count) {
+    for member in generated_entries {
         let key = (member.domain, member.member);
         if let Some(previous) = members.insert(key, member.name) {
             if previous != member.name {
@@ -1448,13 +1443,23 @@ mod tests {
     };
     static FIXTURE_ENUM_MEMBER: table::EnumMember = table::EnumMember {
         domain: "mapRotation",
-        member: "afterGame",
+        member: "afterAGame",
         name: "After A Game",
     };
     static GENERATED_ENUM_MEMBER: table::EnumMember = table::EnumMember {
         domain: "mapRotation",
-        member: "afterGame",
+        member: "afterAGame",
         name: "After Game",
+    };
+    static DISPLAY_NAME_COLLISION: table::EnumMember = table::EnumMember {
+        domain: "mapRotation",
+        member: "afterMirrorMatch",
+        name: "After A Game",
+    };
+    static EXPORT_ENUM_MEMBER: table::EnumMember = table::EnumMember {
+        domain: "setting_lobby_mapRotation",
+        member: "afterGame",
+        name: "After A Game",
     };
 
     fn definition(target: TargetPattern) -> SettingDefinition {
@@ -1526,8 +1531,30 @@ mod tests {
 
     #[test]
     fn enum_projection_conflicts_are_not_hidden_by_lookup_order() {
-        let errors = validate_enum_projection([&FIXTURE_ENUM_MEMBER, &GENERATED_ENUM_MEMBER], &[]);
+        let errors =
+            validate_enum_projection([&FIXTURE_ENUM_MEMBER], [&GENERATED_ENUM_MEMBER], &[]);
         assert_eq!(errors.len(), 1);
-        assert!(errors[0].contains("mapRotation.afterGame"));
+        assert!(errors[0].contains("mapRotation.afterAGame"));
+    }
+
+    #[test]
+    fn enum_projection_rejects_display_name_to_identity_collisions() {
+        let errors =
+            validate_enum_projection([&FIXTURE_ENUM_MEMBER, &DISPLAY_NAME_COLLISION], [], &[]);
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("conflicting settings enum display name"));
+    }
+
+    #[test]
+    fn enum_projection_reconciles_export_members_to_canonical_identities() {
+        let mappings = [reconciliation::EnumMemberMapping {
+            source_domain: "setting_lobby_mapRotation".to_string(),
+            source_member: "afterGame".to_string(),
+            target_domain: "mapRotation".to_string(),
+            target_member: "afterAGame".to_string(),
+        }];
+        let errors =
+            validate_enum_projection([&FIXTURE_ENUM_MEMBER], [&EXPORT_ENUM_MEMBER], &mappings);
+        assert!(errors.is_empty(), "{errors:?}");
     }
 }
