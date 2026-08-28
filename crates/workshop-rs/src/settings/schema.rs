@@ -10,6 +10,7 @@ use crate::gameplay::{AbilityVariant, HeroId, LogicalSlot};
 use crate::{gameplay::GameplayDataError, gameplay_data};
 
 use super::table::{self, KeyKind, PathPart, TableEntry};
+use super::{Settings, SettingsNode};
 
 /// A locale-independent Workshop setting concept identity.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -205,6 +206,83 @@ pub enum SettingValueDomain {
     PresenceOnly,
 }
 
+/// A typed authored value in the settings carrier.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SettingValue {
+    Boolean(bool),
+    Number(f64),
+    Percent(f64),
+    String(String),
+    Enum(String),
+    HeroList(Vec<String>),
+    MapList(Vec<String>),
+    PresenceOnly,
+}
+
+/// A typed occurrence together with an evidenced effective numeric value.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SettingOccurrence {
+    pub authored: SettingValue,
+    pub effective: Option<EffectiveNumber>,
+}
+
+/// Failure from a typed settings query or source-preserving edit.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SettingOperationError {
+    NotApplicable {
+        setting: SettingId,
+        target: SettingTarget,
+    },
+    NotFound {
+        setting: SettingId,
+        target: SettingTarget,
+    },
+    WrongValueKind {
+        setting: SettingId,
+        expected: &'static str,
+        actual: &'static str,
+        span: Option<crate::source::Span>,
+    },
+    InvalidValue {
+        setting: SettingId,
+        message: String,
+        span: Option<crate::source::Span>,
+    },
+}
+
+impl fmt::Display for SettingOperationError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NotApplicable { setting, target } => {
+                write!(
+                    formatter,
+                    "setting {setting} does not apply to target {target:?}"
+                )
+            }
+            Self::NotFound { setting, target } => {
+                write!(
+                    formatter,
+                    "setting {setting} was not found for target {target:?}"
+                )
+            }
+            Self::WrongValueKind {
+                setting,
+                expected,
+                actual,
+                ..
+            } => write!(
+                formatter,
+                "setting {setting} expects {expected} value, got {actual}"
+            ),
+            Self::InvalidValue {
+                setting, message, ..
+            } => write!(formatter, "invalid value for setting {setting}: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for SettingOperationError {}
+
 impl SettingValueDomain {
     /// Apply evidenced effective clamping without changing the authored
     /// value held by [`super::SettingsNode`].
@@ -253,6 +331,7 @@ pub struct SettingDefinition {
     identity: SettingIdentity,
     scope: SettingScope,
     path: String,
+    path_parts: &'static [PathPart<'static>],
     key: &'static str,
     target: TargetPattern,
     domain: SettingValueDomain,
@@ -357,7 +436,7 @@ impl SettingDefinition {
             }
             (TargetPattern::Team(expected), SettingTarget::Hero { team, .. }) => {
                 if team_matches(expected.as_deref(), team.as_ref()) {
-                    Applicability::Unknown
+                    Applicability::Applicable
                 } else {
                     Applicability::NotApplicable
                 }
@@ -407,7 +486,7 @@ impl SettingDefinition {
                     Applicability::NotApplicable
                 } else {
                     match hero_ability_exists(actual_hero, actual_slot, actual_variant.as_ref())? {
-                        Some(true) => Applicability::Unknown,
+                        Some(true) => Applicability::Applicable,
                         Some(false) => Applicability::NotApplicable,
                         None => Applicability::Unknown,
                     }
@@ -458,7 +537,13 @@ impl SettingDefinition {
                 match hero_ability_exists(actual_hero, actual_slot, target_variant(target))? {
                     None => Applicability::Unknown,
                     Some(false) => Applicability::NotApplicable,
-                    Some(true) => Applicability::Unknown,
+                    Some(true) => {
+                        match table::hero_setting_applicability(actual_hero.as_str(), self.key) {
+                            Some(true) => Applicability::Applicable,
+                            Some(false) => Applicability::NotApplicable,
+                            None => Applicability::Unknown,
+                        }
+                    }
                 }
             }
             (TargetPattern::Unknown, _) => Applicability::Unknown,
@@ -469,6 +554,318 @@ impl SettingDefinition {
     pub fn effective_number(&self, authored: f64) -> Option<EffectiveNumber> {
         self.domain.effective_number(authored)
     }
+
+    /// Read an existing source-preserving occurrence with its authored value
+    /// and, when evidenced, its effective numeric value.
+    pub fn read(
+        &self,
+        settings: &Settings,
+        target: &SettingTarget,
+    ) -> Result<SettingOccurrence, SettingOperationError> {
+        let id = self.operation_id()?;
+        self.ensure_target(target)?;
+        let path = self.concrete_path(target);
+        let node = find_node(&settings.children, &path).ok_or_else(|| {
+            SettingOperationError::NotFound {
+                setting: id.clone(),
+                target: target.clone(),
+            }
+        })?;
+        let authored = value_from_node(node, &self.domain, &id)?;
+        let effective = match authored {
+            SettingValue::Number(value) | SettingValue::Percent(value) => {
+                self.effective_number(value)
+            }
+            _ => None,
+        };
+        Ok(SettingOccurrence {
+            authored,
+            effective,
+        })
+    }
+
+    /// Update one existing occurrence without rebuilding the surrounding
+    /// settings tree. Unknown and unrelated source structure is untouched.
+    pub fn write(
+        &self,
+        settings: &mut Settings,
+        target: &SettingTarget,
+        value: SettingValue,
+    ) -> Result<(), SettingOperationError> {
+        let id = self.operation_id()?;
+        self.ensure_target(target)?;
+        let path = self.concrete_path(target);
+        let node = find_node_mut(&mut settings.children, &path).ok_or_else(|| {
+            SettingOperationError::NotFound {
+                setting: id.clone(),
+                target: target.clone(),
+            }
+        })?;
+        let span = node.span();
+        validate_value(&self.domain, &id, &value, span)?;
+        apply_value(node, &id, value)
+    }
+
+    fn ensure_target(&self, target: &SettingTarget) -> Result<(), SettingOperationError> {
+        let id = self.operation_id()?;
+        match self
+            .applicability(target)
+            .map_err(|error| SettingOperationError::InvalidValue {
+                setting: id.clone(),
+                message: error.to_string(),
+                span: None,
+            })? {
+            Applicability::NotApplicable => Err(SettingOperationError::NotApplicable {
+                setting: id,
+                target: target.clone(),
+            }),
+            Applicability::Applicable | Applicability::Unknown => Ok(()),
+        }
+    }
+
+    fn operation_id(&self) -> Result<SettingId, SettingOperationError> {
+        self.id()
+            .cloned()
+            .ok_or_else(|| SettingOperationError::InvalidValue {
+                setting: SettingId::new("unknown"),
+                message: "setting has no reviewed canonical identity".to_string(),
+                span: None,
+            })
+    }
+
+    fn concrete_path(&self, target: &SettingTarget) -> Vec<String> {
+        self.path_parts
+            .iter()
+            .map(|part| match part {
+                PathPart::Part(name) => (*name).to_string(),
+                PathPart::Team => target_team(target),
+                PathPart::Hero => target_hero(target),
+            })
+            .collect()
+    }
+}
+
+fn target_team(target: &SettingTarget) -> String {
+    match target {
+        SettingTarget::Team(team)
+        | SettingTarget::Hero {
+            team: Some(team), ..
+        }
+        | SettingTarget::TeamAbility {
+            team: Some(team), ..
+        }
+        | SettingTarget::HeroAbility {
+            team: Some(team), ..
+        } => team.as_str().to_string(),
+        _ => "allTeams".to_string(),
+    }
+}
+
+fn target_hero(target: &SettingTarget) -> String {
+    match target {
+        SettingTarget::Hero { hero, .. } | SettingTarget::HeroAbility { hero, .. } => {
+            hero.as_str().to_string()
+        }
+        _ => String::new(),
+    }
+}
+
+fn find_node<'a>(children: &'a [SettingsNode], path: &[String]) -> Option<&'a SettingsNode> {
+    let (name, rest) = path.split_first()?;
+    let node = children.iter().find(|node| node.name() == name)?;
+    if rest.is_empty() {
+        Some(node)
+    } else {
+        match node {
+            SettingsNode::Workshop { children, .. } | SettingsNode::Group { children, .. } => {
+                find_node(children, rest)
+            }
+            _ => None,
+        }
+    }
+}
+
+fn find_node_mut<'a>(
+    children: &'a mut [SettingsNode],
+    path: &[String],
+) -> Option<&'a mut SettingsNode> {
+    let (name, rest) = path.split_first()?;
+    let node = children.iter_mut().find(|node| node.name() == name)?;
+    if rest.is_empty() {
+        Some(node)
+    } else {
+        match node {
+            SettingsNode::Workshop { children, .. } | SettingsNode::Group { children, .. } => {
+                find_node_mut(children, rest)
+            }
+            _ => None,
+        }
+    }
+}
+
+fn value_kind(value: &SettingValue) -> &'static str {
+    match value {
+        SettingValue::Boolean(_) => "boolean",
+        SettingValue::Number(_) => "number",
+        SettingValue::Percent(_) => "percent",
+        SettingValue::String(_) => "string",
+        SettingValue::Enum(_) => "enum",
+        SettingValue::HeroList(_) => "hero-list",
+        SettingValue::MapList(_) => "map-list",
+        SettingValue::PresenceOnly => "presence-only",
+    }
+}
+
+fn domain_kind(domain: &SettingValueDomain) -> &'static str {
+    match domain {
+        SettingValueDomain::Boolean => "boolean",
+        SettingValueDomain::Number(_) => "number",
+        SettingValueDomain::Percent(_) => "percent",
+        SettingValueDomain::String => "string",
+        SettingValueDomain::Enum { .. } => "enum",
+        SettingValueDomain::HeroList => "hero-list",
+        SettingValueDomain::MapList => "map-list",
+        SettingValueDomain::PresenceOnly => "presence-only",
+    }
+}
+
+fn validate_value(
+    domain: &SettingValueDomain,
+    id: &SettingId,
+    value: &SettingValue,
+    span: Option<crate::source::Span>,
+) -> Result<(), SettingOperationError> {
+    let expected = domain_kind(domain);
+    if value_kind(value) != expected {
+        return Err(SettingOperationError::WrongValueKind {
+            setting: id.clone(),
+            expected,
+            actual: value_kind(value),
+            span,
+        });
+    }
+    match (domain, value) {
+        (
+            SettingValueDomain::Number(_) | SettingValueDomain::Percent(_),
+            SettingValue::Number(value) | SettingValue::Percent(value),
+        ) if !value.is_finite() => Err(SettingOperationError::InvalidValue {
+            setting: id.clone(),
+            message: "numeric settings values must be finite".to_string(),
+            span,
+        }),
+        (SettingValueDomain::Enum { domain }, SettingValue::Enum(member))
+            if table::enum_name(domain, member).is_none() =>
+        {
+            Err(SettingOperationError::InvalidValue {
+                setting: id.clone(),
+                message: format!("unknown member '{member}' for enum domain '{domain}'"),
+                span,
+            })
+        }
+        (SettingValueDomain::HeroList, SettingValue::HeroList(values))
+            if values.iter().any(|value| table::hero_name(value).is_none()) =>
+        {
+            Err(SettingOperationError::InvalidValue {
+                setting: id.clone(),
+                message: "hero list contains an unknown hero".to_string(),
+                span,
+            })
+        }
+        (SettingValueDomain::MapList, SettingValue::MapList(values))
+            if values.iter().any(|value| table::map_name(value).is_none()) =>
+        {
+            Err(SettingOperationError::InvalidValue {
+                setting: id.clone(),
+                message: "map list contains an unknown map".to_string(),
+                span,
+            })
+        }
+        _ => Ok(()),
+    }
+}
+
+fn value_from_node(
+    node: &SettingsNode,
+    domain: &SettingValueDomain,
+    id: &SettingId,
+) -> Result<SettingValue, SettingOperationError> {
+    let value = match node {
+        SettingsNode::Bool { value, .. } => SettingValue::Boolean(*value),
+        SettingsNode::Number { value, .. } => match domain {
+            SettingValueDomain::Percent(_) => SettingValue::Percent(*value),
+            _ => SettingValue::Number(*value),
+        },
+        SettingsNode::String { value, .. } => match domain {
+            SettingValueDomain::Enum { .. } => SettingValue::Enum(value.clone()),
+            _ => SettingValue::String(value.clone()),
+        },
+        SettingsNode::Flag { .. } => SettingValue::PresenceOnly,
+        SettingsNode::List { elements, .. } => {
+            let values = elements
+                .iter()
+                .map(|element| element.value.clone())
+                .collect();
+            match domain {
+                SettingValueDomain::HeroList => SettingValue::HeroList(values),
+                _ => SettingValue::MapList(values),
+            }
+        }
+        _ => {
+            return Err(SettingOperationError::InvalidValue {
+                setting: id.clone(),
+                message: "settings occurrence is not a typed leaf".to_string(),
+                span: node.span(),
+            });
+        }
+    };
+    validate_value(domain, id, &value, node.span())?;
+    Ok(value)
+}
+
+fn apply_value(
+    node: &mut SettingsNode,
+    id: &SettingId,
+    value: SettingValue,
+) -> Result<(), SettingOperationError> {
+    match (node, value) {
+        (SettingsNode::Bool { value: current, .. }, SettingValue::Boolean(value)) => {
+            *current = value
+        }
+        (
+            SettingsNode::Number { value: current, .. },
+            SettingValue::Number(value) | SettingValue::Percent(value),
+        ) => *current = value,
+        (
+            SettingsNode::String { value: current, .. },
+            SettingValue::String(value) | SettingValue::Enum(value),
+        ) => *current = value,
+        (
+            SettingsNode::List { elements, span, .. },
+            SettingValue::HeroList(values) | SettingValue::MapList(values),
+        ) => {
+            if elements.len() != values.len() {
+                return Err(SettingOperationError::InvalidValue {
+                    setting: id.clone(),
+                    message: "source-preserving list edits cannot change list length".to_string(),
+                    span: *span,
+                });
+            }
+            elements
+                .iter_mut()
+                .zip(values)
+                .for_each(|(element, value)| element.value = value);
+        }
+        (SettingsNode::Flag { .. }, SettingValue::PresenceOnly) => {}
+        (node, value) => {
+            return Err(SettingOperationError::WrongValueKind {
+                setting: id.clone(),
+                expected: "existing typed value",
+                actual: value_kind(&value),
+                span: node.span(),
+            });
+        }
+    }
+    Ok(())
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -533,6 +930,16 @@ pub fn definition(path: &[PathPart<'_>]) -> Option<SettingDefinition> {
     table::lookup(path).map(SettingDefinition::from_entry)
 }
 
+/// Find all definitions for a canonical concept identity.
+///
+/// A concept can intentionally have more than one target shape, so the
+/// result is an iterator rather than a single definition. This keeps normal
+/// consumers independent of the private table paths while retaining the
+/// target-specific schema facts.
+pub fn definitions_by_id(id: &SettingId) -> impl Iterator<Item = SettingDefinition> {
+    definitions().filter(move |definition| definition.id() == Some(id))
+}
+
 impl SettingDefinition {
     fn from_entry(entry: &TableEntry) -> Self {
         let scope = scope_for(entry.path);
@@ -554,6 +961,7 @@ impl SettingDefinition {
             identity,
             scope,
             path,
+            path_parts: entry.path,
             key,
             target,
             domain,
@@ -790,6 +1198,7 @@ mod tests {
             identity: SettingIdentity::Known(SettingId::new("setting.test.value")),
             scope: SettingScope::Heroes,
             path: "heroes.test.value".to_string(),
+            path_parts: &[],
             key: "value",
             target,
             domain: SettingValueDomain::Boolean,
