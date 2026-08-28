@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted for the #109 foundation; full catalog population remains #110 and
+Accepted for the #109 foundation and #110 canonical catalog projection;
 ergonomic query/edit APIs remain #111.
 
 ## Decision
@@ -56,9 +56,14 @@ semantic identity until #110 supplies the canonical typed catalog.
 ## Consequences
 
 The existing `TableEntry` inventory remains the parser/emitter source and the
-schema is a single semantic projection of it, avoiding a parallel settings
-framework. #110 can replace or extend the projection with generated catalog
-data without changing the public semantic boundary. #111 can build query/edit
+schema is its single typed semantic projection, avoiding a parallel settings
+framework. The effective catalog preserves the established hand-authored
+parser precedence while collapsing duplicate paths from the generated
+projection. It validates unresolved scopes, missing identities, missing
+presentation, and conflicting domains before catalog-check success. Canonical
+concept identities normalize reusable hero/ability settings
+without embedding localized ability display names; mode-specific enum concepts
+remain distinct when their reviewed domains differ. #111 can build query/edit
 operations on definitions and source-preserving occurrences without inventing
 another identity, scope, target, domain, or provenance model.
 

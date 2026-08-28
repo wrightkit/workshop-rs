@@ -95,7 +95,7 @@ pub enum SettingTarget {
 
 /// The target shape described by a definition. Concrete identities are
 /// supplied separately when applicability is queried.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SettingTargetKind {
     Global,
     Mode,
@@ -521,7 +521,9 @@ fn hero_ability_exists(
 }
 
 /// Project all currently reviewed table entries into the canonical semantic
-/// model. This is intentionally a projection, not a second settings catalog.
+/// catalog. The table remains the single parser/emitter source; this
+/// projection supplies the stable semantic identity and typed facts consumed
+/// by callers.
 pub fn definitions() -> impl Iterator<Item = SettingDefinition> {
     table::entries().map(SettingDefinition::from_entry)
 }
@@ -679,15 +681,104 @@ fn canonical_id(scope: SettingScope, key: &str, path: &[PathPart<'_>]) -> Option
         SettingScope::Workshop => "workshop",
         SettingScope::Unknown => "unknown",
     };
-    if matches!(scope, SettingScope::Unknown)
-        || matches!(scope, SettingScope::Heroes) && semantic_ability_slot_for_path(path).is_some()
-    {
+    if matches!(scope, SettingScope::Unknown) {
         return None;
     }
-    Some(SettingId::new(format!(
-        "setting.{prefix}.{}",
-        key.trim_end_matches('%')
-    )))
+    let concept = canonical_concept(key, path)?;
+    Some(SettingId::new(format!("setting.{prefix}.{concept}")))
+}
+
+/// Map a Workshop leaf to a locale-independent setting concept. These names
+/// intentionally describe the setting's meaning, while hero and logical slot
+/// topology stays in `SettingTarget`.
+fn canonical_concept(key: &str, path: &[PathPart<'_>]) -> Option<String> {
+    let key = key.trim_end_matches('%');
+    Some(match key {
+        "health" => "health".to_string(),
+        "passiveUltGen" => "ultimateGeneration.passive".to_string(),
+        "combatUltGen" => "ultimateGeneration.combat".to_string(),
+        "ultGen" => "ultimateGeneration".to_string(),
+        "enableUlt" => "ability.enabled".to_string(),
+        "enablePrimaryFire"
+        | "enableSecondaryFire"
+        | "enableGenericSecondaryFire"
+        | "enableAbility1"
+        | "enableAbility2"
+        | "enableAbility3" => "ability.enabled".to_string(),
+        "enableAutomaticFire" => "primaryFire.automaticFireEnabled".to_string(),
+        "enableScoping" => "primaryFire.scopingEnabled".to_string(),
+        "enablePassiveUnlimitedFuel" => "passive.unlimitedFuelEnabled".to_string(),
+        "enablePrimaryFireFreezeStack" => "primaryFire.freezeStackEnabled".to_string(),
+        key if key.ends_with("Cooldown") => "ability.cooldown".to_string(),
+        key if key.ends_with("RechargeRate") => "ability.rechargeRate".to_string(),
+        key if key.ends_with("EnergyChargeRate") => "ability.energyChargeRate".to_string(),
+        key if key.ends_with("MaximumTime") || key.ends_with("MaxTime") => {
+            "ability.maximumTime".to_string()
+        }
+        key if key.contains("EnemyKb") => "ability.knockback.enemy".to_string(),
+        key if key.contains("Kb") => "ability.knockback".to_string(),
+        key if key.contains("Damage") => "ability.damage".to_string(),
+        key if key.contains("Healing") => "ability.healing".to_string(),
+        key if key.contains("Resource") => "ability.resource".to_string(),
+        "setValidControlPoints" | "firstActiveControlPoint" => path
+            .iter()
+            .filter_map(|part| match part {
+                PathPart::Part(name) if *name != "gamemodes" && *name != key => Some(*name),
+                _ => None,
+            })
+            .next()
+            .map(|mode| format!("{key}.{mode}"))?,
+        _ => key.to_string(),
+    })
+}
+
+/// Validate the effective settings catalog and reject stale or conflicting
+/// semantic projections before parser/emitter data is shipped.
+pub fn validate_catalog() -> Result<(), Vec<String>> {
+    use std::collections::{HashMap, HashSet};
+
+    let mut errors = Vec::new();
+    let mut paths = HashSet::new();
+    let mut concepts: HashMap<(String, SettingTargetKind), SettingValueDomain> = HashMap::new();
+
+    for definition in definitions() {
+        if !paths.insert(definition.path.clone()) {
+            errors.push(format!("duplicate settings path: {}", definition.path));
+        }
+        if definition.scope == SettingScope::Unknown {
+            errors.push(format!("unknown settings scope: {}", definition.path));
+        }
+        let Some(id) = definition.id() else {
+            errors.push(format!(
+                "missing canonical settings identity: {}",
+                definition.path
+            ));
+            continue;
+        };
+        if !definition.provenance.reviewed {
+            errors.push(format!(
+                "unreviewed settings definition: {}",
+                definition.path
+            ));
+        }
+        if definition.presentation.english_name.is_empty() {
+            errors.push(format!(
+                "missing settings presentation: {}",
+                definition.path
+            ));
+        }
+        let key = (id.as_str().to_string(), definition.target_kind());
+        if let Some(previous) = concepts.insert(key, definition.domain.clone()) {
+            if previous != definition.domain {
+                errors.push(format!("conflicting settings domains for {id}"));
+            }
+        }
+    }
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors)
+    }
 }
 
 #[cfg(test)]
