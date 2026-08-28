@@ -50,7 +50,7 @@ assert_eq!(
     Applicability::Applicable
 );
 
-let ashe_only = definitions_by_id(&SettingId::from("setting.hero.ability.knockback.enemy"))
+let ashe_only = definitions_by_id(&SettingId::from("setting.hero.ability1EnemyKb"))
     .find(|definition| definition.path().ends_with("ability1EnemyKb%"))
     .expect("exceptional hero setting");
 let ana_ability = SettingTarget::HeroAbility {

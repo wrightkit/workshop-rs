@@ -1103,6 +1103,7 @@ fn canonical_concept(key: &str, path: &[PathPart<'_>]) -> Option<String> {
     let key = key.trim_end_matches('%');
     Some(match key {
         "health" => "health".to_string(),
+        "damageDealt" | "damageReceived" | "healingDealt" | "healingReceived" => key.to_string(),
         "passiveUltGen" => "ultimateGeneration.passive".to_string(),
         "combatUltGen" => "ultimateGeneration.combat".to_string(),
         "ultGen" => "ultimateGeneration".to_string(),
@@ -1117,17 +1118,6 @@ fn canonical_concept(key: &str, path: &[PathPart<'_>]) -> Option<String> {
         "enableScoping" => "primaryFire.scopingEnabled".to_string(),
         "enablePassiveUnlimitedFuel" => "passive.unlimitedFuelEnabled".to_string(),
         "enablePrimaryFireFreezeStack" => "primaryFire.freezeStackEnabled".to_string(),
-        key if key.ends_with("Cooldown") => "ability.cooldown".to_string(),
-        key if key.ends_with("RechargeRate") => "ability.rechargeRate".to_string(),
-        key if key.ends_with("EnergyChargeRate") => "ability.energyChargeRate".to_string(),
-        key if key.ends_with("MaximumTime") || key.ends_with("MaxTime") => {
-            "ability.maximumTime".to_string()
-        }
-        key if key.contains("EnemyKb") => "ability.knockback.enemy".to_string(),
-        key if key.contains("Kb") => "ability.knockback".to_string(),
-        key if key.contains("Damage") => "ability.damage".to_string(),
-        key if key.contains("Healing") => "ability.healing".to_string(),
-        key if key.contains("Resource") => "ability.resource".to_string(),
         "setValidControlPoints" | "firstActiveControlPoint" => path
             .iter()
             .filter_map(|part| match part {
@@ -1146,8 +1136,27 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
     use std::collections::{HashMap, HashSet};
 
     let mut errors = Vec::new();
+    let mut raw_paths: HashMap<String, TableEntry> = HashMap::new();
+    for entry in table::raw_entries() {
+        let path = table::path_string(entry.path);
+        if let Some(previous) = raw_paths.insert(path.clone(), *entry) {
+            let same_path = previous.path.len() == entry.path.len()
+                && previous
+                    .path
+                    .iter()
+                    .zip(entry.path.iter())
+                    .all(|(left, right)| left == right);
+            if !same_path || !same_entry_shape(previous.kind, entry.kind) {
+                errors.push(format!(
+                    "conflicting duplicate settings path between catalog projections: {path}"
+                ));
+            }
+        }
+    }
     let mut paths = HashSet::new();
-    let mut concepts: HashMap<(String, SettingTargetKind), SettingValueDomain> = HashMap::new();
+    let mut concepts: HashMap<(String, SettingTargetKind, String), SettingValueDomain> =
+        HashMap::new();
+    let mut concept_keys: HashMap<(String, SettingTargetKind), String> = HashMap::new();
 
     for definition in definitions() {
         if !paths.insert(definition.path.clone()) {
@@ -1175,7 +1184,17 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
                 definition.path
             ));
         }
-        let key = (id.as_str().to_string(), definition.target_kind());
+        let target_kind = definition.target_kind();
+        let semantic_key = semantic_identity_key(definition.key);
+        let collision_key = (id.as_str().to_string(), target_kind.clone());
+        if let Some(previous_key) = concept_keys.insert(collision_key, semantic_key.clone()) {
+            if previous_key != semantic_key {
+                errors.push(format!(
+                    "conflicting settings concepts for {id}: {previous_key} vs {semantic_key}"
+                ));
+            }
+        }
+        let key = (id.as_str().to_string(), target_kind, semantic_key);
         if let Some(previous) = concepts.insert(key, definition.domain.clone()) {
             if previous != definition.domain {
                 errors.push(format!("conflicting settings domains for {id}"));
@@ -1187,6 +1206,27 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
     } else {
         Err(errors)
     }
+}
+
+fn semantic_identity_key(key: &str) -> String {
+    match key {
+        "enableSecondaryFire" | "enableGenericSecondaryFire" => "enableSecondaryFire".to_string(),
+        _ => key.to_string(),
+    }
+}
+
+fn same_entry_shape(left: KeyKind, right: KeyKind) -> bool {
+    matches!(
+        (left, right),
+        (KeyKind::Flag, KeyKind::Flag)
+            | (KeyKind::String, KeyKind::String)
+            | (KeyKind::Bool, KeyKind::Bool)
+            | (KeyKind::Number, KeyKind::Number)
+            | (KeyKind::Percent, KeyKind::Percent)
+            | (KeyKind::ListMap, KeyKind::ListMap)
+            | (KeyKind::ListHero, KeyKind::ListHero)
+            | (KeyKind::Enum(_), KeyKind::Enum(_))
+    )
 }
 
 #[cfg(test)]
