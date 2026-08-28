@@ -306,17 +306,21 @@ impl SettingDefinition {
         &self.presentation
     }
 
-    pub fn localized_name(&self, locale: &str, target: &SettingTarget) -> Option<&'static str> {
+    pub fn localized_name(
+        &self,
+        locale: &str,
+        target: &SettingTarget,
+    ) -> Result<Option<&'static str>, GameplayDataError> {
         match target {
             SettingTarget::Hero { hero, .. } | SettingTarget::HeroAbility { hero, .. } => {
-                if self.applicability(target).ok()? == Applicability::NotApplicable {
-                    None
+                if self.applicability(target)? == Applicability::NotApplicable {
+                    Ok(None)
                 } else {
-                    table::hero_setting_name(hero.as_str(), self.key, locale)
-                        .or_else(|| self.presentation.localized_name(locale))
+                    Ok(table::hero_setting_name(hero.as_str(), self.key, locale)
+                        .or_else(|| self.presentation.localized_name(locale)))
                 }
             }
-            _ => self.presentation.localized_name(locale),
+            _ => Ok(self.presentation.localized_name(locale)),
         }
     }
 
@@ -351,6 +355,13 @@ impl SettingDefinition {
                     Applicability::NotApplicable
                 }
             }
+            (TargetPattern::Team(expected), SettingTarget::Hero { team, .. }) => {
+                if team_matches(expected.as_deref(), team.as_ref()) {
+                    Applicability::Unknown
+                } else {
+                    Applicability::NotApplicable
+                }
+            }
             (
                 TargetPattern::TeamAbility {
                     team,
@@ -363,13 +374,43 @@ impl SettingDefinition {
                     variant: actual_variant,
                 },
             ) => {
-                if team_matches(team.as_deref(), actual_team.as_ref())
-                    && slot == actual_slot
-                    && expected_variant.as_ref() == actual_variant.as_ref()
+                if !team_matches(team.as_deref(), actual_team.as_ref())
+                    || slot != actual_slot
+                    || expected_variant
+                        .as_ref()
+                        .is_some_and(|expected| actual_variant.as_ref() != Some(expected))
                 {
-                    Applicability::Applicable
-                } else {
                     Applicability::NotApplicable
+                } else {
+                    Applicability::Applicable
+                }
+            }
+            (
+                TargetPattern::TeamAbility {
+                    team,
+                    slot,
+                    variant: expected_variant,
+                },
+                SettingTarget::HeroAbility {
+                    team: actual_team,
+                    hero: actual_hero,
+                    slot: actual_slot,
+                    variant: actual_variant,
+                },
+            ) => {
+                if !team_matches(team.as_deref(), actual_team.as_ref())
+                    || slot != actual_slot
+                    || expected_variant
+                        .as_ref()
+                        .is_some_and(|expected| actual_variant.as_ref() != Some(expected))
+                {
+                    Applicability::NotApplicable
+                } else {
+                    match hero_ability_exists(actual_hero, actual_slot, actual_variant.as_ref())? {
+                        Some(true) => Applicability::Unknown,
+                        Some(false) => Applicability::NotApplicable,
+                        None => Applicability::Unknown,
+                    }
                 }
             }
             (
@@ -650,4 +691,58 @@ fn canonical_id(scope: SettingScope, key: &str, path: &[PathPart<'_>]) -> Option
         "setting.{prefix}.{}",
         key.trim_end_matches('%')
     )))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn definition(target: TargetPattern) -> SettingDefinition {
+        SettingDefinition {
+            identity: SettingIdentity::Known(SettingId::new("setting.test.value")),
+            scope: SettingScope::Heroes,
+            path: "heroes.test.value".to_string(),
+            key: "value",
+            target,
+            domain: SettingValueDomain::Boolean,
+            presentation: SettingPresentation {
+                english_name: "Value",
+                locale_section: "labels",
+            },
+            provenance: SettingProvenance {
+                kind: SettingEvidenceKind::RawWorkshopFixture,
+                source: "test",
+                reviewed: true,
+            },
+        }
+    }
+
+    #[test]
+    fn common_target_narrowing_rejects_team_and_slot_mismatches() {
+        let team = definition(TargetPattern::Team(Some("team1".to_string())));
+        assert_eq!(
+            team.applicability(&SettingTarget::Hero {
+                team: Some(TeamId::new("team2")),
+                hero: HeroId::from(crate::gameplay::hero_ids::ANA),
+            })
+            .expect("applicability"),
+            Applicability::NotApplicable
+        );
+
+        let team_ability = definition(TargetPattern::TeamAbility {
+            team: Some("team1".to_string()),
+            slot: LogicalSlot::from(crate::gameplay::slots::PRIMARY_FIRE),
+            variant: None,
+        });
+        let target = SettingTarget::HeroAbility {
+            team: Some(TeamId::new("team2")),
+            hero: HeroId::from(crate::gameplay::hero_ids::DVA),
+            slot: LogicalSlot::from(crate::gameplay::slots::ABILITY_1),
+            variant: Some(AbilityVariant::new("mech")),
+        };
+        assert_eq!(
+            team_ability.applicability(&target).expect("applicability"),
+            Applicability::NotApplicable
+        );
+    }
 }

@@ -46,11 +46,12 @@ fixtures or the reviewed `workshop-data` export. Unknown/raw settings continue
 to be carried by `SettingsNode::Raw`; the schema does not turn missing evidence
 into a guessed definition.
 
-The currently projected hero ability settings do not yet have reviewed concept
-identities. They are isolated under `setting.hero.ability.custom.*` and marked
-as semantically unreviewed until #110 supplies the canonical typed catalog.
-Different controls therefore cannot be silently collapsed into one guessed
-concept, and no path-derived ID is presented as canonical.
+`SettingIdentity::Known(SettingId)` means that a reviewed canonical concept
+identity has been resolved; unresolved projected hero-ability concepts use
+`SettingIdentity::Unknown` and `id() == None`. This is independent from
+`SettingProvenance`: the latter reports whether the underlying table or export
+evidence was reviewed, so reviewed source evidence may still carry an unknown
+semantic identity until #110 supplies the canonical typed catalog.
 
 ## Consequences
 

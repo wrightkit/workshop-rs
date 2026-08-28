@@ -317,7 +317,7 @@ fn settings_schema_projects_workshop_facts_without_display_names_in_ids() {
                 variant: None,
             },
         ),
-        Some("燃火链式机枪")
+        Ok(Some("燃火链式机枪"))
     );
     assert!(hero_ability.provenance().reviewed);
     assert!(hero_ability.id().is_none());
@@ -375,7 +375,12 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         ability3.applicability(&ana).expect("applicability"),
         Applicability::NotApplicable
     );
-    assert_eq!(ability3.localized_name("en-US", &ana), None);
+    assert_eq!(
+        ability3
+            .localized_name("en-US", &ana)
+            .expect("presentation"),
+        None
+    );
 
     let unknown = SettingTarget::HeroAbility {
         team: None,
@@ -566,6 +571,55 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
             })
             .expect("applicability"),
         Applicability::Applicable
+    );
+    assert_eq!(
+        team_primary
+            .applicability(&SettingTarget::HeroAbility {
+                team: Some(TeamId::new("team1")),
+                hero: HeroId::from(hero_ids::DVA),
+                slot: LogicalSlot::from(slots::PRIMARY_FIRE),
+                variant: Some(AbilityVariant::new("mech")),
+            })
+            .expect("applicability"),
+        Applicability::Unknown
+    );
+    assert_eq!(
+        team_primary
+            .applicability(&SettingTarget::HeroAbility {
+                team: Some(TeamId::new("team1")),
+                hero: HeroId::from(hero_ids::DVA),
+                slot: LogicalSlot::from(slots::PRIMARY_FIRE),
+                variant: Some(AbilityVariant::new("pilot")),
+            })
+            .expect("applicability"),
+        Applicability::Unknown
+    );
+    assert_eq!(
+        team_primary
+            .applicability(&SettingTarget::HeroAbility {
+                team: Some(TeamId::new("team1")),
+                hero: HeroId::from(hero_ids::DVA),
+                slot: LogicalSlot::from(slots::ABILITY_1),
+                variant: Some(AbilityVariant::new("mech")),
+            })
+            .expect("applicability"),
+        Applicability::NotApplicable
+    );
+    let team_health = definitions
+        .iter()
+        .find(|definition| {
+            definition.path().ends_with("health%")
+                && definition.target_kind() == SettingTargetKind::Team
+        })
+        .expect("common team health setting");
+    assert_eq!(
+        team_health
+            .applicability(&SettingTarget::Hero {
+                team: Some(TeamId::new("team1")),
+                hero: HeroId::from(hero_ids::ANA),
+            })
+            .expect("applicability"),
+        Applicability::Unknown
     );
 }
 
