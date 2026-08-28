@@ -237,6 +237,10 @@ pub enum SettingOperationError {
         setting: SettingId,
         target: SettingTarget,
     },
+    ApplicabilityUnknown {
+        setting: SettingId,
+        target: Box<SettingTarget>,
+    },
     WrongValueKind {
         setting: SettingId,
         expected: &'static str,
@@ -265,6 +269,10 @@ impl fmt::Display for SettingOperationError {
                     "setting {setting} was not found for target {target:?}"
                 )
             }
+            Self::ApplicabilityUnknown { setting, target } => write!(
+                formatter,
+                "applicability of setting {setting} is unknown for target {target:?}"
+            ),
             Self::WrongValueKind {
                 setting,
                 expected,
@@ -436,7 +444,7 @@ impl SettingDefinition {
             }
             (TargetPattern::Team(expected), SettingTarget::Hero { team, .. }) => {
                 if team_matches(expected.as_deref(), team.as_ref()) {
-                    Applicability::Applicable
+                    Applicability::Unknown
                 } else {
                     Applicability::NotApplicable
                 }
@@ -486,7 +494,7 @@ impl SettingDefinition {
                     Applicability::NotApplicable
                 } else {
                     match hero_ability_exists(actual_hero, actual_slot, actual_variant.as_ref())? {
-                        Some(true) => Applicability::Applicable,
+                        Some(true) => Applicability::Unknown,
                         Some(false) => Applicability::NotApplicable,
                         None => Applicability::Unknown,
                     }
@@ -537,13 +545,7 @@ impl SettingDefinition {
                 match hero_ability_exists(actual_hero, actual_slot, target_variant(target))? {
                     None => Applicability::Unknown,
                     Some(false) => Applicability::NotApplicable,
-                    Some(true) => {
-                        match table::hero_setting_applicability(actual_hero.as_str(), self.key) {
-                            Some(true) => Applicability::Applicable,
-                            Some(false) => Applicability::NotApplicable,
-                            None => Applicability::Unknown,
-                        }
-                    }
+                    Some(true) => Applicability::Unknown,
                 }
             }
             (TargetPattern::Unknown, _) => Applicability::Unknown,
@@ -563,7 +565,7 @@ impl SettingDefinition {
         target: &SettingTarget,
     ) -> Result<SettingOccurrence, SettingOperationError> {
         let id = self.operation_id()?;
-        self.ensure_target(target)?;
+        self.ensure_read_target(target)?;
         let path = self.concrete_path(target);
         let node = find_node(&settings.children, &path).ok_or_else(|| {
             SettingOperationError::NotFound {
@@ -593,7 +595,7 @@ impl SettingDefinition {
         value: SettingValue,
     ) -> Result<(), SettingOperationError> {
         let id = self.operation_id()?;
-        self.ensure_target(target)?;
+        self.ensure_write_target(target)?;
         let path = self.concrete_path(target);
         let node = find_node_mut(&mut settings.children, &path).ok_or_else(|| {
             SettingOperationError::NotFound {
@@ -606,7 +608,7 @@ impl SettingDefinition {
         apply_value(node, &id, value)
     }
 
-    fn ensure_target(&self, target: &SettingTarget) -> Result<(), SettingOperationError> {
+    fn ensure_read_target(&self, target: &SettingTarget) -> Result<(), SettingOperationError> {
         let id = self.operation_id()?;
         match self
             .applicability(target)
@@ -620,6 +622,27 @@ impl SettingDefinition {
                 target: target.clone(),
             }),
             Applicability::Applicable | Applicability::Unknown => Ok(()),
+        }
+    }
+
+    fn ensure_write_target(&self, target: &SettingTarget) -> Result<(), SettingOperationError> {
+        let id = self.operation_id()?;
+        match self
+            .applicability(target)
+            .map_err(|error| SettingOperationError::InvalidValue {
+                setting: id.clone(),
+                message: error.to_string(),
+                span: None,
+            })? {
+            Applicability::NotApplicable => Err(SettingOperationError::NotApplicable {
+                setting: id,
+                target: target.clone(),
+            }),
+            Applicability::Unknown => Err(SettingOperationError::ApplicabilityUnknown {
+                setting: id,
+                target: Box::new(target.clone()),
+            }),
+            Applicability::Applicable => Ok(()),
         }
     }
 
