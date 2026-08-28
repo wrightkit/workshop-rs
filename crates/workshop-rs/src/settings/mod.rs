@@ -15,7 +15,7 @@ pub use schema::{
     Applicability, EffectiveNumber, NumericBounds, NumericBoundsError, SettingDefinition,
     SettingEvidenceKind, SettingId, SettingIdentity, SettingOccurrence, SettingOperationError,
     SettingPresentation, SettingProvenance, SettingScope, SettingTarget, SettingTargetKind,
-    SettingValue, SettingValueDomain, TeamId, definition, definitions,
+    SettingValue, SettingValueDomain, TeamId, definition, definitions, definitions_by_id,
 };
 
 use crate::source::Span;

@@ -8,7 +8,7 @@ use workshop_rs::gameplay::{AbilityVariant, HeroId, LogicalSlot, hero_ids, slots
 use workshop_rs::settings::{
     Applicability, NumericBounds, SettingEvidenceKind, SettingId, SettingIdentity,
     SettingOperationError, SettingScope, SettingTarget, SettingTargetKind, SettingValue,
-    SettingValueDomain, TeamId, definitions,
+    SettingValueDomain, TeamId, definitions, definitions_by_id,
 };
 use workshop_rs::{convert, emitter, parser, roundtrip, semantic};
 
@@ -695,8 +695,8 @@ fn typed_settings_read_and_write_preserve_unrelated_structure() {
         }
     }"#;
     let mut program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("parse");
-    let lobby = definitions()
-        .find(|definition| definition.path() == "lobby.spectatorSlots")
+    let lobby = definitions_by_id(&SettingId::from("setting.lobby.spectatorSlots"))
+        .next()
         .expect("lobby definition");
     let read = lobby
         .read(
@@ -756,6 +756,48 @@ fn typed_settings_read_and_write_preserve_unrelated_structure() {
         .expect_err("wrong kind must be rejected");
     assert!(matches!(
         error,
-        SettingOperationError::WrongValueKind { .. }
+        SettingOperationError::WrongValueKind { span: Some(_), .. }
     ));
+}
+
+#[test]
+fn typed_settings_errors_reject_invalid_members_and_non_applicable_targets() {
+    let catalog = Catalog::builtin().expect("catalog");
+    let mut program = parser::parse(
+        "settings { modes { Assault { Limit Roles: 2 Of Each Role Per Team } } }",
+        &catalog,
+        &Locale::new("en-US"),
+    )
+    .expect("parse");
+    let role_limit = definitions_by_id(&SettingId::from("setting.gameMode.roleLimit"))
+        .find(|definition| definition.path().ends_with("assault.roleLimit"))
+        .expect("role-limit definition");
+    let error = role_limit
+        .write(
+            program.settings.as_mut().expect("settings"),
+            &SettingTarget::Mode("assault".to_string()),
+            SettingValue::Enum("unknownRoleLimit".to_string()),
+        )
+        .expect_err("unknown enum member must be rejected");
+    assert!(matches!(
+        error,
+        SettingOperationError::InvalidValue { span: Some(_), .. }
+    ));
+
+    let ashe_only = definitions()
+        .find(|definition| definition.path().ends_with("ability1EnemyKb%"))
+        .expect("Ashe-only setting");
+    let error = ashe_only
+        .write(
+            program.settings.as_mut().expect("settings"),
+            &SettingTarget::HeroAbility {
+                team: None,
+                hero: HeroId::from(hero_ids::ANA),
+                slot: LogicalSlot::from(slots::ABILITY_1),
+                variant: None,
+            },
+            SettingValue::Percent(10.0),
+        )
+        .expect_err("non-applicable hero setting must be rejected");
+    assert!(matches!(error, SettingOperationError::NotApplicable { .. }));
 }

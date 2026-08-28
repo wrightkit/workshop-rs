@@ -250,6 +250,39 @@ pub enum SettingOperationError {
     },
 }
 
+impl fmt::Display for SettingOperationError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NotApplicable { setting, target } => {
+                write!(
+                    formatter,
+                    "setting {setting} does not apply to target {target:?}"
+                )
+            }
+            Self::NotFound { setting, target } => {
+                write!(
+                    formatter,
+                    "setting {setting} was not found for target {target:?}"
+                )
+            }
+            Self::WrongValueKind {
+                setting,
+                expected,
+                actual,
+                ..
+            } => write!(
+                formatter,
+                "setting {setting} expects {expected} value, got {actual}"
+            ),
+            Self::InvalidValue {
+                setting, message, ..
+            } => write!(formatter, "invalid value for setting {setting}: {message}"),
+        }
+    }
+}
+
+impl std::error::Error for SettingOperationError {}
+
 impl SettingValueDomain {
     /// Apply evidenced effective clamping without changing the authored
     /// value held by [`super::SettingsNode`].
@@ -561,7 +594,6 @@ impl SettingDefinition {
     ) -> Result<(), SettingOperationError> {
         let id = self.operation_id()?;
         self.ensure_target(target)?;
-        validate_value(&self.domain, &id, &value, None)?;
         let path = self.concrete_path(target);
         let node = find_node_mut(&mut settings.children, &path).ok_or_else(|| {
             SettingOperationError::NotFound {
@@ -569,6 +601,8 @@ impl SettingDefinition {
                 target: target.clone(),
             }
         })?;
+        let span = node.span();
+        validate_value(&self.domain, &id, &value, span)?;
         apply_value(node, &id, value)
     }
 
@@ -894,6 +928,16 @@ pub fn definitions() -> impl Iterator<Item = SettingDefinition> {
 /// Project one reviewed table entry into the canonical semantic definition.
 pub fn definition(path: &[PathPart<'_>]) -> Option<SettingDefinition> {
     table::lookup(path).map(SettingDefinition::from_entry)
+}
+
+/// Find all definitions for a canonical concept identity.
+///
+/// A concept can intentionally have more than one target shape, so the
+/// result is an iterator rather than a single definition. This keeps normal
+/// consumers independent of the private table paths while retaining the
+/// target-specific schema facts.
+pub fn definitions_by_id(id: &SettingId) -> impl Iterator<Item = SettingDefinition> {
+    definitions().filter(move |definition| definition.id() == Some(id))
 }
 
 impl SettingDefinition {
