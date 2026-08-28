@@ -1159,23 +1159,12 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
     use std::collections::{HashMap, HashSet};
 
     let mut errors = Vec::new();
-    let mut raw_paths: HashMap<String, TableEntry> = HashMap::new();
-    for entry in table::raw_entries() {
-        let path = table::path_string(entry.path);
-        if let Some(previous) = raw_paths.insert(path.clone(), *entry) {
-            let same_path = previous.path.len() == entry.path.len()
-                && previous
-                    .path
-                    .iter()
-                    .zip(entry.path.iter())
-                    .all(|(left, right)| left == right);
-            if !same_path || !same_entry_shape(previous.kind, entry.kind) {
-                errors.push(format!(
-                    "conflicting duplicate settings path between catalog projections: {path}"
-                ));
-            }
-        }
-    }
+    errors.extend(validate_raw_projection(table::raw_entries()));
+    errors.extend(validate_enum_projection(
+        table::ENUM_MEMBERS
+            .iter()
+            .chain(table::GENERATED_ENUM_MEMBERS.iter()),
+    ));
     let mut paths = HashSet::new();
     let mut concepts: HashMap<(String, SettingTargetKind, String), SettingValueDomain> =
         HashMap::new();
@@ -1231,6 +1220,65 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
     }
 }
 
+/// Reject raw table overlaps unless their complete parser/emitter contract is
+/// identical. Effective lookup may deduplicate exact repeats, but must never
+/// make a divergent generated or fixture projection silently win.
+fn validate_raw_projection(
+    entries: impl IntoIterator<Item = table::ProjectedEntry>,
+) -> Vec<String> {
+    use std::collections::HashMap;
+
+    let mut errors = Vec::new();
+    let mut paths = HashMap::new();
+    for projected in entries {
+        let entry = projected.entry;
+        if let Some(previous) = paths.insert(entry.path, projected) {
+            if previous.entry != entry {
+                errors.push(format!(
+                    "conflicting duplicate settings path between {} and {}: {}",
+                    previous.source.label(),
+                    projected.source.label(),
+                    table::path_string(entry.path),
+                ));
+            }
+        }
+    }
+    errors
+}
+
+/// Validate enum members independently of entry lookup order. This catches
+/// both stale enum projections and conflicting duplicate spellings that the
+/// lookup helper would otherwise hide.
+fn validate_enum_projection(
+    entries: impl IntoIterator<Item = &'static table::EnumMember>,
+) -> Vec<String> {
+    use std::collections::{HashMap, HashSet};
+
+    let domains: HashSet<_> = table::entries()
+        .filter_map(|entry| match entry.kind {
+            KeyKind::Enum(domain) => Some(domain),
+            _ => None,
+        })
+        .collect();
+    let mut errors = Vec::new();
+    let mut members = HashMap::new();
+    for member in entries {
+        if !domains.contains(member.domain) {
+            errors.push(format!("orphaned settings enum domain: {}", member.domain));
+        }
+        let key = (member.domain, member.member);
+        if let Some(previous) = members.insert(key, member.name) {
+            if previous != member.name {
+                errors.push(format!(
+                    "conflicting settings enum member {}.{}: {previous:?} vs {:?}",
+                    member.domain, member.member, member.name
+                ));
+            }
+        }
+    }
+    errors
+}
+
 fn semantic_identity_key(key: &str) -> String {
     match key {
         "enableSecondaryFire" | "enableGenericSecondaryFire" => "enableSecondaryFire".to_string(),
@@ -1238,23 +1286,32 @@ fn semantic_identity_key(key: &str) -> String {
     }
 }
 
-fn same_entry_shape(left: KeyKind, right: KeyKind) -> bool {
-    matches!(
-        (left, right),
-        (KeyKind::Flag, KeyKind::Flag)
-            | (KeyKind::String, KeyKind::String)
-            | (KeyKind::Bool, KeyKind::Bool)
-            | (KeyKind::Number, KeyKind::Number)
-            | (KeyKind::Percent, KeyKind::Percent)
-            | (KeyKind::ListMap, KeyKind::ListMap)
-            | (KeyKind::ListHero, KeyKind::ListHero)
-            | (KeyKind::Enum(_), KeyKind::Enum(_))
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    static DUPLICATE_PATH: [PathPart<'static>; 2] =
+        [PathPart::Part("test"), PathPart::Part("value")];
+    static FIXTURE_ENTRY: TableEntry = TableEntry {
+        path: &DUPLICATE_PATH,
+        workshop_name: "Fixture Value",
+        kind: KeyKind::Bool,
+    };
+    static GENERATED_ENTRY: TableEntry = TableEntry {
+        path: &DUPLICATE_PATH,
+        workshop_name: "Generated Value",
+        kind: KeyKind::Bool,
+    };
+    static FIXTURE_ENUM_MEMBER: table::EnumMember = table::EnumMember {
+        domain: "mapRotation",
+        member: "afterGame",
+        name: "After A Game",
+    };
+    static GENERATED_ENUM_MEMBER: table::EnumMember = table::EnumMember {
+        domain: "mapRotation",
+        member: "afterGame",
+        name: "After Game",
+    };
 
     fn definition(target: TargetPattern) -> SettingDefinition {
         SettingDefinition {
@@ -1304,5 +1361,29 @@ mod tests {
             team_ability.applicability(&target).expect("applicability"),
             Applicability::NotApplicable
         );
+    }
+
+    #[test]
+    fn raw_projection_conflicts_include_presentation_contract() {
+        let errors = validate_raw_projection([
+            table::ProjectedEntry {
+                source: table::ProjectionSource::FixtureTable,
+                entry: &FIXTURE_ENTRY,
+            },
+            table::ProjectedEntry {
+                source: table::ProjectionSource::WorkshopDataExport,
+                entry: &GENERATED_ENTRY,
+            },
+        ]);
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("fixture table"));
+        assert!(errors[0].contains("Workshop-data export"));
+    }
+
+    #[test]
+    fn enum_projection_conflicts_are_not_hidden_by_lookup_order() {
+        let errors = validate_enum_projection([&FIXTURE_ENUM_MEMBER, &GENERATED_ENUM_MEMBER]);
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("mapRotation.afterGame"));
     }
 }

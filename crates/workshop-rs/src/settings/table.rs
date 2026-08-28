@@ -65,7 +65,7 @@ pub enum KeyKind {
 }
 
 /// One segment of an exact settings path.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub enum PathPart<'a> {
     /// A literal key (mode names under `gamemodes` are literal keys too:
     /// per-key subsets are exact-path entries, #86).
@@ -90,7 +90,7 @@ impl<'b> PartialEq<PathPart<'b>> for PathPart<'_> {
 impl Eq for PathPart<'_> {}
 
 /// One table entry: an exact key path, its workshop name, and its kind.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TableEntry {
     pub path: &'static [PathPart<'static>],
     pub workshop_name: &'static str,
@@ -967,8 +967,40 @@ pub fn entries() -> impl Iterator<Item = &'static TableEntry> {
 /// Iterate both catalog projections without applying effective lookup
 /// precedence. The semantic validator uses this to compare duplicate paths
 /// instead of allowing `entries()` to hide stale or conflicting data.
-pub(crate) fn raw_entries() -> impl Iterator<Item = &'static TableEntry> {
-    ENTRIES.iter().chain(GENERATED_ENTRIES.iter())
+pub(crate) fn raw_entries() -> impl Iterator<Item = ProjectedEntry> {
+    ENTRIES
+        .iter()
+        .map(|entry| ProjectedEntry {
+            source: ProjectionSource::FixtureTable,
+            entry,
+        })
+        .chain(GENERATED_ENTRIES.iter().map(|entry| ProjectedEntry {
+            source: ProjectionSource::WorkshopDataExport,
+            entry,
+        }))
+}
+
+/// One setting leaf before effective lookup resolves duplicated projections.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct ProjectedEntry {
+    pub(crate) source: ProjectionSource,
+    pub(crate) entry: &'static TableEntry,
+}
+
+/// The source that supplied a raw settings projection entry.
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum ProjectionSource {
+    FixtureTable,
+    WorkshopDataExport,
+}
+
+impl ProjectionSource {
+    pub(crate) const fn label(self) -> &'static str {
+        match self {
+            Self::FixtureTable => "fixture table",
+            Self::WorkshopDataExport => "Workshop-data export",
+        }
+    }
 }
 
 fn deduplicated_entries(
