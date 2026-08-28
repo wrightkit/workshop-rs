@@ -893,6 +893,16 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         name: "After A Game",
     },
     EnumMember {
+        domain: "mapRotation",
+        member: "afterMirrorMatch",
+        name: "After A Mirror Match",
+    },
+    EnumMember {
+        domain: "mapRotation",
+        member: "paused",
+        name: "Paused",
+    },
+    EnumMember {
         domain: "matchVoiceChat",
         member: "enabled",
         name: "Enabled",
@@ -906,6 +916,11 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         domain: "returnToLobby",
         member: "afterAGame",
         name: "After A Game",
+    },
+    EnumMember {
+        domain: "returnToLobby",
+        member: "afterMirrorMatch",
+        name: "After A Mirror Match",
     },
     EnumMember {
         domain: "gameModeStartTrigger",
@@ -923,6 +938,16 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         name: "Disabled",
     },
     EnumMember {
+        domain: "spawnHealthPacks",
+        member: "modeDependent",
+        name: "Determined By Mode",
+    },
+    EnumMember {
+        domain: "spawnHealthPacks",
+        member: "enabled",
+        name: "Enabled",
+    },
+    EnumMember {
         domain: "roleLimit",
         member: "2OfEachRolePerTeam",
         name: "2 Of Each Role Per Team",
@@ -931,6 +956,11 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         domain: "roleLimit",
         member: "1Tank2Offense2Support",
         name: "1 Tank 2 Offense 2 Support",
+    },
+    EnumMember {
+        domain: "roleLimit",
+        member: "off",
+        name: "Off",
     },
     EnumMember {
         domain: "tankPassiveHealthBonus",
@@ -946,6 +976,26 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         domain: "heroLimit",
         member: "off",
         name: "Off",
+    },
+    EnumMember {
+        domain: "heroLimit",
+        member: "1PerTeam",
+        name: "1 Per Team",
+    },
+    EnumMember {
+        domain: "heroLimit",
+        member: "2PerTeam",
+        name: "2 Per Team",
+    },
+    EnumMember {
+        domain: "heroLimit",
+        member: "1PerGame",
+        name: "1 Per Game",
+    },
+    EnumMember {
+        domain: "heroLimit",
+        member: "2PerGame",
+        name: "2 Per Game",
     },
 ];
 

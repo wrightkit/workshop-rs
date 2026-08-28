@@ -690,6 +690,30 @@ fn settings_schema_catalog_is_complete_and_conflict_checked() {
 }
 
 #[test]
+fn reconciled_export_enum_members_remain_writable() {
+    let catalog = catalog();
+    let mut program = parser::parse(
+        "settings { modes { General { Hero Limit: Off } } }",
+        &catalog,
+        &Locale::new("en-US"),
+    )
+    .expect("parse fixture-owned hero limit");
+    let definition = definitions_by_id(&SettingId::from("setting.gameMode.heroLimit"))
+        .find(|definition| definition.path() == "gamemodes.general.heroLimit")
+        .expect("hero-limit definition");
+    definition
+        .write(
+            program.settings.as_mut().expect("settings"),
+            &SettingTarget::Global,
+            SettingValue::Enum("1PerTeam".to_string()),
+        )
+        .expect("export-backed hero-limit member remains writable");
+
+    let emitted = emitter::emit(&program, &catalog, &Locale::new("en-US")).expect("emit");
+    assert!(emitted.contains("Hero Limit: 1 Per Team"));
+}
+
+#[test]
 fn typed_settings_read_and_write_preserve_unrelated_structure() {
     let catalog = Catalog::builtin().expect("catalog");
     let source = r#"settings {

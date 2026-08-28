@@ -1,6 +1,4 @@
-// Generated from the reviewed workshop-data export. Entries with fixture-owned
-// path-specific rendering or enum identities are reconciled out of this
-// projection; schema validation rejects any remaining divergent overlap.
+// Generated from the reviewed workshop-data export; do not edit by hand.
 pub static GENERATED_ENTRIES: &[TableEntry] = &[
     entry!(
         [PathPart::Part("extensions"), PathPart::Part("beamEffects")],
@@ -643,6 +641,11 @@ pub static GENERATED_ENTRIES: &[TableEntry] = &[
         KeyKind::Percent
     ),
     entry!(
+        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("heroLimit")],
+        "Hero Limit",
+        KeyKind::Enum("setting_gamemodes_general_heroLimit")
+    ),
+    entry!(
         [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("perkEliminationCatchupLevelAmount%")],
         "Perk Elimination Catchup Level Amount",
         KeyKind::Percent
@@ -661,6 +664,16 @@ pub static GENERATED_ENTRIES: &[TableEntry] = &[
         [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("respawnTime%")],
         "Respawn Time Scalar",
         KeyKind::Percent
+    ),
+    entry!(
+        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("roleLimit")],
+        "Limit Roles",
+        KeyKind::Enum("setting_gamemodes_general_roleLimit")
+    ),
+    entry!(
+        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("spawnHealthPacks")],
+        "Spawn Health Packs",
+        KeyKind::Enum("setting_gamemodes_general_spawnHealthPacks")
     ),
     entry!(
         [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("tankPassiveHealthBonus")],
@@ -1238,6 +1251,11 @@ pub static GENERATED_ENTRIES: &[TableEntry] = &[
         KeyKind::Percent
     ),
     entry!(
+        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("combatUltGen%")],
+        "Ultimate Generation - Combat %1$s",
+        KeyKind::Percent
+    ),
+    entry!(
         [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("damageDealt%")],
         "Damage Dealt",
         KeyKind::Percent
@@ -1246,6 +1264,16 @@ pub static GENERATED_ENTRIES: &[TableEntry] = &[
         [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("damageReceived%")],
         "Damage Received",
         KeyKind::Percent
+    ),
+    entry!(
+        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableAbility1")],
+        "%1$s",
+        KeyKind::Bool
+    ),
+    entry!(
+        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableAbility2")],
+        "%1$s",
+        KeyKind::Bool
     ),
     entry!(
         [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableAbility3")],
@@ -1318,6 +1346,11 @@ pub static GENERATED_ENTRIES: &[TableEntry] = &[
         KeyKind::Bool
     ),
     entry!(
+        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableSecondaryFire")],
+        "%1$s",
+        KeyKind::Bool
+    ),
+    entry!(
         [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableSpawningWithUlt")],
         "Spawn With Ultimate Ready",
         KeyKind::Bool
@@ -1385,6 +1418,11 @@ pub static GENERATED_ENTRIES: &[TableEntry] = &[
     entry!(
         [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("passiveRechargeRate%")],
         "Hover Jets Recharge Rate",
+        KeyKind::Percent
+    ),
+    entry!(
+        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("passiveUltGen%")],
+        "Ultimate Generation - Passive %1$s",
         KeyKind::Percent
     ),
     entry!(
@@ -1608,6 +1646,11 @@ pub static GENERATED_ENTRIES: &[TableEntry] = &[
         KeyKind::Number
     ),
     entry!(
+        [PathPart::Part("lobby"), PathPart::Part("mapRotation")],
+        "Map Rotation",
+        KeyKind::Enum("setting_lobby_mapRotation")
+    ),
+    entry!(
         [PathPart::Part("lobby"), PathPart::Part("minimumLatencyInNs")],
         "Minimum Latency milliseconds",
         KeyKind::Number
@@ -1618,6 +1661,11 @@ pub static GENERATED_ENTRIES: &[TableEntry] = &[
         KeyKind::Bool
     ),
     entry!(
+        [PathPart::Part("lobby"), PathPart::Part("returnToLobby")],
+        "Return To Lobby",
+        KeyKind::Enum("setting_lobby_returnToLobby")
+    ),
+    entry!(
         [PathPart::Part("lobby"), PathPart::Part("spectatorSlots")],
         "Max Spectators",
         KeyKind::Number
@@ -1626,6 +1674,16 @@ pub static GENERATED_ENTRIES: &[TableEntry] = &[
         [PathPart::Part("lobby"), PathPart::Part("swapTeamsAfterMatch")],
         "Swap Teams After Match",
         KeyKind::Bool
+    ),
+    entry!(
+        [PathPart::Part("lobby"), PathPart::Part("team1Slots")],
+        "Max %1$s Players",
+        KeyKind::Number
+    ),
+    entry!(
+        [PathPart::Part("lobby"), PathPart::Part("team2Slots")],
+        "Max %1$s Players",
+        KeyKind::Number
     ),
     entry!(
         [PathPart::Part("lobby"), PathPart::Part("teamBalancing")],
@@ -1833,6 +1891,61 @@ pub static GENERATED_ENUM_MEMBERS: &[EnumMember] = &[
         domain: "setting_gamemodes_general_gamemodeStartTrigger",
         member: "manual",
         name: "Manual",
+    },
+    EnumMember {
+        domain: "setting_gamemodes_general_heroLimit",
+        member: "off",
+        name: "Off",
+    },
+    EnumMember {
+        domain: "setting_gamemodes_general_heroLimit",
+        member: "1PerTeam",
+        name: "1 Per Team",
+    },
+    EnumMember {
+        domain: "setting_gamemodes_general_heroLimit",
+        member: "2PerTeam",
+        name: "2 Per Team",
+    },
+    EnumMember {
+        domain: "setting_gamemodes_general_heroLimit",
+        member: "1PerGame",
+        name: "1 Per Game",
+    },
+    EnumMember {
+        domain: "setting_gamemodes_general_heroLimit",
+        member: "2PerGame",
+        name: "2 Per Game",
+    },
+    EnumMember {
+        domain: "setting_gamemodes_general_roleLimit",
+        member: "off",
+        name: "Off",
+    },
+    EnumMember {
+        domain: "setting_gamemodes_general_roleLimit",
+        member: "2OfEachRolePerTeam",
+        name: "2 Of Each Role Per Team",
+    },
+    EnumMember {
+        domain: "setting_gamemodes_general_roleLimit",
+        member: "1Tank2Offense2Support",
+        name: "1 Tank 2 Offense 2 Support",
+    },
+    EnumMember {
+        domain: "setting_gamemodes_general_spawnHealthPacks",
+        member: "modeDependent",
+        name: "Determined By Mode",
+    },
+    EnumMember {
+        domain: "setting_gamemodes_general_spawnHealthPacks",
+        member: "enabled",
+        name: "Enabled",
+    },
+    EnumMember {
+        domain: "setting_gamemodes_general_spawnHealthPacks",
+        member: "disabled",
+        name: "Disabled",
     },
     EnumMember {
         domain: "setting_gamemodes_general_tankPassiveHealthBonus",
@@ -2118,6 +2231,36 @@ pub static GENERATED_ENUM_MEMBERS: &[EnumMember] = &[
         domain: "setting_lobby_dataCenterPreference",
         member: "usWest2",
         name: "USA - West 2",
+    },
+    EnumMember {
+        domain: "setting_lobby_mapRotation",
+        member: "afterMirrorMatch",
+        name: "After A Mirror Match",
+    },
+    EnumMember {
+        domain: "setting_lobby_mapRotation",
+        member: "afterGame",
+        name: "After A Game",
+    },
+    EnumMember {
+        domain: "setting_lobby_mapRotation",
+        member: "paused",
+        name: "Paused",
+    },
+    EnumMember {
+        domain: "setting_lobby_returnToLobby",
+        member: "never",
+        name: "Never",
+    },
+    EnumMember {
+        domain: "setting_lobby_returnToLobby",
+        member: "afterGame",
+        name: "After A Game",
+    },
+    EnumMember {
+        domain: "setting_lobby_returnToLobby",
+        member: "afterMirrorMatch",
+        name: "After A Mirror Match",
     },
     EnumMember {
         domain: "setting_lobby_teamBalancing",
