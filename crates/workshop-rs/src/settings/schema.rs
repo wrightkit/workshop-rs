@@ -768,10 +768,10 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
             ));
         }
         let key = (id.as_str().to_string(), definition.target_kind());
-        if let Some(previous) = concepts.insert(key, definition.domain.clone())
-            && previous != definition.domain
-        {
-            errors.push(format!("conflicting settings domains for {id}"));
+        if let Some(previous) = concepts.insert(key, definition.domain.clone()) {
+            if previous != definition.domain {
+                errors.push(format!("conflicting settings domains for {id}"));
+            }
         }
     }
     if errors.is_empty() {
