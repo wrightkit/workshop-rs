@@ -13,9 +13,9 @@ pub mod table;
 
 pub use schema::{
     Applicability, EffectiveNumber, NumericBounds, NumericBoundsError, SettingDefinition,
-    SettingEvidenceKind, SettingId, SettingIdentity, SettingPresentation, SettingProvenance,
-    SettingScope, SettingTarget, SettingTargetKind, SettingValueDomain, TeamId, definition,
-    definitions,
+    SettingEvidenceKind, SettingId, SettingIdentity, SettingOccurrence, SettingOperationError,
+    SettingPresentation, SettingProvenance, SettingScope, SettingTarget, SettingTargetKind,
+    SettingValue, SettingValueDomain, TeamId, definition, definitions,
 };
 
 use crate::source::Span;

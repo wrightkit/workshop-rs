@@ -41,3 +41,8 @@ Hero and ability display names are presentation data only. Consumers use the
 canonical concept and `SettingTarget`; localized aliases remain parser/emitter
 resolution details. Numeric bounds are explicit when reviewed evidence proves
 them, and otherwise remain unknown rather than being guessed.
+
+`SettingDefinition::read` and `write` operate on existing occurrences. A
+write changes only the typed leaf value, preserving its span and all unrelated
+settings structure; inserting or resizing a source list is rejected so an
+edit cannot silently become whole-tree regeneration.

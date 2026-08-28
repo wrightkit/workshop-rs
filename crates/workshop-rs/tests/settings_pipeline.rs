@@ -6,8 +6,9 @@ use std::path::{Path, PathBuf};
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::gameplay::{AbilityVariant, HeroId, LogicalSlot, hero_ids, slots};
 use workshop_rs::settings::{
-    Applicability, NumericBounds, SettingEvidenceKind, SettingId, SettingIdentity, SettingScope,
-    SettingTarget, SettingTargetKind, SettingValueDomain, TeamId, definitions,
+    Applicability, NumericBounds, SettingEvidenceKind, SettingId, SettingIdentity,
+    SettingOperationError, SettingScope, SettingTarget, SettingTargetKind, SettingValue,
+    SettingValueDomain, TeamId, definitions,
 };
 use workshop_rs::{convert, emitter, parser, roundtrip, semantic};
 
@@ -422,7 +423,7 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         ashe_only
             .applicability(&ana_ability1)
             .expect("applicability"),
-        Applicability::Unknown
+        Applicability::NotApplicable
     );
 
     let ability1 = definitions
@@ -453,7 +454,7 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
             definition.path().ends_with("enablePrimaryFire")
                 && matches!(
                     definition.target_kind(),
-                    SettingTargetKind::HeroAbility { .. }
+                    SettingTargetKind::TeamAbility { .. }
                 )
         })
         .expect("generic primary-fire setting");
@@ -466,7 +467,7 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
                 variant: None,
             })
             .expect("applicability"),
-        Applicability::Unknown
+        Applicability::Applicable
     );
 
     let health = definitions
@@ -602,7 +603,7 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
                 variant: Some(AbilityVariant::new("mech")),
             })
             .expect("applicability"),
-        Applicability::Unknown
+        Applicability::Applicable
     );
     assert_eq!(
         team_primary
@@ -613,7 +614,7 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
                 variant: Some(AbilityVariant::new("pilot")),
             })
             .expect("applicability"),
-        Applicability::Unknown
+        Applicability::Applicable
     );
     assert_eq!(
         team_primary
@@ -640,7 +641,7 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
                 hero: HeroId::from(hero_ids::ANA),
             })
             .expect("applicability"),
-        Applicability::Unknown
+        Applicability::Applicable
     );
 }
 
@@ -673,4 +674,88 @@ fn settings_schema_preserves_locale_and_evidence_provenance() {
 #[test]
 fn settings_schema_catalog_is_complete_and_conflict_checked() {
     workshop_rs::settings::schema::validate_catalog().expect("reviewed settings catalog");
+}
+
+#[test]
+fn typed_settings_read_and_write_preserve_unrelated_structure() {
+    let catalog = Catalog::builtin().expect("catalog");
+    let source = r#"settings {
+        main {
+            Description: "keep this"
+        }
+        lobby {
+            Max Spectators: 2
+        }
+        heroes {
+            General {
+                D.Va {
+                    Primary Fire: On
+                }
+            }
+        }
+    }"#;
+    let mut program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("parse");
+    let lobby = definitions()
+        .find(|definition| definition.path() == "lobby.spectatorSlots")
+        .expect("lobby definition");
+    let read = lobby
+        .read(
+            program.settings.as_ref().expect("settings"),
+            &SettingTarget::Global,
+        )
+        .expect("typed read");
+    assert_eq!(read.authored, SettingValue::Number(2.0));
+    assert_eq!(read.effective, None);
+    lobby
+        .write(
+            program.settings.as_mut().expect("settings"),
+            &SettingTarget::Global,
+            SettingValue::Number(4.0),
+        )
+        .expect("typed write");
+    let emitted = emitter::emit(&program, &catalog, &Locale::new("en-US")).expect("emit");
+    assert!(emitted.contains("Description: \"keep this\""));
+    assert!(emitted.contains("Max Spectators: 4"));
+
+    let primary = definitions()
+        .find(|definition| {
+            definition.path().ends_with("enablePrimaryFire")
+                && matches!(
+                    definition.target_kind(),
+                    SettingTargetKind::HeroAbility { .. }
+                )
+        })
+        .expect("primary-fire definition");
+    let target = SettingTarget::HeroAbility {
+        team: Some(TeamId::new("allTeams")),
+        hero: HeroId::from(hero_ids::DVA),
+        slot: LogicalSlot::from(slots::PRIMARY_FIRE),
+        variant: None,
+    };
+    primary
+        .write(
+            program.settings.as_mut().expect("settings"),
+            &target,
+            SettingValue::Boolean(false),
+        )
+        .expect("hero typed write");
+    assert!(matches!(
+        primary
+            .read(program.settings.as_ref().expect("settings"), &target)
+            .expect("hero typed read")
+            .authored,
+        SettingValue::Boolean(false)
+    ));
+
+    let error = primary
+        .write(
+            program.settings.as_mut().expect("settings"),
+            &target,
+            SettingValue::Number(1.0),
+        )
+        .expect_err("wrong kind must be rejected");
+    assert!(matches!(
+        error,
+        SettingOperationError::WrongValueKind { .. }
+    ));
 }
