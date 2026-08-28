@@ -65,7 +65,7 @@ pub enum KeyKind {
 }
 
 /// One segment of an exact settings path.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash)]
 pub enum PathPart<'a> {
     /// A literal key (mode names under `gamemodes` are literal keys too:
     /// per-key subsets are exact-path entries, #86).
@@ -90,7 +90,7 @@ impl<'b> PartialEq<PathPart<'b>> for PathPart<'_> {
 impl Eq for PathPart<'_> {}
 
 /// One table entry: an exact key path, its workshop name, and its kind.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct TableEntry {
     pub path: &'static [PathPart<'static>],
     pub workshop_name: &'static str,
@@ -881,16 +881,25 @@ pub struct EnumMember {
 include!("data/generated_entries.rs");
 include!("data/generated_hero_settings.rs");
 
-/// Enum member names per domain. `roleLimit` has exactly one evidenced
-/// member ("2OfEachRolePerTeam", pixelart + broken-weapons); "off" appears
-/// only in the not-acquired skirmish_elim source and is rejected
-/// (settings-unknown-value) until a snapshot evidences it. `heroLimit` "off"
-/// is evidenced (santa, clientToServer, parabola, crosshair, inputhud).
+/// Fixture-owned canonical enum member names. Additional reviewed
+/// Workshop-data export members are retained through
+/// `projection_reconciliation.json`, which maps their source identities into
+/// these canonical domains without replacing fixture-backed display names.
 pub static ENUM_MEMBERS: &[EnumMember] = &[
     EnumMember {
         domain: "mapRotation",
         member: "afterAGame",
         name: "After A Game",
+    },
+    EnumMember {
+        domain: "mapRotation",
+        member: "afterMirrorMatch",
+        name: "After A Mirror Match",
+    },
+    EnumMember {
+        domain: "mapRotation",
+        member: "paused",
+        name: "Paused",
     },
     EnumMember {
         domain: "matchVoiceChat",
@@ -908,6 +917,11 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         name: "After A Game",
     },
     EnumMember {
+        domain: "returnToLobby",
+        member: "afterMirrorMatch",
+        name: "After A Mirror Match",
+    },
+    EnumMember {
         domain: "gameModeStartTrigger",
         member: "immediately",
         name: "Immediately",
@@ -923,6 +937,16 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         name: "Disabled",
     },
     EnumMember {
+        domain: "spawnHealthPacks",
+        member: "modeDependent",
+        name: "Determined By Mode",
+    },
+    EnumMember {
+        domain: "spawnHealthPacks",
+        member: "enabled",
+        name: "Enabled",
+    },
+    EnumMember {
         domain: "roleLimit",
         member: "2OfEachRolePerTeam",
         name: "2 Of Each Role Per Team",
@@ -931,6 +955,11 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         domain: "roleLimit",
         member: "1Tank2Offense2Support",
         name: "1 Tank 2 Offense 2 Support",
+    },
+    EnumMember {
+        domain: "roleLimit",
+        member: "off",
+        name: "Off",
     },
     EnumMember {
         domain: "tankPassiveHealthBonus",
@@ -946,6 +975,26 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         domain: "heroLimit",
         member: "off",
         name: "Off",
+    },
+    EnumMember {
+        domain: "heroLimit",
+        member: "1PerTeam",
+        name: "1 Per Team",
+    },
+    EnumMember {
+        domain: "heroLimit",
+        member: "2PerTeam",
+        name: "2 Per Team",
+    },
+    EnumMember {
+        domain: "heroLimit",
+        member: "1PerGame",
+        name: "1 Per Game",
+    },
+    EnumMember {
+        domain: "heroLimit",
+        member: "2PerGame",
+        name: "2 Per Game",
     },
 ];
 
@@ -967,8 +1016,40 @@ pub fn entries() -> impl Iterator<Item = &'static TableEntry> {
 /// Iterate both catalog projections without applying effective lookup
 /// precedence. The semantic validator uses this to compare duplicate paths
 /// instead of allowing `entries()` to hide stale or conflicting data.
-pub(crate) fn raw_entries() -> impl Iterator<Item = &'static TableEntry> {
-    ENTRIES.iter().chain(GENERATED_ENTRIES.iter())
+pub(crate) fn raw_entries() -> impl Iterator<Item = ProjectedEntry> {
+    ENTRIES
+        .iter()
+        .map(|entry| ProjectedEntry {
+            source: ProjectionSource::FixtureTable,
+            entry,
+        })
+        .chain(GENERATED_ENTRIES.iter().map(|entry| ProjectedEntry {
+            source: ProjectionSource::WorkshopDataExport,
+            entry,
+        }))
+}
+
+/// One setting leaf before effective lookup resolves duplicated projections.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct ProjectedEntry {
+    pub(crate) source: ProjectionSource,
+    pub(crate) entry: &'static TableEntry,
+}
+
+/// The source that supplied a raw settings projection entry.
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum ProjectionSource {
+    FixtureTable,
+    WorkshopDataExport,
+}
+
+impl ProjectionSource {
+    pub(crate) const fn label(self) -> &'static str {
+        match self {
+            Self::FixtureTable => "fixture table",
+            Self::WorkshopDataExport => "Workshop-data export",
+        }
+    }
 }
 
 fn deduplicated_entries(

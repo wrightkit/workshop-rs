@@ -9,6 +9,7 @@ use std::fmt;
 use crate::gameplay::{AbilityVariant, HeroId, LogicalSlot};
 use crate::{gameplay::GameplayDataError, gameplay_data};
 
+use super::reconciliation;
 use super::table::{self, KeyKind, PathPart, TableEntry};
 use super::{Settings, SettingsNode};
 
@@ -1159,23 +1160,13 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
     use std::collections::{HashMap, HashSet};
 
     let mut errors = Vec::new();
-    let mut raw_paths: HashMap<String, TableEntry> = HashMap::new();
-    for entry in table::raw_entries() {
-        let path = table::path_string(entry.path);
-        if let Some(previous) = raw_paths.insert(path.clone(), *entry) {
-            let same_path = previous.path.len() == entry.path.len()
-                && previous
-                    .path
-                    .iter()
-                    .zip(entry.path.iter())
-                    .all(|(left, right)| left == right);
-            if !same_path || !same_entry_shape(previous.kind, entry.kind) {
-                errors.push(format!(
-                    "conflicting duplicate settings path between catalog projections: {path}"
-                ));
-            }
-        }
-    }
+    errors.extend(reconciliation::validate());
+    errors.extend(validate_raw_projection(table::raw_entries()));
+    errors.extend(validate_enum_projection(
+        table::ENUM_MEMBERS.iter(),
+        table::GENERATED_ENUM_MEMBERS.iter(),
+        &reconciliation::data().enum_member_mappings,
+    ));
     let mut paths = HashSet::new();
     let mut concepts: HashMap<(String, SettingTargetKind, String), SettingValueDomain> =
         HashMap::new();
@@ -1231,6 +1222,203 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
     }
 }
 
+/// Reject raw table overlaps unless their complete parser/emitter contract is
+/// identical. Effective lookup may deduplicate exact repeats, but must never
+/// make a divergent generated or fixture projection silently win.
+fn validate_raw_projection(
+    entries: impl IntoIterator<Item = table::ProjectedEntry>,
+) -> Vec<String> {
+    use std::collections::HashMap;
+
+    let mut errors = Vec::new();
+    let mut paths = HashMap::new();
+    for projected in entries {
+        let entry = projected.entry;
+        if let Some(previous) = paths.insert(entry.path, projected) {
+            if previous.entry != entry
+                && !reconciled_entry_override(
+                    table::path_string(entry.path).as_str(),
+                    previous,
+                    projected,
+                )
+            {
+                errors.push(format!(
+                    "conflicting duplicate settings path between {} and {}: {}",
+                    previous.source.label(),
+                    projected.source.label(),
+                    table::path_string(entry.path),
+                ));
+            }
+        }
+    }
+    errors
+}
+
+fn reconciled_entry_override(
+    path: &str,
+    fixture: table::ProjectedEntry,
+    generated: table::ProjectedEntry,
+) -> bool {
+    use table::ProjectionSource::{FixtureTable, WorkshopDataExport};
+
+    let (fixture, generated) = match (fixture.source, generated.source) {
+        (FixtureTable, WorkshopDataExport) => (fixture.entry, generated.entry),
+        (WorkshopDataExport, FixtureTable) => (generated.entry, fixture.entry),
+        _ => return false,
+    };
+    reconciliation::data()
+        .entry_overrides
+        .iter()
+        .find(|override_| override_.path == path)
+        .is_some_and(|override_| {
+            entry_contract_matches(fixture, &override_.fixture)
+                && entry_contract_matches(generated, &override_.generated)
+        })
+}
+
+fn entry_contract_matches(entry: &TableEntry, expected: &reconciliation::EntryContract) -> bool {
+    entry.workshop_name == expected.name && key_kind_matches(entry.kind, expected)
+}
+
+fn key_kind_matches(kind: KeyKind, expected: &reconciliation::EntryContract) -> bool {
+    match (kind, expected.kind.as_str(), expected.domain.as_deref()) {
+        (KeyKind::Flag, "flag", None)
+        | (KeyKind::String, "string", None)
+        | (KeyKind::Bool, "bool", None)
+        | (KeyKind::Number, "number", None)
+        | (KeyKind::Percent, "percent", None)
+        | (KeyKind::ListMap, "mapList", None)
+        | (KeyKind::ListHero, "heroList", None) => true,
+        (KeyKind::Enum(actual), "enum", Some(expected)) => actual == expected,
+        _ => false,
+    }
+}
+
+/// Validate enum members independently of entry lookup order. This catches
+/// both stale enum projections and conflicting duplicate spellings that the
+/// lookup helper would otherwise hide.
+fn validate_enum_projection(
+    fixture_entries: impl IntoIterator<Item = &'static table::EnumMember>,
+    generated_entries: impl IntoIterator<Item = &'static table::EnumMember>,
+    mappings: &[reconciliation::EnumMemberMapping],
+) -> Vec<String> {
+    use std::collections::{HashMap, HashSet};
+
+    let domains: HashSet<_> = table::entries()
+        .filter_map(|entry| match entry.kind {
+            KeyKind::Enum(domain) => Some(domain),
+            _ => None,
+        })
+        .collect();
+    let mut errors = Vec::new();
+    let mut members = HashMap::new();
+    let mut names = HashMap::new();
+    for member in fixture_entries {
+        if !domains.contains(member.domain) {
+            errors.push(format!("orphaned settings enum domain: {}", member.domain));
+        }
+        let key = (member.domain, member.member);
+        if let Some(previous) = members.insert(key, member.name) {
+            if previous != member.name {
+                errors.push(format!(
+                    "conflicting settings enum member {}.{}: {previous:?} vs {:?}",
+                    member.domain, member.member, member.name
+                ));
+            }
+        }
+        if let Some(previous) = names.insert((member.domain, member.name), member.member) {
+            if previous != member.member {
+                errors.push(format!(
+                    "conflicting settings enum display name {}.{:?}: {previous} vs {}",
+                    member.domain, member.name, member.member
+                ));
+            }
+        }
+    }
+    let fixture_members: HashMap<_, _> = table::ENUM_MEMBERS
+        .iter()
+        .map(|member| ((member.domain, member.member), member))
+        .collect();
+    let mut mapped_sources = HashSet::new();
+    for member in generated_entries {
+        let key = (member.domain, member.member);
+        if let Some(previous) = members.insert(key, member.name) {
+            if previous != member.name {
+                errors.push(format!(
+                    "conflicting settings enum member {}.{}: {previous:?} vs {:?}",
+                    member.domain, member.member, member.name
+                ));
+            }
+        }
+        let mapping = mappings.iter().find(|mapping| {
+            mapping.source_domain == member.domain && mapping.source_member == member.member
+        });
+        if mapping.is_none() && !domains.contains(member.domain) {
+            errors.push(format!("orphaned settings enum domain: {}", member.domain));
+        }
+        let (domain, canonical_member, name) = match mapping {
+            Some(mapping) => {
+                if !mapped_sources.insert((
+                    mapping.source_domain.as_str(),
+                    mapping.source_member.as_str(),
+                )) {
+                    errors.push(format!(
+                        "duplicate settings enum reconciliation for {}.{}",
+                        mapping.source_domain, mapping.source_member
+                    ));
+                }
+                match fixture_members.get(&(
+                    mapping.target_domain.as_str(),
+                    mapping.target_member.as_str(),
+                )) {
+                    Some(target) if target.name == member.name => {
+                        (target.domain, target.member, target.name)
+                    }
+                    Some(target) => {
+                        errors.push(format!(
+                            "settings enum reconciliation name mismatch {}.{} -> {}.{}: {:?} vs {:?}",
+                            mapping.source_domain, mapping.source_member,
+                            mapping.target_domain, mapping.target_member, member.name, target.name
+                        ));
+                        continue;
+                    }
+                    None => {
+                        errors.push(format!(
+                            "settings enum reconciliation target is missing: {}.{} -> {}.{}",
+                            mapping.source_domain,
+                            mapping.source_member,
+                            mapping.target_domain,
+                            mapping.target_member
+                        ));
+                        continue;
+                    }
+                }
+            }
+            None => (member.domain, member.member, member.name),
+        };
+        if let Some(previous) = names.insert((domain, name), canonical_member) {
+            if previous != canonical_member {
+                errors.push(format!(
+                    "conflicting settings enum display name {}.{name:?}: {previous} vs {canonical_member}",
+                    domain
+                ));
+            }
+        }
+    }
+    for mapping in mappings {
+        if !mapped_sources.contains(&(
+            mapping.source_domain.as_str(),
+            mapping.source_member.as_str(),
+        )) {
+            errors.push(format!(
+                "orphaned settings enum reconciliation: {}.{}",
+                mapping.source_domain, mapping.source_member
+            ));
+        }
+    }
+    errors
+}
+
 fn semantic_identity_key(key: &str) -> String {
     match key {
         "enableSecondaryFire" | "enableGenericSecondaryFire" => "enableSecondaryFire".to_string(),
@@ -1238,23 +1426,42 @@ fn semantic_identity_key(key: &str) -> String {
     }
 }
 
-fn same_entry_shape(left: KeyKind, right: KeyKind) -> bool {
-    matches!(
-        (left, right),
-        (KeyKind::Flag, KeyKind::Flag)
-            | (KeyKind::String, KeyKind::String)
-            | (KeyKind::Bool, KeyKind::Bool)
-            | (KeyKind::Number, KeyKind::Number)
-            | (KeyKind::Percent, KeyKind::Percent)
-            | (KeyKind::ListMap, KeyKind::ListMap)
-            | (KeyKind::ListHero, KeyKind::ListHero)
-            | (KeyKind::Enum(_), KeyKind::Enum(_))
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    static DUPLICATE_PATH: [PathPart<'static>; 2] =
+        [PathPart::Part("test"), PathPart::Part("value")];
+    static FIXTURE_ENTRY: TableEntry = TableEntry {
+        path: &DUPLICATE_PATH,
+        workshop_name: "Fixture Value",
+        kind: KeyKind::Bool,
+    };
+    static GENERATED_ENTRY: TableEntry = TableEntry {
+        path: &DUPLICATE_PATH,
+        workshop_name: "Generated Value",
+        kind: KeyKind::Bool,
+    };
+    static FIXTURE_ENUM_MEMBER: table::EnumMember = table::EnumMember {
+        domain: "mapRotation",
+        member: "afterAGame",
+        name: "After A Game",
+    };
+    static GENERATED_ENUM_MEMBER: table::EnumMember = table::EnumMember {
+        domain: "mapRotation",
+        member: "afterAGame",
+        name: "After Game",
+    };
+    static DISPLAY_NAME_COLLISION: table::EnumMember = table::EnumMember {
+        domain: "mapRotation",
+        member: "afterMirrorMatch",
+        name: "After A Game",
+    };
+    static EXPORT_ENUM_MEMBER: table::EnumMember = table::EnumMember {
+        domain: "setting_lobby_mapRotation",
+        member: "afterGame",
+        name: "After A Game",
+    };
 
     fn definition(target: TargetPattern) -> SettingDefinition {
         SettingDefinition {
@@ -1304,5 +1511,51 @@ mod tests {
             team_ability.applicability(&target).expect("applicability"),
             Applicability::NotApplicable
         );
+    }
+
+    #[test]
+    fn raw_projection_conflicts_include_presentation_contract() {
+        let errors = validate_raw_projection([
+            table::ProjectedEntry {
+                source: table::ProjectionSource::FixtureTable,
+                entry: &FIXTURE_ENTRY,
+            },
+            table::ProjectedEntry {
+                source: table::ProjectionSource::WorkshopDataExport,
+                entry: &GENERATED_ENTRY,
+            },
+        ]);
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("fixture table"));
+        assert!(errors[0].contains("Workshop-data export"));
+    }
+
+    #[test]
+    fn enum_projection_conflicts_are_not_hidden_by_lookup_order() {
+        let errors =
+            validate_enum_projection([&FIXTURE_ENUM_MEMBER], [&GENERATED_ENUM_MEMBER], &[]);
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("mapRotation.afterAGame"));
+    }
+
+    #[test]
+    fn enum_projection_rejects_display_name_to_identity_collisions() {
+        let errors =
+            validate_enum_projection([&FIXTURE_ENUM_MEMBER, &DISPLAY_NAME_COLLISION], [], &[]);
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].contains("conflicting settings enum display name"));
+    }
+
+    #[test]
+    fn enum_projection_reconciles_export_members_to_canonical_identities() {
+        let mappings = [reconciliation::EnumMemberMapping {
+            source_domain: "setting_lobby_mapRotation".to_string(),
+            source_member: "afterGame".to_string(),
+            target_domain: "mapRotation".to_string(),
+            target_member: "afterAGame".to_string(),
+        }];
+        let errors =
+            validate_enum_projection([&FIXTURE_ENUM_MEMBER], [&EXPORT_ENUM_MEMBER], &mappings);
+        assert!(errors.is_empty(), "{errors:?}");
     }
 }

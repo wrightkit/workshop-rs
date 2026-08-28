@@ -690,6 +690,43 @@ fn settings_schema_catalog_is_complete_and_conflict_checked() {
 }
 
 #[test]
+fn reconciled_export_enum_members_remain_writable() {
+    let catalog = catalog();
+    for (source, id, path, member, expected) in [
+        (
+            "settings { modes { General { Hero Limit: Off } } }",
+            "setting.gameMode.heroLimit",
+            "gamemodes.general.heroLimit",
+            "1PerTeam",
+            "Hero Limit: 1 Per Team",
+        ),
+        (
+            "settings { lobby { Map Rotation: After A Game } }",
+            "setting.lobby.mapRotation",
+            "lobby.mapRotation",
+            "afterMirrorMatch",
+            "Map Rotation: After A Mirror Match",
+        ),
+    ] {
+        let mut program = parser::parse(source, &catalog, &Locale::new("en-US"))
+            .expect("parse fixture-owned enum setting");
+        let definition = definitions_by_id(&SettingId::from(id))
+            .find(|definition| definition.path() == path)
+            .expect("reconciled enum definition");
+        definition
+            .write(
+                program.settings.as_mut().expect("settings"),
+                &SettingTarget::Global,
+                SettingValue::Enum(member.to_string()),
+            )
+            .expect("export-backed enum member remains writable");
+
+        let emitted = emitter::emit(&program, &catalog, &Locale::new("en-US")).expect("emit");
+        assert!(emitted.contains(expected), "{emitted}");
+    }
+}
+
+#[test]
 fn typed_settings_read_and_write_preserve_unrelated_structure() {
     let catalog = Catalog::builtin().expect("catalog");
     let source = r#"settings {

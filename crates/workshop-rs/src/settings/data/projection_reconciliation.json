@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "entryOverrides": [
+    { "path": "gamemodes.general.heroLimit", "fixture": { "name": "Hero Limit", "kind": "enum", "domain": "heroLimit" }, "generated": { "name": "Hero Limit", "kind": "enum", "domain": "setting_gamemodes_general_heroLimit" } },
+    { "path": "gamemodes.general.roleLimit", "fixture": { "name": "Limit Roles", "kind": "enum", "domain": "roleLimit" }, "generated": { "name": "Limit Roles", "kind": "enum", "domain": "setting_gamemodes_general_roleLimit" } },
+    { "path": "gamemodes.general.spawnHealthPacks", "fixture": { "name": "Spawn Health Packs", "kind": "enum", "domain": "spawnHealthPacks" }, "generated": { "name": "Spawn Health Packs", "kind": "enum", "domain": "setting_gamemodes_general_spawnHealthPacks" } },
+    { "path": "heroes.<team>.<hero>.combatUltGen%", "fixture": { "name": "Ultimate Generation - Combat Blizzard", "kind": "percent" }, "generated": { "name": "Ultimate Generation - Combat %1$s", "kind": "percent" } },
+    { "path": "heroes.<team>.<hero>.enableAbility1", "fixture": { "name": "Ability 1", "kind": "bool" }, "generated": { "name": "%1$s", "kind": "bool" } },
+    { "path": "heroes.<team>.<hero>.enableAbility2", "fixture": { "name": "Ability 2", "kind": "bool" }, "generated": { "name": "%1$s", "kind": "bool" } },
+    { "path": "heroes.<team>.<hero>.enableSecondaryFire", "fixture": { "name": "Secondary Fire", "kind": "bool" }, "generated": { "name": "%1$s", "kind": "bool" } },
+    { "path": "heroes.<team>.<hero>.passiveUltGen%", "fixture": { "name": "Ultimate Generation - Passive Blizzard", "kind": "percent" }, "generated": { "name": "Ultimate Generation - Passive %1$s", "kind": "percent" } },
+    { "path": "lobby.mapRotation", "fixture": { "name": "Map Rotation", "kind": "enum", "domain": "mapRotation" }, "generated": { "name": "Map Rotation", "kind": "enum", "domain": "setting_lobby_mapRotation" } },
+    { "path": "lobby.returnToLobby", "fixture": { "name": "Return To Lobby", "kind": "enum", "domain": "returnToLobby" }, "generated": { "name": "Return To Lobby", "kind": "enum", "domain": "setting_lobby_returnToLobby" } },
+    { "path": "lobby.team1Slots", "fixture": { "name": "Max Team 1 Players", "kind": "number" }, "generated": { "name": "Max %1$s Players", "kind": "number" } },
+    { "path": "lobby.team2Slots", "fixture": { "name": "Max Team 2 Players", "kind": "number" }, "generated": { "name": "Max %1$s Players", "kind": "number" } }
+  ],
+  "enumMemberMappings": [
+    { "sourceDomain": "setting_gamemodes_general_heroLimit", "sourceMember": "off", "targetDomain": "heroLimit", "targetMember": "off" },
+    { "sourceDomain": "setting_gamemodes_general_heroLimit", "sourceMember": "1PerTeam", "targetDomain": "heroLimit", "targetMember": "1PerTeam" },
+    { "sourceDomain": "setting_gamemodes_general_heroLimit", "sourceMember": "2PerTeam", "targetDomain": "heroLimit", "targetMember": "2PerTeam" },
+    { "sourceDomain": "setting_gamemodes_general_heroLimit", "sourceMember": "1PerGame", "targetDomain": "heroLimit", "targetMember": "1PerGame" },
+    { "sourceDomain": "setting_gamemodes_general_heroLimit", "sourceMember": "2PerGame", "targetDomain": "heroLimit", "targetMember": "2PerGame" },
+    { "sourceDomain": "setting_gamemodes_general_roleLimit", "sourceMember": "off", "targetDomain": "roleLimit", "targetMember": "off" },
+    { "sourceDomain": "setting_gamemodes_general_roleLimit", "sourceMember": "2OfEachRolePerTeam", "targetDomain": "roleLimit", "targetMember": "2OfEachRolePerTeam" },
+    { "sourceDomain": "setting_gamemodes_general_roleLimit", "sourceMember": "1Tank2Offense2Support", "targetDomain": "roleLimit", "targetMember": "1Tank2Offense2Support" },
+    { "sourceDomain": "setting_gamemodes_general_spawnHealthPacks", "sourceMember": "modeDependent", "targetDomain": "spawnHealthPacks", "targetMember": "modeDependent" },
+    { "sourceDomain": "setting_gamemodes_general_spawnHealthPacks", "sourceMember": "enabled", "targetDomain": "spawnHealthPacks", "targetMember": "enabled" },
+    { "sourceDomain": "setting_gamemodes_general_spawnHealthPacks", "sourceMember": "disabled", "targetDomain": "spawnHealthPacks", "targetMember": "disabled" },
+    { "sourceDomain": "setting_lobby_mapRotation", "sourceMember": "afterMirrorMatch", "targetDomain": "mapRotation", "targetMember": "afterMirrorMatch" },
+    { "sourceDomain": "setting_lobby_mapRotation", "sourceMember": "afterGame", "targetDomain": "mapRotation", "targetMember": "afterAGame" },
+    { "sourceDomain": "setting_lobby_mapRotation", "sourceMember": "paused", "targetDomain": "mapRotation", "targetMember": "paused" },
+    { "sourceDomain": "setting_lobby_returnToLobby", "sourceMember": "never", "targetDomain": "returnToLobby", "targetMember": "never" },
+    { "sourceDomain": "setting_lobby_returnToLobby", "sourceMember": "afterGame", "targetDomain": "returnToLobby", "targetMember": "afterAGame" },
+    { "sourceDomain": "setting_lobby_returnToLobby", "sourceMember": "afterMirrorMatch", "targetDomain": "returnToLobby", "targetMember": "afterMirrorMatch" }
+  ]
+}
