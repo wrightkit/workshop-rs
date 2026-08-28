@@ -558,18 +558,7 @@ impl SettingDefinition {
                 match hero_ability_exists(actual_hero, actual_slot, target_variant(target))? {
                     None => Applicability::Unknown,
                     Some(false) => Applicability::NotApplicable,
-                    Some(true) => {
-                        if is_common_hero_setting(self.key) {
-                            Applicability::Applicable
-                        } else {
-                            match table::hero_setting_applicability(actual_hero.as_str(), self.key)
-                            {
-                                Some(true) => Applicability::Applicable,
-                                Some(false) => Applicability::NotApplicable,
-                                None => Applicability::Unknown,
-                            }
-                        }
-                    }
+                    Some(true) => Applicability::Unknown,
                 }
             }
             (TargetPattern::Unknown, _) => Applicability::Unknown,
@@ -589,7 +578,7 @@ impl SettingDefinition {
         target: &SettingTarget,
     ) -> Result<SettingOccurrence, SettingOperationError> {
         let id = self.operation_id()?;
-        self.ensure_target(target)?;
+        self.ensure_read_target(target)?;
         let path = self.concrete_path(target);
         let node = find_node(&settings.children, &path).ok_or_else(|| {
             SettingOperationError::NotFound {
@@ -619,7 +608,7 @@ impl SettingDefinition {
         value: SettingValue,
     ) -> Result<(), SettingOperationError> {
         let id = self.operation_id()?;
-        self.ensure_target(target)?;
+        self.ensure_write_target(target)?;
         if !self.write_target_shape_matches(target) {
             return Err(SettingOperationError::TargetShapeMismatch {
                 setting: id,
@@ -639,7 +628,24 @@ impl SettingDefinition {
         apply_value(node, &id, value)
     }
 
-    fn ensure_target(&self, target: &SettingTarget) -> Result<(), SettingOperationError> {
+    fn ensure_read_target(&self, target: &SettingTarget) -> Result<(), SettingOperationError> {
+        let id = self.operation_id()?;
+        match self
+            .applicability(target)
+            .map_err(|error| SettingOperationError::InvalidValue {
+                setting: id.clone(),
+                message: error.to_string(),
+                span: None,
+            })? {
+            Applicability::NotApplicable => Err(SettingOperationError::NotApplicable {
+                setting: id,
+                target: target.clone(),
+            }),
+            Applicability::Applicable | Applicability::Unknown => Ok(()),
+        }
+    }
+
+    fn ensure_write_target(&self, target: &SettingTarget) -> Result<(), SettingOperationError> {
         let id = self.operation_id()?;
         match self
             .applicability(target)
@@ -716,20 +722,6 @@ fn target_hero(target: &SettingTarget) -> String {
         }
         _ => String::new(),
     }
-}
-
-fn is_common_hero_setting(key: &str) -> bool {
-    matches!(
-        key,
-        "health%"
-            | "enablePrimaryFire"
-            | "enableSecondaryFire"
-            | "enableAbility1"
-            | "enableAbility2"
-            | "enableAbility3"
-            | "combatUltGen%"
-            | "passiveUltGen%"
-    )
 }
 
 fn find_node<'a>(children: &'a [SettingsNode], path: &[String]) -> Option<&'a SettingsNode> {

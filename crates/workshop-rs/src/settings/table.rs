@@ -1044,21 +1044,6 @@ pub fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static
         })
 }
 
-/// Return explicit applicability evidence for a hero setting from the
-/// reviewed hero-setting export. `None` means the hero is not in the reviewed
-/// roster; otherwise the exported presence/absence is the effective setting
-/// applicability for this catalog surface.
-pub fn hero_setting_applicability(hero: &str, key: &str) -> Option<bool> {
-    hero_name(hero)?;
-    // This is a reviewed semantic exception, independent of localized
-    // presentation data. All other hero-specific applicability remains
-    // Unknown until an equivalent semantic fact is reviewed.
-    match key {
-        "ability1EnemyKb%" => Some(hero == "ashe"),
-        _ => None,
-    }
-}
-
 #[derive(Deserialize)]
 struct HeroSettingAlias {
     hero: String,

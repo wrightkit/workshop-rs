@@ -422,10 +422,10 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         Applicability::Unknown
     );
 
-    let ashe_only = definitions
+    let ability1_enemy_kb = definitions
         .iter()
         .find(|definition| definition.path().ends_with("ability1EnemyKb%"))
-        .expect("Ashe-only ability setting");
+        .expect("ability 1 enemy knockback setting");
     let ana_ability1 = SettingTarget::HeroAbility {
         team: None,
         hero: HeroId::from(hero_ids::ANA),
@@ -433,10 +433,10 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
         variant: None,
     };
     assert_eq!(
-        ashe_only
+        ability1_enemy_kb
             .applicability(&ana_ability1)
             .expect("applicability"),
-        Applicability::NotApplicable
+        Applicability::Unknown
     );
 
     let ability1 = definitions
@@ -745,31 +745,28 @@ fn typed_settings_read_and_write_preserve_unrelated_structure() {
         slot: LogicalSlot::from(slots::PRIMARY_FIRE),
         variant: None,
     };
-    primary
-        .write(
-            program.settings.as_mut().expect("settings"),
-            &target,
-            SettingValue::Boolean(false),
-        )
-        .expect("hero typed write");
+    assert_eq!(
+        primary.applicability(&target).expect("applicability"),
+        Applicability::Unknown
+    );
     assert!(matches!(
         primary
             .read(program.settings.as_ref().expect("settings"), &target)
-            .expect("hero typed read")
+            .expect("typed reads preserve evidence-insufficient occurrences")
             .authored,
-        SettingValue::Boolean(false)
+        SettingValue::Boolean(true)
     ));
 
     let error = primary
         .write(
             program.settings.as_mut().expect("settings"),
             &target,
-            SettingValue::Number(1.0),
+            SettingValue::Boolean(false),
         )
-        .expect_err("wrong kind must be rejected");
+        .expect_err("unknown applicability must reject writes");
     assert!(matches!(
         error,
-        SettingOperationError::WrongValueKind { span: Some(_), .. }
+        SettingOperationError::ApplicabilityUnknown { .. }
     ));
 }
 
@@ -797,10 +794,10 @@ fn typed_settings_errors_reject_invalid_members_and_non_applicable_targets() {
         SettingOperationError::InvalidValue { span: Some(_), .. }
     ));
 
-    let ashe_only = definitions()
+    let ability1_enemy_kb = definitions()
         .find(|definition| definition.path().ends_with("ability1EnemyKb%"))
-        .expect("Ashe-only setting");
-    let error = ashe_only
+        .expect("ability 1 enemy knockback setting");
+    let error = ability1_enemy_kb
         .write(
             program.settings.as_mut().expect("settings"),
             &SettingTarget::HeroAbility {
@@ -811,8 +808,11 @@ fn typed_settings_errors_reject_invalid_members_and_non_applicable_targets() {
             },
             SettingValue::Percent(10.0),
         )
-        .expect_err("non-applicable hero setting must be rejected");
-    assert!(matches!(error, SettingOperationError::NotApplicable { .. }));
+        .expect_err("uncertain hero setting must be rejected for writes");
+    assert!(matches!(
+        error,
+        SettingOperationError::ApplicabilityUnknown { .. }
+    ));
 }
 
 #[test]
