@@ -241,11 +241,6 @@ pub enum SettingOperationError {
         setting: SettingId,
         target: Box<SettingTarget>,
     },
-    TargetShapeMismatch {
-        setting: SettingId,
-        definition: SettingTargetKind,
-        target: Box<SettingTarget>,
-    },
     WrongValueKind {
         setting: SettingId,
         expected: &'static str,
@@ -277,14 +272,6 @@ impl fmt::Display for SettingOperationError {
             Self::ApplicabilityUnknown { setting, target } => write!(
                 formatter,
                 "applicability of setting {setting} is unknown for target {target:?}"
-            ),
-            Self::TargetShapeMismatch {
-                setting,
-                definition,
-                target,
-            } => write!(
-                formatter,
-                "setting {setting} has target shape {definition:?} and cannot write target {target:?}"
             ),
             Self::WrongValueKind {
                 setting,
@@ -457,7 +444,7 @@ impl SettingDefinition {
             }
             (TargetPattern::Team(expected), SettingTarget::Hero { team, .. }) => {
                 if team_matches(expected.as_deref(), team.as_ref()) {
-                    Applicability::Applicable
+                    Applicability::Unknown
                 } else {
                     Applicability::NotApplicable
                 }
@@ -507,7 +494,7 @@ impl SettingDefinition {
                     Applicability::NotApplicable
                 } else {
                     match hero_ability_exists(actual_hero, actual_slot, actual_variant.as_ref())? {
-                        Some(true) => Applicability::Applicable,
+                        Some(true) => Applicability::Unknown,
                         Some(false) => Applicability::NotApplicable,
                         None => Applicability::Unknown,
                     }
@@ -609,13 +596,6 @@ impl SettingDefinition {
     ) -> Result<(), SettingOperationError> {
         let id = self.operation_id()?;
         self.ensure_write_target(target)?;
-        if !self.write_target_shape_matches(target) {
-            return Err(SettingOperationError::TargetShapeMismatch {
-                setting: id,
-                definition: self.target_kind(),
-                target: Box::new(target.clone()),
-            });
-        }
         let path = self.concrete_path(target);
         let node = find_node_mut(&mut settings.children, &path).ok_or_else(|| {
             SettingOperationError::NotFound {
@@ -664,17 +644,6 @@ impl SettingDefinition {
             }),
             Applicability::Applicable => Ok(()),
         }
-    }
-
-    fn write_target_shape_matches(&self, target: &SettingTarget) -> bool {
-        !matches!(
-            (&self.target, target),
-            (TargetPattern::Team(_), SettingTarget::Hero { .. })
-                | (
-                    TargetPattern::TeamAbility { .. },
-                    SettingTarget::HeroAbility { .. }
-                )
-        )
     }
 
     fn operation_id(&self) -> Result<SettingId, SettingOperationError> {

@@ -480,7 +480,7 @@ fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
                 variant: None,
             })
             .expect("applicability"),
-        Applicability::Applicable
+        Applicability::Unknown
     );
 
     let health = definitions
@@ -616,7 +616,7 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
                 variant: Some(AbilityVariant::new("mech")),
             })
             .expect("applicability"),
-        Applicability::Applicable
+        Applicability::Unknown
     );
     assert_eq!(
         team_primary
@@ -627,7 +627,7 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
                 variant: Some(AbilityVariant::new("pilot")),
             })
             .expect("applicability"),
-        Applicability::Applicable
+        Applicability::Unknown
     );
     assert_eq!(
         team_primary
@@ -654,7 +654,7 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
                 hero: HeroId::from(hero_ids::ANA),
             })
             .expect("applicability"),
-        Applicability::Applicable
+        Applicability::Unknown
     );
 }
 
@@ -816,7 +816,7 @@ fn typed_settings_errors_reject_invalid_members_and_non_applicable_targets() {
 }
 
 #[test]
-fn typed_settings_writes_fail_closed_for_unknown_applicability_and_widening() {
+fn typed_settings_writes_fail_closed_for_unknown_applicability() {
     let health = definitions()
         .find(|definition| {
             definition.path().ends_with("health%")
@@ -854,9 +854,9 @@ fn typed_settings_writes_fail_closed_for_unknown_applicability_and_widening() {
             },
             SettingValue::Boolean(false),
         )
-        .expect_err("team path must not be widened to a hero write");
+        .expect_err("team-to-hero applicability without evidence must refuse writes");
     assert!(matches!(
         widening_error,
-        SettingOperationError::TargetShapeMismatch { .. }
+        SettingOperationError::ApplicabilityUnknown { .. }
     ));
 }
