@@ -215,7 +215,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "workshop-rs"
-version = "0.1.11"
+version = "0.1.12"
 dependencies = [
  "regex",
  "serde",
@@ -225,7 +225,7 @@ dependencies = [
 
 [[package]]
 name = "workshop-rs-cli"
-version = "0.1.11"
+version = "0.1.12"
 dependencies = [
  "serde",
  "serde_json",
