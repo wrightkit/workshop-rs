@@ -814,3 +814,49 @@ fn typed_settings_errors_reject_invalid_members_and_non_applicable_targets() {
         .expect_err("non-applicable hero setting must be rejected");
     assert!(matches!(error, SettingOperationError::NotApplicable { .. }));
 }
+
+#[test]
+fn typed_settings_writes_fail_closed_for_unknown_applicability_and_widening() {
+    let health = definitions()
+        .find(|definition| {
+            definition.path().ends_with("health%")
+                && definition.target_kind() == SettingTargetKind::Hero
+        })
+        .expect("hero health definition");
+    let mut settings = workshop_rs::settings::Settings {
+        span: None,
+        children: Vec::new(),
+    };
+    let unknown_error = health
+        .write(
+            &mut settings,
+            &SettingTarget::Hero {
+                team: None,
+                hero: HeroId::new("futureHero"),
+            },
+            SettingValue::Percent(100.0),
+        )
+        .expect_err("unknown applicability must refuse writes");
+    assert!(matches!(
+        unknown_error,
+        SettingOperationError::ApplicabilityUnknown { .. }
+    ));
+
+    let team_definition = definitions()
+        .find(|definition| definition.target_kind() == SettingTargetKind::Team)
+        .expect("team definition");
+    let widening_error = team_definition
+        .write(
+            &mut settings,
+            &SettingTarget::Hero {
+                team: None,
+                hero: HeroId::from(hero_ids::ANA),
+            },
+            SettingValue::Boolean(false),
+        )
+        .expect_err("team path must not be widened to a hero write");
+    assert!(matches!(
+        widening_error,
+        SettingOperationError::TargetShapeMismatch { .. }
+    ));
+}

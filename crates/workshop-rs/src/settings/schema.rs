@@ -237,6 +237,15 @@ pub enum SettingOperationError {
         setting: SettingId,
         target: SettingTarget,
     },
+    ApplicabilityUnknown {
+        setting: SettingId,
+        target: Box<SettingTarget>,
+    },
+    TargetShapeMismatch {
+        setting: SettingId,
+        definition: SettingTargetKind,
+        target: Box<SettingTarget>,
+    },
     WrongValueKind {
         setting: SettingId,
         expected: &'static str,
@@ -265,6 +274,18 @@ impl fmt::Display for SettingOperationError {
                     "setting {setting} was not found for target {target:?}"
                 )
             }
+            Self::ApplicabilityUnknown { setting, target } => write!(
+                formatter,
+                "applicability of setting {setting} is unknown for target {target:?}"
+            ),
+            Self::TargetShapeMismatch {
+                setting,
+                definition,
+                target,
+            } => write!(
+                formatter,
+                "setting {setting} has target shape {definition:?} and cannot write target {target:?}"
+            ),
             Self::WrongValueKind {
                 setting,
                 expected,
@@ -538,10 +559,15 @@ impl SettingDefinition {
                     None => Applicability::Unknown,
                     Some(false) => Applicability::NotApplicable,
                     Some(true) => {
-                        match table::hero_setting_applicability(actual_hero.as_str(), self.key) {
-                            Some(true) => Applicability::Applicable,
-                            Some(false) => Applicability::NotApplicable,
-                            None => Applicability::Unknown,
+                        if is_common_hero_setting(self.key) {
+                            Applicability::Applicable
+                        } else {
+                            match table::hero_setting_applicability(actual_hero.as_str(), self.key)
+                            {
+                                Some(true) => Applicability::Applicable,
+                                Some(false) => Applicability::NotApplicable,
+                                None => Applicability::Unknown,
+                            }
                         }
                     }
                 }
@@ -594,6 +620,13 @@ impl SettingDefinition {
     ) -> Result<(), SettingOperationError> {
         let id = self.operation_id()?;
         self.ensure_target(target)?;
+        if !self.write_target_shape_matches(target) {
+            return Err(SettingOperationError::TargetShapeMismatch {
+                setting: id,
+                definition: self.target_kind(),
+                target: Box::new(target.clone()),
+            });
+        }
         let path = self.concrete_path(target);
         let node = find_node_mut(&mut settings.children, &path).ok_or_else(|| {
             SettingOperationError::NotFound {
@@ -619,8 +652,23 @@ impl SettingDefinition {
                 setting: id,
                 target: target.clone(),
             }),
-            Applicability::Applicable | Applicability::Unknown => Ok(()),
+            Applicability::Unknown => Err(SettingOperationError::ApplicabilityUnknown {
+                setting: id,
+                target: Box::new(target.clone()),
+            }),
+            Applicability::Applicable => Ok(()),
         }
+    }
+
+    fn write_target_shape_matches(&self, target: &SettingTarget) -> bool {
+        !matches!(
+            (&self.target, target),
+            (TargetPattern::Team(_), SettingTarget::Hero { .. })
+                | (
+                    TargetPattern::TeamAbility { .. },
+                    SettingTarget::HeroAbility { .. }
+                )
+        )
     }
 
     fn operation_id(&self) -> Result<SettingId, SettingOperationError> {
@@ -668,6 +716,20 @@ fn target_hero(target: &SettingTarget) -> String {
         }
         _ => String::new(),
     }
+}
+
+fn is_common_hero_setting(key: &str) -> bool {
+    matches!(
+        key,
+        "health%"
+            | "enablePrimaryFire"
+            | "enableSecondaryFire"
+            | "enableAbility1"
+            | "enableAbility2"
+            | "enableAbility3"
+            | "combatUltGen%"
+            | "passiveUltGen%"
+    )
 }
 
 fn find_node<'a>(children: &'a [SettingsNode], path: &[String]) -> Option<&'a SettingsNode> {
