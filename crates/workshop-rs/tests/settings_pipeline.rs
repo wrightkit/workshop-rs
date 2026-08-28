@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::gameplay::{AbilityVariant, HeroId, LogicalSlot, hero_ids, slots};
 use workshop_rs::settings::{
-    Applicability, NumericBounds, SettingEvidenceKind, SettingIdentity, SettingScope,
+    Applicability, NumericBounds, SettingEvidenceKind, SettingId, SettingIdentity, SettingScope,
     SettingTarget, SettingTargetKind, SettingValueDomain, TeamId, definitions,
 };
 use workshop_rs::{convert, emitter, parser, roundtrip, semantic};
@@ -320,8 +320,11 @@ fn settings_schema_projects_workshop_facts_without_display_names_in_ids() {
         Ok(Some("燃火链式机枪"))
     );
     assert!(hero_ability.provenance().reviewed);
-    assert!(hero_ability.id().is_none());
-    assert!(matches!(hero_ability.identity(), SettingIdentity::Unknown));
+    assert_eq!(
+        hero_ability.id().map(SettingId::as_str),
+        Some("setting.hero.ability.enabled")
+    );
+    assert!(matches!(hero_ability.identity(), SettingIdentity::Known(_)));
     assert_eq!(
         hero_ability.target_kind(),
         SettingTargetKind::HeroAbility {
@@ -530,7 +533,7 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
             .iter()
             .find(|definition| definition.path().ends_with(suffix))
             .expect("projected ability setting");
-        assert!(definition.id().is_none());
+        assert!(definition.id().is_some());
         assert!(definition.provenance().reviewed);
     }
     let automatic_fire = definitions
@@ -541,8 +544,14 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
         .iter()
         .find(|definition| definition.path().ends_with("enableScoping"))
         .expect("scoping setting");
-    assert!(automatic_fire.id().is_none());
-    assert!(scoping.id().is_none());
+    assert_eq!(
+        automatic_fire.id().map(SettingId::as_str),
+        Some("setting.hero.primaryFire.automaticFireEnabled")
+    );
+    assert_eq!(
+        scoping.id().map(SettingId::as_str),
+        Some("setting.hero.primaryFire.scopingEnabled")
+    );
     assert_ne!(automatic_fire.path(), scoping.path());
 
     let general = definitions
@@ -659,4 +668,9 @@ fn settings_schema_preserves_locale_and_evidence_provenance() {
         generated.provenance().kind,
         SettingEvidenceKind::WorkshopDataExport
     );
+}
+
+#[test]
+fn settings_schema_catalog_is_complete_and_conflict_checked() {
+    workshop_rs::settings::schema::validate_catalog().expect("reviewed settings catalog");
 }

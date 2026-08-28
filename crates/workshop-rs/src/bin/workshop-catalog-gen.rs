@@ -41,7 +41,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use workshop_rs::catalog::{Catalog, build_canonical};
-use workshop_rs::settings::table;
+use workshop_rs::settings::{schema, table};
 
 /// The committed catalog data, relative to the workspace root (where CI and
 /// the documented pipeline commands run); `--file` overrides it.
@@ -121,6 +121,12 @@ fn main() -> ExitCode {
     match command.as_deref() {
         Some("check") => match Catalog::load(&content) {
             Ok(catalog) => {
+                if let Err(errors) = schema::validate_catalog() {
+                    for error in errors {
+                        eprintln!("workshop-catalog-gen: settings catalog: {error}");
+                    }
+                    return ExitCode::from(1);
+                }
                 let identity = catalog.identity();
                 if json {
                     match serde_json::to_string_pretty(&identity) {

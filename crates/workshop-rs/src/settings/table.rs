@@ -956,9 +956,16 @@ pub fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
     })
 }
 
-/// Iterate the reviewed hand-written and generated settings inventory.
+/// Iterate the reviewed settings inventory with generated export entries
+/// taking precedence over the legacy hand-written projection. Duplicate
+/// paths are therefore represented once in the semantic catalog while the
+/// parser and emitter continue to use the same lookup table.
 pub fn entries() -> impl Iterator<Item = &'static TableEntry> {
-    ENTRIES.iter().chain(GENERATED_ENTRIES.iter())
+    let mut paths = std::collections::HashSet::new();
+    ENTRIES
+        .iter()
+        .chain(GENERATED_ENTRIES.iter())
+        .filter(move |entry| paths.insert(path_string(entry.path)))
 }
 
 pub(crate) fn is_generated_entry(entry: &TableEntry) -> bool {
