@@ -1160,6 +1160,7 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
     use std::collections::{HashMap, HashSet};
 
     let mut errors = Vec::new();
+    errors.extend(reconciliation::validate());
     errors.extend(validate_raw_projection(table::raw_entries()));
     errors.extend(validate_enum_projection(
         table::ENUM_MEMBERS.iter(),

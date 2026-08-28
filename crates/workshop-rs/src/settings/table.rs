@@ -881,11 +881,10 @@ pub struct EnumMember {
 include!("data/generated_entries.rs");
 include!("data/generated_hero_settings.rs");
 
-/// Enum member names per domain. `roleLimit` has exactly one evidenced
-/// member ("2OfEachRolePerTeam", pixelart + broken-weapons); "off" appears
-/// only in the not-acquired skirmish_elim source and is rejected
-/// (settings-unknown-value) until a snapshot evidences it. `heroLimit` "off"
-/// is evidenced (santa, clientToServer, parabola, crosshair, inputhud).
+/// Fixture-owned canonical enum member names. Additional reviewed
+/// Workshop-data export members are retained through
+/// `projection_reconciliation.json`, which maps their source identities into
+/// these canonical domains without replacing fixture-backed display names.
 pub static ENUM_MEMBERS: &[EnumMember] = &[
     EnumMember {
         domain: "mapRotation",
