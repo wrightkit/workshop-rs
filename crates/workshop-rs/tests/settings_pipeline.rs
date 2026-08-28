@@ -336,6 +336,19 @@ fn settings_schema_projects_workshop_facts_without_display_names_in_ids() {
 }
 
 #[test]
+fn settings_schema_keeps_distinct_hero_modifier_identities() {
+    let damage_dealt = definitions_by_id(&SettingId::from("setting.hero.damageDealt"))
+        .find(|definition| definition.target_kind() == SettingTargetKind::Hero)
+        .expect("hero damage-dealt definition");
+    let damage_received = definitions_by_id(&SettingId::from("setting.hero.damageReceived"))
+        .find(|definition| definition.target_kind() == SettingTargetKind::Hero)
+        .expect("hero damage-received definition");
+
+    assert_ne!(damage_dealt.id(), damage_received.id());
+    assert_ne!(damage_dealt.path(), damage_received.path());
+}
+
+#[test]
 fn settings_schema_exposes_normal_enum_and_list_domains() {
     let definitions: Vec<_> = definitions().collect();
     let description = definitions

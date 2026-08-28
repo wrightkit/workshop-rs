@@ -956,16 +956,26 @@ pub fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
     })
 }
 
-/// Iterate the reviewed settings inventory with generated export entries
-/// taking precedence over the legacy hand-written projection. Duplicate
-/// paths are therefore represented once in the semantic catalog while the
-/// parser and emitter continue to use the same lookup table.
+/// Iterate the reviewed settings inventory with the hand-written projection
+/// taking precedence over the generated export projection. Duplicate paths
+/// are represented once in the semantic catalog while the parser and emitter
+/// continue to use the same lookup table.
 pub fn entries() -> impl Iterator<Item = &'static TableEntry> {
+    deduplicated_entries(ENTRIES.iter().chain(GENERATED_ENTRIES.iter()))
+}
+
+/// Iterate both catalog projections without applying effective lookup
+/// precedence. The semantic validator uses this to compare duplicate paths
+/// instead of allowing `entries()` to hide stale or conflicting data.
+pub(crate) fn raw_entries() -> impl Iterator<Item = &'static TableEntry> {
+    ENTRIES.iter().chain(GENERATED_ENTRIES.iter())
+}
+
+fn deduplicated_entries(
+    entries: impl Iterator<Item = &'static TableEntry>,
+) -> impl Iterator<Item = &'static TableEntry> {
     let mut paths = std::collections::HashSet::new();
-    ENTRIES
-        .iter()
-        .chain(GENERATED_ENTRIES.iter())
-        .filter(move |entry| paths.insert(path_string(entry.path)))
+    entries.filter(move |entry| paths.insert(path_string(entry.path)))
 }
 
 pub(crate) fn is_generated_entry(entry: &TableEntry) -> bool {
