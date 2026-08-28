@@ -1,4 +1,6 @@
-// Generated from the reviewed workshop-data hero settings export.
+// Generated from the reviewed workshop-data hero settings export. This
+// projection is locale presentation data only; absence or emptiness is not an
+// applicability fact. Applicability requires reviewed semantic evidence.
 pub struct GeneratedHeroSettingName { pub hero: &'static str, pub key: &'static str, pub locales: &'static [(&'static str, &'static str)] }
 impl GeneratedHeroSettingName {
     pub fn localized(&self, locale: &str) -> Option<&'static str> {

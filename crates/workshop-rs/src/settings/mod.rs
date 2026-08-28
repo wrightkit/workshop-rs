@@ -8,7 +8,15 @@
 //! Extracted from the Wright-authored `wright-ir` crate; see
 //! [`docs/provenance.md`](https://github.com/wrightkit/workshop-rs/blob/main/docs/provenance.md).
 
+pub mod schema;
 pub mod table;
+
+pub use schema::{
+    Applicability, EffectiveNumber, NumericBounds, NumericBoundsError, SettingDefinition,
+    SettingEvidenceKind, SettingId, SettingIdentity, SettingPresentation, SettingProvenance,
+    SettingScope, SettingTarget, SettingTargetKind, SettingValueDomain, TeamId, definition,
+    definitions,
+};
 
 use crate::source::Span;
 

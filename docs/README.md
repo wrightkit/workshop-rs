@@ -47,6 +47,9 @@ belong in documentation.
   missing-mapping behavior, and version identity.
 - [ADR-0002 (Gameplay): Hero Gameplay Domain API and Provenance Boundary](adr/0002-gameplay-domain-api.md):
   typed hero/ability topology, variants, open identities, and dataset lifecycle.
+- [ADR-0006: Canonical Typed Workshop Settings Semantics](adr/0006-settings-semantic-schema.md):
+  setting identity, scope, targets, domains, applicability, provenance, and
+  authored-versus-effective numeric semantics.
 - [Repository ownership rules](../AGENTS.md): cross-repository routing,
   provenance, validation, and delivery rules.
 
@@ -96,6 +99,7 @@ belong in documentation.
 | Feature census | [`adr/0003-sharded-census.md`](adr/0003-sharded-census.md) |
 | Real-project evidence | [`adr/0004-real-project-evidence.md`](adr/0004-real-project-evidence.md) |
 | Seasonal validation | [`adr/0005-seasonal-client-validation.md`](adr/0005-seasonal-client-validation.md) |
+| Typed Workshop settings | [`adr/0006-settings-semantic-schema.md`](adr/0006-settings-semantic-schema.md) |
 | Release & publishing | [`release.md`](release.md) |
 
 > [!NOTE]

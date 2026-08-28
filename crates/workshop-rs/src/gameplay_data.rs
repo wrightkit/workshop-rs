@@ -43,8 +43,16 @@ pub fn load(json: &str) -> Result<GameplayCatalog, GameplayDataError> {
 
 /// Load the checked-in gameplay dataset.
 pub fn builtin() -> Result<GameplayCatalog, GameplayDataError> {
+    builtin_ref().cloned().map_err(Clone::clone)
+}
+
+/// Borrow the cached checked-in gameplay dataset without cloning it.
+pub(crate) fn builtin_ref() -> Result<&'static GameplayCatalog, &'static GameplayDataError> {
     static DATA: OnceLock<Result<GameplayCatalog, GameplayDataError>> = OnceLock::new();
-    DATA.get_or_init(|| load(GAMEPLAY_DATA)).clone()
+    match DATA.get_or_init(|| load(GAMEPLAY_DATA)) {
+        Ok(catalog) => Ok(catalog),
+        Err(error) => Err(error),
+    }
 }
 
 /// Compute the deterministic SHA-256 identity of a gameplay dataset.
