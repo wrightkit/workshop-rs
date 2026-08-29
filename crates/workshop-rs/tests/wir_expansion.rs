@@ -151,13 +151,33 @@ fn indexed_members_and_native_break_controls_have_one_canonical_contract() {
 }
 
 #[test]
-fn assign_member_rejects_non_member_access_targets() {
+fn assign_member_rejects_non_lvalue_member_access_targets() {
     let catalog = catalog();
     let mut program = wir::Program::default();
-    let target = program.values.push(ValueNode::new(
+    let receiver = program
+        .values
+        .push(ValueNode::new(Value::EventPlayer, None));
+    let member = program
+        .values
+        .push(ValueNode::new(Value::String("payload".into()), None));
+    let member_access = program.values.push(ValueNode::new(
+        Value::Call {
+            name: "memberAccess".into(),
+            args: vec![receiver, member],
+        },
+        None,
+    ));
+    let index = program.values.push(ValueNode::new(
         Value::Number {
             value: 1.0,
             text: "1".into(),
+        },
+        None,
+    ));
+    let target = program.values.push(ValueNode::new(
+        Value::Call {
+            name: "valueInArray".into(),
+            args: vec![member_access, index],
         },
         None,
     ));

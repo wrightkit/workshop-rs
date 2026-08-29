@@ -220,18 +220,6 @@ fn is_member_assignment_target(program: &wir::Program, target: wir::ValueId) -> 
             value: wir::Value::Call { name, args },
             ..
         }) if name == "memberAccess" => (2..=3).contains(&args.len()),
-        Some(wir::ValueNode {
-            value: wir::Value::Call { name, args },
-            ..
-        }) if name == "valueInArray" && args.len() == 2 => {
-            matches!(
-                program.values.get(args[0]),
-                Some(wir::ValueNode {
-                    value: wir::Value::Call { name, .. },
-                    ..
-                }) if name == "memberAccess"
-            )
-        }
         _ => false,
     }
 }

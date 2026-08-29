@@ -63,10 +63,10 @@ identities:
 
 - indexing a declared global or player variable uses the catalog-backed
   `set*VariableAtIndex` and `modify*VariableAtIndex` action calls;
-- a member read is the `memberAccess(receiver, "member"[, index])` value call
-  (with native array indexing represented by `valueInArray` when applicable),
-  and `AssignMember` accepts that member-access value as its assignment target
-  without assigning it dictionary, object, or container type semantics;
+- a member read is the `memberAccess(receiver, "member"[, index])` value call,
+  and `AssignMember` accepts only that canonical member-access value as its
+  assignment target without assigning it dictionary, object, or container type
+  semantics;
 - native `Break`, `Continue`, `Skip`, and `Skip If` actions remain generic
   catalog action calls and can occur inside the existing structured `If`,
   `While`, and `For` actions.
