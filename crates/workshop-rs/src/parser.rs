@@ -11,7 +11,7 @@ use std::sync::OnceLock;
 
 use crate::settings::table::{self, KeyKind, PathPart};
 use crate::settings::{Settings, SettingsListElement, SettingsNode};
-use crate::signatures::{ExpectedDomain, NoExpectedDomain};
+use crate::signatures::ExpectedDomain;
 use crate::source::{Position, SourceFile, Span};
 use crate::wir::{
     self, Action, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Value, ValueNode,
@@ -39,11 +39,13 @@ enum AssignmentOperator {
     Modify(ModifyOp),
 }
 
-/// Parse localized Workshop text into Workshop IR with no signature context:
-/// ambiguous bare enum members (e.g. the `None` shared by several domains)
-/// stay rejected. See [`parse_with_context`] for the context-sensitive form.
+/// Parse localized Workshop text into Workshop IR using the catalog's
+/// canonical call-signature context. Ambiguous bare enum members resolve when
+/// their enclosing call pins one matching domain; unpinned ambiguity remains a
+/// structured unsupported diagnostic. See [`parse_with_context`] when a
+/// consumer needs to provide additional signature context.
 pub fn parse(input: &str, catalog: &Catalog, locale: &Locale) -> Result<wir::Program> {
-    parse_with_context(input, catalog, locale, &NoExpectedDomain)
+    parse_with_context(input, catalog, locale, catalog)
 }
 
 /// Parse localized Workshop text into Workshop IR, resolving ambiguous bare

@@ -591,8 +591,8 @@ fn unsupported_construct_is_distinct_from_malformed() {
 #[test]
 fn bare_chase_reevaluation_none_is_ambiguous_across_domains() {
     // Both reference reevaluation domains spell their NONE member "None".
-    // Without a signature pin the flat parser rejects the bare spelling
-    // with a structured Unsupported diagnostic.
+    // Without a signature pin the catalog-backed parser rejects the bare
+    // spelling with a structured Unsupported diagnostic.
     let text = "variables { global: 0: g }\nrule (\"x\") { event { Ongoing - Global; } actions { Set Global Variable(g, None); } }";
     let error = parser::parse(text, &catalog(), &Locale::new("en-US")).unwrap_err();
     assert!(
@@ -654,6 +654,68 @@ fn context_pinned_ambiguous_none_resolves_for_set_invisible() {
             if value_type == "Invis" && value == "NONE"),
         "the bare None resolves to Invis.NONE, got {value:?}"
     );
+}
+
+#[test]
+fn released_parse_contract_resolves_pinned_oracle_members() {
+    let catalog = catalog();
+    let locale = Locale::new("en-US");
+
+    let cake = parser::parse(&corpus_workshop_text("overpy-cake"), &catalog, &locale)
+        .expect("the pinned cake Workshop output must parse through the released contract");
+    assert!(cake.values.iter().any(|node| matches!(
+        node.value,
+        wir::Value::Enum { ref value_type, ref value }
+            if value_type == "EffectReeval" && value == "VISIBILITY"
+    )));
+
+    let chase = r#"variables {
+    global:
+        0: Round_Attack_Time
+}
+
+rule ("chase and condition") {
+    event {
+        Ongoing - Global;
+    }
+    conditions {
+        Is Game In Progress == True;
+        Global.Round_Attack_Time != 0;
+    }
+    actions {
+        Chase Global Variable Over Time(Round_Attack_Time, 0, 30, None);
+    }
+}
+"#;
+    let chase = parser::parse(chase, &catalog, &locale)
+        .expect("the pinned chase Workshop output must parse through the released contract");
+    assert!(chase.values.iter().any(|node| matches!(
+        node.value,
+        wir::Value::Enum { ref value_type, ref value }
+            if value_type == "ChaseTimeReeval" && value == "NONE"
+    )));
+
+    let chase_zh = r#"variables {
+    global:
+        0: Round_Attack_Time
+}
+
+rule ("chase and condition") {
+    event {
+        持续 - 全局;
+    }
+    actions {
+        持续追踪全局变量(Round_Attack_Time, 0, 30, 全部禁用);
+    }
+}
+"#;
+    let chase_zh = parser::parse(chase_zh, &catalog, &Locale::new("zh-CN"))
+        .expect("the pinned chase Workshop output must parse in zh-CN");
+    assert!(chase_zh.values.iter().any(|node| matches!(
+        node.value,
+        wir::Value::Enum { ref value_type, ref value }
+            if value_type == "ChaseTimeReeval" && value == "NONE"
+    )));
 }
 
 #[test]
