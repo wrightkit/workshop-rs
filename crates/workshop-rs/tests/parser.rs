@@ -694,6 +694,28 @@ rule ("chase and condition") {
         wir::Value::Enum { ref value_type, ref value }
             if value_type == "ChaseTimeReeval" && value == "NONE"
     )));
+
+    let chase_zh = r#"variables {
+    global:
+        0: Round_Attack_Time
+}
+
+rule ("chase and condition") {
+    event {
+        持续 - 全局;
+    }
+    actions {
+        持续追踪全局变量(Round_Attack_Time, 0, 30, 全部禁用);
+    }
+}
+"#;
+    let chase_zh = parser::parse(chase_zh, &catalog, &Locale::new("zh-CN"))
+        .expect("the pinned chase Workshop output must parse in zh-CN");
+    assert!(chase_zh.values.iter().any(|node| matches!(
+        node.value,
+        wir::Value::Enum { ref value_type, ref value }
+            if value_type == "ChaseTimeReeval" && value == "NONE"
+    )));
 }
 
 #[test]
