@@ -140,7 +140,18 @@ fn validate_action(
             validate_value(program, catalog, *player, errors);
             validate_value(program, catalog, *value, errors);
         }
-        wir::Action::AssignMember { target, value, .. } => {
+        wir::Action::AssignMember {
+            target,
+            value,
+            span,
+            ..
+        } => {
+            if !is_member_assignment_target(program, *target) {
+                errors.push(WorkshopError::Malformed {
+                    message: "AssignMember target must be a memberAccess value".to_string(),
+                    span: *span,
+                });
+            }
             validate_value(program, catalog, *target, errors);
             validate_value(program, catalog, *value, errors);
         }
@@ -200,6 +211,16 @@ fn validate_action(
             }
         }
         wir::Action::CallSubroutine { .. } => {}
+    }
+}
+
+fn is_member_assignment_target(program: &wir::Program, target: wir::ValueId) -> bool {
+    match program.values.get(target) {
+        Some(wir::ValueNode {
+            value: wir::Value::Call { name, args },
+            ..
+        }) if name == "memberAccess" => (2..=3).contains(&args.len()),
+        _ => false,
     }
 }
 

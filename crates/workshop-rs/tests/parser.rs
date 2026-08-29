@@ -249,7 +249,7 @@ fn every_corpus_workshop_text_parses_to_valid_wir() {
 }
 
 #[test]
-fn member_assignment_lowers_to_source_semantic_wir() {
+fn member_assignment_lowers_to_canonical_wir() {
     let text = r#"rule ("member") { event { Ongoing - Global; } actions {
         All Players(All Teams).abilityHUD[17] = True;
         Global.botOrisaChild.botDoesUniqueBehaviour = False;

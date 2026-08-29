@@ -54,3 +54,33 @@ implementation.
 
 This keeps the shared Workshop contract useful without turning it into a union
 of every frontend/compiler's internal model.
+
+## Indexed members and control-flow lowering contract
+
+The canonical WIR contract for the interoperability surface in
+`wrightkit/workshop-rs#123` is deliberately composed from native Workshop
+identities:
+
+- indexing a declared global or player variable uses the catalog-backed
+  `set*VariableAtIndex` and `modify*VariableAtIndex` action calls;
+- a member read is the `memberAccess(receiver, "member"[, index])` value call,
+  and `AssignMember` accepts only that canonical member-access value as its
+  assignment target without assigning it dictionary, object, or container type
+  semantics;
+- native `Break`, `Continue`, `Skip`, and `Skip If` actions remain generic
+  catalog action calls and can occur inside the existing structured `If`,
+  `While`, and `For` actions.
+
+There are no `Dictionary`, `Switch`, or `Break` WIR nodes. OPY dictionary and
+switch lowering remains an `opy-rs` concern: a source form is consumable only
+after it is lowered to the native indexed/member or control-flow calls above.
+If no lossless lowering exists, `opy-rs` must report its explicit integration
+boundary rather than extending this Workshop contract with source-language
+carriers.
+
+This classifies the remaining interoperability probes without using OPY syntax
+as Workshop evidence: the dictionary-literal probe is an OPY-owned lowering
+gap unless it folds to one of the native indexed/member forms, while the
+nested and multiple switch-break probes have the required native `Break`,
+`Skip`, and `Skip If` primitives but still require `opy-rs` to prove a lossless
+source-to-Workshop lowering for their control-flow shape.

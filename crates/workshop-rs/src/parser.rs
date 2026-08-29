@@ -1431,7 +1431,7 @@ impl Parser<'_> {
         if !is_event_player {
             // Object/member assignments use the same value grammar as member
             // reads (`receiver.member` and `receiver.member[index]`). Keep
-            // this source-level form distinct from catalog actions: the
+            // this native member-assignment form distinct from catalog actions: the
             // receiver and member are dynamic Workshop values, not a builtin
             // identity. Global and Event Player assignments are handled by
             // their dedicated variable paths above and below.
