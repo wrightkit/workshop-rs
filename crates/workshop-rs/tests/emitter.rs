@@ -236,44 +236,32 @@ fn emitted_condition_matches_reference_infix_form() {
 }
 
 #[test]
-fn debug_actions_emit_hud_text() {
-    // Debug/Print emit a semantically equivalent Create HUD Text effect
-    // (documented intentional difference from the reference's type-aware
-    // formatting).
-    let mut program = wir::Program::default();
-    let file = program
-        .files
-        .push(workshop_rs::source::SourceFile::new("workshop.txt"));
-    let value = program.values.push(workshop_rs::wir::ValueNode::new(
-        workshop_rs::wir::Value::Number {
-            value: 1.0,
-            text: "1".to_string(),
-        },
-        None,
-    ));
-    let debug = program
-        .actions
-        .push(wir::Action::Debug { value, span: None });
-    program.rules.push(wir::Rule {
-        name: "x".into(),
-        span: None,
-        name_span: None,
-        disabled: false,
-        event: wir::Event::Global,
-        conditions: vec![],
-        actions: vec![debug],
-    });
-    let _ = file;
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("Debug emits");
-    assert!(
-        emitted.contains("Create HUD Text(All Players(All Teams), Null, Custom String(\"{0}\", 1)"),
-        "debug emits the value as HUD text:\n{emitted}"
-    );
-    // The emitted text reparses to a createHudText action call.
+fn native_hud_actions_use_the_generic_catalog_path() {
     let catalog = catalog();
-    let reparsed =
-        workshop_rs::parser::parse_with_context(&emitted, &catalog, &en(), &catalog).unwrap();
-    assert_eq!(reparsed.rules.len(), 1);
+    let source = r#"
+        variables { global: 0: value }
+        rule ("hud") {
+            event { Ongoing - Global; }
+            actions {
+                Create HUD Text(All Players(All Teams), Null, Null, Custom String("{0}", Global.value), Left, 0, Null, Null, Null, Visible To and String, Default Visibility);
+            }
+        }
+    "#;
+    let program = parser::parse_with_context(source, &catalog, &en(), &catalog)
+        .expect("native HUD action parses");
+    let rule = program.rules.iter().next().expect("HUD rule");
+    assert!(matches!(
+        program.actions.get(rule.actions[0]),
+        Some(wir::Action::Call { name, args, .. })
+            if name == "createHudText" && args.len() == 11
+    ));
+    workshop_rs::validate::validate_canonical_ids(&program, &catalog)
+        .expect("native HUD action validates");
+
+    let emitted = emitter::emit(&program, &catalog, &en()).expect("native HUD action emits");
+    let reparsed = parser::parse_with_context(&emitted, &catalog, &en(), &catalog)
+        .expect("emitted HUD action reparses");
+    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
 }
 
 #[test]

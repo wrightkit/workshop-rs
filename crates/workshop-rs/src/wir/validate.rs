@@ -180,8 +180,6 @@ fn check_action(program: &Program, id: super::ActionId) -> Result<(), IrError> {
             }
             Ok(())
         }
-        Action::Debug { value, .. } => check_value(program, *value),
-        Action::Print { message, .. } => check_value(program, *message),
         Action::Call { args, .. } => {
             for arg in args {
                 check_value(program, *arg)?;

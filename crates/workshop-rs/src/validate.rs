@@ -130,9 +130,7 @@ fn validate_action(
             }
         }
         wir::Action::SetGlobalVariable { value, .. }
-        | wir::Action::ModifyGlobalVariable { value, .. }
-        | wir::Action::Debug { value, .. }
-        | wir::Action::Print { message: value, .. } => {
+        | wir::Action::ModifyGlobalVariable { value, .. } => {
             validate_value(program, catalog, *value, errors);
         }
         wir::Action::SetPlayerVariable { player, value, .. }

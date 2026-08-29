@@ -873,16 +873,6 @@ impl Emitter<'_> {
                 let end = self.spelling(Kind::Structural, "end")?;
                 self.line(level, &format!("{end};"))?;
             }
-            wir::Action::Debug { value, .. } => {
-                // `debug(value)` displays the value as HUD text. The
-                // reference formats values with type-aware machinery; Wright
-                // emits a semantically equivalent but presentation-simpler
-                // Create HUD Text (documented intentional difference).
-                self.emit_hud_text(*value, level, true)?;
-            }
-            wir::Action::Print { message, .. } => {
-                self.emit_hud_text(*message, level, false)?;
-            }
             wir::Action::AssignMember {
                 target, op, value, ..
             } => {
@@ -1039,54 +1029,6 @@ impl Emitter<'_> {
                 }
             }
         }
-        Ok(())
-    }
-
-    /// Emit a `debug`/`print` action as a `Create HUD Text` effect.
-    ///
-    /// `debug` renders the value into the HUD body; `print` renders the
-    /// message directly (a `format` value already carries the text). Every
-    /// fixed token resolves through the catalog, so the effect is
-    /// locale-correct by data and fails explicitly on missing target-locale
-    /// mappings.
-    fn emit_hud_text(&mut self, value: wir::ValueId, level: usize, is_debug: bool) -> Result<()> {
-        let mut body = String::new();
-        if is_debug {
-            // Display the value in the HUD body: Custom String("{0}", value).
-            body.push_str(&self.spelling(Kind::Value, "customString")?);
-            body.push_str("(\"{0}\", ");
-            self.value(value, &mut body)?;
-            body.push(')');
-        } else {
-            self.value(value, &mut body)?;
-        }
-        // Create HUD Text(All Players(All Teams), Null, header, body, text,
-        // location, sort order, header color, subheader color, text color,
-        // reevaluation, spectators) — the canonical catalog layout (probe P6
-        // emission), so the emitted text reparses against the catalog's
-        // expected enum domains at the canonical positions.
-        let mut line = String::new();
-        line.push_str(&self.spelling(Kind::Action, "createHudText")?);
-        line.push('(');
-        line.push_str(&self.spelling(Kind::Value, "allPlayers")?);
-        line.push('(');
-        line.push_str(&self.enum_spelling("Team", "ALL")?);
-        line.push_str("), Null, ");
-        line.push_str(&body);
-        line.push_str(", Null, ");
-        line.push_str(&self.enum_spelling("HudPosition", "LEFT")?);
-        line.push_str(", -9999, Color(");
-        line.push_str(&self.enum_spelling("Color", "WHITE")?);
-        line.push_str("), Color(");
-        line.push_str(&self.enum_spelling("Color", "WHITE")?);
-        line.push_str("), Color(");
-        line.push_str(&self.enum_spelling("Color", "WHITE")?);
-        line.push_str("), ");
-        line.push_str(&self.enum_spelling("HudReeval", "VISIBILITY_AND_STRING")?);
-        line.push_str(", ");
-        line.push_str(&self.enum_spelling("SpecVisibility", "VISIBLE_ALWAYS")?);
-        line.push_str(");");
-        self.line(level, &line)?;
         Ok(())
     }
 

@@ -69,6 +69,18 @@ license, reviewed) is embedded in the dataset itself and surfaced by
 | Action/Value signature cross-check | Representative Workshop.codes article links remain recorded in the catalog provenance; fetched snapshots and acceptance results are CI evidence, not generator or runtime inputs. |
 | Settings emission table (`src/settings/table.rs` and generated data files) | Hand-written fixture surface plus the reviewed `workshop-data` export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; generated entries, names, locale mappings, and source paths are committed together in the declared multi-locale projection, while pinned OverPy 9.7.10 output remains the behavioral check (classes 1/5). |
 
+### Native display action boundary (`workshop-rs#129`)
+
+The independent [Workshop.codes action inventory](https://workshop.codes/wiki/categories/actions)
+contains no native `Debug` or `Print` action, while its [`Create HUD Text`]
+article documents the native display action, its eleven parameters, and its
+persistent HUD behavior. The catalog therefore represents HUD output through
+the canonical `createHudText` action call. OverPy `debug(...)` and `print(...)`
+remain source-language helpers whose lowering belongs to their provider, not to
+canonical WIR.
+
+[`Create HUD Text`]: https://workshop.codes/wiki/articles/create-hud-text
+
 ### Locale coverage
 
 * `en-US` is the primary locale and is complete. The committed catalog

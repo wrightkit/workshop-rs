@@ -78,6 +78,16 @@ If no lossless lowering exists, `opy-rs` must report its explicit integration
 boundary rather than extending this Workshop contract with source-language
 carriers.
 
+## Source-language display helpers
+
+`Debug` and `Print` are not native Workshop action identities. The independent
+[Workshop.codes action inventory](https://workshop.codes/wiki/categories/actions)
+lists the native display operation as [`Create HUD Text`](https://workshop.codes/wiki/articles/create-hud-text),
+whose documented parameters and persistent HUD behavior are represented by the
+catalog-backed `createHudText` action call. Source-language helpers such as
+OverPy `debug(...)` and `print(...)` therefore remain provider-owned lowering
+concerns; canonical WIR does not carry dedicated variants for them.
+
 This classifies the remaining interoperability probes without using OPY syntax
 as Workshop evidence: the dictionary-literal probe is an OPY-owned lowering
 gap unless it folds to one of the native indexed/member forms, while the
