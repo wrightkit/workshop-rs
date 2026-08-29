@@ -28,16 +28,14 @@ The calculator is locale-independent: it reads canonical WIR identities and
 never emitted spellings. It validates WIR and catalog identities before
 producing a report. Unknown or unsupported constructs return
 `ElementCountError` instead of yielding a misleading exact total. In
-particular, the current `Debug` and `Print` nodes are presentation helpers that
-the emitter expands into `Create HUD Text`; callers should count that canonical
-action until a reviewed expansion contract is added.
+Native display actions such as `Create HUD Text` are counted through their
+canonical catalog-backed action calls.
 
 The independent behavioral source for the supported rules is the
 [Workshop.codes element-count calculation reference](https://workshop.codes/wiki/articles/element-count-calculation).
 
 Known evidence gap: this initial API does not claim live-client/editor
-validation, source-language debug-count compatibility, or an exact count for
-presentation-only WIR helpers. Those belong to later
+validation or source-language debug-count compatibility. Those belong to later
 client-backed/consumer integration work after the canonical WIR surface is
 stable. The current real-project `rework.ow` fixture still stops in the parser
 on an ambiguous bare `None` enum spelling, so it is not counted as a passing

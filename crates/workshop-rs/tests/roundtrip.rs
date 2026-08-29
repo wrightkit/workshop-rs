@@ -139,12 +139,14 @@ fn equivalence_detects_semantic_differences() {
         },
         None,
     ));
-    a.actions.push(workshop_rs::wir::Action::Debug {
-        value: value_a,
+    a.actions.push(workshop_rs::wir::Action::Call {
+        name: "wait".into(),
+        args: vec![value_a],
         span: None,
     });
-    b.actions.push(workshop_rs::wir::Action::Debug {
-        value: value_b,
+    b.actions.push(workshop_rs::wir::Action::Call {
+        name: "wait".into(),
+        args: vec![value_b],
         span: None,
     });
     a.rules.push(workshop_rs::wir::Rule {

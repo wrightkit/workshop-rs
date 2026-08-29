@@ -103,9 +103,8 @@ impl Program {
     /// Count the canonical Workshop target represented by this WIR program.
     ///
     /// The catalog is used to reject unknown action/value identities before a
-    /// report is produced. Presentation-only `Debug` and `Print` WIR nodes
-    /// are intentionally rejected because their emitted HUD expansion is not
-    /// yet represented as canonical WIR actions.
+    /// report is produced. Native display actions are represented by their
+    /// canonical catalog-backed action calls.
     pub fn element_count(
         &self,
         catalog: &Catalog,
@@ -340,22 +339,6 @@ impl Counter<'_> {
                 for nested in body {
                     children.push(self.action(*nested)?.node);
                 }
-            }
-            Action::Debug { .. } => {
-                return Err(ElementCountError::Unsupported {
-                    kind: ElementNodeKind::Action,
-                    name: "debug".to_string(),
-                    span,
-                    reason: "the emitter expands Debug into a HUD action; count the canonical HUD action instead".to_string(),
-                });
-            }
-            Action::Print { .. } => {
-                return Err(ElementCountError::Unsupported {
-                    kind: ElementNodeKind::Action,
-                    name: "print".to_string(),
-                    span,
-                    reason: "the emitter expands Print into a HUD action; count the canonical HUD action instead".to_string(),
-                });
             }
             Action::Call {
                 name: action_name,

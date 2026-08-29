@@ -1,6 +1,6 @@
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::convert::{self, ConvertOptions};
-use workshop_rs::element_count::{ElementCountError, ElementNodeKind};
+use workshop_rs::element_count::ElementNodeKind;
 use workshop_rs::parser;
 use workshop_rs::settings::{Settings, SettingsNode};
 use workshop_rs::source::SourceFile;
@@ -184,31 +184,6 @@ fn representative_corpus_program_produces_a_report() {
 
     assert_eq!(report.rules.len(), 2);
     assert!(report.total > 2);
-}
-
-#[test]
-fn debug_reports_an_explicit_incomplete_surface() {
-    let mut program = Program::default();
-    let value = number(&mut program, 1.0);
-    let action = program.actions.push(Action::Debug { value, span: None });
-    program.rules.push(Rule {
-        name: "debug".to_string(),
-        span: None,
-        name_span: None,
-        disabled: false,
-        event: Event::Global,
-        conditions: vec![],
-        actions: vec![action],
-    });
-
-    assert!(matches!(
-        program.element_count(&catalog()),
-        Err(ElementCountError::Unsupported {
-            kind: ElementNodeKind::Action,
-            name,
-            ..
-        }) if name == "debug"
-    ));
 }
 
 fn attach_value(mut program: Program, value: wir::ValueId) -> Program {

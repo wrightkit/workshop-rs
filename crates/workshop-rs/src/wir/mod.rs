@@ -7,9 +7,7 @@
 //!
 //! Name policy: call/value `name` fields keep the canonical catalog ids
 //! (`countOf`, `wait`, `createBeamEffect`); mapping those to localized
-//! Workshop presentation spellings is an emission concern. `debug` and
-//! `print` are represented as dedicated [`Action::Debug`]/[`Action::Print`]
-//! nodes.
+//! Workshop presentation spellings is an emission concern.
 //!
 //! Extracted from the Wright-authored `wright-ir` crate (the `wir`,
 //! `settings`, and `source` modules); see
@@ -399,13 +397,6 @@ pub enum Action {
         body: Vec<ActionId>,
         span: Option<Span>,
     },
-    /// The `debug(value)` HUD debug effect.
-    Debug { value: ValueId, span: Option<Span> },
-    /// The `print(message)` HUD message effect.
-    Print {
-        message: ValueId,
-        span: Option<Span>,
-    },
     /// Any other action call with side effects.
     Call {
         name: String,
@@ -428,8 +419,6 @@ impl Action {
             | Action::While { span, .. }
             | Action::ForGlobalVariable { span, .. }
             | Action::ForPlayerVariable { span, .. }
-            | Action::Debug { span, .. }
-            | Action::Print { span, .. }
             | Action::Call { span, .. } => *span,
         }
     }

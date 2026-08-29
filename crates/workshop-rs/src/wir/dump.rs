@@ -311,16 +311,6 @@ fn render_action(program: &Program, id: super::ActionId, out: &mut String, level
                 render_action(program, *action, out, level + 1);
             }
         }
-        Action::Debug { value, span } => {
-            out.push_str(&format!("{}debug ", indent(level)));
-            render_value(program, *value, out);
-            out.push_str(&format!("{}\n", span_suffix(*span)));
-        }
-        Action::Print { message, span } => {
-            out.push_str(&format!("{}print ", indent(level)));
-            render_value(program, *message, out);
-            out.push_str(&format!("{}\n", span_suffix(*span)));
-        }
         Action::Call { name, args, span } => {
             out.push_str(&format!("{}call {name}(", indent(level)));
             for (index, arg) in args.iter().enumerate() {

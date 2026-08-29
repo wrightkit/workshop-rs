@@ -180,9 +180,7 @@ fn inspect_action(
         | Action::SetPlayerVariable { .. }
         | Action::ModifyPlayerVariable { .. }
         | Action::AssignMember { .. }
-        | Action::CallSubroutine { .. }
-        | Action::Debug { .. }
-        | Action::Print { .. } => {}
+        | Action::CallSubroutine { .. } => {}
     }
 }
 

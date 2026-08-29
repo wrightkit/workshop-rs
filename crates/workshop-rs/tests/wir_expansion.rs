@@ -317,18 +317,19 @@ fn build_surface_program() -> wir::Program {
         Some(s(6, 14, 24)),
     ));
 
-    let debug_value = program.values.push(ValueNode::new(
+    let wait_duration = program.values.push(ValueNode::new(
         Value::Number {
             value: 1.0,
             text: "1".to_string(),
         },
         Some(s(7, 11, 12)),
     ));
-    let debug = program.actions.push(Action::Debug {
-        value: debug_value,
+    let wait = program.actions.push(Action::Call {
+        name: "wait".into(),
+        args: vec![wait_duration],
         span: Some(s(7, 9, 13)),
     });
-    let if_body = vec![debug];
+    let if_body = vec![wait];
     let if_action = program.actions.push(Action::If {
         branches: vec![wir::IfBranch {
             condition: compare,
