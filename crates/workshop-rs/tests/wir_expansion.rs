@@ -50,6 +50,143 @@ fn member_access_has_a_canonical_shape_contract() {
     );
 }
 
+#[test]
+fn indexed_members_and_native_break_controls_have_one_canonical_contract() {
+    let catalog = catalog();
+    let locale = Locale::new("en-US");
+    let source = r#"
+        variables { global: 0: values }
+        rule ("interop primitives") {
+            event { Ongoing - Global; }
+            actions {
+                Global.values[1] = 2;
+                Event Player.values[0] = 3;
+                If(True);
+                    Event Player.payload.member[0] = 4;
+                    Skip If(True, 1);
+                    While(True);
+                        Break;
+                        Continue;
+                    End;
+                Else;
+                    Skip(2);
+                End;
+            }
+        }
+    "#;
+    let program = workshop_rs::parser::parse_with_context(source, &catalog, &locale, &catalog)
+        .expect("native indexed/member and control-flow forms parse");
+    program
+        .validate()
+        .expect("canonical WIR is structurally valid");
+    validate::validate_canonical_ids(&program, &catalog).expect("catalog ids resolve");
+
+    let rule = program.rules.iter().next().expect("rule");
+    assert!(matches!(
+        program.actions.get(rule.actions[0]),
+        Some(Action::Call { name, args, .. })
+            if name == "setGlobalVariableAtIndex"
+                && args.len() == 3
+                && matches!(program.values.get(args[0]).map(|node| &node.value), Some(Value::GlobalVariable(_)))
+    ));
+    assert!(matches!(
+        program.actions.get(rule.actions[1]),
+        Some(Action::Call { name, args, .. })
+            if name == "setPlayerVariableAtIndex"
+                && args.len() == 3
+                && matches!(program.values.get(args[0]).map(|node| &node.value), Some(Value::PlayerVariable { .. }))
+    ));
+
+    let Action::If {
+        branches,
+        else_body: Some(else_body),
+        ..
+    } = program.actions.get(rule.actions[2]).expect("if action")
+    else {
+        panic!("expected an if with an else branch");
+    };
+    let member_action = program
+        .actions
+        .get(branches[0].body[0])
+        .expect("member assignment");
+    let Action::AssignMember { target, .. } = member_action else {
+        panic!("expected canonical member assignment");
+    };
+    assert!(matches!(
+        program.values.get(*target).map(|node| &node.value),
+        Some(Value::Call { name, args })
+            if name == "memberAccess"
+                && args.len() == 3
+                && matches!(program.values.get(args[1]).map(|node| &node.value), Some(Value::String(member)) if member == "member")
+    ));
+    assert!(matches!(
+        program.actions.get(branches[0].body[1]),
+        Some(Action::Call { name, args, .. }) if name == "skipIf" && args.len() == 2
+    ));
+    let Action::While { body, .. } = program.actions.get(branches[0].body[2]).expect("while")
+    else {
+        panic!("expected nested while");
+    };
+    assert!(matches!(
+        program.actions.get(body[0]),
+        Some(Action::Call { name, args, .. }) if name == "break" && args.is_empty()
+    ));
+    assert!(matches!(
+        program.actions.get(body[1]),
+        Some(Action::Call { name, args, .. }) if name == "continue" && args.is_empty()
+    ));
+    assert!(matches!(
+        program.actions.get(else_body[0]),
+        Some(Action::Call { name, args, .. }) if name == "skip" && args.len() == 1
+    ));
+
+    let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emits");
+    let reparsed = workshop_rs::parser::parse_with_context(&emitted, &catalog, &locale, &catalog)
+        .expect("emitted native controls reparse");
+    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
+    assert_eq!(
+        emitted,
+        workshop_rs::emitter::emit(&reparsed, &catalog, &locale).expect("re-emits")
+    );
+}
+
+#[test]
+fn assign_member_rejects_non_member_access_targets() {
+    let catalog = catalog();
+    let mut program = wir::Program::default();
+    let target = program.values.push(ValueNode::new(
+        Value::Number {
+            value: 1.0,
+            text: "1".into(),
+        },
+        None,
+    ));
+    let value = program.values.push(ValueNode::new(Value::Bool(true), None));
+    let action = program.actions.push(Action::AssignMember {
+        target,
+        op: None,
+        value,
+        span: None,
+    });
+    program.rules.push(wir::Rule {
+        name: "invalid member target".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: Event::Global,
+        conditions: vec![],
+        actions: vec![action],
+    });
+
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("AssignMember must require a memberAccess target");
+    assert!(
+        error
+            .to_string()
+            .contains("AssignMember target must be a memberAccess value")
+    );
+}
+
 fn span(file: workshop_rs::ids::Id<SourceFile>, line: u32, col: u32, end_col: u32) -> Span {
     Span::new(file, Position::new(line, col), Position::new(line, end_col))
 }

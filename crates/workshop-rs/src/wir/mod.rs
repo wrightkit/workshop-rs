@@ -351,9 +351,9 @@ pub enum Action {
         /// The exact span of the modified variable identifier.
         target_span: Option<Span>,
     },
-    /// Assignment to a dynamic Workshop object member, optionally through an
-    /// indexed `memberAccess` value. This is source semantics, not a builtin
-    /// catalog action; the emitter preserves the member-assignment syntax.
+    /// Assignment to a canonical Workshop member-access target, optionally
+    /// indexed. This is not a builtin catalog action; the emitter preserves
+    /// the native member-assignment syntax.
     AssignMember {
         target: ValueId,
         op: Option<ModifyOp>,
