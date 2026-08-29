@@ -81,7 +81,7 @@ use workshop_rs::emitter::emit;
 
 let catalog = Catalog::builtin()?;
 let locale = Locale::new("en-US");
-let program = workshop_rs::parser::parse_with_context(text, &catalog, &locale, &catalog)?;
+let program = workshop_rs::parser::parse(text, &catalog, &locale)?;
 let emitted = emit(&program, &catalog, &locale)?;
 
 let converted = convert(

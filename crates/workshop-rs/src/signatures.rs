@@ -24,10 +24,8 @@ pub trait ExpectedDomain {
     fn expected_domain(&self, catalog_id: &str, arg_index: usize) -> Option<&str>;
 }
 
-/// The default context: no signature pins any argument domain, so ambiguous
-/// bare enum members stay rejected. Used by the plain
-/// [`crate::parser::parse`] entry point and callers without signature
-/// metadata.
+/// A context with no signature metadata. Ambiguous bare enum members stay
+/// rejected. Used by callers that intentionally need context-free parsing.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NoExpectedDomain;
 
