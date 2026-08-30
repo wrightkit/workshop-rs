@@ -121,6 +121,104 @@ impl Parser<'_> {
             })
     }
 
+    fn contextual_coercions(
+        &self,
+        call_id: &str,
+        arg_index: usize,
+    ) -> Option<crate::catalog::ParamCoercions> {
+        [Kind::Action, Kind::Value].into_iter().find_map(|kind| {
+            self.catalog
+                .entry(kind, call_id)
+                .and_then(|entry| entry.param_coercions(arg_index))
+                .copied()
+        })
+    }
+
+    fn is_zero_number(&self, value_id: wir::ValueId) -> bool {
+        matches!(
+            self.target.values.get(value_id),
+            Some(ValueNode {
+                value: Value::Number { value, .. },
+                ..
+            }) if *value == 0.0
+        )
+    }
+
+    fn is_empty_string(&self, value_id: wir::ValueId) -> bool {
+        matches!(
+            self.target.values.get(value_id),
+            Some(ValueNode {
+                value: Value::String(value),
+                ..
+            }) if value.is_empty()
+        )
+    }
+
+    fn normalize_contextual_argument(
+        &mut self,
+        call_id: &str,
+        arg_index: usize,
+        value_id: wir::ValueId,
+    ) -> wir::ValueId {
+        let Some(coercions) = self.contextual_coercions(call_id, arg_index) else {
+            return value_id;
+        };
+        let Some(node) = self.target.values.get(value_id) else {
+            return value_id;
+        };
+        let span = node.span;
+        let replacement = match &node.value {
+            Value::Bool(false) if coercions.false_as_number => Some(Value::Number {
+                value: 0.0,
+                text: "0".to_string(),
+            }),
+            Value::Bool(true) if coercions.true_as_number => Some(Value::Number {
+                value: 1.0,
+                text: "1".to_string(),
+            }),
+            Value::Number { value, .. } if coercions.zero_as_null && *value == 0.0 => {
+                Some(Value::Null)
+            }
+            Value::Vector { x, y, z }
+                if coercions.null_vector_as_null
+                    && self.is_zero_number(*x)
+                    && self.is_zero_number(*y)
+                    && self.is_zero_number(*z) =>
+            {
+                Some(Value::Null)
+            }
+            Value::Call { name, args }
+                if coercions.null_vector_as_null
+                    && name == "vector"
+                    && args.len() == 3
+                    && args.iter().all(|value_id| self.is_zero_number(*value_id)) =>
+            {
+                Some(Value::Null)
+            }
+            Value::Call { name, args }
+                if coercions.empty_array_as_string && name == "emptyArray" && args.is_empty() =>
+            {
+                Some(Value::String(String::new()))
+            }
+            Value::Call { name, args }
+                if coercions.empty_array_as_string
+                    && name == "customString"
+                    && args.len() == 1
+                    && self.is_empty_string(args[0]) =>
+            {
+                Some(Value::String(String::new()))
+            }
+            Value::Array(elements) if coercions.empty_array_as_string && elements.is_empty() => {
+                Some(Value::String(String::new()))
+            }
+            _ => None,
+        };
+        let Some(value) = replacement else {
+            return value_id;
+        };
+        self.target.values.push(ValueNode::new(value, span))
+    }
+
     fn canonical_keyword(&self, spelling: &str) -> String {
         self.catalog
             .resolve(Kind::Structural, &self.locale, spelling)
@@ -2175,6 +2273,9 @@ impl Parser<'_> {
                     let when_true = self.value()?;
                     self.expect(TokenKind::Colon, "expected ':' in conditional value")?;
                     let when_false = self.value()?;
+                    let when_true = self.normalize_contextual_argument("ifThenElse", 1, when_true);
+                    let when_false =
+                        self.normalize_contextual_argument("ifThenElse", 2, when_false);
                     value = self.target.values.push(ValueNode::new(
                         Value::Call {
                             name: "ifThenElse".to_string(),
@@ -2202,10 +2303,12 @@ impl Parser<'_> {
                         "%" => "modulo",
                         _ => op.as_str(),
                     };
+                    let left = self.normalize_contextual_argument(name, 0, value);
+                    let right = self.normalize_contextual_argument(name, 1, right);
                     value = self.target.values.push(ValueNode::new(
                         Value::Call {
                             name: name.to_string(),
-                            args: vec![value, right],
+                            args: vec![left, right],
                         },
                         Some(Span::new(self.file(), start, end)),
                     ));
@@ -2942,6 +3045,16 @@ impl Parser<'_> {
         let mut arg_index = 0usize;
         let mut raw_modify_operator = false;
         loop {
+            let canonical_arg_index = if matches!(
+                call_id,
+                "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex"
+            ) && arg_index >= 2
+                && args.len() == arg_index - 1
+            {
+                arg_index - 1
+            } else {
+                arg_index
+            };
             // Indexed variable actions carry a project-local variable name,
             // not a Workshop value expression. Resolve it through the symbol
             // table so names such as `Brigitte` remain variable identities.
@@ -2974,10 +3087,15 @@ impl Parser<'_> {
                 } else {
                     self.pos = saved;
                     let saved_domain = self.expected_domain;
-                    self.expected_domain = self.context.expected_domain(call_id, arg_index);
+                    self.expected_domain =
+                        self.context.expected_domain(call_id, canonical_arg_index);
                     let arg = self.value();
                     self.expected_domain = saved_domain;
-                    args.push(arg?);
+                    args.push(self.normalize_contextual_argument(
+                        call_id,
+                        canonical_arg_index,
+                        arg?,
+                    ));
                 }
             } else if matches!(
                 call_id,
@@ -3022,7 +3140,7 @@ impl Parser<'_> {
                         });
                 let arg = self.value();
                 self.expected_domain = saved;
-                args.push(arg?);
+                args.push(self.normalize_contextual_argument(call_id, canonical_arg_index, arg?));
             }
             arg_index += 1;
             match self.peek() {

@@ -39,3 +39,28 @@
 | `Abort If Condition Is True` | ✅ Supported | Terminates rule execution if all rule conditions are currently true. |
 | `Abort If Condition Is False` | ✅ Supported | Terminates rule execution if any rule condition is currently false. |
 | `Return` | 🚧 Coming soon | The audited contract is recorded, but the native parser/WIR surface does not yet represent a return action. |
+
+## Contextual Literal Semantics
+
+Literal substitutions are catalog facts attached to an exact action or value
+parameter. They are normalized into canonical WIR only at that position; the
+catalog does not define a global Boolean/Number, Null/Vector, or String/Array
+coercion hierarchy.
+
+The reviewed contract includes these examples:
+
+- `False` and `True` may stand for numeric `0` and `1` only where the parameter
+  declares those substitutions. Some parameters intentionally declare only one
+  direction, such as `Start Forcing Spawn Room` accepting `False` for room `0`.
+- Numeric `0` may stand for `Null` in selected object/position inputs, and
+  `Vector(0, 0, 0)` may stand for `Null` in selected position inputs.
+- `Empty Array` may stand for an empty string in selected string inputs.
+- `Compare` keeps its polymorphic operands. `Wait Until` accepts a numeric
+  condition as a documented exception, but does not normalize it to Boolean;
+  non-zero numbers are not treated as true by that action. Callers should use
+  an explicit comparison when Boolean behavior is intended.
+
+These distinctions are cross-checked against
+[OverPy's replacement metadata](https://github.com/Zezombye/overpy/blob/master/src/types.d.ts),
+its [Workshop emission replacements](https://github.com/Zezombye/overpy/blob/master/src/compiler/astToWorkshop.ts),
+and its [Wait Until diagnostic](https://github.com/Zezombye/overpy/blob/master/src/compiler/functions/waitUntil.ts).

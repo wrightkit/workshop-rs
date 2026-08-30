@@ -396,7 +396,9 @@ fn validate_call_signature(
             continue;
         }
         if let Some(expected) = entry.param_type(index) {
-            if !value_matches_type(program, catalog, *arg_id, expected) {
+            if !value_matches_type(program, catalog, *arg_id, expected)
+                && !contextual_value_matches(entry, index, program, *arg_id, expected)
+            {
                 let actual = value_type_name(program, catalog, *arg_id);
                 errors.push(WorkshopError::Unsupported {
                     message: format!(
@@ -453,6 +455,64 @@ fn validate_call_signature(
             });
         }
     }
+}
+
+fn contextual_value_matches(
+    entry: &crate::catalog::CatalogEntry,
+    index: usize,
+    program: &wir::Program,
+    value_id: wir::ValueId,
+    expected: &str,
+) -> bool {
+    let Some(coercions) = entry.param_coercions(index) else {
+        return false;
+    };
+    let Some(node) = program.values.get(value_id) else {
+        return false;
+    };
+    let expected_number = expected
+        .split('|')
+        .any(|alternative| matches!(alternative, "Number" | "Any" | "Unknown"));
+    let expected_string = expected
+        .split('|')
+        .any(|alternative| matches!(alternative, "String" | "Text"));
+    match &node.value {
+        wir::Value::Bool(false) => coercions.false_as_number && expected_number,
+        wir::Value::Bool(true) => coercions.true_as_number && expected_number,
+        wir::Value::Number { value, .. } => coercions.zero_as_null && *value == 0.0,
+        wir::Value::Vector { x, y, z } => {
+            coercions.null_vector_as_null
+                && is_zero_number(program, *x)
+                && is_zero_number(program, *y)
+                && is_zero_number(program, *z)
+        }
+        wir::Value::Call { name, args } => {
+            (coercions.null_vector_as_null
+                && name == "vector"
+                && args.len() == 3
+                && args
+                    .iter()
+                    .all(|value_id| is_zero_number(program, *value_id)))
+                || (coercions.empty_array_as_string
+                    && expected_string
+                    && name == "emptyArray"
+                    && args.is_empty())
+        }
+        wir::Value::Array(elements) => {
+            coercions.empty_array_as_string && expected_string && elements.is_empty()
+        }
+        _ => false,
+    }
+}
+
+fn is_zero_number(program: &wir::Program, value_id: wir::ValueId) -> bool {
+    matches!(
+        program.values.get(value_id),
+        Some(wir::ValueNode {
+            value: wir::Value::Number { value, .. },
+            ..
+        }) if *value == 0.0
+    )
 }
 
 fn value_matches_type(

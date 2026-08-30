@@ -25,7 +25,7 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Communicate` | ✅ Supported | Parameters: (Object: Player|Array, Comms: Comms). |
 | `Continue` | ✅ Supported | No parameters. |
 | `Create Beam Effect` | ✅ Supported | Parameters: (VisibleTo: Player|Array, Type: Beam, StartPosition: Vector, EndPosition: Vector, Color: Color, Reevaluation: EffectReeval). |
-| `Create Dummy Bot` | ✅ Supported | Parameters: (Hero: Hero, Team: Team, Slot: Number|Boolean, Position: Vector, Direction: Vector). |
+| `Create Dummy Bot` | ✅ Supported | Parameters: (Hero: Hero, Team: Team, Slot: Number, Position: Vector, Direction: Vector). |
 | `Create Effect` | ✅ Supported | Parameters: (VisibleTo: Player|Array, Type: Effect, Color: Color, Position: Vector|Player, Radius: Number, Reevaluation: EffectReeval). |
 | `Create HUD Text` | ✅ Supported | Parameters: (VisibleTo: Player|Array, Header: Object|String, Subheader: Object|String, Text: Object|String, Location: HudPosition, SortOrder: Number|Boolean, HeaderColor: Color, SubheaderColor: Color, TextColor: Color, Reevaluation: HudReeval, Spectators: SpecVisibility). |
 | `Create Homing Projectile` | ✅ Supported | Parameters: (Projectile: Projectile, Object: Player|Array, Position: Vector, Direction: Vector, Relativity: Relativity, ModifyHealth: ModifyHealth, Team: Team, Number: Number, Number: Number, Number: Number, DynamicEffect: DynamicEffect, DynamicEffect: DynamicEffect, Number: Number, Number: Number, Number: Number, Number: Number, Player: Player, Number: Number). |
@@ -127,7 +127,7 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Set Ability 1 Enabled` | ✅ Supported | Parameters: (Object: Player|Array, Boolean: Boolean). |
 | `Set Ability 2 Enabled` | ✅ Supported | Parameters: (Object: Player|Array, Boolean: Boolean). |
 | `Set Ability Charge` | ✅ Supported | Parameters: (Object: Player|Array, Button: Button, Number: Number). |
-| `Set Ability Cooldown` | ✅ Supported | Parameters: (Object: Player|Array, Button: Button, Number: Number|Boolean). |
+| `Set Ability Cooldown` | ✅ Supported | Parameters: (Object: Player|Array, Button: Button, Number: Number). |
 | `Set Ability Resource` | ✅ Supported | Parameters: (Object: Player|Array, Button: Button, Number: Number). |
 | `Set Aim Speed` | ✅ Supported | Parameters: (player: Player|Array, turnSpeedPercent: Number). |
 | `Set Allowed Heroes` | ✅ Supported | Parameters: (Player: Player|Array, Heroes: Hero|Array). |
@@ -146,7 +146,7 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Set Jump Vertical Speed` | ✅ Supported | Parameters: (Object: Player|Array, Number: Number). |
 | `Set Knockback Dealt` | ✅ Supported | Parameters: (Object: Player|Array, Number: Number). |
 | `Set Knockback Received` | ✅ Supported | Parameters: (Object: Player|Array, Number: Number). |
-| `Set Match Time` | ✅ Supported | Parameters: (Number: Number|Boolean). |
+| `Set Match Time` | ✅ Supported | Parameters: (Number: Number). |
 | `Set Max Ammo` | ✅ Supported | Parameters: (Object: Player|Array, Number: Number, Number: Number). |
 | `Set Max Health` | ✅ Supported | Parameters: (player: Player|Array, healthPercent: Number). |
 | `Set Melee Enabled` | ✅ Supported | Parameters: (Object: Player|Array, Boolean: Boolean). |
@@ -180,7 +180,7 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Start Forcing Player Outlines` | ✅ Supported | Parameters: (ViewedPlayers: Player|Array, ViewingPlayers: Player|Array, Visible: Boolean, Color: Color, Visibility: OutlineVisibility). |
 | `Start Forcing Player Position` | ✅ Supported | Parameters: (Player: Player, Position: Vector, Boolean: Boolean). |
 | `Start Forcing Player To Be Hero` | ✅ Supported | Parameters: (Object: Player|Array, Hero: Hero). |
-| `Start Forcing Spawn Room` | ✅ Supported | Parameters: (Team: Team, Number: Number|Boolean). |
+| `Start Forcing Spawn Room` | ✅ Supported | Parameters: (Team: Team, Number: Number). |
 | `Start Forcing Throttle` | ✅ Supported | Parameters: (Object: Player|Array, Number: Number|Boolean, Number: Number|Boolean, Number: Number|Boolean, Number: Number|Boolean, Number: Number|Boolean, Number: Number|Boolean). |
 | `Start Game Mode` | ✅ Supported | No parameters. |
 | `Start Heal Over Time` | ✅ Supported | Parameters: (Object: Player|Array, Player: Player, Number: Number, Number: Number). |
@@ -224,4 +224,4 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Teleport` | ✅ Supported | Parameters: (Player: Player|Array, Position: Vector). |
 | `Unpause Match Time` | ✅ Supported | No parameters. |
 | `Wait` | ✅ Supported | Parameters: (Duration: Any, WaitBehavior: Wait). |
-| `Wait Until` | ✅ Supported | Parameters: (Condition: Any, Timeout: Number). |
+| `Wait Until` | ✅ Supported | Parameters: (Condition: Boolean|Number, Timeout: Number). |
