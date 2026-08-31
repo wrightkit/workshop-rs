@@ -407,7 +407,7 @@ rule ("r") {
     }
 }
 "#;
-    let program = parser::parse(&text, &catalog(), &Locale::new("en-US")).unwrap();
+    let program = parser::parse(text, &catalog(), &Locale::new("en-US")).unwrap();
     let rule = program.rules.iter().next().unwrap();
     let action = program.actions.get(rule.actions[0]).unwrap();
     let wir::Action::ForPlayerVariable { target_span, .. } = action else {
