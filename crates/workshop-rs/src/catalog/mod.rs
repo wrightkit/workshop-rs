@@ -95,6 +95,32 @@ impl Kind {
     }
 }
 
+/// Literal substitutions accepted at one parameter position and normalized
+/// into the parameter's declared semantic type before it enters WIR.
+///
+/// These are deliberately per-parameter facts. They do not establish a
+/// global relationship between Workshop booleans, numbers, arrays, strings,
+/// vectors, or null.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ParamCoercions {
+    /// Accept `False` as numeric zero.
+    #[serde(default)]
+    pub false_as_number: bool,
+    /// Accept `True` as numeric one.
+    #[serde(default)]
+    pub true_as_number: bool,
+    /// Accept numeric zero as `Null`.
+    #[serde(default)]
+    pub zero_as_null: bool,
+    /// Accept `Vector(0, 0, 0)` as `Null`.
+    #[serde(default)]
+    pub null_vector_as_null: bool,
+    /// Accept `Empty Array` as an empty string.
+    #[serde(default)]
+    pub empty_array_as_string: bool,
+}
+
 /// One catalog builtin.
 #[derive(Debug, Clone)]
 pub struct CatalogEntry {
@@ -117,6 +143,8 @@ pub struct CatalogEntry {
     /// Evidence-backed semantic type per parameter position. `None` means
     /// the available sources do not prove a narrower type.
     pub param_types: Vec<Option<String>>,
+    /// Contextual literal substitutions per parameter position.
+    pub param_coercions: Vec<Option<ParamCoercions>>,
     /// Evidence-backed return type for Value entries. Actions must leave this
     /// unset; an absent value is intentionally evidence-insufficient.
     pub return_type: Option<String>,
@@ -202,6 +230,14 @@ impl CatalogEntry {
             .get(index)
             .or_else(|| self.variadic.then(|| self.param_types.last()).flatten())
             .and_then(Option::as_deref)
+    }
+
+    /// The contextual literal substitutions for an argument position.
+    pub fn param_coercions(&self, index: usize) -> Option<&ParamCoercions> {
+        self.param_coercions
+            .get(index)
+            .or_else(|| self.variadic.then(|| self.param_coercions.last()).flatten())
+            .and_then(Option::as_ref)
     }
 
     /// The evidence-backed return type of a Value, when available.
@@ -386,6 +422,8 @@ struct EntryFile {
     param_defaults: Vec<Option<String>>,
     #[serde(default)]
     param_types: Vec<Option<String>>,
+    #[serde(default)]
+    param_coercions: Vec<Option<ParamCoercions>>,
     #[serde(default)]
     return_type: Option<String>,
     #[serde(default)]
@@ -791,6 +829,7 @@ impl Catalog {
             param_domains: item.param_domains,
             param_defaults: item.param_defaults,
             param_types: item.param_types,
+            param_coercions: item.param_coercions,
             return_type: item.return_type,
             variadic: item.variadic,
             aliases,
@@ -862,6 +901,13 @@ impl Catalog {
             if entry.param_types.len() > entry.params.len() {
                 return Err(CatalogError::validation(format!(
                     "{} '{}' declares more param types than params",
+                    entry.kind.as_str(),
+                    entry.id
+                )));
+            }
+            if entry.param_coercions.len() > entry.params.len() {
+                return Err(CatalogError::validation(format!(
+                    "{} '{}' declares more param coercions than params",
                     entry.kind.as_str(),
                     entry.id
                 )));
