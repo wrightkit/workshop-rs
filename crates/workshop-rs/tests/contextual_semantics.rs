@@ -283,3 +283,119 @@ fn conditional_operator_applies_branch_contextual_aliases() {
         Value::Null
     ));
 }
+
+#[test]
+fn audited_catalog_parameters_cover_boolean_numeric_aliases() {
+    for (source, expected) in [
+        ("Set Gravity(Event Player, True);", 1.0),
+        ("Set Ultimate Charge(Event Player, False);", 0.0),
+        ("Set Team Score(Team 1, True);", 1.0),
+    ] {
+        let parsed = program(source);
+        validate_program(&parsed);
+        assert!(matches!(
+            &parsed
+                .values
+                .get(first_action_args(&parsed)[1])
+                .expect("numeric parameter")
+                .value,
+            Value::Number { value, .. } if *value == expected
+        ));
+    }
+
+    let parsed = program("Set Global Variable(probe, Is Objective Complete(True));");
+    validate_program(&parsed);
+    let args = first_value_call(&parsed, "isObjectiveComplete");
+    assert!(matches!(
+        &parsed.values.get(args[0]).expect("objective index").value,
+        Value::Number { value, .. } if *value == 1.0
+    ));
+}
+
+#[test]
+fn array_index_sugar_applies_value_in_array_context() {
+    let parsed = program("Set Global Variable(probe, Array(1)[True]);");
+    validate_program(&parsed);
+    let args = first_value_call(&parsed, "valueInArray");
+    assert!(matches!(
+        &parsed.values.get(args[1]).expect("array index").value,
+        Value::Number { value, .. } if *value == 1.0
+    ));
+}
+
+#[test]
+fn modify_contexts_apply_operation_specific_replacements() {
+    let source = r#"variables
+{
+    global:
+        0: g
+    player:
+        0: p
+}
+rule ("modify contextual semantics")
+{
+    event { Ongoing - Global; }
+    actions {
+        Modify Global Variable(g, Add, False);
+        Modify Global Variable(g, Append To Array, 0);
+        Modify Player Variable(Event Player, p, Subtract, True);
+        Modify Global Variable At Index(g, 0, Append To Array, 0);
+        Global.g[False] += 1;
+    }
+}"#;
+    let parsed =
+        parser::parse(source, &catalog(), &Locale::new("en-US")).expect("modify source parses");
+    validate_program(&parsed);
+
+    let direct_values: Vec<_> = parsed
+        .actions
+        .iter()
+        .filter_map(|action| match action {
+            Action::ModifyGlobalVariable { value, .. }
+            | Action::ModifyPlayerVariable { value, .. } => Some(value),
+            _ => None,
+        })
+        .collect();
+    assert!(matches!(
+        &parsed.values.get(*direct_values[0]).expect("add value").value,
+        Value::Number { value, .. } if *value == 0.0
+    ));
+    assert!(matches!(
+        &parsed
+            .values
+            .get(*direct_values[1])
+            .expect("append value")
+            .value,
+        Value::Null
+    ));
+    assert!(matches!(
+        &parsed.values.get(*direct_values[2]).expect("subtract value").value,
+        Value::Number { value, .. } if *value == 1.0
+    ));
+
+    let indexed: Vec<_> = parsed
+        .actions
+        .iter()
+        .filter_map(|action| match action {
+            Action::Call { name, args, .. } if name == "modifyGlobalVariableAtIndex" => Some(args),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(indexed.len(), 2);
+    assert!(matches!(
+        &parsed
+            .values
+            .get(indexed[0][3])
+            .expect("indexed modify value")
+            .value,
+        Value::Null
+    ));
+    assert!(matches!(
+        &parsed
+            .values
+            .get(indexed[1][1])
+            .expect("indexed assignment index")
+            .value,
+        Value::Number { value, .. } if *value == 0.0
+    ));
+}

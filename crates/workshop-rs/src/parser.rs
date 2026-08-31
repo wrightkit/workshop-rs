@@ -17,7 +17,7 @@ use crate::wir::{
     self, Action, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Value, ValueNode,
 };
 
-use crate::catalog::{Catalog, Kind, Locale};
+use crate::catalog::{Catalog, Kind, Locale, ParamCoercions};
 use crate::error::{Result, WorkshopError};
 use crate::lexer::{Token, TokenKind, tokenize};
 
@@ -163,6 +163,14 @@ impl Parser<'_> {
         let Some(coercions) = self.contextual_coercions(call_id, arg_index) else {
             return value_id;
         };
+        self.normalize_value_with_coercions(coercions, value_id)
+    }
+
+    fn normalize_value_with_coercions(
+        &mut self,
+        coercions: ParamCoercions,
+        value_id: wir::ValueId,
+    ) -> wir::ValueId {
         let Some(node) = self.target.values.get(value_id) else {
             return value_id;
         };
@@ -217,6 +225,72 @@ impl Parser<'_> {
             return value_id;
         };
         self.target.values.push(ValueNode::new(value, span))
+    }
+
+    fn normalize_modify_value(&mut self, op: ModifyOp, value_id: wir::ValueId) -> wir::ValueId {
+        let coercions = match op {
+            ModifyOp::Add
+            | ModifyOp::Subtract
+            | ModifyOp::Modulo
+            | ModifyOp::Min
+            | ModifyOp::Max
+            | ModifyOp::RemoveFromArrayByIndex => ParamCoercions {
+                false_as_number: true,
+                true_as_number: true,
+                ..Default::default()
+            },
+            ModifyOp::AppendToArray | ModifyOp::RemoveFromArray => ParamCoercions {
+                zero_as_null: true,
+                ..Default::default()
+            },
+            ModifyOp::Multiply | ModifyOp::Divide | ModifyOp::RaiseToPower => return value_id,
+        };
+        self.normalize_value_with_coercions(coercions, value_id)
+    }
+
+    fn modify_op_from_value(&self, value_id: wir::ValueId) -> Option<ModifyOp> {
+        let Value::Call { name, args } = &self.target.values.get(value_id)?.value else {
+            return None;
+        };
+        if !args.is_empty() {
+            return None;
+        }
+        match name.as_str() {
+            "add" => Some(ModifyOp::Add),
+            "subtract" => Some(ModifyOp::Subtract),
+            "multiply" => Some(ModifyOp::Multiply),
+            "divide" => Some(ModifyOp::Divide),
+            "modulo" => Some(ModifyOp::Modulo),
+            "min" => Some(ModifyOp::Min),
+            "max" => Some(ModifyOp::Max),
+            "raiseToPower" => Some(ModifyOp::RaiseToPower),
+            "appendToArray" => Some(ModifyOp::AppendToArray),
+            "removeFromArray" | "removeFromArrayByValue" => Some(ModifyOp::RemoveFromArray),
+            "removeFromArrayByIndex" => Some(ModifyOp::RemoveFromArrayByIndex),
+            _ => None,
+        }
+    }
+
+    fn normalize_modify_call_value(
+        &mut self,
+        call_id: &str,
+        arg_index: usize,
+        args: &[wir::ValueId],
+        value_id: wir::ValueId,
+    ) -> wir::ValueId {
+        if matches!(
+            call_id,
+            "modifyGlobalVariableAtIndex" | "modifyPlayerVariableAtIndex"
+        ) && arg_index == 3
+        {
+            if let Some(op) = args
+                .get(2)
+                .and_then(|value_id| self.modify_op_from_value(*value_id))
+            {
+                return self.normalize_modify_value(op, value_id);
+            }
+        }
+        value_id
     }
 
     fn canonical_keyword(&self, spelling: &str) -> String {
@@ -1498,6 +1572,11 @@ impl Parser<'_> {
             };
             let variable = self.global_by_name(&name)?;
             let value = self.value()?;
+            let value = if let AssignmentOperator::Modify(op) = &operator {
+                self.normalize_modify_value(*op, value)
+            } else {
+                value
+            };
             self.expect(TokenKind::Semi, "expected ';' after assignment")?;
             let span = Some(Span::new(self.file(), start, self.previous_span().1));
             let target_span = Some(Span::new(self.file(), start, target_end));
@@ -1589,6 +1668,11 @@ impl Parser<'_> {
             return self.member_assignment_action(saved, start);
         };
         let value = self.value()?;
+        let value = if let AssignmentOperator::Modify(op) = &operator {
+            self.normalize_modify_value(*op, value)
+        } else {
+            value
+        };
         self.expect(TokenKind::Semi, "expected ';' after assignment")?;
         let span = Some(Span::new(self.file(), start, self.previous_span().1));
         let target_span = Some(Span::new(self.file(), target_start, target_end));
@@ -1648,34 +1732,41 @@ impl Parser<'_> {
         value: wir::ValueId,
         start: Position,
     ) -> wir::ActionId {
-        let (name, args) = match operator {
-            AssignmentOperator::Set => (
+        let name = match &operator {
+            AssignmentOperator::Set => {
                 if global {
                     "setGlobalVariableAtIndex"
                 } else {
                     "setPlayerVariableAtIndex"
-                },
-                vec![variable, index, value],
-            ),
-            AssignmentOperator::Modify(op) => (
+                }
+            }
+            AssignmentOperator::Modify(_) => {
                 if global {
                     "modifyGlobalVariableAtIndex"
                 } else {
                     "modifyPlayerVariableAtIndex"
-                },
-                vec![
-                    variable,
-                    index,
-                    self.target.values.push(ValueNode::new(
-                        Value::Call {
-                            name: op.catalog_id().to_string(),
-                            args: Vec::new(),
-                        },
-                        None,
-                    )),
-                    value,
-                ],
-            ),
+                }
+            }
+        };
+        let index = self.normalize_contextual_argument(name, 1, index);
+        let (value, modify_op) = match operator {
+            AssignmentOperator::Set => (value, None),
+            AssignmentOperator::Modify(op) => (self.normalize_modify_value(op, value), Some(op)),
+        };
+        let args = match modify_op {
+            None => vec![variable, index, value],
+            Some(op) => vec![
+                variable,
+                index,
+                self.target.values.push(ValueNode::new(
+                    Value::Call {
+                        name: op.catalog_id().to_string(),
+                        args: Vec::new(),
+                    },
+                    None,
+                )),
+                value,
+            ],
         };
         self.target.actions.push(Action::Call {
             name: name.to_string(),
@@ -1954,6 +2045,7 @@ impl Parser<'_> {
                     let op = self.modify_op()?;
                     self.expect(TokenKind::Comma, "expected ',' after modify operator")?;
                     let value = self.value()?;
+                    let value = self.normalize_modify_value(op, value);
                     self.expect(TokenKind::RParen, "expected ')'")?;
                     self.expect(TokenKind::Semi, "expected ';'")?;
                     Ok(self.target.actions.push(Action::ModifyGlobalVariable {
@@ -1992,6 +2084,7 @@ impl Parser<'_> {
                     let op = self.modify_op()?;
                     self.expect(TokenKind::Comma, "expected ',' after modify operator")?;
                     let value = self.value()?;
+                    let value = self.normalize_modify_value(op, value);
                     self.expect(TokenKind::RParen, "expected ')'")?;
                     self.expect(TokenKind::Semi, "expected ';'")?;
                     Ok(self.target.actions.push(Action::ModifyPlayerVariable {
@@ -2217,6 +2310,7 @@ impl Parser<'_> {
             {
                 self.pos += 1;
                 let index = self.value()?;
+                let index = self.normalize_contextual_argument("valueInArray", 1, index);
                 let end = self.peek().map(|token| token.end).unwrap_or(start);
                 self.expect(TokenKind::RBracket, "expected ']' after array index")?;
                 value = self.target.values.push(ValueNode::new(
@@ -3130,17 +3224,23 @@ impl Parser<'_> {
                 // per the enclosing call's canonical signature (#111); nested
                 // calls override the expectation for their own arguments.
                 let saved = self.expected_domain;
-                self.expected_domain =
-                    self.context
-                        .expected_domain(call_id, arg_index)
-                        .or_else(|| {
-                            (matches!(call_id, "array" | "randomValueInArray"))
-                                .then_some(saved)
-                                .flatten()
-                        });
+                self.expected_domain = self
+                    .context
+                    .expected_domain(call_id, canonical_arg_index)
+                    .or_else(|| {
+                        (matches!(call_id, "array" | "randomValueInArray"))
+                            .then_some(saved)
+                            .flatten()
+                    });
                 let arg = self.value();
                 self.expected_domain = saved;
-                args.push(self.normalize_contextual_argument(call_id, canonical_arg_index, arg?));
+                let arg = self.normalize_contextual_argument(call_id, canonical_arg_index, arg?);
+                args.push(self.normalize_modify_call_value(
+                    call_id,
+                    canonical_arg_index,
+                    &args,
+                    arg,
+                ));
             }
             arg_index += 1;
             match self.peek() {
