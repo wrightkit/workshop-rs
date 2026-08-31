@@ -68,6 +68,7 @@ fn program_with_structured_actions() -> (wir::Program, Vec<wir::ActionId>) {
         step: number,
         body: vec![nested_if_body],
         span: None,
+        target_span: None,
     });
     let trailing_leaf = leaf(&mut program, number);
     let actions = vec![

@@ -396,6 +396,8 @@ pub enum Action {
         step: ValueId,
         body: Vec<ActionId>,
         span: Option<Span>,
+        /// The exact span of the loop variable identifier.
+        target_span: Option<Span>,
     },
     /// Any other action call with side effects.
     Call {

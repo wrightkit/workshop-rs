@@ -391,6 +391,36 @@ fn spans_are_preserved() {
 }
 
 #[test]
+fn player_variable_loop_preserves_target_span() {
+    let text = r#"variables {
+    player:
+        0: I
+}
+
+rule ("r") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        For Player Variable(Host Player, I, 0, 3, 1);
+        End;
+    }
+}
+"#;
+    let program = parser::parse(&text, &catalog(), &Locale::new("en-US")).unwrap();
+    let rule = program.rules.iter().next().unwrap();
+    let action = program.actions.get(rule.actions[0]).unwrap();
+    let wir::Action::ForPlayerVariable { target_span, .. } = action else {
+        panic!("expected For Player Variable");
+    };
+    let target_span = target_span.expect("player loop target span");
+    assert_eq!(target_span.start.line, 11);
+    assert_eq!(target_span.start.col, 42);
+    assert_eq!(target_span.end.line, 11);
+    assert_eq!(target_span.end.col, 43);
+}
+
+#[test]
 fn malformed_input_is_reported_as_malformed() {
     // A rule-final If without `End;` is the oracle's valid spelling; an If
     // whose body never closes at all stays malformed.

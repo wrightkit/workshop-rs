@@ -295,6 +295,7 @@ fn render_action(program: &Program, id: super::ActionId, out: &mut String, level
             step,
             body,
             span,
+            ..
         } => {
             out.push_str(&format!("{}forPlayerVariable ", indent(level)));
             render_value(program, *player, out);

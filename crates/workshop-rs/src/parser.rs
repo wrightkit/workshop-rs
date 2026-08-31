@@ -1976,7 +1976,7 @@ impl Parser<'_> {
         )?;
         let player = self.value()?;
         self.expect(TokenKind::Comma, "expected ',' after loop player")?;
-        let (name, _, _) = self.phrase()?;
+        let (name, target_start, target_end) = self.phrase()?;
         let variable = self.player_by_name(&name)?;
         self.expect(TokenKind::Comma, "expected ',' after loop variable")?;
         let start_value = self.value()?;
@@ -2004,6 +2004,7 @@ impl Parser<'_> {
             step,
             body,
             span: Some(Span::new(self.file(), start, end_span.1)),
+            target_span: Some(Span::new(self.file(), target_start, target_end)),
         };
         Ok(self.target.actions.push(action))
     }
