@@ -61,6 +61,6 @@ The reviewed contract includes these examples:
   an explicit comparison when Boolean behavior is intended.
 
 These distinctions are cross-checked against
-[OverPy's replacement metadata](https://github.com/Zezombye/overpy/blob/master/src/types.d.ts),
-its [Workshop emission replacements](https://github.com/Zezombye/overpy/blob/master/src/compiler/astToWorkshop.ts),
-and its [Wait Until diagnostic](https://github.com/Zezombye/overpy/blob/master/src/compiler/functions/waitUntil.ts).
+[OverPy's replacement metadata](https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/types.d.ts),
+its [Workshop emission replacements](https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/compiler/astToWorkshop.ts),
+and its [Wait Until diagnostic](https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/compiler/functions/waitUntil.ts).
