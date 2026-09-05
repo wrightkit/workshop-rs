@@ -1123,7 +1123,12 @@ mod corpus {
             );
             index
         };
-        let gamemodes = localized_index(export, &["gamemodes.", "customGameSettings.gamemodes."]);
+        let gamemodes = {
+            let mut index =
+                localized_index(export, &["gamemodes.", "customGameSettings.gamemodes."]);
+            merge_index(&mut index, data_index(export, "gamemodes"));
+            index
+        };
         let maps = localized_index(export, &["maps."]);
         let heroes = localized_index(export, &["heroes."]);
         let teams = localized_index(
@@ -1232,7 +1237,7 @@ mod corpus {
                 "commit": meta.get("commit").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
-                "method": "exact en-US spelling match between the declared settings surface (settings::table) and every locale translation carried by the export's customGameSettings/gamemodes/maps/heroes labels and other.customGameSettings tokens; the two hero Ultimate Generation labels are composed per reviewed locale from exact export templates and hero identities; entries without an accepted match keep fail-explicit behavior (ADR-0001 Decision 7)",
+                "method": "exact en-US spelling match between the declared settings surface (settings::table) and every locale translation carried by the export's customGameSettings/gamemodes/maps/heroes labels, direct data.gamemodes entries, and other.customGameSettings tokens; the two hero Ultimate Generation labels are composed per reviewed locale from exact export templates and hero identities; entries without an accepted match keep fail-explicit behavior (ADR-0001 Decision 7)",
                 "sourceReview": "reviewed: workshop-rs commits its own settings mapping data; the user-provided JSON is build input only and is not redistributed",
             },
             "labels": labels,
@@ -1430,7 +1435,7 @@ mod corpus {
 
     #[cfg(test)]
     mod tests {
-        use super::{Index, en_aliases, match_en_aliases, set_zh_alias};
+        use super::{Index, en_aliases, match_en_aliases, set_zh_alias, settings_corpus};
         use serde_json::json;
 
         #[test]
@@ -1489,6 +1494,27 @@ mod corpus {
             set_zh_alias(&mut entry, "中断").expect("conflicting corpus alias is retained");
 
             assert_eq!(entry["aliases"]["zh-CN"], json!(["中止", "中断"]));
+        }
+
+        #[test]
+        fn settings_corpus_includes_direct_gamemode_data() {
+            let export = json!({
+                "data": {
+                    "gamemodes": {
+                        "ctf": {
+                            "en-US": "Capture The Flag",
+                            "zh-CN": "勇夺锦旗"
+                        }
+                    }
+                }
+            });
+
+            let settings = settings_corpus(&export).expect("settings corpus builds");
+            assert_eq!(settings["modes"]["Capture The Flag"]["zh-CN"], "勇夺锦旗");
+            assert_eq!(
+                settings["modes"]["Capture The Flag"]["sources"],
+                json!(["data.gamemodes.ctf"])
+            );
         }
     }
 }
