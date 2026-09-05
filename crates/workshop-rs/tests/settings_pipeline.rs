@@ -68,6 +68,21 @@ fn reviewed_settings_conversion_round_trips_en_us_and_zh_cn() {
 }
 
 #[test]
+fn capture_the_flag_settings_emit_and_reparse_in_zh_cn() {
+    let catalog = catalog();
+    let source = "settings { modes { Capture The Flag {} } }";
+    let en = Locale::new("en-US");
+    let zh = Locale::new("zh-CN");
+    let program = parser::parse(source, &catalog, &en).expect("CTF settings parse");
+
+    let emitted = emitter::emit(&program, &catalog, &zh).expect("CTF settings emit");
+    assert!(emitted.contains("勇夺锦旗"), "{emitted}");
+
+    let reparsed = parser::parse(&emitted, &catalog, &zh).expect("CTF settings reparse");
+    assert!(roundtrip::equivalent(&program, &reparsed));
+}
+
+#[test]
 fn composed_blizzard_settings_labels_convert_in_both_directions() {
     let source = "settings {
     heroes {

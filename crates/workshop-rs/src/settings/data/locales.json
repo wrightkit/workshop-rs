@@ -17,8 +17,8 @@
       "total": 2
     },
     "modes": {
-      "matched": 7,
-      "total": 7
+      "matched": 8,
+      "total": 8
     },
     "teams": {
       "matched": 3,
@@ -3472,6 +3472,13 @@
       ],
       "zh-CN": "占领要点"
     },
+    "Capture The Flag": {
+      "en-US": "Capture The Flag",
+      "sources": [
+        "data.gamemodes.ctf"
+      ],
+      "zh-CN": "勇夺锦旗"
+    },
     "Deathmatch": {
       "en-US": "Deathmatch",
       "sources": [
@@ -3512,7 +3519,7 @@
   "provenance": {
     "source": "user-provided workshop-data export (workshop-data.json)",
     "sourceCommit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
-    "method": "generated current customGameSettings labels, value kinds, enum members, and paths; dynamic hero templates remain resolved through gameplay catalog identities"
+    "method": "generated current customGameSettings labels, value kinds, enum members, and paths; game mode headers use reviewed localized and direct data.gamemodes identities; dynamic hero templates remain resolved through gameplay catalog identities"
   },
   "schemaVersion": 2,
   "teams": {
