@@ -26,6 +26,24 @@ pub const CENSUS_IDENTITY_SCHEMA_VERSION: u32 = 1;
 const EN_US: &str = "en-US";
 const ZH_CN: &str = "zh-CN";
 const CENSUS_TRACKING_REF: &str = "#19";
+const LOCALIZATION_EN_US_SOURCE: &str = r#"rule ("Localization") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        Disable Inspector Recording;
+    }
+}
+"#;
+const LOCALIZATION_ZH_CN_SOURCE: &str = r#"rule ("Localization") {
+    event {
+        持续 - 全局;
+    }
+    actions {
+        禁用查看器录制;
+    }
+}
+"#;
 
 /// An explicit support classification for a census case.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -529,10 +547,6 @@ fn wir_shard() -> Result<CensusShard, CensusError> {
 }
 
 fn localization_shard() -> Result<CensusShard, CensusError> {
-    let en_source =
-        include_str!("../../workshop-rs/tests/fixtures/census/localization-en-us.ws").to_string();
-    let zh_source =
-        include_str!("../../workshop-rs/tests/fixtures/census/localization-zh-cn.ws").to_string();
     CensusShard::new(
         "localization",
         vec![
@@ -544,7 +558,7 @@ fn localization_shard() -> Result<CensusShard, CensusError> {
                     "en-us-to-zh-cn",
                 )],
                 source_locale: EN_US.to_string(),
-                source: en_source,
+                source: LOCALIZATION_EN_US_SOURCE.to_string(),
                 reference_source: None,
                 support: generated_probe_support(),
             },
@@ -556,7 +570,7 @@ fn localization_shard() -> Result<CensusShard, CensusError> {
                     "zh-cn-to-en-us",
                 )],
                 source_locale: ZH_CN.to_string(),
-                source: zh_source,
+                source: LOCALIZATION_ZH_CN_SOURCE.to_string(),
                 reference_source: None,
                 support: generated_probe_support(),
             },
