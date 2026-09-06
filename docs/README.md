@@ -1,28 +1,41 @@
 # workshop-rs Documentation
 
 This directory is the canonical documentation index for `workshop-rs`. The root
-[`README.md`](../README.md) is the user-facing project overview. `workshop-rs`
-is both an independently usable raw Workshop implementation and WrightKit's
-canonical Workshop semantic core.
+[`README.md`](../README.md) is the user-facing overview.
 
 ## Documentation model
 
 ```text
-language-support.md          authoritative Workshop language support matrix
-implementation-role.md       standalone implementation and consumer relationship
-  └─ docs/adr/               accepted point-in-time architecture decisions
-      └─ living references   catalog, gameplay, provenance, conformance, release
-          └─ executable evidence   crates, datasets, tests, census, corpus
+architecture/README.md       current architecture routing
+  └─ current domain contracts
+language-support.md          current declared support, backed by executable evidence
+domain/provenance docs       durable public and evidence contracts
+adr/                         point-in-time decisions and rationale
+Issues / PRs / releases      mutable execution state
+source / tests / data        current implementation reality
 ```
 
-GitHub issues/PRs own active execution scope and sequencing; durable contracts
-belong in documentation.
+An accepted ADR is not current-reality evidence. For implementation work, start
+from [`architecture/README.md`](architecture/README.md), then inspect the
+relevant code/tests/data and current Issue contract.
+
+## Current architecture
+
+- [Architecture routing](architecture/README.md): current contract index and
+  authority model.
+- [Workshop core boundaries](architecture/core-boundaries.md): repository
+  ownership, dependency direction, canonical WIR, source-language separation,
+  and semantic-code versus declarative-data boundary.
+- [Repository agent guidance](../AGENTS.md): implementation routing,
+  verification, provenance, and delivery rules.
+
+[`implementation-role.md`](implementation-role.md) is retained only as a
+compatibility pointer for older links.
 
 ## Workshop language support
 
-- [Language support matrix](language-support.md): the single authoritative
-  index and status matrix for all Workshop language capabilities, linking to
-  component inventories in [`language-support/`](language-support/):
+- [Language support matrix](language-support.md): current declared Workshop
+  capability surface, with component inventories in [`language-support/`](language-support/):
   - [Program Structure & Variables](language-support/structure.md)
   - [Events & Event Filters](language-support/events.md)
   - [Conditions & Control Flow](language-support/control-flow.md)
@@ -34,75 +47,44 @@ belong in documentation.
   - [Strings & Localization](language-support/strings.md)
   - [Tooling & Semantic Capabilities](language-support/tooling.md)
 
-## Architecture and ownership
+Support prose is not a substitute for current executable evidence.
 
-- [Implementation role](implementation-role.md): standalone Workshop
-  implementation identity, canonical ownership, dependency direction from
-  `opy-rs` / `del-rs` / Wright, and consumer-driven evolution rules.
-- [Canonical action layout](action-layout.md): native Workshop action-width
-  queries for validated WIR sequences, including structured action expansion
-  and explicit layout errors.
-- [ADR-0001: Workshop Catalog, Locale, Provenance, and Version Boundaries](adr/0001-catalog-boundaries.md):
-  semantic-code/catalog separation, locale-independent identities,
-  missing-mapping behavior, and version identity.
-- [ADR-0002 (Gameplay): Hero Gameplay Domain API and Provenance Boundary](adr/0002-gameplay-domain-api.md):
-  typed hero/ability topology, variants, open identities, and dataset lifecycle.
-- [ADR-0006: Canonical Typed Workshop Settings Semantics](adr/0006-settings-semantic-schema.md):
-  setting identity, scope, targets, domains, applicability, provenance, and
-  authored-versus-effective numeric semantics.
-- [Repository ownership rules](../AGENTS.md): cross-repository routing,
-  provenance, validation, and delivery rules.
+## Domain and evidence contracts
 
-## Workshop catalog, localization, and provenance
-
-- [Provenance record](provenance.md): catalog, event/filter, locale, gameplay,
-  fixture, and dataset provenance.
+- [Provenance record](provenance.md): catalog, locale, gameplay, fixture, and
+  dataset evidence.
+- [Hero gameplay dataset](gameplay-data.md): embedded data model and validation
+  boundaries.
+- [Gameplay query API](gameplay-query.md): read-only semantic queries and
+  locale-aware ability resolution.
+- [Hero gameplay topology survey](gameplay-roster-survey.md): evidence used by
+  the gameplay domain.
+- [Canonical action layout](action-layout.md): validated WIR action-width and
+  structured action expansion behavior.
 - [Test fixture provenance](../crates/workshop-rs/tests/fixtures/README.md):
   source origin and verification for raw Workshop/settings fixtures.
 
-## Hero gameplay data and query APIs
+## Architecture decision history
 
-- [Hero gameplay dataset](gameplay-data.md): embedded dataset schema, role facts,
-  ability keywords, and validation boundaries.
-- [Gameplay query API](gameplay-query.md): read-only semantic queries, kit
-  lookups, Custom Game calculations, and locale-aware ability resolution.
-- [Hero gameplay topology survey](gameplay-roster-survey.md): roster/slot/variant
-  evidence used by the domain model.
+See [ADR registry](adr/README.md). ADRs explain why decisions were made; current
+architecture is routed from `docs/architecture/`.
 
-## Conformance, census, and compatibility evidence
+Current registry:
 
-- [ADR-0002: Workshop Conformance Result and Feature Identity Contract](adr/0002-conformance-contract.md):
-  stable feature/result/evidence schema.
-- [ADR-0003: Canonical Sharded Workshop Feature Census](adr/0003-sharded-census.md):
-  deterministic offline census and WIR capability shards.
-- [ADR-0004: Provenance-Linked Real-Project Evidence](adr/0004-real-project-evidence.md):
-  preserved real-project and minimized regression evidence.
-- [ADR-0005: Seasonal Workshop Client Validation Workflow](adr/0005-seasonal-client-validation.md):
-  live-client capture and structured drift review.
+- [ADR-0001: Workshop catalog, locale, provenance, and version boundaries](adr/0001-catalog-boundaries.md)
+- [ADR-0002: Workshop conformance result and feature identity contract](adr/0002-conformance-contract.md)
+- [ADR-0003: Canonical sharded Workshop feature census](adr/0003-sharded-census.md)
+- [ADR-0004: Provenance-linked real-project evidence](adr/0004-real-project-evidence.md)
+- [ADR-0005: Seasonal Workshop client validation workflow](adr/0005-seasonal-client-validation.md)
+- [ADR-0006: Canonical typed Workshop settings semantics](adr/0006-settings-semantic-schema.md)
+- [ADR-0007: Hero gameplay domain API and provenance boundary](adr/0007-gameplay-domain-api.md)
 
 ## Release and operations
 
 - [Release automation](release.md): release/publish workflow, artifacts,
   checksums, and maintainer runbook.
 
-## Authority map
-
-| Contract | Primary document |
-| --- | --- |
-| Workshop language support status | [`language-support.md`](language-support.md) |
-| Repository/consumer role | [`implementation-role.md`](implementation-role.md) |
-| Catalog & semantic boundaries | [`adr/0001-catalog-boundaries.md`](adr/0001-catalog-boundaries.md) |
-| Provenance & evidence | [`provenance.md`](provenance.md) |
-| Hero gameplay model | [`adr/0002-gameplay-domain-api.md`](adr/0002-gameplay-domain-api.md), [`gameplay-data.md`](gameplay-data.md) |
-| Gameplay queries | [`gameplay-query.md`](gameplay-query.md) |
-| Conformance | [`adr/0002-conformance-contract.md`](adr/0002-conformance-contract.md) |
-| Feature census | [`adr/0003-sharded-census.md`](adr/0003-sharded-census.md) |
-| Real-project evidence | [`adr/0004-real-project-evidence.md`](adr/0004-real-project-evidence.md) |
-| Seasonal validation | [`adr/0005-seasonal-client-validation.md`](adr/0005-seasonal-client-validation.md) |
-| Typed Workshop settings | [`adr/0006-settings-semantic-schema.md`](adr/0006-settings-semantic-schema.md) |
-| Release & publishing | [`release.md`](release.md) |
-
 > [!NOTE]
-> Source-language-specific syntax, runtime lowering, compiler quirks, or
-> reconstruction belong to `opy-rs` / `del-rs`, even when those implementations
+> Source-language syntax, runtime lowering, compiler quirks, and reconstruction
+> remain owned by `opy-rs` / `deltin-rs`, even when those implementations
 > consume canonical Workshop contracts from this repository.
