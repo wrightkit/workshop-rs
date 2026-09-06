@@ -13,10 +13,19 @@
 //! `settings`, and `source` modules); see
 //! [`docs/provenance.md`](https://github.com/wrightkit/workshop-rs/blob/main/docs/provenance.md).
 
+mod action;
 mod dump;
+mod event;
+mod rule;
 mod validate;
+mod value;
 
 pub mod error;
+
+pub use action::{Action, IfBranch, ModifyOp};
+pub use event::{Event, EventTarget, EventTeam, PlayerEventKind};
+pub use rule::{Rule, WorkshopSubroutine, WorkshopVariable};
+pub use value::{Value, ValueNode};
 
 /// The WIR-owned capability surface used by the canonical census. Providers
 /// do not contribute source-language inventories to this registry.
@@ -74,9 +83,9 @@ pub const CENSUS_CAPABILITIES: &[CensusCapability] = &[
     },
 ];
 
-use crate::arena::Arena;
-use crate::ids::Id;
-use crate::source::{SourceFile, Span};
+use crate::core::arena::Arena;
+use crate::core::ids::Id;
+use crate::core::source::SourceFile;
 
 /// A typed ID referencing a [`WorkshopVariable`] in the global table.
 pub type GlobalVarId = Id<WorkshopVariable>;
@@ -137,348 +146,12 @@ impl Program {
     pub fn semantic_issues(
         &self,
         catalog: &crate::catalog::Catalog,
-    ) -> Vec<crate::semantic::SemanticIssue> {
-        crate::semantic::inspect(self, catalog)
+    ) -> Vec<crate::analysis::semantic::SemanticIssue> {
+        crate::analysis::semantic::inspect(self, catalog)
     }
 
     /// Render a deterministic debug dump of the workshop program.
     pub fn dump(&self) -> String {
         dump::dump(self)
-    }
-}
-
-/// A workshop variable (global or player) with its assigned index.
-///
-/// Declaration initializers are lowered into synthetic "Initialize global
-/// variables" / "Initialize player variables" rules during HIR → WIR lowering
-/// (#112); the variable tables carry no initializer field, so the Initialize
-/// rules are the single source of truth.
-#[derive(Debug, Clone)]
-pub struct WorkshopVariable {
-    pub name: String,
-    /// The workshop variable index assigned during lowering.
-    pub index: u32,
-    pub span: Option<Span>,
-    /// The exact span of the declared identifier token.
-    pub name_span: Option<Span>,
-}
-
-/// A workshop subroutine with its assigned index.
-#[derive(Debug, Clone)]
-pub struct WorkshopSubroutine {
-    pub name: String,
-    pub index: u32,
-    pub span: Option<Span>,
-    /// The exact span of the declared identifier token.
-    pub name_span: Option<Span>,
-}
-
-/// A workshop rule.
-#[derive(Debug, Clone)]
-pub struct Rule {
-    pub name: String,
-    pub span: Option<Span>,
-    /// The exact span of the rule name inside its string literal.
-    pub name_span: Option<Span>,
-    pub disabled: bool,
-    pub event: Event,
-    pub conditions: Vec<ValueId>,
-    pub actions: Vec<ActionId>,
-}
-
-/// The team filter attached to a player-scoped Workshop event.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EventTeam {
-    All,
-    Team1,
-    Team2,
-}
-
-/// The player filter attached to a player-scoped Workshop event.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum EventTarget {
-    All,
-    Slot(u8),
-    Hero(String),
-}
-
-/// A non-ongoing player event identity.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PlayerEventKind {
-    DealtDamage,
-    DealtFinalBlow,
-    DealtHealing,
-    DealtKnockback,
-    Died,
-    EarnedElimination,
-    Joined,
-    Left,
-    ReceivedHealing,
-    ReceivedKnockback,
-    TookDamage,
-}
-
-impl PlayerEventKind {
-    /// The locale-independent catalog identity for this event.
-    pub fn catalog_id(self) -> &'static str {
-        match self {
-            PlayerEventKind::DealtDamage => "playerDealtDamage",
-            PlayerEventKind::DealtFinalBlow => "playerDealtFinalBlow",
-            PlayerEventKind::DealtHealing => "playerDealtHealing",
-            PlayerEventKind::DealtKnockback => "playerDealtKnockback",
-            PlayerEventKind::Died => "playerDied",
-            PlayerEventKind::EarnedElimination => "playerEarnedElimination",
-            PlayerEventKind::Joined => "playerJoined",
-            PlayerEventKind::Left => "playerLeft",
-            PlayerEventKind::ReceivedHealing => "playerReceivedHealing",
-            PlayerEventKind::ReceivedKnockback => "playerReceivedKnockback",
-            PlayerEventKind::TookDamage => "playerTookDamage",
-        }
-    }
-}
-
-/// A workshop event.
-#[derive(Debug, Clone)]
-pub enum Event {
-    /// `Ongoing - Global` (from `@Event global`).
-    Global,
-    /// `Ongoing - Each Player` (from `@Event eachPlayer`).
-    EachPlayer,
-    /// `Ongoing - Each Player` with its canonical team/player filters.
-    EachPlayerWithFilters {
-        team: EventTeam,
-        target: EventTarget,
-    },
-    /// A player-scoped Workshop event with canonical filters.
-    Player {
-        kind: PlayerEventKind,
-        team: EventTeam,
-        target: EventTarget,
-    },
-    /// A subroutine body (`def name():`), referencing the subroutine.
-    Subroutine(SubroutineId),
-}
-
-/// A workshop value (expression) node with its source span.
-#[derive(Debug, Clone)]
-pub struct ValueNode {
-    pub value: Value,
-    pub span: Option<Span>,
-}
-
-/// A workshop value (expression).
-#[derive(Debug, Clone)]
-pub enum Value {
-    /// A numeric literal with its source spelling (`5`, `0.0`, `-22.05`);
-    /// computed values (constant folding) carry the formatted spelling.
-    Number {
-        value: f64,
-        text: String,
-    },
-    String(String),
-    /// A reviewed localized Workshop preset-string identity.
-    LocalizedString(String),
-    Bool(bool),
-    Null,
-    Array(Vec<ValueId>),
-    Vector {
-        x: ValueId,
-        y: ValueId,
-        z: ValueId,
-    },
-    /// A built-in enumerated value, e.g. `Team.ALL`.
-    Enum {
-        value_type: String,
-        value: String,
-    },
-    GlobalVariable(GlobalVarId),
-    PlayerVariable {
-        player: ValueId,
-        variable: PlayerVarId,
-    },
-    /// A declared Workshop subroutine referenced by a generic action such as
-    /// `Start Rule`. The identity is source-owned, not a catalog builtin.
-    Subroutine(SubroutineId),
-    EventPlayer,
-    /// A function call over workshop values.
-    Call {
-        name: String,
-        args: Vec<ValueId>,
-    },
-}
-
-impl ValueNode {
-    /// Build a value node with a source span.
-    pub fn new(value: Value, span: Option<Span>) -> Self {
-        ValueNode { value, span }
-    }
-}
-
-/// A workshop action.
-#[derive(Debug, Clone)]
-pub enum Action {
-    SetGlobalVariable {
-        variable: GlobalVarId,
-        value: ValueId,
-        span: Option<Span>,
-        /// The exact span of the assigned variable identifier.
-        target_span: Option<Span>,
-    },
-    ModifyGlobalVariable {
-        variable: GlobalVarId,
-        op: ModifyOp,
-        value: ValueId,
-        span: Option<Span>,
-        /// The exact span of the modified variable identifier.
-        target_span: Option<Span>,
-    },
-    SetPlayerVariable {
-        player: ValueId,
-        variable: PlayerVarId,
-        value: ValueId,
-        span: Option<Span>,
-        /// The exact span of the assigned variable identifier.
-        target_span: Option<Span>,
-    },
-    ModifyPlayerVariable {
-        player: ValueId,
-        variable: PlayerVarId,
-        op: ModifyOp,
-        value: ValueId,
-        span: Option<Span>,
-        /// The exact span of the modified variable identifier.
-        target_span: Option<Span>,
-    },
-    /// Assignment to a canonical Workshop member-access target, optionally
-    /// indexed. This is not a builtin catalog action; the emitter preserves
-    /// the native member-assignment syntax.
-    AssignMember {
-        target: ValueId,
-        op: Option<ModifyOp>,
-        value: ValueId,
-        span: Option<Span>,
-    },
-    CallSubroutine {
-        subroutine: SubroutineId,
-        span: Option<Span>,
-        /// The exact span of the callee identifier occurrence.
-        callee_span: Option<Span>,
-    },
-    If {
-        branches: Vec<IfBranch>,
-        else_body: Option<Vec<ActionId>>,
-        span: Option<Span>,
-    },
-    While {
-        condition: ValueId,
-        body: Vec<ActionId>,
-        span: Option<Span>,
-    },
-    ForGlobalVariable {
-        variable: GlobalVarId,
-        start: ValueId,
-        stop: ValueId,
-        step: ValueId,
-        body: Vec<ActionId>,
-        span: Option<Span>,
-        /// The exact span of the loop variable identifier.
-        target_span: Option<Span>,
-    },
-    /// `For Player Variable(player, name, start, stop, step)`: the
-    /// per-player loop form (frontend-neutral; parsed from reference
-    /// evidence, not emitted by Wright's own lowering, which models
-    /// foreach counters as globals under the declared #119 contract).
-    ForPlayerVariable {
-        player: ValueId,
-        variable: PlayerVarId,
-        start: ValueId,
-        stop: ValueId,
-        step: ValueId,
-        body: Vec<ActionId>,
-        span: Option<Span>,
-    },
-    /// Any other action call with side effects.
-    Call {
-        name: String,
-        args: Vec<ValueId>,
-        span: Option<Span>,
-    },
-}
-
-impl Action {
-    /// The source span of this action, if any.
-    pub fn span(&self) -> Option<Span> {
-        match self {
-            Action::SetGlobalVariable { span, .. }
-            | Action::ModifyGlobalVariable { span, .. }
-            | Action::SetPlayerVariable { span, .. }
-            | Action::ModifyPlayerVariable { span, .. }
-            | Action::AssignMember { span, .. }
-            | Action::CallSubroutine { span, .. }
-            | Action::If { span, .. }
-            | Action::While { span, .. }
-            | Action::ForGlobalVariable { span, .. }
-            | Action::ForPlayerVariable { span, .. }
-            | Action::Call { span, .. } => *span,
-        }
-    }
-}
-
-/// One condition/body pair of an `If` action.
-#[derive(Debug, Clone)]
-pub struct IfBranch {
-    pub condition: ValueId,
-    pub body: Vec<ActionId>,
-}
-
-/// The modify operators of the v0.1 surface.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ModifyOp {
-    Add,
-    Subtract,
-    Multiply,
-    Divide,
-    Modulo,
-    Min,
-    Max,
-    RaiseToPower,
-    AppendToArray,
-    RemoveFromArray,
-    RemoveFromArrayByIndex,
-}
-
-impl ModifyOp {
-    /// A short canonical name for dumps and diagnostics.
-    pub fn as_str(self) -> &'static str {
-        match self {
-            ModifyOp::Add => "Add",
-            ModifyOp::Subtract => "Subtract",
-            ModifyOp::Multiply => "Multiply",
-            ModifyOp::Divide => "Divide",
-            ModifyOp::Modulo => "Modulo",
-            ModifyOp::Min => "Min",
-            ModifyOp::Max => "Max",
-            ModifyOp::RaiseToPower => "RaiseToPower",
-            ModifyOp::AppendToArray => "AppendToArray",
-            ModifyOp::RemoveFromArray => "RemoveFromArray",
-            ModifyOp::RemoveFromArrayByIndex => "RemoveFromArrayByIndex",
-        }
-    }
-
-    /// The canonical catalog identity for this modification operation.
-    pub fn catalog_id(self) -> &'static str {
-        match self {
-            ModifyOp::Add => "add",
-            ModifyOp::Subtract => "subtract",
-            ModifyOp::Multiply => "multiply",
-            ModifyOp::Divide => "divide",
-            ModifyOp::Modulo => "modulo",
-            ModifyOp::Min => "min",
-            ModifyOp::Max => "max",
-            ModifyOp::RaiseToPower => "raiseToPower",
-            ModifyOp::AppendToArray => "appendToArray",
-            ModifyOp::RemoveFromArray => "removeFromArray",
-            ModifyOp::RemoveFromArrayByIndex => "removeFromArrayByIndex",
-        }
     }
 }

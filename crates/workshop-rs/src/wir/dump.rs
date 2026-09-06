@@ -1,6 +1,6 @@
 //! Deterministic debug dump for the Workshop IR model.
 
-use crate::source::Span;
+use crate::core::source::Span;
 
 use super::{Action, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Program, Value};
 

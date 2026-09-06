@@ -19,7 +19,7 @@ pub use schema::{
     SettingValue, SettingValueDomain, TeamId, definition, definitions, definitions_by_id,
 };
 
-use crate::source::Span;
+use crate::core::source::Span;
 
 /// A settings block: `settings { ... }` with its typed children.
 #[derive(Debug, Clone)]

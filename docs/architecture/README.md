@@ -21,5 +21,6 @@ For substantive implementation work, resolve the smallest relevant current contr
 | Gameplay semantic queries | [`../gameplay-query.md`](../gameplay-query.md) |
 | Action layout contract | [`../action-layout.md`](../action-layout.md) |
 | Architecture decision history | [`../adr/README.md`](../adr/README.md) |
+| Source layout and domain routing | [`source-layout.md`](source-layout.md) |
 
 Do not add versions, current feature counts, Issue progress, migration sequencing, or release state to this architecture directory. Those belong to executable metadata, Issues/PRs, releases, or other live evidence.
