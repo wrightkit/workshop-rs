@@ -461,14 +461,15 @@ impl Emitter<'_> {
                 self.line(level, &format!("{display_name}: {rendered}"))?;
             }
             (SettingsNode::Bool { value, .. }, KeyKind::BoolEnum(domain)) => {
-                let member = if *value { "enabled" } else { "disabled" };
-                let english = table::enum_name(domain, member).ok_or_else(|| {
-                    self.malformed(format!(
-                        "unknown value '{member}' for settings key '{name}'"
-                    ))
+                if !*value {
+                    return Err(self
+                        .malformed(format!("unsupported false value for settings key '{name}'")));
+                }
+                let english = table::enum_name(domain, "enabled").ok_or_else(|| {
+                    self.malformed(format!("unknown value 'enabled' for settings key '{name}'"))
                 })?;
                 let rendered =
-                    self.setting_name("enums", english, &format!("enum.{domain}.{member}"))?;
+                    self.setting_name("enums", english, &format!("enum.{domain}.enabled"))?;
                 self.line(level, &format!("{display_name}: {rendered}"))?;
             }
             (SettingsNode::List { elements, .. }, KeyKind::ListMap) => {

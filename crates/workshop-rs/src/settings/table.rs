@@ -51,7 +51,8 @@ pub enum KeyKind {
     String,
     /// A boolean rendered `On`/`Off`.
     Bool,
-    /// A boolean carrier rendered through an evidenced enum token domain.
+    /// A boolean carrier rendered through an evidenced true-value enum token.
+    /// The false value remains unsupported until independently evidenced.
     BoolEnum(&'static str),
     /// A plain number.
     Number,
@@ -910,11 +911,6 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
         domain: "matchVoiceChat",
         member: "enabled",
         name: "Enabled",
-    },
-    EnumMember {
-        domain: "matchVoiceChat",
-        member: "disabled",
-        name: "Disabled",
     },
     EnumMember {
         domain: "returnToLobby",

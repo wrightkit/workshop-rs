@@ -88,22 +88,12 @@ fn match_voice_chat_uses_reviewed_enabled_tokens_in_both_locales() {
 }
 
 #[test]
-fn match_voice_chat_disabled_token_round_trips_in_both_locales() {
+fn match_voice_chat_rejects_unreviewed_disabled_token() {
     let catalog = catalog();
     let en = Locale::new("en-US");
-    let zh = Locale::new("zh-CN");
     let source = "settings { lobby { Match Voice Chat: Disabled } }";
-    let program = parser::parse(source, &catalog, &en).expect("disabled Match Voice Chat parses");
-
-    let emitted_en = emitter::emit(&program, &catalog, &en).expect("en-US emits");
-    assert!(emitted_en.contains("Match Voice Chat: Disabled"));
-    let reparsed_en = parser::parse(&emitted_en, &catalog, &en).expect("en-US reparses");
-    assert!(roundtrip::equivalent(&program, &reparsed_en));
-
-    let emitted_zh = emitter::emit(&program, &catalog, &zh).expect("zh-CN emits");
-    assert!(emitted_zh.contains("比赛语音聊天: 禁用"));
-    let reparsed_zh = parser::parse(&emitted_zh, &catalog, &zh).expect("zh-CN reparses");
-    assert!(roundtrip::equivalent(&program, &reparsed_zh));
+    let error = parser::parse(source, &catalog, &en).expect_err("disabled state is unevidenced");
+    assert!(format!("{error:?}").contains("settings enum"));
 }
 
 #[test]

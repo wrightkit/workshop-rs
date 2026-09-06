@@ -849,10 +849,10 @@ impl Parser<'_> {
 
     fn settings_bool_enum(&mut self, domain: &str) -> Result<bool> {
         let member = self.resolve_enum_settings_name(domain)?;
-        match member.as_str() {
-            "enabled" => Ok(true),
-            "disabled" => Ok(false),
-            _ => Err(self.unknown("setting boolean", &member)),
+        if member == "enabled" {
+            Ok(true)
+        } else {
+            Err(self.unknown("setting boolean", &member))
         }
     }
 
