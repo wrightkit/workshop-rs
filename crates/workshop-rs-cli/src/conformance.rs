@@ -8,7 +8,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-use crate::catalog::{Catalog, CatalogIdentity, Kind, Locale};
+use workshop_rs::catalog::{Catalog, CatalogIdentity, Kind, Locale};
 
 /// The current machine-readable conformance schema version.
 pub const CONFORMANCE_SCHEMA_VERSION: u32 = 1;
@@ -831,7 +831,7 @@ impl std::error::Error for ConformanceDecodeError {}
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::catalog::{Catalog, Locale};
+    use workshop_rs::catalog::{Catalog, Locale};
 
     fn catalog() -> CatalogIdentity {
         Catalog::builtin().expect("built-in catalog").identity()

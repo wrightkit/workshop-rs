@@ -6,13 +6,14 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use workshop_rs::catalog::{Catalog, Locale};
-use workshop_rs::conformance::CONFORMANCE_SCHEMA_VERSION;
-use workshop_rs::conformance::{
+use workshop_rs_cli::conformance;
+use workshop_rs_cli::conformance::CONFORMANCE_SCHEMA_VERSION;
+use workshop_rs_cli::conformance::{
     Comparison, ConformanceReason, ConformanceResult, ConformanceStatus, Equivalence, Evidence,
     EvidenceArtifact, EvidenceBasis, EvidenceClass, ExpectationSource, FeatureId, FeatureKind,
     FeatureNamespace, ReasonCode,
 };
-use workshop_rs::live_capture::{
+use workshop_rs_cli::live_capture::{
     CENSUS_IDENTITY_SCHEMA_VERSION, CensusIdentity, LIVE_CAPTURE_SCHEMA_VERSION, LiveCapture,
 };
 
@@ -67,7 +68,7 @@ fn synthetic_capture(id: &str) -> String {
             },
             catalog: catalog.identity(),
             locale: Some(locale.clone()),
-            client: Some(workshop_rs::conformance::ClientEvidence {
+            client: Some(conformance::ClientEvidence {
                 game: "overwatch-2".to_string(),
                 client_version: Some("synthetic-client".to_string()),
                 season: Some("synthetic-season".to_string()),

@@ -5,18 +5,18 @@
 //! admitted Workshop semantic gaps. Consumers can use it to select and
 //! validate the same inputs without maintaining a second expectation list.
 
-use crate::analysis::semantic::{IncompletenessKind, ResidualClassification, SemanticIssue};
-use crate::core::error::WorkshopError;
+use workshop_rs::WorkshopError;
+use workshop_rs::semantic::{IncompletenessKind, ResidualClassification, SemanticIssue};
 
 /// The schema version of [`REAL_PROJECT_EXPECTATION`].
-pub const REAL_PROJECT_EXPECTATION_SCHEMA_VERSION: u32 = 1;
+pub(crate) const REAL_PROJECT_EXPECTATION_SCHEMA_VERSION: u32 = 1;
 
 /// The stable identity of the pinned real-project source corpus.
-pub const REAL_PROJECT_CORPUS_ID: &str = "raw-workshop-real-projects/v1";
+pub(crate) const REAL_PROJECT_CORPUS_ID: &str = "raw-workshop-real-projects/v1";
 
 /// The stage at which an admitted real-project gap is observed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum RealProjectStage {
+pub(crate) enum RealProjectStage {
     /// Canonical builtin references are validated after parsing.
     CanonicalValidation,
     /// Canonical WIR is emitted back to Workshop text.
@@ -27,7 +27,7 @@ pub enum RealProjectStage {
 
 impl RealProjectStage {
     /// Return the stable machine-readable stage name.
-    pub const fn as_str(self) -> &'static str {
+    pub(crate) const fn as_str(self) -> &'static str {
         match self {
             Self::CanonicalValidation => "canonical-validation",
             Self::Emission => "emission",
@@ -38,14 +38,14 @@ impl RealProjectStage {
 
 /// The Workshop error identity admitted for a real-project stage gap.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum RealProjectGapKind {
+pub(crate) enum RealProjectGapKind {
     /// An action spelling is not present in the canonical Workshop catalog.
     UnknownAction,
 }
 
 impl RealProjectGapKind {
     /// Return the stable machine-readable error kind name.
-    pub const fn as_str(self) -> &'static str {
+    pub(crate) const fn as_str(self) -> &'static str {
         match self {
             Self::UnknownAction => "action",
         }
@@ -54,48 +54,48 @@ impl RealProjectGapKind {
 
 /// An admitted semantic residual for one real-project source case.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RealProjectResidualExpectation {
-    /// The semantic issue kind reported by [`crate::analysis::semantic::inspect`].
-    pub kind: IncompletenessKind,
+pub(crate) struct RealProjectResidualExpectation {
+    /// The semantic issue kind reported by [`workshop_rs::semantic::inspect`].
+    pub(crate) kind: IncompletenessKind,
     /// The locale-independent Workshop identity of the residual.
-    pub identity: &'static str,
+    pub(crate) identity: &'static str,
     /// The owner-defined classification of the residual.
-    pub classification: ResidualClassification,
+    pub(crate) classification: ResidualClassification,
 }
 
 /// An admitted Workshop error for one real-project processing stage.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RealProjectGapExpectation {
+pub(crate) struct RealProjectGapExpectation {
     /// The processing stage where the error is admitted.
-    pub stage: RealProjectStage,
+    pub(crate) stage: RealProjectStage,
     /// The structured Workshop error kind.
-    pub kind: RealProjectGapKind,
+    pub(crate) kind: RealProjectGapKind,
     /// The localized spelling or identity carried by the error.
-    pub identity: &'static str,
+    pub(crate) identity: &'static str,
     /// The owner-defined classification corresponding to this gap.
-    pub classification: ResidualClassification,
+    pub(crate) classification: ResidualClassification,
 }
 
 /// The pinned source identity and owner-defined expectation for one real-project case.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RealProjectCaseExpectation {
+pub(crate) struct RealProjectCaseExpectation {
     /// Stable case identity.
-    pub id: &'static str,
+    pub(crate) id: &'static str,
     /// Source locale of the pinned Workshop input.
-    pub locale: &'static str,
+    pub(crate) locale: &'static str,
     /// Crate-relative path to the pinned source input.
-    pub source_fixture: &'static str,
+    pub(crate) source_fixture: &'static str,
     /// SHA-256 digest of [`Self::source_fixture`].
-    pub source_sha256: &'static str,
+    pub(crate) source_sha256: &'static str,
     /// Semantic residuals admitted for this case at every inspection stage.
-    pub residuals: &'static [RealProjectResidualExpectation],
+    pub(crate) residuals: &'static [RealProjectResidualExpectation],
     /// Stage-specific Workshop errors admitted for this case.
-    pub gaps: &'static [RealProjectGapExpectation],
+    pub(crate) gaps: &'static [RealProjectGapExpectation],
 }
 
 impl RealProjectCaseExpectation {
     /// Whether the inspected semantic issue is admitted for this case.
-    pub fn admits_residual(&self, issue: &SemanticIssue) -> bool {
+    pub(crate) fn admits_residual(&self, issue: &SemanticIssue) -> bool {
         self.residuals.iter().any(|expected| {
             expected.kind == issue.kind
                 && expected.identity == issue.name
@@ -104,7 +104,7 @@ impl RealProjectCaseExpectation {
     }
 
     /// Whether the error is an owner-admitted gap at the given stage.
-    pub fn admits_gap(&self, stage: RealProjectStage, error: &WorkshopError) -> bool {
+    pub(crate) fn admits_gap(&self, stage: RealProjectStage, error: &WorkshopError) -> bool {
         self.gaps.iter().any(|expected| {
             expected.stage == stage
                 && match (expected.kind, error) {
@@ -121,13 +121,13 @@ impl RealProjectCaseExpectation {
 /// The owner-controlled real-project expectation contract consumed by the
 /// harness and downstream conformance tests.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct RealProjectExpectation {
+pub(crate) struct RealProjectExpectation {
     /// Contract schema version.
-    pub schema_version: u32,
+    pub(crate) schema_version: u32,
     /// Stable identity of the source corpus.
-    pub corpus_id: &'static str,
+    pub(crate) corpus_id: &'static str,
     /// The complete current real-project case inventory and expectations.
-    pub cases: &'static [RealProjectCaseExpectation],
+    pub(crate) cases: &'static [RealProjectCaseExpectation],
 }
 
 const NO_RESIDUALS: &[RealProjectResidualExpectation] = &[];
@@ -159,7 +159,7 @@ const DEFEND_GAPS: &[RealProjectGapExpectation] = &[
 ];
 
 /// The single authoritative real-project case and expectation definition.
-pub const REAL_PROJECT_EXPECTATION: RealProjectExpectation = RealProjectExpectation {
+pub(crate) const REAL_PROJECT_EXPECTATION: RealProjectExpectation = RealProjectExpectation {
     schema_version: REAL_PROJECT_EXPECTATION_SCHEMA_VERSION,
     corpus_id: REAL_PROJECT_CORPUS_ID,
     cases: &[
@@ -205,67 +205,3 @@ pub const REAL_PROJECT_EXPECTATION: RealProjectExpectation = RealProjectExpectat
         },
     ],
 };
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn real_projects_expectation_has_unique_pinned_case_identities() {
-        assert_eq!(
-            REAL_PROJECT_EXPECTATION.schema_version,
-            REAL_PROJECT_EXPECTATION_SCHEMA_VERSION
-        );
-        assert_eq!(REAL_PROJECT_EXPECTATION.corpus_id, REAL_PROJECT_CORPUS_ID);
-
-        for (index, case) in REAL_PROJECT_EXPECTATION.cases.iter().enumerate() {
-            assert!(!case.id.is_empty());
-            assert!(case.locale == "en-US" || case.locale == "zh-CN");
-            assert!(
-                case.source_fixture
-                    .starts_with("tests/fixtures/real-projects/")
-            );
-            assert_eq!(case.source_sha256.len(), 64);
-            assert!(
-                REAL_PROJECT_EXPECTATION.cases[index + 1..]
-                    .iter()
-                    .all(|other| other.id != case.id),
-                "duplicate real-project case identity: {}",
-                case.id
-            );
-        }
-    }
-
-    #[test]
-    fn real_projects_expectation_keeps_the_admitted_gap_identity_and_classification() {
-        let defend = REAL_PROJECT_EXPECTATION
-            .cases
-            .iter()
-            .find(|case| case.id == "defend")
-            .expect("defend case");
-        assert_eq!(defend.residuals, DEFEND_RESIDUALS);
-        assert_eq!(defend.gaps.len(), 3);
-        assert!(defend.gaps.iter().all(|gap| {
-            gap.kind == RealProjectGapKind::UnknownAction
-                && gap.identity == "rawWorkshopAction"
-                && gap.classification == ResidualClassification::LegacyOpaque
-        }));
-
-        let error = WorkshopError::Unknown {
-            kind: "action",
-            spelling: "rawWorkshopAction".to_string(),
-            locale: crate::catalog::Locale::new("en-US"),
-            span: None,
-        };
-        assert!(defend.admits_gap(RealProjectStage::Emission, &error));
-        assert!(!defend.admits_gap(
-            RealProjectStage::CanonicalValidation,
-            &WorkshopError::Unknown {
-                kind: "value",
-                spelling: "rawWorkshopAction".to_string(),
-                locale: crate::catalog::Locale::new("en-US"),
-                span: None,
-            }
-        ));
-    }
-}

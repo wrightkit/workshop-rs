@@ -1,4 +1,4 @@
-//! Corpus-backed zh-CN conversion evidence.
+//! Corpus-backed zh-CN conversion contract tests.
 
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::convert::{self, ConvertOptions};

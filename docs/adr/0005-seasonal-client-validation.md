@@ -7,7 +7,7 @@ execution remains a manual maintainer boundary.
 
 ## Decision
 
-`workshop_rs::live_capture::LiveCapture` is the machine-readable envelope for a
+`workshop-rs-cli` provides the machine-readable `LiveCapture` envelope for a
 capture made by a maintainer from the #19 census. It pins the capture ID,
 game/client/season metadata, capture time and environment, client locale,
 catalog identity, census schema/digest/shards, raw exported Workshop artifact
@@ -54,6 +54,11 @@ client observation.
    experiment. A new capture is never accepted as canonical by automation.
 
 ## Evidence boundary
+
+The capture schema and diff command are implemented by `workshop-rs-cli`
+(`crates/workshop-rs-cli/src/live_capture.rs`). The semantic crate supplies
+the Workshop contracts they validate but does not own a capture implementation
+domain.
 
 This workflow proves only what the recorded client import/export and metadata
 support. It does not automate startup, login, locale switching, or gameplay,

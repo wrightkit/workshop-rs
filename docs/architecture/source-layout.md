@@ -35,8 +35,10 @@ shared home:
 - `output/` owns deterministic emission, locale conversion, and round-trip
   comparison;
 - `core/` owns storage, typed IDs, source spans, formatting, and shared errors;
-- `evidence/` owns census, conformance, client captures, and real-project
-  support, outside the normal semantic path.
+- `workshop-rs-cli/src/` owns census execution, conformance report schemas,
+  capture comparison, and corpus tooling;
+- `tests/` owns executable Workshop contract and regression checks, with
+  provenance-linked fixtures beside the tests that exercise them.
 
 The historical root modules (`parser`, `emitter`, `validate`, and the other
 phase or support names) remain thin re-export compatibility paths for existing

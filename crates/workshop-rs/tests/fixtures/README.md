@@ -51,8 +51,10 @@ catalog data change and must be recorded here.
 The five pinned real-project Workshop outputs used by the required real-project
 scenario gate are vendored under `real-projects/`. Their source repositories,
 revisions, local paths, locales, and SHA-256 values are recorded in
-`docs/evidence/raw-workshop-real-projects-v1.json`. They are source inputs, not acceptance
-reports; residual classifications and pass/fail results are emitted by CI.
+[`real-projects/provenance.json`](real-projects/provenance.json). They are source
+inputs, not acceptance reports; residual classifications and pass/fail results
+are emitted by CI. The acquisition procedure is recorded in
+[`real-projects/README.md`](real-projects/README.md).
 
 ## Real-project admission
 

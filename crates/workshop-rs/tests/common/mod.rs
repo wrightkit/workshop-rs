@@ -4,9 +4,11 @@ use sha2::{Digest, Sha256};
 use workshop_rs::{
     WorkshopError,
     catalog::{Catalog, Locale},
-    real_projects::{RealProjectCaseExpectation, RealProjectStage},
     semantic,
 };
+
+pub(crate) mod real_projects;
+pub(crate) use real_projects::{RealProjectCaseExpectation, RealProjectStage};
 
 #[derive(Debug)]
 struct SpanReport {
@@ -18,7 +20,7 @@ struct SpanReport {
 }
 
 pub(crate) fn cases() -> &'static [RealProjectCaseExpectation] {
-    workshop_rs::real_projects::REAL_PROJECT_EXPECTATION.cases
+    real_projects::REAL_PROJECT_EXPECTATION.cases
 }
 
 pub(crate) fn source(case: &RealProjectCaseExpectation) -> (String, Locale) {

@@ -14,7 +14,7 @@ use super::conformance::{
     ConformanceResult, ConformanceStatus, Equivalence, EvidenceArtifact, EvidenceBasis,
     EvidenceClass, FeatureId,
 };
-use crate::catalog::{Catalog, CatalogIdentity, Locale};
+use workshop_rs::catalog::{Catalog, CatalogIdentity, Locale};
 
 /// The current machine-readable live-capture schema version.
 pub const LIVE_CAPTURE_SCHEMA_VERSION: u32 = 1;
@@ -505,7 +505,7 @@ mod tests {
         ExpectationSource, FeatureKind, FeatureNamespace, ReasonCode,
     };
     use super::*;
-    use crate::catalog::Catalog;
+    use workshop_rs::catalog::Catalog;
 
     const DIGEST: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     const OTHER_DIGEST: &str = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";

@@ -12,7 +12,8 @@ It owns:
 - canonical WIR and locale-independent Workshop identities;
 - Workshop catalog, settings, localization, and Workshop-owned gameplay facts;
 - Workshop semantic/query contracts used by downstream tooling;
-- Workshop conformance, corpus, provenance, and seasonal-client evidence.
+- Workshop contract tests, provenance-linked fixtures, and the semantic
+  contracts consumed by the CLI verification tooling.
 
 It does not own OverPy or DEL/OSTW syntax, preprocessing, project models, source-language semantics, runtime/compiler lowering policy, reconstruction policy, or Wright tooling behavior.
 
@@ -61,7 +62,7 @@ Canonical identities are locale-independent and independent from OPY/DEL naming.
 
 Likewise, OverPy or DEL/OSTW names, defaults, helpers, or compiler quirks do not become Workshop identities unless independent Workshop evidence establishes the same concept.
 
-## Support and evidence
+## Support and provenance
 
 Architecture does not prove feature support. Current support claims come from the language-support surface and executable evidence: code, tests, corpus/fixtures, catalog checks, real consumer workflows, and live/runtime evidence where applicable.
 

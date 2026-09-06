@@ -8,8 +8,8 @@ This directory is the canonical documentation index for `workshop-rs`. The root
 ```text
 architecture/README.md       current architecture routing
   └─ current domain contracts
-language-support.md          current declared support, backed by executable evidence
-domain/provenance docs       durable public and evidence contracts
+language-support.md          current declared support, backed by executable tests
+domain/provenance docs       durable public contracts and fixture provenance
 adr/                         point-in-time decisions and rationale
 Issues / PRs / releases      mutable execution state
 source / tests / data        current implementation reality
@@ -26,9 +26,9 @@ relevant code/tests/data and current Issue contract.
 - [Workshop core boundaries](architecture/core-boundaries.md): repository
   ownership, dependency direction, canonical WIR, source-language separation,
   and semantic-code versus declarative-data boundary.
-- [Workshop source layout](architecture/source-layout.md): domain entry points
-  and the intentionally small shared frontend, analysis, output, core, and
-  evidence boundaries.
+- [Workshop source layout](architecture/source-layout.md): domain entry points,
+  shared implementation boundaries, CLI verification tooling, and test-owned
+  fixtures.
 - [Repository agent guidance](../AGENTS.md): implementation routing,
   verification, provenance, and delivery rules.
 
@@ -52,10 +52,10 @@ compatibility pointer for older links.
 
 Support prose is not a substitute for current executable evidence.
 
-## Domain and evidence contracts
+## Domain contracts and fixture provenance
 
 - [Provenance record](provenance.md): catalog, locale, gameplay, fixture, and
-  dataset evidence.
+  dataset provenance.
 - [Hero gameplay dataset](gameplay-data.md): embedded data model and validation
   boundaries.
 - [Gameplay query API](gameplay-query.md): read-only semantic queries and
