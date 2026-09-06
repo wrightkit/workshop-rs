@@ -48,22 +48,20 @@ provider-shaped nodes, aliases, runtime layouts, or source-language semantics to
 WIR/catalog contracts unless they are independently justified as Workshop
 semantics.
 
-See [`docs/implementation-role.md`](docs/implementation-role.md) for the durable
-relationship with the other WrightKit implementations.
+## Architecture routing
 
-## Architecture boundaries
+For substantive implementation work, resolve the relevant current contract from
+[`docs/architecture/README.md`](docs/architecture/README.md) before editing.
+Architecture Decision Records under `docs/adr/` are decision history, not proof
+of current implementation reality. If the Issue, current architecture contract,
+and source/tests disagree materially, stop and surface the mismatch rather than
+choosing a design by implementation convenience.
 
-- Semantic code contains no locale-specific branches or per-locale spelling
-  knowledge; locale coverage lives in reviewed catalog data.
-- Canonical identities are locale-independent and never derived from OPY/DEL
-  naming.
-- Missing mappings or unsupported catalog entries fail explicitly rather than
-  being guessed.
-- Public WIR/catalog contracts should remain generic enough for raw Workshop and
-  multiple source-language implementations.
-- Internal representation can evolve when tests and public contracts remain
-  valid; do not spend product-critical time preserving incidental internal
-  structure.
+The current Workshop core contract keeps canonical identities locale- and
+provider-independent and distinguishes declarative bulk facts from executable
+semantic behavior. Do not use an existing registry/catalog field as precedent
+for placing new context-sensitive semantics in data; follow
+[`docs/architecture/core-boundaries.md`](docs/architecture/core-boundaries.md).
 
 ## Development priority
 
