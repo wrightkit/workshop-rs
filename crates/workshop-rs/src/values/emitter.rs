@@ -1,9 +1,9 @@
-// Emitter behavior owned by the Workshop values domain.
+// EmitContext behavior owned by the Workshop values domain.
 
-use super::*;
+use crate::output::emitter::*;
 
-impl Emitter<'_> {
-    pub(super) fn value(&mut self, id: wir::ValueId, out: &mut String) -> Result<()> {
+impl EmitContext<'_> {
+    pub(crate) fn value(&mut self, id: wir::ValueId, out: &mut String) -> Result<()> {
         let Some(node) = self.program.values.get(id) else {
             return Err(WorkshopError::Malformed {
                 message: format!("dangling value {id}"),
@@ -274,7 +274,7 @@ impl Emitter<'_> {
         Ok(())
     }
 
-    pub(super) fn localized_string_value(
+    pub(crate) fn localized_string_value(
         &mut self,
         id: wir::ValueId,
         out: &mut String,
@@ -306,7 +306,7 @@ impl Emitter<'_> {
     /// when nothing canonicalizes: explicit-only texts without constants,
     /// texts mixing implicit and explicit placeholders (the oracle rejects
     /// those), out-of-range placeholders, or non-String text arguments.
-    pub(super) fn canonicalize_format_call(
+    pub(crate) fn canonicalize_format_call(
         &self,
         args: &[wir::ValueId],
     ) -> Result<Option<(String, Vec<wir::ValueId>)>> {
@@ -434,15 +434,15 @@ impl Emitter<'_> {
 
     /// The localized spelling of a modify operator, resolved through the
     /// catalog (fallback-aware).
-    pub(super) fn modify_op_spelling(&mut self, op: wir::ModifyOp) -> Result<String> {
+    pub(crate) fn modify_op_spelling(&mut self, op: wir::ModifyOp) -> Result<String> {
         self.spelling(Kind::Operator, op.catalog_id())
     }
 
     /// The localized spelling of a canonical builtin id, resolving through
     /// the catalog: a dangling id is `Unknown`, an id without a target-locale
     /// mapping is `MissingMapping` unless an opt-in fallback locale declares
-    /// one (recorded in [`Emitter::fallback_ids`]).
-    pub(super) fn spelling(&mut self, kind: Kind, id: &str) -> Result<String> {
+    /// one (recorded in [`EmitContext::fallback_ids`]).
+    pub(crate) fn spelling(&mut self, kind: Kind, id: &str) -> Result<String> {
         let Some(entry) = self.catalog.entry(kind, id) else {
             return Err(WorkshopError::Unknown {
                 kind: kind.as_str(),
@@ -467,7 +467,7 @@ impl Emitter<'_> {
         })
     }
 
-    pub(super) fn localized_string_spelling(&mut self, id: &str) -> Result<String> {
+    pub(crate) fn localized_string_spelling(&mut self, id: &str) -> Result<String> {
         if let Some(spelling) = self.catalog.localized_string_spelling(&self.locale, id) {
             return Ok(spelling.to_string());
         }
@@ -492,13 +492,13 @@ impl Emitter<'_> {
         })
     }
 
-    pub(super) fn structural(&mut self, id: &str) -> Result<String> {
+    pub(crate) fn structural(&mut self, id: &str) -> Result<String> {
         self.spelling(Kind::Structural, id)
     }
 
     /// The localized spelling of a canonical enum member, resolving through
-    /// the catalog (fallback-aware; see [`Emitter::spelling`]).
-    pub(super) fn enum_spelling(&mut self, domain: &str, member: &str) -> Result<String> {
+    /// the catalog (fallback-aware; see [`EmitContext::spelling`]).
+    pub(crate) fn enum_spelling(&mut self, domain: &str, member: &str) -> Result<String> {
         let Some(domain_entry) = self.catalog.enum_domain(domain) else {
             return Err(WorkshopError::Unknown {
                 kind: "enum domain",
@@ -533,7 +533,7 @@ impl Emitter<'_> {
 
     /// Render a value that must stay a bare string (the `Custom String` text
     /// argument). Any non-string value falls back to the normal renderer.
-    pub(super) fn bare_string_value(&mut self, id: wir::ValueId, out: &mut String) -> Result<()> {
+    pub(crate) fn bare_string_value(&mut self, id: wir::ValueId, out: &mut String) -> Result<()> {
         let Some(node) = self.program.values.get(id) else {
             return Err(WorkshopError::Malformed {
                 message: format!("dangling value {id}"),
@@ -549,7 +549,7 @@ impl Emitter<'_> {
 
     /// Emit a value-position string as `Custom String("...")`, splitting it
     /// into a continuation chain when it exceeds the Workshop 128-char limit.
-    pub(super) fn emit_string_value(&mut self, value: &str, out: &mut String) -> Result<()> {
+    pub(crate) fn emit_string_value(&mut self, value: &str, out: &mut String) -> Result<()> {
         let spelling = self.spelling(Kind::Value, "customString")?;
         let segments = split_string(value);
         emit_string_chain(&spelling, &segments, out);

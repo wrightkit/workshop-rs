@@ -1,9 +1,9 @@
-// Parser behavior owned by the Workshop settings domain.
+// ParseContext behavior owned by the Workshop settings domain.
 
-use super::*;
+use crate::frontend::parser::*;
 
-impl Parser<'_> {
-    pub(super) fn settings_section(&mut self) -> Result<()> {
+impl ParseContext<'_> {
+    pub(crate) fn settings_section(&mut self) -> Result<()> {
         let start = self.expect_keyword("settings")?;
         self.expect(TokenKind::LBrace, "expected '{' after 'settings'")?;
         let mut children = Vec::new();
@@ -75,7 +75,7 @@ impl Parser<'_> {
         Ok(())
     }
 
-    pub(super) fn settings_modes(&mut self, start: Position) -> Result<SettingsNode> {
+    pub(crate) fn settings_modes(&mut self, start: Position) -> Result<SettingsNode> {
         let mut children = Vec::new();
         while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
             let mut disabled = false;
@@ -128,7 +128,7 @@ impl Parser<'_> {
         })
     }
 
-    pub(super) fn settings_heroes(&mut self, start: Position) -> Result<SettingsNode> {
+    pub(crate) fn settings_heroes(&mut self, start: Position) -> Result<SettingsNode> {
         let mut teams = Vec::new();
         while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
             let (team_display, team_start, _) = self.phrase_on_line_with_colon()?;
@@ -188,7 +188,7 @@ impl Parser<'_> {
         })
     }
 
-    pub(super) fn settings_members(
+    pub(crate) fn settings_members(
         &mut self,
         path: &[PathPart<'static>],
         hero: Option<&str>,
@@ -202,7 +202,7 @@ impl Parser<'_> {
         Ok(children)
     }
 
-    pub(super) fn settings_member_named(
+    pub(crate) fn settings_member_named(
         &mut self,
         display: String,
         start: Position,
@@ -331,7 +331,7 @@ impl Parser<'_> {
         }
     }
 
-    pub(super) fn settings_opaque_group(
+    pub(crate) fn settings_opaque_group(
         &mut self,
         name: &str,
         start: Position,
@@ -343,7 +343,7 @@ impl Parser<'_> {
         })
     }
 
-    pub(super) fn settings_opaque_members(&mut self) -> Result<Vec<SettingsNode>> {
+    pub(crate) fn settings_opaque_members(&mut self) -> Result<Vec<SettingsNode>> {
         let mut children = Vec::new();
         while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
             let (display, start, _) = self.opaque_name_on_line()?;
@@ -358,7 +358,7 @@ impl Parser<'_> {
         Ok(children)
     }
 
-    pub(super) fn settings_raw_member(
+    pub(crate) fn settings_raw_member(
         &mut self,
         name: String,
         start: Position,
@@ -376,7 +376,7 @@ impl Parser<'_> {
         })
     }
 
-    pub(super) fn opaque_name_on_line(&mut self) -> Result<(String, Position, Position)> {
+    pub(crate) fn opaque_name_on_line(&mut self) -> Result<(String, Position, Position)> {
         let first = self
             .peek()
             .ok_or_else(|| self.malformed("expected an identifier", self.eof()))?;
@@ -411,7 +411,7 @@ impl Parser<'_> {
         ))
     }
 
-    pub(super) fn raw_settings_line(&mut self) -> Result<String> {
+    pub(crate) fn raw_settings_line(&mut self) -> Result<String> {
         let line = self.peek().map(|token| token.start.line);
         let mut parts = Vec::new();
         while let Some(token) = self.peek() {
@@ -426,7 +426,7 @@ impl Parser<'_> {
         Ok(parts.join(" "))
     }
 
-    pub(super) fn settings_number(&mut self, percent: bool) -> Result<f64> {
+    pub(crate) fn settings_number(&mut self, percent: bool) -> Result<f64> {
         let value = match self.next() {
             Some(Token {
                 kind: TokenKind::Number { value, .. },
@@ -444,7 +444,7 @@ impl Parser<'_> {
         Ok(value)
     }
 
-    pub(super) fn settings_number_percent(&mut self) -> Result<f64> {
+    pub(crate) fn settings_number_percent(&mut self) -> Result<f64> {
         let value = self.settings_number(false)?;
         if matches!(
             self.peek(),
@@ -458,7 +458,7 @@ impl Parser<'_> {
         Ok(value)
     }
 
-    pub(super) fn settings_bool(&mut self) -> Result<bool> {
+    pub(crate) fn settings_bool(&mut self) -> Result<bool> {
         let token = self
             .next()
             .ok_or_else(|| self.malformed("expected a settings boolean", self.eof()))?;
@@ -478,7 +478,7 @@ impl Parser<'_> {
         }
     }
 
-    pub(super) fn settings_bool_enum(&mut self, domain: &str) -> Result<bool> {
+    pub(crate) fn settings_bool_enum(&mut self, domain: &str) -> Result<bool> {
         let member = self.resolve_enum_settings_name(domain)?;
         if member == "enabled" {
             Ok(true)
@@ -487,7 +487,7 @@ impl Parser<'_> {
         }
     }
 
-    pub(super) fn resolve_enum_settings_name(&mut self, domain: &str) -> Result<String> {
+    pub(crate) fn resolve_enum_settings_name(&mut self, domain: &str) -> Result<String> {
         let (display, _, _) = self.phrase_on_line()?;
         table::ENUM_MEMBERS
             .iter()
@@ -508,7 +508,7 @@ impl Parser<'_> {
             .ok_or_else(|| self.unknown("settings enum", &display))
     }
 
-    pub(super) fn resolve_settings_name(
+    pub(crate) fn resolve_settings_name(
         &self,
         names: &[table::NameMap],
         section: &str,
@@ -521,7 +521,7 @@ impl Parser<'_> {
             .ok_or_else(|| self.unknown("setting", display))
     }
 
-    pub(super) fn resolve_settings_name_extended(
+    pub(crate) fn resolve_settings_name_extended(
         &self,
         names: &[table::NameMap],
         generated: &[table::NameMap],
@@ -536,7 +536,7 @@ impl Parser<'_> {
             .ok_or_else(|| self.unknown("setting", display))
     }
 
-    pub(super) fn settings_name_matches_for_path(
+    pub(crate) fn settings_name_matches_for_path(
         &self,
         candidate: &table::TableEntry,
         display: &str,
@@ -577,7 +577,7 @@ impl Parser<'_> {
         self.settings_name_matches("labels", candidate.workshop_name, display)
     }
 
-    pub(super) fn settings_name_matches(
+    pub(crate) fn settings_name_matches(
         &self,
         section: &str,
         english: &str,
@@ -593,7 +593,7 @@ impl Parser<'_> {
             || display == english
     }
 
-    pub(super) fn settings_span(&self, start: Position) -> Span {
+    pub(crate) fn settings_span(&self, start: Position) -> Span {
         Span::new(self.file(), start, self.previous_span().1)
     }
 }

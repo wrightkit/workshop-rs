@@ -1,9 +1,9 @@
-// Parser behavior owned by the Workshop values domain.
+// ParseContext behavior owned by the Workshop values domain.
 
-use super::*;
+use crate::frontend::parser::*;
 
-impl Parser<'_> {
-    pub(super) fn contextual_coercions(
+impl ParseContext<'_> {
+    pub(crate) fn contextual_coercions(
         &self,
         call_id: &str,
         arg_index: usize,
@@ -16,7 +16,7 @@ impl Parser<'_> {
         })
     }
 
-    pub(super) fn is_zero_number(&self, value_id: wir::ValueId) -> bool {
+    pub(crate) fn is_zero_number(&self, value_id: wir::ValueId) -> bool {
         matches!(
             self.target.values.get(value_id),
             Some(ValueNode {
@@ -26,7 +26,7 @@ impl Parser<'_> {
         )
     }
 
-    pub(super) fn is_empty_string(&self, value_id: wir::ValueId) -> bool {
+    pub(crate) fn is_empty_string(&self, value_id: wir::ValueId) -> bool {
         matches!(
             self.target.values.get(value_id),
             Some(ValueNode {
@@ -36,7 +36,7 @@ impl Parser<'_> {
         )
     }
 
-    pub(super) fn normalize_contextual_argument(
+    pub(crate) fn normalize_contextual_argument(
         &mut self,
         call_id: &str,
         arg_index: usize,
@@ -48,7 +48,7 @@ impl Parser<'_> {
         self.normalize_value_with_coercions(coercions, value_id)
     }
 
-    pub(super) fn normalize_value_with_coercions(
+    pub(crate) fn normalize_value_with_coercions(
         &mut self,
         coercions: ParamCoercions,
         value_id: wir::ValueId,
@@ -109,7 +109,7 @@ impl Parser<'_> {
         self.target.values.push(ValueNode::new(value, span))
     }
 
-    pub(super) fn normalize_modify_value(
+    pub(crate) fn normalize_modify_value(
         &mut self,
         op: ModifyOp,
         value_id: wir::ValueId,
@@ -134,7 +134,7 @@ impl Parser<'_> {
         self.normalize_value_with_coercions(coercions, value_id)
     }
 
-    pub(super) fn modify_op_from_value(&self, value_id: wir::ValueId) -> Option<ModifyOp> {
+    pub(crate) fn modify_op_from_value(&self, value_id: wir::ValueId) -> Option<ModifyOp> {
         let Value::Call { name, args } = &self.target.values.get(value_id)?.value else {
             return None;
         };
@@ -157,7 +157,7 @@ impl Parser<'_> {
         }
     }
 
-    pub(super) fn normalize_modify_call_value(
+    pub(crate) fn normalize_modify_call_value(
         &mut self,
         call_id: &str,
         arg_index: usize,
@@ -179,7 +179,7 @@ impl Parser<'_> {
         value_id
     }
 
-    pub(super) fn resolve_enum_domain_mixed(&self, spelling: &str) -> Option<&str> {
+    pub(crate) fn resolve_enum_domain_mixed(&self, spelling: &str) -> Option<&str> {
         self.catalog
             .resolve_enum_domain(&self.locale, spelling)
             .or_else(|| {
@@ -192,7 +192,7 @@ impl Parser<'_> {
             })
     }
 
-    pub(super) fn resolve_enum_member_mixed(
+    pub(crate) fn resolve_enum_member_mixed(
         &self,
         domain: &str,
         spelling: &str,
@@ -220,7 +220,7 @@ impl Parser<'_> {
             })
     }
 
-    pub(super) fn value(&mut self) -> Result<wir::ValueId> {
+    pub(crate) fn value(&mut self) -> Result<wir::ValueId> {
         let mut value = self.primary()?;
         loop {
             if let Some(Token {
@@ -335,7 +335,7 @@ impl Parser<'_> {
         Ok(value)
     }
 
-    pub(super) fn primary(&mut self) -> Result<wir::ValueId> {
+    pub(crate) fn primary(&mut self) -> Result<wir::ValueId> {
         match self.peek() {
             Some(Token {
                 kind: TokenKind::Op(op),
@@ -690,7 +690,7 @@ impl Parser<'_> {
     /// catalog value or enum member. Dots otherwise remain member-access
     /// syntax, and unresolved dotted identifiers keep the existing diagnostic
     /// path instead of being accepted as catalog names.
-    pub(super) fn catalog_phrase_with_dot(&mut self) -> Option<(String, Position, Position)> {
+    pub(crate) fn catalog_phrase_with_dot(&mut self) -> Option<(String, Position, Position)> {
         let first = self.peek()?;
         if !matches!(first.kind, TokenKind::Word(_)) {
             return None;
@@ -729,7 +729,7 @@ impl Parser<'_> {
         Some((phrase, start, end))
     }
 
-    pub(super) fn call_or_enum(
+    pub(crate) fn call_or_enum(
         &mut self,
         phrase: &str,
         start: Position,
@@ -845,7 +845,7 @@ impl Parser<'_> {
         )))
     }
 
-    pub(super) fn bare_member(
+    pub(crate) fn bare_member(
         &mut self,
         phrase: &str,
         start: Position,
@@ -874,7 +874,7 @@ impl Parser<'_> {
         self.bare_member_resolved(phrase, start, end)
     }
 
-    pub(super) fn bare_member_resolved(
+    pub(crate) fn bare_member_resolved(
         &mut self,
         phrase: &str,
         start: Position,
@@ -1047,7 +1047,7 @@ impl Parser<'_> {
         )))
     }
 
-    pub(super) fn value_args(&mut self, call_id: &str) -> Result<Vec<wir::ValueId>> {
+    pub(crate) fn value_args(&mut self, call_id: &str) -> Result<Vec<wir::ValueId>> {
         let mut args = Vec::new();
         if let Some(Token {
             kind: TokenKind::RParen,
@@ -1207,7 +1207,7 @@ impl Parser<'_> {
         Ok(args)
     }
 
-    pub(super) fn localized_string_argument(&mut self) -> Result<wir::ValueId> {
+    pub(crate) fn localized_string_argument(&mut self) -> Result<wir::ValueId> {
         let Some(token) = self.peek() else {
             return Err(self.malformed("expected a localized string", self.eof()));
         };
@@ -1240,7 +1240,7 @@ impl Parser<'_> {
         self.localized_string_literal(text, Some(Span::new(self.file(), start, end)))
     }
 
-    pub(super) fn localized_string_literal(
+    pub(crate) fn localized_string_literal(
         &mut self,
         text: String,
         span: Option<Span>,
@@ -1259,7 +1259,7 @@ impl Parser<'_> {
         )))
     }
 
-    pub(super) fn opaque_value_args(&mut self) -> Result<Vec<wir::ValueId>> {
+    pub(crate) fn opaque_value_args(&mut self) -> Result<Vec<wir::ValueId>> {
         let mut args = Vec::new();
         if matches!(self.peek().map(|token| token.kind), Some(TokenKind::RParen)) {
             return Ok(args);
@@ -1311,7 +1311,7 @@ impl Parser<'_> {
         Ok(args)
     }
 
-    pub(super) fn push_bool(
+    pub(crate) fn push_bool(
         &mut self,
         value: bool,
         start: Position,

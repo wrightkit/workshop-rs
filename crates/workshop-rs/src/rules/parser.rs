@@ -1,9 +1,9 @@
-// Parser behavior owned by the Workshop rules domain.
+// ParseContext behavior owned by the Workshop rules domain.
 
-use super::*;
+use crate::frontend::parser::*;
 
-impl Parser<'_> {
-    pub(super) fn program(mut self) -> Result<wir::Program> {
+impl ParseContext<'_> {
+    pub(crate) fn program(mut self) -> Result<wir::Program> {
         let file = self.target.files.push(SourceFile::new("workshop.txt"));
         // Re-point synthetic spans at the real file id by keeping a helper.
         let _ = file;
@@ -40,7 +40,7 @@ impl Parser<'_> {
         Ok(self.target)
     }
 
-    pub(super) fn variables_section(&mut self) -> Result<()> {
+    pub(crate) fn variables_section(&mut self) -> Result<()> {
         self.expect_keyword("variables")?;
         self.expect(TokenKind::LBrace, "expected '{' after 'variables'")?;
         let mut saw_section = false;
@@ -107,7 +107,7 @@ impl Parser<'_> {
         Ok(())
     }
 
-    pub(super) fn variable_line(&mut self) -> Result<wir::WorkshopVariable> {
+    pub(crate) fn variable_line(&mut self) -> Result<wir::WorkshopVariable> {
         let (index, span) = match self.next() {
             Some(Token {
                 kind: TokenKind::Number { value, .. },
@@ -137,7 +137,7 @@ impl Parser<'_> {
         })
     }
 
-    pub(super) fn subroutines_section(&mut self) -> Result<()> {
+    pub(crate) fn subroutines_section(&mut self) -> Result<()> {
         self.expect_keyword("subroutines")?;
         self.expect(TokenKind::LBrace, "expected '{' after 'subroutines'")?;
         while let Some(Token {
@@ -167,7 +167,7 @@ impl Parser<'_> {
         Ok(())
     }
 
-    pub(super) fn rule(&mut self, disabled: bool) -> Result<()> {
+    pub(crate) fn rule(&mut self, disabled: bool) -> Result<()> {
         self.expect_keyword("rule")?;
         self.expect(TokenKind::LParen, "expected '(' after 'rule'")?;
         let name = self.expect_string("expected a rule name string")?;
@@ -237,7 +237,7 @@ impl Parser<'_> {
         Ok(())
     }
 
-    pub(super) fn global_by_name(&mut self, name: &str) -> Result<wir::GlobalVarId> {
+    pub(crate) fn global_by_name(&mut self, name: &str) -> Result<wir::GlobalVarId> {
         if let Some(id) = self.globals.get(name).copied() {
             return Ok(id);
         }
@@ -252,7 +252,7 @@ impl Parser<'_> {
         Ok(id)
     }
 
-    pub(super) fn player_by_name(&mut self, name: &str) -> Result<wir::PlayerVarId> {
+    pub(crate) fn player_by_name(&mut self, name: &str) -> Result<wir::PlayerVarId> {
         if let Some(id) = self.players.get(name).copied() {
             return Ok(id);
         }
@@ -267,7 +267,7 @@ impl Parser<'_> {
         Ok(id)
     }
 
-    pub(super) fn next_variable_index(&self, player: bool) -> u32 {
+    pub(crate) fn next_variable_index(&self, player: bool) -> u32 {
         let variables = if player {
             &self.target.player_variables
         } else {
@@ -280,7 +280,7 @@ impl Parser<'_> {
             .map_or(0, |index| index.saturating_add(1))
     }
 
-    pub(super) fn subroutine_by_name(&self, name: &str) -> Result<wir::SubroutineId> {
+    pub(crate) fn subroutine_by_name(&self, name: &str) -> Result<wir::SubroutineId> {
         self.subroutines
             .get(name)
             .copied()

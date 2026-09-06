@@ -1,9 +1,9 @@
-// Emitter behavior owned by the Workshop rules domain.
+// EmitContext behavior owned by the Workshop rules domain.
 
-use super::*;
+use crate::output::emitter::*;
 
-impl Emitter<'_> {
-    pub(super) fn rule(&mut self, rule: &wir::Rule) -> Result<()> {
+impl EmitContext<'_> {
+    pub(crate) fn rule(&mut self, rule: &wir::Rule) -> Result<()> {
         let disabled = if rule.disabled {
             format!("{} ", self.structural("disabled")?)
         } else {
@@ -91,7 +91,7 @@ impl Emitter<'_> {
         Ok(())
     }
 
-    pub(super) fn global_name(&self, id: wir::GlobalVarId) -> Result<String> {
+    pub(crate) fn global_name(&self, id: wir::GlobalVarId) -> Result<String> {
         self.program
             .global_variables
             .get(id)
@@ -103,7 +103,7 @@ impl Emitter<'_> {
                 span: None,
             })
     }
-    pub(super) fn player_name(&self, id: wir::PlayerVarId) -> Result<String> {
+    pub(crate) fn player_name(&self, id: wir::PlayerVarId) -> Result<String> {
         self.program
             .player_variables
             .get(id)
