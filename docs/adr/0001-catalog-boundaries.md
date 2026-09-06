@@ -1,6 +1,6 @@
 # ADR-0001: Workshop catalog, locale, provenance, and version boundaries
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-08-16
 - Related:
   [Issue #1](https://github.com/wrightkit/workshop-rs/issues/1),
