@@ -1092,7 +1092,7 @@ fn domain_for(kind: KeyKind) -> SettingValueDomain {
     match kind {
         KeyKind::Flag => SettingValueDomain::PresenceOnly,
         KeyKind::String => SettingValueDomain::String,
-        KeyKind::Bool => SettingValueDomain::Boolean,
+        KeyKind::Bool | KeyKind::BoolEnum(_) => SettingValueDomain::Boolean,
         KeyKind::Number => SettingValueDomain::Number(NumericBounds::unknown()),
         KeyKind::Percent => SettingValueDomain::Percent(NumericBounds::unknown()),
         KeyKind::Enum(domain) => SettingValueDomain::Enum {
@@ -1289,6 +1289,7 @@ fn key_kind_matches(kind: KeyKind, expected: &reconciliation::EntryContract) -> 
         | (KeyKind::Percent, "percent", None)
         | (KeyKind::ListMap, "mapList", None)
         | (KeyKind::ListHero, "heroList", None) => true,
+        (KeyKind::BoolEnum(actual), "boolEnum", Some(expected)) => actual == expected,
         (KeyKind::Enum(actual), "enum", Some(expected)) => actual == expected,
         _ => false,
     }
@@ -1306,7 +1307,7 @@ fn validate_enum_projection(
 
     let domains: HashSet<_> = table::entries()
         .filter_map(|entry| match entry.kind {
-            KeyKind::Enum(domain) => Some(domain),
+            KeyKind::Enum(domain) | KeyKind::BoolEnum(domain) => Some(domain),
             _ => None,
         })
         .collect();

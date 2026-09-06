@@ -732,6 +732,10 @@ fn settings_probe(entry: &TableEntry) -> String {
         KeyKind::Flag => lines.push(format!("{indent}{}", entry.workshop_name)),
         KeyKind::String => lines.push(format!("{indent}{}: \"census\"", entry.workshop_name)),
         KeyKind::Bool => lines.push(format!("{indent}{}: On", entry.workshop_name)),
+        KeyKind::BoolEnum(domain) => {
+            let value = table::enum_name(domain, "enabled").unwrap_or("Enabled");
+            lines.push(format!("{indent}{}: {value}", entry.workshop_name));
+        }
         KeyKind::Number => lines.push(format!("{indent}{}: 1", entry.workshop_name)),
         KeyKind::Percent => lines.push(format!("{indent}{}: 100%", entry.workshop_name)),
         KeyKind::Enum(domain) => {

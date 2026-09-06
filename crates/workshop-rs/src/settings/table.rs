@@ -51,6 +51,9 @@ pub enum KeyKind {
     String,
     /// A boolean rendered `On`/`Off`.
     Bool,
+    /// A boolean carrier rendered through an evidenced true-value enum token.
+    /// The false value remains unsupported until independently evidenced.
+    BoolEnum(&'static str),
     /// A plain number.
     Number,
     /// A number rendered with a `%` suffix (`Respawn Time Scalar: 30%`).
@@ -147,9 +150,12 @@ pub static ENTRIES: &[TableEntry] = &[
         KeyKind::Number
     ),
     entry!(
-        [PathPart::Part("lobby"), PathPart::Part("matchVoiceChat")],
+        [
+            PathPart::Part("lobby"),
+            PathPart::Part("enableMatchVoiceChat")
+        ],
         "Match Voice Chat",
-        KeyKind::Enum("matchVoiceChat")
+        KeyKind::BoolEnum("matchVoiceChat")
     ),
     entry!(
         [PathPart::Part("lobby"), PathPart::Part("team1Slots")],
