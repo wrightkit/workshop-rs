@@ -125,8 +125,8 @@ Workshop contracts rather than OPY- or DEL-shaped special cases.
   cross-language lint, analysis, edits, agents, CI, embedding, and language
   services.
 
-See [`docs/implementation-role.md`](docs/implementation-role.md) for the durable
-boundary.
+See [`docs/architecture/README.md`](docs/architecture/README.md) for the current
+architecture boundary and routing.
 
 ## Catalog data pipeline
 
@@ -154,7 +154,7 @@ CI runs the same checks on stable and the pinned toolchain.
 
 ## Documentation
 
-Detailed architecture specifications, ADRs, catalog/gameplay contracts,
+Current architecture contracts, ADR history, catalog/gameplay contracts,
 conformance evidence, and release procedures are indexed in
 [`docs/README.md`](docs/README.md).
 
