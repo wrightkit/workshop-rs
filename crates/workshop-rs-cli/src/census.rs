@@ -26,8 +26,6 @@ pub const CENSUS_IDENTITY_SCHEMA_VERSION: u32 = 1;
 const EN_US: &str = "en-US";
 const ZH_CN: &str = "zh-CN";
 const CENSUS_TRACKING_REF: &str = "#19";
-const LOCALIZATION_EN_US_SOURCE: &str = "rule (\"Localization\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Disable Inspector Recording;\n    }\n}\n";
-const LOCALIZATION_ZH_CN_SOURCE: &str = "rule (\"Localization\") {\n    event {\n        持续 - 全局;\n    }\n    actions {\n        禁用查看器录制;\n    }\n}\n";
 
 /// An explicit support classification for a census case.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -499,26 +497,12 @@ fn wir_shard() -> Result<CensusShard, CensusError> {
             ),
             CensusCapabilityKind::ControlFlow => {
                 let actions = match capability.name {
-                    "if" => "If(True);\
-    Wait(0);\
-End;",
-                    "else-if" => "If(True);\
-    Wait(0);\
-Else If(False);\
-    Wait(0);\
-End;",
-                    "else" => "If(True);\
-    Wait(0);\
-Else;\
-    Wait(0);\
-End;",
-                    "while" => "While(True);\
-    Wait(0);\
-End;",
+                    "if" => "If(True);\n    Wait(0);\nEnd;",
+                    "else-if" => "If(True);\n    Wait(0);\nElse If(False);\n    Wait(0);\nEnd;",
+                    "else" => "If(True);\n    Wait(0);\nElse;\n    Wait(0);\nEnd;",
+                    "while" => "While(True);\n    Wait(0);\nEnd;",
                     "for-global-variable" => {
-                        "For Global Variable(probe, 0, 1, 1);\
-    Wait(0);\
-End;"
+                        "For Global Variable(probe, 0, 1, 1);\n    Wait(0);\nEnd;"
                     }
                     _ => unreachable!("unknown WIR control-flow census capability"),
                 };
@@ -545,6 +529,10 @@ End;"
 }
 
 fn localization_shard() -> Result<CensusShard, CensusError> {
+    let en_source =
+        include_str!("../../workshop-rs/tests/fixtures/census/localization-en-us.ws").to_string();
+    let zh_source =
+        include_str!("../../workshop-rs/tests/fixtures/census/localization-zh-cn.ws").to_string();
     CensusShard::new(
         "localization",
         vec![
@@ -556,7 +544,7 @@ fn localization_shard() -> Result<CensusShard, CensusError> {
                     "en-us-to-zh-cn",
                 )],
                 source_locale: EN_US.to_string(),
-                source: LOCALIZATION_EN_US_SOURCE.to_string(),
+                source: en_source,
                 reference_source: None,
                 support: generated_probe_support(),
             },
@@ -568,7 +556,7 @@ fn localization_shard() -> Result<CensusShard, CensusError> {
                     "zh-cn-to-en-us",
                 )],
                 source_locale: ZH_CN.to_string(),
-                source: LOCALIZATION_ZH_CN_SOURCE.to_string(),
+                source: zh_source,
                 reference_source: None,
                 support: generated_probe_support(),
             },
@@ -596,7 +584,7 @@ fn control_flow_case(name: &str, actions: &str) -> CensusCase {
             name,
         )],
         source_locale: EN_US.to_string(),
-        source,
+        source: rule_source(name, actions),
         reference_source: None,
         support: generated_probe_support(),
     }
@@ -610,76 +598,22 @@ fn generated_probe_support() -> CensusSupport {
 
 fn rule_source(name: &str, actions: &str) -> String {
     format!(
-        "variables {{\
-    global:\
-        0: probe\
-}}\
-\
-rule (\"{name}\") {{\
-    event {{\
-        Ongoing - Global;\
-    }}\
-    actions {{\
-        {actions}\
-    }}\
-}}\
-"
+        "variables {{\n    global:\n        0: probe\n}}\n\nrule (\"{name}\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{\n        {actions}\n    }}\n}}\n"
     )
 }
 
 fn variables_source() -> String {
-    "variables {\
-    global:\
-        0: probe\
-}\
-\
-rule (\"Global variable\") {\
-    event {\
-        Ongoing - Global;\
-    }\
-    actions {\
-        Set Global Variable(probe, 1);\
-    }\
-}\
-"
+    "variables {\n    global:\n        0: probe\n}\n\nrule (\"Global variable\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Set Global Variable(probe, 1);\n    }\n}\n"
         .to_string()
 }
 
 fn player_variable_source() -> String {
-    "variables {\
-    player:\
-        0: probe\
-}\
-\
-rule (\"Player variable\") {\
-    event {\
-        Ongoing - Each Player;\
-        All;\
-        All;\
-    }\
-    actions {\
-        Set Player Variable(Event Player, probe, 1);\
-    }\
-}\
-"
+    "variables {\n    player:\n        0: probe\n}\n\nrule (\"Player variable\") {\n    event {\n        Ongoing - Each Player;\n        All;\n        All;\n    }\n    actions {\n        Set Player Variable(Event Player, probe, 1);\n    }\n}\n"
         .to_string()
 }
 
 fn subroutine_source() -> String {
-    "subroutines {\
-    0: probe\
-}\
-\
-rule (\"Subroutine\") {\
-    event {\
-        Subroutine;\
-        probe;\
-    }\
-    actions {\
-        Call Subroutine(probe);\
-    }\
-}\
-"
+    "subroutines {\n    0: probe\n}\n\nrule (\"Subroutine\") {\n    event {\n        Subroutine;\n        probe;\n    }\n    actions {\n        Call Subroutine(probe);\n    }\n}\n"
         .to_string()
 }
 
@@ -690,30 +624,15 @@ fn event_probe(catalog: &Catalog, entry: &CatalogEntry) -> String {
     let filters = if matches!(entry.id.as_str(), "global" | "subroutine") {
         String::new()
     } else {
-        "        All;\
-        All;\
-".to_string()
+        "        All;\n        All;\n".to_string()
     };
     let subroutine = if entry.id == "subroutine" {
-        "        probe;\
-"
+        "        probe;\n"
     } else {
         ""
     };
     format!(
-        "subroutines {{\
-    0: probe\
-}}\
-\
-rule (\"Event\") {{\
-    event {{\
-        {spelling};\
-{filters}{subroutine}    }}\
-    actions {{\
-        Wait;\
-    }}\
-}}\
-"
+        "subroutines {{\n    0: probe\n}}\n\nrule (\"Event\") {{\n    event {{\n        {spelling};\n{filters}{subroutine}    }}\n    actions {{\n        Wait;\n    }}\n}}\n"
     )
 }
 
@@ -745,9 +664,7 @@ fn operator_probe(catalog: &Catalog, entry: &CatalogEntry) -> String {
         .unwrap_or(&entry.id);
     rule_source(
         "Operator",
-        &format!("If(1 {spelling} 1);\
-    Wait(0);\
-End;"),
+        &format!("If(1 {spelling} 1);\n    Wait(0);\nEnd;"),
     )
 }
 
@@ -756,28 +673,12 @@ fn structural_probe(catalog: &Catalog, entry: &CatalogEntry) -> String {
         .spelling(Kind::Structural, &Locale::new(EN_US), &entry.id)
         .unwrap_or(&entry.id);
     let actions = match entry.id.as_str() {
-        "if" => format!("{spelling}(True);\
-    Wait(0);\
-End;"),
-        "elseIf" => format!("If(True);\
-    Wait(0);\
-{spelling}(False);\
-    Wait(0);\
-End;"),
-        "else" => format!("If(True);\
-    Wait(0);\
-{spelling};\
-    Wait(0);\
-End;"),
-        "end" => format!("If(True);\
-    Wait(0);\
-{spelling};"),
-        "while" => format!("{spelling}(True);\
-    Wait(0);\
-End;"),
-        "forGlobalVariable" => format!("{spelling}(probe, 0, 1, 1);\
-    Wait(0);\
-End;"),
+        "if" => format!("{spelling}(True);\n    Wait(0);\nEnd;"),
+        "elseIf" => format!("If(True);\n    Wait(0);\n{spelling}(False);\n    Wait(0);\nEnd;"),
+        "else" => format!("If(True);\n    Wait(0);\n{spelling};\n    Wait(0);\nEnd;"),
+        "end" => format!("If(True);\n    Wait(0);\n{spelling};"),
+        "while" => format!("{spelling}(True);\n    Wait(0);\nEnd;"),
+        "forGlobalVariable" => format!("{spelling}(probe, 0, 1, 1);\n    Wait(0);\nEnd;"),
         "setGlobalVariable" => format!("{spelling}(probe, 1);"),
         "modifyGlobalVariable" => format!("{spelling}(probe, Add, 1);"),
         "setPlayerVariable" => format!("{spelling}(Event Player, probe, 1);"),
@@ -787,18 +688,9 @@ End;"),
     };
     let prefix = match entry.id.as_str() {
         "setPlayerVariable" | "modifyPlayerVariable" => {
-            "variables {\
-    player:\
-        0: probe\
-}\
-\
-"
+            "variables {\n    player:\n        0: probe\n}\n\n"
         }
-        "callSubroutine" => "subroutines {\
-    0: probe\
-}\
-\
-",
+        "callSubroutine" => "subroutines {\n    0: probe\n}\n\n",
         _ => "",
     };
     format!("{prefix}{}", rule_source("Structural", &actions))
@@ -864,8 +756,7 @@ fn settings_probe(entry: &TableEntry) -> String {
         lines.push(format!("{}{}", "    ".repeat(depth), "}"));
     }
     lines.push("}".to_string());
-    lines.join("\
-")
+    lines.join("\n")
 }
 
 fn run_case(case: &CensusCase, shard_id: &str, catalog: &Catalog) -> ConformanceResult {
