@@ -246,12 +246,12 @@ pub enum SettingOperationError {
         setting: SettingId,
         expected: &'static str,
         actual: &'static str,
-        span: Option<crate::source::Span>,
+        span: Option<crate::core::source::Span>,
     },
     InvalidValue {
         setting: SettingId,
         message: String,
-        span: Option<crate::source::Span>,
+        span: Option<crate::core::source::Span>,
     },
 }
 
@@ -757,7 +757,7 @@ fn validate_value(
     domain: &SettingValueDomain,
     id: &SettingId,
     value: &SettingValue,
-    span: Option<crate::source::Span>,
+    span: Option<crate::core::source::Span>,
 ) -> Result<(), SettingOperationError> {
     let expected = domain_kind(domain);
     if value_kind(value) != expected {

@@ -26,6 +26,9 @@ relevant code/tests/data and current Issue contract.
 - [Workshop core boundaries](architecture/core-boundaries.md): repository
   ownership, dependency direction, canonical WIR, source-language separation,
   and semantic-code versus declarative-data boundary.
+- [Workshop source layout](architecture/source-layout.md): domain entry points
+  and the intentionally small shared frontend, analysis, output, core, and
+  evidence boundaries.
 - [Repository agent guidance](../AGENTS.md): implementation routing,
   verification, provenance, and delivery rules.
 

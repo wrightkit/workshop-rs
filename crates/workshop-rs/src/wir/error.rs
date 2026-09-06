@@ -4,7 +4,7 @@
 //! [`IrError`] with a stable code and, when the offending source position is
 //! known, a span. Human-readable wording is not part of the stable contract.
 
-use crate::source::Span;
+use crate::core::source::Span;
 
 /// A structured IR error.
 #[derive(Debug, Clone, PartialEq, Eq)]

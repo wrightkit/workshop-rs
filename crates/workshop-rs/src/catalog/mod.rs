@@ -19,13 +19,15 @@
 //! (`workshop-catalog-gen build`); [`Catalog::load`] rejects a digest
 //! mismatch, so dataset changes are deliberate and reproducible.
 
+pub mod detect;
+
 use std::collections::HashMap;
 
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::signatures::ExpectedDomain;
+use crate::core::signatures::ExpectedDomain;
 
-use crate::error::{CatalogError, Result};
+use crate::core::error::{CatalogError, Result};
 
 /// The embedded catalog data.
 pub const CATALOG_DATA: &str = include_str!("data/catalog.json");

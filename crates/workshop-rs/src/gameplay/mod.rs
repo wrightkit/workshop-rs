@@ -6,6 +6,9 @@
 //! `hero + logical slot + optional hero-local variant` tuple; display names
 //! are localized, evidence-backed metadata and are not semantic identity.
 
+pub mod data;
+pub mod query;
+
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use serde::{Deserialize, Deserializer, Serialize};

@@ -1,7 +1,7 @@
 //! Structural validation of the Workshop IR model.
 
+use crate::core::source::Span;
 use crate::settings::{Settings as IrSettings, SettingsNode as IrSettingsNode};
-use crate::source::Span;
 use crate::wir::error::IrError;
 
 use super::{Action, Event, EventTarget, Program, Rule, Value};
