@@ -16,6 +16,13 @@ to understand. The public domain entry points are:
 `wir/` contains the canonical locale-independent Workshop representation used
 by those domains. It is the shared semantic model, not a compiler phase.
 
+Feature-owned parser and emitter method implementations live beside their
+domain under `actions/`, `events/`, `rules/`, `values/`, and `settings/`. The
+`frontend/parser.rs` and `output/emitter.rs` files retain only their public
+entry points, shared state, and genuinely cross-domain helpers; private
+submodules attach the domain implementations to that state without creating
+parallel phase trees.
+
 Some operations necessarily cross every domain and therefore have one explicit
 shared home:
 
