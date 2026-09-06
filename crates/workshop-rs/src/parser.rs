@@ -692,6 +692,11 @@ impl Parser<'_> {
                 value: self.settings_bool()?,
                 span,
             }),
+            KeyKind::BoolEnum(domain) => Ok(SettingsNode::Bool {
+                name: name.to_string(),
+                value: self.settings_bool_enum(domain)?,
+                span,
+            }),
             KeyKind::Enum(domain) => Ok(SettingsNode::String {
                 name: name.to_string(),
                 value: self.resolve_enum_settings_name(domain)?,
@@ -839,6 +844,15 @@ impl Parser<'_> {
             Ok(false)
         } else {
             Err(self.unknown("setting boolean", &value))
+        }
+    }
+
+    fn settings_bool_enum(&mut self, domain: &str) -> Result<bool> {
+        let member = self.resolve_enum_settings_name(domain)?;
+        match member.as_str() {
+            "enabled" => Ok(true),
+            "disabled" => Ok(false),
+            _ => Err(self.unknown("setting boolean", &member)),
         }
     }
 
