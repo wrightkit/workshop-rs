@@ -1,12 +1,12 @@
-// Emitter behavior owned by the Workshop settings domain.
+// EmitContext behavior owned by the Workshop settings domain.
 
-use super::*;
+use crate::output::emitter::*;
 
-impl Emitter<'_> {
+impl EmitContext<'_> {
     /// Emit the `settings { ... }` section from the validated settings
     /// carrier, table-driven (fixture-evidenced names). Only runs on
     /// validated programs, so unknown keys cannot reach this point.
-    pub(super) fn emit_settings(&mut self, settings: &SettingsTree) -> Result<()> {
+    pub(crate) fn emit_settings(&mut self, settings: &SettingsTree) -> Result<()> {
         let settings_keyword = self.structural("settings")?;
         self.line(0, &format!("{settings_keyword} {{"))?;
         for child in &settings.children {
@@ -41,7 +41,7 @@ impl Emitter<'_> {
         Ok(())
     }
 
-    pub(super) fn emit_workshop_settings(
+    pub(crate) fn emit_workshop_settings(
         &mut self,
         children: &[SettingsNode],
         level: usize,
@@ -55,7 +55,7 @@ impl Emitter<'_> {
         Ok(())
     }
 
-    pub(super) fn emit_workshop_node(&mut self, node: &SettingsNode, level: usize) -> Result<()> {
+    pub(crate) fn emit_workshop_node(&mut self, node: &SettingsNode, level: usize) -> Result<()> {
         match node {
             SettingsNode::Group { name, children, .. } => {
                 self.line(level, &format!("{name} {{"))?;
@@ -78,7 +78,7 @@ impl Emitter<'_> {
     }
 
     /// Emit the `modes { <Mode> { ... } }` block of a gamemodes group.
-    pub(super) fn emit_modes(&mut self, modes: &[SettingsNode]) -> Result<()> {
+    pub(crate) fn emit_modes(&mut self, modes: &[SettingsNode]) -> Result<()> {
         self.line(1, "modes {")?;
         for mode in modes {
             let SettingsNode::Group { name, children, .. } = mode else {
@@ -121,7 +121,7 @@ impl Emitter<'_> {
     }
 
     /// Emit the `heroes { <Team> { ... } }` block of a heroes group.
-    pub(super) fn emit_heroes(&mut self, teams: &[SettingsNode]) -> Result<()> {
+    pub(crate) fn emit_heroes(&mut self, teams: &[SettingsNode]) -> Result<()> {
         self.line(1, "heroes {")?;
         for team in teams {
             let SettingsNode::Group { name, children, .. } = team else {
@@ -163,7 +163,7 @@ impl Emitter<'_> {
     }
 
     /// Emit one leaf-level settings member (`Name: value`, lists as blocks).
-    pub(super) fn settings_member(
+    pub(crate) fn settings_member(
         &mut self,
         node: &SettingsNode,
         level: usize,
@@ -302,7 +302,7 @@ impl Emitter<'_> {
         Ok(())
     }
 
-    pub(super) fn emit_opaque_group(
+    pub(crate) fn emit_opaque_group(
         &mut self,
         children: &[SettingsNode],
         name: &str,
@@ -324,7 +324,7 @@ impl Emitter<'_> {
     /// Resolve a settings spelling from the generated locale corpus. The
     /// English table remains the explicit fallback only when the caller opts
     /// into `en-US`, matching the catalog's missing-mapping contract.
-    pub(super) fn gameplay_setting_name(
+    pub(crate) fn gameplay_setting_name(
         &mut self,
         hero: &str,
         slot: &str,
@@ -356,7 +356,7 @@ impl Emitter<'_> {
             locale: self.locale.clone(),
         })
     }
-    pub(super) fn setting_name(
+    pub(crate) fn setting_name(
         &mut self,
         section: &str,
         english: &str,

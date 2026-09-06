@@ -113,7 +113,7 @@ impl Program {
             .map_err(|error| ElementCountError::InvalidProgram {
                 message: error.to_string(),
             })?;
-        crate::analysis::validate::validate_canonical_ids(self, catalog).map_err(|error| {
+        crate::rules::validate::validate_canonical_ids(self, catalog).map_err(|error| {
             ElementCountError::InvalidProgram {
                 message: error.to_string(),
             }

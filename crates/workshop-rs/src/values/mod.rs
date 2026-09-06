@@ -4,4 +4,8 @@
 //! The shared parser and output boundaries preserve their locale-independent
 //! identities.
 
+pub(crate) mod emitter;
+pub(crate) mod parser;
+pub(crate) mod validate;
+
 pub use crate::wir::{Value, ValueId, ValueNode};

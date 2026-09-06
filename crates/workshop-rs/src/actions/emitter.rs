@@ -1,12 +1,12 @@
-// Emitter behavior owned by the Workshop actions domain.
+// EmitContext behavior owned by the Workshop actions domain.
 
-use super::*;
+use crate::output::emitter::*;
 
-impl Emitter<'_> {
+impl EmitContext<'_> {
     /// Emit one rule action; `rule_final` marks the last action of the rule,
     /// for which an `if`/`if-else` closes without the trailing `End;`
     /// (the pinned oracle's spelling, #87).
-    pub(super) fn action(
+    pub(crate) fn action(
         &mut self,
         id: wir::ActionId,
         level: usize,
@@ -350,7 +350,7 @@ impl Emitter<'_> {
         }
         Ok(())
     }
-    pub(super) fn args(&mut self, args: &[wir::ValueId], out: &mut String) -> Result<()> {
+    pub(crate) fn args(&mut self, args: &[wir::ValueId], out: &mut String) -> Result<()> {
         for (index, arg) in args.iter().enumerate() {
             if index > 0 {
                 out.push_str(", ");

@@ -1,9 +1,9 @@
-// Emitter behavior owned by the Workshop events domain.
+// EmitContext behavior owned by the Workshop events domain.
 
-use super::*;
+use crate::output::emitter::*;
 
-impl Emitter<'_> {
-    pub(super) fn event_filters(
+impl EmitContext<'_> {
+    pub(crate) fn event_filters(
         &mut self,
         team: wir::EventTeam,
         target: &wir::EventTarget,

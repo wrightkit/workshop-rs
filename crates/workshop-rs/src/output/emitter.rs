@@ -13,76 +13,14 @@
 //! parser (a `.ws` decompiler is a non-goal). Settings names are resolved from
 //! the generated locale corpus, with an explicit `en-US` fallback when needed.
 
-use std::fmt::Write;
+pub(crate) use std::fmt::Write;
 
-use crate::catalog::{Catalog, Kind, Locale};
-use crate::core::error::{Result, WorkshopError};
-use crate::core::format::format_number;
-use crate::settings::table::{self, KeyKind, PathPart};
-use crate::settings::{Settings as SettingsTree, SettingsNode};
-use crate::wir;
-
-/// The number of native Workshop actions emitted by a canonical WIR action
-/// sequence.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct ActionLayout {
-    /// The action count in the canonical native action stream.
-    pub width: usize,
-}
-
-/// Errors returned while querying canonical native action layout.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ActionLayoutError {
-    /// The WIR does not satisfy its structural invariants.
-    InvalidWIR(crate::wir::error::IrError),
-    /// Canonical emission could not expand the requested actions.
-    Emission(WorkshopError),
-}
-
-impl std::fmt::Display for ActionLayoutError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::InvalidWIR(error) => write!(f, "invalid WIR: {error}"),
-            Self::Emission(error) => write!(f, "action layout emission failed: {error}"),
-        }
-    }
-}
-
-impl std::error::Error for ActionLayoutError {}
-
-/// Query the native Workshop action width of a validated WIR action sequence.
-///
-/// The sequence is expanded using the same recursive action implementation as
-/// [`emit`]. Every action in the sequence is treated as non-rule-final, which
-/// is the canonical stream contract needed for relative action offsets. The
-/// returned width counts native Workshop action lines, including structural
-/// headers and terminators.
-pub fn action_width(
-    program: &wir::Program,
-    catalog: &Catalog,
-    locale: &Locale,
-    actions: &[wir::ActionId],
-) -> std::result::Result<ActionLayout, ActionLayoutError> {
-    program.validate().map_err(ActionLayoutError::InvalidWIR)?;
-    let mut emitter = Emitter {
-        program,
-        catalog,
-        locale: locale.clone(),
-        fallback: None,
-        fallback_ids: Vec::new(),
-        force_hero_constructors: false,
-        out: String::new(),
-        line_count: 0,
-    };
-    for action in actions {
-        emitter
-            .action(*action, 0, false)
-            .map_err(ActionLayoutError::Emission)?;
-    }
-    Ok(ActionLayout {
-        width: emitter.line_count,
-    })
-}
+pub(crate) use crate::catalog::{Catalog, Kind, Locale};
+pub(crate) use crate::core::error::{Result, WorkshopError};
+pub(crate) use crate::core::format::format_number;
+pub(crate) use crate::settings::table::{self, KeyKind, PathPart};
+pub(crate) use crate::settings::{Settings as SettingsTree, SettingsNode};
+pub(crate) use crate::wir;
 
 /// Emission options: opt-in fallback for missing target-locale mappings.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -138,7 +76,7 @@ fn emit_with_options_inner(
     options: &EmitOptions,
     force_hero_constructors: bool,
 ) -> Result<EmitOutput> {
-    let mut emitter = Emitter {
+    let mut emitter = EmitContext {
         program,
         catalog,
         locale: locale.clone(),
@@ -155,32 +93,21 @@ fn emit_with_options_inner(
     })
 }
 
-struct Emitter<'a> {
-    program: &'a wir::Program,
-    catalog: &'a Catalog,
-    locale: Locale,
+pub(crate) struct EmitContext<'a> {
+    pub(crate) program: &'a wir::Program,
+    pub(crate) catalog: &'a Catalog,
+    pub(crate) locale: Locale,
     /// The opt-in fallback locale for missing target-locale mappings.
-    fallback: Option<Locale>,
+    pub(crate) fallback: Option<Locale>,
     /// Canonical ids emitted with a fallback-locale spelling.
-    fallback_ids: Vec<String>,
-    force_hero_constructors: bool,
-    out: String,
-    line_count: usize,
+    pub(crate) fallback_ids: Vec<String>,
+    pub(crate) force_hero_constructors: bool,
+    pub(crate) out: String,
+    pub(crate) line_count: usize,
 }
 
-#[path = "../actions/emitter.rs"]
-mod actions_emitter;
-#[path = "../events/emitter.rs"]
-mod events_emitter;
-#[path = "../rules/emitter.rs"]
-mod rules_emitter;
-#[path = "../settings/emitter.rs"]
-mod settings_emitter;
-#[path = "../values/emitter.rs"]
-mod values_emitter;
-
-impl Emitter<'_> {
-    fn run(&mut self) -> Result<()> {
+impl EmitContext<'_> {
+    pub(crate) fn run(&mut self) -> Result<()> {
         // Section order: settings, variables, subroutines, rules.
         if let Some(settings) = &self.program.settings {
             self.emit_settings(settings)?;
@@ -230,14 +157,14 @@ impl Emitter<'_> {
         Ok(())
     }
 
-    fn malformed(&self, message: impl Into<String>) -> WorkshopError {
+    pub(crate) fn malformed(&self, message: impl Into<String>) -> WorkshopError {
         WorkshopError::Malformed {
             message: message.into(),
             span: None,
         }
     }
 
-    fn line(&mut self, level: usize, text: &str) -> Result<()> {
+    pub(crate) fn line(&mut self, level: usize, text: &str) -> Result<()> {
         for _ in 0..level {
             self.out.push_str("    ");
         }
@@ -252,11 +179,11 @@ impl Emitter<'_> {
 /// decimal point, and non-integers print the shortest round-trip
 /// representation truncated to 16 significant digits (OverPy behavior;
 /// evidence: the pinned oracle snapshots).
-fn is_comparison_operator(name: &str) -> bool {
+pub(crate) fn is_comparison_operator(name: &str) -> bool {
     matches!(name, "==" | "!=" | "<" | "<=" | ">" | ">=")
 }
 
-fn escape_string(value: &str) -> String {
+pub(crate) fn escape_string(value: &str) -> String {
     value.replace('"', "\\\"")
 }
 
@@ -264,7 +191,7 @@ fn escape_string(value: &str) -> String {
 /// `\`, `"`, newline, and carriage return re-escape; tabs pass through raw
 /// (byte-measured oracle behavior: `a\tb` emits a real tab, `a\nb` emits the
 /// literal two-character `\n`).
-fn escape_value_string(value: &str) -> String {
+pub(crate) fn escape_value_string(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {
         match ch {
@@ -286,7 +213,7 @@ fn escape_value_string(value: &str) -> String {
 /// Segment texts are re-escaped. Byte-measured basis: chunk sizes are
 /// counted on the decoded string (70 escaped newlines — 140 escaped chars,
 /// 70 decoded — emit unsplit; 129 decoded newlines split at 125 decoded).
-fn split_string(value: &str) -> Vec<String> {
+pub(crate) fn split_string(value: &str) -> Vec<String> {
     if value.chars().count() <= 128 {
         return vec![escape_value_string(value)];
     }
@@ -310,7 +237,7 @@ fn split_string(value: &str) -> Vec<String> {
 /// round-trip to the oracle's spelling. Evidence: the inputhud description
 /// (`\n` in the source block) is emitted by the oracle as the literal
 /// two-character sequence `\n` in the Workshop settings section.
-fn escape_settings_string(value: &str) -> String {
+pub(crate) fn escape_settings_string(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {
         match ch {
@@ -330,7 +257,7 @@ fn escape_settings_string(value: &str) -> String {
 /// pre-escaped, non-final segments carry the `{0}` placeholder. Iterative:
 /// every segment except the first opens a `Custom String` level, then all
 /// levels close.
-fn emit_string_chain(spelling: &str, segments: &[String], out: &mut String) {
+pub(crate) fn emit_string_chain(spelling: &str, segments: &[String], out: &mut String) {
     let Some((first, rest)) = segments.split_first() else {
         return;
     };
@@ -351,7 +278,7 @@ fn emit_string_chain(spelling: &str, segments: &[String], out: &mut String) {
 /// Render a constant format argument the way the oracle folds it: integers
 /// without decimals, non-integers with exactly two decimals (JS `toFixed(2)`
 /// rounding: `0.5` -> `0.50`, `0.125` -> `0.13`, #87).
-fn fold_number(value: f64) -> String {
+pub(crate) fn fold_number(value: f64) -> String {
     if value.fract() == 0.0 && value.abs() < 1e15 {
         format!("{}", value as i64)
     } else {

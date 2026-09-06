@@ -1,9 +1,9 @@
-// Parser behavior owned by the Workshop events domain.
+// ParseContext behavior owned by the Workshop events domain.
 
-use super::*;
+use crate::frontend::parser::*;
 
-impl Parser<'_> {
-    pub(super) fn event_section(&mut self) -> Result<Event> {
+impl ParseContext<'_> {
+    pub(crate) fn event_section(&mut self) -> Result<Event> {
         self.expect_keyword("event")?;
         self.expect(TokenKind::LBrace, "expected '{' after 'event'")?;
         let mut lines: Vec<String> = Vec::new();
@@ -97,12 +97,12 @@ impl Parser<'_> {
         }
     }
 
-    pub(super) fn player_event(&self, lines: &[String], kind: PlayerEventKind) -> Result<Event> {
+    pub(crate) fn player_event(&self, lines: &[String], kind: PlayerEventKind) -> Result<Event> {
         let (team, target) = self.event_filters(lines, kind.catalog_id(), false)?;
         Ok(Event::Player { kind, team, target })
     }
 
-    pub(super) fn event_filters(
+    pub(crate) fn event_filters(
         &self,
         lines: &[String],
         event_id: &str,
@@ -174,7 +174,7 @@ impl Parser<'_> {
         Ok((team, target))
     }
 
-    pub(super) fn unsupported_event_parameters(&self, event_id: &str) -> WorkshopError {
+    pub(crate) fn unsupported_event_parameters(&self, event_id: &str) -> WorkshopError {
         WorkshopError::Unsupported {
             message: format!("event '{event_id}' does not accept parameters"),
             span: None,

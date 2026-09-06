@@ -8,6 +8,9 @@
 //! Extracted from the Wright-authored `wright-ir` crate; see
 //! [`docs/provenance.md`](https://github.com/wrightkit/workshop-rs/blob/main/docs/provenance.md).
 
+pub(crate) mod emitter;
+pub(crate) mod parser;
+
 pub(crate) mod reconciliation;
 pub mod schema;
 pub mod table;

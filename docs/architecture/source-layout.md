@@ -16,19 +16,22 @@ to understand. The public domain entry points are:
 `wir/` contains the canonical locale-independent Workshop representation used
 by those domains. It is the shared semantic model, not a compiler phase.
 
-Feature-owned parser and emitter method implementations live beside their
-domain under `actions/`, `events/`, `rules/`, `values/`, and `settings/`. The
-`frontend/parser.rs` and `output/emitter.rs` files retain only their public
-entry points, shared state, and genuinely cross-domain helpers; private
-submodules attach the domain implementations to that state without creating
-parallel phase trees.
+Feature-owned parser, validation, emitter, and layout implementations live
+beside their domain under `actions/`, `events/`, `rules/`, `values/`, and
+`settings/`. `frontend/parser.rs` owns the crate-private `ParseContext` and
+shared token/catalog/span mechanics. `output/emitter.rs` owns the crate-private
+`EmitContext`, complete-program section ordering, and shared presentation
+helpers. The domain modules attach their behavior to those state holders
+directly; the shared contexts do not mount phase-wide feature implementations
+through private path modules.
 
 Some operations necessarily cross every domain and therefore have one explicit
 shared home:
 
 - `frontend/` owns tokenization and parsing of raw Workshop text;
-- `analysis/` owns complete-program inspection, canonical validation, and
-  resource counting;
+- `analysis/` owns complete-program inspection and resource counting;
+- `rules/validate.rs` orchestrates canonical validation while delegating event,
+  action, and value checks to their owning domains;
 - `output/` owns deterministic emission, locale conversion, and round-trip
   comparison;
 - `core/` owns storage, typed IDs, source spans, formatting, and shared errors;

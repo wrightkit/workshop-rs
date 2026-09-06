@@ -6,24 +6,24 @@
 //! unknown spellings, and recognized-but-unsupported constructs are reported
 //! as distinct structured diagnostics with source spans.
 
-use std::collections::HashMap;
+pub(crate) use std::collections::HashMap;
 use std::sync::OnceLock;
 
-use crate::core::signatures::ExpectedDomain;
-use crate::core::source::{Position, SourceFile, Span};
-use crate::settings::table::{self, KeyKind, PathPart};
-use crate::settings::{Settings, SettingsListElement, SettingsNode};
-use crate::wir::{
+pub(crate) use crate::core::signatures::ExpectedDomain;
+pub(crate) use crate::core::source::{Position, SourceFile, Span};
+pub(crate) use crate::settings::table::{self, KeyKind, PathPart};
+pub(crate) use crate::settings::{Settings, SettingsListElement, SettingsNode};
+pub(crate) use crate::wir::{
     self, Action, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Value, ValueNode,
 };
 
-use super::lexer::{Token, TokenKind, tokenize};
-use crate::catalog::{Catalog, Kind, Locale, ParamCoercions};
-use crate::core::error::{Result, WorkshopError};
+pub(crate) use super::lexer::{Token, TokenKind, tokenize};
+pub(crate) use crate::catalog::{Catalog, Kind, Locale, ParamCoercions};
+pub(crate) use crate::core::error::{Result, WorkshopError};
 
 /// Where action parsing stopped.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Stop {
+pub(crate) enum Stop {
     /// The enclosing `}` was consumed.
     SectionClosed,
     /// The `End` keyword is next (not consumed).
@@ -34,7 +34,7 @@ enum Stop {
     Else,
 }
 
-enum AssignmentOperator {
+pub(crate) enum AssignmentOperator {
     Set,
     Modify(ModifyOp),
 }
@@ -66,7 +66,7 @@ pub fn parse_with_context(
         message: error.message,
         span: Some(synthetic_span(error.position)),
     })?;
-    Parser {
+    ParseContext {
         tokens,
         pos: 0,
         catalog,
@@ -83,41 +83,34 @@ pub fn parse_with_context(
 }
 
 /// A synthetic single-position span (used before a file registry exists).
-fn synthetic_span(position: Position) -> Span {
+pub(crate) fn synthetic_span(position: Position) -> Span {
     Span::new(crate::core::ids::Id::from_index(0), position, position)
 }
 
-struct Parser<'a> {
-    tokens: Vec<Token>,
-    pos: usize,
-    catalog: &'a Catalog,
-    locale: Locale,
+pub(crate) struct ParseContext<'a> {
+    pub(crate) tokens: Vec<Token>,
+    pub(crate) pos: usize,
+    pub(crate) catalog: &'a Catalog,
+    pub(crate) locale: Locale,
     /// Canonical signature context (#111): supplies the expected enum domain
     /// for the call argument currently being parsed.
-    context: &'a dyn ExpectedDomain,
+    pub(crate) context: &'a dyn ExpectedDomain,
     /// The expected enum domain for the value currently being parsed, set by
-    /// [`Parser::value_args`] from the enclosing call's signature.
-    expected_domain: Option<&'a str>,
-    call_stack: Vec<String>,
-    target: wir::Program,
-    globals: HashMap<String, wir::GlobalVarId>,
-    players: HashMap<String, wir::PlayerVarId>,
-    subroutines: HashMap<String, wir::SubroutineId>,
+    /// [`ParseContext::value_args`] from the enclosing call's signature.
+    pub(crate) expected_domain: Option<&'a str>,
+    pub(crate) call_stack: Vec<String>,
+    pub(crate) target: wir::Program,
+    pub(crate) globals: HashMap<String, wir::GlobalVarId>,
+    pub(crate) players: HashMap<String, wir::PlayerVarId>,
+    pub(crate) subroutines: HashMap<String, wir::SubroutineId>,
 }
 
-#[path = "../actions/parser.rs"]
-mod actions_parser;
-#[path = "../events/parser.rs"]
-mod events_parser;
-#[path = "../rules/parser.rs"]
-mod rules_parser;
-#[path = "../settings/parser.rs"]
-mod settings_parser;
-#[path = "../values/parser.rs"]
-mod values_parser;
-
-impl Parser<'_> {
-    fn resolve_entry(&self, kind: Kind, spelling: &str) -> Option<crate::catalog::CatalogEntry> {
+impl ParseContext<'_> {
+    pub(crate) fn resolve_entry(
+        &self,
+        kind: Kind,
+        spelling: &str,
+    ) -> Option<crate::catalog::CatalogEntry> {
         self.catalog
             .resolve(kind, &self.locale, spelling)
             .cloned()
@@ -132,7 +125,7 @@ impl Parser<'_> {
             })
     }
 
-    fn canonical_keyword(&self, spelling: &str) -> String {
+    pub(crate) fn canonical_keyword(&self, spelling: &str) -> String {
         self.catalog
             .resolve(Kind::Structural, &self.locale, spelling)
             .or_else(|| {
@@ -145,7 +138,7 @@ impl Parser<'_> {
             .unwrap_or_else(|| canonical_keyword(spelling).to_string())
     }
 
-    fn line_has_assignment(&self) -> bool {
+    pub(crate) fn line_has_assignment(&self) -> bool {
         let tokens: Vec<_> = self.tokens[self.pos..]
             .iter()
             .take_while(|token| !matches!(token.kind, TokenKind::Semi | TokenKind::RBrace))
@@ -160,7 +153,7 @@ impl Parser<'_> {
 
     /// Read the maximal phrase of consecutive words (space-joined). Phrases
     /// may span lines because long Workshop action arguments wrap mid-phrase.
-    fn phrase(&mut self) -> Result<(String, Position, Position)> {
+    pub(crate) fn phrase(&mut self) -> Result<(String, Position, Position)> {
         let mut words = Vec::new();
         let (start, mut end) = match self.peek() {
             Some(Token {
@@ -220,7 +213,7 @@ impl Parser<'_> {
 
     /// Read a single-line phrase (stops at a line boundary). Used for names
     /// that are structurally one per line, such as variable declarations.
-    fn phrase_on_line(&mut self) -> Result<(String, Position, Position)> {
+    pub(crate) fn phrase_on_line(&mut self) -> Result<(String, Position, Position)> {
         let mut words = Vec::new();
         let (start, mut end, line) = match self.peek() {
             Some(Token {
@@ -286,7 +279,7 @@ impl Parser<'_> {
         ))
     }
 
-    fn phrase_on_line_with_colon(&mut self) -> Result<(String, Position, Position)> {
+    pub(crate) fn phrase_on_line_with_colon(&mut self) -> Result<(String, Position, Position)> {
         let (mut phrase, start, mut end) = self.phrase_on_line()?;
         if matches!(
             self.peek(),
@@ -316,7 +309,7 @@ impl Parser<'_> {
         Ok((phrase, start, end))
     }
 
-    fn enum_member_phrase(&mut self) -> Result<(String, Position, Position)> {
+    pub(crate) fn enum_member_phrase(&mut self) -> Result<(String, Position, Position)> {
         let first = self
             .peek()
             .ok_or_else(|| self.malformed("expected an enum member", self.eof()))?;
@@ -350,7 +343,7 @@ impl Parser<'_> {
 
     /// Read a text line (tokens until `;`), joining words and dashes into
     /// the literal text, and consume the terminating `;`.
-    fn line_text(&mut self) -> Result<String> {
+    pub(crate) fn line_text(&mut self) -> Result<String> {
         let mut parts = Vec::new();
         loop {
             match self.peek() {
@@ -408,7 +401,7 @@ impl Parser<'_> {
     }
 
     /// Consume a known keyword phrase, verifying its spelling.
-    fn consume_phrase(&mut self, expected: &str) -> Result<()> {
+    pub(crate) fn consume_phrase(&mut self, expected: &str) -> Result<()> {
         let (phrase, _, _) = self.phrase()?;
         if phrase != expected {
             return Err(self.malformed(&format!("expected '{expected}'"), self.previous()));
@@ -416,7 +409,7 @@ impl Parser<'_> {
         Ok(())
     }
 
-    fn expect_keyword(&mut self, expected: &str) -> Result<Position> {
+    pub(crate) fn expect_keyword(&mut self, expected: &str) -> Result<Position> {
         match self.next() {
             Some(Token {
                 kind: TokenKind::Word(word),
@@ -428,7 +421,7 @@ impl Parser<'_> {
         }
     }
 
-    fn expect(&mut self, kind: TokenKind, message: &str) -> Result<()> {
+    pub(crate) fn expect(&mut self, kind: TokenKind, message: &str) -> Result<()> {
         match self.next() {
             Some(token) if token.kind == kind => Ok(()),
             Some(token) => Err(self.malformed(message, &token)),
@@ -436,7 +429,7 @@ impl Parser<'_> {
         }
     }
 
-    fn expect_string(&mut self, message: &str) -> Result<String> {
+    pub(crate) fn expect_string(&mut self, message: &str) -> Result<String> {
         match self.next() {
             Some(Token {
                 kind: TokenKind::String(content),
@@ -447,14 +440,14 @@ impl Parser<'_> {
         }
     }
 
-    fn malformed(&self, message: &str, token: &Token) -> WorkshopError {
+    pub(crate) fn malformed(&self, message: &str, token: &Token) -> WorkshopError {
         WorkshopError::Malformed {
             message: message.to_string(),
             span: Some(Span::new(self.file(), token.start, token.end)),
         }
     }
 
-    fn unknown(&self, kind: &'static str, spelling: &str) -> WorkshopError {
+    pub(crate) fn unknown(&self, kind: &'static str, spelling: &str) -> WorkshopError {
         WorkshopError::Unknown {
             kind,
             spelling: spelling.to_string(),
@@ -463,15 +456,15 @@ impl Parser<'_> {
         }
     }
 
-    fn peek(&self) -> Option<Token> {
+    pub(crate) fn peek(&self) -> Option<Token> {
         self.tokens.get(self.pos).cloned()
     }
 
-    fn peek_at(&self, offset: usize) -> Option<Token> {
+    pub(crate) fn peek_at(&self, offset: usize) -> Option<Token> {
         self.tokens.get(self.pos + offset).cloned()
     }
 
-    fn next(&mut self) -> Option<Token> {
+    pub(crate) fn next(&mut self) -> Option<Token> {
         let token = self.tokens.get(self.pos).cloned();
         if token.is_some() {
             self.pos += 1;
@@ -479,38 +472,38 @@ impl Parser<'_> {
         token
     }
 
-    fn previous(&self) -> &Token {
+    pub(crate) fn previous(&self) -> &Token {
         self.tokens
             .get(self.pos.saturating_sub(1))
             .unwrap_or_else(|| self.tokens.last().unwrap())
     }
 
-    fn previous_span(&self) -> (Position, Position) {
+    pub(crate) fn previous_span(&self) -> (Position, Position) {
         let token = self.previous();
         (token.start, token.end)
     }
 
-    fn span_here(&self) -> (Position, Position) {
+    pub(crate) fn span_here(&self) -> (Position, Position) {
         let token = self
             .peek()
             .unwrap_or_else(|| self.tokens.last().unwrap().clone());
         (token.start, token.end)
     }
 
-    fn eof(&self) -> &Token {
+    pub(crate) fn eof(&self) -> &Token {
         self.tokens.last().unwrap()
     }
 
-    fn file(&self) -> crate::core::ids::Id<SourceFile> {
+    pub(crate) fn file(&self) -> crate::core::ids::Id<SourceFile> {
         crate::core::ids::Id::from_index(0)
     }
 }
 
-fn is_comparison(op: &str) -> bool {
+pub(crate) fn is_comparison(op: &str) -> bool {
     matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=")
 }
 
-fn canonical_keyword(keyword: &str) -> &str {
+pub(crate) fn canonical_keyword(keyword: &str) -> &str {
     static KEYWORDS: OnceLock<HashMap<String, String>> = OnceLock::new();
     KEYWORDS
         .get_or_init(|| {
@@ -522,7 +515,7 @@ fn canonical_keyword(keyword: &str) -> &str {
         .unwrap_or(keyword)
 }
 
-fn raw_token_text(kind: &TokenKind) -> String {
+pub(crate) fn raw_token_text(kind: &TokenKind) -> String {
     match kind {
         TokenKind::Word(value) => value.clone(),
         TokenKind::Number { text, .. } => text.clone(),

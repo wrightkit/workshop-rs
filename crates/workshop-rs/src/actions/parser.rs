@@ -1,9 +1,9 @@
-// Parser behavior owned by the Workshop actions domain.
+// ParseContext behavior owned by the Workshop actions domain.
 
-use super::*;
+use crate::frontend::parser::*;
 
-impl Parser<'_> {
-    pub(super) fn conditions_section(&mut self) -> Result<Vec<wir::ValueId>> {
+impl ParseContext<'_> {
+    pub(crate) fn conditions_section(&mut self) -> Result<Vec<wir::ValueId>> {
         self.expect_keyword("conditions")?;
         self.expect(TokenKind::LBrace, "expected '{' after 'conditions'")?;
         let mut conditions = Vec::new();
@@ -57,7 +57,7 @@ impl Parser<'_> {
         Ok(conditions)
     }
 
-    pub(super) fn actions_section(&mut self) -> Result<Vec<wir::ActionId>> {
+    pub(crate) fn actions_section(&mut self) -> Result<Vec<wir::ActionId>> {
         self.expect_keyword("actions")?;
         self.expect(TokenKind::LBrace, "expected '{' after 'actions'")?;
         let mut all_actions = Vec::new();
@@ -78,7 +78,7 @@ impl Parser<'_> {
     /// Parse actions until a structural `else`/`elseIf`/`end` terminator
     /// (not consumed; the token position is preserved) or the enclosing `}`
     /// (consumed). Returns where the parse stopped.
-    pub(super) fn actions_until_end(&mut self) -> Result<(Vec<wir::ActionId>, Stop)> {
+    pub(crate) fn actions_until_end(&mut self) -> Result<(Vec<wir::ActionId>, Stop)> {
         let mut actions = Vec::new();
         loop {
             match self.peek() {
@@ -198,7 +198,7 @@ impl Parser<'_> {
     /// Return the action spelling after the locale-declared disabled
     /// modifier. The modifier itself is settings/catalog data, not a parser
     /// branch for a fixed pair of client locales.
-    pub(super) fn disabled_action_rest<'a>(&self, phrase: &'a str) -> Option<&'a str> {
+    pub(crate) fn disabled_action_rest<'a>(&self, phrase: &'a str) -> Option<&'a str> {
         if let Some(rest) = phrase.strip_prefix("disabled ") {
             return Some(rest);
         }
@@ -206,7 +206,7 @@ impl Parser<'_> {
         phrase.strip_prefix(localized)?.strip_prefix(' ')
     }
 
-    pub(super) fn assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
+    pub(crate) fn assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
         let saved = self.pos;
         let Some(Token {
             kind: TokenKind::Word(first),
@@ -376,7 +376,7 @@ impl Parser<'_> {
         })))
     }
 
-    pub(super) fn member_assignment_action(
+    pub(crate) fn member_assignment_action(
         &mut self,
         saved: usize,
         start: Position,
@@ -404,7 +404,7 @@ impl Parser<'_> {
         })))
     }
 
-    pub(super) fn indexed_assignment_action(
+    pub(crate) fn indexed_assignment_action(
         &mut self,
         global: bool,
         variable: wir::ValueId,
@@ -456,7 +456,7 @@ impl Parser<'_> {
         })
     }
 
-    pub(super) fn assignment_operator(&mut self) -> Result<Option<AssignmentOperator>> {
+    pub(crate) fn assignment_operator(&mut self) -> Result<Option<AssignmentOperator>> {
         let Some(token) = self.peek() else {
             return Ok(None);
         };
@@ -510,7 +510,7 @@ impl Parser<'_> {
         Ok(Some(AssignmentOperator::Modify(op)))
     }
 
-    pub(super) fn opaque_action(&mut self) -> Result<wir::ActionId> {
+    pub(crate) fn opaque_action(&mut self) -> Result<wir::ActionId> {
         let start = self
             .peek()
             .map(|token| token.start)
@@ -528,7 +528,7 @@ impl Parser<'_> {
         }))
     }
 
-    pub(super) fn if_group(&mut self) -> Result<wir::ActionId> {
+    pub(crate) fn if_group(&mut self) -> Result<wir::ActionId> {
         let start = self.previous_span().0;
         self.expect(TokenKind::LParen, "expected '(' after 'If'")?;
         let condition = self.value()?;
@@ -586,7 +586,7 @@ impl Parser<'_> {
         Ok(self.target.actions.push(action))
     }
 
-    pub(super) fn for_group(&mut self) -> Result<wir::ActionId> {
+    pub(crate) fn for_group(&mut self) -> Result<wir::ActionId> {
         let start = self.previous_span().0;
         self.expect(
             TokenKind::LParen,
@@ -624,7 +624,7 @@ impl Parser<'_> {
         Ok(self.target.actions.push(action))
     }
 
-    pub(super) fn while_group(&mut self) -> Result<wir::ActionId> {
+    pub(crate) fn while_group(&mut self) -> Result<wir::ActionId> {
         let start = self.previous_span().0;
         self.expect(TokenKind::LParen, "expected '(' after 'While'")?;
         let condition = self.value()?;
@@ -649,7 +649,7 @@ impl Parser<'_> {
     /// reference's per-player loop form (parsed from pinned reference
     /// evidence; the differential gate normalizes it to the declared global
     /// form, #119).
-    pub(super) fn for_player_group(&mut self) -> Result<wir::ActionId> {
+    pub(crate) fn for_player_group(&mut self) -> Result<wir::ActionId> {
         let start = self.previous_span().0;
         self.expect(
             TokenKind::LParen,
@@ -689,7 +689,7 @@ impl Parser<'_> {
         Ok(self.target.actions.push(action))
     }
 
-    pub(super) fn action_call_from_phrase(
+    pub(crate) fn action_call_from_phrase(
         &mut self,
         phrase: String,
         start: Position,
@@ -941,7 +941,7 @@ impl Parser<'_> {
         }
     }
 
-    pub(super) fn modify_op(&mut self) -> Result<ModifyOp> {
+    pub(crate) fn modify_op(&mut self) -> Result<ModifyOp> {
         let (phrase, start, end) = self.phrase()?;
         if phrase == "根据值从数组中移除" {
             return Ok(ModifyOp::RemoveFromArray);
