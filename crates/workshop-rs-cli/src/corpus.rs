@@ -1,4 +1,4 @@
-//! Offline execution for provenance-linked real-project evidence manifests.
+//! Offline execution for provenance-linked real-project regression manifests.
 //!
 //! The manifest describes source and expectation provenance; this runner only
 //! measures the bundled Workshop text with the canonical parser and WIR
@@ -8,11 +8,11 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::Path;
 
-use workshop_rs::catalog::{Catalog, CatalogIdentity, Locale};
-use workshop_rs::conformance::{
+use super::conformance::{
     Comparison, ConformanceReason, ConformanceResult, ConformanceStatus, Equivalence, Evidence,
     EvidenceArtifact, EvidenceClass, ExpectationSource, FeatureId, ReasonCode,
 };
+use workshop_rs::catalog::{Catalog, CatalogIdentity, Locale};
 use workshop_rs::{parser, validate};
 
 #[derive(Debug, Deserialize)]
@@ -157,7 +157,7 @@ pub(crate) fn run(manifest_path: &Path) -> Result<CorpusReport, String> {
             catalog: catalog_identity.clone(),
             locale: Some(locale.clone()),
             client: None,
-            implementation: Some(workshop_rs::conformance::ImplementationIdentity {
+            implementation: Some(crate::conformance::ImplementationIdentity {
                 name: "workshop-rs".to_string(),
                 version: env!("CARGO_PKG_VERSION").to_string(),
                 revision: None,

@@ -50,8 +50,8 @@ because those projects depend on its Workshop capabilities.
 - **Hero gameplay & query domain:** embedded reviewed hero/gameplay data and
   typed semantic queries for abilities, slots, variants, custom-game modifiers,
   and localized ability-name resolution.
-- **Conformance & census harness:** deterministic offline feature census,
-  real-project regression runner, and seasonal client-drift analysis.
+- **Verification tooling:** deterministic offline feature census, real-project
+  regression runner, and seasonal client-drift analysis in the CLI package.
 - **Standalone architecture:** zero dependency on upstream compiler runtimes or
   Wright tooling internals.
 
@@ -155,7 +155,7 @@ CI runs the same checks on stable and the pinned toolchain.
 ## Documentation
 
 Current architecture contracts, ADR history, catalog/gameplay contracts,
-conformance evidence, and release procedures are indexed in
+contract tests and fixture provenance, and release procedures are indexed in
 [`docs/README.md`](docs/README.md).
 
 ## Releases

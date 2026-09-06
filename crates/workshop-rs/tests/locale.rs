@@ -46,11 +46,7 @@ fn pinned_real_projects_convert_between_supported_locales() {
         ) {
             Ok(converted) => converted,
             Err(error) => {
-                common::assert_gap(
-                    case,
-                    workshop_rs::real_projects::RealProjectStage::LocaleConversion,
-                    &error,
-                );
+                common::assert_gap(case, common::RealProjectStage::LocaleConversion, &error);
                 println!("{}: known locale conversion gap: {error:?}", case.id);
                 continue;
             }

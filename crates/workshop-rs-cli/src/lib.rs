@@ -9,14 +9,15 @@
 use std::path::{Path, PathBuf};
 
 use workshop_rs::catalog::{Catalog, Locale};
-use workshop_rs::census;
 use workshop_rs::convert::{self, ConvertOptions};
 use workshop_rs::detect;
 use workshop_rs::emitter::{self, EmitOptions};
-use workshop_rs::live_capture;
 use workshop_rs::parser;
 
+pub mod census;
+pub mod conformance;
 mod corpus;
+pub mod live_capture;
 
 /// The default locale override for parsing when the input locale is not
 /// specified explicitly.
@@ -408,9 +409,11 @@ fn census_command(args: Vec<String>) -> i32 {
             println!("{}: {:?}", result.case_id, result.status);
         }
     }
-    if report.results.iter().any(|result| {
-        result.status == workshop_rs::conformance::ConformanceStatus::UnexpectedRegression
-    }) {
+    if report
+        .results
+        .iter()
+        .any(|result| result.status == conformance::ConformanceStatus::UnexpectedRegression)
+    {
         1
     } else {
         0

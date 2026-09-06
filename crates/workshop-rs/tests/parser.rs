@@ -36,11 +36,7 @@ fn pinned_real_projects_parse_with_expected_semantic_residuals() {
             .unwrap_or_else(|error| panic!("{} parse failed: {error:?}", case.id));
         common::assert_residual_policy(case, "source-parse", &program.semantic_issues(&catalog));
         if let Err(error) = validate::validate_canonical_ids(&program, &catalog) {
-            common::assert_gap(
-                case,
-                workshop_rs::real_projects::RealProjectStage::CanonicalValidation,
-                &error,
-            );
+            common::assert_gap(case, common::RealProjectStage::CanonicalValidation, &error);
             println!("{}: known canonical-validation gap: {error:?}", case.id);
         }
     }

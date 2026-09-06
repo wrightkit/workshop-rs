@@ -1,26 +1,25 @@
 //! Deterministic, sharded census of the canonical Workshop surface.
 //!
 //! The census is derived from this crate's catalog, settings table, and WIR
-//! capabilities. It is a runner and evidence assembler, not a source-language
-//! inventory or a live-client oracle.
+//! capabilities. It is tooling that runs contract/regression probes and
+//! produces structured results, not a source-language inventory or a
+//! live-client oracle.
 
 use std::collections::HashSet;
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use super::conformance::{
+use crate::conformance::{
     CONFORMANCE_SCHEMA_VERSION, Comparison, ConformanceReason, ConformanceResult,
     ConformanceStatus, Equivalence, Evidence, EvidenceArtifact, EvidenceBasis, EvidenceClass,
     ExpectationSource, FeatureId, FeatureKind, FeatureNamespace, ImplementationIdentity,
     ReasonCode,
 };
-use crate::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
-use crate::core::error::WorkshopError;
-use crate::frontend::parser;
-use crate::output::{convert, emitter, roundtrip};
-use crate::settings::table::{self, KeyKind, PathPart, TableEntry};
-use crate::wir::{CENSUS_CAPABILITIES, CensusCapabilityKind};
+use workshop_rs::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
+use workshop_rs::settings::table::{self, KeyKind, PathPart, TableEntry};
+use workshop_rs::wir::{CENSUS_CAPABILITIES, CensusCapabilityKind};
+use workshop_rs::{WorkshopError, convert, emitter, parser, roundtrip};
 
 pub const CENSUS_SCHEMA_VERSION: u32 = 1;
 pub const CENSUS_IDENTITY_SCHEMA_VERSION: u32 = 1;
@@ -249,7 +248,7 @@ impl Census {
 pub struct CensusReport {
     pub schema_version: u32,
     pub conformance_schema_version: u32,
-    pub catalog: crate::catalog::CatalogIdentity,
+    pub catalog: workshop_rs::catalog::CatalogIdentity,
     pub census: CensusIdentity,
     pub results: Vec<ConformanceResult>,
 }
@@ -530,8 +529,10 @@ fn wir_shard() -> Result<CensusShard, CensusError> {
 }
 
 fn localization_shard() -> Result<CensusShard, CensusError> {
-    let en_source = include_str!("../../tests/fixtures/census/localization-en-us.ws").to_string();
-    let zh_source = include_str!("../../tests/fixtures/census/localization-zh-cn.ws").to_string();
+    let en_source =
+        include_str!("../../workshop-rs/tests/fixtures/census/localization-en-us.ws").to_string();
+    let zh_source =
+        include_str!("../../workshop-rs/tests/fixtures/census/localization-zh-cn.ws").to_string();
     CensusShard::new(
         "localization",
         vec![

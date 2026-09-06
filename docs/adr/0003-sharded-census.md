@@ -6,9 +6,9 @@ Accepted as the offline census layer for the #10 evidence corpus.
 
 ## Decision
 
-`workshop_rs::census::Census::builtin` derives deterministic shards from the
-canonical catalog, the reviewed settings table, and Workshop IR capabilities
-owned by `workshop-rs`. It does not import OPY/DEL inventories or claim live
+The CLI census runner derives deterministic shards from the canonical catalog,
+the reviewed settings table, and Workshop IR capabilities owned by
+`workshop-rs`. It does not import OPY/DEL inventories or claim live
 client/runtime behavior.
 
 Each `CensusCase` has a stable case ID, one or more #18 `FeatureId` values,
@@ -44,6 +44,11 @@ oracle. Focused parser/catalog/emitter tests remain complementary and are not
 replaced by census totals.
 
 ## Consequences
+
+The census runner is tooling owned by `workshop-rs-cli`
+(`crates/workshop-rs-cli/src/census.rs`). Its probes exercise the semantic
+crate and its contract tests; they are not part of the semantic crate's source
+domain taxonomy.
 
 Future live-client workflows can assemble the same shards into probes while
 retaining feature attribution. A census result is offline evidence only until

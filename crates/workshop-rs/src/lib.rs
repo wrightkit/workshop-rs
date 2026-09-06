@@ -16,8 +16,6 @@
 //!   representation) with its arena/source/settings support;
 //! * [`parser`] and [`emitter`] — compatibility paths for the shared frontend
 //!   and output boundaries;
-//! * [`census`], [`conformance`], [`live_capture`], and [`real_projects`] —
-//!   compatibility paths for the separate evidence support tree.
 //!
 //! The catalog is locale-independent at the identity layer: analyzer and WIR
 //! APIs never need locale-specific strings to identify a builtin. Locale
@@ -28,8 +26,6 @@ pub mod actions;
 mod analysis;
 pub mod arena;
 pub mod catalog;
-pub mod census;
-pub mod conformance;
 pub mod convert;
 mod core;
 pub mod detect;
@@ -37,7 +33,6 @@ pub mod element_count;
 pub mod emitter;
 mod error;
 pub mod events;
-mod evidence;
 pub mod format;
 mod frontend;
 pub mod gameplay;
@@ -45,10 +40,8 @@ pub mod gameplay_data;
 pub mod gameplay_query;
 pub mod ids;
 pub mod lexer;
-pub mod live_capture;
 mod output;
 pub mod parser;
-pub mod real_projects;
 pub mod roundtrip;
 pub mod rules;
 pub mod semantic;

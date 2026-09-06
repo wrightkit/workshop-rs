@@ -114,7 +114,7 @@ declared corpus is therefore complete and contains no silent exclusions.
 
 The `settings.workshop` namespace aliases (`workshop` / `地图工坊`) and the
 Wrecking Ball cooldown labels are pinned from the reacquired AI-PVE and Bastion
-artifacts described by `docs/evidence/raw-workshop-real-projects-v1.json`; they are source-preserving
+artifacts described by `crates/workshop-rs/tests/fixtures/real-projects/provenance.json`; they are source-preserving
 custom data or producer aliases, not new builtin gameplay identities.
 
 ## Test fixtures (`crates/workshop-rs/tests/fixtures/`)

@@ -1,5 +1,5 @@
 //! Cross-language round-trip suite: every supported-locale fixture
-//! round-trips with recorded evidence, equivalence ignores presentation-only
+//! round-trips with regression fixtures; equivalence ignores presentation-only
 //! differences, and negative fixtures fail at the right stage.
 
 use std::path::{Path, PathBuf};

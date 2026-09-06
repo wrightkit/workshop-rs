@@ -54,22 +54,14 @@ fn pinned_real_projects_emit_deterministically_and_reparse() {
         common::assert_residual_policy(case, "source-parse", &program.semantic_issues(&catalog));
 
         if let Err(error) = workshop_rs::validate::validate_canonical_ids(&program, &catalog) {
-            common::assert_gap(
-                case,
-                workshop_rs::real_projects::RealProjectStage::CanonicalValidation,
-                &error,
-            );
+            common::assert_gap(case, common::RealProjectStage::CanonicalValidation, &error);
             println!("{}: known canonical-validation gap: {error:?}", case.id);
         }
 
         let emitted = match emitter::emit(&program, &catalog, &locale) {
             Ok(text) => text,
             Err(error) => {
-                common::assert_gap(
-                    case,
-                    workshop_rs::real_projects::RealProjectStage::Emission,
-                    &error,
-                );
+                common::assert_gap(case, common::RealProjectStage::Emission, &error);
                 println!("{}: known emission gap: {error:?}", case.id);
                 continue;
             }
