@@ -117,6 +117,204 @@ fn equivalence_ignores_presentation_but_preserves_semantics() {
 }
 
 #[test]
+fn equivalence_accepts_workshop_presentation_aliases() {
+    let mut all_players_a = workshop_rs::wir::Program::default();
+    let mut all_players_b = workshop_rs::wir::Program::default();
+    let all_players = add_value(
+        &mut all_players_a,
+        workshop_rs::wir::Value::Call {
+            name: "allPlayers".into(),
+            args: vec![],
+        },
+    );
+    let team_all = add_value(
+        &mut all_players_b,
+        workshop_rs::wir::Value::Enum {
+            value_type: "Team".into(),
+            value: "ALL".into(),
+        },
+    );
+    let all_players_with_team = add_value(
+        &mut all_players_b,
+        workshop_rs::wir::Value::Call {
+            name: "allPlayers".into(),
+            args: vec![team_all],
+        },
+    );
+    assert!(equivalent_program_values(
+        &all_players_a,
+        all_players,
+        &all_players_b,
+        all_players_with_team
+    ));
+
+    let mut a = workshop_rs::wir::Program::default();
+    let mut b = workshop_rs::wir::Program::default();
+    let up = add_value(
+        &mut a,
+        workshop_rs::wir::Value::Enum {
+            value_type: "Vector".into(),
+            value: "UP".into(),
+        },
+    );
+    let zero = add_value(
+        &mut b,
+        workshop_rs::wir::Value::Number {
+            value: 0.0,
+            text: "0".into(),
+        },
+    );
+    let one = add_value(
+        &mut b,
+        workshop_rs::wir::Value::Number {
+            value: 1.0,
+            text: "1".into(),
+        },
+    );
+    let vector_up = add_value(
+        &mut b,
+        workshop_rs::wir::Value::Call {
+            name: "vector".into(),
+            args: vec![zero, one, zero],
+        },
+    );
+    assert!(equivalent_program_values(&a, up, &b, vector_up));
+}
+
+#[test]
+fn equivalence_accepts_owner_defined_float_precision() {
+    assert!(equivalent_values(
+        workshop_rs::wir::Value::Number {
+            value: 1.810660171779821,
+            text: "1.810660171779821".into(),
+        },
+        workshop_rs::wir::Value::Number {
+            value: 1.8106601717798212,
+            text: "1.8106601717798212".into(),
+        },
+    ));
+}
+
+#[test]
+fn equivalence_accepts_nested_unit_up_alias() {
+    let mut a = workshop_rs::wir::Program::default();
+    let mut b = workshop_rs::wir::Program::default();
+    let up = add_value(
+        &mut a,
+        workshop_rs::wir::Value::Enum {
+            value_type: "Vector".into(),
+            value: "UP".into(),
+        },
+    );
+    let zero = add_value(
+        &mut b,
+        workshop_rs::wir::Value::Number {
+            value: 0.0,
+            text: "0".into(),
+        },
+    );
+    let one = add_value(
+        &mut b,
+        workshop_rs::wir::Value::Number {
+            value: 1.0,
+            text: "1".into(),
+        },
+    );
+    let vector_up = add_value(
+        &mut b,
+        workshop_rs::wir::Value::Call {
+            name: "vector".into(),
+            args: vec![zero, one, zero],
+        },
+    );
+    let base_a = add_value(
+        &mut a,
+        workshop_rs::wir::Value::Number {
+            value: 1.0,
+            text: "1".into(),
+        },
+    );
+    let base_b = add_value(
+        &mut b,
+        workshop_rs::wir::Value::Number {
+            value: 1.0,
+            text: "1".into(),
+        },
+    );
+    let left = add_value(
+        &mut a,
+        workshop_rs::wir::Value::Call {
+            name: "add".into(),
+            args: vec![base_a, up],
+        },
+    );
+    let right = add_value(
+        &mut b,
+        workshop_rs::wir::Value::Call {
+            name: "add".into(),
+            args: vec![base_b, vector_up],
+        },
+    );
+    assert!(equivalent_program_values(&a, left, &b, right));
+}
+
+fn equivalent_values(left: workshop_rs::wir::Value, right: workshop_rs::wir::Value) -> bool {
+    let mut a = workshop_rs::wir::Program::default();
+    let mut b = workshop_rs::wir::Program::default();
+    let left_id = add_value(&mut a, left);
+    let right_id = add_value(&mut b, right);
+    equivalent_program_values(&a, left_id, &b, right_id)
+}
+
+fn equivalent_program_values(
+    a: &workshop_rs::wir::Program,
+    left_id: workshop_rs::wir::ValueId,
+    b: &workshop_rs::wir::Program,
+    right_id: workshop_rs::wir::ValueId,
+) -> bool {
+    let mut a = a.clone();
+    let mut b = b.clone();
+    let left_action = a.actions.push(workshop_rs::wir::Action::Call {
+        name: "wait".into(),
+        args: vec![left_id],
+        span: None,
+    });
+    let right_action = b.actions.push(workshop_rs::wir::Action::Call {
+        name: "wait".into(),
+        args: vec![right_id],
+        span: None,
+    });
+    a.rules.push(workshop_rs::wir::Rule {
+        name: "r".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: workshop_rs::wir::Event::Global,
+        conditions: vec![],
+        actions: vec![left_action],
+    });
+    b.rules.push(workshop_rs::wir::Rule {
+        name: "r".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: workshop_rs::wir::Event::Global,
+        conditions: vec![],
+        actions: vec![right_action],
+    });
+    roundtrip::equivalent(&a, &b)
+}
+
+fn add_value(
+    program: &mut workshop_rs::wir::Program,
+    value: workshop_rs::wir::Value,
+) -> workshop_rs::wir::ValueId {
+    program
+        .values
+        .push(workshop_rs::wir::ValueNode::new(value, None))
+}
+
+#[test]
 fn equivalence_detects_semantic_differences() {
     let mut a = workshop_rs::wir::Program::default();
     a.files

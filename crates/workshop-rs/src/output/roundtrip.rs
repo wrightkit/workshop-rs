@@ -600,7 +600,9 @@ fn value_equivalent(
         return false;
     };
     match (&la.value, &rb.value) {
-        (wir::Value::Number { value: x, .. }, wir::Value::Number { value: y, .. }) => x == y,
+        (wir::Value::Number { value: x, .. }, wir::Value::Number { value: y, .. }) => {
+            float_equivalent(*x, *y)
+        }
         (wir::Value::String(x), wir::Value::String(y)) => x == y,
         (wir::Value::LocalizedString(x), wir::Value::LocalizedString(y)) => x == y,
         (wir::Value::Bool(x), wir::Value::Bool(y)) => x == y,
@@ -683,10 +685,80 @@ fn value_equivalent(
                     .is_some_and(|value| value.name == *member)
         }
         (wir::Value::Call { name: n1, args: x1 }, wir::Value::Call { name: n2, args: x2 }) => {
+            if n1 == "allPlayers" && n2 == "allPlayers" {
+                return all_players_equivalent(a, b, x1, x2);
+            }
             canonical_value_name(n1) == canonical_value_name(n2) && values_equivalent(a, b, x1, x2)
+        }
+        (wir::Value::Enum { value_type, value }, wir::Value::Call { name, args })
+            if is_unit_up_enum(value_type, value) =>
+        {
+            is_unit_up_call(b, name, args)
+        }
+        (wir::Value::Call { name, args }, wir::Value::Enum { value_type, value })
+            if is_unit_up_enum(value_type, value) =>
+        {
+            is_unit_up_call(a, name, args)
+        }
+        (wir::Value::Enum { value_type, value }, wir::Value::Vector { x, y, z })
+            if is_unit_up_enum(value_type, value) =>
+        {
+            is_unit_up_vector(b, *x, *y, *z)
+        }
+        (wir::Value::Vector { x, y, z }, wir::Value::Enum { value_type, value })
+            if is_unit_up_enum(value_type, value) =>
+        {
+            is_unit_up_vector(a, *x, *y, *z)
         }
         _ => false,
     }
+}
+
+fn all_players_equivalent(
+    a: &wir::Program,
+    b: &wir::Program,
+    left: &[wir::ValueId],
+    right: &[wir::ValueId],
+) -> bool {
+    (all_players_args(a, left) && all_players_args(b, right))
+        || values_equivalent(a, b, left, right)
+}
+
+fn all_players_args(program: &wir::Program, args: &[wir::ValueId]) -> bool {
+    match args {
+        [] => true,
+        [team] => matches!(
+            program.values.get(*team).map(|node| &node.value),
+            Some(wir::Value::Enum { value_type, value })
+                if value_type == "Team" && value == "ALL"
+        ),
+        _ => false,
+    }
+}
+
+fn is_unit_up_enum(value_type: &str, value: &str) -> bool {
+    value_type == "Vector" && value == "UP"
+}
+
+fn is_unit_up_call(program: &wir::Program, name: &str, args: &[wir::ValueId]) -> bool {
+    name == "vector" && args.len() == 3 && is_unit_up_vector(program, args[0], args[1], args[2])
+}
+
+fn is_unit_up_vector(
+    program: &wir::Program,
+    x: wir::ValueId,
+    y: wir::ValueId,
+    z: wir::ValueId,
+) -> bool {
+    [x, y, z]
+        .into_iter()
+        .zip([0.0, 1.0, 0.0])
+        .all(|(id, expected)| {
+            matches!(
+                program.values.get(id).map(|node| &node.value),
+                Some(wir::Value::Number { value, .. }) if float_equivalent(*value, expected)
+            )
+        })
 }
 
 fn canonical_value_name(name: &str) -> &str {
