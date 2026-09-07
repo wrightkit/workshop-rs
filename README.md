@@ -6,9 +6,10 @@ provides an independently usable library and CLI for parsing, validating,
 analyzing, converting, querying, and emitting Workshop text and reviewed
 Workshop gameplay/catalog data.
 
-It is not merely a backend hidden behind Wright. Wright, `opy-rs`, and `del-rs`
-are consumers of its public contracts. `workshop-rs` has no dependency on
-Wright tooling internals or source-language implementation internals.
+`workshop-rs` is an independent library and CLI used across WrightKit as the
+shared semantic core for raw Workshop code. Frontends such as `opy-rs` and
+`del-rs` consume its public contracts to emit validated Workshop output without
+tying their implementations to Wright internals.
 
 ```text
 Raw Workshop text
@@ -33,27 +34,22 @@ del-rs ─────► workshop-rs
 wright  ─────► workshop-rs
 ```
 
-`opy-rs` and `del-rs` remain responsible for their own source-language
-semantics, compiler lowering choices, and Workshop-to-source reconstruction.
-`workshop-rs` does not become an OverPy or DEL/OSTW implementation simply
-because those projects depend on its Workshop capabilities.
+`opy-rs` and `del-rs` own their respective frontend semantics, lowering
+strategies, and source reconstruction. `workshop-rs` provides the canonical
+Workshop target data and WIR representations they compile into.
 
-## Features
+## Key features
 
-- **Raw Workshop parsing & WIR:** parse raw Workshop text into a validated,
-  locale-independent Workshop Intermediate Representation (WIR).
-- **Deterministic emission & conversion:** deterministic localized emission and
-  raw Workshop conversion (`en-US` ↔ `zh-CN`) with fail-explicit missing-mapping
-  safety and opt-in fallback.
-- **Catalog & allowlist validation:** canonical, locale-independent identities
-  for Workshop actions, values, events, enums, operators, settings, and content.
-- **Hero gameplay & query domain:** embedded reviewed hero/gameplay data and
-  typed semantic queries for abilities, slots, variants, custom-game modifiers,
-  and localized ability-name resolution.
-- **Verification tooling:** deterministic offline feature census, real-project
-  regression runner, and seasonal client-drift analysis in the CLI package.
-- **Standalone architecture:** zero dependency on upstream compiler runtimes or
-  Wright tooling internals.
+- Parser and WIR: parses raw Workshop text into a validated, locale-neutral
+  Workshop Intermediate Representation (WIR).
+- Code generation and conversion: deterministic emission and translation
+  (`en-US` ↔ `zh-CN`) with strict validation for missing terms.
+- Catalog validation: canonical identities and allowlists for Workshop actions,
+  values, events, enums, operators, and settings.
+- Game domain data: typed queries for hero abilities, weapon slots, and custom
+  game modifiers.
+- Verification tools: offline feature census, regression test runners, and
+  client version drift analysis.
 
 ## CLI usage
 
@@ -110,9 +106,9 @@ See [`docs/language-support.md`](docs/language-support.md) for the complete capa
 - **Strings & localization** (`Custom String`, `en-US`, `zh-CN`, bidirectional conversion)
 - **Tooling & semantic capabilities** (parsing, validation, emission, conversion, hero gameplay query APIs)
 
-The canonical Workshop baseline is intentionally independent of any single
-source-language compiler. Consumer-driven additions must remain generic
-Workshop contracts rather than OPY- or DEL-shaped special cases.
+All features in `workshop-rs` are modeled directly on canonical Overwatch
+Workshop behavior, keeping definitions language-neutral rather than shaped by
+specific compiler frontends.
 
 ## Relationship with WrightKit implementations
 
