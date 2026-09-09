@@ -1,5 +1,3 @@
-// ParseContext behavior owned by the Workshop rules domain.
-
 use crate::frontend::parser::*;
 
 impl ParseContext<'_> {
