@@ -895,6 +895,78 @@ fn typed_settings_source_edit_replaces_only_the_existing_value_bytes() {
 }
 
 #[test]
+fn typed_settings_source_edit_uses_settings_string_escaping() {
+    let catalog = Catalog::builtin().expect("catalog");
+    let source = "settings { main { Description: \"old\" } }";
+    let program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("parse");
+    let definition = definitions_by_id(&SettingId::from("setting.main.description"))
+        .next()
+        .expect("description definition");
+    let value = "line one\nline\\two\t\"quoted\"\r".to_string();
+    let edit = definition
+        .source_edit(
+            source,
+            program.settings.as_ref().expect("settings"),
+            "en-US",
+            &SettingTarget::Global,
+            SettingValue::String(value.clone()),
+        )
+        .expect("editable string occurrence");
+    assert_eq!(
+        edit.replacement(),
+        "\"line one\\nline\\\\two\\t\\\"quoted\\\"\\r\""
+    );
+
+    let reparsed = parser::parse(
+        &edit.apply(source).expect("apply source edit"),
+        &catalog,
+        &Locale::new("en-US"),
+    )
+    .expect("reparse escaped string");
+    assert_eq!(
+        definition
+            .read(
+                reparsed.settings.as_ref().expect("settings"),
+                &SettingTarget::Global,
+            )
+            .expect("read escaped string")
+            .authored,
+        SettingValue::String(value)
+    );
+}
+
+#[test]
+fn typed_settings_source_edit_rejects_false_boolean_enum_values() {
+    let catalog = Catalog::builtin().expect("catalog");
+    let source = "settings { lobby { Match Voice Chat: Enabled } }";
+    let program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("parse");
+    let definition = definitions_by_id(&SettingId::from("setting.lobby.enableMatchVoiceChat"))
+        .next()
+        .expect("match voice chat definition");
+
+    let edit = definition
+        .source_edit(
+            source,
+            program.settings.as_ref().expect("settings"),
+            "en-US",
+            &SettingTarget::Global,
+            SettingValue::Boolean(true),
+        )
+        .expect("enabled enum member is writable");
+    assert_eq!(edit.replacement(), "Enabled");
+    assert!(matches!(
+        definition.source_edit(
+            source,
+            program.settings.as_ref().expect("settings"),
+            "en-US",
+            &SettingTarget::Global,
+            SettingValue::Boolean(false),
+        ),
+        Err(SettingOperationError::InvalidValue { .. })
+    ));
+}
+
+#[test]
 fn typed_settings_errors_reject_invalid_members_and_non_applicable_targets() {
     let catalog = Catalog::builtin().expect("catalog");
     let mut program = parser::parse(

@@ -687,7 +687,10 @@ impl SettingDefinition {
                     setting: id.clone(),
                 })?;
         let range = source_value_range(source, span, &id)?;
-        let replacement = source_value_spelling(&self.domain, locale, &id, value)?;
+        let kind = table::lookup(self.path_parts)
+            .expect("settings definition must retain its table entry")
+            .kind;
+        let replacement = source_value_spelling(&self.domain, kind, locale, &id, value)?;
         Ok(SettingSourceEdit {
             expected: source[range.clone()].to_string(),
             range,
@@ -841,6 +844,7 @@ fn byte_offset(source: &str, position: crate::core::source::Position) -> Option<
 
 fn source_value_spelling(
     domain: &SettingValueDomain,
+    kind: KeyKind,
     locale: &str,
     setting: &SettingId,
     value: SettingValue,
@@ -858,20 +862,38 @@ fn source_value_spelling(
             span: None,
         })
     };
-    match (domain, value) {
-        (SettingValueDomain::Boolean, SettingValue::Boolean(value)) => {
+    match (domain, kind, value) {
+        (SettingValueDomain::Boolean, KeyKind::Bool, SettingValue::Boolean(value)) => {
             localized("tokens", if value { "On" } else { "Off" })
         }
-        (SettingValueDomain::Number(_), SettingValue::Number(value)) => {
+        (SettingValueDomain::Boolean, KeyKind::BoolEnum(domain), SettingValue::Boolean(true)) => {
+            let english = table::enum_name(domain, "enabled").ok_or_else(|| {
+                SettingOperationError::InvalidValue {
+                    setting: setting.clone(),
+                    message: format!("unknown enabled member for enum domain '{domain}'"),
+                    span: None,
+                }
+            })?;
+            localized("enums", english)
+        }
+        (SettingValueDomain::Boolean, KeyKind::BoolEnum(_), SettingValue::Boolean(false)) => {
+            Err(SettingOperationError::InvalidValue {
+                setting: setting.clone(),
+                message: "false is unsupported by this Workshop boolean-enum setting".to_string(),
+                span: None,
+            })
+        }
+        (SettingValueDomain::Number(_), KeyKind::Number, SettingValue::Number(value)) => {
             Ok(crate::format::format_number(value))
         }
-        (SettingValueDomain::Percent(_), SettingValue::Percent(value)) => {
+        (SettingValueDomain::Percent(_), KeyKind::Percent, SettingValue::Percent(value)) => {
             Ok(format!("{}%", crate::format::format_number(value)))
         }
-        (SettingValueDomain::String, SettingValue::String(value)) => {
-            Ok(format!("\"{}\"", value.replace('"', "\\\\\"")))
-        }
-        (SettingValueDomain::Enum { domain }, SettingValue::Enum(member)) => {
+        (SettingValueDomain::String, KeyKind::String, SettingValue::String(value)) => Ok(format!(
+            "\"{}\"",
+            crate::output::emitter::escape_settings_string(&value)
+        )),
+        (SettingValueDomain::Enum { domain }, KeyKind::Enum(_), SettingValue::Enum(member)) => {
             let english = table::enum_name(domain, &member).ok_or_else(|| {
                 SettingOperationError::InvalidValue {
                     setting: setting.clone(),
