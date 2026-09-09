@@ -5,11 +5,6 @@
 //! two WIR programs structurally, ignoring presentation-only differences
 //! (source spans and file paths) while preserving operations, references,
 //! control flow, and values.
-//!
-//! The v0.2 catalog supports `en-US`, so cross-locale equivalence is
-//! trivially identity for now; the suite is locale-generic so additional
-//! locales (a data-pipeline change) automatically extend coverage.
-
 use crate::wir;
 
 use crate::catalog::{Catalog, Locale};

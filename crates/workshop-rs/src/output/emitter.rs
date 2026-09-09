@@ -6,12 +6,7 @@
 //! with a [`WorkshopError::MissingMapping`] diagnostic — never a guess, never
 //! a silent passthrough of another locale's spelling. Fallback to another
 //! declared locale is opt-in ([`EmitOptions`]) and every fell-back identity
-//! is recorded in [`EmitOutput::fallback_ids`]. The formatting is fixed and
-//! presentation-canonical, so the same WIR/config emits byte-stable text that
-//! reparses to equivalent WIR — except for the `settings` section:
-//! settings-bearing emissions are deliberately rejected by the Workshop
-//! parser (a `.ws` decompiler is a non-goal). Settings names are resolved from
-//! the generated locale corpus, with an explicit `en-US` fallback when needed.
+//! is recorded in [`EmitOutput::fallback_ids`].
 
 pub(crate) use std::fmt::Write;
 
