@@ -25,7 +25,7 @@ value carrier; the catalog does not regenerate or discard unknown settings.
 ```rust
 use workshop_rs::gameplay::{hero_ids, slots, HeroId, LogicalSlot};
 use workshop_rs::settings::{
-    definitions_by_id, Applicability, NumericBounds, SettingId, SettingTarget,
+    definitions_by_id, Applicability, SettingId, SettingTarget,
     SettingTargetKind, SettingValueDomain, TeamId,
 };
 
@@ -64,14 +64,6 @@ assert_eq!(
     Applicability::NotApplicable
 );
 
-// A definition whose reviewed evidence exposes bounds reports both values;
-// the authored source value remains unchanged until an explicit write.
-let evidenced = SettingValueDomain::Percent(
-    NumericBounds::new(Some(0.0), Some(500.0)).expect("valid bounds"),
-);
-let effective = evidenced.effective_number(650.0).expect("clamped value");
-assert_eq!((effective.authored, effective.effective), (650.0, 500.0));
-
 let health = definitions_by_id(&SettingId::from("setting.hero.health"))
     .next()
     .expect("canonical hero setting");
@@ -86,10 +78,19 @@ assert!(health
 
 Hero and ability display names are presentation data only. Consumers use the
 canonical concept and `SettingTarget`; localized aliases remain parser/emitter
-resolution details. Numeric bounds are explicit when reviewed evidence proves
-them, and otherwise remain unknown rather than being guessed.
+resolution details. Numeric bounds remain unknown until reviewed Workshop
+evidence establishes them; `SettingValueDomain::effective_number` exposes a
+clamped effective value only for a definition carrying such evidence.
 
 `SettingDefinition::read` and `write` operate on existing occurrences. A
 write changes only the typed leaf value, preserving its span and all unrelated
 settings structure; inserting or resizing a source list is rejected so an
 edit cannot silently become whole-tree regeneration.
+
+For an edit that must retain the original Workshop text, use
+`SettingDefinition::source_edit(source, settings, locale, target, value)`.
+It produces a `SettingSourceEdit` for the existing scalar value and verifies
+the expected bytes again when `apply(source)` is called. Only that range is
+replaced; comments, whitespace, and all bytes outside it are retained. This
+does not define comment/trivia attachment semantics beyond the edited setting
+occurrence.

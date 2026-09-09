@@ -852,6 +852,49 @@ fn typed_settings_read_and_write_preserve_unrelated_structure() {
 }
 
 #[test]
+fn typed_settings_source_edit_replaces_only_the_existing_value_bytes() {
+    let catalog = Catalog::builtin().expect("catalog");
+    let source = "// 保留这条注释\nsettings {\n    lobby {\n        Max Spectators: 2 // and this one\n    }\n}";
+    let program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("parse");
+    let settings = program.settings.as_ref().expect("settings");
+    let definition = definitions_by_id(&SettingId::from("setting.lobby.spectatorSlots"))
+        .next()
+        .expect("spectator-slot definition");
+
+    let edit = definition
+        .source_edit(
+            source,
+            settings,
+            "en-US",
+            &SettingTarget::Global,
+            SettingValue::Number(4.0),
+        )
+        .expect("editable source occurrence");
+    assert_eq!(&source[edit.range()], "2");
+
+    let edited = edit.apply(source).expect("apply exact-source edit");
+    assert_eq!(
+        edited,
+        "// 保留这条注释\nsettings {\n    lobby {\n        Max Spectators: 4 // and this one\n    }\n}"
+    );
+    let reparsed = parser::parse(&edited, &catalog, &Locale::new("en-US")).expect("reparse");
+    assert_eq!(
+        definition
+            .read(
+                reparsed.settings.as_ref().expect("settings"),
+                &SettingTarget::Global,
+            )
+            .expect("read edited value")
+            .authored,
+        SettingValue::Number(4.0)
+    );
+    assert!(matches!(
+        edit.apply(&source.replacen("2", "3", 1)),
+        Err(SettingOperationError::SourceMismatch)
+    ));
+}
+
+#[test]
 fn typed_settings_errors_reject_invalid_members_and_non_applicable_targets() {
     let catalog = Catalog::builtin().expect("catalog");
     let mut program = parser::parse(

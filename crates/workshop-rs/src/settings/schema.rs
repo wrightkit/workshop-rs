@@ -4,7 +4,7 @@
 //! table remains the parser/emitter lookup source, while [`Settings`] and
 //! [`SettingsNode`] remain the source-preserving authored-value carrier.
 
-use std::fmt;
+use std::{fmt, ops::Range};
 
 use crate::gameplay::{AbilityVariant, HeroId, LogicalSlot};
 use crate::{gameplay::GameplayDataError, gameplay_data};
@@ -227,6 +227,43 @@ pub struct SettingOccurrence {
     pub effective: Option<EffectiveNumber>,
 }
 
+/// One checked replacement in the original Workshop source text.
+///
+/// The edit changes only `range`; [`Self::apply`] refuses a source buffer whose
+/// bytes at that range no longer equal `expected`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SettingSourceEdit {
+    range: Range<usize>,
+    expected: String,
+    replacement: String,
+}
+
+impl SettingSourceEdit {
+    pub fn range(&self) -> Range<usize> {
+        self.range.clone()
+    }
+
+    pub fn replacement(&self) -> &str {
+        &self.replacement
+    }
+
+    /// Apply this edit when the targeted source bytes are unchanged.
+    pub fn apply(&self, source: &str) -> Result<String, SettingOperationError> {
+        if source
+            .get(self.range.clone())
+            .is_none_or(|actual| actual != self.expected)
+        {
+            return Err(SettingOperationError::SourceMismatch);
+        }
+        let mut edited =
+            String::with_capacity(source.len() - self.expected.len() + self.replacement.len());
+        edited.push_str(&source[..self.range.start]);
+        edited.push_str(&self.replacement);
+        edited.push_str(&source[self.range.end..]);
+        Ok(edited)
+    }
+}
+
 /// Failure from a typed settings query or source-preserving edit.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SettingOperationError {
@@ -253,6 +290,10 @@ pub enum SettingOperationError {
         message: String,
         span: Option<crate::core::source::Span>,
     },
+    SourceProvenanceUnavailable {
+        setting: SettingId,
+    },
+    SourceMismatch,
 }
 
 impl fmt::Display for SettingOperationError {
@@ -286,6 +327,13 @@ impl fmt::Display for SettingOperationError {
             Self::InvalidValue {
                 setting, message, ..
             } => write!(formatter, "invalid value for setting {setting}: {message}"),
+            Self::SourceProvenanceUnavailable { setting } => {
+                write!(
+                    formatter,
+                    "setting {setting} has no editable source provenance"
+                )
+            }
+            Self::SourceMismatch => formatter.write_str("source no longer matches the edit"),
         }
     }
 }
@@ -609,6 +657,44 @@ impl SettingDefinition {
         apply_value(node, &id, value)
     }
 
+    /// Build a source-text edit for one existing scalar occurrence.
+    ///
+    /// The caller retains the original source and applies the returned edit
+    /// while its targeted bytes are unchanged. Comments, whitespace, and every
+    /// other byte remain outside the edit range and are therefore preserved
+    /// without assigning them comment/trivia ownership semantics.
+    pub fn source_edit(
+        &self,
+        source: &str,
+        settings: &Settings,
+        locale: &str,
+        target: &SettingTarget,
+        value: SettingValue,
+    ) -> Result<SettingSourceEdit, SettingOperationError> {
+        let id = self.operation_id()?;
+        self.ensure_write_target(target)?;
+        let path = self.concrete_path(target);
+        let node = find_node(&settings.children, &path).ok_or_else(|| {
+            SettingOperationError::NotFound {
+                setting: id.clone(),
+                target: target.clone(),
+            }
+        })?;
+        validate_value(&self.domain, &id, &value, node.span())?;
+        let span =
+            node.span()
+                .ok_or_else(|| SettingOperationError::SourceProvenanceUnavailable {
+                    setting: id.clone(),
+                })?;
+        let range = source_value_range(source, span, &id)?;
+        let replacement = source_value_spelling(&self.domain, locale, &id, value)?;
+        Ok(SettingSourceEdit {
+            expected: source[range.clone()].to_string(),
+            range,
+            replacement,
+        })
+    }
+
     fn ensure_read_target(&self, target: &SettingTarget) -> Result<(), SettingOperationError> {
         let id = self.operation_id()?;
         match self
@@ -691,6 +777,113 @@ fn target_hero(target: &SettingTarget) -> String {
             hero.as_str().to_string()
         }
         _ => String::new(),
+    }
+}
+
+fn source_value_range(
+    source: &str,
+    span: crate::core::source::Span,
+    setting: &SettingId,
+) -> Result<Range<usize>, SettingOperationError> {
+    let start = byte_offset(source, span.start).ok_or_else(|| {
+        SettingOperationError::SourceProvenanceUnavailable {
+            setting: setting.clone(),
+        }
+    })?;
+    let end = byte_offset(source, span.end).ok_or_else(|| {
+        SettingOperationError::SourceProvenanceUnavailable {
+            setting: setting.clone(),
+        }
+    })?;
+    let member = source.get(start..end).ok_or_else(|| {
+        SettingOperationError::SourceProvenanceUnavailable {
+            setting: setting.clone(),
+        }
+    })?;
+    let Some(colon) = member.find(':') else {
+        return Err(SettingOperationError::SourceProvenanceUnavailable {
+            setting: setting.clone(),
+        });
+    };
+    let value_start = start + colon + 1;
+    let leading = source[value_start..end].len()
+        - source[value_start..end]
+            .trim_start_matches(char::is_whitespace)
+            .len();
+    let range = value_start + leading..end;
+    if range.is_empty() || source.get(range.clone()).is_none() {
+        return Err(SettingOperationError::SourceProvenanceUnavailable {
+            setting: setting.clone(),
+        });
+    }
+    Ok(range)
+}
+
+fn byte_offset(source: &str, position: crate::core::source::Position) -> Option<usize> {
+    if !position.is_valid() {
+        return None;
+    }
+    let mut line = 1;
+    let mut col = 1;
+    for (index, character) in source.char_indices() {
+        if line == position.line && col == position.col {
+            return Some(index);
+        }
+        if character == '\n' {
+            line += 1;
+            col = 1;
+        } else {
+            col += 1;
+        }
+    }
+    (line == position.line && col == position.col).then_some(source.len())
+}
+
+fn source_value_spelling(
+    domain: &SettingValueDomain,
+    locale: &str,
+    setting: &SettingId,
+    value: SettingValue,
+) -> Result<String, SettingOperationError> {
+    let localized = |section: &str, english: &str| {
+        if locale.eq_ignore_ascii_case("en-US") {
+            Some(english)
+        } else {
+            table::localized_name(locale, section, english)
+        }
+        .map(str::to_string)
+        .ok_or_else(|| SettingOperationError::InvalidValue {
+            setting: setting.clone(),
+            message: format!("missing {section} locale mapping for '{english}' in {locale}"),
+            span: None,
+        })
+    };
+    match (domain, value) {
+        (SettingValueDomain::Boolean, SettingValue::Boolean(value)) => {
+            localized("tokens", if value { "On" } else { "Off" })
+        }
+        (SettingValueDomain::Number(_), SettingValue::Number(value)) => {
+            Ok(crate::format::format_number(value))
+        }
+        (SettingValueDomain::Percent(_), SettingValue::Percent(value)) => {
+            Ok(format!("{}%", crate::format::format_number(value)))
+        }
+        (SettingValueDomain::String, SettingValue::String(value)) => {
+            Ok(format!("\"{}\"", value.replace('"', "\\\\\"")))
+        }
+        (SettingValueDomain::Enum { domain }, SettingValue::Enum(member)) => {
+            let english = table::enum_name(domain, &member).ok_or_else(|| {
+                SettingOperationError::InvalidValue {
+                    setting: setting.clone(),
+                    message: format!("unknown member '{member}' for enum domain '{domain}'"),
+                    span: None,
+                }
+            })?;
+            localized("enums", english)
+        }
+        _ => Err(SettingOperationError::SourceProvenanceUnavailable {
+            setting: setting.clone(),
+        }),
     }
 }
 
