@@ -1,5 +1,3 @@
-//! Canonical validation owned by the Workshop event domain.
-
 use crate::catalog::{Catalog, Kind};
 use crate::core::error::WorkshopError;
 use crate::wir;

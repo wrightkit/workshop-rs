@@ -1,12 +1,3 @@
-//! Workshop client-language detection and explicit locale override.
-//!
-//! Detection scores each catalog-declared locale by how many distinct
-//! localized builtin/struct/enum aliases appear in the input text. With the
-//! v0.2 en-US catalog this confirms English Workshop input; adding locales is
-//! a data-pipeline change that makes cross-locale ranking meaningful.
-//! Ambiguous or low-confidence input fails explicitly rather than selecting
-//! arbitrarily, and an explicit locale always bypasses detection.
-
 use crate::catalog::{Catalog, Locale};
 use crate::core::error::{Result, WorkshopError};
 

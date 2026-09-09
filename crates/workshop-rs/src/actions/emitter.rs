@@ -1,5 +1,3 @@
-// EmitContext behavior owned by the Workshop actions domain.
-
 use crate::output::emitter::*;
 
 impl EmitContext<'_> {

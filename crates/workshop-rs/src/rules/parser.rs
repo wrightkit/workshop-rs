@@ -1,11 +1,8 @@
-// ParseContext behavior owned by the Workshop rules domain.
-
 use crate::frontend::parser::*;
 
 impl ParseContext<'_> {
     pub(crate) fn program(mut self) -> Result<wir::Program> {
         let file = self.target.files.push(SourceFile::new("workshop.txt"));
-        // Re-point synthetic spans at the real file id by keeping a helper.
         let _ = file;
 
         loop {
