@@ -289,40 +289,56 @@ impl ParseContext<'_> {
             });
         }
         self.expect(TokenKind::Colon, "expected ':' after settings key")?;
-        let end = self.previous_span().1;
-        let span = Some(Span::new(self.file(), start, end));
         match entry.kind {
             KeyKind::Flag => unreachable!("presence-only settings returned before ':'"),
-            KeyKind::String => Ok(SettingsNode::String {
-                name: name.to_string(),
-                value: self.expect_string("expected a settings string")?,
-                span,
-            }),
-            KeyKind::Number => Ok(SettingsNode::Number {
-                name: name.to_string(),
-                value: self.settings_number(false)?,
-                span,
-            }),
-            KeyKind::Percent => Ok(SettingsNode::Number {
-                name: name.to_string(),
-                value: self.settings_number_percent()?,
-                span,
-            }),
-            KeyKind::Bool => Ok(SettingsNode::Bool {
-                name: name.to_string(),
-                value: self.settings_bool()?,
-                span,
-            }),
-            KeyKind::BoolEnum(domain) => Ok(SettingsNode::Bool {
-                name: name.to_string(),
-                value: self.settings_bool_enum(domain)?,
-                span,
-            }),
-            KeyKind::Enum(domain) => Ok(SettingsNode::String {
-                name: name.to_string(),
-                value: self.resolve_enum_settings_name(domain)?,
-                span,
-            }),
+            KeyKind::String => {
+                let value = self.expect_string("expected a settings string")?;
+                Ok(SettingsNode::String {
+                    name: name.to_string(),
+                    value,
+                    span: Some(Span::new(self.file(), start, self.previous_span().1)),
+                })
+            }
+            KeyKind::Number => {
+                let value = self.settings_number(false)?;
+                Ok(SettingsNode::Number {
+                    name: name.to_string(),
+                    value,
+                    span: Some(Span::new(self.file(), start, self.previous_span().1)),
+                })
+            }
+            KeyKind::Percent => {
+                let value = self.settings_number_percent()?;
+                Ok(SettingsNode::Number {
+                    name: name.to_string(),
+                    value,
+                    span: Some(Span::new(self.file(), start, self.previous_span().1)),
+                })
+            }
+            KeyKind::Bool => {
+                let value = self.settings_bool()?;
+                Ok(SettingsNode::Bool {
+                    name: name.to_string(),
+                    value,
+                    span: Some(Span::new(self.file(), start, self.previous_span().1)),
+                })
+            }
+            KeyKind::BoolEnum(domain) => {
+                let value = self.settings_bool_enum(domain)?;
+                Ok(SettingsNode::Bool {
+                    name: name.to_string(),
+                    value,
+                    span: Some(Span::new(self.file(), start, self.previous_span().1)),
+                })
+            }
+            KeyKind::Enum(domain) => {
+                let value = self.resolve_enum_settings_name(domain)?;
+                Ok(SettingsNode::String {
+                    name: name.to_string(),
+                    value,
+                    span: Some(Span::new(self.file(), start, self.previous_span().1)),
+                })
+            }
             KeyKind::ListMap | KeyKind::ListHero => {
                 Err(self.malformed("settings list requires a brace block", self.previous()))
             }
