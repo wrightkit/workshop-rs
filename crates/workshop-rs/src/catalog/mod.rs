@@ -133,6 +133,8 @@ pub struct CatalogEntry {
     /// Reviewed semantic parameter names for consumer-facing typed APIs,
     /// parallel to `params`.
     pub param_names: Vec<String>,
+    /// Reviewed localized spellings for each parameter, parallel to `params`.
+    pub param_aliases: Vec<HashMap<Locale, Vec<String>>>,
     /// The canonical enum domain expected at each parameter position, when
     /// the parameter takes an enumerated value (parallel to `params`).
     /// `None` for non-enum parameters and for parameters whose accepted
@@ -198,6 +200,26 @@ impl CatalogEntry {
     /// spelling reserved for deterministic emission.
     pub fn spellings(&self, locale: &Locale) -> &[String] {
         self.aliases.get(locale).map(Vec::as_slice).unwrap_or(&[])
+    }
+
+    /// Resolve a canonical or reviewed localized parameter spelling to its
+    /// unambiguous declared position.
+    pub fn resolve_param(&self, locale: &Locale, spelling: &str) -> Option<usize> {
+        let matches = self
+            .params
+            .iter()
+            .enumerate()
+            .filter(|(index, canonical)| {
+                canonical == &spelling
+                    || self
+                        .param_aliases
+                        .get(*index)
+                        .and_then(|aliases| aliases.get(locale))
+                        .is_some_and(|aliases| aliases.iter().any(|alias| alias == spelling))
+            })
+            .map(|(index, _)| index)
+            .collect::<Vec<_>>();
+        (matches.len() == 1).then(|| matches[0])
     }
 
     /// The number of declared arguments for this builtin.
@@ -425,6 +447,8 @@ struct EntryFile {
     /// parallel to `params`.
     #[serde(default)]
     param_names: Vec<String>,
+    #[serde(default)]
+    param_aliases: Vec<HashMap<String, AliasFile>>,
     /// Canonical enum domain per parameter position (parallel to `params`);
     /// empty when no parameter domains are documented.
     #[serde(default)]
@@ -853,11 +877,26 @@ impl Catalog {
             )));
         }
         self.by_id.insert(id_key, index);
+        let item_id = item.id.clone();
         self.entries.push(CatalogEntry {
             id: item.id,
             kind,
             params: item.params,
             param_names,
+            param_aliases: item
+                .param_aliases
+                .into_iter()
+                .map(|aliases| {
+                    aliases
+                        .into_iter()
+                        .map(|(locale, alias)| {
+                            let locale_key = Locale::new(&locale);
+                            let spellings = alias.into_spellings(&item_id, locale_key.as_str())?;
+                            Ok((locale_key, spellings))
+                        })
+                        .collect::<Result<HashMap<_, _>>>()
+                })
+                .collect::<Result<Vec<_>>>()?,
             param_domains: item.param_domains,
             param_defaults: item.param_defaults,
             param_types: item.param_types,
@@ -923,6 +962,13 @@ impl Catalog {
                     entry.id
                 )));
             }
+            if entry.param_aliases.len() > entry.params.len() {
+                return Err(CatalogError::validation(format!(
+                    "{} '{}' declares more parameter alias sets than params",
+                    entry.kind.as_str(),
+                    entry.id
+                )));
+            }
             if entry.param_domains.len() > entry.params.len() {
                 return Err(CatalogError::validation(format!(
                     "{} '{}' declares more param domains than params",
@@ -965,6 +1011,18 @@ impl Catalog {
                         entry.kind.as_str(),
                         entry.id
                     )));
+                }
+            }
+            for aliases in &entry.param_aliases {
+                for locale in aliases.keys() {
+                    if !self.locales.contains(locale) {
+                        return Err(CatalogError::validation(format!(
+                            "{} '{}' declares parameter alias for undeclared locale '{}'",
+                            entry.kind.as_str(),
+                            entry.id,
+                            locale
+                        )));
+                    }
                 }
             }
         }

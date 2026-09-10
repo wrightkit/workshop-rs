@@ -2708,6 +2708,14 @@
         "zh-CN": "等待"
       },
       "id": "wait",
+      "paramAliases": [
+        {
+          "zh-CN": "持续时间"
+        },
+        {
+          "zh-CN": "等待行为"
+        }
+      ],
       "paramCoercions": [
         {
           "falseAsNumber": true,

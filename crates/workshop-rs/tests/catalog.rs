@@ -64,6 +64,20 @@ fn localized_spelling_resolves_to_canonical_id_and_back() {
 }
 
 #[test]
+fn canonical_and_localized_parameter_spellings_resolve_by_position() {
+    let catalog = builtin();
+    let entry = catalog.entry(Kind::Action, "wait").expect("wait action");
+    let en = en();
+    let zh = Locale::new("zh-CN");
+
+    assert_eq!(entry.resolve_param(&en, "Duration"), Some(0));
+    assert_eq!(entry.resolve_param(&zh, "Duration"), Some(0));
+    assert_eq!(entry.resolve_param(&zh, "持续时间"), Some(0));
+    assert_eq!(entry.resolve_param(&zh, "等待行为"), Some(1));
+    assert_eq!(entry.resolve_param(&zh, "missing"), None);
+}
+
+#[test]
 fn localized_string_presets_resolve_and_translate_by_identity() {
     let catalog = builtin();
     let zh = Locale::new("zh-CN");
