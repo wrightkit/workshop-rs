@@ -1,8 +1,8 @@
 //! Cross-language Workshop round-trip compatibility suite.
 //!
-//! [`round_trip`] records the `Workshop(locale) -> WIR -> Workshop(locale) ->
-//! WIR` regression check, and [`equivalent`] compares
-//! two WIR programs structurally, ignoring presentation-only differences
+//! [`round_trip`] records the `Workshop(locale) -> Program -> Workshop(locale)
+//! -> Program` regression check, and [`equivalent`] compares
+//! two public programs structurally, ignoring presentation-only differences
 //! (source spans and file paths) while preserving operations, references,
 //! control flow, and values.
 use crate::wir;
@@ -27,13 +27,13 @@ pub struct RoundTripRecord {
     pub emit_ok: bool,
     /// Whether the emitted text reparsed.
     pub reparse_ok: bool,
-    /// Whether the original and round-tripped WIR are equivalent.
+    /// Whether the original and round-tripped public programs are equivalent.
     pub equivalent: bool,
     /// A structured failure message, when any stage failed.
     pub error: Option<String>,
 }
 
-/// Run `Workshop -> WIR -> Workshop -> WIR` and record the check. The record is
+/// Run `Workshop -> Program -> Workshop -> Program` and record the check. The record is
 /// always produced; failures are captured in its `error` field.
 /// Ambiguous bare enum members stay rejected (no signature context).
 pub fn round_trip(input: &str, catalog: &Catalog, locale: &Locale) -> RoundTripRecord {
@@ -89,9 +89,17 @@ pub fn round_trip_with_context(
     record
 }
 
-/// Structural equivalence of two WIR programs: identical settings, tables,
+/// Structural equivalence of two public programs: identical settings, tables,
 /// rules, actions, and values, ignoring source spans and file paths.
-pub fn equivalent(a: &wir::Program, b: &wir::Program) -> bool {
+pub fn equivalent(a: &crate::Program, b: &crate::Program) -> bool {
+    let (Ok(a), Ok(b)) = (a.to_wir(), b.to_wir()) else {
+        return false;
+    };
+    equivalent_wir(&a, &b)
+}
+
+#[doc(hidden)]
+pub fn equivalent_wir(a: &wir::Program, b: &wir::Program) -> bool {
     if !settings_equivalent(a.settings.as_ref(), b.settings.as_ref()) {
         return false;
     }

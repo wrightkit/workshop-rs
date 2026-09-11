@@ -13,7 +13,11 @@ pub(crate) mod parser;
 
 pub(crate) mod reconciliation;
 pub mod schema;
+#[doc(hidden)]
 pub mod table;
+
+#[doc(hidden)]
+pub use table::{KeyKind, PathPart, TableEntry, entries, enum_name, mode_name, path_string};
 
 pub use schema::{
     Applicability, EffectiveNumber, NumericBounds, NumericBoundsError, SettingDefinition,

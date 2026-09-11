@@ -9,7 +9,7 @@ This document is the current architecture contract for `workshop-rs` ownership a
 It owns:
 
 - raw Workshop syntax, parsing, validation, and deterministic emission;
-- canonical WIR and locale-independent Workshop identities;
+- the public `Program` model and locale-independent Workshop identities;
 - Workshop catalog, settings, localization, and Workshop-owned gameplay facts;
 - Workshop semantic/query contracts used by downstream tooling;
 - Workshop contract tests, provenance-linked fixtures, and the semantic
@@ -28,11 +28,19 @@ opy-rs ─────► workshop-rs ◄───── deltin-rs
 
 No source-language representation becomes canonical Workshop behavior merely because a consumer needs it. A consumer gap belongs here only when it demonstrates a missing Workshop concept or observable Workshop semantic contract.
 
-## Canonical WIR boundary
+## Canonical program boundary
 
-WIR represents canonical Workshop meaning. It may expose structured forms where Workshop itself has a stable semantic distinction, but it must not carry provider-specific syntax, aliases, helper identities, source-language runtime layouts, or reconstruction-only carriers.
+`Program` represents canonical Workshop meaning for ordinary consumers. It may
+expose structured forms where Workshop itself has a stable semantic distinction,
+but it must not carry provider-specific syntax, aliases, helper identities,
+source-language runtime layouts, or reconstruction-only carriers. The
+arena-backed `wir` representation may normalize this model internally; it is
+not a second public semantic contract.
 
-Source-language implementations lower their constructs into canonical WIR. If a source construct has no correct Workshop representation, the owning source implementation reports that boundary rather than widening WIR with a source-language surrogate.
+Source-language implementations lower their constructs into `Program`. If a
+source construct has no correct Workshop representation, the owning source
+implementation reports that boundary rather than widening the public model with
+a source-language surrogate.
 
 ## Behavior and data
 

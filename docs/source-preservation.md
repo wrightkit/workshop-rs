@@ -1,21 +1,21 @@
 # Workshop source preservation
 
-`workshop-rs` keeps canonical Workshop meaning in `wir::Program`. Authored
-source is an optional capability on the existing source-file registry, so
-programmatically constructed WIR does not need synthetic source metadata.
+`workshop-rs` keeps canonical Workshop meaning in the public `Program` model.
+Authored source is optional metadata retained by raw parsing, so
+programmatically constructed programs do not need synthetic source metadata.
 
 ## Supported source
 
 `parser::parse` and `parser::parse_with_context` retain the exact input in a
-`SourceDocument` attached to file 0. A consumer constructing a program can use
-`SourceFile::with_source` or `SourceFile::set_source` when it has authored
-source for a file; `Program::add_file` also binds the file ID needed by
-span-based operations. The document preserves every byte,
+`SourceDocument` attached to file 0. The parsed public `Program` exposes that
+document through `Program::source`. A consumer constructing a program can use
+the source types directly when it has authored source for a file. The document preserves every byte,
 including whitespace and newlines, and indexes `//` line comments outside
 string literals. Other trivia is intentionally not assigned semantic identity;
 it remains available in the exact source text.
 
-Canonical nodes keep their existing optional `Span` values. A comment is
+The normalized storage keeps optional `Span` values for source-aware internal
+operations. A comment is
 attached to a node only when its complete byte range is contained by that
 node's span, through `SourceDocument::comments_for`. Comments outside a node
 remain document-level source. No neighboring node is guessed as their owner.

@@ -96,25 +96,25 @@ fn structured_action_widths_count_native_expansion() {
     let locale = Locale::new("en-US");
 
     assert_eq!(
-        emitter::action_width(&program, &catalog, &locale, &actions[..1])
+        emitter::action_width_wir(&program, &catalog, &locale, &actions[..1])
             .unwrap()
             .width,
         5
     );
     assert_eq!(
-        emitter::action_width(&program, &catalog, &locale, &actions[1..2])
+        emitter::action_width_wir(&program, &catalog, &locale, &actions[1..2])
             .unwrap()
             .width,
         3
     );
     assert_eq!(
-        emitter::action_width(&program, &catalog, &locale, &actions[2..3])
+        emitter::action_width_wir(&program, &catalog, &locale, &actions[2..3])
             .unwrap()
             .width,
         3
     );
     assert_eq!(
-        emitter::action_width(&program, &catalog, &locale, &actions[3..4])
+        emitter::action_width_wir(&program, &catalog, &locale, &actions[3..4])
             .unwrap()
             .width,
         7
@@ -126,7 +126,7 @@ fn layout_matches_canonical_emission_for_a_nested_sequence() {
     let (program, actions) = program_with_structured_actions();
     let catalog = Catalog::builtin().unwrap();
     let locale = Locale::new("en-US");
-    let emitted = emitter::emit(&program, &catalog, &locale).unwrap();
+    let emitted = emitter::emit_wir(&program, &catalog, &locale).unwrap();
     let action_text = emitted
         .split_once("actions {\n")
         .unwrap()
@@ -138,7 +138,7 @@ fn layout_matches_canonical_emission_for_a_nested_sequence() {
         .lines()
         .filter(|line| !line.trim().is_empty())
         .count();
-    let layout = emitter::action_width(&program, &catalog, &locale, &actions).unwrap();
+    let layout = emitter::action_width_wir(&program, &catalog, &locale, &actions).unwrap();
     assert_eq!(layout.width, emitted_width);
     assert_eq!(layout.width, 19);
 }
@@ -156,7 +156,7 @@ fn invalid_layout_requests_fail_explicitly() {
         conditions: vec![],
         actions: vec![dangling],
     });
-    let error = emitter::action_width(
+    let error = emitter::action_width_wir(
         &program,
         &Catalog::builtin().unwrap(),
         &Locale::new("en-US"),
@@ -165,7 +165,7 @@ fn invalid_layout_requests_fail_explicitly() {
     .unwrap_err();
     assert!(matches!(
         error,
-        emitter::ActionLayoutError::InvalidWIR(wir::error::IrError::DanglingReference {
+        emitter::WIRActionLayoutError::InvalidWIR(wir::error::IrError::DanglingReference {
             what: "action",
             id: 0
         })

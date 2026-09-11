@@ -433,7 +433,7 @@ fn run_string_cases(
         .any(|row| row.starts_with("Bidirectional conversion"))
     {
         count += 1;
-        let en = parser::parse_with_context(en_source, catalog, &Locale::new(EN_US), catalog)
+        let en = parser::parse_wir_with_context(en_source, catalog, &Locale::new(EN_US), catalog)
             .expect("en-US localization fixture parses");
         let converted = convert::convert(
             en_source,
@@ -443,9 +443,10 @@ fn run_string_cases(
             &Default::default(),
         )
         .expect("en-US localization fixture converts");
-        let zh = parser::parse_with_context(&converted.text, catalog, &Locale::new(ZH_CN), catalog)
-            .expect("converted localization fixture parses");
-        assert!(roundtrip::equivalent(&en, &zh));
+        let zh =
+            parser::parse_wir_with_context(&converted.text, catalog, &Locale::new(ZH_CN), catalog)
+                .expect("converted localization fixture parses");
+        assert!(roundtrip::equivalent_wir(&en, &zh));
     }
     summaries.insert(
         "Strings and localization",
@@ -455,14 +456,14 @@ fn run_string_cases(
 
 fn run_enum_case(case_id: &str, source: &str, catalog: &Catalog, failures: &mut Vec<String>) {
     let locale = Locale::new(EN_US);
-    let program = match parser::parse_with_context(source, catalog, &locale, catalog) {
+    let program = match parser::parse_wir_with_context(source, catalog, &locale, catalog) {
         Ok(program) => program,
         Err(error) => {
             failures.push(format!("{case_id}: parse failed: {error}"));
             return;
         }
     };
-    if let Err(error) = validate::validate_canonical_ids(&program, catalog) {
+    if let Err(error) = validate::validate_canonical_ids_wir(&program, catalog) {
         failures.push(format!("{case_id}: canonical validation failed: {error}"));
     } else if let Err(error) = program.validate() {
         failures.push(format!("{case_id}: semantic validation failed: {error}"));
@@ -485,14 +486,14 @@ fn run_case_in_locale(
     } else {
         Locale::new(EN_US)
     };
-    let program = match parser::parse_with_context(source, catalog, source_locale, catalog) {
+    let program = match parser::parse_wir_with_context(source, catalog, source_locale, catalog) {
         Ok(program) => program,
         Err(error) => {
             failures.push(format!("{case_id}: parse failed: {error}"));
             return;
         }
     };
-    if let Err(error) = validate::validate_canonical_ids(&program, catalog) {
+    if let Err(error) = validate::validate_canonical_ids_wir(&program, catalog) {
         failures.push(format!("{case_id}: canonical validation failed: {error}"));
         return;
     }
@@ -500,14 +501,14 @@ fn run_case_in_locale(
         failures.push(format!("{case_id}: semantic validation failed: {error}"));
         return;
     }
-    let emitted = match emitter::emit(&program, catalog, source_locale) {
+    let emitted = match emitter::emit_wir(&program, catalog, source_locale) {
         Ok(text) => text,
         Err(error) => {
             failures.push(format!("{case_id}: emission failed: {error}"));
             return;
         }
     };
-    let reparsed = match parser::parse_with_context(&emitted, catalog, source_locale, catalog) {
+    let reparsed = match parser::parse_wir_with_context(&emitted, catalog, source_locale, catalog) {
         Ok(program) => program,
         Err(error) => {
             failures.push(format!(
@@ -522,7 +523,7 @@ fn run_case_in_locale(
         ));
         return;
     }
-    if !roundtrip::equivalent(&program, &reparsed) {
+    if !roundtrip::equivalent_wir(&program, &reparsed) {
         failures.push(format!(
             "{case_id}: emit -> parse changed canonical semantics"
         ));
@@ -544,7 +545,7 @@ fn run_case_in_locale(
         }
     };
     let converted_program =
-        match parser::parse_with_context(&converted.text, catalog, &target_locale, catalog) {
+        match parser::parse_wir_with_context(&converted.text, catalog, &target_locale, catalog) {
             Ok(program) => program,
             Err(error) => {
                 failures.push(format!(
@@ -557,7 +558,7 @@ fn run_case_in_locale(
         failures.push(format!(
             "{case_id}: converted output did not validate: {error}"
         ));
-    } else if !roundtrip::equivalent(&program, &converted_program) {
+    } else if !roundtrip::equivalent_wir(&program, &converted_program) {
         failures.push(format!(
             "{case_id}: locale conversion changed canonical semantics"
         ));
@@ -565,11 +566,11 @@ fn run_case_in_locale(
 }
 
 fn expect_rejection(case_id: &str, source: &str, catalog: &Catalog, failures: &mut Vec<String>) {
-    let parsed = parser::parse_with_context(source, catalog, &Locale::new(EN_US), catalog);
+    let parsed = parser::parse_wir_with_context(source, catalog, &Locale::new(EN_US), catalog);
     let rejected = match parsed {
         Err(_) => true,
         Ok(program) => {
-            validate::validate_canonical_ids(&program, catalog).is_err()
+            validate::validate_canonical_ids_wir(&program, catalog).is_err()
                 || program.validate().is_err()
         }
     };

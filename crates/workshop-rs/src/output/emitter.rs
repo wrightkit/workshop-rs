@@ -1,6 +1,6 @@
 //! Deterministic localized Workshop emitter.
 //!
-//! Serializes validated Workshop IR into localized Workshop text with a
+//! Serializes validated public Workshop programs into localized Workshop text with a
 //! selectable output locale. Canonical catalog identities resolve to
 //! locale-specific spellings; missing target-locale mappings fail explicitly
 //! with a [`WorkshopError::MissingMapping`] diagnostic — never a guess, never
@@ -38,30 +38,48 @@ pub struct EmitOutput {
     pub fallback_ids: Vec<String>,
 }
 
-/// Emit a Workshop IR program as localized Workshop text, failing explicitly
+/// Emit a public Workshop program as localized Workshop text, failing explicitly
 /// on any missing target-locale mapping (no fallback).
-pub fn emit(program: &wir::Program, catalog: &Catalog, locale: &Locale) -> Result<String> {
+pub fn emit(program: &crate::Program, catalog: &Catalog, locale: &Locale) -> Result<String> {
     emit_with_options(program, catalog, locale, &EmitOptions::default()).map(|out| out.text)
 }
 
-/// Emit a Workshop IR program as localized Workshop text with emission
+#[doc(hidden)]
+pub fn emit_wir(program: &wir::Program, catalog: &Catalog, locale: &Locale) -> Result<String> {
+    emit_with_options_inner(program, catalog, locale, &EmitOptions::default(), false)
+        .map(|out| out.text)
+}
+
+/// Emit a public Workshop program as localized Workshop text with emission
 /// options (opt-in fallback locale).
 pub fn emit_with_options(
+    program: &crate::Program,
+    catalog: &Catalog,
+    locale: &Locale,
+    options: &EmitOptions,
+) -> Result<EmitOutput> {
+    let storage = program.to_wir()?;
+    emit_with_options_inner(&storage, catalog, locale, options, false)
+}
+
+pub(crate) fn emit_with_options_for_conversion(
+    program: &crate::Program,
+    catalog: &Catalog,
+    locale: &Locale,
+    options: &EmitOptions,
+) -> Result<EmitOutput> {
+    let storage = program.to_wir()?;
+    emit_with_options_inner(&storage, catalog, locale, options, true)
+}
+
+#[doc(hidden)]
+pub fn emit_wir_with_options(
     program: &wir::Program,
     catalog: &Catalog,
     locale: &Locale,
     options: &EmitOptions,
 ) -> Result<EmitOutput> {
     emit_with_options_inner(program, catalog, locale, options, false)
-}
-
-pub(crate) fn emit_with_options_for_conversion(
-    program: &wir::Program,
-    catalog: &Catalog,
-    locale: &Locale,
-    options: &EmitOptions,
-) -> Result<EmitOutput> {
-    emit_with_options_inner(program, catalog, locale, options, true)
 }
 
 fn emit_with_options_inner(

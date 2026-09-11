@@ -69,7 +69,15 @@ pub struct SemanticIssue {
 
 /// Report preserved or catalog-unknown constructs that must not be treated as
 /// fully understood by downstream analysis.
-pub fn inspect(program: &Program, catalog: &Catalog) -> Vec<SemanticIssue> {
+pub fn inspect(program: &crate::Program, catalog: &Catalog) -> Vec<SemanticIssue> {
+    let Ok(storage) = program.to_wir() else {
+        return Vec::new();
+    };
+    inspect_wir(&storage, catalog)
+}
+
+#[doc(hidden)]
+pub fn inspect_wir(program: &Program, catalog: &Catalog) -> Vec<SemanticIssue> {
     let mut issues = Vec::new();
     if let Some(settings) = &program.settings {
         for node in &settings.children {
@@ -293,7 +301,7 @@ mod tests {
             None,
         ));
 
-        let issues = inspect(&program, &catalog);
+        let issues = inspect_wir(&program, &catalog);
         assert!(
             issues
                 .iter()

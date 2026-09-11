@@ -1,6 +1,6 @@
 //! Canonical Workshop element-count analysis.
 //!
-//! The calculator operates on validated WIR, not source-language syntax or
+//! The calculator operates on the canonical public program, not source-language syntax or
 //! emitted text. Its rules are the documented Workshop.codes model: rules,
 //! actions, conditions, and ordinary values cost one element; arrays and
 //! evaluate-once values cost two; localized strings cost two; direct action or
@@ -81,7 +81,7 @@ pub enum ElementCountError {
 impl fmt::Display for ElementCountError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::InvalidProgram { message } => write!(formatter, "invalid WIR: {message}"),
+            Self::InvalidProgram { message } => write!(formatter, "invalid program: {message}"),
             Self::Unsupported {
                 kind,
                 name,
@@ -113,7 +113,7 @@ impl Program {
             .map_err(|error| ElementCountError::InvalidProgram {
                 message: error.to_string(),
             })?;
-        crate::rules::validate::validate_canonical_ids(self, catalog).map_err(|error| {
+        crate::rules::validate::validate_wir(self, catalog).map_err(|error| {
             ElementCountError::InvalidProgram {
                 message: error.to_string(),
             }
@@ -131,6 +131,21 @@ impl Program {
         }
         let total = rules.iter().map(|rule| rule.count).sum();
         Ok(ElementCountReport { total, rules })
+    }
+}
+
+impl crate::program::Program {
+    /// Count the canonical Workshop target represented by this program.
+    pub fn element_count(
+        &self,
+        catalog: &Catalog,
+    ) -> Result<ElementCountReport, ElementCountError> {
+        let storage = self
+            .to_wir()
+            .map_err(|error| ElementCountError::InvalidProgram {
+                message: error.to_string(),
+            })?;
+        storage.element_count(catalog)
     }
 }
 

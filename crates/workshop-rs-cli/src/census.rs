@@ -17,9 +17,61 @@ use crate::conformance::{
     ReasonCode,
 };
 use workshop_rs::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
-use workshop_rs::settings::table::{self, KeyKind, PathPart, TableEntry};
-use workshop_rs::wir::{CENSUS_CAPABILITIES, CensusCapabilityKind};
+use workshop_rs::settings::{self, KeyKind, PathPart, TableEntry};
 use workshop_rs::{WorkshopError, convert, emitter, parser, roundtrip};
+
+#[derive(Clone, Copy)]
+enum CensusCapabilityKind {
+    Variable,
+    PlayerVariable,
+    Subroutine,
+    ControlFlow,
+    String,
+}
+
+struct CensusCapability {
+    kind: CensusCapabilityKind,
+    name: &'static str,
+}
+
+const CENSUS_CAPABILITIES: &[CensusCapability] = &[
+    CensusCapability {
+        kind: CensusCapabilityKind::Variable,
+        name: "global",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::PlayerVariable,
+        name: "player",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::Subroutine,
+        name: "declaration-and-call",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::ControlFlow,
+        name: "if",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::ControlFlow,
+        name: "else-if",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::ControlFlow,
+        name: "else",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::ControlFlow,
+        name: "while",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::ControlFlow,
+        name: "for-global-variable",
+    },
+    CensusCapability {
+        kind: CensusCapabilityKind::String,
+        name: "custom-string",
+    },
+];
 
 pub const CENSUS_SCHEMA_VERSION: u32 = 1;
 pub const CENSUS_IDENTITY_SCHEMA_VERSION: u32 = 1;
@@ -464,10 +516,9 @@ fn content_id_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
 }
 
 fn settings_shard() -> Result<CensusShard, CensusError> {
-    let cases = table::ENTRIES
-        .iter()
+    let cases = settings::entries()
         .map(|entry| {
-            let path = table::path_string(entry.path);
+            let path = settings::path_string(entry.path);
             CensusCase {
                 case_id: format!("settings/{path}"),
                 features: vec![feature(
@@ -733,7 +784,7 @@ fn settings_probe(entry: &TableEntry) -> String {
             PathPart::Part("heroes") => "heroes",
             PathPart::Part("main") => "main",
             PathPart::Part("lobby") => "lobby",
-            PathPart::Part(value) => table::mode_name(value).unwrap_or(value),
+            PathPart::Part(value) => settings::mode_name(value).unwrap_or(value),
             PathPart::Team => "General",
             PathPart::Hero => "Mei",
         };
@@ -746,7 +797,7 @@ fn settings_probe(entry: &TableEntry) -> String {
         KeyKind::String => lines.push(format!("{indent}{}: \"census\"", entry.workshop_name)),
         KeyKind::Bool => lines.push(format!("{indent}{}: On", entry.workshop_name)),
         KeyKind::BoolEnum(domain) => {
-            let value = table::enum_name(domain, "enabled").unwrap_or("Enabled");
+            let value = settings::enum_name(domain, "enabled").unwrap_or("Enabled");
             lines.push(format!("{indent}{}: {value}", entry.workshop_name));
         }
         KeyKind::Number => lines.push(format!("{indent}{}: 1", entry.workshop_name)),
@@ -757,7 +808,7 @@ fn settings_probe(entry: &TableEntry) -> String {
             } else {
                 "off"
             };
-            let value = table::enum_name(domain, member).unwrap_or("Off");
+            let value = settings::enum_name(domain, member).unwrap_or("Off");
             lines.push(format!("{indent}{}: {value}", entry.workshop_name));
         }
         KeyKind::ListMap | KeyKind::ListHero => {

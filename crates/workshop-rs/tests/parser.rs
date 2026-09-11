@@ -32,10 +32,10 @@ fn pinned_real_projects_parse_with_expected_semantic_residuals() {
     let catalog = catalog();
     for case in common::cases() {
         let (source, locale) = common::source(case);
-        let program = parser::parse_with_context(&source, &catalog, &locale, &catalog)
+        let program = parser::parse_wir_with_context(&source, &catalog, &locale, &catalog)
             .unwrap_or_else(|error| panic!("{} parse failed: {error:?}", case.id));
         common::assert_residual_policy(case, "source-parse", &program.semantic_issues(&catalog));
-        if let Err(error) = validate::validate_canonical_ids(&program, &catalog) {
+        if let Err(error) = validate::validate_canonical_ids_wir(&program, &catalog) {
             common::assert_gap(case, common::RealProjectStage::CanonicalValidation, &error);
             println!("{}: known canonical-validation gap: {error:?}", case.id);
         }
@@ -61,8 +61,9 @@ rule("colonated enum")
     }
 }
 "#;
-    let program = parser::parse_with_context(source, &catalog(), &Locale::new("en-US"), &catalog())
-        .expect("Arrow: Up resolves through Icon");
+    let program =
+        parser::parse_wir_with_context(source, &catalog(), &Locale::new("en-US"), &catalog())
+            .expect("Arrow: Up resolves through Icon");
     assert!(program
         .values
         .iter()
@@ -87,8 +88,9 @@ fn localized_hero_call_resolves_dotted_member() {
     }
 }
 "#;
-    let program = parser::parse_with_context(source, &catalog(), &Locale::new("zh-CN"), &catalog())
-        .expect("localized Hero(D.Va) resolves");
+    let program =
+        parser::parse_wir_with_context(source, &catalog(), &Locale::new("zh-CN"), &catalog())
+            .expect("localized Hero(D.Va) resolves");
     assert!(program.values.iter().any(|value| matches!(value.value, wir::Value::Enum { ref value_type, ref value } if value_type == "Hero" && value == "DVA")));
 }
 
@@ -107,7 +109,7 @@ fn dotted_localized_catalog_effect_resolves_as_one_member() {
 }
 "#;
     let catalog = catalog();
-    let program = parser::parse_with_context(source, &catalog, &Locale::new("zh-CN"), &catalog)
+    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("zh-CN"), &catalog)
         .expect("dotted localized effect alias resolves");
     assert!(program.values.iter().any(|value| matches!(
         value.value,
@@ -126,7 +128,7 @@ fn dotted_english_catalog_effect_resolves_as_one_member() {
 }
 "#;
     let catalog = catalog();
-    let program = parser::parse_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
         .expect("English effect alias resolves");
     assert!(program.values.iter().any(|value| matches!(
         value.value,
@@ -145,7 +147,7 @@ fn unresolved_dotted_value_remains_a_source_located_issue() {
 }
 "#;
     let catalog = catalog();
-    let program = parser::parse_with_context(source, &catalog, &Locale::new("zh-CN"), &catalog)
+    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("zh-CN"), &catalog)
         .expect("unresolved dotted value remains parseable");
     let issues = program.semantic_issues(&catalog);
     let issue = issues
@@ -173,7 +175,7 @@ rule ("indexed") {
 }
 "##;
     let catalog = catalog();
-    let program = parser::parse_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
         .expect("indexed global variable action parses");
     let action = program.actions.iter().next().expect("indexed action");
     let wir::Action::Call { args, .. } = action else {
@@ -183,7 +185,7 @@ rule ("indexed") {
         program.values.get(args[0]).map(|node| &node.value),
         Some(wir::Value::GlobalVariable(_))
     ));
-    validate::validate_canonical_ids(&program, &catalog)
+    validate::validate_canonical_ids_wir(&program, &catalog)
         .expect("declared indexed variable is canonical WIR");
 }
 
@@ -214,12 +216,12 @@ fn every_corpus_workshop_text_parses_to_valid_wir() {
     for fixture_id in CORPUS_FIXTURES {
         let text = corpus_workshop_text(fixture_id);
         let catalog = catalog();
-        match parser::parse_with_context(&text, &catalog, &Locale::new("en-US"), &catalog) {
+        match parser::parse_wir_with_context(&text, &catalog, &Locale::new("en-US"), &catalog) {
             Ok(program) => {
                 program
                     .validate()
                     .unwrap_or_else(|error| panic!("{fixture_id} WIR must validate: {error}"));
-                validate::validate_canonical_ids(&program, &catalog).unwrap_or_else(|error| {
+                validate::validate_canonical_ids_wir(&program, &catalog).unwrap_or_else(|error| {
                     panic!("{fixture_id} canonical ids must resolve: {error}")
                 });
                 assert!(!program.rules.is_empty(), "{fixture_id} must produce rules");
@@ -252,7 +254,7 @@ fn member_assignment_lowers_to_canonical_wir() {
         Event Player.beamID.uppercutMomentum += 1;
     } }"#;
     let catalog = catalog();
-    let program = parser::parse_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
+    let program = parser::parse_wir_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
         .expect("member assignments parse");
     assert!(
         program
@@ -277,16 +279,16 @@ fn parsing_is_deterministic() {
     let text = corpus_workshop_text("control-flow");
     let catalog = catalog();
     let first =
-        parser::parse_with_context(&text, &catalog, &Locale::new("en-US"), &catalog).unwrap();
+        parser::parse_wir_with_context(&text, &catalog, &Locale::new("en-US"), &catalog).unwrap();
     let second =
-        parser::parse_with_context(&text, &catalog, &Locale::new("en-US"), &catalog).unwrap();
+        parser::parse_wir_with_context(&text, &catalog, &Locale::new("en-US"), &catalog).unwrap();
     assert_eq!(first.dump(), second.dump());
 }
 
 #[test]
 fn parsed_variables_and_subroutines_carry_indexes() {
     let catalog = catalog();
-    let program = parser::parse_with_context(
+    let program = parser::parse_wir_with_context(
         &corpus_workshop_text("declarations-rules"),
         &catalog,
         &Locale::new("en-US"),
@@ -316,7 +318,7 @@ fn parsed_variables_and_subroutines_carry_indexes() {
 #[test]
 fn parsed_events_are_canonical() {
     let catalog = catalog();
-    let program = parser::parse_with_context(
+    let program = parser::parse_wir_with_context(
         &corpus_workshop_text("declarations-rules"),
         &catalog,
         &Locale::new("en-US"),
@@ -349,7 +351,7 @@ fn parsed_events_are_canonical() {
 #[test]
 fn parsed_conditions_resolve_infix_operators() {
     let catalog = catalog();
-    let program = parser::parse_with_context(
+    let program = parser::parse_wir_with_context(
         &corpus_workshop_text("declarations-rules"),
         &catalog,
         &Locale::new("en-US"),
@@ -376,7 +378,7 @@ fn parsed_conditions_resolve_infix_operators() {
 #[test]
 fn spans_are_preserved() {
     let text = corpus_workshop_text("basic-rule");
-    let program = parser::parse(&text, &catalog(), &Locale::new("en-US")).unwrap();
+    let program = parser::parse_wir(&text, &catalog(), &Locale::new("en-US")).unwrap();
     let rule = program.rules.iter().next().unwrap();
     let rule_span = rule.span.expect("rule span");
     assert_eq!(rule.name, "setup");
@@ -391,7 +393,7 @@ fn malformed_input_is_reported_as_malformed() {
     // A rule-final If without `End;` is the oracle's valid spelling; an If
     // whose body never closes at all stays malformed.
     let text = "rule (\"broken\") { actions { If(True);";
-    let error = parser::parse(text, &catalog(), &Locale::new("en-US")).unwrap_err();
+    let error = parser::parse_wir(text, &catalog(), &Locale::new("en-US")).unwrap_err();
     assert!(
         matches!(error, workshop_rs::WorkshopError::Malformed { .. }),
         "an unclosed If body is malformed: {error}"
@@ -402,7 +404,7 @@ fn malformed_input_is_reported_as_malformed() {
 #[test]
 fn rule_final_if_without_end_is_the_oracle_spelling() {
     let text = "rule (\"ok\") { actions { If(True); } }";
-    let program = parser::parse(text, &catalog(), &Locale::new("en-US"))
+    let program = parser::parse_wir(text, &catalog(), &Locale::new("en-US"))
         .expect("a rule-final If without End; is valid (oracle spelling)");
     assert_eq!(program.rules.len(), 1);
 }
@@ -410,7 +412,7 @@ fn rule_final_if_without_end_is_the_oracle_spelling() {
 #[test]
 fn unknown_spelling_is_reported_as_unknown() {
     let text = "rule (\"x\") { event { Ongoing - Global; } actions { Totally Unknown Thing(1); } }";
-    let error = parser::parse(text, &catalog(), &Locale::new("en-US")).unwrap_err();
+    let error = parser::parse_wir(text, &catalog(), &Locale::new("en-US")).unwrap_err();
     assert!(
         matches!(error, workshop_rs::WorkshopError::Unknown { .. }),
         "unknown action must be Unknown: {error}"
@@ -422,9 +424,9 @@ fn unknown_spelling_is_reported_as_unknown() {
 fn canonical_validation_enforces_declared_arity_and_enum_domain() {
     let catalog = catalog();
     let arity = r#"rule ("arity") { event { Ongoing - Global; } actions { Wait(); } }"#;
-    let program = parser::parse_with_context(arity, &catalog, &Locale::new("en-US"), &catalog)
+    let program = parser::parse_wir_with_context(arity, &catalog, &Locale::new("en-US"), &catalog)
         .expect("parser preserves the call for canonical validation");
-    let error = validate::validate_canonical_ids(&program, &catalog)
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("missing required signature argument must be rejected");
     assert!(
         error
@@ -434,9 +436,9 @@ fn canonical_validation_enforces_declared_arity_and_enum_domain() {
 
     let wrong_domain = r#"rule ("domain") { event { Ongoing - Global; } actions { Set Invisible(All Players(All Teams), Color(White)); } }"#;
     let program =
-        parser::parse_with_context(wrong_domain, &catalog, &Locale::new("en-US"), &catalog)
+        parser::parse_wir_with_context(wrong_domain, &catalog, &Locale::new("en-US"), &catalog)
             .expect("parser preserves the call for canonical validation");
-    let error = validate::validate_canonical_ids(&program, &catalog)
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("wrong enum domain must be rejected");
     assert!(
         error
@@ -457,14 +459,14 @@ fn remaining_value_contracts_are_canonical_and_type_checked() {
         Set Global Variable(probe, Raise To Power(2, 3));
     } }"#;
     let locale = Locale::new("en-US");
-    let program = parser::parse_with_context(source, &catalog, &locale, &catalog)
+    let program = parser::parse_wir_with_context(source, &catalog, &locale, &catalog)
         .expect("the three declared Value contracts parse");
-    validate::validate_canonical_ids(&program, &catalog)
+    validate::validate_canonical_ids_wir(&program, &catalog)
         .expect("the three Values resolve to canonical ids");
     program
         .validate()
         .expect("the three Value signatures validate");
-    let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale)
+    let emitted = workshop_rs::emitter::emit_wir(&program, &catalog, &locale)
         .expect("localized String emits through its dedicated path");
     assert!(emitted.contains("String()"));
     assert!(emitted.contains("String(\"Hello\")"));
@@ -493,11 +495,12 @@ fn remaining_value_contracts_are_canonical_and_type_checked() {
         r#"rule ("wrong-array") { event { Ongoing - Global; } actions { Set Global Variable(probe, Randomized Array(1)); } }"#,
         r#"rule ("wrong-power") { event { Ongoing - Global; } actions { Set Global Variable(probe, Raise To Power(1, Custom String("wrong"))); } }"#,
     ] {
-        let Ok(program) = parser::parse_with_context(source, &catalog, &locale, &catalog) else {
+        let Ok(program) = parser::parse_wir_with_context(source, &catalog, &locale, &catalog)
+        else {
             continue;
         };
         assert!(
-            validate::validate_canonical_ids(&program, &catalog).is_err(),
+            validate::validate_canonical_ids_wir(&program, &catalog).is_err(),
             "invalid Value signature must be rejected"
         );
     }
@@ -508,9 +511,9 @@ fn canonical_validation_enforces_literal_types_and_value_return_types() {
     let catalog = catalog();
     let wrong_literal = r#"rule ("type") { event { Ongoing - Global; } actions { Set Crouch Enabled(All Players(All Teams), Color(White)); } }"#;
     let program =
-        parser::parse_with_context(wrong_literal, &catalog, &Locale::new("en-US"), &catalog)
+        parser::parse_wir_with_context(wrong_literal, &catalog, &Locale::new("en-US"), &catalog)
             .expect("parser preserves a typed call for canonical validation");
-    let error = validate::validate_canonical_ids(&program, &catalog)
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("a Color is not a Boolean action parameter");
     assert!(
         error
@@ -520,9 +523,9 @@ fn canonical_validation_enforces_literal_types_and_value_return_types() {
 
     let wrong_return = r#"rule ("return") { event { Ongoing - Global; } actions { Teleport(Event Player, Max Health(Event Player)); } }"#;
     let program =
-        parser::parse_with_context(wrong_return, &catalog, &Locale::new("en-US"), &catalog)
+        parser::parse_wir_with_context(wrong_return, &catalog, &Locale::new("en-US"), &catalog)
             .expect("parser preserves a value-returning call for canonical validation");
-    let error = validate::validate_canonical_ids(&program, &catalog)
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("a Number Value return is not a Vector action parameter");
     assert!(
         error
@@ -541,9 +544,9 @@ fn canonical_validation_rejects_incompatible_variable_reference_types() {
 rule ("type") { event { Ongoing - Global; } actions {
     Set Player Variable At Index(1, 0, 1);
 } }"#;
-    let program = parser::parse_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
         .expect("parser preserves the incompatible indexed-variable call");
-    let error = validate::validate_canonical_ids(&program, &catalog)
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("a number is not a player-variable reference");
     assert!(
         error
@@ -556,7 +559,7 @@ rule ("type") { event { Ongoing - Global; } actions {
 fn current_loop_action_resolves_to_canonical_generic_wir() {
     let catalog = catalog();
     let source = r#"rule ("loop") { event { Ongoing - Global; } actions { Loop; } }"#;
-    let program = parser::parse_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
         .expect("declared Loop action parses");
     let rule = program.rules.get(wir::RuleId::from_index(0)).expect("rule");
     let action = program.actions.get(rule.actions[0]).expect("action");
@@ -564,9 +567,9 @@ fn current_loop_action_resolves_to_canonical_generic_wir() {
         action,
         wir::Action::Call { name, args, .. } if name == "loop" && args.is_empty()
     ));
-    validate::validate_canonical_ids(&program, &catalog).expect("Loop has canonical identity");
+    validate::validate_canonical_ids_wir(&program, &catalog).expect("Loop has canonical identity");
     assert!(
-        workshop_rs::semantic::inspect(&program, &catalog)
+        workshop_rs::semantic::inspect_wir(&program, &catalog)
             .iter()
             .all(|issue| issue.name != "rawWorkshopAction"),
         "declared Loop must not use the opaque action path"
@@ -577,7 +580,7 @@ fn current_loop_action_resolves_to_canonical_generic_wir() {
 fn unsupported_construct_is_distinct_from_malformed() {
     // A non-default eachPlayer sub-parameter is recognized but unsupported.
     let text = "rule (\"x\") { event { Ongoing - Each Player; Team 1; } actions { } }";
-    let error = parser::parse(text, &catalog(), &Locale::new("en-US")).unwrap_err();
+    let error = parser::parse_wir(text, &catalog(), &Locale::new("en-US")).unwrap_err();
     assert!(
         matches!(error, workshop_rs::WorkshopError::Unsupported { .. }),
         "non-default event parameter must be Unsupported: {error}"
@@ -590,7 +593,7 @@ fn bare_chase_reevaluation_none_is_ambiguous_across_domains() {
     // Without a signature pin the catalog-backed parser rejects the bare
     // spelling with a structured Unsupported diagnostic.
     let text = "variables { global: 0: g }\nrule (\"x\") { event { Ongoing - Global; } actions { Set Global Variable(g, None); } }";
-    let error = parser::parse(text, &catalog(), &Locale::new("en-US")).unwrap_err();
+    let error = parser::parse_wir(text, &catalog(), &Locale::new("en-US")).unwrap_err();
     assert!(
         matches!(error, workshop_rs::WorkshopError::Unsupported { .. }),
         "the shared None member spelling must be a structured ambiguity: {error}"
@@ -602,7 +605,7 @@ fn bare_chase_reevaluation_none_is_ambiguous_across_domains() {
 fn explicit_locale_is_honored() {
     // en-US parsing is deterministic; the parser never guesses a locale.
     let text = corpus_workshop_text("basic-rule");
-    let program = parser::parse(&text, &catalog(), &Locale::new("en-US")).unwrap();
+    let program = parser::parse_wir(&text, &catalog(), &Locale::new("en-US")).unwrap();
     let dump = program.dump();
     assert!(!dump.is_empty());
 }
@@ -626,8 +629,9 @@ fn context_pinned_ambiguous_none_resolves_via_canonical_signature() {
     // pins argument 3 to the ChaseTimeReeval domain (catalog data, migrated
     // from the Wright-authored manifest probes).
     let text = "variables { global: 0: g }\nrule (\"x\") { event { Ongoing - Global; } actions { Chase Global Variable Over Time(Global.g, 0, 30, None); } }";
-    let program = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-        .expect("the pinned Chase None must resolve");
+    let program =
+        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+            .expect("the pinned Chase None must resolve");
     let value = enum_value_of_first_action(&program, 0);
     assert!(
         matches!(value, wir::Value::Enum { value_type, value }
@@ -642,8 +646,9 @@ fn context_pinned_ambiguous_none_resolves_for_set_invisible() {
     // canonical setInvisibility signature pins argument 1 to the Invis
     // domain (member-action receiver offset).
     let text = "rule (\"x\") { event { Ongoing - Each Player; } actions { Set Invisible(Event Player, None); } }";
-    let program = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-        .expect("the pinned Invis None must resolve");
+    let program =
+        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+            .expect("the pinned Invis None must resolve");
     let value = enum_value_of_first_action(&program, 0);
     assert!(
         matches!(value, wir::Value::Enum { value_type, value }
@@ -657,7 +662,7 @@ fn released_parse_contract_resolves_pinned_oracle_members() {
     let catalog = catalog();
     let locale = Locale::new("en-US");
 
-    let cake = parser::parse(&corpus_workshop_text("overpy-cake"), &catalog, &locale)
+    let cake = parser::parse_wir(&corpus_workshop_text("overpy-cake"), &catalog, &locale)
         .expect("the pinned cake Workshop output must parse through the released contract");
     assert!(cake.values.iter().any(|node| matches!(
         node.value,
@@ -683,7 +688,7 @@ rule ("chase and condition") {
     }
 }
 "#;
-    let chase = parser::parse(chase, &catalog, &locale)
+    let chase = parser::parse_wir(chase, &catalog, &locale)
         .expect("the pinned chase Workshop output must parse through the released contract");
     assert!(chase.values.iter().any(|node| matches!(
         node.value,
@@ -705,7 +710,7 @@ rule ("chase and condition") {
     }
 }
 "#;
-    let chase_zh = parser::parse(chase_zh, &catalog, &Locale::new("zh-CN"))
+    let chase_zh = parser::parse_wir(chase_zh, &catalog, &Locale::new("zh-CN"))
         .expect("the pinned chase Workshop output must parse in zh-CN");
     assert!(chase_zh.values.iter().any(|node| matches!(
         node.value,
@@ -721,7 +726,7 @@ fn wrong_domain_context_keeps_the_ambiguity_rejected() {
     // no `None` member), so the bare `None` stays ambiguous — no guessing,
     // no arbitrary precedence.
     let text = "rule (\"x\") { event { Ongoing - Global; } actions { Wait(0.016, None); } }";
-    let error = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+    let error = parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
         .expect_err("a non-matching expected domain must keep the ambiguity");
     assert!(
         matches!(error, workshop_rs::WorkshopError::Unsupported { .. }),
@@ -786,8 +791,9 @@ fn raw_workshop_member_access_and_disabled_groups_parse() {
             }
         }
     "#;
-    let program = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-        .expect("raw member access and disabled groups must parse");
+    let program =
+        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+            .expect("raw member access and disabled groups must parse");
     program
         .validate()
         .expect("the lowered raw program must validate");
@@ -804,8 +810,9 @@ fn disabled_condition_is_ignored_as_inactive() {
             actions { Wait(0.016, Ignore Condition); }
         }
     "#;
-    let program = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-        .expect("disabled conditions must parse");
+    let program =
+        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+            .expect("disabled conditions must parse");
     let rule = program.rules.iter().next().expect("rule");
     assert!(rule.conditions.is_empty());
 }
@@ -819,8 +826,9 @@ fn raw_indexed_assignment_lowers_to_explicit_wir_call() {
             actions { Global.values[0] = 1; }
         }
     "#;
-    let program = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-        .expect("indexed raw assignment must parse");
+    let program =
+        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+            .expect("indexed raw assignment must parse");
     assert!(program.dump().contains("setGlobalVariableAtIndex"));
     program
         .validate()
@@ -851,9 +859,9 @@ fn min_max_modifications_lower_for_global_player_and_indexed_forms() {
         }
     "#;
     let catalog = catalog();
-    let program = parser::parse_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
+    let program = parser::parse_wir_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
         .expect("min/max forms parse");
-    validate::validate_canonical_ids(&program, &catalog).expect("min/max ids validate");
+    validate::validate_canonical_ids_wir(&program, &catalog).expect("min/max ids validate");
 
     let direct: Vec<_> = program
         .actions
@@ -907,7 +915,7 @@ fn unsupported_named_assignment_operator_is_rejected() {
             actions { Global.g median= 1; }
         }
     "#;
-    let error = parser::parse_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+    let error = parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
         .expect_err("unsupported named assignment must fail");
     assert!(matches!(
         error,

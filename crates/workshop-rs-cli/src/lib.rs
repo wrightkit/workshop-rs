@@ -1,6 +1,6 @@
 //! Standalone command-line interface for the canonical Workshop core
-//! (`workshop-rs`). Operates on raw Workshop text files: parse to WIR,
-//! emit localized Workshop text, convert between locales, list declared
+//! (`workshop-rs`). Operates on raw Workshop text files: parse to the public
+//! `Program` model, emit localized Workshop text, convert between locales, list declared
 //! locales with coverage, and print the machine-readable catalog identity.
 //!
 //! Exit codes: `0` success, `1` parse/emit/conversion/catalog failure,
@@ -14,9 +14,12 @@ use workshop_rs::detect;
 use workshop_rs::emitter::{self, EmitOptions};
 use workshop_rs::parser;
 
+#[doc(hidden)]
 pub mod census;
+#[doc(hidden)]
 pub mod conformance;
 mod corpus;
+#[doc(hidden)]
 pub mod live_capture;
 
 /// The default locale override for parsing when the input locale is not
@@ -26,8 +29,8 @@ usage: workshop-rs-cli <command> [options]
 
 commands:
   parse <file> [--locale LOCALE]
-      Parse raw Workshop text into validated Workshop IR and print a
-      deterministic WIR dump. Without --locale the locale is auto-detected.
+      Parse raw Workshop text into the validated public Program model and
+      print a deterministic debug dump. Without --locale the locale is auto-detected.
   emit <file> [--locale LOCALE] [--fallback-locale LOCALE]
       Parse and emit localized Workshop text (fail-explicit on missing
       target-locale mappings; --fallback-locale opts into fallback, which is

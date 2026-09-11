@@ -28,7 +28,7 @@ rule ("contextual semantics")
     }}
 }}"#
     );
-    parser::parse(&source, &catalog(), &Locale::new("en-US")).expect("contextual source parses")
+    parser::parse_wir(&source, &catalog(), &Locale::new("en-US")).expect("contextual source parses")
 }
 
 fn program(actions: &str) -> wir::Program {
@@ -44,7 +44,7 @@ fn first_action_args(program: &wir::Program) -> &[wir::ValueId] {
 }
 
 fn validate_program(program: &wir::Program) {
-    validate::validate_canonical_ids(program, &catalog()).expect("canonical validation");
+    validate::validate_canonical_ids_wir(program, &catalog()).expect("canonical validation");
 }
 
 fn first_value_call<'a>(program: &'a wir::Program, name: &str) -> &'a [wir::ValueId] {
@@ -68,7 +68,7 @@ fn numeric_boolean_aliases_share_canonical_wir_only_when_declared() {
         let number_program = program(&format!("Wait({number}, Ignore Condition);"));
         validate_program(&boolean_program);
         validate_program(&number_program);
-        assert!(roundtrip::equivalent(&boolean_program, &number_program));
+        assert!(roundtrip::equivalent_wir(&boolean_program, &number_program));
         assert!(matches!(
             &boolean_program
                 .values
@@ -94,7 +94,7 @@ fn one_sided_contextual_aliases_reject_the_other_boolean() {
     ));
 
     let rejected = program("Start Forcing Spawn Room(Team 1, True);");
-    let error = validate::validate_canonical_ids(&rejected, &catalog())
+    let error = validate::validate_canonical_ids_wir(&rejected, &catalog())
         .expect_err("True is not a documented alias for the spawn-room parameter");
     assert!(format!("{error:?}").contains("semantic type"));
 }
@@ -113,7 +113,7 @@ fn wait_until_keeps_numeric_exception_without_global_truthiness() {
     ));
 
     let vector = program("Wait Until(Vector(1, 2, 3), 2);");
-    let error = validate::validate_canonical_ids(&vector, &catalog())
+    let error = validate::validate_canonical_ids_wir(&vector, &catalog())
         .expect_err("Wait Until must not accept arbitrary values as conditions");
     assert!(format!("{error:?}").contains("semantic type"));
 }
@@ -257,9 +257,9 @@ rule ("indexed contextual semantics")
     event { Ongoing - Global; }
     actions { Set Player Variable At Index(Event Player, indexed, True, Null); }
 }"#;
-    let parsed =
-        parser::parse(source, &catalog(), &Locale::new("en-US")).expect("indexed source parses");
-    validate::validate_canonical_ids(&parsed, &catalog()).expect("canonical validation");
+    let parsed = parser::parse_wir(source, &catalog(), &Locale::new("en-US"))
+        .expect("indexed source parses");
+    validate::validate_canonical_ids_wir(&parsed, &catalog()).expect("canonical validation");
     let action = parsed
         .actions
         .get(parsed.rules.iter().next().expect("rule").actions[0])
@@ -344,7 +344,7 @@ rule ("modify contextual semantics")
     }
 }"#;
     let parsed =
-        parser::parse(source, &catalog(), &Locale::new("en-US")).expect("modify source parses");
+        parser::parse_wir(source, &catalog(), &Locale::new("en-US")).expect("modify source parses");
     validate_program(&parsed);
 
     let direct_values: Vec<_> = parsed

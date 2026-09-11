@@ -50,7 +50,7 @@ fn program_with_value(value: Value) -> Program {
 
 #[test]
 fn ordinary_rule_and_action_have_structured_per_rule_counts() {
-    let program = parser::parse(
+    let program = parser::parse_wir(
         include_str!("fixtures/corpus/basic-rule.ws"),
         &catalog(),
         &Locale::new("en-US"),
@@ -67,7 +67,7 @@ fn ordinary_rule_and_action_have_structured_per_rule_counts() {
 
 #[test]
 fn conditions_and_top_level_arguments_follow_the_documented_adjustments() {
-    let program = parser::parse(
+    let program = parser::parse_wir(
         "rule (\"condition\") { event { Ongoing - Global; } conditions { Is Game In Progress; } actions { Disable Inspector Recording; } }",
         &catalog(),
         &Locale::new("en-US"),
@@ -133,7 +133,7 @@ fn arrays_localized_strings_and_hero_pairs_are_visible_in_the_tree() {
 
 #[test]
 fn custom_settings_and_disabled_rules_do_not_change_cost() {
-    let mut program = parser::parse(
+    let mut program = parser::parse_wir(
         "disabled rule (\"disabled\") { event { Ongoing - Global; } actions { Disable Inspector Recording; } }",
         &catalog(),
         &Locale::new("en-US"),
@@ -154,7 +154,7 @@ fn custom_settings_and_disabled_rules_do_not_change_cost() {
 fn locale_conversion_preserves_the_canonical_count() {
     let catalog = catalog();
     let source = include_str!("fixtures/corpus/basic-rule.ws");
-    let english = parser::parse(source, &catalog, &Locale::new("en-US")).unwrap();
+    let english = parser::parse_wir(source, &catalog, &Locale::new("en-US")).unwrap();
     let converted = convert::convert(
         source,
         &catalog,
@@ -163,7 +163,7 @@ fn locale_conversion_preserves_the_canonical_count() {
         &ConvertOptions::default(),
     )
     .unwrap();
-    let chinese = parser::parse(&converted.text, &catalog, &Locale::new("zh-CN")).unwrap();
+    let chinese = parser::parse_wir(&converted.text, &catalog, &Locale::new("zh-CN")).unwrap();
 
     assert_eq!(
         english.element_count(&catalog).unwrap().total,
@@ -174,7 +174,7 @@ fn locale_conversion_preserves_the_canonical_count() {
 #[test]
 fn representative_corpus_program_produces_a_report() {
     let catalog = catalog();
-    let program = parser::parse(
+    let program = parser::parse_wir(
         include_str!("fixtures/corpus/expressions-values.ws"),
         &catalog,
         &Locale::new("en-US"),
