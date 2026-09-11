@@ -259,12 +259,14 @@ pub enum Action {
 }
 
 impl Action {
+    /// Mark an action as disabled.
     pub fn disabled(action: Action) -> Self {
         Self::Disabled {
             action: Box::new(action),
         }
     }
 
+    /// Construct a dynamic action call by canonical Workshop id.
     pub fn call(name: impl Into<String>, args: impl IntoIterator<Item = Value>) -> Self {
         Self::Call {
             name: name.into(),
@@ -321,10 +323,12 @@ pub enum Value {
 }
 
 impl Value {
+    /// Construct a numeric Workshop literal.
     pub fn number(value: f64) -> Self {
         Self::Number(value)
     }
 
+    /// Construct a custom Workshop string literal.
     pub fn string(value: impl Into<String>) -> Self {
         Self::String(value.into())
     }
@@ -340,6 +344,7 @@ impl Value {
         }
     }
 
+    /// Construct a dynamic value call by canonical Workshop id.
     pub fn call(name: impl Into<String>, args: impl IntoIterator<Item = Value>) -> Self {
         Self::Call {
             name: name.into(),
@@ -347,3 +352,61 @@ impl Value {
         }
     }
 }
+
+impl From<bool> for Value {
+    fn from(value: bool) -> Self {
+        Self::Bool(value)
+    }
+}
+
+impl From<f64> for Value {
+    fn from(value: f64) -> Self {
+        Self::Number(value)
+    }
+}
+
+impl From<f32> for Value {
+    fn from(value: f32) -> Self {
+        Self::Number(f64::from(value))
+    }
+}
+
+macro_rules! impl_integer_value {
+    ($($type:ty),+ $(,)?) => {
+        $(
+            impl From<$type> for Value {
+                fn from(value: $type) -> Self {
+                    Self::Number(value as f64)
+                }
+            }
+        )+
+    };
+}
+
+impl_integer_value!(i8, i16, i32, i64, isize, u8, u16, u32, u64, usize);
+
+impl From<String> for Value {
+    fn from(value: String) -> Self {
+        Self::String(value)
+    }
+}
+
+impl From<&str> for Value {
+    fn from(value: &str) -> Self {
+        Self::String(value.to_string())
+    }
+}
+
+impl<T: Into<Value>> From<Vec<T>> for Value {
+    fn from(values: Vec<T>) -> Self {
+        Self::Array(values.into_iter().map(Into::into).collect())
+    }
+}
+
+impl<T: Into<Value>, const N: usize> From<[T; N]> for Value {
+    fn from(values: [T; N]) -> Self {
+        Self::Array(values.into_iter().map(Into::into).collect())
+    }
+}
+
+include!(concat!(env!("OUT_DIR"), "/typed_api.rs"));
