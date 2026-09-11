@@ -95,6 +95,19 @@ fn source_edit_preserves_unrelated_trivia_and_reparses_semantics() {
 }
 
 #[test]
+fn synthesized_control_flow_markers_have_no_enclosing_block_span() {
+    let source = "rule (\"control\") {\n    event { Ongoing - Global; }\n    actions {\n        If(True);\n            Wait(1, Ignore Condition);\n        Else;\n            Wait(2, Ignore Condition);\n        End;\n    }\n}\n";
+    let program = parser::parse(source, &catalog(), &Locale::new("en-US")).expect("parses");
+
+    assert!(program.action_span(0, 0).is_some());
+    assert!(program.action_span(0, 1).is_some());
+    assert!(program.action_span(0, 2).is_none());
+    assert!(program.action_span(0, 3).is_some());
+    assert!(program.action_span(0, 4).is_none());
+    assert!(program.action_argument_span(0, 3, 0).is_some());
+}
+
+#[test]
 fn unsupported_mixed_source_is_rejected_without_fabricated_workshop_semantics() {
     let mixed = "rule (\"raw\") { event { Ongoing - Global; } actions { Wait(1, Ignore Condition); } }\n@if deltin_only_construct\n";
     let error = parser::parse(mixed, &catalog(), &Locale::new("en-US"))

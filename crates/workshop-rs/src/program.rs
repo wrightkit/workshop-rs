@@ -648,6 +648,15 @@ fn public_action_provenance(
                 .collect(),
         });
     };
+    let push_without_span = |output: &mut Vec<ActionProvenance>, arguments: &[wir::ValueId]| {
+        output.push(ActionProvenance {
+            span: None,
+            arguments: arguments
+                .iter()
+                .map(|value| storage.values.get(*value).and_then(|value| value.span))
+                .collect(),
+        });
+    };
     match action {
         wir::Action::SetGlobalVariable { value, .. }
         | wir::Action::ModifyGlobalVariable { value, .. } => push(output, &[*value]),
@@ -663,20 +672,24 @@ fn public_action_provenance(
             ..
         } => {
             for (index, branch) in branches.iter().enumerate() {
-                push(output, &[branch.condition]);
+                if index == 0 {
+                    push(output, &[branch.condition]);
+                } else {
+                    push_without_span(output, &[branch.condition]);
+                }
                 for action in &branch.body {
                     public_action_provenance(storage, *action, output)?;
                 }
                 if index + 1 == branches.len() && else_body.is_none() {
-                    push(output, &[]);
+                    push_without_span(output, &[]);
                 }
             }
             if let Some(body) = else_body {
-                push(output, &[]);
+                push_without_span(output, &[]);
                 for action in body {
                     public_action_provenance(storage, *action, output)?;
                 }
-                push(output, &[]);
+                push_without_span(output, &[]);
             }
         }
         wir::Action::While {
@@ -686,7 +699,7 @@ fn public_action_provenance(
             for action in body {
                 public_action_provenance(storage, *action, output)?;
             }
-            push(output, &[]);
+            push_without_span(output, &[]);
         }
         wir::Action::ForGlobalVariable {
             start,
@@ -699,7 +712,7 @@ fn public_action_provenance(
             for action in body {
                 public_action_provenance(storage, *action, output)?;
             }
-            push(output, &[]);
+            push_without_span(output, &[]);
         }
         wir::Action::ForPlayerVariable {
             player,
@@ -713,7 +726,7 @@ fn public_action_provenance(
             for action in body {
                 public_action_provenance(storage, *action, output)?;
             }
-            push(output, &[]);
+            push_without_span(output, &[]);
         }
         wir::Action::Call { args, .. } => push(output, args),
     }
