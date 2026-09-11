@@ -2710,7 +2710,7 @@
       "id": "wait",
       "paramAliases": [
         {
-          "zh-CN": "持续时间"
+          "zh-CN": "时间"
         },
         {
           "zh-CN": "等待行为"
@@ -10989,7 +10989,7 @@
       "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
       "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
       "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
-      "Wait parameter labels are a separately reviewed mapping: canonical parameter order and descriptions are from the user-provided workshop-data action definition at commit d854bf01fc7bbf3b2169f67408c07a8da8989ad6; the zh-CN wording is cross-checked against the documented Chinese Workshop action reference at https://overwatch.huijiwiki.com/wiki/%E5%9C%B0%E5%9B%BE%E5%B7%A5%E5%9D%8A/%E5%8A%A8%E4%BD%9C (accessed 2026-09-11). This is documented community evidence, not output from the zh-CN corpus generator, and further parameter labels require the same evidence review."
+      "Wait parameter labels are a separately reviewed mapping: the zh-CN spellings are 时间 and 等待行为, as identified by the documented Chinese Workshop action reference at https://overwatch.huijiwiki.com/wiki/%E5%9C%B0%E5%9B%BE%E5%B7%A5%E5%9D%8A/%E5%8A%A8%E4%BD%9C (accessed 2026-09-11); canonical parameter order and descriptions are cross-checked against the user-provided workshop-data action definition at commit d854bf01fc7bbf3b2169f67408c07a8da8989ad6. This is documented community evidence, not output from the zh-CN corpus generator, and further parameter labels require the same evidence review."
     ]
   },
   "schemaVersion": 1,
@@ -16030,5 +16030,5 @@
       "returnType": "Number"
     }
   ],
-  "version": "0.1.4"
+  "version": "0.1.5"
 }

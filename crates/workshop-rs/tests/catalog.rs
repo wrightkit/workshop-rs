@@ -72,7 +72,7 @@ fn canonical_and_localized_parameter_spellings_resolve_by_position() {
 
     assert_eq!(entry.resolve_param(&en, "Duration"), Some(0));
     assert_eq!(entry.resolve_param(&zh, "Duration"), Some(0));
-    assert_eq!(entry.resolve_param(&zh, "持续时间"), Some(0));
+    assert_eq!(entry.resolve_param(&zh, "时间"), Some(0));
     assert_eq!(entry.resolve_param(&zh, "等待行为"), Some(1));
     assert_eq!(entry.resolve_param(&zh, "missing"), None);
 }
