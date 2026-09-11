@@ -42,6 +42,7 @@ pub mod ids;
 pub mod lexer;
 mod output;
 pub mod parser;
+pub mod program;
 pub mod roundtrip;
 pub mod rules;
 pub mod semantic;
@@ -53,3 +54,7 @@ pub mod values;
 pub mod wir;
 
 pub use error::{CatalogError, WorkshopError};
+pub use program::{
+    Action, Condition, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Program, Rule,
+    Subroutine, Value, Variable,
+};
