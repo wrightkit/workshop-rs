@@ -69,6 +69,7 @@ pub fn parse_with_context(
     ParseContext {
         tokens,
         pos: 0,
+        source: input,
         catalog,
         locale: locale.clone(),
         context,
@@ -90,6 +91,7 @@ pub(crate) fn synthetic_span(position: Position) -> Span {
 pub(crate) struct ParseContext<'a> {
     pub(crate) tokens: Vec<Token>,
     pub(crate) pos: usize,
+    pub(crate) source: &'a str,
     pub(crate) catalog: &'a Catalog,
     pub(crate) locale: Locale,
     /// Canonical signature context (#111): supplies the expected enum domain

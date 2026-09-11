@@ -257,6 +257,15 @@ fn check_span(span: Option<Span>, program: &Program) -> Result<(), IrError> {
             span: Some(span),
         });
     }
+    if let Some(source) = program.files.get(span.file).and_then(|file| file.source()) {
+        if source.byte_range(span).is_none() {
+            return Err(IrError::Invalid {
+                code: "invalid-span",
+                message: "span is outside its retained source document".into(),
+                span: Some(span),
+            });
+        }
+    }
     Ok(())
 }
 

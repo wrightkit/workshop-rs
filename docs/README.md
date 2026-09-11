@@ -56,6 +56,8 @@ Support prose is not a substitute for current executable evidence.
 
 - [Provenance record](provenance.md): catalog, locale, gameplay, fixture, and
   dataset provenance.
+- [Source preservation contract](source-preservation.md): optional authored
+  source, comment attachment, checked edits, and mixed-source boundaries.
 - [Hero gameplay dataset](gameplay-data.md): embedded data model and validation
   boundaries.
 - [Gameplay query API](gameplay-query.md): read-only semantic queries and

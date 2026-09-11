@@ -133,6 +133,11 @@ impl Default for Program {
 }
 
 impl Program {
+    /// Return retained authored source for a registered file, when available.
+    pub fn source(&self, file: crate::source::FileId) -> Option<&crate::source::SourceDocument> {
+        self.files.get(file).and_then(SourceFile::source)
+    }
+
     /// Validate structural invariants: every ID resolves and every span is
     /// valid. Returns the first violation as a structured [`IrError`].
     ///
