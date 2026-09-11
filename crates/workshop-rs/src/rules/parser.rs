@@ -4,8 +4,7 @@ impl ParseContext<'_> {
     pub(crate) fn program(mut self) -> Result<wir::Program> {
         let file = self
             .target
-            .files
-            .push(SourceFile::with_source("workshop.txt", self.source));
+            .add_file(SourceFile::with_source("workshop.txt", self.source));
         let _ = file;
 
         loop {
@@ -27,10 +26,11 @@ impl ParseContext<'_> {
                 "settings" => self.settings_section()?,
                 "variables" => self.variables_section()?,
                 "subroutines" => self.subroutines_section()?,
-                "rule" => self.rule(false)?,
+                "rule" => self.rule(false, self.span_here().0)?,
                 "disabled" => {
+                    let rule_start = self.span_here().0;
                     self.pos += 1;
-                    self.rule(true)?;
+                    self.rule(true, rule_start)?;
                 }
                 other => {
                     return Err(self.unknown("top-level section", other));
@@ -167,8 +167,7 @@ impl ParseContext<'_> {
         Ok(())
     }
 
-    pub(crate) fn rule(&mut self, disabled: bool) -> Result<()> {
-        let rule_start = self.span_here().0;
+    pub(crate) fn rule(&mut self, disabled: bool, rule_start: Position) -> Result<()> {
         self.expect_keyword("rule")?;
         self.expect(TokenKind::LParen, "expected '(' after 'rule'")?;
         let name = self.expect_string("expected a rule name string")?;

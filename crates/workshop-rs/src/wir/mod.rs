@@ -133,6 +133,14 @@ impl Default for Program {
 }
 
 impl Program {
+    /// Add a source file and bind its optional source metadata to the returned
+    /// file ID.
+    pub fn add_file(&mut self, file: SourceFile) -> crate::source::FileId {
+        let id = self.files.push(file);
+        self.files.get_mut(id).unwrap().bind_file(id);
+        id
+    }
+
     /// Return retained authored source for a registered file, when available.
     pub fn source(&self, file: crate::source::FileId) -> Option<&crate::source::SourceDocument> {
         self.files.get(file).and_then(SourceFile::source)

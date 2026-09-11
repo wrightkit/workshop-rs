@@ -1,4 +1,5 @@
 use workshop_rs::catalog::{Catalog, Locale};
+use workshop_rs::source::{FileId, Span};
 use workshop_rs::{parser, roundtrip};
 
 fn catalog() -> Catalog {
@@ -25,6 +26,31 @@ fn raw_parse_retains_comments_and_attaches_inner_comments_by_span() {
     assert_eq!(rule_comments.len(), 3);
     assert_eq!(rule_comments[0].text(document), "// rule header");
     assert_eq!(rule_comments[2].text(document), "// action note");
+}
+
+#[test]
+fn source_span_operations_fail_closed_for_another_file() {
+    let source =
+        "rule (\"one\") { event { Ongoing - Global; } actions { Wait(1, Ignore Condition); } }";
+    let program = parser::parse(source, &catalog(), &Locale::new("en-US")).expect("parses");
+    let document = program.source(FileId::from_index(0)).unwrap();
+    let rule_span = program.rules.iter().next().unwrap().span.unwrap();
+    let foreign_span = Span::new(FileId::from_index(1), rule_span.start, rule_span.end);
+    assert!(document.byte_range(foreign_span).is_none());
+    assert!(document.comments_for(foreign_span).next().is_none());
+    assert!(document.edit_span(foreign_span, "").is_err());
+}
+
+#[test]
+fn disabled_rule_span_includes_modifier_and_intervening_comment() {
+    let source = "disabled // modifier note\nrule (\"disabled\") { event { Ongoing - Global; } actions { Wait(1, Ignore Condition); } }";
+    let program = parser::parse(source, &catalog(), &Locale::new("en-US")).expect("parses");
+    let rule = program.rules.iter().next().unwrap();
+    assert!(rule.disabled);
+    let document = program.source(FileId::from_index(0)).unwrap();
+    let span = rule.span.unwrap();
+    assert_eq!(&document.text()[document.byte_range(span).unwrap()], source);
+    assert_eq!(document.comments_for(span).count(), 1);
 }
 
 #[test]

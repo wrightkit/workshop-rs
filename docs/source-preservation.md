@@ -9,7 +9,8 @@ programmatically constructed WIR does not need synthetic source metadata.
 `parser::parse` and `parser::parse_with_context` retain the exact input in a
 `SourceDocument` attached to file 0. A consumer constructing a program can use
 `SourceFile::with_source` or `SourceFile::set_source` when it has authored
-source for a file. The document preserves every byte,
+source for a file; `Program::add_file` also binds the file ID needed by
+span-based operations. The document preserves every byte,
 including whitespace and newlines, and indexes `//` line comments outside
 string literals. Other trivia is intentionally not assigned semantic identity;
 it remains available in the exact source text.

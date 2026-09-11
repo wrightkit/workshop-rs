@@ -38,7 +38,16 @@ impl SourceFile {
 
     /// Attach authored source to an existing file entry.
     pub fn set_source(&mut self, source: impl Into<String>) {
-        self.source = Some(SourceDocument::new(source));
+        let file = self.source.as_ref().and_then(SourceDocument::file);
+        let mut document = SourceDocument::new(source);
+        document.file = file;
+        self.source = Some(document);
+    }
+
+    pub(crate) fn bind_file(&mut self, file: FileId) {
+        if let Some(source) = &mut self.source {
+            source.file = Some(file);
+        }
     }
 
     /// The retained authored source, when this file was created source-aware.
@@ -55,6 +64,7 @@ impl SourceFile {
 /// obtain updated semantic spans.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SourceDocument {
+    file: Option<FileId>,
     text: String,
     comments: Vec<SourceComment>,
 }
@@ -64,12 +74,20 @@ impl SourceDocument {
     pub fn new(text: impl Into<String>) -> Self {
         let text = text.into();
         let comments = find_line_comments(&text);
-        Self { text, comments }
+        Self {
+            file: None,
+            text,
+            comments,
+        }
     }
 
     /// The exact authored source text.
     pub fn text(&self) -> &str {
         &self.text
+    }
+
+    fn file(&self) -> Option<FileId> {
+        self.file
     }
 
     /// All indexed comments in authored source order.
@@ -93,6 +111,9 @@ impl SourceDocument {
 
     /// Convert a line/column span into a UTF-8 byte range in this document.
     pub fn byte_range(&self, span: Span) -> Option<Range<usize>> {
+        if self.file != Some(span.file) {
+            return None;
+        }
         let start = byte_offset(&self.text, span.start)?;
         let end = byte_offset(&self.text, span.end)?;
         (start <= end).then_some(start..end)
@@ -253,7 +274,10 @@ fn find_line_comments(source: &str) -> Vec<SourceComment> {
         } else if character == '/' && source[index..].starts_with("//") {
             let start = index;
             index += 2;
-            while index < source.len() && !source[index..].starts_with('\n') {
+            while index < source.len()
+                && !source[index..].starts_with('\n')
+                && !source[index..].starts_with('\r')
+            {
                 index += source[index..].chars().next().unwrap().len_utf8();
             }
             comments.push(SourceComment {
@@ -393,5 +417,12 @@ mod tests {
             document.apply(&[left, right]),
             Err(super::SourceEditError::OverlappingEdits)
         ));
+    }
+
+    #[test]
+    fn source_comment_ranges_exclude_crlf_line_endings() {
+        let document = SourceDocument::new("// comment\r\nnext\r\n");
+        let comment = document.comments().next().unwrap();
+        assert_eq!(comment.text(&document), "// comment");
     }
 }
