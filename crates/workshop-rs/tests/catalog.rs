@@ -300,6 +300,13 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
             .map(|e| e.params.clone()),
         Some(vec!["Duration".to_string(), "WaitBehavior".to_string()])
     );
+    assert_eq!(
+        catalog
+            .entry(Kind::Action, "setCrouchEnabled")
+            .expect("setCrouchEnabled is in the catalog")
+            .param_names,
+        ["player", "enabled"]
+    );
 
     // The exercised param surface resolves by en-US spelling too.
     assert!(
