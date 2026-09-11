@@ -17,6 +17,25 @@ pub struct Program {
     /// Raw source metadata is retained by parsed programs without becoming a
     /// required field for independently constructed programs.
     source: Option<Box<wir::Program>>,
+    provenance: Option<Box<ProgramProvenance>>,
+}
+
+#[derive(Debug, Clone, Default)]
+struct ProgramProvenance {
+    rules: Vec<RuleProvenance>,
+}
+
+#[derive(Debug, Clone, Default)]
+struct RuleProvenance {
+    span: Option<crate::source::Span>,
+    conditions: Vec<Option<crate::source::Span>>,
+    actions: Vec<ActionProvenance>,
+}
+
+#[derive(Debug, Clone, Default)]
+struct ActionProvenance {
+    span: Option<crate::source::Span>,
+    arguments: Vec<Option<crate::source::Span>>,
 }
 
 impl Program {
@@ -49,6 +68,61 @@ impl Program {
         self.source
             .as_deref()
             .and_then(|program| program.source(file))
+    }
+
+    /// Return the authored span of a public rule, when source metadata exists.
+    pub fn rule_span(&self, rule: usize) -> Option<crate::source::Span> {
+        self.provenance
+            .as_deref()
+            .and_then(|provenance| provenance.rules.get(rule))
+            .and_then(|rule| rule.span)
+    }
+
+    /// Return the authored span of a public rule condition value.
+    pub fn condition_span(&self, rule: usize, condition: usize) -> Option<crate::source::Span> {
+        self.provenance
+            .as_deref()
+            .and_then(|provenance| provenance.rules.get(rule))
+            .and_then(|rule| rule.conditions.get(condition))
+            .copied()
+            .flatten()
+    }
+
+    /// Return the authored span of a public action in its linear rule order.
+    pub fn action_span(&self, rule: usize, action: usize) -> Option<crate::source::Span> {
+        self.provenance
+            .as_deref()
+            .and_then(|provenance| provenance.rules.get(rule))
+            .and_then(|rule| rule.actions.get(action))
+            .and_then(|action| action.span)
+    }
+
+    /// Return the authored span of a direct value argument of a public action.
+    pub fn action_argument_span(
+        &self,
+        rule: usize,
+        action: usize,
+        argument: usize,
+    ) -> Option<crate::source::Span> {
+        self.provenance
+            .as_deref()
+            .and_then(|provenance| provenance.rules.get(rule))
+            .and_then(|rule| rule.actions.get(action))
+            .and_then(|action| action.arguments.get(argument))
+            .copied()
+            .flatten()
+    }
+
+    /// Create a checked source edit through the authored source attached to
+    /// this canonical program.
+    pub fn edit_source(
+        &self,
+        span: crate::source::Span,
+        replacement: impl Into<String>,
+    ) -> std::result::Result<crate::source::SourceEdit, crate::source::SourceEditError> {
+        self.source(span.file)
+            .ok_or(crate::source::SourceEditError::InvalidRange)?
+            .edit_span(span, replacement)
     }
 
     /// Validate the structural invariants of the canonical program.
@@ -99,6 +173,7 @@ impl Program {
                 .collect(),
             rules: Vec::with_capacity(storage.rules.len()),
             source: Some(Box::new(storage.clone())),
+            provenance: Some(Box::new(ProgramProvenance::default())),
         };
         for rule in storage.rules.iter() {
             let event = public_event(&storage, &rule.event)?;
@@ -108,9 +183,27 @@ impl Program {
                 .map(|condition| public_value(&storage, *condition))
                 .collect::<Result<Vec<_>>>()?;
             let mut actions = Vec::new();
+            let mut action_provenance = Vec::new();
             for action in &rule.actions {
                 public_actions(&storage, *action, &mut actions)?;
+                public_action_provenance(&storage, *action, &mut action_provenance)?;
             }
+            program
+                .provenance
+                .as_mut()
+                .expect("parsed programs retain provenance")
+                .rules
+                .push(RuleProvenance {
+                    span: rule.span,
+                    conditions: rule
+                        .conditions
+                        .iter()
+                        .map(|condition| {
+                            storage.values.get(*condition).and_then(|value| value.span)
+                        })
+                        .collect(),
+                    actions: action_provenance,
+                });
             program.rules.push(Rule {
                 name: rule.name.clone(),
                 disabled: rule.disabled,
@@ -165,12 +258,20 @@ impl Program {
             subroutines.insert(subroutine.name.clone(), id);
         }
 
-        for rule in &self.rules {
+        for (rule_index, rule) in self.rules.iter().enumerate() {
             let event = wir_event(&rule.event, &subroutines)?;
             let conditions = rule
                 .conditions
                 .iter()
-                .map(|condition| {
+                .enumerate()
+                .map(|(condition_index, condition)| {
+                    if condition.disabled {
+                        return Err(WorkshopError::Unsupported {
+                            message: "disabled conditions are not representable by the canonical storage model"
+                                .to_string(),
+                            span: None,
+                        });
+                    }
                     wir_value(
                         &condition.value,
                         &mut storage,
@@ -178,6 +279,11 @@ impl Program {
                         &players,
                         &subroutines,
                     )
+                    .inspect(|&value| {
+                        if let Some(span) = self.condition_span(rule_index, condition_index) {
+                            storage.values.get_mut(value).unwrap().span = Some(span);
+                        }
+                    })
                 })
                 .collect::<Result<Vec<_>>>()?;
             let mut actions = Vec::new();
@@ -191,6 +297,19 @@ impl Program {
                 &players,
                 &subroutines,
             )?;
+            if let Some(provenance) = self
+                .provenance
+                .as_deref()
+                .and_then(|provenance| provenance.rules.get(rule_index))
+            {
+                let mut public_position = 0;
+                apply_action_provenance(
+                    &mut storage,
+                    &actions,
+                    &provenance.actions,
+                    &mut public_position,
+                )?;
+            }
             if position != rule.actions.len() {
                 return Err(WorkshopError::Malformed {
                     message: "unexpected control-flow terminator in rule actions".to_string(),
@@ -199,7 +318,7 @@ impl Program {
             }
             storage.rules.push(wir::Rule {
                 name: rule.name.clone(),
-                span: None,
+                span: self.rule_span(rule_index),
                 name_span: None,
                 disabled: rule.disabled,
                 event,
@@ -511,6 +630,96 @@ fn public_actions(
     Ok(())
 }
 
+fn public_action_provenance(
+    storage: &wir::Program,
+    id: wir::ActionId,
+    output: &mut Vec<ActionProvenance>,
+) -> Result<()> {
+    let action = storage
+        .actions
+        .get(id)
+        .ok_or_else(|| malformed_id("action", id.index()))?;
+    let push = |output: &mut Vec<ActionProvenance>, arguments: &[wir::ValueId]| {
+        output.push(ActionProvenance {
+            span: action.span(),
+            arguments: arguments
+                .iter()
+                .map(|value| storage.values.get(*value).and_then(|value| value.span))
+                .collect(),
+        });
+    };
+    match action {
+        wir::Action::SetGlobalVariable { value, .. }
+        | wir::Action::ModifyGlobalVariable { value, .. } => push(output, &[*value]),
+        wir::Action::SetPlayerVariable { player, value, .. }
+        | wir::Action::ModifyPlayerVariable { player, value, .. } => {
+            push(output, &[*player, *value])
+        }
+        wir::Action::AssignMember { target, value, .. } => push(output, &[*target, *value]),
+        wir::Action::CallSubroutine { .. } => push(output, &[]),
+        wir::Action::If {
+            branches,
+            else_body,
+            ..
+        } => {
+            for (index, branch) in branches.iter().enumerate() {
+                push(output, &[branch.condition]);
+                for action in &branch.body {
+                    public_action_provenance(storage, *action, output)?;
+                }
+                if index + 1 == branches.len() && else_body.is_none() {
+                    push(output, &[]);
+                }
+            }
+            if let Some(body) = else_body {
+                push(output, &[]);
+                for action in body {
+                    public_action_provenance(storage, *action, output)?;
+                }
+                push(output, &[]);
+            }
+        }
+        wir::Action::While {
+            condition, body, ..
+        } => {
+            push(output, &[*condition]);
+            for action in body {
+                public_action_provenance(storage, *action, output)?;
+            }
+            push(output, &[]);
+        }
+        wir::Action::ForGlobalVariable {
+            start,
+            stop,
+            step,
+            body,
+            ..
+        } => {
+            push(output, &[*start, *stop, *step]);
+            for action in body {
+                public_action_provenance(storage, *action, output)?;
+            }
+            push(output, &[]);
+        }
+        wir::Action::ForPlayerVariable {
+            player,
+            start,
+            stop,
+            step,
+            body,
+            ..
+        } => {
+            push(output, &[*player, *start, *stop, *step]);
+            for action in body {
+                public_action_provenance(storage, *action, output)?;
+            }
+            push(output, &[]);
+        }
+        wir::Action::Call { args, .. } => push(output, args),
+    }
+    Ok(())
+}
+
 fn lower_actions(
     actions: &[Action],
     position: &mut usize,
@@ -684,6 +893,168 @@ fn lower_actions(
     Ok(())
 }
 
+fn apply_action_provenance(
+    storage: &mut wir::Program,
+    actions: &[wir::ActionId],
+    provenance: &[ActionProvenance],
+    position: &mut usize,
+) -> Result<()> {
+    for id in actions {
+        let action = storage
+            .actions
+            .get(*id)
+            .cloned()
+            .ok_or_else(|| malformed_id("action", id.index()))?;
+        match action {
+            wir::Action::If {
+                branches,
+                else_body,
+                ..
+            } => {
+                let source = provenance.get(*position).cloned().unwrap_or_default();
+                *position += 1;
+                apply_action_source(storage, *id, &source);
+                for (branch_index, branch) in branches.iter().enumerate() {
+                    if branch_index > 0 {
+                        let source = provenance.get(*position).cloned().unwrap_or_default();
+                        *position += 1;
+                        set_value_span(
+                            storage,
+                            branch.condition,
+                            source.arguments.first().copied().flatten(),
+                        );
+                    }
+                    apply_action_provenance(storage, &branch.body, provenance, position)?;
+                }
+                if let Some(body) = else_body {
+                    *position += 1;
+                    apply_action_provenance(storage, &body, provenance, position)?;
+                }
+                *position += 1;
+            }
+            wir::Action::While {
+                condition, body, ..
+            } => {
+                let source = provenance.get(*position).cloned().unwrap_or_default();
+                *position += 1;
+                apply_action_source(storage, *id, &source);
+                apply_action_provenance(storage, &body, provenance, position)?;
+                *position += 1;
+                set_value_span(
+                    storage,
+                    condition,
+                    source.arguments.first().copied().flatten(),
+                );
+            }
+            wir::Action::ForGlobalVariable {
+                start,
+                stop,
+                step,
+                body,
+                ..
+            } => {
+                let source = provenance.get(*position).cloned().unwrap_or_default();
+                *position += 1;
+                apply_action_source(storage, *id, &source);
+                apply_action_provenance(storage, &body, provenance, position)?;
+                *position += 1;
+                for (value, span) in [start, stop, step].into_iter().zip(source.arguments) {
+                    set_value_span(storage, value, span);
+                }
+            }
+            wir::Action::ForPlayerVariable {
+                player,
+                start,
+                stop,
+                step,
+                body,
+                ..
+            } => {
+                let source = provenance.get(*position).cloned().unwrap_or_default();
+                *position += 1;
+                apply_action_source(storage, *id, &source);
+                apply_action_provenance(storage, &body, provenance, position)?;
+                *position += 1;
+                for (value, span) in [player, start, stop, step]
+                    .into_iter()
+                    .zip(source.arguments)
+                {
+                    set_value_span(storage, value, span);
+                }
+            }
+            _ => {
+                let source = provenance.get(*position).cloned().unwrap_or_default();
+                *position += 1;
+                apply_action_source(storage, *id, &source);
+            }
+        }
+    }
+    Ok(())
+}
+
+fn apply_action_source(storage: &mut wir::Program, id: wir::ActionId, source: &ActionProvenance) {
+    let arguments = source.arguments.clone();
+    if let Some(action) = storage.actions.get_mut(id) {
+        match action {
+            wir::Action::SetGlobalVariable { span, .. }
+            | wir::Action::ModifyGlobalVariable { span, .. }
+            | wir::Action::SetPlayerVariable { span, .. }
+            | wir::Action::ModifyPlayerVariable { span, .. }
+            | wir::Action::AssignMember { span, .. }
+            | wir::Action::CallSubroutine { span, .. }
+            | wir::Action::If { span, .. }
+            | wir::Action::While { span, .. }
+            | wir::Action::ForGlobalVariable { span, .. }
+            | wir::Action::ForPlayerVariable { span, .. }
+            | wir::Action::Call { span, .. } => *span = source.span,
+        }
+    }
+    let value_ids = storage
+        .actions
+        .get(id)
+        .map(action_value_ids)
+        .unwrap_or_default();
+    for (value, span) in value_ids.into_iter().zip(arguments) {
+        set_value_span(storage, value, span);
+    }
+}
+
+fn action_value_ids(action: &wir::Action) -> Vec<wir::ValueId> {
+    match action {
+        wir::Action::SetGlobalVariable { value, .. }
+        | wir::Action::ModifyGlobalVariable { value, .. } => vec![*value],
+        wir::Action::SetPlayerVariable { player, value, .. }
+        | wir::Action::ModifyPlayerVariable { player, value, .. } => vec![*player, *value],
+        wir::Action::AssignMember { target, value, .. } => vec![*target, *value],
+        wir::Action::If { branches, .. } => {
+            branches.iter().map(|branch| branch.condition).collect()
+        }
+        wir::Action::While { condition, .. } => vec![*condition],
+        wir::Action::ForGlobalVariable {
+            start, stop, step, ..
+        } => vec![*start, *stop, *step],
+        wir::Action::ForPlayerVariable {
+            player,
+            start,
+            stop,
+            step,
+            ..
+        } => vec![*player, *start, *stop, *step],
+        wir::Action::Call { args, .. } => args.clone(),
+        wir::Action::CallSubroutine { .. } => Vec::new(),
+    }
+}
+
+fn set_value_span(
+    storage: &mut wir::Program,
+    value: wir::ValueId,
+    span: Option<crate::source::Span>,
+) {
+    if let Some(node) = storage.values.get_mut(value) {
+        node.span = span;
+    }
+}
+
 fn require_end(actions: &[Action], position: &mut usize) -> Result<()> {
     if !matches!(actions.get(*position), Some(Action::End)) {
         return Err(WorkshopError::Malformed {
@@ -765,8 +1136,12 @@ fn wir_action(
             span: None,
             callee_span: None,
         },
-        Action::Disabled { action } => {
-            return wir_action(action, storage, globals, players, subroutines);
+        Action::Disabled { .. } => {
+            return Err(WorkshopError::Unsupported {
+                message: "disabled actions are not representable by the canonical storage model"
+                    .to_string(),
+                span: None,
+            });
         }
         Action::Call { name, args } => wir::Action::Call {
             name: name.clone(),

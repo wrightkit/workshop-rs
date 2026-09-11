@@ -31,6 +31,12 @@ new document with comments reindexed; consumers reparse its text to obtain new
 semantic spans. Bytes outside an explicit edit are unchanged, so unrelated
 comments, whitespace, and mixed source structure are preserved.
 
+Parsed programs expose rule, condition, action, and direct action-argument
+spans through `Program::rule_span`, `Program::condition_span`,
+`Program::action_span`, and `Program::action_argument_span`. `Program::edit_source`
+creates a checked edit from those public spans without exposing normalized WIR
+storage. Programmatic construction has no provenance and returns no spans.
+
 The settings API's `SettingSourceEdit` remains the typed settings operation and
 uses the same expected-byte/fail-closed principle. Canonical `emitter::emit`
 continues to be deterministic semantic regeneration and does not claim exact

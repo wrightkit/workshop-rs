@@ -71,6 +71,21 @@ fn public_program_is_the_raw_parse_and_emit_boundary() {
             .text(),
         source
     );
+    let rule_span = parsed.rule_span(0).expect("public rule span");
+    assert!(parsed.action_span(0, 0).is_some());
+    let argument_span = parsed
+        .action_argument_span(0, 0, 0)
+        .expect("public action argument span");
+    assert!(rule_span.start.line <= argument_span.start.line);
+    let edit = parsed
+        .edit_source(argument_span, "2")
+        .expect("validated public source edit");
+    let updated = parsed
+        .source(workshop_rs::source::FileId::from_index(0))
+        .unwrap()
+        .apply(&[edit])
+        .expect("apply public source edit");
+    assert!(updated.text().contains("Wait(2, Ignore Condition)"));
     parsed.validate().expect("structurally validates");
     workshop_rs::validate::validate_canonical_ids(&parsed, &catalog).expect("catalog validates");
     assert!(parsed.semantic_issues(&catalog).is_empty());
@@ -79,6 +94,10 @@ fn public_program_is_the_raw_parse_and_emit_boundary() {
     let emitted = workshop_rs::emitter::emit(&parsed, &catalog, &locale).expect("emits");
     let reparsed = workshop_rs::parser::parse(&emitted, &catalog, &locale).expect("reparses");
     assert!(workshop_rs::roundtrip::equivalent(&parsed, &reparsed));
+
+    let edited =
+        workshop_rs::parser::parse(updated.text(), &catalog, &locale).expect("reparses edit");
+    assert!(!workshop_rs::roundtrip::equivalent(&parsed, &edited));
 }
 
 #[test]
@@ -101,4 +120,30 @@ fn independently_constructed_program_uses_the_same_operations() {
     assert_eq!(layout.width, 1);
     let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emits");
     assert!(emitted.contains("Set Global Variable(Score, 1)"));
+}
+
+#[test]
+fn disabled_public_semantics_fail_explicitly_at_the_storage_boundary() {
+    let catalog = catalog();
+    let locale = workshop_rs::catalog::Locale::new("en-US");
+
+    let mut disabled_condition = Program::new();
+    disabled_condition.rule(
+        Rule::new("disabled condition", Event::Global)
+            .condition(Condition::disabled(Value::Bool(true))),
+    );
+    assert!(matches!(
+        disabled_condition.validate(),
+        Err(workshop_rs::WorkshopError::Unsupported { .. })
+    ));
+
+    let mut disabled_action = Program::new();
+    disabled_action.rule(
+        Rule::new("disabled action", Event::Global)
+            .action(Action::disabled(Action::call("Wait", [Value::number(1.0)]))),
+    );
+    assert!(matches!(
+        workshop_rs::emitter::emit(&disabled_action, &catalog, &locale),
+        Err(workshop_rs::WorkshopError::Unsupported { .. })
+    ));
 }
