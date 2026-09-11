@@ -16,6 +16,7 @@ pub type FileId = Id<SourceFile>;
 pub struct SourceFile {
     /// The file name as the frontend reported it (for diagnostics).
     pub path: String,
+    file: Option<FileId>,
     source: Option<SourceDocument>,
 }
 
@@ -24,6 +25,7 @@ impl SourceFile {
     pub fn new(path: impl Into<String>) -> Self {
         SourceFile {
             path: path.into(),
+            file: None,
             source: None,
         }
     }
@@ -32,19 +34,20 @@ impl SourceFile {
     pub fn with_source(path: impl Into<String>, source: impl Into<String>) -> Self {
         SourceFile {
             path: path.into(),
+            file: None,
             source: Some(SourceDocument::new(source)),
         }
     }
 
     /// Attach authored source to an existing file entry.
     pub fn set_source(&mut self, source: impl Into<String>) {
-        let file = self.source.as_ref().and_then(SourceDocument::file);
         let mut document = SourceDocument::new(source);
-        document.file = file;
+        document.file = self.file;
         self.source = Some(document);
     }
 
     pub(crate) fn bind_file(&mut self, file: FileId) {
+        self.file = Some(file);
         if let Some(source) = &mut self.source {
             source.file = Some(file);
         }
@@ -84,10 +87,6 @@ impl SourceDocument {
     /// The exact authored source text.
     pub fn text(&self) -> &str {
         &self.text
-    }
-
-    fn file(&self) -> Option<FileId> {
-        self.file
     }
 
     /// All indexed comments in authored source order.

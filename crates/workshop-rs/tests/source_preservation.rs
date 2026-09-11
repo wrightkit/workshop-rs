@@ -1,5 +1,5 @@
 use workshop_rs::catalog::{Catalog, Locale};
-use workshop_rs::source::{FileId, Span};
+use workshop_rs::source::{FileId, Position, SourceFile, Span};
 use workshop_rs::{parser, roundtrip};
 
 fn catalog() -> Catalog {
@@ -39,6 +39,26 @@ fn source_span_operations_fail_closed_for_another_file() {
     assert!(document.byte_range(foreign_span).is_none());
     assert!(document.comments_for(foreign_span).next().is_none());
     assert!(document.edit_span(foreign_span, "").is_err());
+}
+
+#[test]
+fn late_source_attachment_preserves_bound_file_identity() {
+    let source = "// late source\nrule (\"late\") { event { Ongoing - Global; } actions { Wait(1, Ignore Condition); } }";
+    let mut program = workshop_rs::wir::Program::default();
+    let file = program.add_file(SourceFile::new("late.ws"));
+    program.files.get_mut(file).unwrap().set_source(source);
+
+    let document = program.source(file).expect("late source attachment");
+    let span = Span::new(file, Position::new(2, 1), Position::new(2, 5));
+    assert_eq!(document.byte_range(span), Some(15..19));
+    let edit = document.edit_span(span, "Rule").expect("bound span edit");
+    assert!(
+        document
+            .apply(&[edit])
+            .unwrap()
+            .text()
+            .contains("Rule (\"late\")")
+    );
 }
 
 #[test]
