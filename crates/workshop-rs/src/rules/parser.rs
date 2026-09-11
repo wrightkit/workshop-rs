@@ -2,7 +2,9 @@ use crate::frontend::parser::*;
 
 impl ParseContext<'_> {
     pub(crate) fn program(mut self) -> Result<wir::Program> {
-        let file = self.target.files.push(SourceFile::new("workshop.txt"));
+        let file = self
+            .target
+            .add_file(SourceFile::with_source("workshop.txt", self.source));
         let _ = file;
 
         loop {
@@ -24,10 +26,11 @@ impl ParseContext<'_> {
                 "settings" => self.settings_section()?,
                 "variables" => self.variables_section()?,
                 "subroutines" => self.subroutines_section()?,
-                "rule" => self.rule(false)?,
+                "rule" => self.rule(false, self.span_here().0)?,
                 "disabled" => {
+                    let rule_start = self.span_here().0;
                     self.pos += 1;
-                    self.rule(true)?;
+                    self.rule(true, rule_start)?;
                 }
                 other => {
                     return Err(self.unknown("top-level section", other));
@@ -164,17 +167,16 @@ impl ParseContext<'_> {
         Ok(())
     }
 
-    pub(crate) fn rule(&mut self, disabled: bool) -> Result<()> {
+    pub(crate) fn rule(&mut self, disabled: bool, rule_start: Position) -> Result<()> {
         self.expect_keyword("rule")?;
         self.expect(TokenKind::LParen, "expected '(' after 'rule'")?;
         let name = self.expect_string("expected a rule name string")?;
         self.expect(TokenKind::RParen, "expected ')' after rule name")?;
-        let (rule_start, rule_end) = self.previous_span();
         self.expect(TokenKind::LBrace, "expected '{' after rule header")?;
 
         let mut rule = wir::Rule {
             name,
-            span: Some(Span::new(self.file(), rule_start, rule_end)),
+            span: None,
             name_span: None,
             disabled,
             event: Event::Global,
@@ -230,6 +232,8 @@ impl ParseContext<'_> {
                 None => return Err(self.malformed("unexpected end of input in rule", self.eof())),
             }
         }
+        let rule_end = self.previous_span().1;
+        rule.span = Some(Span::new(self.file(), rule_start, rule_end));
         self.target.rules.push(rule);
         Ok(())
     }
