@@ -13,8 +13,7 @@ fn typed_constructors_preserve_canonical_ids_and_order() {
     assert!(matches!(
         value,
         Value::Call { name, args } if name == "getMaxHealth"
-            && matches!(&args[..], [Value::Call { name, args }]
-                if name == "eventPlayer" && args.is_empty())
+            && matches!(&args[..], [Value::EventPlayer])
     ));
 }
 
@@ -23,19 +22,22 @@ fn typed_values_accept_obvious_rust_literals() {
     let value = Value::vector(1, 2, 3);
     assert!(matches!(
         value,
-        Value::Call { name, args } if name == "vector"
-            && matches!(&args[..], [
-                Value::Number(x), Value::Number(y), Value::Number(z)
-            ] if (*x, *y, *z) == (1.0, 2.0, 3.0))
+        Value::Vector { x, y, z }
+            if matches!(x.as_ref(), Value::Number(value) if *value == 1.0)
+                && matches!(y.as_ref(), Value::Number(value) if *value == 2.0)
+                && matches!(z.as_ref(), Value::Number(value) if *value == 3.0)
     ));
 
     let array = Value::array(["first", "second"]);
     assert!(matches!(
         array,
-        Value::Call { name, args } if name == "array"
-            && matches!(&args[..], [Value::String(first), Value::String(second)]
+        Value::Array(values)
+            if matches!(&values[..], [Value::String(first), Value::String(second)]
                 if first == "first" && second == "second")
     ));
+
+    assert!(matches!(Value::empty_array(), Value::Array(values) if values.is_empty()));
+    assert!(matches!(Value::null(), Value::Null));
 }
 
 #[test]

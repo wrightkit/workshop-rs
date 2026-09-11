@@ -130,6 +130,9 @@ pub struct CatalogEntry {
     pub kind: Kind,
     /// Parameter names, when the catalog documents them.
     pub params: Vec<String>,
+    /// Reviewed semantic parameter names for consumer-facing typed APIs,
+    /// parallel to `params`.
+    pub param_names: Vec<String>,
     /// The canonical enum domain expected at each parameter position, when
     /// the parameter takes an enumerated value (parallel to `params`).
     /// `None` for non-enum parameters and for parameters whose accepted
@@ -200,6 +203,14 @@ impl CatalogEntry {
     /// The number of declared arguments for this builtin.
     pub fn param_count(&self) -> usize {
         self.params.len()
+    }
+
+    /// The reviewed semantic name for an argument position, when declared.
+    pub fn param_name(&self, index: usize) -> Option<&str> {
+        self.param_names
+            .get(index)
+            .or_else(|| self.variadic.then(|| self.param_names.last()).flatten())
+            .map(String::as_str)
     }
 
     /// The number of arguments that must be present when trailing defaults
@@ -410,6 +421,10 @@ struct EntryFile {
     aliases: HashMap<String, AliasFile>,
     #[serde(default)]
     params: Vec<String>,
+    /// Reviewed semantic parameter names for consumer-facing typed APIs,
+    /// parallel to `params`.
+    #[serde(default)]
+    param_names: Vec<String>,
     /// Canonical enum domain per parameter position (parallel to `params`);
     /// empty when no parameter domains are documented.
     #[serde(default)]
@@ -823,11 +838,26 @@ impl Catalog {
                 primary
             )));
         }
+        let param_names = if item.param_names.is_empty() {
+            item.params.clone()
+        } else {
+            item.param_names.clone()
+        };
+        if param_names.len() != item.params.len() {
+            return Err(CatalogError::validation(format!(
+                "{} '{}' declares {} param names for {} params",
+                kind.as_str(),
+                item.id,
+                param_names.len(),
+                item.params.len()
+            )));
+        }
         self.by_id.insert(id_key, index);
         self.entries.push(CatalogEntry {
             id: item.id,
             kind,
             params: item.params,
+            param_names,
             param_domains: item.param_domains,
             param_defaults: item.param_defaults,
             param_types: item.param_types,
@@ -886,6 +916,13 @@ impl Catalog {
     /// Every declared `paramDomains` domain must name a declared enum domain.
     fn validate_param_domains(&self) -> Result<()> {
         for entry in &self.entries {
+            if entry.param_names.len() != entry.params.len() {
+                return Err(CatalogError::validation(format!(
+                    "{} '{}' declares param names that do not match params",
+                    entry.kind.as_str(),
+                    entry.id
+                )));
+            }
             if entry.param_domains.len() > entry.params.len() {
                 return Err(CatalogError::validation(format!(
                     "{} '{}' declares more param domains than params",

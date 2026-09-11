@@ -72,12 +72,22 @@ fn generate_impl(
             .and_then(Value::as_array)
             .cloned()
             .unwrap_or_default();
+        let parameter_names_source = entry.get("paramNames").and_then(Value::as_array);
+        if !params.is_empty() && parameter_names_source.is_none() {
+            panic!("catalog {section} entry '{id}' must declare paramNames");
+        }
+        let parameter_names_source = parameter_names_source.unwrap_or(&params);
+        if parameter_names_source.len() != params.len() {
+            panic!(
+                "catalog {section} entry '{id}' must declare one paramNames entry per params entry"
+            );
+        }
         let variadic = entry
             .get("variadic")
             .and_then(Value::as_bool)
             .unwrap_or(false);
         let mut used_parameter_names = HashSet::new();
-        let parameter_names: Vec<String> = params
+        let parameter_names: Vec<String> = parameter_names_source
             .iter()
             .enumerate()
             .map(|(index, parameter)| {
@@ -114,11 +124,17 @@ fn generate_impl(
                 "    pub fn {method_name}(values: impl IntoIterator<Item = impl Into<Value>>) -> Self {{"
             )
             .unwrap();
-            writeln!(
-                output,
-                "        Self::call({id:?}, values.into_iter().map(|value| value.into()))"
-            )
-            .unwrap();
+            if type_name == "Value" && id == "array" {
+                output.push_str(
+                    "        Self::Array(values.into_iter().map(|value| value.into()).collect())\n",
+                );
+            } else {
+                writeln!(
+                    output,
+                    "        Self::call({id:?}, values.into_iter().map(|value| value.into()))"
+                )
+                .unwrap();
+            }
             output.push_str("    }\n");
             continue;
         }
@@ -137,7 +153,27 @@ fn generate_impl(
             .map(|name| format!("{name}.into()"))
             .collect::<Vec<_>>()
             .join(", ");
-        writeln!(output, "        Self::call({id:?}, [{arguments}])").unwrap();
+        if type_name == "Value" {
+            match id {
+                "emptyArray" => output.push_str("        Self::Array(Vec::new())\n"),
+                "eventPlayer" => output.push_str("        Self::EventPlayer\n"),
+                "null" => output.push_str("        Self::Null\n"),
+                "vector" => {
+                    if parameter_names.len() != 3 {
+                        panic!("catalog values entry 'vector' must have three parameters");
+                    }
+                    writeln!(
+                        output,
+                        "        Self::Vector {{ x: Box::new({}.into()), y: Box::new({}.into()), z: Box::new({}.into()) }}",
+                        parameter_names[0], parameter_names[1], parameter_names[2]
+                    )
+                    .unwrap();
+                }
+                _ => writeln!(output, "        Self::call({id:?}, [{arguments}])").unwrap(),
+            }
+        } else {
+            writeln!(output, "        Self::call({id:?}, [{arguments}])").unwrap();
+        }
         output.push_str("    }\n");
     }
     output.push_str("}\n\n");
