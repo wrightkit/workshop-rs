@@ -226,14 +226,14 @@ pub enum Action {
         subroutine: String,
     },
     If {
-        condition: Condition,
+        condition: Value,
     },
     ElseIf {
-        condition: Condition,
+        condition: Value,
     },
     Else,
     While {
-        condition: Condition,
+        condition: Value,
     },
     ForGlobalVariable {
         variable: String,

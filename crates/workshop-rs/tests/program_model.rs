@@ -2,18 +2,21 @@ use workshop_rs::{Action, Condition, Event, Program, Rule, Value, Variable};
 
 #[test]
 fn program_is_constructible_without_storage_ids() {
-    let condition = Condition::new(Value::call("isAlive", [Value::global_variable("Target")]));
+    let predicate = Value::call("isAlive", [Value::global_variable("Target")]);
+    let condition = Condition::new(predicate.clone());
     let rule = Rule::new("Linear control flow", Event::Global)
-        .condition(condition.clone())
+        .condition(condition)
         .action(Action::If {
-            condition: condition.clone(),
+            condition: predicate.clone(),
         })
         .action(Action::call("Wait", [Value::number(1.0)]))
         .action(Action::ElseIf {
-            condition: Condition::new(Value::Bool(false)),
+            condition: Value::Bool(false),
         })
         .action(Action::Else)
-        .action(Action::While { condition })
+        .action(Action::While {
+            condition: predicate,
+        })
         .action(Action::disabled(Action::call("Abort", std::iter::empty())))
         .action(Action::End);
 
