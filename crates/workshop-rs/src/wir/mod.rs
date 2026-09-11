@@ -160,7 +160,7 @@ impl Program {
         &self,
         catalog: &crate::catalog::Catalog,
     ) -> Vec<crate::analysis::semantic::SemanticIssue> {
-        crate::analysis::semantic::inspect(self, catalog)
+        crate::analysis::semantic::inspect_wir(self, catalog)
     }
 
     /// Render a deterministic debug dump of the workshop program.

@@ -88,6 +88,7 @@ fn detected_locale_parses_the_input() {
     // The full loop: detect, then parse with the detected locale.
     let text = corpus_text("control-flow");
     let locale = detect::resolve_locale(&text, &catalog(), None).expect("detected");
-    let program = parser::parse(&text, &catalog(), &locale).expect("parses with detected locale");
+    let program =
+        parser::parse_wir(&text, &catalog(), &locale).expect("parses with detected locale");
     assert!(!program.rules.is_empty());
 }

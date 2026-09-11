@@ -105,13 +105,13 @@ fn equivalence_ignores_presentation_but_preserves_semantics() {
     let a = workshop_rs::wir::Program::default();
     let b = workshop_rs::wir::Program::default();
     // Two empty programs are equivalent.
-    assert!(roundtrip::equivalent(&a, &b));
+    assert!(roundtrip::equivalent_wir(&a, &b));
     // Same semantics, different file ids in spans: still equivalent.
     let mut c = workshop_rs::wir::Program::default();
     c.files
         .push(workshop_rs::source::SourceFile::new("other.txt"));
     assert!(
-        roundtrip::equivalent(&a, &c),
+        roundtrip::equivalent_wir(&a, &c),
         "file paths are presentation-only"
     );
 }
@@ -176,7 +176,7 @@ fn equivalence_detects_semantic_differences() {
             .collect(),
     });
     assert!(
-        !roundtrip::equivalent(&a, &b),
+        !roundtrip::equivalent_wir(&a, &b),
         "different values must not be equivalent"
     );
 }
@@ -219,7 +219,8 @@ fn unknown_builtin_fails_at_emit_stage() {
         actions: vec![call],
     });
     // Equivalent to the round-trip emit stage: emission of unknown ids fails.
-    let error = workshop_rs::emitter::emit(&program, &catalog(), &en()).expect_err("unknown id");
+    let error =
+        workshop_rs::emitter::emit_wir(&program, &catalog(), &en()).expect_err("unknown id");
     assert!(error.to_string().contains("notACatalogId"));
 }
 
@@ -297,15 +298,15 @@ fn context_chase_none_emission_is_a_fixed_point() {
     // emit again: the text is a fixed point.
     let text = "variables { global: 0: g }\nrule (\"chase\") { event { Ongoing - Global; } actions { Chase Global Variable Over Time(Global.g, 0, 30, None); } }";
     let catalog = catalog();
-    let first = workshop_rs::parser::parse_with_context(text, &catalog, &en(), &catalog)
+    let first = workshop_rs::parser::parse_wir_with_context(text, &catalog, &en(), &catalog)
         .expect("pinned Chase None parses");
-    let emitted = workshop_rs::emitter::emit(&first, &catalog, &en()).expect("emits");
+    let emitted = workshop_rs::emitter::emit_wir(&first, &catalog, &en()).expect("emits");
     assert!(
         emitted.contains("Chase Global Variable Over Time(Global.g, 0, 30, None)"),
         "emission preserves the bare None spelling:\n{emitted}"
     );
-    let reparsed = workshop_rs::parser::parse_with_context(&emitted, &catalog, &en(), &catalog)
+    let reparsed = workshop_rs::parser::parse_wir_with_context(&emitted, &catalog, &en(), &catalog)
         .expect("emitted text reparses with context");
-    let reemitted = workshop_rs::emitter::emit(&reparsed, &catalog, &en()).expect("re-emits");
+    let reemitted = workshop_rs::emitter::emit_wir(&reparsed, &catalog, &en()).expect("re-emits");
     assert_eq!(emitted, reemitted, "emission must be a fixed point");
 }

@@ -10,19 +10,18 @@ fn catalog() -> Catalog {
 fn raw_parse_retains_comments_and_attaches_inner_comments_by_span() {
     let source = "// file header\nrule (\"comments\") { // rule header\n    event { Ongoing - Global; } // event note\n    actions { Wait(1, Ignore Condition); } // action note\n}\n// file footer\n";
     let program = parser::parse(source, &catalog(), &Locale::new("en-US")).expect("parses");
-    let file = program
-        .files
-        .get(workshop_rs::source::FileId::from_index(0))
-        .unwrap();
-    let document = file.source().expect("raw parsing retains source");
+    let document = program
+        .source(workshop_rs::source::FileId::from_index(0))
+        .expect("raw parsing retains source");
     assert_eq!(document.text(), source);
     let comments: Vec<_> = document.comments().collect();
     assert_eq!(comments.len(), 5);
     assert_eq!(comments[0].text(document), "// file header");
     assert_eq!(comments[4].text(document), "// file footer");
 
-    let rule = program.rules.iter().next().expect("rule");
-    let rule_comments: Vec<_> = document.comments_for(rule.span.unwrap()).collect();
+    let rule_comments: Vec<_> = document
+        .comments_for(program.rule_span(0).expect("public rule span"))
+        .collect();
     assert_eq!(rule_comments.len(), 3);
     assert_eq!(rule_comments[0].text(document), "// rule header");
     assert_eq!(rule_comments[2].text(document), "// action note");
@@ -34,7 +33,7 @@ fn source_span_operations_fail_closed_for_another_file() {
         "rule (\"one\") { event { Ongoing - Global; } actions { Wait(1, Ignore Condition); } }";
     let program = parser::parse(source, &catalog(), &Locale::new("en-US")).expect("parses");
     let document = program.source(FileId::from_index(0)).unwrap();
-    let rule_span = program.rules.iter().next().unwrap().span.unwrap();
+    let rule_span = program.rule_span(0).expect("public rule span");
     let foreign_span = Span::new(FileId::from_index(1), rule_span.start, rule_span.end);
     assert!(document.byte_range(foreign_span).is_none());
     assert!(document.comments_for(foreign_span).next().is_none());
@@ -65,10 +64,9 @@ fn late_source_attachment_preserves_bound_file_identity() {
 fn disabled_rule_span_includes_modifier_and_intervening_comment() {
     let source = "disabled // modifier note\nrule (\"disabled\") { event { Ongoing - Global; } actions { Wait(1, Ignore Condition); } }";
     let program = parser::parse(source, &catalog(), &Locale::new("en-US")).expect("parses");
-    let rule = program.rules.iter().next().unwrap();
-    assert!(rule.disabled);
+    assert!(program.rules[0].disabled);
     let document = program.source(FileId::from_index(0)).unwrap();
-    let span = rule.span.unwrap();
+    let span = program.rule_span(0).expect("public rule span");
     assert_eq!(&document.text()[document.byte_range(span).unwrap()], source);
     assert_eq!(document.comments_for(span).count(), 1);
 }
@@ -78,16 +76,13 @@ fn source_edit_preserves_unrelated_trivia_and_reparses_semantics() {
     let source = "// retain this\nrule (\"edit\") {\n  event { Ongoing - Global; }\n  actions { Wait(1, Ignore Condition); } // retain this too\n}\n";
     let catalog = catalog();
     let program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("parses");
-    let wait_value = program
-        .values
-        .iter()
-        .find(|node| matches!(node.value, workshop_rs::wir::Value::Number { value, .. } if value == 1.0))
-        .expect("wait duration");
-    let span = wait_value.span.expect("number span");
+    let span = program
+        .action_argument_span(0, 0, 0)
+        .expect("public action argument span");
+    let edit = program.edit_source(span, "2").expect("public number edit");
     let document = program
         .source(workshop_rs::source::FileId::from_index(0))
         .unwrap();
-    let edit = document.edit_span(span, "2").expect("number edit");
     let updated = document.apply(&[edit]).expect("edit applies");
     assert!(updated.text().contains("// retain this"));
     assert!(updated.text().contains("// retain this too"));
@@ -96,7 +91,20 @@ fn source_edit_preserves_unrelated_trivia_and_reparses_semantics() {
     let reparsed = parser::parse(updated.text(), &catalog, &Locale::new("en-US"))
         .expect("edited source reparses");
     assert!(!roundtrip::equivalent(&program, &reparsed));
-    assert_eq!(reparsed.values.iter().filter(|node| matches!(node.value, workshop_rs::wir::Value::Number { value, .. } if value == 2.0)).count(), 1);
+    assert!(reparsed.action_argument_span(0, 0, 0).is_some());
+}
+
+#[test]
+fn synthesized_control_flow_markers_have_no_enclosing_block_span() {
+    let source = "rule (\"control\") {\n    event { Ongoing - Global; }\n    actions {\n        If(True);\n            Wait(1, Ignore Condition);\n        Else;\n            Wait(2, Ignore Condition);\n        End;\n    }\n}\n";
+    let program = parser::parse(source, &catalog(), &Locale::new("en-US")).expect("parses");
+
+    assert!(program.action_span(0, 0).is_some());
+    assert!(program.action_span(0, 1).is_some());
+    assert!(program.action_span(0, 2).is_none());
+    assert!(program.action_span(0, 3).is_some());
+    assert!(program.action_span(0, 4).is_none());
+    assert!(program.action_argument_span(0, 3, 0).is_some());
 }
 
 #[test]

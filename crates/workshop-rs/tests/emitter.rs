@@ -49,16 +49,16 @@ fn pinned_real_projects_emit_deterministically_and_reparse() {
     let catalog = catalog();
     for case in common::cases() {
         let (source, locale) = common::source(case);
-        let program = parser::parse_with_context(&source, &catalog, &locale, &catalog)
+        let program = parser::parse_wir_with_context(&source, &catalog, &locale, &catalog)
             .unwrap_or_else(|error| panic!("{} parse failed: {error:?}", case.id));
         common::assert_residual_policy(case, "source-parse", &program.semantic_issues(&catalog));
 
-        if let Err(error) = workshop_rs::validate::validate_canonical_ids(&program, &catalog) {
+        if let Err(error) = workshop_rs::validate::validate_canonical_ids_wir(&program, &catalog) {
             common::assert_gap(case, common::RealProjectStage::CanonicalValidation, &error);
             println!("{}: known canonical-validation gap: {error:?}", case.id);
         }
 
-        let emitted = match emitter::emit(&program, &catalog, &locale) {
+        let emitted = match emitter::emit_wir(&program, &catalog, &locale) {
             Ok(text) => text,
             Err(error) => {
                 common::assert_gap(case, common::RealProjectStage::Emission, &error);
@@ -66,7 +66,7 @@ fn pinned_real_projects_emit_deterministically_and_reparse() {
                 continue;
             }
         };
-        let reparsed = parser::parse_with_context(&emitted, &catalog, &locale, &catalog)
+        let reparsed = parser::parse_wir_with_context(&emitted, &catalog, &locale, &catalog)
             .unwrap_or_else(|error| panic!("{} reparse failed: {error:?}", case.id));
         common::assert_residual_policy(
             case,
@@ -74,13 +74,14 @@ fn pinned_real_projects_emit_deterministically_and_reparse() {
             &reparsed.semantic_issues(&catalog),
         );
         assert!(
-            workshop_rs::roundtrip::equivalent(&program, &reparsed),
+            workshop_rs::roundtrip::equivalent_wir(&program, &reparsed),
             "{} semantic round-trip changed WIR",
             case.id
         );
-        let emitted_again = emitter::emit(&reparsed, &catalog, &locale).unwrap_or_else(|error| {
-            panic!("{} deterministic re-emission failed: {error:?}", case.id)
-        });
+        let emitted_again =
+            emitter::emit_wir(&reparsed, &catalog, &locale).unwrap_or_else(|error| {
+                panic!("{} deterministic re-emission failed: {error:?}", case.id)
+            });
         assert_eq!(
             emitted, emitted_again,
             "{} emission is not deterministic",
@@ -91,15 +92,15 @@ fn pinned_real_projects_emit_deterministically_and_reparse() {
 
 #[test]
 fn emission_is_byte_stable_and_a_fixed_point() {
-    let program = parser::parse(&corpus_text("control-flow"), &catalog(), &en()).unwrap();
-    let first = emitter::emit(&program, &catalog(), &en()).expect("emits");
-    let second = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let program = parser::parse_wir(&corpus_text("control-flow"), &catalog(), &en()).unwrap();
+    let first = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
+    let second = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert_eq!(first, second, "emission must be byte-stable");
 
     // The emitted text is a fixed point: re-emitting the reparsed program
     // produces identical text.
-    let reparsed = parser::parse(&first, &catalog(), &en()).expect("emitted text reparses");
-    let reemitted = emitter::emit(&reparsed, &catalog(), &en()).expect("re-emits");
+    let reparsed = parser::parse_wir(&first, &catalog(), &en()).expect("emitted text reparses");
+    let reemitted = emitter::emit_wir(&reparsed, &catalog(), &en()).expect("re-emits");
     assert_eq!(first, reemitted, "emission must be a fixed point");
 }
 
@@ -109,16 +110,16 @@ fn event_player_member_assignment_emits_action_reparsable_syntax() {
         event { Ongoing - Global; }
         actions { (Event Player).ready = False; }
     }"#;
-    let program = parser::parse_with_context(source, &catalog(), &en(), &catalog())
+    let program = parser::parse_wir_with_context(source, &catalog(), &en(), &catalog())
         .expect("member assignment parses");
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("member assignment emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("member assignment emits");
     assert!(
         emitted.contains("(Event Player).ready = False;"),
         "{emitted}"
     );
-    let reparsed = parser::parse_with_context(&emitted, &catalog(), &en(), &catalog())
+    let reparsed = parser::parse_wir_with_context(&emitted, &catalog(), &en(), &catalog())
         .expect("emitted member assignment reparses");
-    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
+    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
 }
 
 #[test]
@@ -139,13 +140,14 @@ fn min_max_operations_emit_and_round_trip_in_zh_cn() {
         }
     "#;
     let catalog = catalog();
-    let program = parser::parse_with_context(source, &catalog, &en(), &catalog).unwrap();
-    let emitted = emitter::emit(&program, &catalog, &Locale::new("zh-CN")).unwrap();
+    let program = parser::parse_wir_with_context(source, &catalog, &en(), &catalog).unwrap();
+    let emitted = emitter::emit_wir(&program, &catalog, &Locale::new("zh-CN")).unwrap();
     assert!(emitted.contains("较小"), "{emitted}");
     assert!(emitted.contains("较大"), "{emitted}");
     let reparsed =
-        parser::parse_with_context(&emitted, &catalog, &Locale::new("zh-CN"), &catalog).unwrap();
-    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
+        parser::parse_wir_with_context(&emitted, &catalog, &Locale::new("zh-CN"), &catalog)
+            .unwrap();
+    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
 }
 
 #[test]
@@ -167,26 +169,30 @@ fn every_corpus_program_round_trips_to_equivalent_wir() {
         "overpy-cake",
     ] {
         let catalog = catalog();
-        let program =
-            match parser::parse_with_context(&corpus_text(fixture_id), &catalog, &en(), &catalog) {
-                Ok(program) => program,
-                Err(error) => {
-                    let Some((_, message)) = documented_ambiguities
-                        .iter()
-                        .find(|(id, _)| **id == *fixture_id)
-                    else {
-                        panic!("{fixture_id} must parse: {error}");
-                    };
-                    assert!(
-                        error.to_string().contains(message),
-                        "{fixture_id} fails only with the documented ambiguity, got: {error}"
-                    );
-                    continue;
-                }
-            };
-        let emitted = emitter::emit(&program, &catalog, &en())
+        let program = match parser::parse_wir_with_context(
+            &corpus_text(fixture_id),
+            &catalog,
+            &en(),
+            &catalog,
+        ) {
+            Ok(program) => program,
+            Err(error) => {
+                let Some((_, message)) = documented_ambiguities
+                    .iter()
+                    .find(|(id, _)| **id == *fixture_id)
+                else {
+                    panic!("{fixture_id} must parse: {error}");
+                };
+                assert!(
+                    error.to_string().contains(message),
+                    "{fixture_id} fails only with the documented ambiguity, got: {error}"
+                );
+                continue;
+            }
+        };
+        let emitted = emitter::emit_wir(&program, &catalog, &en())
             .unwrap_or_else(|error| panic!("{fixture_id} must emit: {error}"));
-        let reparsed = parser::parse_with_context(&emitted, &catalog, &en(), &catalog)
+        let reparsed = parser::parse_wir_with_context(&emitted, &catalog, &en(), &catalog)
             .unwrap_or_else(|error| {
                 panic!("{fixture_id} emitted text must reparse:\n{error}\n{emitted}")
             });
@@ -201,8 +207,8 @@ fn every_corpus_program_round_trips_to_equivalent_wir() {
 
 #[test]
 fn emitted_text_is_recognizably_workshop() {
-    let program = parser::parse(&corpus_text("basic-rule"), &catalog(), &en()).unwrap();
-    let emitted = emitter::emit(&program, &catalog(), &en()).unwrap();
+    let program = parser::parse_wir(&corpus_text("basic-rule"), &catalog(), &en()).unwrap();
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).unwrap();
     assert!(emitted.contains("rule (\"setup\") {"));
     assert!(emitted.contains("event {"));
     assert!(emitted.contains("Ongoing - Global;"));
@@ -213,14 +219,14 @@ fn emitted_text_is_recognizably_workshop() {
 #[test]
 fn emitted_condition_matches_reference_infix_form() {
     let catalog = catalog();
-    let program = parser::parse_with_context(
+    let program = parser::parse_wir_with_context(
         &corpus_text("declarations-rules"),
         &catalog,
         &en(),
         &catalog,
     )
     .unwrap();
-    let emitted = emitter::emit(&program, &catalog, &en()).unwrap();
+    let emitted = emitter::emit_wir(&program, &catalog, &en()).unwrap();
     assert!(
         emitted.contains("Has Spawned(Event Player) == True"),
         "non-comparison conditions emit in reference infix form:\n{emitted}"
@@ -239,7 +245,7 @@ fn native_hud_actions_use_the_generic_catalog_path() {
             }
         }
     "#;
-    let program = parser::parse_with_context(source, &catalog, &en(), &catalog)
+    let program = parser::parse_wir_with_context(source, &catalog, &en(), &catalog)
         .expect("native HUD action parses");
     let rule = program.rules.iter().next().expect("HUD rule");
     assert!(matches!(
@@ -247,13 +253,13 @@ fn native_hud_actions_use_the_generic_catalog_path() {
         Some(wir::Action::Call { name, args, .. })
             if name == "createHudText" && args.len() == 11
     ));
-    workshop_rs::validate::validate_canonical_ids(&program, &catalog)
+    workshop_rs::validate::validate_canonical_ids_wir(&program, &catalog)
         .expect("native HUD action validates");
 
-    let emitted = emitter::emit(&program, &catalog, &en()).expect("native HUD action emits");
-    let reparsed = parser::parse_with_context(&emitted, &catalog, &en(), &catalog)
+    let emitted = emitter::emit_wir(&program, &catalog, &en()).expect("native HUD action emits");
+    let reparsed = parser::parse_wir_with_context(&emitted, &catalog, &en(), &catalog)
         .expect("emitted HUD action reparses");
-    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
+    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
 }
 
 #[test]
@@ -283,7 +289,7 @@ fn unknown_value_id_fails_explicitly() {
         conditions: vec![],
         actions: vec![call],
     });
-    let error = emitter::emit(&program, &catalog(), &en()).expect_err("unknown id must fail");
+    let error = emitter::emit_wir(&program, &catalog(), &en()).expect_err("unknown id must fail");
     assert!(error.to_string().contains("notACatalogId"), "{error}");
 }
 
@@ -446,7 +452,7 @@ fn collapse(text: &str) -> String {
 #[test]
 fn settings_emission_matches_oracle_for_pixelart() {
     let program = program_with_settings(pixelart_settings());
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     let oracle = settings_text("pixelart");
     assert_eq!(
         collapse(&settings_section(&emitted)),
@@ -458,7 +464,7 @@ fn settings_emission_matches_oracle_for_pixelart() {
 #[test]
 fn settings_emission_matches_oracle_for_santa() {
     let program = program_with_settings(santa_settings());
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     let oracle = settings_text("santa");
     assert_eq!(
         collapse(&settings_section(&emitted)),
@@ -470,8 +476,8 @@ fn settings_emission_matches_oracle_for_santa() {
 #[test]
 fn settings_emission_is_deterministic() {
     let program = program_with_settings(santa_settings());
-    let first = emitter::emit(&program, &catalog(), &en()).expect("emits");
-    let second = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let first = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
+    let second = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert_eq!(first, second);
 }
 
@@ -488,7 +494,7 @@ fn settings_free_program_emits_no_settings_section() {
         actions: vec![],
     });
     let _ = rule;
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert!(
         !emitted.contains("settings"),
         "settings-free programs emit no settings section:\n{emitted}"
@@ -498,10 +504,10 @@ fn settings_free_program_emits_no_settings_section() {
 #[test]
 fn settings_emission_reparses_into_equivalent_wir() {
     let program = program_with_settings(pixelart_settings());
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert!(emitted.starts_with("settings {"));
-    let reparsed = parser::parse(&emitted, &catalog(), &en()).expect("settings reparses");
-    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
+    let reparsed = parser::parse_wir(&emitted, &catalog(), &en()).expect("settings reparses");
+    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
 }
 
 #[test]
@@ -516,7 +522,7 @@ fn enabled_false_prefixes_the_mode_header() {
             ],
         )],
     )]));
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     let section = settings_section(&emitted);
     assert!(collapse(&section).contains("disabledAssault{CompetitiveRules:On}"));
 }
@@ -527,7 +533,7 @@ fn empty_list_emits_empty_braces_block() {
         "gamemodes",
         vec![group("skirmish", vec![list("enabledMaps", &[])])],
     )]));
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     let section = settings_section(&emitted);
     assert!(
         collapse(&section).contains("Skirmish{enabledmaps{}}"),
@@ -544,7 +550,7 @@ fn settings_section_precedes_variables() {
         span: None,
         name_span: None,
     });
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     let settings_pos = emitted.find("settings").unwrap();
     let variables_pos = emitted.find("variables {").unwrap();
     assert!(settings_pos < variables_pos, "settings precedes variables");
@@ -556,7 +562,7 @@ fn percent_keys_append_the_suffix() {
         "gamemodes",
         vec![group("general", vec![number("respawnTime%", 30.0)])],
     )]));
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert!(collapse(&settings_section(&emitted)).contains("RespawnTimeScalar:30%"));
 }
 
@@ -566,7 +572,7 @@ fn string_values_are_escaped() {
         "main",
         vec![string("description", "a \"quoted\" line")],
     )]));
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert!(
         collapse(&settings_section(&emitted)).contains("Description:\"a\\\"quoted\\\"line\""),
         "strings are escaped: {emitted}"
@@ -582,7 +588,7 @@ fn settings_strings_re_escape_decoded_escapes() {
         "main",
         vec![string("description", "line one\nline two\t\"quoted\"\\end")],
     )]));
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     let section = settings_section(&emitted);
     assert!(
         section.contains("Description: \"line one\\nline two\\t\\\"quoted\\\"\\\\end\""),
@@ -618,9 +624,9 @@ rule ("r") {
 }
 
 "#;
-    let program = parser::parse(oracle_spelling, &catalog(), &en())
+    let program = parser::parse_wir(oracle_spelling, &catalog(), &en())
         .expect("the oracle's rule-final if spelling must parse");
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert_eq!(
         emitted, oracle_spelling,
         "the rule-final if-else re-emits byte-identically"
@@ -630,7 +636,7 @@ rule ("r") {
         "no trailing End; in the rule-final if-else"
     );
     // Middle-of-rule if keeps End;.
-    let middle = parser::parse(
+    let middle = parser::parse_wir(
         r#"variables {
     global:
         0: x
@@ -653,7 +659,7 @@ rule ("r") {
         &en(),
     )
     .expect("middle-of-rule if parses");
-    let emitted = emitter::emit(&middle, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&middle, &catalog(), &en()).expect("emits");
     assert!(emitted.contains("End;"), "middle-of-rule if keeps End;");
 }
 
@@ -706,13 +712,13 @@ fn constant_format_calls_fold_to_the_substituted_text() {
         actions: vec![action],
     });
     let _ = file;
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert!(
         emitted.contains("Set Global Variable(y, Custom String(\"value: 3\"));"),
         "constant format folds to the substituted text: {emitted}"
     );
-    let reparsed = parser::parse(&emitted, &catalog(), &en()).expect("folded output reparses");
-    let reemitted = emitter::emit(&reparsed, &catalog(), &en()).expect("re-emits");
+    let reparsed = parser::parse_wir(&emitted, &catalog(), &en()).expect("folded output reparses");
+    let reemitted = emitter::emit_wir(&reparsed, &catalog(), &en()).expect("re-emits");
     assert_eq!(
         emitted, reemitted,
         "folded format must be a byte-identical fixed point"
@@ -766,7 +772,7 @@ fn constant_float_format_arguments_use_two_decimals() {
         actions: vec![action],
     });
     let _ = file;
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert!(
         emitted.contains("Set Global Variable(y, Custom String(\"v: 0.50\"));"),
         "0.5 folds to 0.50 (toFixed(2)): {emitted}"
@@ -823,7 +829,7 @@ fn split_and_reescaped_value_strings_round_trip_byte_identically() {
         actions: vec![first, second],
     });
     let _ = file;
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert!(
         emitted.contains("Custom String(\"B",),
         "the long string splits into a continuation chain: {emitted}"
@@ -832,9 +838,9 @@ fn split_and_reescaped_value_strings_round_trip_byte_identically() {
         emitted.contains("Custom String(\"a\\nb\\\"c\\\\d\te\")"),
         "escapes re-emit in the oracle spelling: {emitted}"
     );
-    let reparsed = parser::parse(&emitted, &catalog(), &en())
+    let reparsed = parser::parse_wir(&emitted, &catalog(), &en())
         .expect("the split chain and escaped string must reparse");
-    let reemitted = emitter::emit(&reparsed, &catalog(), &en()).expect("re-emits");
+    let reemitted = emitter::emit_wir(&reparsed, &catalog(), &en()).expect("re-emits");
     assert_eq!(
         emitted, reemitted,
         "split and re-escaped spellings must be a byte-identical fixed point"
@@ -894,13 +900,13 @@ fn implicit_format_placeholders_renumber_to_the_oracle_form() {
         actions: vec![action],
     });
     let _ = file;
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert!(
         emitted.contains("Set Global Variable(z, Custom String(\"v: {0}\", Global.x));"),
         "implicit placeholders renumber to the oracle form: {emitted}"
     );
-    let reparsed = parser::parse(&emitted, &catalog(), &en()).expect("reparses");
-    let reemitted = emitter::emit(&reparsed, &catalog(), &en()).expect("re-emits");
+    let reparsed = parser::parse_wir(&emitted, &catalog(), &en()).expect("reparses");
+    let reemitted = emitter::emit_wir(&reparsed, &catalog(), &en()).expect("re-emits");
     assert_eq!(
         emitted, reemitted,
         "renumbered format must be a byte-identical fixed point"
@@ -966,7 +972,7 @@ fn partial_constant_format_folds_and_renumbers() {
         actions: vec![action],
     });
     let _ = file;
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert!(
         emitted.contains("Set Global Variable(z, Custom String(\"3 {0}\", Global.x));"),
         "the constant folds and the variable placeholder renumbers: {emitted}"
@@ -1021,14 +1027,14 @@ fn playervar_reads_parenthesize_the_receiver() {
         actions: vec![action],
     });
     let _ = file;
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert!(
         emitted.contains("Set Global Variable(g, (Event Player).p);"),
         "playervar reads parenthesize the receiver: {emitted}"
     );
     let reparsed =
-        parser::parse(&emitted, &catalog(), &en()).expect("the oracle spelling reparses");
-    let reemitted = emitter::emit(&reparsed, &catalog(), &en()).expect("re-emits");
+        parser::parse_wir(&emitted, &catalog(), &en()).expect("the oracle spelling reparses");
+    let reemitted = emitter::emit_wir(&reparsed, &catalog(), &en()).expect("re-emits");
     assert_eq!(
         emitted, reemitted,
         "playervar reads must be a byte-identical fixed point"
@@ -1077,7 +1083,7 @@ fn receiver_call_actions_and_values_emit_catalog_spellings() {
         actions: vec![move_speed],
     });
 
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let emitted = emitter::emit_wir(&program, &catalog(), &en()).expect("emits");
     assert!(
         emitted.contains("Is Alive(Event Player) == True;"),
         "receiver value calls resolve through the catalog: {emitted}"

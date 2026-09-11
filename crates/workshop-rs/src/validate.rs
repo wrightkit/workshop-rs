@@ -1,3 +1,3 @@
-//! Compatibility path for cross-domain canonical validation.
+//! Public cross-domain canonical validation over [`crate::Program`].
 
 pub use crate::rules::validate::*;

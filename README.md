@@ -16,7 +16,7 @@ Raw Workshop text
     ↓
 workshop-rs parser
     ↓
-canonical Workshop WIR / catalog identities
+canonical public Workshop `Program`
     ↓
 validation / semantic query / transformation
     ↓
@@ -36,12 +36,13 @@ wright  ─────► workshop-rs
 
 `opy-rs` and `del-rs` own their respective frontend semantics, lowering
 strategies, and source reconstruction. `workshop-rs` provides the canonical
-Workshop target data and WIR representations they compile into.
+Workshop target data and public `Program` model they compile into.
 
 ## Key features
 
-- Parser and WIR: parses raw Workshop text into a validated, locale-neutral
-  Workshop Intermediate Representation (WIR).
+- Canonical program API: raw parsing and independent language lowerings share
+  the same constructible `Program`, `Rule`, `Action`, `Condition`, and `Value`
+  types; storage IDs remain an implementation detail.
 - Code generation and conversion: deterministic emission and translation
   (`en-US` ↔ `zh-CN`) with strict validation for missing terms.
 - Catalog validation: canonical identities and allowlists for Workshop actions,
@@ -78,7 +79,20 @@ use workshop_rs::emitter::emit;
 let catalog = Catalog::builtin()?;
 let locale = Locale::new("en-US");
 let program = workshop_rs::parser::parse(text, &catalog, &locale)?;
+program.validate()?;
+workshop_rs::validate::validate_canonical_ids(&program, &catalog)?;
 let emitted = emit(&program, &catalog, &locale)?;
+
+// An independent language frontend can lower directly into the same model.
+let mut generated = workshop_rs::Program::new();
+generated
+    .global_variable(workshop_rs::Variable::new("Score"))
+    .rule(workshop_rs::Rule::new("generated", workshop_rs::Event::Global)
+        .action(workshop_rs::Action::SetGlobalVariable {
+            variable: "Score".to_string(),
+            value: workshop_rs::Value::number(1.0),
+        }));
+let generated_text = emit(&generated, &catalog, &locale)?;
 
 let converted = convert(
     text,

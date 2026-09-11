@@ -23,9 +23,9 @@ fn en() -> Locale {
 
 /// Parse an emitted artifact, re-emit, and assert byte-identity.
 fn assert_closure(label: &str, artifact: &str) {
-    let program = parser::parse(artifact, &catalog(), &en())
+    let program = parser::parse_wir(artifact, &catalog(), &en())
         .unwrap_or_else(|error| panic!("{label} must reparse: {error}"));
-    let reemitted = emitter::emit(&program, &catalog(), &en())
+    let reemitted = emitter::emit_wir(&program, &catalog(), &en())
         .unwrap_or_else(|error| panic!("{label} must re-emit: {error}"));
     assert_eq!(
         artifact, reemitted,

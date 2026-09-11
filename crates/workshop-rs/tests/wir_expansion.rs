@@ -42,7 +42,7 @@ fn member_access_has_a_canonical_shape_contract() {
         actions: vec![],
     });
     let error =
-        validate::validate_canonical_ids(&program, &catalog).expect_err("invalid memberAccess");
+        validate::validate_canonical_ids_wir(&program, &catalog).expect_err("invalid memberAccess");
     assert!(
         error
             .to_string()
@@ -74,12 +74,12 @@ fn indexed_members_and_native_break_controls_have_one_canonical_contract() {
             }
         }
     "#;
-    let program = workshop_rs::parser::parse_with_context(source, &catalog, &locale, &catalog)
+    let program = workshop_rs::parser::parse_wir_with_context(source, &catalog, &locale, &catalog)
         .expect("native indexed/member and control-flow forms parse");
     program
         .validate()
         .expect("canonical WIR is structurally valid");
-    validate::validate_canonical_ids(&program, &catalog).expect("catalog ids resolve");
+    validate::validate_canonical_ids_wir(&program, &catalog).expect("catalog ids resolve");
 
     let rule = program.rules.iter().next().expect("rule");
     assert!(matches!(
@@ -140,13 +140,14 @@ fn indexed_members_and_native_break_controls_have_one_canonical_contract() {
         Some(Action::Call { name, args, .. }) if name == "skip" && args.len() == 1
     ));
 
-    let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emits");
-    let reparsed = workshop_rs::parser::parse_with_context(&emitted, &catalog, &locale, &catalog)
-        .expect("emitted native controls reparse");
-    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
+    let emitted = workshop_rs::emitter::emit_wir(&program, &catalog, &locale).expect("emits");
+    let reparsed =
+        workshop_rs::parser::parse_wir_with_context(&emitted, &catalog, &locale, &catalog)
+            .expect("emitted native controls reparse");
+    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
     assert_eq!(
         emitted,
-        workshop_rs::emitter::emit(&reparsed, &catalog, &locale).expect("re-emits")
+        workshop_rs::emitter::emit_wir(&reparsed, &catalog, &locale).expect("re-emits")
     );
 }
 
@@ -198,7 +199,7 @@ fn assign_member_rejects_non_lvalue_member_access_targets() {
         actions: vec![action],
     });
 
-    let error = validate::validate_canonical_ids(&program, &catalog)
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("AssignMember must require a memberAccess target");
     assert!(
         error
@@ -383,7 +384,7 @@ fn build_surface_program() -> wir::Program {
 fn corpus_surface_is_representable_and_validates() {
     let program = build_surface_program();
     program.validate().expect("WIR is structurally valid");
-    validate::validate_canonical_ids(&program, &catalog()).expect("canonical ids resolve");
+    validate::validate_canonical_ids_wir(&program, &catalog()).expect("canonical ids resolve");
 
     let dump = program.dump();
     assert!(dump.contains("forGlobalVariable index in 0, 3, 1"));
@@ -410,7 +411,8 @@ fn unknown_action_id_is_rejected_with_location() {
         *name = "createLaserEffect".into();
         *span = Some(Span::new(file, Position::new(9, 5), Position::new(9, 20)));
     }
-    let error = validate::validate_canonical_ids(&program, &catalog()).expect_err("unknown action");
+    let error =
+        validate::validate_canonical_ids_wir(&program, &catalog()).expect_err("unknown action");
     assert!(error.to_string().contains("createLaserEffect"), "{error}");
 }
 
@@ -441,7 +443,8 @@ fn unknown_enum_member_is_rejected() {
     if let Value::Enum { value, .. } = &mut program.values.get_mut(color_id).unwrap().value {
         *value = "NEON".into();
     }
-    let error = validate::validate_canonical_ids(&program, &catalog()).expect_err("unknown member");
+    let error =
+        validate::validate_canonical_ids_wir(&program, &catalog()).expect_err("unknown member");
     assert!(error.to_string().contains("NEON"), "{error}");
 }
 
@@ -465,7 +468,8 @@ fn unknown_value_id_is_rejected() {
     if let Value::Call { name, .. } = &mut program.values.get_mut(add_id).unwrap().value {
         *name = "plus".into();
     }
-    let error = validate::validate_canonical_ids(&program, &catalog()).expect_err("unknown value");
+    let error =
+        validate::validate_canonical_ids_wir(&program, &catalog()).expect_err("unknown value");
     assert!(error.to_string().contains("plus"), "{error}");
 }
 
@@ -474,7 +478,7 @@ fn canonical_validation_is_locale_independent() {
     // Resolution uses canonical ids; locale spelling never appears in WIR.
     let program = build_surface_program();
     let _ = Locale::new("en-US");
-    validate::validate_canonical_ids(&program, &catalog()).expect("valid");
+    validate::validate_canonical_ids_wir(&program, &catalog()).expect("valid");
     // No WIR dump contains a localized spelling.
     let dump = program.dump();
     assert!(!dump.contains("Disable Inspector Recording"));

@@ -1,7 +1,7 @@
 //! Native localized Workshop parser.
 //!
 //! Parses vanilla Workshop text directly into validated, locale-independent
-//! Workshop IR. Localized actions, values, events, enums, and structural
+//! the canonical public [`Program`]. Localized actions, values, events, enums, and structural
 //! keywords resolve through the canonical catalog; malformed input,
 //! unknown spellings, and recognized-but-unsupported constructs are reported
 //! as distinct structured diagnostics with source spans.
@@ -11,6 +11,7 @@ use std::sync::OnceLock;
 
 pub(crate) use crate::core::signatures::ExpectedDomain;
 pub(crate) use crate::core::source::{Position, SourceFile, Span};
+use crate::program::Program;
 pub(crate) use crate::settings::table::{self, KeyKind, PathPart};
 pub(crate) use crate::settings::{Settings, SettingsListElement, SettingsNode};
 pub(crate) use crate::wir::{
@@ -44,8 +45,15 @@ pub(crate) enum AssignmentOperator {
 /// their enclosing call pins one matching domain; unpinned ambiguity remains a
 /// structured unsupported diagnostic. See [`parse_with_context`] when a
 /// consumer needs to provide additional signature context.
-pub fn parse(input: &str, catalog: &Catalog, locale: &Locale) -> Result<wir::Program> {
+pub fn parse(input: &str, catalog: &Catalog, locale: &Locale) -> Result<Program> {
     parse_with_context(input, catalog, locale, catalog)
+}
+
+/// Compatibility entry point for crate-internal storage tests and migration
+/// checks. Ordinary consumers should use [`parse`], which returns [`Program`].
+#[doc(hidden)]
+pub fn parse_wir(input: &str, catalog: &Catalog, locale: &Locale) -> Result<wir::Program> {
+    parse_wir_with_context(input, catalog, locale, catalog)
 }
 
 /// Parse localized Workshop text into Workshop IR, resolving ambiguous bare
@@ -57,6 +65,16 @@ pub fn parse(input: &str, catalog: &Catalog, locale: &Locale) -> Result<wir::Pro
 /// that expected domain is one of the matching domains (i.e. the signature
 /// pins exactly one). Without a pin the ambiguity diagnostic is unchanged.
 pub fn parse_with_context(
+    input: &str,
+    catalog: &Catalog,
+    locale: &Locale,
+    context: &dyn ExpectedDomain,
+) -> Result<Program> {
+    parse_wir_with_context(input, catalog, locale, context).and_then(Program::from_wir)
+}
+
+#[doc(hidden)]
+pub fn parse_wir_with_context(
     input: &str,
     catalog: &Catalog,
     locale: &Locale,

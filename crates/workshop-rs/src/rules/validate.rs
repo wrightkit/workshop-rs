@@ -8,7 +8,17 @@ use crate::wir;
 /// Validate every builtin reference in a Workshop-origin WIR program against
 /// the canonical catalog: action/value call names must be known canonical ids,
 /// and event/enum references must resolve to canonical identities.
-pub fn validate_canonical_ids(program: &wir::Program, catalog: &Catalog) -> Result<()> {
+pub fn validate_canonical_ids(program: &crate::Program, catalog: &Catalog) -> Result<()> {
+    let storage = program.to_wir()?;
+    validate_wir(&storage, catalog)
+}
+
+#[doc(hidden)]
+pub fn validate_canonical_ids_wir(program: &wir::Program, catalog: &Catalog) -> Result<()> {
+    validate_wir(program, catalog)
+}
+
+pub(crate) fn validate_wir(program: &wir::Program, catalog: &Catalog) -> Result<()> {
     let mut errors = Vec::new();
     for (index, _) in program.rules.iter().enumerate() {
         let rule = wir::RuleId::from_index(index);
