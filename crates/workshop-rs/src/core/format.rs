@@ -4,13 +4,15 @@
 //! does for computed values: integers print without a decimal point, and
 //! non-integers print the shortest round-trip representation truncated to 16
 //! significant digits (OverPy behavior; evidence: the pinned oracle
-//! snapshots). Literal source spellings (e.g. `0.0`, `5.0`) are preserved by
+//! snapshots), unless that truncation would discard a non-zero fractional
+//! component. Literal source spellings (e.g. `0.0`, `5.0`) are preserved by
 //! the frontends' number nodes and take precedence over this formatter.
 
 /// Format a float like the reference frontend: integers print without a
 /// decimal point, and non-integers print the shortest round-trip
 /// representation truncated to 16 significant digits (OverPy behavior;
-/// evidence: the pinned oracle snapshots).
+/// evidence: the pinned oracle snapshots). A non-integer keeps its shortest
+/// representation when truncation would make the emitted value integral.
 pub fn format_number(value: f64) -> String {
     if !value.is_finite() {
         return format!("{value}");
@@ -18,12 +20,20 @@ pub fn format_number(value: f64) -> String {
     if value == 0.0 {
         return "0".to_string();
     }
-    let rounded = value.round();
-    let near_integer = (value - rounded).abs() <= f64::EPSILON * value.abs().max(1.0) * 4.0;
-    if near_integer && rounded.abs() < 1e15 {
-        return format!("{}", rounded as i64);
+    if value.fract() == 0.0 && value.abs() < 1e15 {
+        return format!("{}", value as i64);
     }
-    truncate_significant(&format!("{value}"), 16)
+    let shortest = format!("{value}");
+    let truncated = truncate_significant(&shortest, 16);
+    if value.fract() != 0.0
+        && truncated
+            .parse::<f64>()
+            .is_ok_and(|formatted| formatted.fract() == 0.0)
+    {
+        shortest
+    } else {
+        truncated
+    }
 }
 
 /// Keep at most `max_digits` significant digits of a decimal string,
@@ -95,5 +105,14 @@ mod tests {
         assert_eq!(format_number(0.016), "0.016");
         assert_eq!(format_number(0.125), "0.125");
         assert_eq!(format_number(1.5), "1.5");
+    }
+
+    #[test]
+    fn near_integer_non_integers_keep_their_fractional_value() {
+        let value = 1.0000000000000004;
+        let text = format_number(value);
+
+        assert_eq!(text, "1.0000000000000004");
+        assert_eq!(text.parse::<f64>(), Ok(value));
     }
 }

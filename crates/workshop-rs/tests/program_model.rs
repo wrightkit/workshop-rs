@@ -124,6 +124,28 @@ fn independently_constructed_program_uses_the_same_operations() {
 }
 
 #[test]
+fn independently_constructed_program_preserves_near_integer_numbers() {
+    let catalog = catalog();
+    let locale = workshop_rs::catalog::Locale::new("en-US");
+    let value = 1.0000000000000004;
+    let mut program = Program::new();
+    program.global_variable(Variable::new("Score")).rule(
+        Rule::new("near integer", Event::Global).action(Action::SetGlobalVariable {
+            variable: "Score".to_string(),
+            value: Value::number(value),
+        }),
+    );
+
+    let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emits");
+    assert!(
+        emitted.contains("Set Global Variable(Score, 1.0000000000000004)"),
+        "non-integral values must not be emitted as integers: {emitted}"
+    );
+    let reparsed = workshop_rs::parser::parse(&emitted, &catalog, &locale).expect("reparses");
+    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
+}
+
+#[test]
 fn externally_constructed_program_attaches_source_and_preserves_diagnostic_span() {
     let catalog = catalog();
     let mut program = Program::new();
