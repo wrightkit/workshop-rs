@@ -63,6 +63,6 @@ pub mod wir;
 
 pub use error::{CatalogError, WorkshopError};
 pub use program::{
-    Action, Condition, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Program, Rule,
-    Subroutine, Value, Variable,
+    Action, Condition, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Program,
+    ProvenanceError, Rule, Subroutine, Value, Variable,
 };

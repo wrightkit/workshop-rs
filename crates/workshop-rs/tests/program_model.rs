@@ -1,3 +1,4 @@
+use workshop_rs::source::{Position, SourceFile, Span};
 use workshop_rs::{Action, Condition, Event, Program, Rule, Value, Variable};
 
 fn catalog() -> workshop_rs::catalog::Catalog {
@@ -120,6 +121,139 @@ fn independently_constructed_program_uses_the_same_operations() {
     assert_eq!(layout.width, 1);
     let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emits");
     assert!(emitted.contains("Set Global Variable(Score, 1)"));
+}
+
+#[test]
+fn externally_constructed_program_attaches_source_and_preserves_diagnostic_span() {
+    let catalog = catalog();
+    let mut program = Program::new();
+    program.global_variable(Variable::new("Score")).rule(
+        Rule::new("external", Event::Global).action(Action::SetGlobalVariable {
+            variable: "Score".to_string(),
+            value: Value::call("notCanonicalValue", std::iter::empty()),
+        }),
+    );
+
+    let file = program.add_file(SourceFile::with_source(
+        "main.opy",
+        "Score = notCanonicalValue()\n",
+    ));
+    let action_span = Span::new(file, Position::new(1, 1), Position::new(1, 29));
+    let value_span = Span::new(file, Position::new(1, 9), Position::new(1, 28));
+    program
+        .set_rule_span(0, Some(action_span))
+        .expect("rule span attaches");
+    program
+        .set_action_span(0, 0, Some(action_span))
+        .expect("action span attaches");
+    program
+        .set_action_argument_span(0, 0, 0, Some(value_span))
+        .expect("action argument span attaches");
+
+    assert_eq!(
+        program.source(file).unwrap().text(),
+        "Score = notCanonicalValue()\n"
+    );
+    assert_eq!(program.action_span(0, 0), Some(action_span));
+    assert_eq!(program.action_argument_span(0, 0, 0), Some(value_span));
+
+    let error = workshop_rs::validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("unknown canonical value is rejected");
+    assert!(matches!(
+        error,
+        workshop_rs::WorkshopError::Unknown {
+            kind: "value",
+            span: Some(span),
+            ..
+        } if span == value_span
+    ));
+}
+
+#[test]
+fn external_action_provenance_reaches_structural_validation() {
+    let source = "Wait(1)\n";
+    let action_span = Span::new(
+        workshop_rs::source::FileId::from_index(0),
+        Position::new(2, 1),
+        Position::new(2, 5),
+    );
+    let argument_span = Span::new(
+        workshop_rs::source::FileId::from_index(0),
+        Position::new(2, 6),
+        Position::new(2, 7),
+    );
+
+    let mut action_program = Program::new();
+    action_program.rule(
+        Rule::new("action span", Event::Global).action(Action::call("Wait", [Value::number(1.0)])),
+    );
+    let file = action_program.add_file(SourceFile::with_source("main.opy", source));
+    let action_span = Span::new(file, action_span.start, action_span.end);
+    action_program
+        .set_action_span(0, 0, Some(action_span))
+        .expect("action span attaches");
+    assert!(matches!(
+        action_program.validate(),
+        Err(workshop_rs::WorkshopError::Malformed {
+            span: Some(span), ..
+        }) if span == action_span
+    ));
+
+    let mut argument_program = Program::new();
+    argument_program.rule(
+        Rule::new("argument span", Event::Global)
+            .action(Action::call("Wait", [Value::number(1.0)])),
+    );
+    let file = argument_program.add_file(SourceFile::with_source("main.opy", source));
+    let argument_span = Span::new(file, argument_span.start, argument_span.end);
+    argument_program
+        .set_action_argument_span(0, 0, 0, Some(argument_span))
+        .expect("action argument span attaches");
+    assert!(matches!(
+        argument_program.validate(),
+        Err(workshop_rs::WorkshopError::Malformed {
+            span: Some(span), ..
+        }) if span == argument_span
+    ));
+}
+
+#[test]
+fn provenance_attachment_rejects_foreign_files() {
+    let mut program = Program::new();
+    program.rule(Rule::new("external", Event::Global));
+    let file = program.add_file(SourceFile::new("main.opy"));
+    let foreign = Span::new(
+        workshop_rs::source::FileId::from_index(file.index() + 1),
+        Position::new(1, 1),
+        Position::new(1, 2),
+    );
+
+    assert_eq!(
+        program.set_rule_span(0, Some(foreign)),
+        Err(workshop_rs::ProvenanceError::UnknownFile(foreign.file))
+    );
+    assert!(program.rule_span(0).is_none());
+}
+
+#[test]
+fn declaration_provenance_reaches_structural_diagnostics() {
+    let mut program = Program::new();
+    program.global_variable(Variable::new("Score"));
+    let file = program.add_file(SourceFile::with_source("main.opy", "Score\n"));
+    let declaration_span = Span::new(file, Position::new(2, 1), Position::new(2, 6));
+
+    program
+        .set_global_variable_spans(0, Some(declaration_span), None)
+        .expect("declaration span attaches");
+    let error = program
+        .validate()
+        .expect_err("source range outside the document is rejected");
+    assert!(matches!(
+        error,
+        workshop_rs::WorkshopError::Malformed {
+            span: Some(span), ..
+        } if span == declaration_span
+    ));
 }
 
 #[test]
