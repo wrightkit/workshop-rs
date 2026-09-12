@@ -1,6 +1,6 @@
 # ADR-0008: Canonical public Workshop `Program` boundary
 
-- Status: Accepted
+- Status: Accepted (backfilled)
 - Date: 2026-09-12
 - Related:
   [Issue #32](https://github.com/wrightkit/workshop-rs/issues/32),

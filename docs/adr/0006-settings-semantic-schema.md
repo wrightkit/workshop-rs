@@ -2,8 +2,8 @@
 
 ## Status
 
-Accepted for canonical typed Workshop settings semantics. Query and edit API
-ergonomics are outside this decision.
+Accepted for the #109 foundation and #110 canonical catalog projection.
+Query and edit API ergonomics are outside this decision.
 
 ## Decision
 

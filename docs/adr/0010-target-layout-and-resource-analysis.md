@@ -1,6 +1,6 @@
 # ADR-0010: Canonical Workshop target-layout and resource analysis
 
-- Status: Accepted
+- Status: Accepted (backfilled)
 - Date: 2026-09-12
 - Related:
   [Issue #89](https://github.com/wrightkit/workshop-rs/issues/89),

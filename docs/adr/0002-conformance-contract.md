@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted for the v0.1 conformance corpus foundation.
 
 ## Context
 
@@ -49,8 +49,9 @@ verification data.
 
 The schema version is `1`. Cross-field validation is explicit through
 `ConformanceResult::validate` and `ConformanceResult::from_json`;
-serialization is JSON-compatible through Serde. This contract defines the
-result representation; an observed result must not claim semantic or
+serialization is JSON-compatible through Serde. The independent comparison
+gate associated with this corpus was recorded in Issue #19; this contract
+defines the result representation. An observed result must not claim semantic or
 normalized equivalence unless the corresponding independent comparison was
 executed. Live-client and runtime gameplay claims require live-client evidence.
 

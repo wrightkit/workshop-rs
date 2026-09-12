@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted as the repository-owned offline contract for #21.
 
 ## Decision
 
@@ -10,7 +10,8 @@ Accepted
 capture derived from a census artifact. It pins the capture ID,
 game/client/season metadata, capture time and environment, client locale,
 catalog identity, census schema/digest/shards, raw exported Workshop artifact
-provenance, and feature-attributed conformance results. Validation requires every
+provenance, and feature-attributed conformance results defined by the contract
+recorded in Issue #18. Validation requires every
 result to be `live-client` evidence with matching catalog, locale, raw
 artifact, game, and capture-time provenance. The bundled runtime is offline; no
 network catalog or client integration is introduced.

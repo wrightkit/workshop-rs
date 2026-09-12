@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted for the offline real-project evidence lane of #10.
 
 ## Decision
 
@@ -17,7 +17,8 @@ external OverPy 9.7.10 oracle were identified by immutable provenance.
 
 `workshop-rs-cli corpus <manifest> [--json]` runs the manifest offline. It
 reads the preserved Workshop source, parses and validates it through the
-canonical catalog/WIR path, and emits structured conformance results. A parse or WIR
+canonical catalog/WIR path, and emits structured conformance results from the
+conformance contract recorded in Issue #18. A parse or WIR
 failure becomes an unexpected regression unless an explicit known-gap record
 matches the observed diagnostic. Known gaps and unsupported states remain
 visible and do not count as matched. The runner never creates an expectation

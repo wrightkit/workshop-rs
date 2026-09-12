@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted as the offline census layer for the #10 evidence corpus.
 
 ## Decision
 
@@ -11,8 +11,9 @@ the reviewed settings table, and Workshop IR capabilities owned by
 `workshop-rs`. It does not import OPY/DEL inventories or claim live
 client/runtime behavior.
 
-Each `CensusCase` has a stable case ID, one or more `FeatureId` values,
-canonical en-US source text, and an explicit support classification. Catalog
+Each `CensusCase` has a stable case ID, one or more `FeatureId` values from the
+conformance contract recorded in Issue #18, canonical en-US source text, and an
+explicit support classification. Catalog
 entries and enum members are emitted from the loaded canonical catalog;
 content IDs use their domain-qualified canonical enum-member identities.
 Settings, variables, subroutines, control flow, strings, and localization

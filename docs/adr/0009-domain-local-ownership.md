@@ -1,6 +1,6 @@
 # ADR-0009: Domain-local Workshop ownership and verification placement
 
-- Status: Accepted
+- Status: Accepted (backfilled)
 - Date: 2026-09-12
 - Related:
   [Issue #149](https://github.com/wrightkit/workshop-rs/issues/149),
