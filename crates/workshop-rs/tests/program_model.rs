@@ -170,6 +170,54 @@ fn externally_constructed_program_attaches_source_and_preserves_diagnostic_span(
 }
 
 #[test]
+fn external_action_provenance_reaches_structural_validation() {
+    let source = "Wait(1)\n";
+    let action_span = Span::new(
+        workshop_rs::source::FileId::from_index(0),
+        Position::new(2, 1),
+        Position::new(2, 5),
+    );
+    let argument_span = Span::new(
+        workshop_rs::source::FileId::from_index(0),
+        Position::new(2, 6),
+        Position::new(2, 7),
+    );
+
+    let mut action_program = Program::new();
+    action_program.rule(
+        Rule::new("action span", Event::Global).action(Action::call("Wait", [Value::number(1.0)])),
+    );
+    let file = action_program.add_file(SourceFile::with_source("main.opy", source));
+    let action_span = Span::new(file, action_span.start, action_span.end);
+    action_program
+        .set_action_span(0, 0, Some(action_span))
+        .expect("action span attaches");
+    assert!(matches!(
+        action_program.validate(),
+        Err(workshop_rs::WorkshopError::Malformed {
+            span: Some(span), ..
+        }) if span == action_span
+    ));
+
+    let mut argument_program = Program::new();
+    argument_program.rule(
+        Rule::new("argument span", Event::Global)
+            .action(Action::call("Wait", [Value::number(1.0)])),
+    );
+    let file = argument_program.add_file(SourceFile::with_source("main.opy", source));
+    let argument_span = Span::new(file, argument_span.start, argument_span.end);
+    argument_program
+        .set_action_argument_span(0, 0, 0, Some(argument_span))
+        .expect("action argument span attaches");
+    assert!(matches!(
+        argument_program.validate(),
+        Err(workshop_rs::WorkshopError::Malformed {
+            span: Some(span), ..
+        }) if span == argument_span
+    ));
+}
+
+#[test]
 fn provenance_attachment_rejects_foreign_files() {
     let mut program = Program::new();
     program.rule(Rule::new("external", Event::Global));
