@@ -2,19 +2,19 @@
 
 ## Status
 
-Accepted as the repository-owned offline contract for #21. Live-client
-execution remains a manual maintainer boundary.
+Accepted as the repository-owned offline contract for #21.
 
 ## Decision
 
 `workshop-rs-cli` provides the machine-readable `LiveCapture` envelope for a
-capture made by a maintainer from the #19 census. It pins the capture ID,
+capture derived from a census artifact. It pins the capture ID,
 game/client/season metadata, capture time and environment, client locale,
 catalog identity, census schema/digest/shards, raw exported Workshop artifact
-provenance, and feature-attributed #18 results. Validation requires every
+provenance, and feature-attributed conformance results defined by the contract
+recorded in Issue #18. Validation requires every
 result to be `live-client` evidence with matching catalog, locale, raw
-artifact, game, and capture-time provenance. The bundled runtime remains
-offline; no network catalog or client integration is introduced.
+artifact, game, and capture-time provenance. The bundled runtime is offline; no
+network catalog or client integration is introduced.
 
 `workshop-rs-cli seasonal-diff <previous.json> <current.json> [--json]`
 validates both documents and emits a deterministic structured diff. Changes
@@ -24,25 +24,25 @@ feature-level entries. A runtime classification is deliberately not a claim
 of gameplay behavior: import/export acceptance cannot establish runtime
 correctness.
 
-No real client capture is committed by this issue. Unit tests use explicitly
-labelled synthetic schema/diff inputs and are not evidence of an Overwatch
-client observation.
+Synthetic schema and diff inputs exercise the validation contract; they are not
+evidence of an Overwatch client observation.
 
 ## Maintainer procedure
 
-1. Run `workshop-rs-cli census --json` from the reviewed #19 head and retain
+1. Run `workshop-rs-cli census --json` from a reviewed census input and retain
    the exported shard definition, catalog identity, census digest, and case
-   to #18 feature mapping.
+   to feature mapping.
 2. Assemble the required shard probes into an importable Workshop text
    document. Keep the generated probe separate from the client-exported raw
    artifact.
-3. In the current Overwatch client, import the en-US probe, record the
+3. In an Overwatch client, import the en-US probe, record the
    observable client version/season and capture time, then export or copy the
    resulting Workshop text without editing it. Hash and preserve the raw
    artifact outside the repository, and record its immutable path/revision,
    license or retention note, and SHA-256 in `rawArtifact`.
 4. Repeat the same probe in zh-CN. The locale must be recorded on the capture
-   and on every #18 result; do not infer a locale from the text after capture.
+   and on every conformance result; do not infer a locale from the text after
+   capture.
 5. Assemble the manually recorded results into a `LiveCapture` document and
    run `seasonal-diff` against the prior capture. Keep both JSON reports and
    both raw artifacts; do not replace the prior expectation with the new
@@ -62,6 +62,6 @@ domain.
 
 This workflow proves only what the recorded client import/export and metadata
 support. It does not automate startup, login, locale switching, or gameplay,
-and it does not claim exhaustive runtime correctness. If no Overwatch client
-is available, the validated offline schema and diff contracts are the complete
-result and the manual capture step remains explicitly open.
+and it does not claim exhaustive runtime correctness. Offline schema and diff
+validation does not establish live-client claims; those claims require a
+recorded capture with the provenance described above.

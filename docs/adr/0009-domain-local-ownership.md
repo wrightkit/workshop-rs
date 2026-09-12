@@ -37,8 +37,8 @@ verification label was itself a semantic boundary.
    linked fixtures and corpus data remain beside those tests; census, capture,
    conformance, and similar acquisition/reporting support belongs in tests,
    CLI tooling, or data-generation support according to its responsibility.
-5. External expectations and implementation-derived regressions remain
-   distinguishable. Moving verification support does not weaken, replace, or
+5. External expectations and implementation-derived regressions must remain
+   distinguishable. Verification placement must not weaken the distinction or
    turn self-derived output into independent Workshop evidence.
 
 The semantic-code versus declarative-data boundary remains the one established
@@ -49,11 +49,10 @@ typed semantic behavior.
 ## Consequences
 
 Contributors can find a Workshop feature's parser, validator, emitter, and
-related operations from the feature's domain. Shared contexts remain small
-orchestration boundaries, and verification code no longer competes with
-semantic domains for ownership. Tests and fixtures retain their evidence and
-provenance without requiring a replacement verification abstraction.
+related operations from the feature's domain. Shared contexts serve as small
+orchestration boundaries, and verification code has a separate support role.
+Tests and fixtures retain their evidence and provenance without requiring a
+replacement verification abstraction.
 
 This decision does not require one file per builtin, a new CST/AST/compiler
-framework, or a repository-wide phase-to-domain rewrite beyond the bounded
-ownership migration represented by #149 and #150.
+framework, or a repository-wide phase-to-domain rewrite.

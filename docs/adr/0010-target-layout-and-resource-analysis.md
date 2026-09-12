@@ -21,7 +21,7 @@ emission changed.
 
 1. `workshop-rs` owns reusable, source-language-neutral analysis of target
    layout and resource cost over the canonical public `Program` and catalog.
-2. Element count is exposed as a structured report with total, per-rule and
+2. Element count is exposed as a structured report with total, per-rule, and
    attributable node contributions, provenance where available, and explicit
    incompleteness/errors for unknown or unsupported constructs. It is
    locale-independent and does not depend on formatted output.
@@ -39,13 +39,13 @@ emission changed.
 
 ## Consequences
 
-Cost and layout calculations have one canonical Workshop owner and remain
-stable across locale conversion and textual formatting choices. Consumers can
-delete duplicated emitter-width or cost models while retaining their own
-source-language semantics. The API does not claim live-client/editor
-validation or implement a source-language debug directive.
+Cost and layout calculations have one canonical Workshop owner and are stable
+across locale conversion and textual formatting choices. Consumers can use
+these results without maintaining duplicated emitter-width or cost models,
+while retaining their own source-language semantics. The API does not claim
+live-client/editor validation or implement a source-language debug directive.
 
 The supported element-count rules and action-layout behavior are documented in
 [`docs/element-count.md`](../element-count.md) and
 [`docs/action-layout.md`](../action-layout.md); those documents describe
-current contract detail, while this ADR records the ownership decision.
+detailed contract behavior, while this ADR records the ownership decision.
