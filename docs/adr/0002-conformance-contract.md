@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted for the v0.1 conformance corpus foundation.
+Accepted
 
 ## Context
 
@@ -49,15 +49,15 @@ verification data.
 
 The schema version is `1`. Cross-field validation is explicit through
 `ConformanceResult::validate` and `ConformanceResult::from_json`;
-serialization is JSON-compatible through Serde. This contract does not claim
-that a result's semantic/normalized comparison has been executed: #19 owns
-that independent comparison gate. It also does not claim live-client or
-runtime gameplay evidence until a real capture is supplied.
+serialization is JSON-compatible through Serde. This contract defines the
+result representation; an observed result must not claim semantic or
+normalized equivalence unless the corresponding independent comparison was
+executed. Live-client and runtime gameplay claims require live-client evidence.
 
 ## Consequences
 
-The report schema is a tooling contract. Its current implementation is owned
-by `workshop-rs-cli` (`crates/workshop-rs-cli/src/conformance.rs`), while
+The report schema is a tooling contract owned by `workshop-rs-cli`
+(`crates/workshop-rs-cli/src/conformance.rs`), while
 semantic contract tests and provenance-linked fixtures remain with
 `workshop-rs`; the semantic crate does not expose an evidence implementation
 domain.

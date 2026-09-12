@@ -1,6 +1,6 @@
 # ADR-0010: Canonical Workshop target-layout and resource analysis
 
-- Status: Accepted (backfilled)
+- Status: Accepted
 - Date: 2026-09-12
 - Related:
   [Issue #89](https://github.com/wrightkit/workshop-rs/issues/89),
@@ -39,13 +39,13 @@ emission changed.
 
 ## Consequences
 
-Cost and layout calculations have one canonical Workshop owner and remain
-stable across locale conversion and textual formatting choices. Consumers can
-delete duplicated emitter-width or cost models while retaining their own
-source-language semantics. The API does not claim live-client/editor
-validation or implement a source-language debug directive.
+Cost and layout calculations have one canonical Workshop owner and are stable
+across locale conversion and textual formatting choices. Consumers can use
+these results without maintaining duplicated emitter-width or cost models,
+while retaining their own source-language semantics. The API does not claim
+live-client/editor validation or implement a source-language debug directive.
 
 The supported element-count rules and action-layout behavior are documented in
 [`docs/element-count.md`](../element-count.md) and
 [`docs/action-layout.md`](../action-layout.md); those documents describe
-current contract detail, while this ADR records the ownership decision.
+detailed contract behavior, while this ADR records the ownership decision.

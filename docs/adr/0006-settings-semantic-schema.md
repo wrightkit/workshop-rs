@@ -2,8 +2,8 @@
 
 ## Status
 
-Accepted for the #109 foundation and #110 canonical catalog projection;
-ergonomic query/edit APIs remain #111.
+Accepted for canonical typed Workshop settings semantics. Query and edit API
+ergonomics are outside this decision.
 
 ## Decision
 
@@ -21,25 +21,22 @@ wildcard hero entries are projected as definitions whose applicability is
 resolved against gameplay topology and explicit applicability evidence. A
 known hero without explicit applicability evidence is `Unknown`; an unknown
 hero is `Unknown`. Gameplay kit topology is checked first for hero-ability targets;
-missing slots or variants are `NotApplicable`. The current settings projection
-has no complete independent applicability matrix, so a topology-valid target
-without explicit applicability evidence remains `Unknown`. Locale label quality
+missing slots or variants are `NotApplicable`. Without explicit applicability
+evidence, a topology-valid target is `Unknown`. Locale label quality
 never changes applicability. `gamemodes.general` is a literal
 Workshop settings group and therefore has a global/no semantic target, not a
 mode target.
 
 `SettingValueDomain` records the value kind and an optional effective numeric
-range. The current reviewed table does not contain enough independent evidence
-to assign numeric or percent bounds to its entries, so those bounds are
-explicitly unknown (`None`) until #110 or a separately reviewed evidence update
-establishes them. Unknown bounds do not produce an effective value. A partially
+range. Numeric or percent bounds without independent evidence are explicitly
+unknown (`None`). Unknown bounds do not produce an effective value. A partially
 known range only produces an effective value when the known bound necessarily
 clamps the authored value; otherwise the result remains unknown. Validated
 `NumericBounds` supports evidenced Workshop clamping while preserving the
 authored value in `EffectiveNumber`; the source-preserving
-`SettingsNode::Number` remains unchanged.
+`SettingsNode::Number` is not changed by this schema.
 
-Locale names are presentation metadata resolved through the existing generated
+Locale names are presentation metadata resolved through the generated
 locale projection, with the primary `en-US` spelling retained directly. Each
 definition reports whether its evidence comes from pinned raw Workshop
 fixtures or the reviewed `workshop-data` export. Unknown/raw settings continue
@@ -51,20 +48,20 @@ identity has been resolved; unresolved projected hero-ability concepts use
 `SettingIdentity::Unknown` and `id() == None`. This is independent from
 `SettingProvenance`: the latter reports whether the underlying table or export
 evidence was reviewed, so reviewed source evidence may still carry an unknown
-semantic identity until #110 supplies the canonical typed catalog.
+semantic identity when no canonical typed identity has been established.
 
 ## Consequences
 
-The existing `TableEntry` inventory remains the parser/emitter source and the
-schema is its single typed semantic projection, avoiding a parallel settings
+The `TableEntry` inventory is the parser/emitter source and the schema is its
+single typed semantic projection, avoiding a parallel settings
 framework. The effective catalog preserves the established hand-authored
 parser precedence while collapsing duplicate paths from the generated
 projection. It validates unresolved scopes, missing identities, missing
 presentation, and conflicting domains before catalog-check success. Canonical
 concept identities normalize reusable hero/ability settings
 without embedding localized ability display names; mode-specific enum concepts
-remain distinct when their reviewed domains differ. #111 can build query/edit
-operations on definitions and source-preserving occurrences without inventing
+remain distinct when their reviewed domains differ. Query/edit operations can
+use definitions and source-preserving occurrences without inventing
 another identity, scope, target, domain, or provenance model.
 
 No UI step metadata, source-language carrier parsing, per-hero Rust structs, or

@@ -1,6 +1,6 @@
 # ADR-0008: Canonical public Workshop `Program` boundary
 
-- Status: Accepted (backfilled)
+- Status: Accepted
 - Date: 2026-09-12
 - Related:
   [Issue #32](https://github.com/wrightkit/workshop-rs/issues/32),
@@ -23,10 +23,10 @@
 The original public surface exposed arena-backed WIR storage, typed node IDs,
 and phase-oriented compatibility paths. That surface made ordinary raw
 Workshop use and independent source-language lowering depend on implementation
-details rather than Workshop concepts. The accepted 1.0 contract in #112 and
-the implementation work in #177–#179 replaced that boundary. #32 and #187
-then established how source-aware consumers can attach optional provenance
-without making metadata part of ordinary semantic construction.
+details rather than Workshop concepts. The contract recorded in #112 and the
+implementation work in #177–#179 replaced that boundary. #32 and #187
+established how source-aware consumers can attach optional provenance without
+making metadata part of ordinary semantic construction.
 
 The same boundary audit found that dedicated `Debug` and `Print` WIR nodes
 were provider helpers rather than native Workshop semantics (#129). Keeping
@@ -48,8 +48,8 @@ convenience part of the Workshop contract.
    contract and are not required knowledge for consumers.
 4. Public parsing, validation, analysis, conversion, source editing,
    round-trip comparison, emission, and CLI workflows operate through
-   `Program`. Compatibility re-exports remain only where needed for existing
-   consumers and do not define the preferred boundary.
+   `Program`. Compatibility re-exports may be retained only where an existing
+   consumer contract requires them and do not define the preferred boundary.
 5. Typed action and value constructors are generated from canonical catalog
    facts. They constrain builtin identity and parameter shape while canonical
    validation remains authoritative. Generic catalog-backed calls remain an

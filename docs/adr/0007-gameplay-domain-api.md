@@ -24,10 +24,10 @@ change look like a parser/catalog change and would make provenance ambiguous.
    string-backed newtypes. An ability's canonical reference is the tuple
    `AbilityRef { hero, slot, variant }`; there is no global ability identity
    derived from an English or localized display name. The crate provides
-   typed references and constants for the current hero roster and common
-   slots, but adding a future identity is a data change rather than a breaking
-   enum change. `AbilityRef` rejects unknown wire fields so name-derived
-   identity cannot be silently accepted.
+   typed references and data-defined constants for hero rosters and common
+   slots. Adding an identity is a data change rather than a breaking enum
+   change. `AbilityRef` rejects unknown wire fields so name-derived identity
+   cannot be silently accepted.
 2. `LogicalSlot` is a classification (`primaryFire`, `secondaryFire`,
    `ability1`, `ability2`, `ability3`, `ultimate`, `passive`), not a control,
    activation condition, or runtime state-machine model. Multiple abilities in
@@ -42,17 +42,17 @@ change look like a parser/catalog change and would make provenance ambiguous.
 4. `GameplayDatasetIdentity` is separate from
    `crate::catalog::CatalogIdentity`. A gameplay-data update must not silently
    change Workshop parser/WIR/catalog identity.
-5. Semantic calculations are a separate layer from raw records. The initial
+5. Semantic calculations are a separate layer from raw records. The
    query/calculation layer may consume this model, but raw records do not
    embed Workshop-specific presentation or provider semantics.
 
 ## Topology evidence
 
-The complete row-by-row survey is pinned in
+The row-by-row survey for this decision is pinned in
 [`docs/gameplay-roster-survey.md`](../gameplay-roster-survey.md). The
-user-provided `workshop-data` export at commit
+historical `workshop-data` export at commit
 `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date 2026-08-12) contains
-53 hero identities and logical-slot records with localized/display names. Its topology categories
+hero identities and logical-slot records with localized/display names. Its topology categories
 include:
 
 | Shape | Evidence examples | API consequence |
@@ -72,7 +72,7 @@ dataset evidence and remain absent when unsupported.
 
 Consumers use typed accessors and deterministic catalog lookup rather than
 parsing JSON or maintaining hero-specific schema branches. A normal new hero,
-slot, keyword, or stat can be added in data. A new semantic concept that is
+slot, keyword, or stat can be represented as data. A new semantic concept that is
 not representable by the open identity/value types requires an intentional API
 review.
 

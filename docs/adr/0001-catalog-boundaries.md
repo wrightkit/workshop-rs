@@ -59,8 +59,8 @@ Every supported content item has a canonical identity that is:
 Shapes only, not a frozen syntax: `action.set_global_variable`,
 `value.all_players`, `enum.team` / member `all`, `event.ongoing_global`,
 `hero.ana`, `map.ilios`, `game_mode.quick_play`, `setting.<key>`. Exact ID
-syntax and serialization are implementation detail for Issue #2; the properties
-above are the contract.
+syntax and serialization are implementation details; the properties above are
+the contract.
 
 ### 3. Locale tables are mappings, not semantics
 
@@ -121,9 +121,8 @@ recorded provenance. OverPy's translation tables are GPL-3.0 reference data and
 are not a permissible source for catalog or locale data (Wright ADR-0004,
 `docs/licensing.md`). Observed reference behavior is an interoperability input,
 not permission to copy an implementation; mechanically translating upstream
-data is not permitted. New locales, including the initial `zh-CN` data, require
-a permissible reference source with provenance and license review before
-inclusion.
+data is not permitted. New locale data requires a permissible reference source
+with provenance and license review before inclusion.
 
 ### 7. Supported categories and missing-target-locale behavior
 
@@ -146,9 +145,9 @@ revalidating and regenerating pinned fixtures through the pipeline of
 Decision 6. Tooling reports the effective identity so any run is reproducible
 and attributable.
 
-### 9. Initial product gate
+### 9. Historical product gate
 
-The first usable multi-locale release supports a complete declared
+The product gate recorded with this decision required a complete declared
 `en-US` <-> `zh-CN` raw Workshop conversion surface — parse, validate, emit,
 and convert in both directions, including settings — for the declared surface,
 verified by corpus tests. Further locales expand only through evidence-backed
@@ -172,17 +171,15 @@ license review.
   knowledge; provider naming never enters the core.
 - The strict allowlist makes unsupported input loud, which is the intended
   safety property for conversion tooling.
-- Costs: every data entry needs provenance; validation and pipeline tooling
-  must exist before the first multi-locale release; unknown-token diagnostics
-  must be implemented in the core.
-- Follow-up: Issue #2 bootstraps the repository implementation against this
-  contract.
+- Costs: every data entry needs provenance; catalog updates require validation
+  and deterministic pipeline tooling; unknown-token diagnostics belong in the
+  core.
 
 ## Compatibility impact
 
-No runtime compatibility claims exist yet. This ADR defines how future claims
-are evidenced, pinned, and attributed. No `zh-CN` compatibility claim may be
-made until locale data with reviewed provenance is committed per Decision 6.
+Runtime compatibility claims are outside this decision; any such claim must be
+evidenced, pinned, and attributed. Locale compatibility claims require locale
+data with reviewed provenance under Decision 6.
 
 ## Acceptance criteria
 
@@ -195,12 +192,13 @@ made until locale data with reviewed provenance is committed per Decision 6.
 | 5 | Data-only Workshop updates can be added without compiler logic changes when they are genuinely data-only. | Decisions 1, 6 |
 | 6 | The core implementation can consume this contract without duplicating locale/catalog knowledge in source-language providers. | Decisions 1, 2, 3; Consequences |
 
-## Open questions
+## Scope boundaries
 
-- Exact canonical identity syntax, dataset schema, and serialization format —
-  decided in Issue #2 implementation.
-- Whether a candidate `zh-CN` reference source is permissible under the MIT
-  policy — resolved by provenance and license review before the first
-  multi-locale release.
-- How `target-evidence` is recorded when evidence is community documentation
-  rather than an executable oracle — resolved per entry by the pipeline.
+- This decision does not prescribe the exact canonical identity syntax,
+  dataset schema, or serialization format; implementations must preserve the
+  identity and provenance properties above.
+- Locale data is admitted only when its reference source passes the provenance
+  and license review required by Decision 6.
+- `target-evidence` is recorded according to the evidence source for each
+  entry, including when that source is community documentation rather than an
+  executable oracle.
