@@ -21,7 +21,7 @@ emission changed.
 
 1. `workshop-rs` owns reusable, source-language-neutral analysis of target
    layout and resource cost over the canonical public `Program` and catalog.
-2. Element count is exposed as a structured report with total, per-rule and
+2. Element count is exposed as a structured report with total, per-rule, and
    attributable node contributions, provenance where available, and explicit
    incompleteness/errors for unknown or unsupported constructs. It is
    locale-independent and does not depend on formatted output.

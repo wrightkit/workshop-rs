@@ -11,9 +11,9 @@ minimized case derived from it. Each case records its own immutable
 `repository/revision/path` tuple and pinned SHA-256. An expectation may point to
 an immutable external oracle artifact without redistributing that artifact.
 
-The historical example for this decision used the `overpy-cake.ws` project and
-a minimized loop case derived from it; the Workshop fixture and the external
-OverPy 9.7.10 oracle were identified by immutable provenance.
+The initial evidence recorded for this decision used the `overpy-cake.ws`
+project and a minimized loop case derived from it; the Workshop fixture and the
+external OverPy 9.7.10 oracle were identified by immutable provenance.
 
 `workshop-rs-cli corpus <manifest> [--json]` runs the manifest offline. It
 reads the preserved Workshop source, parses and validates it through the

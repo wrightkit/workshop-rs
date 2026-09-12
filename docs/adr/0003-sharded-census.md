@@ -22,10 +22,11 @@ cases use `workshop-rs`-owned namespaces.
 canonical identity validation, emission, semantic round-trip, and en-US/zh-CN
 conversion checks. The WIR shard is derived from the WIR-owned
 `CENSUS_CAPABILITIES` registry. A case is matched only when its conversion is
-also equal to an independently recorded reference source; generated probes
-without such an artifact remain inconclusive even when all offline gates pass.
-The report retains every `ConformanceResult`, including unsupported,
-known-gap, unexpected-regression, and inconclusive states.
+equal to an independently recorded reference source; generated probes without
+such an artifact remain inconclusive even when all offline gates pass. The
+report retains every `ConformanceResult`, including unsupported, known-gap,
+unexpected-regression, and inconclusive states.
+
 `Census::identity` exposes a deterministic SHA-256 digest of the reviewed,
 serialized shard definition together with the sorted shard IDs. Every
 `CensusReport` carries that authoritative `CensusIdentity`; report validation

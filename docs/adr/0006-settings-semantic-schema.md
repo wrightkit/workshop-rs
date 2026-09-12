@@ -20,10 +20,10 @@ ability-slot targets, including team/common hero ability slots. The table's
 wildcard hero entries are projected as definitions whose applicability is
 resolved against gameplay topology and explicit applicability evidence. A
 known hero without explicit applicability evidence is `Unknown`; an unknown
-hero is `Unknown`. Gameplay kit topology is checked first for hero-ability targets;
-missing slots or variants are `NotApplicable`. Without explicit applicability
-evidence, a topology-valid target is `Unknown`. Locale label quality
-never changes applicability. `gamemodes.general` is a literal
+hero is `Unknown`. For hero-ability targets, gameplay kit topology is checked
+first; missing slots or variants are `NotApplicable`. When topology is valid
+but explicit applicability evidence is absent, the target is `Unknown`. Locale
+label quality never changes applicability. `gamemodes.general` is a literal
 Workshop settings group and therefore has a global/no semantic target, not a
 mode target.
 
@@ -61,8 +61,9 @@ presentation, and conflicting domains before catalog-check success. Canonical
 concept identities normalize reusable hero/ability settings
 without embedding localized ability display names; mode-specific enum concepts
 remain distinct when their reviewed domains differ. Query/edit operations can
-use definitions and source-preserving occurrences without inventing
-another identity, scope, target, domain, or provenance model.
+use definitions and source-preserving occurrences without inventing another
+identity, scope, target, domain, or provenance model.
 
-No UI step metadata, source-language carrier parsing, per-hero Rust structs, or
-consumer-side applicability hacks are part of this contract.
+No UI step metadata, source-language carrier parsing, per-hero Rust structs,
+consumer-side applicability hacks, or query/edit API ergonomics are part of this
+contract.

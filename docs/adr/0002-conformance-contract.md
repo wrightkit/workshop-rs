@@ -69,4 +69,4 @@ independent evidence admission and execution logic. Downstream `opy-rs` and
 their source-language semantics and inventories.
 
 The contract intentionally does not require byte-identical emitted text:
-semantic or normalized equivalence is the default for later corpus gates.
+semantic or normalized equivalence is the default for corpus gates.

@@ -145,13 +145,13 @@ revalidating and regenerating pinned fixtures through the pipeline of
 Decision 6. Tooling reports the effective identity so any run is reproducible
 and attributable.
 
-### 9. Historical product gate
+### 9. Initial product gate
 
-The product gate recorded with this decision required a complete declared
-`en-US` <-> `zh-CN` raw Workshop conversion surface — parse, validate, emit,
-and convert in both directions, including settings — for the declared surface,
-verified by corpus tests. Further locales expand only through evidence-backed
-catalog updates per Decision 6.
+The initial product gate recorded with this decision required a complete
+declared `en-US` <-> `zh-CN` raw Workshop conversion surface — parse, validate,
+emit, and convert in both directions, including settings — for the declared
+surface, verified by corpus tests. Further locales expand only through
+evidence-backed catalog updates per Decision 6.
 
 ### Non-goals
 

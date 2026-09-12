@@ -49,7 +49,7 @@ typed semantic behavior.
 ## Consequences
 
 Contributors can find a Workshop feature's parser, validator, emitter, and
-related operations from the feature's domain. Shared contexts serve small
+related operations from the feature's domain. Shared contexts serve as small
 orchestration boundaries, and verification code has a separate support role.
 Tests and fixtures retain their evidence and provenance without requiring a
 replacement verification abstraction.
