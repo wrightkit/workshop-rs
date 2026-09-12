@@ -42,6 +42,10 @@ source construct has no correct Workshop representation, the owning source
 implementation reports that boundary rather than widening the public model with
 a source-language surrogate.
 
+The historical rationale for this public boundary is recorded in
+[`ADR-0008`](../adr/0008-canonical-public-program-boundary.md); this document
+remains the current contract for consumers.
+
 ## Behavior and data
 
 Use data for large declarative fact sets whose meaning is already defined by the Workshop domain, for example:

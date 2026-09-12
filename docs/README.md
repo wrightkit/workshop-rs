@@ -83,6 +83,10 @@ Current registry:
 - [ADR-0005: Seasonal Workshop client validation workflow](adr/0005-seasonal-client-validation.md)
 - [ADR-0006: Canonical typed Workshop settings semantics](adr/0006-settings-semantic-schema.md)
 - [ADR-0007: Hero gameplay domain API and provenance boundary](adr/0007-gameplay-domain-api.md)
+- [ADR-0008: Canonical public Workshop `Program` boundary](adr/0008-canonical-public-program-boundary.md)
+- [ADR-0009: Domain-local Workshop ownership and verification placement](adr/0009-domain-local-ownership.md)
+- [ADR-0010: Canonical Workshop target-layout and resource analysis](adr/0010-target-layout-and-resource-analysis.md)
+- [ADR-0011: Contextual Workshop semantics at the catalog/code boundary](adr/0011-contextual-semantic-placement.md)
 
 ## Release and operations
 
