@@ -4,6 +4,7 @@ use std::collections::HashMap;
 
 use crate::core::error::{Result, WorkshopError};
 use crate::settings::Settings;
+use crate::source::{FileId, SourceDocument, SourceFile, Span};
 use crate::wir;
 
 /// A complete Workshop program built from Workshop concepts.
@@ -14,15 +15,22 @@ pub struct Program {
     pub player_variables: Vec<Variable>,
     pub subroutines: Vec<Subroutine>,
     pub rules: Vec<Rule>,
-    /// Raw source metadata is retained by parsed programs without becoming a
-    /// required field for independently constructed programs.
-    source: Option<Box<wir::Program>>,
+    files: Vec<SourceFile>,
     provenance: Option<Box<ProgramProvenance>>,
 }
 
 #[derive(Debug, Clone, Default)]
 struct ProgramProvenance {
+    global_variables: Vec<DeclarationProvenance>,
+    player_variables: Vec<DeclarationProvenance>,
+    subroutines: Vec<DeclarationProvenance>,
     rules: Vec<RuleProvenance>,
+}
+
+#[derive(Debug, Clone, Copy, Default)]
+struct DeclarationProvenance {
+    span: Option<Span>,
+    name_span: Option<Span>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -34,13 +42,85 @@ struct RuleProvenance {
 
 #[derive(Debug, Clone, Default)]
 struct ActionProvenance {
-    span: Option<crate::source::Span>,
-    arguments: Vec<Option<crate::source::Span>>,
+    span: Option<Span>,
+    arguments: Vec<Option<Span>>,
 }
+
+/// A failure while attaching source metadata to a public [`Program`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ProvenanceError {
+    UnknownFile(FileId),
+    InvalidSpan(Span),
+    InvalidRule(usize),
+    InvalidCondition {
+        rule: usize,
+        condition: usize,
+    },
+    InvalidAction {
+        rule: usize,
+        action: usize,
+    },
+    InvalidActionArgument {
+        rule: usize,
+        action: usize,
+        argument: usize,
+    },
+    InvalidGlobalVariable(usize),
+    InvalidPlayerVariable(usize),
+    InvalidSubroutine(usize),
+}
+
+impl std::fmt::Display for ProvenanceError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::UnknownFile(file) => {
+                write!(formatter, "source span references unknown file {file}")
+            }
+            Self::InvalidSpan(span) => write!(formatter, "invalid source span {span:?}"),
+            Self::InvalidRule(rule) => write!(formatter, "invalid rule index {rule}"),
+            Self::InvalidCondition { rule, condition } => {
+                write!(
+                    formatter,
+                    "invalid condition index {condition} in rule {rule}"
+                )
+            }
+            Self::InvalidAction { rule, action } => {
+                write!(formatter, "invalid action index {action} in rule {rule}")
+            }
+            Self::InvalidActionArgument {
+                rule,
+                action,
+                argument,
+            } => write!(
+                formatter,
+                "invalid argument index {argument} in action {action} of rule {rule}"
+            ),
+            Self::InvalidGlobalVariable(variable) => {
+                write!(formatter, "invalid global variable index {variable}")
+            }
+            Self::InvalidPlayerVariable(variable) => {
+                write!(formatter, "invalid player variable index {variable}")
+            }
+            Self::InvalidSubroutine(subroutine) => {
+                write!(formatter, "invalid subroutine index {subroutine}")
+            }
+        }
+    }
+}
+
+impl std::error::Error for ProvenanceError {}
 
 impl Program {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Register a source file and return its public file identity.
+    pub fn add_file(&mut self, mut file: SourceFile) -> FileId {
+        let id = FileId::from_index(self.files.len());
+        file.bind_file(id);
+        self.files.push(file);
+        id
     }
 
     pub fn global_variable(&mut self, variable: Variable) -> &mut Self {
@@ -64,10 +144,160 @@ impl Program {
     }
 
     /// Return the retained source document for a parsed file.
-    pub fn source(&self, file: crate::source::FileId) -> Option<&crate::source::SourceDocument> {
-        self.source
-            .as_deref()
-            .and_then(|program| program.source(file))
+    pub fn source(&self, file: FileId) -> Option<&SourceDocument> {
+        self.files.get(file.index()).and_then(SourceFile::source)
+    }
+
+    /// Attach the authored span of a public rule.
+    pub fn set_rule_span(
+        &mut self,
+        rule: usize,
+        span: Option<Span>,
+    ) -> std::result::Result<(), ProvenanceError> {
+        self.validate_span(span)?;
+        self.rule_provenance_mut(rule)?.span = span;
+        Ok(())
+    }
+
+    /// Attach the authored span of a public rule condition value.
+    pub fn set_condition_span(
+        &mut self,
+        rule: usize,
+        condition: usize,
+        span: Option<Span>,
+    ) -> std::result::Result<(), ProvenanceError> {
+        self.validate_span(span)?;
+        let condition_count = self
+            .rules
+            .get(rule)
+            .ok_or(ProvenanceError::InvalidRule(rule))?
+            .conditions
+            .len();
+        if condition >= condition_count {
+            return Err(ProvenanceError::InvalidCondition { rule, condition });
+        }
+        let rule_data = self.rule_provenance_mut(rule)?;
+        rule_data.conditions.resize(condition + 1, None);
+        rule_data.conditions[condition] = span;
+        Ok(())
+    }
+
+    /// Attach the authored span of a public action in its linear rule order.
+    pub fn set_action_span(
+        &mut self,
+        rule: usize,
+        action: usize,
+        span: Option<Span>,
+    ) -> std::result::Result<(), ProvenanceError> {
+        self.validate_span(span)?;
+        let action_count = self
+            .rules
+            .get(rule)
+            .ok_or(ProvenanceError::InvalidRule(rule))?
+            .actions
+            .len();
+        if action >= action_count {
+            return Err(ProvenanceError::InvalidAction { rule, action });
+        }
+        let rule_data = self.rule_provenance_mut(rule)?;
+        rule_data
+            .actions
+            .resize_with(action + 1, ActionProvenance::default);
+        rule_data.actions[action].span = span;
+        Ok(())
+    }
+
+    /// Attach the authored span of a direct value argument of a public action.
+    pub fn set_action_argument_span(
+        &mut self,
+        rule: usize,
+        action: usize,
+        argument: usize,
+        span: Option<Span>,
+    ) -> std::result::Result<(), ProvenanceError> {
+        self.validate_span(span)?;
+        let action_value = self
+            .rules
+            .get(rule)
+            .ok_or(ProvenanceError::InvalidRule(rule))?
+            .actions
+            .get(action)
+            .ok_or(ProvenanceError::InvalidAction { rule, action })?;
+        let argument_count = action_argument_count(action_value);
+        if argument >= argument_count {
+            return Err(ProvenanceError::InvalidActionArgument {
+                rule,
+                action,
+                argument,
+            });
+        }
+        let action_data = self.action_provenance_mut(rule, action)?;
+        action_data.arguments.resize(argument + 1, None);
+        action_data.arguments[argument] = span;
+        Ok(())
+    }
+
+    /// Attach the authored and identifier spans of a global variable.
+    pub fn set_global_variable_spans(
+        &mut self,
+        variable: usize,
+        span: Option<Span>,
+        name_span: Option<Span>,
+    ) -> std::result::Result<(), ProvenanceError> {
+        self.validate_span(span)?;
+        self.validate_span(name_span)?;
+        if variable >= self.global_variables.len() {
+            return Err(ProvenanceError::InvalidGlobalVariable(variable));
+        }
+        let variable_count = self.global_variables.len();
+        let provenance = self.provenance_mut();
+        provenance
+            .global_variables
+            .resize_with(variable_count, DeclarationProvenance::default);
+        provenance.global_variables[variable] = DeclarationProvenance { span, name_span };
+        Ok(())
+    }
+
+    /// Attach the authored and identifier spans of a player variable.
+    pub fn set_player_variable_spans(
+        &mut self,
+        variable: usize,
+        span: Option<Span>,
+        name_span: Option<Span>,
+    ) -> std::result::Result<(), ProvenanceError> {
+        self.validate_span(span)?;
+        self.validate_span(name_span)?;
+        if variable >= self.player_variables.len() {
+            return Err(ProvenanceError::InvalidPlayerVariable(variable));
+        }
+        let variable_count = self.player_variables.len();
+        let provenance = self.provenance_mut();
+        provenance
+            .player_variables
+            .resize_with(variable_count, DeclarationProvenance::default);
+        provenance.player_variables[variable] = DeclarationProvenance { span, name_span };
+        Ok(())
+    }
+
+    /// Attach the authored and identifier spans of a subroutine.
+    pub fn set_subroutine_spans(
+        &mut self,
+        subroutine: usize,
+        span: Option<Span>,
+        name_span: Option<Span>,
+    ) -> std::result::Result<(), ProvenanceError> {
+        self.validate_span(span)?;
+        self.validate_span(name_span)?;
+        if subroutine >= self.subroutines.len() {
+            return Err(ProvenanceError::InvalidSubroutine(subroutine));
+        }
+        let subroutine_count = self.subroutines.len();
+        let provenance = self.provenance_mut();
+        provenance
+            .subroutines
+            .resize_with(subroutine_count, DeclarationProvenance::default);
+        provenance.subroutines[subroutine] = DeclarationProvenance { span, name_span };
+        Ok(())
     }
 
     /// Return the authored span of a public rule, when source metadata exists.
@@ -132,7 +362,7 @@ impl Program {
             .validate()
             .map_err(|error| WorkshopError::Malformed {
                 message: error.to_string(),
-                span: None,
+                span: error.span(),
             })
     }
 
@@ -151,6 +381,61 @@ impl Program {
             |error| format!("invalid program: {error}"),
             |program| program.dump(),
         )
+    }
+
+    fn validate_span(&self, span: Option<Span>) -> std::result::Result<(), ProvenanceError> {
+        let Some(span) = span else {
+            return Ok(());
+        };
+        if !span.is_valid() {
+            return Err(ProvenanceError::InvalidSpan(span));
+        }
+        if self.files.get(span.file.index()).is_none() {
+            return Err(ProvenanceError::UnknownFile(span.file));
+        }
+        Ok(())
+    }
+
+    fn provenance_mut(&mut self) -> &mut ProgramProvenance {
+        self.provenance
+            .get_or_insert_with(|| Box::new(ProgramProvenance::default()))
+            .as_mut()
+    }
+
+    fn rule_provenance_mut(
+        &mut self,
+        rule: usize,
+    ) -> std::result::Result<&mut RuleProvenance, ProvenanceError> {
+        if rule >= self.rules.len() {
+            return Err(ProvenanceError::InvalidRule(rule));
+        }
+        let rule_count = self.rules.len();
+        let provenance = self.provenance_mut();
+        provenance
+            .rules
+            .resize_with(rule_count, RuleProvenance::default);
+        Ok(&mut provenance.rules[rule])
+    }
+
+    fn action_provenance_mut(
+        &mut self,
+        rule: usize,
+        action: usize,
+    ) -> std::result::Result<&mut ActionProvenance, ProvenanceError> {
+        let action_count = self
+            .rules
+            .get(rule)
+            .ok_or(ProvenanceError::InvalidRule(rule))?
+            .actions
+            .len();
+        if action >= action_count {
+            return Err(ProvenanceError::InvalidAction { rule, action });
+        }
+        let rule_data = self.rule_provenance_mut(rule)?;
+        rule_data
+            .actions
+            .resize_with(action + 1, ActionProvenance::default);
+        Ok(&mut rule_data.actions[action])
     }
 
     pub(crate) fn from_wir(storage: wir::Program) -> Result<Self> {
@@ -172,8 +457,34 @@ impl Program {
                 .map(|subroutine| Subroutine::with_index(subroutine.name.clone(), subroutine.index))
                 .collect(),
             rules: Vec::with_capacity(storage.rules.len()),
-            source: Some(Box::new(storage.clone())),
-            provenance: Some(Box::new(ProgramProvenance::default())),
+            files: storage.files.iter().cloned().collect(),
+            provenance: Some(Box::new(ProgramProvenance {
+                global_variables: storage
+                    .global_variables
+                    .iter()
+                    .map(|variable| DeclarationProvenance {
+                        span: variable.span,
+                        name_span: variable.name_span,
+                    })
+                    .collect(),
+                player_variables: storage
+                    .player_variables
+                    .iter()
+                    .map(|variable| DeclarationProvenance {
+                        span: variable.span,
+                        name_span: variable.name_span,
+                    })
+                    .collect(),
+                subroutines: storage
+                    .subroutines
+                    .iter()
+                    .map(|subroutine| DeclarationProvenance {
+                        span: subroutine.span,
+                        name_span: subroutine.name_span,
+                    })
+                    .collect(),
+                rules: Vec::with_capacity(storage.rules.len()),
+            })),
         };
         for rule in storage.rules.iter() {
             let event = public_event(&storage, &rule.event)?;
@@ -221,10 +532,8 @@ impl Program {
             ..Default::default()
         };
 
-        if let Some(source) = &self.source {
-            for file in source.files.iter() {
-                storage.add_file(file.clone());
-            }
+        for file in &self.files {
+            storage.add_file(file.clone());
         }
 
         let mut globals = HashMap::new();
@@ -232,8 +541,16 @@ impl Program {
             let id = storage.global_variables.push(wir::WorkshopVariable {
                 name: variable.name.clone(),
                 index: variable.index.unwrap_or(position as u32),
-                span: None,
-                name_span: None,
+                span: self
+                    .provenance
+                    .as_deref()
+                    .and_then(|provenance| provenance.global_variables.get(position))
+                    .and_then(|provenance| provenance.span),
+                name_span: self
+                    .provenance
+                    .as_deref()
+                    .and_then(|provenance| provenance.global_variables.get(position))
+                    .and_then(|provenance| provenance.name_span),
             });
             globals.insert(variable.name.clone(), id);
         }
@@ -242,8 +559,16 @@ impl Program {
             let id = storage.player_variables.push(wir::WorkshopVariable {
                 name: variable.name.clone(),
                 index: variable.index.unwrap_or(position as u32),
-                span: None,
-                name_span: None,
+                span: self
+                    .provenance
+                    .as_deref()
+                    .and_then(|provenance| provenance.player_variables.get(position))
+                    .and_then(|provenance| provenance.span),
+                name_span: self
+                    .provenance
+                    .as_deref()
+                    .and_then(|provenance| provenance.player_variables.get(position))
+                    .and_then(|provenance| provenance.name_span),
             });
             players.insert(variable.name.clone(), id);
         }
@@ -252,8 +577,16 @@ impl Program {
             let id = storage.subroutines.push(wir::WorkshopSubroutine {
                 name: subroutine.name.clone(),
                 index: subroutine.index.unwrap_or(position as u32),
-                span: None,
-                name_span: None,
+                span: self
+                    .provenance
+                    .as_deref()
+                    .and_then(|provenance| provenance.subroutines.get(position))
+                    .and_then(|provenance| provenance.span),
+                name_span: self
+                    .provenance
+                    .as_deref()
+                    .and_then(|provenance| provenance.subroutines.get(position))
+                    .and_then(|provenance| provenance.name_span),
             });
             subroutines.insert(subroutine.name.clone(), id);
         }
@@ -269,7 +602,7 @@ impl Program {
                         return Err(WorkshopError::Unsupported {
                             message: "disabled conditions are not representable by the canonical storage model"
                                 .to_string(),
-                            span: None,
+                            span: self.condition_span(rule_index, condition_index),
                         });
                     }
                     wir_value(
@@ -1444,6 +1777,22 @@ impl Condition {
 impl From<Value> for Condition {
     fn from(value: Value) -> Self {
         Self::new(value)
+    }
+}
+
+fn action_argument_count(action: &Action) -> usize {
+    match action {
+        Action::SetGlobalVariable { .. }
+        | Action::ModifyGlobalVariable { .. }
+        | Action::If { .. }
+        | Action::ElseIf { .. }
+        | Action::While { .. } => 1,
+        Action::SetPlayerVariable { .. } | Action::ModifyPlayerVariable { .. } => 2,
+        Action::AssignMember { .. } => 2,
+        Action::ForGlobalVariable { .. } => 3,
+        Action::ForPlayerVariable { .. } => 4,
+        Action::Call { args, .. } => args.len(),
+        Action::CallSubroutine { .. } | Action::Else | Action::End | Action::Disabled { .. } => 0,
     }
 }
 

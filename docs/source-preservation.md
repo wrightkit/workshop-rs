@@ -9,7 +9,8 @@ programmatically constructed programs do not need synthetic source metadata.
 `parser::parse` and `parser::parse_with_context` retain the exact input in a
 `SourceDocument` attached to file 0. The parsed public `Program` exposes that
 document through `Program::source`. A consumer constructing a program can use
-the source types directly when it has authored source for a file. The document preserves every byte,
+`Program::add_file` with the source types directly when it has authored source
+for a file. The document preserves every byte,
 including whitespace and newlines, and indexes `//` line comments outside
 string literals. Other trivia is intentionally not assigned semantic identity;
 it remains available in the exact source text.
@@ -33,9 +34,14 @@ comments, whitespace, and mixed source structure are preserved.
 
 Parsed programs expose rule, condition, action, and direct action-argument
 spans through `Program::rule_span`, `Program::condition_span`,
-`Program::action_span`, and `Program::action_argument_span`. `Program::edit_source`
+`Program::action_span`, and `Program::action_argument_span`. Consumers that
+construct a program can attach the same metadata with
+`Program::set_rule_span`, `Program::set_condition_span`,
+`Program::set_action_span`, and `Program::set_action_argument_span`; declaration
+spans use the corresponding variable and subroutine methods. `Program::edit_source`
 creates a checked edit from those public spans without exposing normalized WIR
-storage. Programmatic construction has no provenance and returns no spans.
+storage. Programmatic construction remains source-free when no files or spans
+are attached.
 
 The settings API's `SettingSourceEdit` remains the typed settings operation and
 uses the same expected-byte/fail-closed principle. Canonical `emitter::emit`
