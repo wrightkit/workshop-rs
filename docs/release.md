@@ -111,6 +111,19 @@ crates.io, Git tags, Actions artifacts, and GitHub Releases are separate externa
 
 Release changes require ordinary repository CI plus release-specific static validation such as `actionlint` when the workflow changes.
 
+The `Public API compatibility` CI job runs `cargo-semver-checks` for the
+`workshop-rs` library against the latest normal release published on crates.io.
+This automatically advances the accepted baseline after each release, so
+semver-safe additive changes do not require baseline updates. The protected
+surface is the documented public library API established by #112. The CLI
+crate, generated catalog data, test support, storage internals, and
+`#[doc(hidden)]` compatibility paths are outside this gate unless they are
+reachable through that documented API.
+
+An intentional breaking change must first have an approved public-contract
+decision and use the corresponding major version release. Once that release is
+published, the compatibility gate automatically uses it as the next baseline.
+
 Those checks do not prove external publication behavior. A material release-topology change is considered established only after at least one real release completes the declared production path:
 
 ```text
