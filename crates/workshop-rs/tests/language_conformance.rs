@@ -597,6 +597,12 @@ fn call_program_source_variant(
     override_argument: Option<(usize, String)>,
 ) -> String {
     let spelling = entry.spelling(&Locale::new(EN_US)).unwrap_or(&entry.id);
+    if entry.id == "true" || entry.id == "false" || entry.id == "null" {
+        return program_source(&format!("Set Global Variable(probe, {spelling});"), false);
+    }
+    if entry.id == "global" {
+        return program_source("Set Global Variable(probe, Global.probe);", false);
+    }
     if entry.id == "__forPlayerVariable__" {
         return program_source(
             "For Player Variable(Event Player, probe, 0, 1, 1);\n    Wait(1, Ignore Condition);\nEnd;",

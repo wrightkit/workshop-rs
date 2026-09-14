@@ -62,15 +62,18 @@ impl EmitContext<'_> {
                 {
                     if is_comparison_operator(name) && args.len() == 2 {
                         self.value(args[0], &mut text)?;
-                        write!(text, " {name} ").unwrap();
+                        let operator = self.spelling(Kind::Operator, name)?;
+                        write!(text, " {operator} ").unwrap();
                         self.value(args[1], &mut text)?;
                     } else {
                         self.value(*condition, &mut text)?;
-                        text.push_str(" == True");
+                        let true_spelling = self.spelling(Kind::Value, "true")?;
+                        write!(text, " == {true_spelling}").unwrap();
                     }
                 } else {
                     self.value(*condition, &mut text)?;
-                    text.push_str(" == True");
+                    let true_spelling = self.spelling(Kind::Value, "true")?;
+                    write!(text, " == {true_spelling}").unwrap();
                 }
                 self.line(2, &format!("{text};"))?;
             }

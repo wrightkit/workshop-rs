@@ -108,6 +108,16 @@ fn settings_projection_is_multi_locale_data() {
         serde_json::from_str(include_str!("../src/settings/data/locales.json"))
             .expect("multi-locale settings projection");
     assert_eq!(projection["locales"], serde_json::json!(["en-US", "zh-CN"]));
+    for (name, zh_name) in [
+        ("main", "主程序"),
+        ("lobby", "大厅"),
+        ("modes", "模式"),
+        ("heroes", "英雄"),
+        ("extensions", "扩展"),
+        ("workshop", "地图工坊"),
+    ] {
+        assert_eq!(projection["namespaces"][name]["zh-CN"], zh_name);
+    }
 }
 
 const BASIC_RULE: &str = "rule (\"setup\") {
@@ -127,6 +137,46 @@ fn emission_into_zh_cn_uses_evidence_backed_mappings() {
     let output = emitter::emit_wir(&program, &catalog, &zh()).expect("corpus mappings emit");
     assert!(output.contains("持续 - 全局"), "{output}");
     assert!(output.contains("禁用查看器录制"), "{output}");
+}
+
+// Minimized from the OWBastion/Bastion zh-CN differential reported in
+// Bastion#214, using revision c010e1a2d468ec7140f474e334067e5ab8d02d89 and
+// source fixture crates/workshop-rs/tests/fixtures/real-projects/bastion.ow.
+const BASTION_ZH_CN_EMISSION_SLICE: &str = r#"variables {
+    global:
+        0: probe
+}
+
+rule ("locale surface") {
+    event {
+        Ongoing - Global;
+    }
+    conditions {
+        Global.probe == True;
+    }
+    actions {
+        Set Global Variable(probe, False);
+        Set Global Variable(probe, Null);
+    }
+}
+"#;
+
+#[test]
+fn primitive_and_global_spellings_emit_and_reparse_in_zh_cn() {
+    let catalog = builtin();
+    let program = parser::parse_wir(BASTION_ZH_CN_EMISSION_SLICE, &catalog, &en()).expect("parses");
+    let output = emitter::emit_wir(&program, &catalog, &zh()).expect("zh-CN emits");
+    assert!(output.contains("全局.probe"), "{output}");
+    assert!(output.contains("假"), "{output}");
+    assert!(output.contains("空"), "{output}");
+    assert!(output.contains(" == 真"), "{output}");
+    let reparsed = parser::parse_wir(&output, &catalog, &zh()).expect("zh-CN reparses");
+    assert!(
+        workshop_rs::roundtrip::equivalent_wir(&program, &reparsed),
+        "original={} reparsed={}",
+        program.dump(),
+        reparsed.dump()
+    );
 }
 
 #[test]
@@ -264,6 +314,40 @@ fn settings_emission_into_zh_cn_uses_the_generated_locale_corpus() {
     };
     let output = emitter::emit_wir(&program, &catalog, &zh()).expect("settings corpus emits");
     assert!(output.contains("自由混战人数上限: 6"), "{}", output);
+}
+
+#[test]
+fn settings_namespace_spellings_emit_and_reparse_in_zh_cn() {
+    use workshop_rs::settings::Settings;
+    let catalog = builtin();
+    let group = |name: &str| SettingsNode::Group {
+        name: name.to_string(),
+        children: Vec::new(),
+        span: None,
+    };
+    let program = workshop_rs::wir::Program {
+        settings: Some(Settings {
+            span: None,
+            children: vec![
+                group("main"),
+                group("lobby"),
+                group("gamemodes"),
+                group("heroes"),
+                group("extensions"),
+                SettingsNode::Workshop {
+                    children: Vec::new(),
+                    span: None,
+                },
+            ],
+        }),
+        ..workshop_rs::wir::Program::default()
+    };
+    let output = emitter::emit_wir(&program, &catalog, &zh()).expect("zh-CN settings emit");
+    for header in ["主程序", "大厅", "模式", "英雄", "扩展", "地图工坊"] {
+        assert!(output.contains(&format!("{header} {{")), "{output}");
+    }
+    let reparsed = parser::parse_wir(&output, &catalog, &zh()).expect("zh-CN settings reparse");
+    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
 }
 
 /// A test-only catalog with a second declared locale carrying clearly

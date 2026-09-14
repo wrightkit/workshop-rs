@@ -17,7 +17,9 @@ impl EmitContext<'_> {
             };
             match name.as_str() {
                 "main" | "lobby" => {
-                    self.line(1, &format!("{name} {{"))?;
+                    let display =
+                        self.setting_name("namespaces", name, &format!("namespace.{name}"))?;
+                    self.line(1, &format!("{display} {{"))?;
                     for member in children {
                         self.settings_member(member, 2, &[PathPart::Part(name)], None)?;
                     }
@@ -26,7 +28,9 @@ impl EmitContext<'_> {
                 "gamemodes" => self.emit_modes(children)?,
                 "heroes" => self.emit_heroes(children)?,
                 "extensions" => {
-                    self.line(1, "extensions {")?;
+                    let display =
+                        self.setting_name("namespaces", "extensions", "namespace.extensions")?;
+                    self.line(1, &format!("{display} {{"))?;
                     for member in children {
                         self.settings_member(member, 2, &[PathPart::Part("extensions")], None)?;
                     }
@@ -44,7 +48,7 @@ impl EmitContext<'_> {
         children: &[SettingsNode],
         level: usize,
     ) -> Result<()> {
-        let workshop = self.structural("workshop")?;
+        let workshop = self.setting_name("namespaces", "workshop", "namespace.workshop")?;
         self.line(level, &format!("{workshop} {{"))?;
         for child in children {
             self.emit_workshop_node(child, level + 1)?;
@@ -77,7 +81,8 @@ impl EmitContext<'_> {
 
     /// Emit the `modes { <Mode> { ... } }` block of a gamemodes group.
     pub(crate) fn emit_modes(&mut self, modes: &[SettingsNode]) -> Result<()> {
-        self.line(1, "modes {")?;
+        let modes_keyword = self.setting_name("namespaces", "modes", "namespace.modes")?;
+        self.line(1, &format!("{modes_keyword} {{"))?;
         for mode in modes {
             let SettingsNode::Group { name, children, .. } = mode else {
                 return Err(self.malformed("mode entries must be groups"));
@@ -120,7 +125,8 @@ impl EmitContext<'_> {
 
     /// Emit the `heroes { <Team> { ... } }` block of a heroes group.
     pub(crate) fn emit_heroes(&mut self, teams: &[SettingsNode]) -> Result<()> {
-        self.line(1, "heroes {")?;
+        let heroes_keyword = self.setting_name("namespaces", "heroes", "namespace.heroes")?;
+        self.line(1, &format!("{heroes_keyword} {{"))?;
         for team in teams {
             let SettingsNode::Group { name, children, .. } = team else {
                 return Err(self.malformed("team entries must be groups"));

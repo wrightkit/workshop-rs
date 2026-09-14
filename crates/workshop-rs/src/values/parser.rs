@@ -401,7 +401,9 @@ impl ParseContext<'_> {
             Some(Token {
                 kind: TokenKind::Word(word),
                 ..
-            }) if matches!(canonical_keyword(&word), "Global" | "global") => {
+            }) if matches!(word.as_str(), "Global" | "global")
+                || self.canonical_keyword(&word) == "global" =>
+            {
                 let (start, end) = self.span_here();
                 self.pos += 1;
                 // The reference's value spelling `Global Variable(name)`
@@ -657,14 +659,18 @@ impl ParseContext<'_> {
                     return self.bare_member_resolved(&phrase, start, end);
                 }
                 let (phrase, start, end) = self.phrase()?;
-                match canonical_keyword(&phrase) {
-                    "True" | "真" => Ok(self.push_bool(true, start, end)),
-                    "False" | "假" => Ok(self.push_bool(false, start, end)),
+                let canonical_value = self
+                    .resolve_entry(Kind::Value, &phrase)
+                    .map(|entry| entry.id)
+                    .unwrap_or_else(|| canonical_keyword(&phrase).to_string());
+                match canonical_value.as_str() {
+                    "true" => Ok(self.push_bool(true, start, end)),
+                    "false" => Ok(self.push_bool(false, start, end)),
                     "Event Player" => Ok(self.target.values.push(ValueNode::new(
                         Value::EventPlayer,
                         Some(Span::new(self.file(), start, end)),
                     ))),
-                    "Null" => Ok(self.target.values.push(ValueNode::new(
+                    "null" => Ok(self.target.values.push(ValueNode::new(
                         Value::Null,
                         Some(Span::new(self.file(), start, end)),
                     ))),

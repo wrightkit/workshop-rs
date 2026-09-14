@@ -517,6 +517,7 @@ mod corpus {
     /// The declared settings surface (mirrors `settings::table`).
     #[derive(Debug)]
     struct SettingsSurface {
+        namespaces: Vec<(String, String)>,
         /// `(surface id, en-US name)` of every rendering label. The
         /// per-mode `enabled` members render no label (the mode header's
         /// `disabled` prefix instead) and are excluded here.
@@ -547,6 +548,17 @@ mod corpus {
         // per-mode repeats (enabled maps, Limit Roles, Competitive Rules)
         // share one label. The per-mode `enabled` members render no label
         // (the mode header's `disabled` prefix instead) and are excluded.
+        let namespaces = [
+            ("namespace.main", "main"),
+            ("namespace.lobby", "lobby"),
+            ("namespace.modes", "modes"),
+            ("namespace.heroes", "heroes"),
+            ("namespace.extensions", "extensions"),
+            ("namespace.workshop", "workshop"),
+        ]
+        .into_iter()
+        .map(|(id, name)| (id.to_string(), name.to_string()))
+        .collect();
         let mut labels: Vec<(String, String)> = Vec::new();
         let mut seen = std::collections::HashSet::new();
         for entry in table::entries() {
@@ -592,12 +604,14 @@ mod corpus {
         let tokens = [
             ("token.on", "On"),
             ("token.off", "Off"),
+            ("token.no", "No"),
             ("token.disabled", "disabled"),
         ]
         .iter()
         .map(|(id, name)| (id.to_string(), name.to_string()))
         .collect();
         SettingsSurface {
+            namespaces,
             labels,
             modes,
             maps,
@@ -1139,6 +1153,7 @@ mod corpus {
         let surface = settings_surface();
 
         let mut sections: Vec<SettingsSection<'_>> = vec![
+            ("namespaces", surface.namespaces, &custom_game),
             ("labels", surface.labels, &custom_game),
             ("modes", surface.modes, &gamemodes),
             ("maps", surface.maps, &maps),
@@ -1166,13 +1181,13 @@ mod corpus {
                 match index.match_spelling(export_en) {
                     Ok(candidates) => {
                         matched += 1;
-                        entries.insert(en.clone(), settings_entry(&candidates)?);
+                        entries.insert(en.clone(), settings_entry(&candidates, export_en)?);
                     }
                     Err(reason) => {
                         match confirmed_settings_identity_match(export, surface_id, en) {
                             Some(candidates) => {
                                 matched += 1;
-                                entries.insert(en.clone(), settings_entry(&candidates)?);
+                                entries.insert(en.clone(), settings_entry(&candidates, export_en)?);
                             }
                             None => excluded.push(serde_json::json!({
                                 "surface": surface_id,
@@ -1193,6 +1208,7 @@ mod corpus {
         // Split the flat matched entries into per-section maps mirroring the
         // declared settings surface.
         let mut labels = Map::new();
+        let mut namespaces = Map::new();
         let mut modes = Map::new();
         let mut maps_out = Map::new();
         let mut heroes_out = Map::new();
@@ -1201,6 +1217,7 @@ mod corpus {
         let mut tokens_out = Map::new();
         for (section, surface_entries, _) in &sections {
             let target = match *section {
+                "namespaces" => &mut namespaces,
                 "labels" => &mut labels,
                 "modes" => &mut modes,
                 "maps" => &mut maps_out,
@@ -1220,15 +1237,13 @@ mod corpus {
         let locales: std::collections::BTreeSet<String> = entries
             .values()
             .flat_map(Value::as_object)
-            .flat_map(|section| section.values())
-            .flat_map(Value::as_object)
             .flat_map(|entry| entry.keys())
             .filter(|key| key.as_str() != "sources")
             .cloned()
             .collect();
 
         Ok(serde_json::json!({
-            "schemaVersion": 1,
+            "schemaVersion": 2,
             "locales": locales,
             "provenance": {
                 "generator": "workshop-catalog-gen corpus",
@@ -1238,8 +1253,9 @@ mod corpus {
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "method": "exact en-US spelling match between the declared settings surface (settings::table) and every locale translation carried by the export's customGameSettings/gamemodes/maps/heroes labels, direct data.gamemodes entries, and other.customGameSettings tokens; the two hero Ultimate Generation labels are composed per reviewed locale from exact export templates and hero identities; entries without an accepted match keep fail-explicit behavior (ADR-0001 Decision 7)",
-                "sourceReview": "reviewed: workshop-rs commits its own settings mapping data; the user-provided JSON is build input only and is not redistributed",
+            "sourceReview": "reviewed: workshop-rs commits its own settings mapping data; the user-provided JSON is build input only and is not redistributed",
             },
+            "namespaces": namespaces,
             "labels": labels,
             "modes": modes,
             "maps": maps_out,
@@ -1249,13 +1265,20 @@ mod corpus {
             "tokens": tokens_out,
             "excluded": excluded,
             "coverage": coverage,
+            "projection": "multi-locale-settings/v1",
         }))
     }
 
-    fn settings_entry(candidates: &[Candidate]) -> Result<Value, String> {
+    fn settings_entry(candidates: &[Candidate], expected_en: &str) -> Result<Value, String> {
         let mut aliases = Map::new();
         for candidate in candidates {
+            if candidate.locales.get("en-US").map(String::as_str) != Some(expected_en) {
+                continue;
+            }
             for (locale, value) in &candidate.locales {
+                if !matches!(locale.as_str(), "en-US" | "zh-CN") {
+                    continue;
+                }
                 if let Some(previous) = aliases.get(locale).and_then(Value::as_str) {
                     if previous != value {
                         return Err(format!(

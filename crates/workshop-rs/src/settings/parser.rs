@@ -8,27 +8,30 @@ impl ParseContext<'_> {
         while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
             let (display, child_start, _) = self.phrase()?;
             let canonical_display = self.canonical_keyword(&display);
-            let name = match canonical_display.as_str() {
-                value
-                    if value == "extensions"
-                        || display == "扩展"
-                        || self.settings_name_matches("labels", "Extensions", &display) =>
-                {
-                    "extensions"
-                }
-                value
-                    if value == "workshop"
-                        || table::localized_name(
-                            self.locale.as_str(),
-                            "namespaces",
-                            "workshop",
-                        )
-                        .is_some_and(|name| name == display) =>
-                {
-                    "workshop"
-                }
-                value => value,
-            };
+            let name = ["main", "lobby", "modes", "heroes", "extensions", "workshop"]
+                .into_iter()
+                .find(|name| self.settings_namespace_matches(name, &display))
+                .unwrap_or_else(|| match canonical_display.as_str() {
+                    value
+                        if value == "extensions"
+                            || display == "扩展"
+                            || self.settings_name_matches("labels", "Extensions", &display) =>
+                    {
+                        "extensions"
+                    }
+                    value
+                        if value == "workshop"
+                            || table::localized_name(
+                                self.locale.as_str(),
+                                "namespaces",
+                                "workshop",
+                            )
+                            .is_some_and(|name| name == display) =>
+                    {
+                        "workshop"
+                    }
+                    value => value,
+                });
             self.expect(TokenKind::LBrace, "expected '{' after settings group")?;
             let node = match name {
                 "main" | "lobby" => SettingsNode::Group {
@@ -605,6 +608,12 @@ impl ParseContext<'_> {
             // Accept that source spelling for parsing, while emission
             // still fails explicitly if the target mapping is missing.
             || display == english
+    }
+
+    fn settings_namespace_matches(&self, name: &str, display: &str) -> bool {
+        table::localized_name(self.locale.as_str(), "namespaces", name)
+            .is_some_and(|localized| localized == display)
+            || display == name
     }
 
     pub(crate) fn settings_span(&self, start: Position) -> Span {
