@@ -234,6 +234,7 @@ fn check_value(program: &Program, id: super::ValueId) -> Result<(), IrError> {
         | Value::Bool(_)
         | Value::Null
         | Value::Enum { .. }
+        | Value::AmbiguousEnum { .. }
         | Value::EventPlayer => {}
     }
     Ok(())

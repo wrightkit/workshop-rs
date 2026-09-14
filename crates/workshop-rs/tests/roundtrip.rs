@@ -28,12 +28,8 @@ fn en() -> Locale {
 #[test]
 fn every_corpus_fixture_round_trips_with_full_evidence() {
     // Corpus text round-trips against the catalog context, which pins the
-    // expected enum domains from the canonical catalog signatures.
-    // `overpy-cake` is the documented exception: its bare `Up` (OverPy folds
-    // the vector-up constant inside `Add(...)`) is genuinely ambiguous
-    // between the `Vector` and `Rounding` enum domains and no enclosing
-    // signature pins it, so the parser rejects it.
-    let documented_ambiguities = [("overpy-cake", "ambiguous enum member 'Up'")];
+    // expected enum domains from the canonical catalog signatures. Unpinned
+    // shared members retain all catalog-backed candidates for equivalence.
     for fixture_id in [
         "basic-rule",
         "control-flow",
@@ -46,19 +42,10 @@ fn every_corpus_fixture_round_trips_with_full_evidence() {
         let catalog = catalog();
         let record =
             roundtrip::round_trip_with_context(&corpus_text(fixture_id), &catalog, &en(), &catalog);
-        if let Some(error) = &record.error {
-            let Some((_, message)) = documented_ambiguities
-                .iter()
-                .find(|(id, _)| **id == *fixture_id)
-            else {
-                panic!("{fixture_id} must round-trip cleanly: {error}");
-            };
-            assert!(
-                error.contains(message),
-                "{fixture_id} fails only with the documented ambiguity, got: {error}"
-            );
-            continue;
-        }
+        assert!(
+            record.error.is_none(),
+            "{fixture_id} must round-trip cleanly"
+        );
         assert!(record.parse_ok, "{fixture_id}");
         assert!(record.emit_ok, "{fixture_id}");
         assert!(record.reparse_ok, "{fixture_id}");
@@ -72,10 +59,7 @@ fn every_corpus_fixture_round_trips_with_full_evidence() {
 #[test]
 fn same_locale_round_trip_is_a_release_gate() {
     // The suite fails closed: any fixture failing round-trip equivalence
-    // blocks the gate. The `overpy-cake` bare-`Up` ambiguity is the single
-    // documented exception: the catalog documents both the `Vector` and
-    // `Rounding` "Up" members, and no enclosing signature pins the fixture's
-    // folded vector-up constant.
+    // blocks the gate, including unpinned shared preset members.
     let failures: Vec<String> = [
         "basic-rule",
         "control-flow",
@@ -86,7 +70,6 @@ fn same_locale_round_trip_is_a_release_gate() {
         "overpy-cake",
     ]
     .iter()
-    .filter(|fixture_id| **fixture_id != "overpy-cake")
     .map(|fixture_id| {
         let catalog = catalog();
         roundtrip::round_trip_with_context(&corpus_text(fixture_id), &catalog, &en(), &catalog)
@@ -281,15 +264,17 @@ fn emitter_chase_at_rate_none_round_trips_through_the_catalog_context() {
 }
 
 #[test]
-fn context_free_chase_none_stays_a_documented_exception() {
-    // Without a signature pin the ambiguity stays rejected: the same input
-    // through the plain (context-free) round-trip fails at parse, keeping
-    // the boundary deterministic.
+fn context_free_chase_none_is_preserved() {
+    // Without a signature pin the ambiguity remains structured: the same
+    // input through the plain (context-free) round-trip preserves all of its
+    // canonical candidates.
     let text = "variables { global: 0: g }\nrule (\"chase\") { event { Ongoing - Global; } actions { Chase Global Variable Over Time(Global.g, 0, 30, None); } }";
     let record = roundtrip::round_trip(text, &catalog(), &en());
-    assert!(!record.parse_ok, "context-free None must stay rejected");
-    let error = record.error.expect("a parse failure is recorded");
-    assert!(error.contains("ambiguous enum member 'None'"), "{error}");
+    assert!(record.parse_ok && record.emit_ok && record.reparse_ok);
+    assert!(
+        record.equivalent,
+        "context-free None candidates must round-trip"
+    );
 }
 
 #[test]

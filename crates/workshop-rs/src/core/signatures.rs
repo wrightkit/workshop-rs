@@ -17,15 +17,16 @@
 /// The parser asks for the expected domain of argument `arg_index` (0-based)
 /// of the call whose Workshop catalog id is `catalog_id`. Implementations
 /// must return the domain only when the canonical signature pins exactly one;
-/// returning `None` keeps an ambiguous bare member rejected.
+/// returning `None` leaves an ambiguous bare member unresolved.
 pub trait ExpectedDomain {
     /// The expected enum domain for `arg_index` of the call with catalog id
     /// `catalog_id`, or `None` when the signature does not pin one.
     fn expected_domain(&self, catalog_id: &str, arg_index: usize) -> Option<&str>;
 }
 
-/// A context with no signature metadata. Ambiguous bare enum members stay
-/// rejected. Used by callers that intentionally need context-free parsing.
+/// A context with no signature metadata. Ambiguous bare enum members remain
+/// structured with their catalog candidates. Used by callers that intentionally
+/// need context-free parsing.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct NoExpectedDomain;
 

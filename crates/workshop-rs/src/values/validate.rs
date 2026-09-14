@@ -96,6 +96,34 @@ pub(crate) fn validate_value(
                 });
             }
         }
+        wir::Value::AmbiguousEnum { candidates, .. } => {
+            if candidates.is_empty() {
+                errors.push(WorkshopError::Malformed {
+                    message: "ambiguous enum member has no candidates".to_string(),
+                    span: node.span,
+                });
+            }
+            for (value_type, value) in candidates {
+                if catalog.enum_domain(value_type).is_none() {
+                    errors.push(WorkshopError::Unknown {
+                        kind: "enum domain",
+                        spelling: value_type.clone(),
+                        locale: crate::catalog::Locale::new("en-US"),
+                        span: node.span,
+                    });
+                } else if catalog
+                    .enum_spelling(value_type, &crate::catalog::Locale::new("en-US"), value)
+                    .is_none()
+                {
+                    errors.push(WorkshopError::Unknown {
+                        kind: "enum member",
+                        spelling: format!("{value_type}.{value}"),
+                        locale: crate::catalog::Locale::new("en-US"),
+                        span: node.span,
+                    });
+                }
+            }
+        }
         wir::Value::Array(elements) => {
             for element in elements {
                 validate_value(program, catalog, *element, errors);
@@ -211,6 +239,14 @@ pub(crate) fn validate_call_signature(
                         .enum_spelling(domain, catalog.primary_locale(), value)
                         .is_some()
             }
+            wir::Value::AmbiguousEnum { candidates, .. } => {
+                candidates.iter().any(|(value_type, value)| {
+                    value_type == domain
+                        && catalog
+                            .enum_spelling(domain, catalog.primary_locale(), value)
+                            .is_some()
+                })
+            }
             _ => true,
         };
         if !valid {
@@ -219,6 +255,9 @@ pub(crate) fn validate_call_signature(
                     value_type, value, ..
                 } => {
                     format!("{value_type}.{value}")
+                }
+                wir::Value::AmbiguousEnum { spelling, .. } => {
+                    format!("ambiguous '{spelling}'")
                 }
                 _ => "non-enum expression".to_string(),
             };
@@ -328,6 +367,12 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
         (wir::Value::Enum { value_type, .. }, domain) => {
             matches!(domain, "Any" | "Unknown" | "Object") || value_type == domain
         }
+        (wir::Value::AmbiguousEnum { candidates, .. }, domain) => {
+            matches!(domain, "Any" | "Unknown" | "Object")
+                || candidates
+                    .iter()
+                    .any(|(value_type, _)| value_type == domain)
+        }
         (wir::Value::Call { name, .. }, expected) => {
             if expected == "Operation"
                 && matches!(
@@ -401,6 +446,7 @@ fn value_type_name(program: &wir::Program, catalog: &Catalog, value_id: wir::Val
         wir::Value::Vector { .. } => "Vector".to_string(),
         wir::Value::Array(_) => "Array".to_string(),
         wir::Value::Enum { value_type, .. } => value_type.clone(),
+        wir::Value::AmbiguousEnum { .. } => "AmbiguousEnum".to_string(),
         wir::Value::Call { name, .. } => catalog
             .entry(crate::catalog::Kind::Value, name)
             .and_then(|entry| entry.return_type())

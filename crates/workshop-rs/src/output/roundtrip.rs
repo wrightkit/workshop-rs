@@ -35,7 +35,7 @@ pub struct RoundTripRecord {
 
 /// Run `Workshop -> Program -> Workshop -> Program` and record the check. The record is
 /// always produced; failures are captured in its `error` field.
-/// Ambiguous bare enum members stay rejected (no signature context).
+/// Ambiguous bare enum members remain structured values (no signature context).
 pub fn round_trip(input: &str, catalog: &Catalog, locale: &Locale) -> RoundTripRecord {
     round_trip_with_context(input, catalog, locale, &NoExpectedDomain)
 }
@@ -635,6 +635,10 @@ fn value_equivalent(
                 value: v2,
             },
         ) => t1 == t2 && v1 == v2,
+        (
+            wir::Value::AmbiguousEnum { candidates: c1, .. },
+            wir::Value::AmbiguousEnum { candidates: c2, .. },
+        ) => c1 == c2,
         (wir::Value::GlobalVariable(v1), wir::Value::GlobalVariable(v2)) => {
             name_eq(a.global_variables.get(*v1), b.global_variables.get(*v2))
         }

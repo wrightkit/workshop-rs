@@ -378,6 +378,23 @@ fn render_value(program: &Program, id: super::ValueId, out: &mut String) {
             out.push('.');
             out.push_str(value);
         }
+        Value::AmbiguousEnum {
+            spelling,
+            candidates,
+        } => {
+            out.push_str("ambiguous(");
+            out.push_str(spelling);
+            out.push_str(" [");
+            for (index, (domain, member)) in candidates.iter().enumerate() {
+                if index > 0 {
+                    out.push_str(", ");
+                }
+                out.push_str(domain);
+                out.push('.');
+                out.push_str(member);
+            }
+            out.push_str("])");
+        }
         Value::GlobalVariable(variable) => out.push_str(&variable_name(
             program.global_variables.get(*variable),
             variable.index(),

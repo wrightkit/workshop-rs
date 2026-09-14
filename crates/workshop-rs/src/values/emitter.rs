@@ -87,6 +87,10 @@ impl EmitContext<'_> {
                     out.push_str(&spelling);
                 }
             }
+            wir::Value::AmbiguousEnum {
+                spelling,
+                candidates,
+            } => out.push_str(&self.ambiguous_enum_spelling(spelling, candidates)?),
             wir::Value::GlobalVariable(variable) => {
                 let name = self.global_name(*variable)?;
                 write!(out, "Global.{name}").unwrap();
@@ -525,6 +529,41 @@ impl EmitContext<'_> {
         Err(WorkshopError::MissingMapping {
             kind: "enum member",
             id: format!("{domain}.{member}"),
+            locale: self.locale.clone(),
+        })
+    }
+
+    fn ambiguous_enum_spelling(
+        &self,
+        spelling: &str,
+        candidates: &[(String, String)],
+    ) -> Result<String> {
+        let common_spelling = |locale: &Locale| {
+            let mut common = None;
+            for (domain, member) in candidates {
+                let candidate = self.catalog.enum_spelling(domain, locale, member)?;
+                if let Some(existing) = &common {
+                    if existing != candidate {
+                        return None;
+                    }
+                } else {
+                    common = Some(candidate.to_string());
+                }
+            }
+            common
+        };
+
+        if let Some(mapped) = common_spelling(&self.locale) {
+            return Ok(mapped);
+        }
+        if let Some(fallback) = &self.fallback {
+            if let Some(mapped) = common_spelling(fallback) {
+                return Ok(mapped);
+            }
+        }
+        Err(WorkshopError::MissingMapping {
+            kind: "ambiguous enum member",
+            id: spelling.to_string(),
             locale: self.locale.clone(),
         })
     }

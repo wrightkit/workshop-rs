@@ -919,15 +919,6 @@ impl ParseContext<'_> {
                 Some(Span::new(self.file(), start, end)),
             )));
         }
-        if phrase == "Visible To and String" {
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::Enum {
-                    value_type: "HudReeval".to_string(),
-                    value: "VISIBILITY_AND_STRING".to_string(),
-                },
-                Some(Span::new(self.file(), start, end)),
-            )));
-        }
         if self
             .call_stack
             .last()
@@ -941,27 +932,7 @@ impl ParseContext<'_> {
                 )));
             }
         }
-        if (self.expected_domain.is_none()
-            && matches!(
-                phrase,
-                "Up" | "上" | "Down" | "下" | "Left" | "左" | "Right" | "右"
-            )
-            && (self
-                .call_stack
-                .last()
-                .is_some_and(|call| matches!(call.as_str(), "multiply" | "add"))
-                || self.call_stack.is_empty()
-                || self
-                    .call_stack
-                    .iter()
-                    .any(|call| call == "startAcceleration")
-                || self.call_stack.iter().any(|call| {
-                    call == "raycastHitPosition"
-                        || call == "Direction Towards"
-                        || call == "directionTowards"
-                })))
-            || (matches!(self.expected_domain, Some("Position")) && matches!(phrase, "Up" | "上"))
-        {
+        if matches!(self.expected_domain, Some("Position")) && matches!(phrase, "Up" | "上") {
             let value = match phrase {
                 "Left" | "左" => "LEFT",
                 "Right" | "右" => "RIGHT",
@@ -996,10 +967,10 @@ impl ParseContext<'_> {
             )));
         }
         if matches.len() > 1 {
-            // #111: a bare spelling shared by several enum domains resolves
-            // only when the enclosing call's canonical signature pins exactly
-            // one of the matching domains. No pin keeps the deterministic
-            // ambiguity diagnostic — no guessing, no global precedence.
+            // #124: a bare spelling shared by several enum domains resolves
+            // to a canonical domain only when the enclosing call's signature
+            // pins one of the candidates. Otherwise preserve every candidate
+            // instead of fabricating a domain.
             if let Some(expected) = self.expected_domain {
                 let pinned: Vec<&(String, String)> = matches
                     .iter()
@@ -1015,10 +986,13 @@ impl ParseContext<'_> {
                     )));
                 }
             }
-            return Err(WorkshopError::Unsupported {
-                message: format!("ambiguous enum member '{phrase}' (multiple domains match)"),
-                span: Some(Span::new(self.file(), start, end)),
-            });
+            return Ok(self.target.values.push(ValueNode::new(
+                Value::AmbiguousEnum {
+                    spelling: phrase.to_string(),
+                    candidates: matches,
+                },
+                Some(Span::new(self.file(), start, end)),
+            )));
         }
         // A bare value constant (e.g. Empty Array).
         if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {

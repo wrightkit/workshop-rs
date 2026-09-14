@@ -6,7 +6,9 @@ use std::path::{Path, PathBuf};
 
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::convert;
+use workshop_rs::emitter;
 use workshop_rs::parser;
+use workshop_rs::roundtrip;
 use workshop_rs::validate;
 use workshop_rs::wir;
 
@@ -205,44 +207,24 @@ fn every_corpus_workshop_text_parses_to_valid_wir() {
     // signatures (e.g. Create HUD Text's Reevaluation argument is
     // `HudReeval`, Create Beam Effect's is `EffectReeval`), resolving bare
     // members that are ambiguous across the catalog's enum domains (e.g.
-    // `Visible To and String`).
-    //
-    // One documented exception: `overpy-cake`'s bare `Up` (OverPy folds the
-    // vector-up constant into the bare member inside `Add(...)`) is
-    // genuinely ambiguous between the `Vector` and `Rounding` enum domains
-    // and no enclosing signature pins it, so the parser rejects it
-    // deterministically rather than guessing.
-    let documented_ambiguities = [("overpy-cake", "ambiguous enum member 'Up'")];
+    // `Visible To and String`). Unpinned members retain all catalog-backed
+    // candidates instead of fabricating a domain.
     for fixture_id in CORPUS_FIXTURES {
         let text = corpus_workshop_text(fixture_id);
         let catalog = catalog();
-        match parser::parse_wir_with_context(&text, &catalog, &Locale::new("en-US"), &catalog) {
-            Ok(program) => {
-                program
-                    .validate()
-                    .unwrap_or_else(|error| panic!("{fixture_id} WIR must validate: {error}"));
-                validate::validate_canonical_ids_wir(&program, &catalog).unwrap_or_else(|error| {
-                    panic!("{fixture_id} canonical ids must resolve: {error}")
-                });
-                assert!(!program.rules.is_empty(), "{fixture_id} must produce rules");
-                assert!(
-                    !program.dump().is_empty(),
-                    "{fixture_id} dump must not be empty"
-                );
-            }
-            Err(error) => {
-                let Some((_, message)) = documented_ambiguities
-                    .iter()
-                    .find(|(id, _)| *id == *fixture_id)
-                else {
-                    panic!("{fixture_id} must parse:\n{error}");
-                };
-                assert!(
-                    error.to_string().contains(message),
-                    "{fixture_id} fails only with the documented ambiguity, got: {error}"
-                );
-            }
-        }
+        let program =
+            parser::parse_wir_with_context(&text, &catalog, &Locale::new("en-US"), &catalog)
+                .unwrap_or_else(|error| panic!("{fixture_id} must parse:\n{error}"));
+        program
+            .validate()
+            .unwrap_or_else(|error| panic!("{fixture_id} WIR must validate: {error}"));
+        validate::validate_canonical_ids_wir(&program, &catalog)
+            .unwrap_or_else(|error| panic!("{fixture_id} canonical ids must resolve: {error}"));
+        assert!(!program.rules.is_empty(), "{fixture_id} must produce rules");
+        assert!(
+            !program.dump().is_empty(),
+            "{fixture_id} dump must not be empty"
+        );
     }
 }
 
@@ -590,15 +572,67 @@ fn unsupported_construct_is_distinct_from_malformed() {
 #[test]
 fn bare_chase_reevaluation_none_is_ambiguous_across_domains() {
     // Both reference reevaluation domains spell their NONE member "None".
-    // Without a signature pin the catalog-backed parser rejects the bare
-    // spelling with a structured Unsupported diagnostic.
+    // Without a signature pin the catalog-backed parser retains all matching
+    // canonical candidates instead of choosing a domain.
     let text = "variables { global: 0: g }\nrule (\"x\") { event { Ongoing - Global; } actions { Set Global Variable(g, None); } }";
-    let error = parser::parse_wir(text, &catalog(), &Locale::new("en-US")).unwrap_err();
+    let program = parser::parse_wir(text, &catalog(), &Locale::new("en-US"))
+        .expect("the shared None member spelling must be preserved");
+    let value_id = match program.actions.iter().next().expect("action") {
+        wir::Action::SetGlobalVariable { value, .. } => *value,
+        action => panic!("expected a global assignment, got {action:?}"),
+    };
+    let value = &program.values.get(value_id).expect("value").value;
+    let wir::Value::AmbiguousEnum {
+        spelling,
+        candidates,
+    } = value
+    else {
+        panic!("expected preserved ambiguous enum, got {value:?}");
+    };
+    assert_eq!(spelling, "None");
     assert!(
-        matches!(error, workshop_rs::WorkshopError::Unsupported { .. }),
-        "the shared None member spelling must be a structured ambiguity: {error}"
+        candidates
+            .iter()
+            .any(|candidate| { candidate == &("ChaseTimeReeval".to_string(), "NONE".to_string()) })
     );
-    assert!(error.to_string().contains("ambiguous enum member 'None'"));
+    assert!(
+        candidates
+            .iter()
+            .any(|candidate| { candidate == &("ChaseRateReeval".to_string(), "NONE".to_string()) })
+    );
+}
+
+#[test]
+fn pinned_chase_enums_preserve_ambiguous_literals_through_public_round_trip() {
+    // Provenance: wrightkit/opy-rs synthetic/chase-enums/oracle.json,
+    // OverPy 9.7.10 Workshop artifact SHA-256
+    // f5cf7f06ea9dc10c18923275471b9e95d38db2aa737fb8d9173ea75db0afceb7.
+    let text = r#"variables {
+    global:
+        0: time_reeval
+        1: rate_reeval
+}
+
+rule ("chase reevaluation enums") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        Set Global Variable(time_reeval, None);
+        Set Global Variable(time_reeval, Destination and Duration);
+        Set Global Variable(rate_reeval, None);
+        Set Global Variable(rate_reeval, Destination and Rate);
+    }
+}
+"#;
+    let catalog = catalog();
+    let locale = Locale::new("en-US");
+    let program = parser::parse(text, &catalog, &locale).expect("pinned artifact parses");
+    program.validate().expect("preserved candidates validate");
+    let emitted = emitter::emit(&program, &catalog, &locale).expect("pinned artifact emits");
+    assert_eq!(emitted.matches("Set Global Variable").count(), 4);
+    let reparsed = parser::parse(&emitted, &catalog, &locale).expect("emitted artifact reparses");
+    assert!(roundtrip::equivalent(&program, &reparsed));
 }
 
 #[test]
@@ -720,19 +754,19 @@ rule ("chase and condition") {
 }
 
 #[test]
-fn wrong_domain_context_keeps_the_ambiguity_rejected() {
+fn wrong_domain_context_keeps_the_ambiguity_preserved() {
     // A signature pinning a *different* domain than the ambiguous member's
     // candidates must not resolve it: `Wait(...)` expects `Wait` (which has
     // no `None` member), so the bare `None` stays ambiguous — no guessing,
     // no arbitrary precedence.
     let text = "rule (\"x\") { event { Ongoing - Global; } actions { Wait(0.016, None); } }";
-    let error = parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-        .expect_err("a non-matching expected domain must keep the ambiguity");
-    assert!(
-        matches!(error, workshop_rs::WorkshopError::Unsupported { .. }),
-        "expected a structured ambiguity: {error}"
-    );
-    assert!(error.to_string().contains("ambiguous enum member 'None'"));
+    let program =
+        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+            .expect("a non-matching expected domain must preserve the ambiguity");
+    assert!(matches!(
+        enum_value_of_first_action(&program, 0),
+        wir::Value::AmbiguousEnum { .. }
+    ));
 }
 
 #[test]
