@@ -635,10 +635,6 @@ fn value_equivalent(
                 value: v2,
             },
         ) => t1 == t2 && v1 == v2,
-        (
-            wir::Value::AmbiguousEnum { candidates: c1, .. },
-            wir::Value::AmbiguousEnum { candidates: c2, .. },
-        ) => c1 == c2,
         (wir::Value::GlobalVariable(v1), wir::Value::GlobalVariable(v2)) => {
             name_eq(a.global_variables.get(*v1), b.global_variables.get(*v2))
         }
@@ -689,11 +685,31 @@ fn value_equivalent(
                     .get(*variable)
                     .is_some_and(|value| value.name == *member)
         }
+        (wir::Value::Call { name: n1, args: x1 }, wir::Value::Call { name: n2, args: x2 })
+            if n1 == wir::AMBIGUOUS_ENUM_CALL && n2 == wir::AMBIGUOUS_ENUM_CALL =>
+        {
+            ambiguous_enum_equivalent(a, b, x1, x2)
+        }
         (wir::Value::Call { name: n1, args: x1 }, wir::Value::Call { name: n2, args: x2 }) => {
             canonical_value_name(n1) == canonical_value_name(n2) && values_equivalent(a, b, x1, x2)
         }
         _ => false,
     }
+}
+
+fn ambiguous_enum_equivalent(
+    a: &wir::Program,
+    b: &wir::Program,
+    left: &[wir::ValueId],
+    right: &[wir::ValueId],
+) -> bool {
+    let Some((_, left_candidates)) = wir::ambiguous_enum_parts_by_args(a, left) else {
+        return false;
+    };
+    let Some((_, right_candidates)) = wir::ambiguous_enum_parts_by_args(b, right) else {
+        return false;
+    };
+    left_candidates == right_candidates
 }
 
 fn canonical_value_name(name: &str) -> &str {

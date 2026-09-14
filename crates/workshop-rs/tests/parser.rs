@@ -582,24 +582,36 @@ fn bare_chase_reevaluation_none_is_ambiguous_across_domains() {
         action => panic!("expected a global assignment, got {action:?}"),
     };
     let value = &program.values.get(value_id).expect("value").value;
-    let wir::Value::AmbiguousEnum {
-        spelling,
-        candidates,
-    } = value
-    else {
+    let wir::Value::Call { name, args } = value else {
         panic!("expected preserved ambiguous enum, got {value:?}");
     };
-    assert_eq!(spelling, "None");
-    assert!(
-        candidates
-            .iter()
-            .any(|candidate| { candidate == &("ChaseTimeReeval".to_string(), "NONE".to_string()) })
-    );
-    assert!(
-        candidates
-            .iter()
-            .any(|candidate| { candidate == &("ChaseRateReeval".to_string(), "NONE".to_string()) })
-    );
+    assert_eq!(name, "__ambiguous_enum");
+    assert_eq!(args.len(), 2);
+    assert!(matches!(
+        program.values.get(args[0]),
+        Some(wir::ValueNode {
+            value: wir::Value::String(spelling),
+            ..
+        }) if spelling == "None"
+    ));
+    let wir::Value::Array(candidates) = &program.values.get(args[1]).expect("candidates").value
+    else {
+        panic!("expected ambiguous enum candidates, got {value:?}");
+    };
+    assert!(candidates.iter().any(|candidate| matches!(
+        program.values.get(*candidate),
+        Some(wir::ValueNode {
+            value: wir::Value::Enum { value_type, value },
+            ..
+        }) if value_type == "ChaseTimeReeval" && value == "NONE"
+    )));
+    assert!(candidates.iter().any(|candidate| matches!(
+        program.values.get(*candidate),
+        Some(wir::ValueNode {
+            value: wir::Value::Enum { value_type, value },
+            ..
+        }) if value_type == "ChaseRateReeval" && value == "NONE"
+    )));
 }
 
 #[test]
@@ -765,7 +777,7 @@ fn wrong_domain_context_keeps_the_ambiguity_preserved() {
             .expect("a non-matching expected domain must preserve the ambiguity");
     assert!(matches!(
         enum_value_of_first_action(&program, 0),
-        wir::Value::AmbiguousEnum { .. }
+        wir::Value::Call { name, .. } if name == "__ambiguous_enum"
     ));
 }
 

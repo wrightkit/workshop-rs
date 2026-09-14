@@ -100,6 +100,8 @@ pub type ActionId = Id<Action>;
 /// A typed ID referencing a [`ValueNode`] in the value arena.
 pub type ValueId = Id<ValueNode>;
 
+pub(crate) const AMBIGUOUS_ENUM_CALL: &str = "__ambiguous_enum";
+
 /// The Workshop IR program: tables and arenas produced by lowering.
 #[derive(Debug, Clone)]
 pub struct Program {
@@ -167,4 +169,49 @@ impl Program {
     pub fn dump(&self) -> String {
         dump::dump(self)
     }
+}
+
+pub(crate) fn ambiguous_enum_parts(
+    program: &Program,
+    value_id: ValueId,
+) -> Option<(&str, &[ValueId])> {
+    let Value::Call { name, args } = &program.values.get(value_id)?.value else {
+        return None;
+    };
+    if name != AMBIGUOUS_ENUM_CALL || args.len() != 2 {
+        return None;
+    }
+    let Value::String(spelling) = &program.values.get(args[0])?.value else {
+        return None;
+    };
+    let Value::Array(candidates) = &program.values.get(args[1])?.value else {
+        return None;
+    };
+    Some((spelling, candidates))
+}
+
+pub(crate) fn ambiguous_enum_parts_by_args<'a>(
+    program: &'a Program,
+    args: &[ValueId],
+) -> Option<(&'a str, Vec<(String, String)>)> {
+    if args.len() != 2 {
+        return None;
+    }
+    let Value::String(spelling) = &program.values.get(args[0])?.value else {
+        return None;
+    };
+    let Value::Array(candidate_ids) = &program.values.get(args[1])?.value else {
+        return None;
+    };
+    let candidates = candidate_ids
+        .iter()
+        .map(|candidate_id| {
+            let Value::Enum { value_type, value } = &program.values.get(*candidate_id)?.value
+            else {
+                return None;
+            };
+            Some((value_type.clone(), value.clone()))
+        })
+        .collect::<Option<Vec<_>>>()?;
+    Some((spelling, candidates))
 }

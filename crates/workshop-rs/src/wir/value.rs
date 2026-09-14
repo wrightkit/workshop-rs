@@ -36,12 +36,6 @@ pub enum Value {
         value_type: String,
         value: String,
     },
-    /// A known enum member whose spelling resolves to several domains without
-    /// enough surrounding context to choose one.
-    AmbiguousEnum {
-        spelling: String,
-        candidates: Vec<(String, String)>,
-    },
     GlobalVariable(GlobalVarId),
     PlayerVariable {
         player: ValueId,

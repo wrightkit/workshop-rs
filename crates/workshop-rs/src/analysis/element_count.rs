@@ -425,9 +425,6 @@ impl Counter<'_> {
                 let heroes = usize::from(value_type == "Hero");
                 self.value_node(id, value_type, span, 1, vec![], heroes)
             }
-            Value::AmbiguousEnum { .. } => {
-                self.value_node(id, "ambiguous enum", span, 1, vec![], 0)
-            }
             Value::GlobalVariable(_) => self.value_node(id, "global variable", span, 1, vec![], 0),
             Value::PlayerVariable { player, .. } => {
                 self.value_children(id, "player variable", span, 1, &[*player])
@@ -435,6 +432,11 @@ impl Counter<'_> {
             Value::Subroutine(_) => self.value_node(id, "subroutine", span, 1, vec![], 0),
             Value::EventPlayer => self.value_node(id, "event player", span, 1, vec![], 0),
             Value::Call { name, args } => {
+                if name == crate::wir::AMBIGUOUS_ENUM_CALL
+                    && crate::wir::ambiguous_enum_parts(self.program, id).is_some()
+                {
+                    return self.value_node(id, "ambiguous enum", span, 1, vec![], 0);
+                }
                 if name != "memberAccess"
                     && self.catalog.entry(Kind::Value, name).is_none()
                     && self.catalog.entry(Kind::Operator, name).is_none()

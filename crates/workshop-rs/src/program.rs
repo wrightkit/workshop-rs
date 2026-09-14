@@ -745,13 +745,6 @@ fn public_value(storage: &wir::Program, id: wir::ValueId) -> Result<Value> {
             value_type: value_type.clone(),
             value: value.clone(),
         },
-        wir::Value::AmbiguousEnum {
-            spelling,
-            candidates,
-        } => Value::AmbiguousEnum {
-            spelling: spelling.clone(),
-            candidates: candidates.clone(),
-        },
         wir::Value::GlobalVariable(id) => Value::GlobalVariable(
             storage
                 .global_variables
@@ -1548,13 +1541,6 @@ fn wir_value(
             value_type: value_type.clone(),
             value: value.clone(),
         },
-        Value::AmbiguousEnum {
-            spelling,
-            candidates,
-        } => wir::Value::AmbiguousEnum {
-            spelling: spelling.clone(),
-            candidates: candidates.clone(),
-        },
         Value::GlobalVariable(name) => wir::Value::GlobalVariable(
             *globals
                 .get(name)
@@ -1971,12 +1957,6 @@ pub enum Value {
     Enum {
         value_type: String,
         value: String,
-    },
-    /// A known enum member whose spelling resolves to several domains without
-    /// enough surrounding context to choose one.
-    AmbiguousEnum {
-        spelling: String,
-        candidates: Vec<(String, String)>,
     },
     GlobalVariable(String),
     PlayerVariable {

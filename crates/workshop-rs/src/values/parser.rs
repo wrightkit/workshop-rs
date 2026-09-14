@@ -986,10 +986,27 @@ impl ParseContext<'_> {
                     )));
                 }
             }
+            let spelling = self.target.values.push(ValueNode::new(
+                Value::String(phrase.to_string()),
+                Some(Span::new(self.file(), start, end)),
+            ));
+            let candidates = matches
+                .into_iter()
+                .map(|(value_type, value)| {
+                    self.target.values.push(ValueNode::new(
+                        Value::Enum { value_type, value },
+                        Some(Span::new(self.file(), start, end)),
+                    ))
+                })
+                .collect();
+            let candidates = self
+                .target
+                .values
+                .push(ValueNode::new(Value::Array(candidates), None));
             return Ok(self.target.values.push(ValueNode::new(
-                Value::AmbiguousEnum {
-                    spelling: phrase.to_string(),
-                    candidates: matches,
+                Value::Call {
+                    name: crate::wir::AMBIGUOUS_ENUM_CALL.to_string(),
+                    args: vec![spelling, candidates],
                 },
                 Some(Span::new(self.file(), start, end)),
             )));

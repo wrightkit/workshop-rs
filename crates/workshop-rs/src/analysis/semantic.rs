@@ -217,7 +217,8 @@ fn inspect_value(
         // infix operators are lowered to their source spelling for emission.
         let canonical_helper = matches!(
             name.as_str(),
-            "memberAccess"
+            crate::wir::AMBIGUOUS_ENUM_CALL
+                | "memberAccess"
                 | "+"
                 | "-"
                 | "*"
@@ -235,7 +236,10 @@ fn inspect_value(
                 | "removeFromArray"
                 | "removeFromArrayByIndex"
         ) && (args.is_empty()
-            || matches!(name.as_str(), "memberAccess" | "+" | "-" | "*" | "/" | "%"));
+            || matches!(
+                name.as_str(),
+                crate::wir::AMBIGUOUS_ENUM_CALL | "memberAccess" | "+" | "-" | "*" | "/" | "%"
+            ));
         if canonical_helper {
             return;
         }

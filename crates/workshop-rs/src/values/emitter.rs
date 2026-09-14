@@ -87,10 +87,6 @@ impl EmitContext<'_> {
                     out.push_str(&spelling);
                 }
             }
-            wir::Value::AmbiguousEnum {
-                spelling,
-                candidates,
-            } => out.push_str(&self.ambiguous_enum_spelling(spelling, candidates)?),
             wir::Value::GlobalVariable(variable) => {
                 let name = self.global_name(*variable)?;
                 write!(out, "Global.{name}").unwrap();
@@ -117,6 +113,9 @@ impl EmitContext<'_> {
                 out.push_str(&name);
             }
             wir::Value::EventPlayer => out.push_str(&self.spelling(Kind::Value, "eventPlayer")?),
+            wir::Value::Call { name, args } if name == wir::AMBIGUOUS_ENUM_CALL => {
+                out.push_str(&self.ambiguous_enum_spelling_from_args(args)?);
+            }
             wir::Value::Call { name, args } => {
                 if name == "memberAccess" {
                     if args.len() < 2 || args.len() > 3 {
@@ -531,6 +530,52 @@ impl EmitContext<'_> {
             id: format!("{domain}.{member}"),
             locale: self.locale.clone(),
         })
+    }
+
+    fn ambiguous_enum_spelling_from_args(&self, args: &[wir::ValueId]) -> Result<String> {
+        if args.len() != 2 {
+            return Err(WorkshopError::Malformed {
+                message: "ambiguous enum value expects spelling and candidates".to_string(),
+                span: None,
+            });
+        }
+        let Some(wir::ValueNode {
+            value: wir::Value::String(spelling),
+            ..
+        }) = self.program.values.get(args[0])
+        else {
+            return Err(WorkshopError::Malformed {
+                message: "ambiguous enum spelling must be a string".to_string(),
+                span: None,
+            });
+        };
+        let Some(wir::ValueNode {
+            value: wir::Value::Array(candidate_ids),
+            ..
+        }) = self.program.values.get(args[1])
+        else {
+            return Err(WorkshopError::Malformed {
+                message: "ambiguous enum candidates must be an array".to_string(),
+                span: None,
+            });
+        };
+        let candidates = candidate_ids
+            .iter()
+            .map(|candidate_id| {
+                let Some(wir::ValueNode {
+                    value: wir::Value::Enum { value_type, value },
+                    ..
+                }) = self.program.values.get(*candidate_id)
+                else {
+                    return Err(WorkshopError::Malformed {
+                        message: "ambiguous enum candidate must be an enum value".to_string(),
+                        span: None,
+                    });
+                };
+                Ok((value_type.clone(), value.clone()))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        self.ambiguous_enum_spelling(spelling, &candidates)
     }
 
     fn ambiguous_enum_spelling(
