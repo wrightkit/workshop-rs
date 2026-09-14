@@ -12,7 +12,6 @@ use crate::core::source::Position;
 pub enum TokenKind {
     /// A run of identifier characters (`[A-Za-z_][A-Za-z0-9_]*`).
     Word(String),
-    /// A numeric literal.
     /// A numeric literal with its source spelling.
     Number {
         value: f64,
@@ -219,15 +218,40 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
             '0'..='9' => {
                 let start = pos!();
                 let mut text = String::new();
-                while index < chars.len() && (chars[index].is_ascii_digit() || chars[index] == '.')
-                {
+                let value = if ch == '0' && chars.get(index + 1) == Some(&'X') {
+                    text.push(ch);
+                    advance(&mut index, &mut line, &mut col, &chars);
                     text.push(chars[index]);
                     advance(&mut index, &mut line, &mut col, &chars);
-                }
-                let value: f64 = text.parse().map_err(|_| LexError {
-                    message: format!("invalid number '{text}'"),
-                    position: start,
-                })?;
+                    let digits_start = index;
+                    while index < chars.len() && chars[index].is_ascii_hexdigit() {
+                        text.push(chars[index]);
+                        advance(&mut index, &mut line, &mut col, &chars);
+                    }
+                    if index == digits_start {
+                        return Err(LexError {
+                            message: format!("invalid number '{text}'"),
+                            position: start,
+                        });
+                    }
+                    u64::from_str_radix(&text[2..], 16)
+                        .map(|value| value as f64)
+                        .map_err(|_| LexError {
+                            message: format!("invalid number '{text}'"),
+                            position: start,
+                        })?
+                } else {
+                    while index < chars.len()
+                        && (chars[index].is_ascii_digit() || chars[index] == '.')
+                    {
+                        text.push(chars[index]);
+                        advance(&mut index, &mut line, &mut col, &chars);
+                    }
+                    text.parse().map_err(|_| LexError {
+                        message: format!("invalid number '{text}'"),
+                        position: start,
+                    })?
+                };
                 tokens.push(Token {
                     kind: TokenKind::Number { value, text },
                     start,

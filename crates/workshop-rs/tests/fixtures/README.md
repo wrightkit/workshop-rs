@@ -17,6 +17,7 @@ core migration (Issue #2).
 | `corpus/receiver-calls.ws` | wright `compatibility/fixtures/synthetic/receiver-calls/oracle.json` `compile.workshop` | OverPy 9.7.10, en-US emission |
 | `corpus/overpy-cake.ws` | migrated in workshop-rs `44c04a1166f3df9a495fc04c79e0ae2adc4542d2` from wright `compatibility/fixtures/real-world/overpy-cake/oracle.json` `compile.workshop` | OverPy 9.7.10, en-US emission |
 | `corpus/minimized/overpy-cake-loop.ws` | minimized from `corpus/overpy-cake.ws`, retaining its variable/loop/array/random-value interaction | workshop-rs migration `44c04a1166f3df9a495fc04c79e0ae2adc4542d2`, linked to the pinned wright OverPy 9.7.10 oracle |
+| `corpus/minimized/opy-syntax-surface-hex.ws` | minimized from opy-rs `crates/opy-rs/tests/fixtures/corpus/synthetic/syntax-surface/oracle.json` `compile.workshop`, retaining the evidenced `Array(16, 0X20)` expression | OverPy 9.7.10, en-US emission; workshop-rs #200 |
 | `settings/pixelart.settings.ws` | wright `compatibility/fixtures/real-world/overpy-pixelart/oracle.json` `compile.workshop` settings section | OverPy 9.7.10, en-US emission |
 | `settings/santa.settings.ws` | wright `compatibility/fixtures/real-world/overpy-santa/oracle.json` `compile.workshop` settings section | OverPy 9.7.10, en-US emission |
 | `settings/pixelart.zh-CN.settings.ws` | deterministic conversion of `settings/pixelart.settings.ws` through the reviewed PR #9 locale corpus | reviewed `zh-CN` mappings, no fallback |
