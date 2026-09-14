@@ -35,7 +35,6 @@ jobs:
         uses: obi1kenobi/cargo-semver-checks-action@v2
         with:
           package: workshop-rs
-          baseline-version: 0.3.9
 
   catalog-check:
     name: Catalog check
