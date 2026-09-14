@@ -151,14 +151,33 @@ fn min_max_operations_emit_and_round_trip_in_zh_cn() {
 }
 
 #[test]
+fn ambiguous_enum_emission_does_not_choose_a_locale_specific_domain() {
+    let source = r#"
+        variables { global: 0: g }
+        rule ("ambiguous") {
+            event { Ongoing - Global; }
+            actions { Set Global Variable(g, None); }
+        }
+    "#;
+    let catalog = catalog();
+    let program = parser::parse_wir_with_context(source, &catalog, &en(), &catalog).unwrap();
+    let error = emitter::emit_wir(&program, &catalog, &Locale::new("zh-CN"))
+        .expect_err("diverging ambiguous aliases must not choose a domain");
+    assert!(
+        matches!(
+            error,
+            workshop_rs::WorkshopError::MissingMapping { kind, .. }
+                if kind == "ambiguous enum member"
+        ),
+        "unexpected error: {error:?}"
+    );
+}
+
+#[test]
 fn every_corpus_program_round_trips_to_equivalent_wir() {
     // Corpus text parses against the catalog context (expected enum domains
-    // come from the canonical catalog signatures). `overpy-cake` is the
-    // documented exception: its bare `Up` (OverPy folds the vector-up
-    // constant inside `Add(...)`) is genuinely ambiguous between the
-    // `Vector` and `Rounding` enum domains and no enclosing signature pins
-    // it, so the parser rejects it deterministically.
-    let documented_ambiguities = [("overpy-cake", "ambiguous enum member 'Up'")];
+    // come from the canonical catalog signatures). Unpinned shared members
+    // retain all catalog-backed candidates through emission and reparse.
     for fixture_id in [
         "basic-rule",
         "control-flow",
@@ -169,27 +188,9 @@ fn every_corpus_program_round_trips_to_equivalent_wir() {
         "overpy-cake",
     ] {
         let catalog = catalog();
-        let program = match parser::parse_wir_with_context(
-            &corpus_text(fixture_id),
-            &catalog,
-            &en(),
-            &catalog,
-        ) {
-            Ok(program) => program,
-            Err(error) => {
-                let Some((_, message)) = documented_ambiguities
-                    .iter()
-                    .find(|(id, _)| **id == *fixture_id)
-                else {
-                    panic!("{fixture_id} must parse: {error}");
-                };
-                assert!(
-                    error.to_string().contains(message),
-                    "{fixture_id} fails only with the documented ambiguity, got: {error}"
-                );
-                continue;
-            }
-        };
+        let program =
+            parser::parse_wir_with_context(&corpus_text(fixture_id), &catalog, &en(), &catalog)
+                .unwrap_or_else(|error| panic!("{fixture_id} must parse: {error}"));
         let emitted = emitter::emit_wir(&program, &catalog, &en())
             .unwrap_or_else(|error| panic!("{fixture_id} must emit: {error}"));
         let reparsed = parser::parse_wir_with_context(&emitted, &catalog, &en(), &catalog)

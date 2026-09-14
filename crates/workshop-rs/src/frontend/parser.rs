@@ -43,7 +43,7 @@ pub(crate) enum AssignmentOperator {
 /// Parse localized Workshop text into Workshop IR using the catalog's
 /// canonical call-signature context. Ambiguous bare enum members resolve when
 /// their enclosing call pins one matching domain; unpinned ambiguity remains a
-/// structured unsupported diagnostic. See [`parse_with_context`] when a
+/// structured canonical value. See [`parse_with_context`] when a
 /// consumer needs to provide additional signature context.
 pub fn parse(input: &str, catalog: &Catalog, locale: &Locale) -> Result<Program> {
     parse_with_context(input, catalog, locale, catalog)
@@ -63,7 +63,7 @@ pub fn parse_wir(input: &str, catalog: &Catalog, locale: &Locale) -> Result<wir:
 /// [`ExpectedDomain::expected_domain`] for the domain the enclosing call's
 /// signature expects at that argument position; the member resolves only when
 /// that expected domain is one of the matching domains (i.e. the signature
-/// pins exactly one). Without a pin the ambiguity diagnostic is unchanged.
+/// pins exactly one). Without a pin all matching candidates are preserved.
 pub fn parse_with_context(
     input: &str,
     catalog: &Catalog,

@@ -347,6 +347,27 @@ fn render_value(program: &Program, id: super::ValueId, out: &mut String) {
         out.push_str(&format!("<dangling value {id}>"));
         return;
     };
+    if let Some((spelling, candidate_ids)) = super::ambiguous_enum_parts(program, id) {
+        out.push_str("ambiguous(");
+        out.push_str(spelling);
+        out.push_str(" [");
+        for (index, candidate_id) in candidate_ids.iter().enumerate() {
+            if index > 0 {
+                out.push_str(", ");
+            }
+            if let Some(Value::Enum { value_type, value }) =
+                program.values.get(*candidate_id).map(|node| &node.value)
+            {
+                out.push_str(value_type);
+                out.push('.');
+                out.push_str(value);
+            } else {
+                out.push_str("<invalid>");
+            }
+        }
+        out.push_str("])");
+        return;
+    }
     let value = &node.value;
     match value {
         Value::Number { value, .. } => out.push_str(&format_number(*value)),

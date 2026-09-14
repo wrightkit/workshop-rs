@@ -114,6 +114,9 @@ impl EmitContext<'_> {
                 out.push_str(&name);
             }
             wir::Value::EventPlayer => out.push_str(&self.spelling(Kind::Value, "eventPlayer")?),
+            wir::Value::Call { name, args } if name == wir::AMBIGUOUS_ENUM_CALL => {
+                out.push_str(&self.ambiguous_enum_spelling_from_args(args)?);
+            }
             wir::Value::Call { name, args } => {
                 if name == "memberAccess" {
                     if args.len() < 2 || args.len() > 3 {
@@ -564,6 +567,87 @@ impl EmitContext<'_> {
         Err(WorkshopError::MissingMapping {
             kind: "enum member",
             id: format!("{domain}.{member}"),
+            locale: self.locale.clone(),
+        })
+    }
+
+    fn ambiguous_enum_spelling_from_args(&self, args: &[wir::ValueId]) -> Result<String> {
+        if args.len() != 2 {
+            return Err(WorkshopError::Malformed {
+                message: "ambiguous enum value expects spelling and candidates".to_string(),
+                span: None,
+            });
+        }
+        let Some(wir::ValueNode {
+            value: wir::Value::String(spelling),
+            ..
+        }) = self.program.values.get(args[0])
+        else {
+            return Err(WorkshopError::Malformed {
+                message: "ambiguous enum spelling must be a string".to_string(),
+                span: None,
+            });
+        };
+        let Some(wir::ValueNode {
+            value: wir::Value::Array(candidate_ids),
+            ..
+        }) = self.program.values.get(args[1])
+        else {
+            return Err(WorkshopError::Malformed {
+                message: "ambiguous enum candidates must be an array".to_string(),
+                span: None,
+            });
+        };
+        let candidates = candidate_ids
+            .iter()
+            .map(|candidate_id| {
+                let Some(wir::ValueNode {
+                    value: wir::Value::Enum { value_type, value },
+                    ..
+                }) = self.program.values.get(*candidate_id)
+                else {
+                    return Err(WorkshopError::Malformed {
+                        message: "ambiguous enum candidate must be an enum value".to_string(),
+                        span: None,
+                    });
+                };
+                Ok((value_type.clone(), value.clone()))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        self.ambiguous_enum_spelling(spelling, &candidates)
+    }
+
+    fn ambiguous_enum_spelling(
+        &self,
+        spelling: &str,
+        candidates: &[(String, String)],
+    ) -> Result<String> {
+        let common_spelling = |locale: &Locale| {
+            let mut common = None;
+            for (domain, member) in candidates {
+                let candidate = self.catalog.enum_spelling(domain, locale, member)?;
+                if let Some(existing) = &common {
+                    if existing != candidate {
+                        return None;
+                    }
+                } else {
+                    common = Some(candidate.to_string());
+                }
+            }
+            common
+        };
+
+        if let Some(mapped) = common_spelling(&self.locale) {
+            return Ok(mapped);
+        }
+        if let Some(fallback) = &self.fallback {
+            if let Some(mapped) = common_spelling(fallback) {
+                return Ok(mapped);
+            }
+        }
+        Err(WorkshopError::MissingMapping {
+            kind: "ambiguous enum member",
+            id: spelling.to_string(),
             locale: self.locale.clone(),
         })
     }

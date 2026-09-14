@@ -13,6 +13,10 @@ pub(crate) fn validate_value(
     };
     match &node.value {
         wir::Value::Call { name, args } => {
+            if name == wir::AMBIGUOUS_ENUM_CALL {
+                validate_ambiguous_enum(program, catalog, value_id, node.span, errors);
+                return;
+            }
             // Comparison operators are represented as call names (`==`, `<`,
             // …) following the `Compare(a, op, b)` convention, so both value
             // and operator identities are valid call names.
@@ -127,6 +131,59 @@ pub(crate) fn validate_value(
     }
 }
 
+fn validate_ambiguous_enum(
+    program: &wir::Program,
+    catalog: &Catalog,
+    value_id: wir::ValueId,
+    span: Option<crate::source::Span>,
+    errors: &mut Vec<WorkshopError>,
+) {
+    let Some((_spelling, candidate_ids)) = wir::ambiguous_enum_parts(program, value_id) else {
+        errors.push(WorkshopError::Malformed {
+            message: "ambiguous enum value has an invalid shape".to_string(),
+            span,
+        });
+        return;
+    };
+    if candidate_ids.is_empty() {
+        errors.push(WorkshopError::Malformed {
+            message: "ambiguous enum value has no candidates".to_string(),
+            span,
+        });
+    }
+    for candidate_id in candidate_ids {
+        let Some(wir::ValueNode {
+            value: wir::Value::Enum { value_type, value },
+            ..
+        }) = program.values.get(*candidate_id)
+        else {
+            errors.push(WorkshopError::Malformed {
+                message: "ambiguous enum candidate is not an enum value".to_string(),
+                span,
+            });
+            continue;
+        };
+        if catalog.enum_domain(value_type).is_none() {
+            errors.push(WorkshopError::Unknown {
+                kind: "enum domain",
+                spelling: value_type.clone(),
+                locale: crate::catalog::Locale::new("en-US"),
+                span,
+            });
+        } else if catalog
+            .enum_spelling(value_type, &crate::catalog::Locale::new("en-US"), value)
+            .is_none()
+        {
+            errors.push(WorkshopError::Unknown {
+                kind: "enum member",
+                spelling: format!("{value_type}.{value}"),
+                locale: crate::catalog::Locale::new("en-US"),
+                span,
+            });
+        }
+    }
+}
+
 pub(crate) fn validate_call_signature(
     entry: &crate::catalog::CatalogEntry,
     args: &[wir::ValueId],
@@ -211,6 +268,22 @@ pub(crate) fn validate_call_signature(
                         .enum_spelling(domain, catalog.primary_locale(), value)
                         .is_some()
             }
+            wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
+                wir::ambiguous_enum_parts(program, *arg_id).is_some_and(|(_, candidate_ids)| {
+                    candidate_ids.iter().any(|candidate_id| {
+                        matches!(
+                            program.values.get(*candidate_id),
+                            Some(wir::ValueNode {
+                                value: wir::Value::Enum { value_type, value },
+                                ..
+                            }) if value_type == domain
+                                && catalog
+                                    .enum_spelling(domain, catalog.primary_locale(), value)
+                                    .is_some()
+                        )
+                    })
+                })
+            }
             _ => true,
         };
         if !valid {
@@ -219,6 +292,11 @@ pub(crate) fn validate_call_signature(
                     value_type, value, ..
                 } => {
                     format!("{value_type}.{value}")
+                }
+                wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
+                    wir::ambiguous_enum_parts(program, *arg_id)
+                        .map(|(spelling, _)| format!("ambiguous '{spelling}'"))
+                        .unwrap_or_else(|| "malformed ambiguous enum".to_string())
                 }
                 _ => "non-enum expression".to_string(),
             };
@@ -304,6 +382,26 @@ fn value_matches_type(
     let Some(node) = program.values.get(value_id) else {
         return false;
     };
+    if let wir::Value::Call { name, .. } = &node.value {
+        if name == wir::AMBIGUOUS_ENUM_CALL {
+            return expected.split('|').any(|alternative| {
+                matches!(alternative, "Any" | "Unknown" | "Object")
+                    || wir::ambiguous_enum_parts(program, value_id).is_some_and(
+                        |(_, candidate_ids)| {
+                            candidate_ids.iter().any(|candidate_id| {
+                                matches!(
+                                    program.values.get(*candidate_id),
+                                    Some(wir::ValueNode {
+                                        value: wir::Value::Enum { value_type, .. },
+                                        ..
+                                    }) if value_type == alternative
+                                )
+                            })
+                        },
+                    )
+            });
+        }
+    }
     expected
         .split('|')
         .any(|alternative| value_matches_single_type(catalog, &node.value, alternative))
@@ -401,6 +499,9 @@ fn value_type_name(program: &wir::Program, catalog: &Catalog, value_id: wir::Val
         wir::Value::Vector { .. } => "Vector".to_string(),
         wir::Value::Array(_) => "Array".to_string(),
         wir::Value::Enum { value_type, .. } => value_type.clone(),
+        wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
+            "AmbiguousEnum".to_string()
+        }
         wir::Value::Call { name, .. } => catalog
             .entry(crate::catalog::Kind::Value, name)
             .and_then(|entry| entry.return_type())

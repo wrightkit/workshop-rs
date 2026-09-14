@@ -432,6 +432,11 @@ impl Counter<'_> {
             Value::Subroutine(_) => self.value_node(id, "subroutine", span, 1, vec![], 0),
             Value::EventPlayer => self.value_node(id, "event player", span, 1, vec![], 0),
             Value::Call { name, args } => {
+                if name == crate::wir::AMBIGUOUS_ENUM_CALL
+                    && crate::wir::ambiguous_enum_parts(self.program, id).is_some()
+                {
+                    return self.value_node(id, "ambiguous enum", span, 1, vec![], 0);
+                }
                 if name != "memberAccess"
                     && self.catalog.entry(Kind::Value, name).is_none()
                     && self.catalog.entry(Kind::Operator, name).is_none()
