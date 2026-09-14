@@ -26,6 +26,17 @@ jobs:
       toolchain: ${{ matrix.toolchain }}
       cache-shared-key: quality
 
+  semver-check:
+    name: Public API compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check public API compatibility
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          package: workshop-rs
+          baseline-version: 0.3.9
+
   catalog-check:
     name: Catalog check
     needs: check
