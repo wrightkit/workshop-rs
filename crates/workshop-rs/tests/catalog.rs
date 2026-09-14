@@ -61,6 +61,11 @@ fn localized_spelling_resolves_to_canonical_id_and_back() {
         .resolve(Kind::Structural, &en(), "For Global Variable")
         .expect("structural resolves");
     assert_eq!(entry.id, "forGlobalVariable");
+    assert!(catalog.entry(Kind::Value, "global").is_none());
+    assert_eq!(
+        catalog.spelling(Kind::Structural, &Locale::new("zh-CN"), "global"),
+        Some("全局")
+    );
 }
 
 #[test]

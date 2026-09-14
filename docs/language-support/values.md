@@ -84,7 +84,6 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Flag Position` | ✅ Supported | Returns: `Vector`; Parameters: (Team: Team). |
 | `Forward` | ✅ Supported | Returns: `Array`. |
 | `Game Mode` | ✅ Supported | Returns: `Gamemode`; Parameters: (Gamemode: Gamemode). |
-| `Global` | ✅ Supported | Returns: `GlobalVariable`; global variable reference prefix. |
 | `Has Spawned` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player|Array). |
 | `Has Status` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player, Status: Status). |
 | `Heal Over Time Count` | ✅ Supported | Returns: `Number`. |

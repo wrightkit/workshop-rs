@@ -401,7 +401,9 @@ impl ParseContext<'_> {
             Some(Token {
                 kind: TokenKind::Word(word),
                 ..
-            }) if matches!(canonical_keyword(&word), "Global" | "global") => {
+            }) if matches!(word.as_str(), "Global" | "global")
+                || self.canonical_keyword(&word) == "global" =>
+            {
                 let (start, end) = self.span_here();
                 self.pos += 1;
                 // The reference's value spelling `Global Variable(name)`

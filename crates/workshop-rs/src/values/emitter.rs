@@ -89,7 +89,7 @@ impl EmitContext<'_> {
             }
             wir::Value::GlobalVariable(variable) => {
                 let name = self.global_name(*variable)?;
-                let global = self.spelling(Kind::Value, "global")?;
+                let global = self.spelling_prefer(Kind::Structural, "global", "Global")?;
                 write!(out, "{global}.{name}").unwrap();
             }
             wir::Value::PlayerVariable { player, variable } => {
@@ -488,6 +488,44 @@ impl EmitContext<'_> {
             spelling: id.to_string(),
             locale: self.locale.clone(),
             span: None,
+        })
+    }
+
+    pub(crate) fn spelling_prefer(
+        &mut self,
+        kind: Kind,
+        id: &str,
+        preferred: &str,
+    ) -> Result<String> {
+        let Some(entry) = self.catalog.entry(kind, id) else {
+            return Err(WorkshopError::Unknown {
+                kind: kind.as_str(),
+                spelling: id.to_string(),
+                locale: self.locale.clone(),
+                span: None,
+            });
+        };
+        let spelling = |locale: &Locale| {
+            entry
+                .spellings(locale)
+                .iter()
+                .find(|spelling| spelling.as_str() == preferred)
+                .map(String::as_str)
+                .or_else(|| entry.spelling(locale))
+        };
+        if let Some(spelling) = spelling(&self.locale) {
+            return Ok(spelling.to_string());
+        }
+        if let Some(fallback) = self.fallback.clone() {
+            if let Some(spelling) = spelling(&fallback) {
+                self.fallback_ids.push(id.to_string());
+                return Ok(spelling.to_string());
+            }
+        }
+        Err(WorkshopError::MissingMapping {
+            kind: kind.as_str(),
+            id: id.to_string(),
+            locale: self.locale.clone(),
         })
     }
 
