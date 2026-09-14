@@ -78,11 +78,13 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Eye Position` | ✅ Supported | Returns: `Vector`; Parameters: (Player: Player). |
 | `Facing Direction Of` | ✅ Supported | Returns: `Vector`; Parameters: (Player: Player). |
 | `Farthest Player From` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector, Team: Team). |
+| `False` | ✅ Supported | Returns: `BoolLiteral`. |
 | `Filtered Array` | ✅ Supported | Returns: `Array`; Parameters: (Array: Array, Condition: Boolean). |
 | `First Of` | ✅ Supported | Returns: `Object|Array`; Parameters: (Array: Array). |
 | `Flag Position` | ✅ Supported | Returns: `Vector`; Parameters: (Team: Team). |
 | `Forward` | ✅ Supported | Returns: `Array`. |
 | `Game Mode` | ✅ Supported | Returns: `Gamemode`; Parameters: (Gamemode: Gamemode). |
+| `Global` | ✅ Supported | Returns: `GlobalVariable`; global variable reference prefix. |
 | `Has Spawned` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player|Array). |
 | `Has Status` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player, Status: Status). |
 | `Heal Over Time Count` | ✅ Supported | Returns: `Number`. |
@@ -242,6 +244,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Text Count` | ✅ Supported | Returns: `Number`. |
 | `Throttle Of` | ✅ Supported | Returns: `Vector`; Parameters: (player: Player). |
 | `Total Time Elapsed` | ✅ Supported | Returns: `Number`. |
+| `True` | ✅ Supported | Returns: `BoolLiteral`. |
 | `Ultimate Charge Percent` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player). |
 | `Up` | ✅ Supported | Returns: `Array`. |
 | `Update Every Frame` | ✅ Supported | Returns: `Object|Array`; Parameters: (Value: Object|Array). |

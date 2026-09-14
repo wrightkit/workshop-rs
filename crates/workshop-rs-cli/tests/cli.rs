@@ -138,7 +138,7 @@ fn locales_lists_declared_locales_with_coverage() {
     assert_eq!(lines.len(), 2);
     for (line, (locale, expected)) in lines
         .iter()
-        .zip([("en-us", None), ("zh-cn", Some(("1242", "1261")))])
+        .zip([("en-us", None), ("zh-cn", Some(("1245", "1264")))])
     {
         let (reported_locale, coverage) = line.split_once(' ').expect("locale coverage line");
         let (mapped, total) = coverage.split_once('/').expect("mapped/total coverage");

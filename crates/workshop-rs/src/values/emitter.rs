@@ -31,9 +31,9 @@ impl EmitContext<'_> {
                 write!(out, "\"{}\"", escape_value_string(&spelling)).unwrap();
                 out.push(')');
             }
-            wir::Value::Bool(true) => out.push_str("True"),
-            wir::Value::Bool(false) => out.push_str("False"),
-            wir::Value::Null => out.push_str("Null"),
+            wir::Value::Bool(true) => out.push_str(&self.spelling(Kind::Value, "true")?),
+            wir::Value::Bool(false) => out.push_str(&self.spelling(Kind::Value, "false")?),
+            wir::Value::Null => out.push_str(&self.spelling(Kind::Value, "null")?),
             wir::Value::Array(elements) => {
                 if elements.is_empty() {
                     // The canonical empty-array constant (reference emission).
@@ -89,7 +89,8 @@ impl EmitContext<'_> {
             }
             wir::Value::GlobalVariable(variable) => {
                 let name = self.global_name(*variable)?;
-                write!(out, "Global.{name}").unwrap();
+                let global = self.spelling(Kind::Value, "global")?;
+                write!(out, "{global}.{name}").unwrap();
             }
             wir::Value::PlayerVariable { player, variable } => {
                 // The oracle's spelling parenthesizes the receiver:

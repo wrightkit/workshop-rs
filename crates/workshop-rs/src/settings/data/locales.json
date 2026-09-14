@@ -20,6 +20,10 @@
       "matched": 8,
       "total": 8
     },
+    "namespaces": {
+      "matched": 6,
+      "total": 6
+    },
     "teams": {
       "matched": 3,
       "total": 3
@@ -30,8 +34,46 @@
     }
   },
   "namespaces": {
+    "extensions": {
+      "en-US": "extensions",
+      "sources": [
+        "customGameSettings.extensions"
+      ],
+      "zh-CN": "扩展"
+    },
+    "heroes": {
+      "en-US": "heroes",
+      "sources": [
+        "customGameSettings.heroes"
+      ],
+      "zh-CN": "英雄"
+    },
+    "lobby": {
+      "en-US": "lobby",
+      "sources": [
+        "customGameSettings.lobby"
+      ],
+      "zh-CN": "大厅"
+    },
+    "main": {
+      "en-US": "main",
+      "sources": [
+        "customGameSettings.main"
+      ],
+      "zh-CN": "主程序"
+    },
+    "modes": {
+      "en-US": "modes",
+      "sources": [
+        "customGameSettings.gamemodes"
+      ],
+      "zh-CN": "模式"
+    },
     "workshop": {
       "en-US": "workshop",
+      "sources": [
+        "customGameSettings.workshop"
+      ],
       "zh-CN": "地图工坊"
     }
   },

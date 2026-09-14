@@ -5253,7 +5253,7 @@
       ]
     }
   ],
-  "digest": "66ee5c01f4b7d4f33aa600d1d6b7d159e8e83a13d63d030dce5f3749d57b2b59",
+  "digest": "d57955b9169aac7573df4b74f374120e258a423e865f1868ace944dcf835cfbe",
   "enums": [
     {
       "domain": "Impulse",
@@ -11450,6 +11450,33 @@
         "Player"
       ],
       "returnType": "Boolean"
+    },
+    {
+      "aliases": {
+        "en-US": "False",
+        "zh-CN": "假"
+      },
+      "id": "false",
+      "params": [],
+      "returnType": "BoolLiteral"
+    },
+    {
+      "aliases": {
+        "en-US": "Global",
+        "zh-CN": "全局"
+      },
+      "id": "global",
+      "params": [],
+      "returnType": "GlobalVariable"
+    },
+    {
+      "aliases": {
+        "en-US": "True",
+        "zh-CN": "真"
+      },
+      "id": "true",
+      "params": [],
+      "returnType": "BoolLiteral"
     },
     {
       "aliases": {
