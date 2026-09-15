@@ -623,18 +623,41 @@ impl EmitContext<'_> {
         candidates: &[(String, String)],
     ) -> Result<String> {
         let common_spelling = |locale: &Locale| {
-            let mut common = None;
-            for (domain, member) in candidates {
-                let candidate = self.catalog.enum_spelling(domain, locale, member)?;
-                if let Some(existing) = &common {
-                    if existing != candidate {
-                        return None;
-                    }
-                } else {
-                    common = Some(candidate.to_string());
-                }
+            let members = candidates
+                .iter()
+                .filter_map(|(domain, member)| {
+                    self.catalog.enum_domain(domain).and_then(|domain| {
+                        domain
+                            .members
+                            .iter()
+                            .find(|candidate| candidate.member == *member)
+                    })
+                })
+                .collect::<Vec<_>>();
+            if members.is_empty() || members.len() != candidates.len() {
+                return None;
             }
-            common
+
+            if members.iter().all(|member| {
+                member
+                    .spellings(locale)
+                    .iter()
+                    .any(|alias| alias == spelling)
+            }) {
+                return Some(spelling.to_string());
+            }
+
+            members.first()?.spellings(locale).iter().find_map(|alias| {
+                members
+                    .iter()
+                    .all(|member| {
+                        member
+                            .spellings(locale)
+                            .iter()
+                            .any(|candidate| candidate == alias)
+                    })
+                    .then(|| alias.to_string())
+            })
         };
 
         if let Some(mapped) = common_spelling(&self.locale) {

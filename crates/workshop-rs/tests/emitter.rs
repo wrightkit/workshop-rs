@@ -174,6 +174,29 @@ fn ambiguous_enum_emission_does_not_choose_a_locale_specific_domain() {
 }
 
 #[test]
+fn ambiguous_enum_emission_preserves_a_shared_source_locale_alias() {
+    // Provenance: OWBastion/Bastion#214 review evidence, where OverPy's
+    // zh-CN Workshop artifact contains the shared bare `左` enum spelling.
+    let source = r#"
+        variables { global: 0: g }
+        rule ("ambiguous zh-CN alias") {
+            event { 持续 - 全局; }
+            actions { 设置全局变量(g, 左); }
+        }
+    "#;
+    let catalog = catalog();
+    let locale = Locale::new("zh-CN");
+    let program = parser::parse_wir_with_context(source, &catalog, &locale, &catalog)
+        .expect("shared zh-CN enum alias parses");
+    let emitted =
+        emitter::emit_wir(&program, &catalog, &locale).expect("shared zh-CN enum alias emits");
+    assert!(emitted.contains("左"), "{emitted}");
+    let reparsed = parser::parse_wir_with_context(&emitted, &catalog, &locale, &catalog)
+        .expect("shared zh-CN enum alias reparses");
+    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
+}
+
+#[test]
 fn every_corpus_program_round_trips_to_equivalent_wir() {
     // Corpus text parses against the catalog context (expected enum domains
     // come from the canonical catalog signatures). Unpinned shared members
