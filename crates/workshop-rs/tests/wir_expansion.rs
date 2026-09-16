@@ -483,3 +483,175 @@ fn canonical_validation_is_locale_independent() {
     let dump = program.dump();
     assert!(!dump.contains("Disable Inspector Recording"));
 }
+
+#[test]
+fn canonical_validation_returns_first_error_and_short_circuits() {
+    let catalog = catalog();
+    let mut program = wir::Program::default();
+
+    // Action 1: Unknown action "unknownActionOne"
+    let action_1 = program.actions.push(Action::Call {
+        name: "unknownActionOne".into(),
+        args: vec![],
+        span: None,
+    });
+    // Action 2: Unknown action "unknownActionTwo"
+    let action_2 = program.actions.push(Action::Call {
+        name: "unknownActionTwo".into(),
+        args: vec![],
+        span: None,
+    });
+    // Rule 1 has action_1 then action_2
+    program.rules.push(wir::Rule {
+        name: "rule_one".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: Event::Global,
+        conditions: vec![],
+        actions: vec![action_1, action_2],
+    });
+
+    // Action 3: Unknown action "unknownActionThree" in Rule 2
+    let action_3 = program.actions.push(Action::Call {
+        name: "unknownActionThree".into(),
+        args: vec![],
+        span: None,
+    });
+    program.rules.push(wir::Rule {
+        name: "rule_two".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: Event::Global,
+        conditions: vec![],
+        actions: vec![action_3],
+    });
+
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
+        .expect_err("multi-error program must fail validation on first error");
+    assert!(
+        error.to_string().contains("unknownActionOne"),
+        "expected first error for unknownActionOne, got: {error}"
+    );
+
+    // Also verify event error precedes action error
+    let mut program_event = wir::Program::default();
+    let bad_action = program_event.actions.push(Action::Call {
+        name: "unknownActionInEventTest".into(),
+        args: vec![],
+        span: None,
+    });
+    program_event.rules.push(wir::Rule {
+        name: "rule_event".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: Event::Player {
+            kind: wir::PlayerEventKind::Died,
+            team: wir::EventTeam::All,
+            target: wir::EventTarget::Hero("NonExistentHero".into()),
+        },
+        conditions: vec![],
+        actions: vec![bad_action],
+    });
+    let event_error = validate::validate_canonical_ids_wir(&program_event, &catalog)
+        .expect_err("event error must precede action error");
+    assert!(
+        event_error.to_string().contains("NonExistentHero"),
+        "expected event error, got: {event_error}"
+    );
+
+    // Action error precedes Condition error in the same rule
+    let mut program_action_cond = wir::Program::default();
+    let bad_action = program_action_cond.actions.push(Action::Call {
+        name: "unknownActionBeforeCondition".into(),
+        args: vec![],
+        span: None,
+    });
+    let bad_cond = program_action_cond.values.push(ValueNode::new(
+        Value::Call {
+            name: "unknownConditionValue".into(),
+            args: vec![],
+        },
+        None,
+    ));
+    program_action_cond.rules.push(wir::Rule {
+        name: "rule_action_cond".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: Event::Global,
+        conditions: vec![bad_cond],
+        actions: vec![bad_action],
+    });
+    let action_cond_error = validate::validate_canonical_ids_wir(&program_action_cond, &catalog)
+        .expect_err("action error must precede condition error");
+    assert!(
+        action_cond_error
+            .to_string()
+            .contains("unknownActionBeforeCondition"),
+        "expected action error before condition error, got: {action_cond_error}"
+    );
+
+    // Call signature error precedes argument value error
+    let mut program_sig = wir::Program::default();
+    // "Wait" requires at least 1 argument; passing empty args causes arity error before arg evaluation
+    let bad_call = program_sig.actions.push(Action::Call {
+        name: "wait".into(),
+        args: vec![],
+        span: None,
+    });
+    program_sig.rules.push(wir::Rule {
+        name: "rule_sig".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: Event::Global,
+        conditions: vec![],
+        actions: vec![bad_call],
+    });
+    let sig_error = validate::validate_canonical_ids_wir(&program_sig, &catalog)
+        .expect_err("signature error must trigger");
+    assert!(
+        sig_error.to_string().contains("expects"),
+        "expected arity error, got: {sig_error}"
+    );
+
+    // Argument 1 error precedes Argument 2 error
+    let mut program_args = wir::Program::default();
+    let bad_arg1 = program_args.values.push(ValueNode::new(
+        Value::Call {
+            name: "unknownArgOne".into(),
+            args: vec![],
+        },
+        None,
+    ));
+    let bad_arg2 = program_args.values.push(ValueNode::new(
+        Value::Call {
+            name: "unknownArgTwo".into(),
+            args: vec![],
+        },
+        None,
+    ));
+    let call_args = program_args.actions.push(Action::Call {
+        name: "modifyGlobalVariable".into(),
+        args: vec![bad_arg1, bad_arg2],
+        span: None,
+    });
+    program_args.rules.push(wir::Rule {
+        name: "rule_args".into(),
+        span: None,
+        name_span: None,
+        disabled: false,
+        event: Event::Global,
+        conditions: vec![],
+        actions: vec![call_args],
+    });
+    let args_error = validate::validate_canonical_ids_wir(&program_args, &catalog)
+        .expect_err("argument 1 error must precede argument 2 error");
+    assert!(
+        args_error.to_string().contains("unknownArgOne"),
+        "expected arg 1 error, got: {args_error}"
+    );
+}

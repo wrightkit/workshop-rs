@@ -661,9 +661,9 @@ impl ParseContext<'_> {
                 let (phrase, start, end) = self.phrase()?;
                 let canonical_value = self
                     .resolve_entry(Kind::Value, &phrase)
-                    .map(|entry| entry.id)
-                    .unwrap_or_else(|| canonical_keyword(&phrase).to_string());
-                match canonical_value.as_str() {
+                    .map(|entry| entry.id.as_str())
+                    .unwrap_or_else(|| canonical_keyword(&phrase));
+                match canonical_value {
                     "true" => Ok(self.push_bool(true, start, end)),
                     "false" => Ok(self.push_bool(false, start, end)),
                     "Event Player" => Ok(self.target.values.push(ValueNode::new(

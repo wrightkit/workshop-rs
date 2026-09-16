@@ -125,20 +125,18 @@ pub(crate) struct ParseContext<'a> {
     pub(crate) subroutines: HashMap<String, wir::SubroutineId>,
 }
 
-impl ParseContext<'_> {
+impl<'a> ParseContext<'a> {
     pub(crate) fn resolve_entry(
         &self,
         kind: Kind,
         spelling: &str,
-    ) -> Option<crate::catalog::CatalogEntry> {
+    ) -> Option<&'a crate::catalog::CatalogEntry> {
         self.catalog
             .resolve(kind, &self.locale, spelling)
-            .cloned()
             .or_else(|| {
                 if self.locale != *self.catalog.primary_locale() {
                     self.catalog
                         .resolve(kind, self.catalog.primary_locale(), spelling)
-                        .cloned()
                 } else {
                     None
                 }
