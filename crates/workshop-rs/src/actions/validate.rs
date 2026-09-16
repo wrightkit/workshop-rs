@@ -1,43 +1,38 @@
 use crate::catalog::{Catalog, Kind};
-use crate::core::error::WorkshopError;
+use crate::core::error::{Result, WorkshopError};
 use crate::wir;
 
 pub(crate) fn validate_action(
     program: &wir::Program,
     catalog: &Catalog,
     action_id: wir::ActionId,
-    errors: &mut Vec<WorkshopError>,
-) {
+) -> Result<()> {
     let Some(action) = program.actions.get(action_id) else {
-        return;
+        return Ok(());
     };
     match action {
         wir::Action::Call { name, args, span } => {
-            let entry = catalog.entry(Kind::Action, name);
-            if entry.is_none() {
-                errors.push(WorkshopError::Unknown {
+            let Some(entry) = catalog.entry(Kind::Action, name) else {
+                return Err(WorkshopError::Unknown {
                     kind: "action",
                     spelling: name.clone(),
                     locale: crate::catalog::Locale::new("en-US"),
                     span: *span,
                 });
-            } else if let Some(entry) = entry {
-                crate::values::validate::validate_call_signature(
-                    entry, args, *span, program, catalog, errors,
-                );
-            }
+            };
+            crate::values::validate::validate_call_signature(entry, args, *span, program, catalog)?;
             for arg in args {
-                crate::values::validate::validate_value(program, catalog, *arg, errors);
+                crate::values::validate::validate_value(program, catalog, *arg)?;
             }
         }
         wir::Action::SetGlobalVariable { value, .. }
         | wir::Action::ModifyGlobalVariable { value, .. } => {
-            crate::values::validate::validate_value(program, catalog, *value, errors);
+            crate::values::validate::validate_value(program, catalog, *value)?;
         }
         wir::Action::SetPlayerVariable { player, value, .. }
         | wir::Action::ModifyPlayerVariable { player, value, .. } => {
-            crate::values::validate::validate_value(program, catalog, *player, errors);
-            crate::values::validate::validate_value(program, catalog, *value, errors);
+            crate::values::validate::validate_value(program, catalog, *player)?;
+            crate::values::validate::validate_value(program, catalog, *value)?;
         }
         wir::Action::AssignMember {
             target,
@@ -46,13 +41,13 @@ pub(crate) fn validate_action(
             ..
         } => {
             if !is_member_assignment_target(program, *target) {
-                errors.push(WorkshopError::Malformed {
+                return Err(WorkshopError::Malformed {
                     message: "AssignMember target must be a memberAccess value".to_string(),
                     span: *span,
                 });
             }
-            crate::values::validate::validate_value(program, catalog, *target, errors);
-            crate::values::validate::validate_value(program, catalog, *value, errors);
+            crate::values::validate::validate_value(program, catalog, *target)?;
+            crate::values::validate::validate_value(program, catalog, *value)?;
         }
         wir::Action::If {
             branches,
@@ -60,23 +55,23 @@ pub(crate) fn validate_action(
             ..
         } => {
             for branch in branches {
-                crate::values::validate::validate_value(program, catalog, branch.condition, errors);
+                crate::values::validate::validate_value(program, catalog, branch.condition)?;
                 for action in &branch.body {
-                    validate_action(program, catalog, *action, errors);
+                    validate_action(program, catalog, *action)?;
                 }
             }
             if let Some(else_body) = else_body {
                 for action in else_body {
-                    validate_action(program, catalog, *action, errors);
+                    validate_action(program, catalog, *action)?;
                 }
             }
         }
         wir::Action::While {
             condition, body, ..
         } => {
-            crate::values::validate::validate_value(program, catalog, *condition, errors);
+            crate::values::validate::validate_value(program, catalog, *condition)?;
             for action in body {
-                validate_action(program, catalog, *action, errors);
+                validate_action(program, catalog, *action)?;
             }
         }
         wir::Action::ForGlobalVariable {
@@ -86,11 +81,11 @@ pub(crate) fn validate_action(
             body,
             ..
         } => {
-            crate::values::validate::validate_value(program, catalog, *start, errors);
-            crate::values::validate::validate_value(program, catalog, *stop, errors);
-            crate::values::validate::validate_value(program, catalog, *step, errors);
+            crate::values::validate::validate_value(program, catalog, *start)?;
+            crate::values::validate::validate_value(program, catalog, *stop)?;
+            crate::values::validate::validate_value(program, catalog, *step)?;
             for action in body {
-                validate_action(program, catalog, *action, errors);
+                validate_action(program, catalog, *action)?;
             }
         }
         wir::Action::ForPlayerVariable {
@@ -101,16 +96,17 @@ pub(crate) fn validate_action(
             body,
             ..
         } => {
-            crate::values::validate::validate_value(program, catalog, *player, errors);
-            crate::values::validate::validate_value(program, catalog, *start, errors);
-            crate::values::validate::validate_value(program, catalog, *stop, errors);
-            crate::values::validate::validate_value(program, catalog, *step, errors);
+            crate::values::validate::validate_value(program, catalog, *player)?;
+            crate::values::validate::validate_value(program, catalog, *start)?;
+            crate::values::validate::validate_value(program, catalog, *stop)?;
+            crate::values::validate::validate_value(program, catalog, *step)?;
             for action in body {
-                validate_action(program, catalog, *action, errors);
+                validate_action(program, catalog, *action)?;
             }
         }
         wir::Action::CallSubroutine { .. } => {}
     }
+    Ok(())
 }
 
 pub(crate) fn is_member_assignment_target(program: &wir::Program, target: wir::ValueId) -> bool {

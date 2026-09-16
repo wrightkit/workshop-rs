@@ -335,13 +335,15 @@ impl EmitContext<'_> {
         id: &str,
     ) -> Result<String> {
         let resolve = |locale: &Locale| {
-            crate::gameplay::data::builtin().ok().and_then(|catalog| {
-                catalog
-                    .query()
-                    .ability_name(hero, slot, None, locale.as_str())
-                    .ok()
-                    .map(str::to_string)
-            })
+            crate::gameplay::data::builtin_ref()
+                .ok()
+                .and_then(|catalog| {
+                    catalog
+                        .query()
+                        .ability_name(hero, slot, None, locale.as_str())
+                        .ok()
+                        .map(str::to_string)
+                })
         };
         if let Some(name) = resolve(&self.locale) {
             return Ok(name);

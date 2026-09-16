@@ -1,13 +1,12 @@
 use crate::catalog::{Catalog, Kind};
-use crate::core::error::WorkshopError;
+use crate::core::error::{Result, WorkshopError};
 use crate::wir;
 
 pub(crate) fn validate_event(
     event: &wir::Event,
     span: Option<crate::core::source::Span>,
     catalog: &Catalog,
-    errors: &mut Vec<WorkshopError>,
-) {
+) -> Result<()> {
     let (id, filters) = match event {
         wir::Event::Global => ("global", None),
         wir::Event::EachPlayer => ("eachPlayer", None),
@@ -16,16 +15,15 @@ pub(crate) fn validate_event(
         wir::Event::Subroutine(_) => ("subroutine", None),
     };
     if catalog.entry(Kind::Event, id).is_none() {
-        errors.push(WorkshopError::Unknown {
+        return Err(WorkshopError::Unknown {
             kind: "event",
             spelling: id.to_string(),
             locale: crate::catalog::Locale::new("en-US"),
             span,
         });
-        return;
     }
     let Some((team, target)) = filters else {
-        return;
+        return Ok(());
     };
     let en = crate::catalog::Locale::new("en-US");
     let team_member = match team {
@@ -37,7 +35,7 @@ pub(crate) fn validate_event(
         .enum_spelling("EventTeam", &en, team_member)
         .is_none()
     {
-        errors.push(WorkshopError::Unknown {
+        return Err(WorkshopError::Unknown {
             kind: "event team",
             spelling: team_member.to_string(),
             locale: en.clone(),
@@ -49,7 +47,7 @@ pub(crate) fn validate_event(
         wir::EventTarget::Slot(slot) => Some(format!("SLOT_{slot}")),
         wir::EventTarget::Hero(hero) => {
             if catalog.enum_spelling("Hero", &en, hero).is_none() {
-                errors.push(WorkshopError::Unknown {
+                return Err(WorkshopError::Unknown {
                     kind: "event player",
                     spelling: hero.clone(),
                     locale: en.clone(),
@@ -64,7 +62,7 @@ pub(crate) fn validate_event(
             .enum_spelling("EventPlayer", &en, &target_member)
             .is_none()
         {
-            errors.push(WorkshopError::Unknown {
+            return Err(WorkshopError::Unknown {
                 kind: "event player",
                 spelling: target_member,
                 locale: en,
@@ -72,4 +70,5 @@ pub(crate) fn validate_event(
             });
         }
     }
+    Ok(())
 }
