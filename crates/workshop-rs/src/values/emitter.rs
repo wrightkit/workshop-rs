@@ -1,6 +1,6 @@
 use crate::output::emitter::*;
 
-impl EmitContext<'_> {
+impl<'a> EmitContext<'a> {
     pub(crate) fn value(&mut self, id: wir::ValueId, out: &mut String) -> Result<()> {
         let Some(node) = self.program.values.get(id) else {
             return Err(WorkshopError::Malformed {
@@ -25,28 +25,28 @@ impl EmitContext<'_> {
                 self.emit_string_value(value, out)?;
             }
             wir::Value::LocalizedString(id) => {
-                out.push_str(&self.spelling(Kind::Value, "string")?);
+                out.push_str(self.spelling(Kind::Value, "string")?);
                 out.push('(');
                 let spelling = self.localized_string_spelling(id)?;
-                write!(out, "\"{}\"", escape_value_string(&spelling)).unwrap();
+                write!(out, "\"{}\"", escape_value_string(spelling)).unwrap();
                 out.push(')');
             }
-            wir::Value::Bool(true) => out.push_str(&self.spelling(Kind::Value, "true")?),
-            wir::Value::Bool(false) => out.push_str(&self.spelling(Kind::Value, "false")?),
-            wir::Value::Null => out.push_str(&self.spelling(Kind::Value, "null")?),
+            wir::Value::Bool(true) => out.push_str(self.spelling(Kind::Value, "true")?),
+            wir::Value::Bool(false) => out.push_str(self.spelling(Kind::Value, "false")?),
+            wir::Value::Null => out.push_str(self.spelling(Kind::Value, "null")?),
             wir::Value::Array(elements) => {
                 if elements.is_empty() {
                     // The canonical empty-array constant (reference emission).
-                    out.push_str(&self.spelling(Kind::Value, "emptyArray")?);
+                    out.push_str(self.spelling(Kind::Value, "emptyArray")?);
                 } else {
-                    out.push_str(&self.spelling(Kind::Value, "array")?);
+                    out.push_str(self.spelling(Kind::Value, "array")?);
                     out.push('(');
                     self.args(elements, out)?;
                     out.push(')');
                 }
             }
             wir::Value::Vector { x, y, z } => {
-                out.push_str(&self.spelling(Kind::Value, "vector")?);
+                out.push_str(self.spelling(Kind::Value, "vector")?);
                 out.push('(');
                 self.value(*x, out)?;
                 out.push_str(", ");
@@ -84,7 +84,7 @@ impl EmitContext<'_> {
                         .unwrap_or(value_type);
                     write!(out, "{domain}({spelling})").unwrap();
                 } else {
-                    out.push_str(&spelling);
+                    out.push_str(spelling);
                 }
             }
             wir::Value::GlobalVariable(variable) => {
@@ -113,7 +113,7 @@ impl EmitContext<'_> {
                     })?;
                 out.push_str(&name);
             }
-            wir::Value::EventPlayer => out.push_str(&self.spelling(Kind::Value, "eventPlayer")?),
+            wir::Value::EventPlayer => out.push_str(self.spelling(Kind::Value, "eventPlayer")?),
             wir::Value::Call { name, args } if name == wir::AMBIGUOUS_ENUM_CALL => {
                 out.push_str(&self.ambiguous_enum_spelling_from_args(args)?);
             }
@@ -163,7 +163,7 @@ impl EmitContext<'_> {
                             span: None,
                         });
                     }
-                    out.push_str(&self.spelling(Kind::Value, "compare")?);
+                    out.push_str(self.spelling(Kind::Value, "compare")?);
                     out.push('(');
                     self.value(args[0], out)?;
                     write!(out, ", {name}, ").unwrap();
@@ -174,7 +174,7 @@ impl EmitContext<'_> {
                 // Unary minus renders as Multiply(-1, x); the reference folds
                 // literal negation, handled by the compat constant-fold pass.
                 if name == "-" && args.len() == 1 {
-                    out.push_str(&self.spelling(Kind::Value, "multiply")?);
+                    out.push_str(self.spelling(Kind::Value, "multiply")?);
                     out.push_str("(-1, ");
                     self.value(args[0], out)?;
                     out.push(')');
@@ -182,9 +182,9 @@ impl EmitContext<'_> {
                 }
                 // `getAllPlayers()` is OverPy's All Players(All Teams).
                 if name == "getAllPlayers" && args.is_empty() {
-                    out.push_str(&self.spelling(Kind::Value, "allPlayers")?);
+                    out.push_str(self.spelling(Kind::Value, "allPlayers")?);
                     out.push('(');
-                    out.push_str(&self.enum_spelling("Team", "ALL")?);
+                    out.push_str(self.enum_spelling("Team", "ALL")?);
                     out.push(')');
                     return Ok(());
                 }
@@ -215,7 +215,7 @@ impl EmitContext<'_> {
                 // the same node.
                 let is_custom_string = canonical == Some("customString") || name == "customString";
                 if name == "string" {
-                    out.push_str(&spelling);
+                    out.push_str(spelling);
                     out.push('(');
                     if let Some(first) = args.first() {
                         self.localized_string_value(*first, out)?;
@@ -227,7 +227,7 @@ impl EmitContext<'_> {
                     out.push(')');
                 } else if args.is_empty() {
                     // Constants (e.g. Empty Array) emit as bare spellings.
-                    out.push_str(&spelling);
+                    out.push_str(spelling);
                 } else if is_custom_string {
                     // `.format()` calls canonicalize: constant numeric
                     // arguments fold into the substituted text, implicit
@@ -241,7 +241,7 @@ impl EmitContext<'_> {
                             if variable_args.is_empty() {
                                 self.emit_string_value(&text, out)?;
                             } else {
-                                out.push_str(&spelling);
+                                out.push_str(spelling);
                                 out.push('(');
                                 write!(out, "\"{}\"", escape_value_string(&text)).unwrap();
                                 if !variable_args.is_empty() {
@@ -255,7 +255,7 @@ impl EmitContext<'_> {
                             // The `Custom String` text argument stays bare
                             // (the oracle spelling); the remaining arguments
                             // are values and wrap (#87).
-                            out.push_str(&spelling);
+                            out.push_str(spelling);
                             out.push('(');
                             self.bare_string_value(args[0], out)?;
                             if args.len() > 1 {
@@ -266,7 +266,7 @@ impl EmitContext<'_> {
                         }
                     }
                 } else {
-                    out.push_str(&spelling);
+                    out.push_str(spelling);
                     out.push('(');
                     self.args(args, out)?;
                     out.push(')');
@@ -294,7 +294,7 @@ impl EmitContext<'_> {
             });
         };
         let spelling = self.localized_string_spelling(id)?;
-        write!(out, "\"{}\"", escape_value_string(&spelling)).unwrap();
+        write!(out, "\"{}\"", escape_value_string(spelling)).unwrap();
         Ok(())
     }
 
@@ -436,7 +436,7 @@ impl EmitContext<'_> {
 
     /// The localized spelling of a modify operator, resolved through the
     /// catalog (fallback-aware).
-    pub(crate) fn modify_op_spelling(&mut self, op: wir::ModifyOp) -> Result<String> {
+    pub(crate) fn modify_op_spelling(&mut self, op: wir::ModifyOp) -> Result<&'a str> {
         self.spelling(Kind::Operator, op.catalog_id())
     }
 
@@ -444,7 +444,7 @@ impl EmitContext<'_> {
     /// the catalog: a dangling id is `Unknown`, an id without a target-locale
     /// mapping is `MissingMapping` unless an opt-in fallback locale declares
     /// one (recorded in [`EmitContext::fallback_ids`]).
-    pub(crate) fn spelling(&mut self, kind: Kind, id: &str) -> Result<String> {
+    pub(crate) fn spelling(&mut self, kind: Kind, id: &str) -> Result<&'a str> {
         let Some(entry) = self.catalog.entry(kind, id) else {
             return Err(WorkshopError::Unknown {
                 kind: kind.as_str(),
@@ -454,12 +454,12 @@ impl EmitContext<'_> {
             });
         };
         if let Some(spelling) = entry.spelling(&self.locale) {
-            return Ok(spelling.to_string());
+            return Ok(spelling);
         }
         if let Some(fallback) = &self.fallback {
             if let Some(spelling) = entry.spelling(fallback) {
                 self.fallback_ids.push(id.to_string());
-                return Ok(spelling.to_string());
+                return Ok(spelling);
             }
         }
         Err(WorkshopError::MissingMapping {
@@ -469,14 +469,14 @@ impl EmitContext<'_> {
         })
     }
 
-    pub(crate) fn localized_string_spelling(&mut self, id: &str) -> Result<String> {
+    pub(crate) fn localized_string_spelling(&mut self, id: &str) -> Result<&'a str> {
         if let Some(spelling) = self.catalog.localized_string_spelling(&self.locale, id) {
-            return Ok(spelling.to_string());
+            return Ok(spelling);
         }
         if let Some(fallback) = &self.fallback {
             if let Some(spelling) = self.catalog.localized_string_spelling(fallback, id) {
                 self.fallback_ids.push(format!("localizedString.{id}"));
-                return Ok(spelling.to_string());
+                return Ok(spelling);
             }
         }
         if self.catalog.localized_strings().any(|entry| entry.id == id) {
@@ -499,7 +499,7 @@ impl EmitContext<'_> {
         kind: Kind,
         id: &str,
         preferred: &str,
-    ) -> Result<String> {
+    ) -> Result<&'a str> {
         let Some(entry) = self.catalog.entry(kind, id) else {
             return Err(WorkshopError::Unknown {
                 kind: kind.as_str(),
@@ -517,12 +517,12 @@ impl EmitContext<'_> {
                 .or_else(|| entry.spelling(locale))
         };
         if let Some(spelling) = spelling(&self.locale) {
-            return Ok(spelling.to_string());
+            return Ok(spelling);
         }
-        if let Some(fallback) = self.fallback.clone() {
-            if let Some(spelling) = spelling(&fallback) {
+        if let Some(fallback) = &self.fallback {
+            if let Some(spelling) = spelling(fallback) {
                 self.fallback_ids.push(id.to_string());
-                return Ok(spelling.to_string());
+                return Ok(spelling);
             }
         }
         Err(WorkshopError::MissingMapping {
@@ -532,13 +532,13 @@ impl EmitContext<'_> {
         })
     }
 
-    pub(crate) fn structural(&mut self, id: &str) -> Result<String> {
+    pub(crate) fn structural(&mut self, id: &str) -> Result<&'a str> {
         self.spelling(Kind::Structural, id)
     }
 
     /// The localized spelling of a canonical enum member, resolving through
     /// the catalog (fallback-aware; see [`EmitContext::spelling`]).
-    pub(crate) fn enum_spelling(&mut self, domain: &str, member: &str) -> Result<String> {
+    pub(crate) fn enum_spelling(&mut self, domain: &str, member: &str) -> Result<&'a str> {
         let Some(domain_entry) = self.catalog.enum_domain(domain) else {
             return Err(WorkshopError::Unknown {
                 kind: "enum domain",
@@ -556,12 +556,12 @@ impl EmitContext<'_> {
             });
         };
         if let Some(spelling) = member_entry.spelling(&self.locale) {
-            return Ok(spelling.to_string());
+            return Ok(spelling);
         }
         if let Some(fallback) = &self.fallback {
             if let Some(spelling) = member_entry.spelling(fallback) {
                 self.fallback_ids.push(format!("{domain}.{member}"));
-                return Ok(spelling.to_string());
+                return Ok(spelling);
             }
         }
         Err(WorkshopError::MissingMapping {
@@ -696,7 +696,7 @@ impl EmitContext<'_> {
     pub(crate) fn emit_string_value(&mut self, value: &str, out: &mut String) -> Result<()> {
         let spelling = self.spelling(Kind::Value, "customString")?;
         let segments = split_string(value);
-        emit_string_chain(&spelling, &segments, out);
+        emit_string_chain(spelling, &segments, out);
         Ok(())
     }
 }

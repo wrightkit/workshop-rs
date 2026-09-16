@@ -177,10 +177,14 @@ impl EmitContext<'_> {
         }
     }
 
-    pub(crate) fn line(&mut self, level: usize, text: &str) -> Result<()> {
+    pub(crate) fn indent(&mut self, level: usize) {
         for _ in 0..level {
             self.out.push_str("    ");
         }
+    }
+
+    pub(crate) fn line(&mut self, level: usize, text: &str) -> Result<()> {
+        self.indent(level);
         self.out.push_str(text);
         self.out.push('\n');
         self.line_count += 1;

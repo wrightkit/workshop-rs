@@ -49,158 +49,180 @@ pub struct LexError {
     pub position: Position,
 }
 
-/// Tokenize Workshop text.
-pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
-    let chars: Vec<char> = input.chars().collect();
-    let mut tokens = Vec::new();
-    let mut index = 0;
-    let mut line = 1u32;
-    let mut col = 1u32;
+struct Cursor<'a> {
+    rest: &'a str,
+    line: u32,
+    col: u32,
+}
 
-    macro_rules! pos {
-        () => {
-            Position::new(line, col)
-        };
+impl<'a> Cursor<'a> {
+    fn new(input: &'a str) -> Self {
+        Self {
+            rest: input,
+            line: 1,
+            col: 1,
+        }
     }
 
-    let advance = |index: &mut usize, line: &mut u32, col: &mut u32, chars: &Vec<char>| {
-        let ch = chars[*index];
-        *index += 1;
-        if ch == '\n' {
-            *line += 1;
-            *col = 1;
-        } else {
-            *col += 1;
-        }
-    };
+    fn pos(&self) -> Position {
+        Position::new(self.line, self.col)
+    }
 
-    while index < chars.len() {
-        let ch = chars[index];
+    fn peek(&self) -> Option<char> {
+        self.rest.chars().next()
+    }
+
+    fn peek_at(&self, n: usize) -> Option<char> {
+        self.rest.chars().nth(n)
+    }
+
+    fn advance(&mut self) -> Option<char> {
+        let mut chars = self.rest.chars();
+        let ch = chars.next()?;
+        self.rest = chars.as_str();
+        if ch == '\n' {
+            self.line += 1;
+            self.col = 1;
+        } else {
+            self.col += 1;
+        }
+        Some(ch)
+    }
+}
+
+/// Tokenize Workshop text.
+pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
+    let mut cursor = Cursor::new(input);
+    let mut tokens = Vec::new();
+
+    while let Some(ch) = cursor.peek() {
         match ch {
-            ' ' | '\t' | '\r' | '\n' => advance(&mut index, &mut line, &mut col, &chars),
+            ' ' | '\t' | '\r' | '\n' => {
+                cursor.advance();
+            }
             '(' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 tokens.push(Token {
                     kind: TokenKind::LParen,
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             ')' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 tokens.push(Token {
                     kind: TokenKind::RParen,
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             ',' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 tokens.push(Token {
                     kind: TokenKind::Comma,
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             ';' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 tokens.push(Token {
                     kind: TokenKind::Semi,
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             '{' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 tokens.push(Token {
                     kind: TokenKind::LBrace,
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             '}' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 tokens.push(Token {
                     kind: TokenKind::RBrace,
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             ':' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 tokens.push(Token {
                     kind: TokenKind::Colon,
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             '.' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 tokens.push(Token {
                     kind: TokenKind::Dot,
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             '[' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 tokens.push(Token {
                     kind: TokenKind::LBracket,
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             ']' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 tokens.push(Token {
                     kind: TokenKind::RBracket,
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             '"' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 let mut content = String::new();
                 let mut closed = false;
-                while index < chars.len() {
-                    let c = chars[index];
+                while let Some(c) = cursor.peek() {
                     // Decode the escape spellings the emitter produces so a
                     // settings/value string round-trips byte-identically
                     // (`\"`, `\\`, `\n`, `\r`, `\t`; #87).
-                    if c == '\\' && index + 1 < chars.len() {
-                        let escaped = chars[index + 1];
-                        let decoded = match escaped {
-                            '"' => Some('"'),
-                            '\\' => Some('\\'),
-                            'n' => Some('\n'),
-                            'r' => Some('\r'),
-                            't' => Some('\t'),
-                            _ => None,
-                        };
-                        if let Some(decoded) = decoded {
-                            advance(&mut index, &mut line, &mut col, &chars);
-                            advance(&mut index, &mut line, &mut col, &chars);
-                            content.push(decoded);
-                            continue;
+                    if c == '\\' {
+                        if let Some(escaped) = cursor.peek_at(1) {
+                            let decoded = match escaped {
+                                '"' => Some('"'),
+                                '\\' => Some('\\'),
+                                'n' => Some('\n'),
+                                'r' => Some('\r'),
+                                't' => Some('\t'),
+                                _ => None,
+                            };
+                            if let Some(decoded) = decoded {
+                                cursor.advance();
+                                cursor.advance();
+                                content.push(decoded);
+                                continue;
+                            }
                         }
                     }
                     if c == '"' {
-                        advance(&mut index, &mut line, &mut col, &chars);
+                        cursor.advance();
                         closed = true;
                         break;
                     }
-                    advance(&mut index, &mut line, &mut col, &chars);
+                    cursor.advance();
                     content.push(c);
                 }
                 if !closed {
@@ -212,23 +234,25 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                 tokens.push(Token {
                     kind: TokenKind::String(content),
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             '0'..='9' => {
-                let start = pos!();
+                let start = cursor.pos();
                 let mut text = String::new();
-                let value = if ch == '0' && chars.get(index + 1) == Some(&'X') {
-                    text.push(ch);
-                    advance(&mut index, &mut line, &mut col, &chars);
-                    text.push(chars[index]);
-                    advance(&mut index, &mut line, &mut col, &chars);
-                    let digits_start = index;
-                    while index < chars.len() && chars[index].is_ascii_hexdigit() {
-                        text.push(chars[index]);
-                        advance(&mut index, &mut line, &mut col, &chars);
+                let value = if ch == '0' && cursor.peek_at(1) == Some('X') {
+                    text.push(cursor.advance().unwrap());
+                    text.push(cursor.advance().unwrap());
+                    let mut digit_count = 0;
+                    while let Some(c) = cursor.peek() {
+                        if c.is_ascii_hexdigit() {
+                            text.push(cursor.advance().unwrap());
+                            digit_count += 1;
+                        } else {
+                            break;
+                        }
                     }
-                    if index == digits_start {
+                    if digit_count == 0 {
                         return Err(LexError {
                             message: format!("invalid number '{text}'"),
                             position: start,
@@ -241,11 +265,12 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                             position: start,
                         })?
                 } else {
-                    while index < chars.len()
-                        && (chars[index].is_ascii_digit() || chars[index] == '.')
-                    {
-                        text.push(chars[index]);
-                        advance(&mut index, &mut line, &mut col, &chars);
+                    while let Some(c) = cursor.peek() {
+                        if c.is_ascii_digit() || c == '.' {
+                            text.push(cursor.advance().unwrap());
+                        } else {
+                            break;
+                        }
                     }
                     text.parse().map_err(|_| LexError {
                         message: format!("invalid number '{text}'"),
@@ -255,61 +280,59 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                 tokens.push(Token {
                     kind: TokenKind::Number { value, text },
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             '=' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
-                if index < chars.len() && chars[index] == '=' {
-                    advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
+                if cursor.peek() == Some('=') {
+                    cursor.advance();
                     tokens.push(Token {
                         kind: TokenKind::Op("==".to_string()),
                         start,
-                        end: pos!(),
+                        end: cursor.pos(),
                     });
                 } else {
                     tokens.push(Token {
                         kind: TokenKind::Op("=".to_string()),
                         start,
-                        end: pos!(),
+                        end: cursor.pos(),
                     });
                 }
             }
             '!' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
-                if index < chars.len() && chars[index] == '=' {
-                    advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
+                if cursor.peek() == Some('=') {
+                    cursor.advance();
                     tokens.push(Token {
                         kind: TokenKind::Op("!=".to_string()),
                         start,
-                        end: pos!(),
+                        end: cursor.pos(),
                     });
                 } else {
                     tokens.push(Token {
                         kind: TokenKind::Op("not".to_string()),
                         start,
-                        end: pos!(),
+                        end: cursor.pos(),
                     });
                 }
             }
-            '&' | '|' | '?' => {
-                if ch == '?' {
-                    let start = pos!();
-                    advance(&mut index, &mut line, &mut col, &chars);
-                    tokens.push(Token {
-                        kind: TokenKind::Op("?".to_string()),
-                        start,
-                        end: pos!(),
-                    });
-                    continue;
-                }
-                let start = pos!();
-                let operator = ch;
-                advance(&mut index, &mut line, &mut col, &chars);
-                if index < chars.len() && chars[index] == operator {
-                    advance(&mut index, &mut line, &mut col, &chars);
+            '?' => {
+                let start = cursor.pos();
+                cursor.advance();
+                tokens.push(Token {
+                    kind: TokenKind::Op("?".to_string()),
+                    start,
+                    end: cursor.pos(),
+                });
+            }
+            '&' | '|' => {
+                let start = cursor.pos();
+                let operator = cursor.advance().unwrap();
+                if cursor.peek() == Some(operator) {
+                    cursor.advance();
                     tokens.push(Token {
                         kind: TokenKind::Op(if operator == '&' {
                             "and".to_string()
@@ -317,7 +340,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                             "or".to_string()
                         }),
                         start,
-                        end: pos!(),
+                        end: cursor.pos(),
                     });
                 } else {
                     return Err(LexError {
@@ -329,63 +352,63 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                 }
             }
             '<' | '>' => {
-                let start = pos!();
-                let op = ch.to_string();
-                advance(&mut index, &mut line, &mut col, &chars);
-                if index < chars.len() && chars[index] == '=' {
-                    advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                let op = cursor.advance().unwrap();
+                if cursor.peek() == Some('=') {
+                    cursor.advance();
                     tokens.push(Token {
                         kind: TokenKind::Op(format!("{op}=")),
                         start,
-                        end: pos!(),
+                        end: cursor.pos(),
                     });
                 } else {
                     tokens.push(Token {
-                        kind: TokenKind::Op(op),
+                        kind: TokenKind::Op(op.to_string()),
                         start,
-                        end: pos!(),
+                        end: cursor.pos(),
                     });
                 }
             }
             '+' | '*' | '/' | '%' => {
-                if ch == '/' && index + 1 < chars.len() && chars[index + 1] == '/' {
+                if ch == '/' && cursor.peek_at(1) == Some('/') {
                     // `//` line comments: the reference's Workshop export
                     // format carries element-count comments between rules
                     // (#119 differential evidence); skip to end of line.
-                    while index < chars.len() && chars[index] != '\n' {
-                        advance(&mut index, &mut line, &mut col, &chars);
+                    while let Some(c) = cursor.peek() {
+                        if c == '\n' {
+                            break;
+                        }
+                        cursor.advance();
                     }
                     continue;
                 }
-                let start = pos!();
-                let op = ch.to_string();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                let op = cursor.advance().unwrap();
                 tokens.push(Token {
-                    kind: TokenKind::Op(op),
+                    kind: TokenKind::Op(op.to_string()),
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             '-' => {
-                let start = pos!();
-                advance(&mut index, &mut line, &mut col, &chars);
+                let start = cursor.pos();
+                cursor.advance();
                 tokens.push(Token {
                     kind: TokenKind::Op("-".to_string()),
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             c if is_word_start(c) => {
-                let start = pos!();
+                let start = cursor.pos();
                 let mut word = String::new();
-                while index < chars.len() {
-                    let c = chars[index];
+                while let Some(c) = cursor.peek() {
                     let interior_dash = c == '-'
-                        && index + 1 < chars.len()
-                        && (chars[index + 1].is_alphanumeric() || chars[index + 1] == '_');
+                        && cursor
+                            .peek_at(1)
+                            .is_some_and(|next| next.is_alphanumeric() || next == '_');
                     if is_word_character(c) || interior_dash {
-                        word.push(c);
-                        advance(&mut index, &mut line, &mut col, &chars);
+                        word.push(cursor.advance().unwrap());
                     } else {
                         break;
                     }
@@ -393,19 +416,19 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                 tokens.push(Token {
                     kind: TokenKind::Word(word),
                     start,
-                    end: pos!(),
+                    end: cursor.pos(),
                 });
             }
             other => {
                 return Err(LexError {
                     message: format!("unexpected character '{other}'"),
-                    position: pos!(),
+                    position: cursor.pos(),
                 });
             }
         }
     }
 
-    let end = pos!();
+    let end = cursor.pos();
     tokens.push(Token {
         kind: TokenKind::Eof,
         start: end,

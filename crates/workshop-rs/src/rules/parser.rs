@@ -65,6 +65,8 @@ impl ParseContext<'_> {
                     }) = self.peek()
                     {
                         let variable = self.variable_line()?;
+                        self.next_global_index =
+                            self.next_global_index.max(variable.index.saturating_add(1));
                         let id = self.target.global_variables.push(variable);
                         self.globals.insert(
                             self.target.global_variables.get(id).unwrap().name.clone(),
@@ -85,6 +87,8 @@ impl ParseContext<'_> {
                     }) = self.peek()
                     {
                         let variable = self.variable_line()?;
+                        self.next_player_index =
+                            self.next_player_index.max(variable.index.saturating_add(1));
                         let id = self.target.player_variables.push(variable);
                         self.players.insert(
                             self.target.player_variables.get(id).unwrap().name.clone(),
@@ -268,17 +272,16 @@ impl ParseContext<'_> {
         Ok(id)
     }
 
-    pub(crate) fn next_variable_index(&self, player: bool) -> u32 {
-        let variables = if player {
-            &self.target.player_variables
+    pub(crate) fn next_variable_index(&mut self, player: bool) -> u32 {
+        if player {
+            let index = self.next_player_index;
+            self.next_player_index = self.next_player_index.saturating_add(1);
+            index
         } else {
-            &self.target.global_variables
-        };
-        variables
-            .iter()
-            .map(|variable| variable.index)
-            .max()
-            .map_or(0, |index| index.saturating_add(1))
+            let index = self.next_global_index;
+            self.next_global_index = self.next_global_index.saturating_add(1);
+            index
+        }
     }
 
     pub(crate) fn subroutine_by_name(&self, name: &str) -> Result<wir::SubroutineId> {

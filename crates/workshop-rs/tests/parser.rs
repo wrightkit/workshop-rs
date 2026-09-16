@@ -563,6 +563,53 @@ rule ("type") { event { Ongoing - Global; } actions {
 }
 
 #[test]
+fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
+    let catalog = catalog();
+    // Test 1: Action with multiple invalid arguments must report the first argument error
+    let multi_arg_source = r#"rule ("multi-arg-error") {
+        event { Ongoing - Global; }
+        actions {
+            Set Crouch Enabled(Color(White), Color(White));
+        }
+    }"#;
+    let program =
+        parser::parse_wir_with_context(multi_arg_source, &catalog, &Locale::new("en-US"), &catalog)
+            .expect("parser preserves multi-arg error input for validation");
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
+        .expect_err("multi-arg error must fail with first argument error");
+    assert!(
+        error
+            .to_string()
+            .contains("action 'setCrouchEnabled' argument 1"),
+        "expected error for argument 1 (first argument), got: {error}"
+    );
+
+    // Test 2: Rule with multiple invalid actions must report the first action's error
+    let multi_action_source = r#"rule ("multi-action-error") {
+        event { Ongoing - Global; }
+        actions {
+            Set Crouch Enabled(All Players(All Teams), Color(White));
+            Teleport(Event Player, Max Health(Event Player));
+        }
+    }"#;
+    let program = parser::parse_wir_with_context(
+        multi_action_source,
+        &catalog,
+        &Locale::new("en-US"),
+        &catalog,
+    )
+    .expect("parser preserves multi-action error input for validation");
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
+        .expect_err("multi-action error must fail validation with first action error");
+    assert!(
+        error
+            .to_string()
+            .contains("action 'setCrouchEnabled' argument 2"),
+        "expected first error for setCrouchEnabled, got: {error}"
+    );
+}
+
+#[test]
 fn current_loop_action_resolves_to_canonical_generic_wir() {
     let catalog = catalog();
     let source = r#"rule ("loop") { event { Ongoing - Global; } actions { Loop; } }"#;
@@ -844,6 +891,85 @@ fn expected_domain_resolution_tracks_the_catalog_declared_domains() {
 }
 
 #[test]
+fn contextual_position_direction_resolution_handles_all_directions() {
+    use workshop_rs::signatures::ExpectedDomain;
+
+    struct PositionProvider;
+    impl ExpectedDomain for PositionProvider {
+        fn expected_domain(&self, _catalog_id: &str, _arg_index: usize) -> Option<&str> {
+            Some("Position")
+        }
+    }
+
+    let catalog = catalog();
+    let directions_en = [
+        ("Up", "UP"),
+        ("Down", "DOWN"),
+        ("Left", "LEFT"),
+        ("Right", "RIGHT"),
+        ("Forward", "FORWARD"),
+        ("Backward", "BACKWARD"),
+    ];
+
+    for (spelling, expected_member) in directions_en {
+        let text = format!(
+            "rule (\"dir\") {{ event {{ Ongoing - Global; }} actions {{ Create Icon(All Players(All Teams), {spelling}, Arrow: Up, Visible To, Color(White), True); }} }}"
+        );
+        let program = parser::parse_wir_with_context(
+            &text,
+            &catalog,
+            &Locale::new("en-US"),
+            &PositionProvider,
+        )
+        .expect("contextual position must resolve");
+        let wir::Action::Call { args, .. } =
+            program.actions.get(wir::ActionId::from_index(0)).unwrap()
+        else {
+            panic!("expected action call");
+        };
+        let pos_val = program.values.get(args[1]).unwrap();
+        assert!(
+            matches!(&pos_val.value, wir::Value::Enum { value_type, value } if value_type == "Vector" && value == expected_member),
+            "expected Vector.{expected_member} for spelling {spelling}, got {:?}",
+            pos_val.value
+        );
+    }
+
+    let directions_zh = [
+        ("上", "UP"),
+        ("下", "DOWN"),
+        ("左", "LEFT"),
+        ("右", "RIGHT"),
+        ("前", "FORWARD"),
+        ("后", "BACKWARD"),
+    ];
+
+    for (spelling, expected_member) in directions_zh {
+        let text = format!(
+            "rule (\"dir\") {{ event {{ 持续 - 全局; }} actions {{ 创建图标(所有玩家(所有队伍), {spelling}, 箭头: 向上, 可见: 位置和字符串, 颜色(白色), 是); }} }}"
+        );
+        let program = parser::parse_wir_with_context(
+            &text,
+            &catalog,
+            &Locale::new("zh-CN"),
+            &PositionProvider,
+        )
+        .expect("contextual position in zh-CN must resolve");
+        let wir::Action::Call { args, .. } =
+            program.actions.get(wir::ActionId::from_index(0)).unwrap()
+        else {
+            panic!("expected action call");
+        };
+        let pos_val = program.values.get(args[1]).unwrap();
+        assert!(
+            matches!(&pos_val.value, wir::Value::Enum { value_type, value } if value_type == "Vector" && value == expected_member),
+            "expected Vector.{expected_member} for spelling {spelling}, got {:?}",
+            pos_val.value
+        );
+    }
+}
+
+#[test]
 fn raw_workshop_member_access_and_disabled_groups_parse() {
     let text = r#"
         rule ("raw") {
@@ -1100,4 +1226,58 @@ fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
         );
     }
     assert_eq!(collisions.len(), 50, "the catalog collision census changed");
+}
+
+#[test]
+fn implicit_variables_allocate_monotonically_above_explicit_sparse_indices() {
+    let source = r#"variables {
+        global:
+            5: explicit_five
+            10: explicit_ten
+        player:
+            3: explicit_three
+            8: explicit_eight
+    }
+    rule ("test") {
+        event { Ongoing - Global; }
+        actions {
+            Global.implicit_eleven = 1;
+            Global.implicit_twelve = 2;
+            (Event Player).implicit_nine = 3;
+            (Event Player).implicit_ten = 4;
+            // Existing variable reference does not allocate a new index
+            Global.implicit_eleven = 10;
+        }
+    }"#;
+    let catalog = catalog();
+    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("sparse and implicit variables parse");
+    let globals: Vec<(&str, u32)> = program
+        .global_variables
+        .iter()
+        .map(|v| (v.name.as_str(), v.index))
+        .collect();
+    assert_eq!(
+        globals,
+        vec![
+            ("explicit_five", 5),
+            ("explicit_ten", 10),
+            ("implicit_eleven", 11),
+            ("implicit_twelve", 12),
+        ]
+    );
+    let players: Vec<(&str, u32)> = program
+        .player_variables
+        .iter()
+        .map(|v| (v.name.as_str(), v.index))
+        .collect();
+    assert_eq!(
+        players,
+        vec![
+            ("explicit_three", 3),
+            ("explicit_eight", 8),
+            ("implicit_nine", 9),
+            ("implicit_ten", 10),
+        ]
+    );
 }

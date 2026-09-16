@@ -14,7 +14,6 @@ impl ParseContext<'_> {
                 .unwrap_or_else(|| match canonical_display.as_str() {
                     value
                         if value == "extensions"
-                            || display == "扩展"
                             || self.settings_name_matches("labels", "Extensions", &display) =>
                     {
                         "extensions"

@@ -97,6 +97,8 @@ pub fn parse_wir_with_context(
         globals: HashMap::new(),
         players: HashMap::new(),
         subroutines: HashMap::new(),
+        next_global_index: 0,
+        next_player_index: 0,
     }
     .program()
 }
@@ -123,6 +125,8 @@ pub(crate) struct ParseContext<'a> {
     pub(crate) globals: HashMap<String, wir::GlobalVarId>,
     pub(crate) players: HashMap<String, wir::PlayerVarId>,
     pub(crate) subroutines: HashMap<String, wir::SubroutineId>,
+    pub(crate) next_global_index: u32,
+    pub(crate) next_player_index: u32,
 }
 
 impl<'a> ParseContext<'a> {
