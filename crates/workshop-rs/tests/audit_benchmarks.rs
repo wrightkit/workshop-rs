@@ -7,6 +7,29 @@ use workshop_rs::lexer;
 use workshop_rs::parser;
 use workshop_rs::validate;
 
+const BUNDLED_STATIC_DATA: &[(&str, usize)] = &[
+    (
+        "settings/locales.json",
+        include_bytes!("../src/settings/data/locales.json").len(),
+    ),
+    (
+        "settings/hero_setting_aliases.json",
+        include_bytes!("../src/settings/data/hero_setting_aliases.json").len(),
+    ),
+    (
+        "settings/projection_reconciliation.json",
+        include_bytes!("../src/settings/data/projection_reconciliation.json").len(),
+    ),
+    (
+        "gameplay/gameplay.json",
+        include_bytes!("../src/gameplay/gameplay.json").len(),
+    ),
+    (
+        "catalog/catalog.json",
+        include_bytes!("../src/catalog/data/catalog.json").len(),
+    ),
+];
+
 fn benchmark_duration<T>(iterations: usize, mut operation: impl FnMut() -> T) -> Duration {
     let start = Instant::now();
     for _ in 0..iterations {
@@ -42,6 +65,25 @@ fn report_conversion_share(label: &str, program: Duration, wir: Duration, iterat
             wir / iterations as u32,
             Duration::from_nanos((-delta) as u64)
         );
+    }
+}
+
+fn resident_kib() -> Option<u64> {
+    let pid = std::process::id().to_string();
+    let output = Command::new("ps")
+        .args(["-o", "rss=", "-p", &pid])
+        .output()
+        .ok()?;
+    String::from_utf8_lossy(&output.stdout).trim().parse().ok()
+}
+
+fn report_resident(label: &str, baseline: Option<u64>) {
+    match (baseline, resident_kib()) {
+        (Some(baseline), Some(current)) => println!(
+            "{label} cumulative resident RSS: {current} KiB (+{} KiB from child baseline)",
+            current.saturating_sub(baseline)
+        ),
+        _ => println!("{label} cumulative resident RSS: unavailable on this platform"),
     }
 }
 
@@ -513,7 +555,26 @@ fn benchmark_program_conversion_and_static_data() {
         iterations,
     );
 
+    println!("\n=== ISSUE #216 BOUNDED PROGRAM RECOMMENDATION ===");
+    println!(
+        "direct &Program-safe operations: source lookup and checked source edits; these retain provenance without reimplementing WIR semantics"
+    );
+    println!(
+        "conversion-dependent operations: validate, emit, element_count, semantic_issues, dump, and roundtrip equivalence"
+    );
+    println!(
+        "recommendation: keep one canonical WIR implementation for semantic operations; do not cache mutable Program→WIR state. If repeated emit/count workloads justify it, benchmark an explicit caller-owned batch conversion in a follow-up API rather than adding hidden cache invalidation."
+    );
+
     println!("\n=== ISSUE #216 STATIC DATA COLD/WARM MEASUREMENTS ===");
+    let embedded_bytes: usize = BUNDLED_STATIC_DATA.iter().map(|(_, bytes)| bytes).sum();
+    println!(
+        "embedded static-data payload bytes (exact JSON bytes before linker/runtime overhead):"
+    );
+    for (name, bytes) in BUNDLED_STATIC_DATA {
+        println!("  {name}: {bytes} bytes");
+    }
+    println!("  total: {embedded_bytes} bytes");
     let executable = std::env::current_exe().expect("current test executable");
     let start = Instant::now();
     let child = Command::new(executable)
@@ -545,11 +606,15 @@ fn benchmark_static_data_initialization() {
         return;
     }
 
+    let resident_baseline = resident_kib();
+    report_resident("child start", resident_baseline);
+
     let start = Instant::now();
     black_box(workshop_rs::settings::table::localized_name(
         "zh-CN", "teams", "Team 1",
     ));
     println!("settings locales.json first use: {:?}", start.elapsed());
+    report_resident("after settings/locales.json", resident_baseline);
 
     let start = Instant::now();
     black_box(workshop_rs::settings::table::hero_setting_alias(
@@ -562,6 +627,10 @@ fn benchmark_static_data_initialization() {
         "settings hero_setting_aliases.json first use: {:?}",
         start.elapsed()
     );
+    report_resident(
+        "after settings/hero_setting_aliases.json",
+        resident_baseline,
+    );
 
     let start = Instant::now();
     workshop_rs::settings::schema::validate_catalog().expect("settings schema and reconciliation");
@@ -569,14 +638,20 @@ fn benchmark_static_data_initialization() {
         "settings projection_reconciliation.json first use (schema validation): {:?}",
         start.elapsed()
     );
+    report_resident(
+        "after settings/projection_reconciliation.json",
+        resident_baseline,
+    );
 
     let start = Instant::now();
     black_box(workshop_rs::gameplay::data::builtin().expect("gameplay data"));
     println!("gameplay.json first use: {:?}", start.elapsed());
+    report_resident("after gameplay/gameplay.json", resident_baseline);
 
     let start = Instant::now();
     black_box(Catalog::builtin().expect("catalog"));
     println!("catalog.json load: {:?}", start.elapsed());
+    report_resident("after catalog/catalog.json", resident_baseline);
 
     let iterations = 100;
     let start = Instant::now();
@@ -601,4 +676,5 @@ fn benchmark_static_data_initialization() {
         steady_state,
         steady_state / iterations as u32
     );
+    report_resident("after steady-state mixed lookups/loads", resident_baseline);
 }
