@@ -563,6 +563,53 @@ rule ("type") { event { Ongoing - Global; } actions {
 }
 
 #[test]
+fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
+    let catalog = catalog();
+    // Test 1: Action with multiple invalid arguments must report the first argument error
+    let multi_arg_source = r#"rule ("multi-arg-error") {
+        event { Ongoing - Global; }
+        actions {
+            Set Crouch Enabled(Color(White), Color(White));
+        }
+    }"#;
+    let program =
+        parser::parse_wir_with_context(multi_arg_source, &catalog, &Locale::new("en-US"), &catalog)
+            .expect("parser preserves multi-arg error input for validation");
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
+        .expect_err("multi-arg error must fail with first argument error");
+    assert!(
+        error
+            .to_string()
+            .contains("action 'setCrouchEnabled' argument 1"),
+        "expected error for argument 1 (first argument), got: {error}"
+    );
+
+    // Test 2: Rule with multiple invalid actions must report the first action's error
+    let multi_action_source = r#"rule ("multi-action-error") {
+        event { Ongoing - Global; }
+        actions {
+            Set Crouch Enabled(All Players(All Teams), Color(White));
+            Teleport(Event Player, Max Health(Event Player));
+        }
+    }"#;
+    let program = parser::parse_wir_with_context(
+        multi_action_source,
+        &catalog,
+        &Locale::new("en-US"),
+        &catalog,
+    )
+    .expect("parser preserves multi-action error input for validation");
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
+        .expect_err("multi-action error must fail validation with first action error");
+    assert!(
+        error
+            .to_string()
+            .contains("action 'setCrouchEnabled' argument 2"),
+        "expected first error for setCrouchEnabled, got: {error}"
+    );
+}
+
+#[test]
 fn current_loop_action_resolves_to_canonical_generic_wir() {
     let catalog = catalog();
     let source = r#"rule ("loop") { event { Ongoing - Global; } actions { Loop; } }"#;
