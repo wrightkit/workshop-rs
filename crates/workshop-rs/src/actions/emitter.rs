@@ -1,6 +1,6 @@
 use crate::output::emitter::*;
 
-impl<'a> EmitContext<'a> {
+impl EmitContext<'_> {
     /// Emit one rule action; `rule_final` marks the last action of the rule,
     /// for which an `if`/`if-else` closes without the trailing `End;`
     /// (the pinned oracle's spelling, #87).
