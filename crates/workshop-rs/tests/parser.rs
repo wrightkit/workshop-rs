@@ -1227,3 +1227,57 @@ fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
     }
     assert_eq!(collisions.len(), 50, "the catalog collision census changed");
 }
+
+#[test]
+fn implicit_variables_allocate_monotonically_above_explicit_sparse_indices() {
+    let source = r#"variables {
+        global:
+            5: explicit_five
+            10: explicit_ten
+        player:
+            3: explicit_three
+            8: explicit_eight
+    }
+    rule ("test") {
+        event { Ongoing - Global; }
+        actions {
+            Global.implicit_eleven = 1;
+            Global.implicit_twelve = 2;
+            (Event Player).implicit_nine = 3;
+            (Event Player).implicit_ten = 4;
+            // Existing variable reference does not allocate a new index
+            Global.implicit_eleven = 10;
+        }
+    }"#;
+    let catalog = catalog();
+    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
+        .expect("sparse and implicit variables parse");
+    let globals: Vec<(&str, u32)> = program
+        .global_variables
+        .iter()
+        .map(|v| (v.name.as_str(), v.index))
+        .collect();
+    assert_eq!(
+        globals,
+        vec![
+            ("explicit_five", 5),
+            ("explicit_ten", 10),
+            ("implicit_eleven", 11),
+            ("implicit_twelve", 12),
+        ]
+    );
+    let players: Vec<(&str, u32)> = program
+        .player_variables
+        .iter()
+        .map(|v| (v.name.as_str(), v.index))
+        .collect();
+    assert_eq!(
+        players,
+        vec![
+            ("explicit_three", 3),
+            ("explicit_eight", 8),
+            ("implicit_nine", 9),
+            ("implicit_ten", 10),
+        ]
+    );
+}
