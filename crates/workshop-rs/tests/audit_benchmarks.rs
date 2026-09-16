@@ -564,10 +564,7 @@ fn benchmark_static_data_initialization() {
     );
 
     let start = Instant::now();
-    black_box(
-        workshop_rs::settings::schema::validate_catalog()
-            .expect("settings schema and reconciliation"),
-    );
+    workshop_rs::settings::schema::validate_catalog().expect("settings schema and reconciliation");
     println!(
         "settings projection_reconciliation.json first use (schema validation): {:?}",
         start.elapsed()
@@ -593,10 +590,8 @@ fn benchmark_static_data_initialization() {
             "en-US",
             "A-36 Tactical Grenade Cooldown Time",
         ));
-        black_box(
-            workshop_rs::settings::schema::validate_catalog()
-                .expect("settings schema and reconciliation"),
-        );
+        workshop_rs::settings::schema::validate_catalog()
+            .expect("settings schema and reconciliation");
         black_box(workshop_rs::gameplay::data::builtin().expect("gameplay data"));
         black_box(Catalog::builtin().expect("catalog"));
     }
