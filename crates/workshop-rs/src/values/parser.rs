@@ -699,26 +699,31 @@ impl ParseContext<'_> {
         if !matches!(first.kind, TokenKind::Word(_)) {
             return None;
         }
+        let has_dot_ahead = self.tokens[self.pos..]
+            .iter()
+            .take_while(|t| {
+                matches!(
+                    t.kind,
+                    TokenKind::Word(_) | TokenKind::Number { .. } | TokenKind::Dot
+                )
+            })
+            .any(|t| matches!(t.kind, TokenKind::Dot));
+        if !has_dot_ahead {
+            return None;
+        }
         let start = first.start;
         let mut end = first.end;
         let mut parts = Vec::new();
-        let mut has_dot = false;
         let mut index = self.pos;
         while let Some(token) = self.tokens.get(index) {
             match &token.kind {
                 TokenKind::Word(word) => parts.push(word.clone()),
                 TokenKind::Number { text, .. } => parts.push(text.clone()),
-                TokenKind::Dot => {
-                    has_dot = true;
-                    parts.push(".".to_string());
-                }
+                TokenKind::Dot => parts.push(".".to_string()),
                 _ => break,
             }
             end = token.end;
             index += 1;
-        }
-        if !has_dot {
-            return None;
         }
         let phrase = parts.join(" ").replace(" .", ".").replace(". ", ".");
         let known_value = self.resolve_entry(Kind::Value, &phrase).is_some();
@@ -938,20 +943,13 @@ impl ParseContext<'_> {
                 )));
             }
         }
-        if matches!(self.expected_domain, Some("Position")) && matches!(phrase, "Up" | "上") {
-            let value = match phrase {
-                "Left" | "左" => "LEFT",
-                "Right" | "右" => "RIGHT",
-                "Down" | "下" => "DOWN",
-                _ => "UP",
-            };
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::Enum {
-                    value_type: "Vector".to_string(),
-                    value: value.to_string(),
-                },
-                Some(Span::new(self.file(), start, end)),
-            )));
+        if matches!(self.expected_domain, Some("Position")) {
+            if let Some((value_type, value)) = self.resolve_enum_member_mixed("Vector", phrase) {
+                return Ok(self.target.values.push(ValueNode::new(
+                    Value::Enum { value_type, value },
+                    Some(Span::new(self.file(), start, end)),
+                )));
+            }
         }
         // Event filter domains are resolved by the event parser and are not
         // value-argument domains. Excluding them here keeps their spellings
@@ -1219,10 +1217,7 @@ impl ParseContext<'_> {
         let saved = self.pos;
         let (phrase, _, _) = self.phrase()?;
         let expression_like = self.resolve_entry(Kind::Value, &phrase).is_some()
-            || matches!(
-                self.canonical_keyword(&phrase).as_str(),
-                "True" | "False" | "真" | "假"
-            )
+            || matches!(self.canonical_keyword(&phrase).as_str(), "True" | "False")
             || self
                 .peek()
                 .is_some_and(|token| matches!(&token.kind, TokenKind::LParen | TokenKind::Dot));

@@ -844,6 +844,85 @@ fn expected_domain_resolution_tracks_the_catalog_declared_domains() {
 }
 
 #[test]
+fn contextual_position_direction_resolution_handles_all_directions() {
+    use workshop_rs::signatures::ExpectedDomain;
+
+    struct PositionProvider;
+    impl ExpectedDomain for PositionProvider {
+        fn expected_domain(&self, _catalog_id: &str, _arg_index: usize) -> Option<&str> {
+            Some("Position")
+        }
+    }
+
+    let catalog = catalog();
+    let directions_en = [
+        ("Up", "UP"),
+        ("Down", "DOWN"),
+        ("Left", "LEFT"),
+        ("Right", "RIGHT"),
+        ("Forward", "FORWARD"),
+        ("Backward", "BACKWARD"),
+    ];
+
+    for (spelling, expected_member) in directions_en {
+        let text = format!(
+            "rule (\"dir\") {{ event {{ Ongoing - Global; }} actions {{ Create Icon(All Players(All Teams), {spelling}, Arrow: Up, Visible To, Color(White), True); }} }}"
+        );
+        let program = parser::parse_wir_with_context(
+            &text,
+            &catalog,
+            &Locale::new("en-US"),
+            &PositionProvider,
+        )
+        .expect("contextual position must resolve");
+        let wir::Action::Call { args, .. } =
+            program.actions.get(wir::ActionId::from_index(0)).unwrap()
+        else {
+            panic!("expected action call");
+        };
+        let pos_val = program.values.get(args[1]).unwrap();
+        assert!(
+            matches!(&pos_val.value, wir::Value::Enum { value_type, value } if value_type == "Vector" && value == expected_member),
+            "expected Vector.{expected_member} for spelling {spelling}, got {:?}",
+            pos_val.value
+        );
+    }
+
+    let directions_zh = [
+        ("上", "UP"),
+        ("下", "DOWN"),
+        ("左", "LEFT"),
+        ("右", "RIGHT"),
+        ("前", "FORWARD"),
+        ("后", "BACKWARD"),
+    ];
+
+    for (spelling, expected_member) in directions_zh {
+        let text = format!(
+            "rule (\"dir\") {{ event {{ 持续 - 全局; }} actions {{ 创建图标(所有玩家(所有队伍), {spelling}, 箭头: 向上, 可见: 位置和字符串, 颜色(白色), 是); }} }}"
+        );
+        let program = parser::parse_wir_with_context(
+            &text,
+            &catalog,
+            &Locale::new("zh-CN"),
+            &PositionProvider,
+        )
+        .expect("contextual position in zh-CN must resolve");
+        let wir::Action::Call { args, .. } =
+            program.actions.get(wir::ActionId::from_index(0)).unwrap()
+        else {
+            panic!("expected action call");
+        };
+        let pos_val = program.values.get(args[1]).unwrap();
+        assert!(
+            matches!(&pos_val.value, wir::Value::Enum { value_type, value } if value_type == "Vector" && value == expected_member),
+            "expected Vector.{expected_member} for spelling {spelling}, got {:?}",
+            pos_val.value
+        );
+    }
+}
+
+#[test]
 fn raw_workshop_member_access_and_disabled_groups_parse() {
     let text = r#"
         rule ("raw") {

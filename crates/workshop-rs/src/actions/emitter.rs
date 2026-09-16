@@ -1,6 +1,6 @@
 use crate::output::emitter::*;
 
-impl EmitContext<'_> {
+impl<'a> EmitContext<'a> {
     /// Emit one rule action; `rule_final` marks the last action of the rule,
     /// for which an `if`/`if-else` closes without the trailing `End;`
     /// (the pinned oracle's spelling, #87).
@@ -80,7 +80,7 @@ impl EmitContext<'_> {
                     .program
                     .subroutines
                     .get(*subroutine)
-                    .map(|s| s.name.clone())
+                    .map(|s| s.name.as_str())
                     .ok_or_else(|| WorkshopError::Unknown {
                         kind: "subroutine",
                         spelling: format!("<{subroutine}>"),
@@ -254,7 +254,7 @@ impl EmitContext<'_> {
                         // arguments (the pinned oracle's spelling).
                         let mut text = String::new();
                         self.value(player, &mut text)?;
-                        let mut parts = vec![text, self.player_name(variable)?];
+                        let mut parts = vec![text, self.player_name(variable)?.to_string()];
                         for arg in args.iter().skip(1) {
                             let mut part = String::new();
                             self.value(*arg, &mut part)?;
@@ -329,11 +329,11 @@ impl EmitContext<'_> {
                             if let Some(node) = self.program.values.get(*arg) {
                                 match &node.value {
                                     wir::Value::GlobalVariable(variable) => {
-                                        args_text.push_str(&self.global_name(*variable)?);
+                                        args_text.push_str(self.global_name(*variable)?);
                                         continue;
                                     }
                                     wir::Value::PlayerVariable { variable, .. } => {
-                                        args_text.push_str(&self.player_name(*variable)?);
+                                        args_text.push_str(self.player_name(*variable)?);
                                         continue;
                                     }
                                     _ => {}

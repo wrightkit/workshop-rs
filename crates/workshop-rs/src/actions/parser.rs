@@ -801,14 +801,6 @@ impl ParseContext<'_> {
                 let Some(action) = self
                     .resolve_entry(Kind::Action, &phrase)
                     .or_else(|| self.resolve_entry(Kind::Action, &format!("{phrase} ")))
-                    .or_else(|| {
-                        let alias = match phrase.as_str() {
-                            "Set Player Allowed Heroes" => "Set Allowed Heroes",
-                            "设置技能充能" => "设置终极技能充能",
-                            _ => return None,
-                        };
-                        self.resolve_entry(Kind::Action, alias)
-                    })
                 else {
                     return Err(WorkshopError::Unknown {
                         kind: "action",
@@ -941,12 +933,6 @@ impl ParseContext<'_> {
 
     pub(crate) fn modify_op(&mut self) -> Result<ModifyOp> {
         let (phrase, start, end) = self.phrase()?;
-        if phrase == "根据值从数组中移除" {
-            return Ok(ModifyOp::RemoveFromArray);
-        }
-        if phrase == "根据索引从数组中移除" {
-            return Ok(ModifyOp::RemoveFromArrayByIndex);
-        }
         let entry = self
             .catalog
             .resolve(Kind::Operator, &self.locale, &phrase)

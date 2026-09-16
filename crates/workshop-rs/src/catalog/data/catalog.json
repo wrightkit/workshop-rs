@@ -3724,7 +3724,10 @@
     },
     {
       "aliases": {
-        "en-US": "Set Allowed Heroes",
+        "en-US": [
+          "Set Allowed Heroes",
+          "Set Player Allowed Heroes"
+        ],
         "zh-CN": "设置玩家可选的英雄"
       },
       "id": "setAllowedHeroes",
@@ -5253,7 +5256,7 @@
       ]
     }
   ],
-  "digest": "f9b84f6369921cf755d0a3ebda1ca99f6b7ec47afb1e89426a89b921ed0fb772",
+  "digest": "20782c98ff8378ebe963b03cebee219bb356b74e17913aab2be705f4e3be7b02",
   "enums": [
     {
       "domain": "Impulse",
