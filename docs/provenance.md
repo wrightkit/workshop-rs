@@ -177,6 +177,13 @@ operation article was unavailable during the review, so its operation
 membership is retained from stronger catalog and reference evidence rather than
 inferred from the missing page.
 
+The native articles for [`Set Player Variable At Index`] and [`Modify Player
+Variable At Index`] include a leading `Player` receiver. The compatibility
+inventory records those native parameters; the catalog entries intentionally
+retain the normalized canonical WIR shape, where the receiver and variable are
+represented by one `Player Variable` value. Existing parser and emitter
+coverage exercises the native form and the canonical form separately.
+
 This review confirms the taxonomy correction delivered in the existing focused
 catalog regression. No additional catalog change is made without convergent
 evidence. Broader Markdown acquisition was intermittently limited by
@@ -194,6 +201,8 @@ reference service is available.
 [`Count Of`]: https://md.wrightkit.dev/wiki/articles/count-of
 [`Filtered Array`]: https://md.wrightkit.dev/wiki/articles/filtered-array
 [`Modify Global Variable`]: https://md.wrightkit.dev/wiki/articles/modify-global-variable
+[`Set Player Variable At Index`]: https://md.wrightkit.dev/wiki/articles/set-player-variable-at-index
+[`Modify Player Variable At Index`]: https://md.wrightkit.dev/wiki/articles/modify-player-variable-at-index
 
 Dataset changes are deliberate: edit the data, update this document and the
 dataset `provenance` record, run `workshop-catalog-gen check` then `build`,

@@ -21,7 +21,7 @@ Every capability in this document and its referenced sub-documents uses one of t
 | --- | --- | --- | --- |
 | [Program Structure & Variables](language-support/structure.md) | ✅ Supported | `settings`, `variables`, `subroutines`, `rule`, `disabled` modifiers, global & player variables | [`structure.md`](language-support/structure.md) |
 | [Events & Event Filters](language-support/events.md) | ✅ Supported | Canonical rule events (`global`, `eachPlayer`, knockback, damage, healing, etc.), Team & Player filters | [`events.md`](language-support/events.md) |
-| [Conditions & Control Flow](language-support/control-flow.md) | ✅ Supported | Conditions, `If`, `Else If`, `Else`, `End`, `While`, `For`, `Loop`, `Skip`, `Wait`, `Abort`, `Return` | [`control-flow.md`](language-support/control-flow.md) |
+| [Conditions & Control Flow](language-support/control-flow.md) | ✅ Supported | Conditions, `If`, `Else If`, `Else`, `End`, `While`, `For`, `Loop`, `Skip`, `Wait`, and `Abort` | [`control-flow.md`](language-support/control-flow.md) |
 | [Operators & Variable Modifications](language-support/operators.md) | ✅ Supported | Comparison operators (`==`, `!=`, etc.), arithmetic (`Add`, `Subtract`, `Raise To Power`), array modifications | [`operators.md`](language-support/operators.md) |
 | [Actions Inventory](language-support/actions.md) | ✅ Supported | Complete inventory of canonical Workshop actions with parameter signatures | [`actions.md`](language-support/actions.md) |
 | [Values Inventory](language-support/values.md) | ✅ Supported | Supported values & expressions | [`values.md`](language-support/values.md) |

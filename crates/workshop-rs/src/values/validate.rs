@@ -378,6 +378,16 @@ fn value_matches_type(
     let Some(node) = program.values.get(value_id) else {
         return false;
     };
+    if expected
+        .split('|')
+        .any(|alternative| alternative == "Player Variable")
+    {
+        if let wir::Value::PlayerVariable { player, .. } = &node.value {
+            if !value_matches_type(program, catalog, *player, "Player|Array") {
+                return false;
+            }
+        }
+    }
     if let wir::Value::Call { name, .. } = &node.value {
         if name == wir::AMBIGUOUS_ENUM_CALL {
             return expected.split('|').any(|alternative| {
