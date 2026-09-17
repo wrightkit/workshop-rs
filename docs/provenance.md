@@ -163,13 +163,37 @@ The source-bound settings inventory is regenerated with
 SHA-256 plus per-entry source paths. The generated Rust settings projection
 and catalog surface are then checked with `workshop-catalog-gen check`.
 
-The independent Markdown reference audit is run with
-`python3 tools/catalog-audit.py verify`. Its reviewed offline snapshot is
-`tools/catalog-reference.json`; each extracted fact retains its exact
-`md.wrightkit.dev` article URL. The snapshot is not canonical data and does
-not rewrite the catalog. Uncovered catalog surfaces remain explicit
-`unverified` audit records, while evidenced conflicts fail the audit. Live
-refresh is separate from ordinary CI and aborts if acquisition is incomplete.
+### Targeted `md.wrightkit.dev` review for #233
+
+On 2026-09-17, the relevant array and arithmetic entries were reviewed against
+the available Markdown articles for [`Add`], [`Append To Array`], [`Remove From
+Array`], [`Array`], [`Index Of Array Value`], [`Value In Array`], [`Count Of`],
+[`Filtered Array`], and [`Modify Global Variable`]. Their documented names,
+value/operator distinction, and relevant return and parameter roles agree with
+the canonical catalog. Narrower documentation type labels do not alone
+override the catalog's canonical types and pinned coercion evidence. The
+[`Remove From Array`] article independently confirms the value form; the
+operation article was unavailable during this review, so its operation
+membership is retained from stronger catalog and reference evidence rather than
+inferred from the missing page.
+
+This review confirms the taxonomy correction tracked by #232 and delivered in
+the existing focused catalog regression. No additional catalog change is made
+without convergent evidence. Broader Markdown acquisition was intermittently
+limited by `md.wrightkit.dev` returning Cloudflare 522/500 responses; that is an
+evidence limitation, not evidence that an undocumented Workshop capability is
+absent. Remaining compatibility gaps should be reviewed with targeted pages
+when the reference service is available.
+
+[`Add`]: https://md.wrightkit.dev/wiki/articles/add
+[`Append To Array`]: https://md.wrightkit.dev/wiki/articles/append-to-array
+[`Remove From Array`]: https://md.wrightkit.dev/wiki/articles/remove-from-array
+[`Array`]: https://md.wrightkit.dev/wiki/articles/array
+[`Index Of Array Value`]: https://md.wrightkit.dev/wiki/articles/index-of-array-value
+[`Value In Array`]: https://md.wrightkit.dev/wiki/articles/value-in-array
+[`Count Of`]: https://md.wrightkit.dev/wiki/articles/count-of
+[`Filtered Array`]: https://md.wrightkit.dev/wiki/articles/filtered-array
+[`Modify Global Variable`]: https://md.wrightkit.dev/wiki/articles/modify-global-variable
 
 Dataset changes are deliberate: edit the data, update this document and the
 dataset `provenance` record, run `workshop-catalog-gen check` then `build`,

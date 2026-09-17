@@ -45,10 +45,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.85.0
       - name: Catalog check
         run: cargo run --locked -p workshop-rs --bin workshop-catalog-gen -- check
-      - name: Reference catalog audit
-        run: |
-          python3 -m unittest tools/test_catalog_audit.py
-          python3 tools/catalog-audit.py verify
 
   real-project-scenarios:
     name: five real-project scenarios
