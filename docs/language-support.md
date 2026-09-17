@@ -31,6 +31,44 @@ Every capability in this document and its referenced sub-documents uses one of t
 | [Tooling & Semantic Capabilities](language-support/tooling.md) | ✅ Supported | Parsing, validation, deterministic emission, conversion, hero gameplay query APIs, offline census | [`tooling.md`](language-support/tooling.md) |
 | [Intentionally Out-of-Scope Capabilities](#intentionally-out-of-scope-capabilities) | ❌ Unsupported | Live client simulation/VM, source-language syntax (OverPy/DEL), dynamic runtime `eval` | [See below](#intentionally-out-of-scope-capabilities) |
 
+## Compatibility notes
+
+The available Workshop documentation confirms the catalog's array and
+arithmetic identities, value/operator classification, and relevant return and
+parameter roles for [`Add`], [`Append To Array`], [`Remove From Array`],
+[`Array`], [`Index Of Array Value`], [`Value In Array`], [`Count Of`],
+[`Filtered Array`], and [`Modify Global Variable`]. `Remove From Array` is a
+value expression; its modification forms remain separate operation identities.
+Documentation type labels such as `Float`, `Integer`, and `Array (Player)` are
+presentation details and do not replace the catalog's canonical types or its
+evidence-backed coercions.
+
+The native forms of [`Set Player Variable At Index`] and
+[`Modify Player Variable At Index`] include a `Player` receiver. The
+compatibility inventory records that receiver, while the catalog keeps the
+normalized WIR representation in which the receiver and variable form one
+`Player Variable` value. Both native and canonical forms are parsed, validated,
+emitted, converted, and round-tripped by the compatibility cases.
+
+The detailed control-flow inventory marks `Return` as `🚧 Coming soon`; it is
+therefore not included in the supported control-flow scope above. The
+`Operation` article and some broader documentation requests were unavailable
+or intermittently returned Cloudflare 522/500 responses. Those responses limit
+the available evidence and do not establish that a Workshop capability is
+absent.
+
+[`Add`]: https://md.wrightkit.dev/wiki/articles/add
+[`Append To Array`]: https://md.wrightkit.dev/wiki/articles/append-to-array
+[`Remove From Array`]: https://md.wrightkit.dev/wiki/articles/remove-from-array
+[`Array`]: https://md.wrightkit.dev/wiki/articles/array
+[`Index Of Array Value`]: https://md.wrightkit.dev/wiki/articles/index-of-array-value
+[`Value In Array`]: https://md.wrightkit.dev/wiki/articles/value-in-array
+[`Count Of`]: https://md.wrightkit.dev/wiki/articles/count-of
+[`Filtered Array`]: https://md.wrightkit.dev/wiki/articles/filtered-array
+[`Modify Global Variable`]: https://md.wrightkit.dev/wiki/articles/modify-global-variable
+[`Set Player Variable At Index`]: https://md.wrightkit.dev/wiki/articles/set-player-variable-at-index
+[`Modify Player Variable At Index`]: https://md.wrightkit.dev/wiki/articles/modify-player-variable-at-index
+
 ## Intentionally Out-of-Scope Capabilities
 
 | Feature | Status | Notes |
