@@ -234,6 +234,7 @@ fn inspect_value(
                 | "raiseToPower"
                 | "appendToArray"
                 | "removeFromArray"
+                | "removeFromArrayByValue"
                 | "removeFromArrayByIndex"
         ) && (args.is_empty()
             || matches!(

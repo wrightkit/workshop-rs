@@ -36,6 +36,7 @@ pub(crate) fn validate_value(
                     | "raiseToPower"
                     | "appendToArray"
                     | "removeFromArray"
+                    | "removeFromArrayByValue"
                     | "removeFromArrayByIndex"
             ) && (args.is_empty()
                 || matches!(name.as_str(), "memberAccess" | "+" | "-" | "*" | "/" | "%"));
@@ -435,6 +436,7 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
                         | "raiseToPower"
                         | "appendToArray"
                         | "removeFromArray"
+                        | "removeFromArrayByValue"
                         | "removeFromArrayByIndex"
                 )
             {
