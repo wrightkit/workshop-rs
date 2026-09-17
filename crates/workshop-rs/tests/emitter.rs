@@ -283,7 +283,13 @@ fn remove_array_operations_preserve_distinct_identities() {
     let error = parser::parse_wir_with_context(invalid_modify, &catalog, &en(), &catalog)
         .expect_err("value expression must not be accepted as a modify operation");
     assert!(
-        matches!(error, workshop_rs::WorkshopError::Unsupported { .. }),
+        matches!(
+            error,
+            workshop_rs::WorkshopError::Unknown {
+                kind: "modify operator",
+                ..
+            }
+        ),
         "{error}"
     );
 }
