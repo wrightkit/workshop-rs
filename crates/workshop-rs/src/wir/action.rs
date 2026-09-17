@@ -133,7 +133,6 @@ pub enum ModifyOp {
     Max,
     RaiseToPower,
     AppendToArray,
-    RemoveFromArray,
     RemoveFromArrayByValue,
     RemoveFromArrayByIndex,
 }
@@ -151,7 +150,6 @@ impl ModifyOp {
             ModifyOp::Max => "Max",
             ModifyOp::RaiseToPower => "RaiseToPower",
             ModifyOp::AppendToArray => "AppendToArray",
-            ModifyOp::RemoveFromArray => "RemoveFromArray",
             ModifyOp::RemoveFromArrayByValue => "RemoveFromArrayByValue",
             ModifyOp::RemoveFromArrayByIndex => "RemoveFromArrayByIndex",
         }
@@ -169,7 +167,6 @@ impl ModifyOp {
             ModifyOp::Max => "max",
             ModifyOp::RaiseToPower => "raiseToPower",
             ModifyOp::AppendToArray => "appendToArray",
-            ModifyOp::RemoveFromArray => "removeFromArray",
             ModifyOp::RemoveFromArrayByValue => "removeFromArrayByValue",
             ModifyOp::RemoveFromArrayByIndex => "removeFromArrayByIndex",
         }

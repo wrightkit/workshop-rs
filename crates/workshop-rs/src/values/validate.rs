@@ -436,6 +436,7 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
                         | "raiseToPower"
                         | "appendToArray"
                         | "removeFromArray"
+                        | "removeFromArrayByValue"
                         | "removeFromArrayByIndex"
                 )
             {

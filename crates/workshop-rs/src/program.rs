@@ -1636,7 +1636,6 @@ fn public_modify(op: wir::ModifyOp) -> ModifyOp {
         wir::ModifyOp::Max => ModifyOp::Max,
         wir::ModifyOp::RaiseToPower => ModifyOp::RaiseToPower,
         wir::ModifyOp::AppendToArray => ModifyOp::AppendToArray,
-        wir::ModifyOp::RemoveFromArray => ModifyOp::RemoveFromArray,
         wir::ModifyOp::RemoveFromArrayByValue => ModifyOp::RemoveFromArrayByValue,
         wir::ModifyOp::RemoveFromArrayByIndex => ModifyOp::RemoveFromArrayByIndex,
     }
@@ -1653,7 +1652,6 @@ fn wir_modify(op: ModifyOp) -> wir::ModifyOp {
         ModifyOp::Max => wir::ModifyOp::Max,
         ModifyOp::RaiseToPower => wir::ModifyOp::RaiseToPower,
         ModifyOp::AppendToArray => wir::ModifyOp::AppendToArray,
-        ModifyOp::RemoveFromArray => wir::ModifyOp::RemoveFromArray,
         ModifyOp::RemoveFromArrayByValue => wir::ModifyOp::RemoveFromArrayByValue,
         ModifyOp::RemoveFromArrayByIndex => wir::ModifyOp::RemoveFromArrayByIndex,
     }
@@ -1938,7 +1936,6 @@ pub enum ModifyOp {
     Max,
     RaiseToPower,
     AppendToArray,
-    RemoveFromArray,
     RemoveFromArrayByValue,
     RemoveFromArrayByIndex,
 }

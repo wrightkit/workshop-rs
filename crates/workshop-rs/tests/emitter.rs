@@ -160,14 +160,11 @@ fn remove_array_operations_preserve_distinct_identities() {
         rule ("remove-array") {
             event { Ongoing - Global; }
             actions {
-                Modify Global Variable(g, Remove From Array, 1);
+                Set Global Variable(g, Remove From Array(Array(1, 2), 1));
                 Modify Global Variable(g, Remove From Array By Value, 2);
-                Modify Player Variable(Event Player, p, Remove From Array, 3);
-                Modify Player Variable(Event Player, p, Remove From Array By Value, 4);
-                Modify Global Variable At Index(g, 0, Remove From Array, 5);
-                Modify Global Variable At Index(g, 1, Remove From Array By Value, 6);
-                Modify Player Variable At Index(Event Player, p, 2, Remove From Array, 7);
-                Modify Player Variable At Index(Event Player, p, 3, Remove From Array By Value, 8);
+                Modify Player Variable(Event Player, p, Remove From Array By Value, 3);
+                Modify Global Variable At Index(g, 0, Remove From Array By Value, 4);
+                Modify Player Variable At Index(Event Player, p, 1, Remove From Array By Value, 5);
             }
         }
     "#;
@@ -190,12 +187,26 @@ fn remove_array_operations_preserve_distinct_identities() {
     assert_eq!(
         direct,
         [
-            wir::ModifyOp::RemoveFromArray,
             wir::ModifyOp::RemoveFromArrayByValue,
-            wir::ModifyOp::RemoveFromArray,
             wir::ModifyOp::RemoveFromArrayByValue,
         ]
     );
+
+    let value = match program
+        .actions
+        .get(wir::ActionId::from_index(0))
+        .expect("first action")
+    {
+        wir::Action::SetGlobalVariable { value, .. } => *value,
+        _ => panic!("expected the value-expression action first"),
+    };
+    assert!(matches!(
+        program.values.get(value),
+        Some(wir::ValueNode {
+            value: wir::Value::Call { name, args },
+            ..
+        }) if name == "removeFromArray" && args.len() == 2
+    ));
 
     let public = parser::parse(source, &catalog, &en()).expect("public program parses");
     let public_direct: Vec<_> = public.rules[0]
@@ -210,9 +221,7 @@ fn remove_array_operations_preserve_distinct_identities() {
     assert_eq!(
         public_direct,
         [
-            workshop_rs::ModifyOp::RemoveFromArray,
             workshop_rs::ModifyOp::RemoveFromArrayByValue,
-            workshop_rs::ModifyOp::RemoveFromArray,
             workshop_rs::ModifyOp::RemoveFromArrayByValue,
         ]
     );
@@ -246,66 +255,37 @@ fn remove_array_operations_preserve_distinct_identities() {
         .collect();
     assert_eq!(
         indexed,
-        [
-            "removeFromArray",
-            "removeFromArrayByValue",
-            "removeFromArray",
-            "removeFromArrayByValue",
-        ]
+        ["removeFromArrayByValue", "removeFromArrayByValue",]
     );
 
     let emitted = emitter::emit_wir(&program, &catalog, &en()).expect("remove-array emits");
-    assert!(emitted.contains("Remove From Array, 5"), "{emitted}");
     assert!(
-        emitted.contains("Remove From Array By Value, 6"),
+        emitted.contains("Remove From Array(Array(1, 2), 1)"),
+        "{emitted}"
+    );
+    assert!(
+        emitted.matches("Remove From Array By Value").count() >= 4,
         "{emitted}"
     );
     let reparsed = parser::parse_wir_with_context(&emitted, &catalog, &en(), &catalog)
         .expect("emitted remove-array operations reparse");
     assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
 
-    let mut collapsed = program.clone();
-    for (index, action) in program.actions.iter().enumerate() {
-        let action_id = workshop_rs::wir::ActionId::from_index(index);
-        if matches!(
-            action,
-            wir::Action::ModifyGlobalVariable {
-                op: wir::ModifyOp::RemoveFromArrayByValue,
-                ..
-            } | wir::Action::ModifyPlayerVariable {
-                op: wir::ModifyOp::RemoveFromArrayByValue,
-                ..
-            }
-        ) {
-            match collapsed.actions.get_mut(action_id).unwrap() {
-                wir::Action::ModifyGlobalVariable { op, .. }
-                | wir::Action::ModifyPlayerVariable { op, .. } => {
-                    *op = wir::ModifyOp::RemoveFromArray;
-                }
-                _ => unreachable!(),
+    let invalid_modify = r#"
+        variables { global: 0: g }
+        rule ("invalid-remove-array") {
+            event { Ongoing - Global; }
+            actions {
+                Modify Global Variable(g, Remove From Array, 1);
             }
         }
-        if let wir::Action::Call { args, name, .. } = action {
-            if matches!(
-                name.as_str(),
-                "modifyGlobalVariableAtIndex" | "modifyPlayerVariableAtIndex"
-            ) {
-                let operation = args[2];
-                if let Some(wir::ValueNode {
-                    value: wir::Value::Call { name, .. },
-                    ..
-                }) = collapsed.values.get_mut(operation)
-                {
-                    if name == "removeFromArrayByValue" {
-                        *name = "removeFromArray".to_string();
-                    }
-                }
-            }
-        }
-    }
-    assert!(!workshop_rs::roundtrip::equivalent_wir(
-        &program, &collapsed
-    ));
+    "#;
+    let error = parser::parse_wir_with_context(invalid_modify, &catalog, &en(), &catalog)
+        .expect_err("value expression must not be accepted as a modify operation");
+    assert!(
+        matches!(error, workshop_rs::WorkshopError::Unsupported { .. }),
+        "{error}"
+    );
 }
 
 #[test]

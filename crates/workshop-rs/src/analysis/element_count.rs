@@ -546,6 +546,7 @@ fn is_canonical_helper(name: &str) -> bool {
             | "raiseToPower"
             | "appendToArray"
             | "removeFromArray"
+            | "removeFromArrayByValue"
             | "removeFromArrayByIndex"
     )
 }

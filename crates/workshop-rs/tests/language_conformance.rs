@@ -661,6 +661,11 @@ fn operator_source(_catalog: &Catalog, entry: &CatalogEntry) -> String {
         program_with_conditions(&format!(
             "If(1 {spelling} 1);\n    Wait(1, Ignore Condition);\nEnd;"
         ))
+    } else if entry.id == "removeFromArray" {
+        program_source(
+            &format!("Set Global Variable(probe, {spelling}(Array(1, 2), 1));"),
+            false,
+        )
     } else {
         program_source(
             &format!("Modify Global Variable(probe, {spelling}, 1);"),

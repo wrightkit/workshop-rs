@@ -952,7 +952,6 @@ impl ParseContext<'_> {
             "max" => ModifyOp::Max,
             "raiseToPower" => ModifyOp::RaiseToPower,
             "appendToArray" => ModifyOp::AppendToArray,
-            "removeFromArray" => ModifyOp::RemoveFromArray,
             "removeFromArrayByValue" => ModifyOp::RemoveFromArrayByValue,
             "removeFromArrayByIndex" => ModifyOp::RemoveFromArrayByIndex,
             other => {
