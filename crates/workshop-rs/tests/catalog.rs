@@ -401,6 +401,36 @@ fn min_max_are_canonical_operator_identities() {
 }
 
 #[test]
+fn array_removal_value_and_modification_identities_are_distinct() {
+    let catalog = builtin();
+
+    assert_eq!(
+        catalog
+            .resolve(Kind::Value, &en(), "Remove From Array")
+            .map(|entry| entry.id.as_str()),
+        Some("removeFromArray")
+    );
+    assert!(catalog.entry(Kind::Operator, "removeFromArray").is_none());
+    assert!(
+        catalog
+            .resolve(Kind::Operator, &en(), "Remove From Array")
+            .is_none()
+    );
+
+    for (id, spelling) in [
+        ("removeFromArrayByValue", "Remove From Array By Value"),
+        ("removeFromArrayByIndex", "Remove From Array By Index"),
+    ] {
+        assert_eq!(
+            catalog
+                .resolve(Kind::Operator, &en(), spelling)
+                .map(|entry| entry.id.as_str()),
+            Some(id)
+        );
+    }
+}
+
+#[test]
 fn exercised_enum_domains_resolve_members_to_canonical_identity() {
     let catalog = builtin();
 

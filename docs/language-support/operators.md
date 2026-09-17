@@ -25,7 +25,6 @@
 | `Max` | ✅ Supported | Variable modification operation that clamps the variable to the higher value. |
 | `Multiply` | ✅ Supported | Arithmetic operator and variable modification operation. |
 | `Raise To Power` | ✅ Supported | Arithmetic operator and variable modification operation. |
-| `Remove From Array` | ✅ Supported | Array variable modification operation. |
 | `Remove From Array By Index` | ✅ Supported | Array variable modification operation. |
 | `Remove From Array By Value` | ✅ Supported | Array variable modification operation. |
 | `Subtract` | ✅ Supported | Arithmetic operator and variable modification operation. |

@@ -13,16 +13,16 @@
       "total": 12
     },
     "operators": {
-      "matched": 14,
-      "total": 14
+      "matched": 13,
+      "total": 13
     },
     "structural": {
       "matched": 11,
       "total": 11
     },
     "total": {
-      "matched": 366,
-      "total": 366
+      "matched": 365,
+      "total": 365
     },
     "values": {
       "matched": 77,
@@ -2600,15 +2600,6 @@
         "values.__raiseToPower__"
       ],
       "zh-CN": "乘方"
-    },
-    {
-      "en-US": "Remove From Array",
-      "id": "removeFromArray",
-      "kind": "operator",
-      "sources": [
-        "values..exclude"
-      ],
-      "zh-CN": "从数组中移除"
     },
     {
       "en-US": "Subtract",

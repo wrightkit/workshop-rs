@@ -5256,7 +5256,7 @@
       ]
     }
   ],
-  "digest": "20782c98ff8378ebe963b03cebee219bb356b74e17913aab2be705f4e3be7b02",
+  "digest": "455e97702da49639a5f13d93ecfc4900bb6b2a971978633c686a2ea02544f3fe",
   "enums": [
     {
       "domain": "Impulse",
@@ -10952,13 +10952,6 @@
     },
     {
       "aliases": {
-        "en-US": "Remove From Array",
-        "zh-CN": "从数组中移除"
-      },
-      "id": "removeFromArray"
-    },
-    {
-      "aliases": {
         "en-US": "Remove From Array By Value",
         "zh-CN": "根据值从数组中移除"
       },
@@ -16054,5 +16047,5 @@
       "returnType": "Number"
     }
   ],
-  "version": "0.1.5"
+  "version": "0.1.6"
 }
