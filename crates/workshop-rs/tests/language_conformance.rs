@@ -610,24 +610,11 @@ fn call_program_source_variant(
         );
     }
     let contract = documented_contract(&row.notes);
-    let mut args = if matches!(
-        entry.id.as_str(),
-        "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex"
-    ) {
-        let mut args = vec!["Event Player".to_string(), "probe".to_string()];
-        args.extend(contract.parameters.iter().skip(2).map(|parameter| {
-            sample_argument(catalog, parameter.value_type.as_deref().unwrap_or("Any"))
-        }));
-        args
-    } else {
-        contract
-            .parameters
-            .iter()
-            .map(|parameter| {
-                sample_argument(catalog, parameter.value_type.as_deref().unwrap_or("Any"))
-            })
-            .collect::<Vec<_>>()
-    };
+    let mut args = contract
+        .parameters
+        .iter()
+        .map(|parameter| sample_argument(catalog, parameter.value_type.as_deref().unwrap_or("Any")))
+        .collect::<Vec<_>>();
     if entry.id == "string" {
         args[0] = "\"Hello\"".to_string();
     }
@@ -1039,22 +1026,14 @@ fn assert_documented_contract(
     failures: &mut Vec<String>,
 ) {
     let contract = documented_contract(&row.notes);
-    let parameters = if matches!(
-        entry.id.as_str(),
-        "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex"
-    ) {
-        &contract.parameters[1..]
-    } else {
-        &contract.parameters[..]
-    };
-    if entry.params.len() != parameters.len() {
+    if entry.params.len() != contract.parameters.len() {
         failures.push(format!(
             "{case_id}: documented parameter count {} differs from catalog {}",
-            parameters.len(),
+            contract.parameters.len(),
             entry.params.len()
         ));
     }
-    for (index, parameter) in parameters.iter().enumerate() {
+    for (index, parameter) in contract.parameters.iter().enumerate() {
         if entry.params.get(index).map(String::as_str) != Some(parameter.label.as_str()) {
             failures.push(format!(
                 "{case_id}: documented parameter {index} label/order {:?} differs from catalog {:?}",
