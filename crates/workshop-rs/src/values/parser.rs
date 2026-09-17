@@ -123,7 +123,9 @@ impl ParseContext<'_> {
                 true_as_number: true,
                 ..Default::default()
             },
-            ModifyOp::AppendToArray | ModifyOp::RemoveFromArray => ParamCoercions {
+            ModifyOp::AppendToArray
+            | ModifyOp::RemoveFromArray
+            | ModifyOp::RemoveFromArrayByValue => ParamCoercions {
                 zero_as_null: true,
                 ..Default::default()
             },
@@ -149,7 +151,8 @@ impl ParseContext<'_> {
             "max" => Some(ModifyOp::Max),
             "raiseToPower" => Some(ModifyOp::RaiseToPower),
             "appendToArray" => Some(ModifyOp::AppendToArray),
-            "removeFromArray" | "removeFromArrayByValue" => Some(ModifyOp::RemoveFromArray),
+            "removeFromArray" => Some(ModifyOp::RemoveFromArray),
+            "removeFromArrayByValue" => Some(ModifyOp::RemoveFromArrayByValue),
             "removeFromArrayByIndex" => Some(ModifyOp::RemoveFromArrayByIndex),
             _ => None,
         }

@@ -340,6 +340,32 @@ impl EmitContext<'_> {
                                 }
                             }
                         }
+                        let operation_name = if matches!(
+                            name.as_str(),
+                            "modifyGlobalVariableAtIndex" | "modifyPlayerVariableAtIndex"
+                        ) && index == 2
+                        {
+                            self.program.values.get(*arg).and_then(|node| {
+                                if let wir::Value::Call { name, args } = &node.value
+                                    && args.is_empty()
+                                {
+                                    Some(name.clone())
+                                } else {
+                                    None
+                                }
+                            })
+                        } else {
+                            None
+                        };
+                        if let Some(operation_name) = operation_name
+                            && self
+                                .catalog
+                                .entry(Kind::Operator, &operation_name)
+                                .is_some()
+                        {
+                            args_text.push_str(self.spelling(Kind::Operator, &operation_name)?);
+                            continue;
+                        }
                         self.value(*arg, &mut args_text)?;
                     }
                     self.line(level, &format!("{spelling}({args_text});"))?;

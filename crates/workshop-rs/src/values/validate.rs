@@ -36,6 +36,7 @@ pub(crate) fn validate_value(
                     | "raiseToPower"
                     | "appendToArray"
                     | "removeFromArray"
+                    | "removeFromArrayByValue"
                     | "removeFromArrayByIndex"
             ) && (args.is_empty()
                 || matches!(name.as_str(), "memberAccess" | "+" | "-" | "*" | "/" | "%"));

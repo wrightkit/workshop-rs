@@ -134,6 +134,7 @@ pub enum ModifyOp {
     RaiseToPower,
     AppendToArray,
     RemoveFromArray,
+    RemoveFromArrayByValue,
     RemoveFromArrayByIndex,
 }
 
@@ -151,6 +152,7 @@ impl ModifyOp {
             ModifyOp::RaiseToPower => "RaiseToPower",
             ModifyOp::AppendToArray => "AppendToArray",
             ModifyOp::RemoveFromArray => "RemoveFromArray",
+            ModifyOp::RemoveFromArrayByValue => "RemoveFromArrayByValue",
             ModifyOp::RemoveFromArrayByIndex => "RemoveFromArrayByIndex",
         }
     }
@@ -168,6 +170,7 @@ impl ModifyOp {
             ModifyOp::RaiseToPower => "raiseToPower",
             ModifyOp::AppendToArray => "appendToArray",
             ModifyOp::RemoveFromArray => "removeFromArray",
+            ModifyOp::RemoveFromArrayByValue => "removeFromArrayByValue",
             ModifyOp::RemoveFromArrayByIndex => "removeFromArrayByIndex",
         }
     }
