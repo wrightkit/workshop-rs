@@ -163,27 +163,27 @@ The source-bound settings inventory is regenerated with
 SHA-256 plus per-entry source paths. The generated Rust settings projection
 and catalog surface are then checked with `workshop-catalog-gen check`.
 
-### Targeted `md.wrightkit.dev` review for #233
+### Targeted `md.wrightkit.dev` review
 
-On 2026-09-17, the relevant array and arithmetic entries were reviewed against
-the available Markdown articles for [`Add`], [`Append To Array`], [`Remove From
-Array`], [`Array`], [`Index Of Array Value`], [`Value In Array`], [`Count Of`],
+The relevant array and arithmetic entries were reviewed against the available
+Markdown articles for [`Add`], [`Append To Array`], [`Remove From Array`],
+[`Array`], [`Index Of Array Value`], [`Value In Array`], [`Count Of`],
 [`Filtered Array`], and [`Modify Global Variable`]. Their documented names,
 value/operator distinction, and relevant return and parameter roles agree with
 the canonical catalog. Narrower documentation type labels do not alone
 override the catalog's canonical types and pinned coercion evidence. The
 [`Remove From Array`] article independently confirms the value form; the
-operation article was unavailable during this review, so its operation
+operation article was unavailable during the review, so its operation
 membership is retained from stronger catalog and reference evidence rather than
 inferred from the missing page.
 
-This review confirms the taxonomy correction tracked by #232 and delivered in
-the existing focused catalog regression. No additional catalog change is made
-without convergent evidence. Broader Markdown acquisition was intermittently
-limited by `md.wrightkit.dev` returning Cloudflare 522/500 responses; that is an
-evidence limitation, not evidence that an undocumented Workshop capability is
-absent. Remaining compatibility gaps should be reviewed with targeted pages
-when the reference service is available.
+This review confirms the taxonomy correction delivered in the existing focused
+catalog regression. No additional catalog change is made without convergent
+evidence. Broader Markdown acquisition was intermittently limited by
+`md.wrightkit.dev` returning Cloudflare 522/500 responses; that is an evidence
+limitation, not evidence that an undocumented Workshop capability is absent.
+Remaining compatibility gaps should be reviewed with targeted pages when the
+reference service is available.
 
 [`Add`]: https://md.wrightkit.dev/wiki/articles/add
 [`Append To Array`]: https://md.wrightkit.dev/wiki/articles/append-to-array
