@@ -163,6 +163,14 @@ The source-bound settings inventory is regenerated with
 SHA-256 plus per-entry source paths. The generated Rust settings projection
 and catalog surface are then checked with `workshop-catalog-gen check`.
 
+The independent Markdown reference audit is run with
+`python3 tools/catalog-audit.py verify`. Its reviewed offline snapshot is
+`tools/catalog-reference.json`; each extracted fact retains its exact
+`md.wrightkit.dev` article URL. The snapshot is not canonical data and does
+not rewrite the catalog. Uncovered catalog surfaces remain explicit
+`unverified` audit records, while evidenced conflicts fail the audit. Live
+refresh is separate from ordinary CI and aborts if acquisition is incomplete.
+
 Dataset changes are deliberate: edit the data, update this document and the
 dataset `provenance` record, run `workshop-catalog-gen check` then `build`,
 and commit data and regenerated file together (repo `AGENTS.md`).
