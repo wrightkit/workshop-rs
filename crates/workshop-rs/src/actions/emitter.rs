@@ -345,26 +345,27 @@ impl EmitContext<'_> {
                             "modifyGlobalVariableAtIndex" | "modifyPlayerVariableAtIndex"
                         ) && index == 2
                         {
-                            self.program.values.get(*arg).and_then(|node| {
-                                if let wir::Value::Call { name, args } = &node.value
-                                    && args.is_empty()
-                                {
-                                    Some(name.clone())
-                                } else {
-                                    None
-                                }
-                            })
+                            self.program
+                                .values
+                                .get(*arg)
+                                .and_then(|node| match &node.value {
+                                    wir::Value::Call { name, args } if args.is_empty() => {
+                                        Some(name.clone())
+                                    }
+                                    _ => None,
+                                })
                         } else {
                             None
                         };
-                        if let Some(operation_name) = operation_name
-                            && self
+                        if let Some(operation_name) = operation_name {
+                            if self
                                 .catalog
                                 .entry(Kind::Operator, &operation_name)
                                 .is_some()
-                        {
-                            args_text.push_str(self.spelling(Kind::Operator, &operation_name)?);
-                            continue;
+                            {
+                                args_text.push_str(self.spelling(Kind::Operator, &operation_name)?);
+                                continue;
+                            }
                         }
                         self.value(*arg, &mut args_text)?;
                     }

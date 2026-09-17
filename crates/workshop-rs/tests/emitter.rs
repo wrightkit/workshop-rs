@@ -285,20 +285,21 @@ fn remove_array_operations_preserve_distinct_identities() {
                 _ => unreachable!(),
             }
         }
-        if let wir::Action::Call { args, name, .. } = action
-            && matches!(
+        if let wir::Action::Call { args, name, .. } = action {
+            if matches!(
                 name.as_str(),
                 "modifyGlobalVariableAtIndex" | "modifyPlayerVariableAtIndex"
-            )
-        {
-            let operation = args[2];
-            if let Some(wir::ValueNode {
-                value: wir::Value::Call { name, .. },
-                ..
-            }) = collapsed.values.get_mut(operation)
-                && name == "removeFromArrayByValue"
-            {
-                *name = "removeFromArray".to_string();
+            ) {
+                let operation = args[2];
+                if let Some(wir::ValueNode {
+                    value: wir::Value::Call { name, .. },
+                    ..
+                }) = collapsed.values.get_mut(operation)
+                {
+                    if name == "removeFromArrayByValue" {
+                        *name = "removeFromArray".to_string();
+                    }
+                }
             }
         }
     }
