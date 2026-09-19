@@ -2006,7 +2006,7 @@
         "direction"
       ],
       "paramTypes": [
-        "Hero",
+        "Hero|Array",
         "Team",
         "Number",
         "Vector",
@@ -5256,7 +5256,7 @@
       ]
     }
   ],
-  "digest": "455e97702da49639a5f13d93ecfc4900bb6b2a971978633c686a2ea02544f3fe",
+  "digest": "b3e38df903eaa3ceb0199a228d74cdf60586fe10299c6be697396961122e5079",
   "enums": [
     {
       "domain": "Impulse",
