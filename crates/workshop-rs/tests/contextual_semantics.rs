@@ -101,7 +101,9 @@ fn one_sided_contextual_aliases_reject_the_other_boolean() {
 
 #[test]
 fn entity_ids_and_boolean_string_slice_counts_match_workshop_contract() {
-    let setup = program("Start Forcing Dummy Bot Name(Last Created Entity, Custom String(\"x\"));");
+    let setup = program(
+        "Create Dummy Bot(All Heroes, Team 1, False, Null, Null); Start Forcing Dummy Bot Name(Last Created Entity, Custom String(\"x\"));",
+    );
     validate_program(&setup);
 
     let derived = program(
