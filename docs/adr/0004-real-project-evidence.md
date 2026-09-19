@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted for the offline real-project evidence lane of #10.
+Partially superseded by [ADR-0012](0012-tests-first-verification.md). The
+fixture, immutable source identity, and external expected-result requirements
+remain; the standalone evidence manifest model does not.
 
 ## Decision
 

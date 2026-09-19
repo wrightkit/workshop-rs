@@ -6,12 +6,10 @@ use std::path::PathBuf;
 use std::process::Command;
 
 use workshop_rs::catalog::{Catalog, Locale};
-use workshop_rs_cli::conformance;
 use workshop_rs_cli::conformance::CONFORMANCE_SCHEMA_VERSION;
 use workshop_rs_cli::conformance::{
-    Comparison, ConformanceReason, ConformanceResult, ConformanceStatus, Equivalence, Evidence,
-    EvidenceArtifact, EvidenceBasis, EvidenceClass, ExpectationSource, FeatureId, FeatureKind,
-    FeatureNamespace, ReasonCode,
+    Comparison, ConformanceReason, ConformanceResult, ConformanceStatus, Equivalence, FeatureId,
+    FeatureKind, FeatureNamespace, ReasonCode, TestArtifact,
 };
 use workshop_rs_cli::live_capture::{
     CENSUS_IDENTITY_SCHEMA_VERSION, CensusIdentity, LIVE_CAPTURE_SCHEMA_VERSION, LiveCapture,
@@ -32,11 +30,11 @@ fn run(args: &[&str]) -> std::process::Output {
 }
 
 // Synthetic schema/diff input only. This helper deliberately creates no
-// client artifact and is not an Overwatch evidence fixture.
+// client artifact.
 fn synthetic_capture(id: &str) -> String {
     let catalog = Catalog::builtin().unwrap();
     let locale = Locale::new("en-US");
-    let raw = EvidenceArtifact {
+    let raw = TestArtifact {
         name: "synthetic-cli/raw.ws".to_string(),
         revision: Some("synthetic-cli".to_string()),
         path: Some("synthetic-cli/raw.ws".to_string()),
@@ -58,29 +56,12 @@ fn synthetic_capture(id: &str) -> String {
             observed: None,
             normalizer: None,
         },
-        evidence: Evidence {
-            class: EvidenceClass::LiveClient,
-            fixture: raw.clone(),
-            expectation: ExpectationSource {
-                basis: EvidenceBasis::WorkshopClient,
-                artifact: EvidenceArtifact::new("synthetic-cli/client-expectation"),
-                tracking_ref: None,
-            },
-            catalog: catalog.identity(),
-            locale: Some(locale.clone()),
-            client: Some(conformance::ClientEvidence {
-                game: "overwatch-2".to_string(),
-                client_version: Some("synthetic-client".to_string()),
-                season: Some("synthetic-season".to_string()),
-                captured_at: "2026-08-18T00:00:00Z".to_string(),
-                environment: Some("synthetic CLI unit input".to_string()),
-            }),
-            implementation: None,
-        },
+        source: raw.clone(),
+        catalog: catalog.identity(),
+        locale: Some(locale.clone()),
         reason: Some(ConformanceReason {
             code: ReasonCode::Inconclusive,
             detail: "synthetic CLI schema input".to_string(),
-            tracking_ref: None,
         }),
     };
     LiveCapture {
@@ -274,7 +255,7 @@ fn seasonal_diff_requires_two_capture_files() {
 }
 
 #[test]
-fn seasonal_diff_missing_capture_fails_without_fabricating_evidence() {
+fn seasonal_diff_missing_capture_fails_without_fabricating_results() {
     let output = run(&["seasonal-diff", "/no/previous.json", "/no/current.json"]);
     assert_eq!(output.status.code(), Some(1));
     assert!(String::from_utf8_lossy(&output.stderr).contains("cannot read"));

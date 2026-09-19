@@ -1,22 +1,17 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "workshop-rs-real-projects-v1",
   "locale": "en-US",
-  "expectation": {
-    "basis": "pinned-external-oracle",
-    "artifact": {
-      "name": "wrightkit/wright (OverPy 9.7.10 oracle)",
-      "revision": "af955449d4476a26f8ef25c76868fb0ceb0bcd2d",
-      "path": "compatibility/fixtures/real-world/overpy-cake/oracle.json",
-      "sha256": "cc84203e6c5de8eb3ead332c621e06d3639db2491dcf798177def627ee27ee9b",
-      "license": "GPL-3.0-only"
-    },
-    "trackingRef": "#20"
+  "expected": {
+    "name": "wrightkit/wright (OverPy 9.7.10 oracle)",
+    "revision": "af955449d4476a26f8ef25c76868fb0ceb0bcd2d",
+    "path": "compatibility/fixtures/real-world/overpy-cake/oracle.json",
+    "sha256": "cc84203e6c5de8eb3ead332c621e06d3639db2491dcf798177def627ee27ee9b",
+    "license": "GPL-3.0-only"
   },
   "cases": [
     {
       "id": "real-project/overpy-cake/full",
-      "class": "real-project",
       "fixture": "overpy-cake.ws",
       "source": {
         "name": "wrightkit/workshop-rs",
@@ -36,13 +31,11 @@
       "expectedStatus": "success",
       "failureContains": "ambiguous enum member 'Up'",
       "knownGap": {
-        "detail": "the preserved full project contains OverPy's bare Up member, which is ambiguous across canonical enum domains without the original source context",
-        "trackingRef": "#20"
+        "detail": "the preserved full project contains OverPy's bare Up member, which is ambiguous across canonical enum domains without the original source context"
       }
     },
     {
       "id": "minimized-regression/overpy-cake-loop",
-      "class": "minimized-regression",
       "fixture": "minimized/overpy-cake-loop.ws",
       "source": {
         "name": "wrightkit/workshop-rs",
@@ -59,17 +52,12 @@
         {"namespace": "catalog", "kind": "value", "name": "vector"}
       ],
       "expectedStatus": "success",
-      "derivedFrom": "real-project/overpy-cake/full",
-      "expectation": {
-        "basis": "preserved-regression",
-        "artifact": {
-          "name": "wrightkit/wright (OverPy 9.7.10 oracle)",
-          "revision": "af955449d4476a26f8ef25c76868fb0ceb0bcd2d",
-          "path": "compatibility/fixtures/real-world/overpy-cake/oracle.json",
-          "sha256": "cc84203e6c5de8eb3ead332c621e06d3639db2491dcf798177def627ee27ee9b",
-          "license": "GPL-3.0-only"
-        },
-        "trackingRef": "#20"
+      "expected": {
+        "name": "wrightkit/wright (OverPy 9.7.10 oracle)",
+        "revision": "af955449d4476a26f8ef25c76868fb0ceb0bcd2d",
+        "path": "compatibility/fixtures/real-world/overpy-cake/oracle.json",
+        "sha256": "cc84203e6c5de8eb3ead332c621e06d3639db2491dcf798177def627ee27ee9b",
+        "license": "GPL-3.0-only"
       }
     }
   ]

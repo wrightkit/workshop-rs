@@ -4,7 +4,7 @@ ADRs preserve point-in-time architecture decisions and their rationale. They are
 
 Current durable architecture contracts are routed from [`../architecture/README.md`](../architecture/README.md). Source, tests, Cargo metadata, datasets, and integrations establish current implementation reality. An `Accepted` ADR records an approved decision; it does not by itself prove that later implementation still conforms to it.
 
-Issue and pull-request links in an ADR identify the historical evidence and
+Issue and pull-request links in an ADR identify related decision history and
 origin of a decision. Their current state is maintained by GitHub, not by the
 ADR.
 
@@ -20,16 +20,17 @@ ADR.
 ## Index
 
 - [ADR-0001: Workshop catalog, locale, provenance, and version boundaries](0001-catalog-boundaries.md)
-- [ADR-0002: Workshop conformance result and feature identity contract](0002-conformance-contract.md)
-- [ADR-0003: Canonical sharded Workshop feature census](0003-sharded-census.md)
-- [ADR-0004: Provenance-linked real-project and minimized evidence](0004-real-project-evidence.md)
-- [ADR-0005: Seasonal Workshop client validation workflow](0005-seasonal-client-validation.md)
+- [ADR-0002: Workshop conformance result and feature identity contract](0002-conformance-contract.md) (superseded)
+- [ADR-0003: Canonical sharded Workshop feature census](0003-sharded-census.md) (partially superseded)
+- [ADR-0004: Provenance-linked real-project and minimized evidence](0004-real-project-evidence.md) (partially superseded)
+- [ADR-0005: Seasonal Workshop client validation workflow](0005-seasonal-client-validation.md) (partially superseded)
 - [ADR-0006: Canonical typed Workshop settings semantics](0006-settings-semantic-schema.md)
 - [ADR-0007: Hero gameplay domain API and provenance boundary](0007-gameplay-domain-api.md)
 - [ADR-0008: Canonical public Workshop `Program` boundary](0008-canonical-public-program-boundary.md)
 - [ADR-0009: Domain-local Workshop ownership and verification placement](0009-domain-local-ownership.md)
 - [ADR-0010: Canonical Workshop target-layout and resource analysis](0010-target-layout-and-resource-analysis.md)
 - [ADR-0011: Contextual Workshop semantics at the catalog/code boundary](0011-contextual-semantic-placement.md)
+- [ADR-0012: Tests-first Workshop verification](0012-tests-first-verification.md)
 
 ADR-0007 was originally committed with a duplicate `ADR-0002` identifier. The
 number was corrected to ADR-0007; the recorded gameplay decision is unchanged.
@@ -46,12 +47,12 @@ provenance:
 | #32, #112, #129, #177–#179, #187, and their implementation PRs | Backfill required: canonical public model, provider-carrier boundary, and optional source/provenance | [ADR-0008](0008-canonical-public-program-boundary.md) |
 | #89 and #102 | Backfill required: Workshop-owned structured resource and target-layout APIs | [ADR-0010](0010-target-layout-and-resource-analysis.md) |
 | #135 | Backfill required: positional catalog facts interpreted by typed contextual semantics | [ADR-0011](0011-contextual-semantic-placement.md) |
-| #149, #150, #152 | Backfill required: domain-first ownership, phase contexts as orchestration, and removal of `evidence` as a semantic domain | [ADR-0009](0009-domain-local-ownership.md) |
+| #149, #150, #152 | Backfill required: domain-first ownership, phase contexts as orchestration, and removal of verification taxonomy as a semantic domain | [ADR-0009](0009-domain-local-ownership.md) |
 | #109–#111, #117, #144, and #174 | Existing-ADR-covered settings identity, applicability, and typed edit decisions; source-preservation aspects remain covered by ADR-0008 | [ADR-0006](0006-settings-semantic-schema.md) |
 | #22–#25, #35, and #36 | Existing-ADR-covered gameplay identity, topology, dataset, and query boundary | [ADR-0007](0007-gameplay-domain-api.md) |
-| #1, #2, #65, #86, #87, and #176 | Existing-ADR-covered catalog, conformance, provenance, and locale-mapping boundaries | [ADR-0001](0001-catalog-boundaries.md), [ADR-0002](0002-conformance-contract.md), [ADR-0003](0003-sharded-census.md), [ADR-0004](0004-real-project-evidence.md), [ADR-0005](0005-seasonal-client-validation.md) |
+| #1, #2, #65, #86, #87, and #176 | Existing-ADR-covered catalog, conformance, provenance, and locale-mapping boundaries | [ADR-0001](0001-catalog-boundaries.md), [ADR-0002](0002-conformance-contract.md), [ADR-0003](0003-sharded-census.md), [ADR-0004](0004-real-project-evidence.md), [ADR-0005](0005-seasonal-client-validation.md), [ADR-0012](0012-tests-first-verification.md) |
 | Release tags, documentation polish, CI/build policy, and focused formatting fixes (#164, #165, #168, #171, #172, #190, #191) | Non-ADR detail or consequence; no durable ownership, public-boundary, representation, or semantic/data-placement decision found | — |
 
 This audit records the origin of the backfilled ADRs. It is not a statement of
 present implementation, support, or Issue/PR state; those facts belong to the
-current architecture documents, executable evidence, and GitHub records.
+current architecture documents, executable tests and data, and GitHub records.

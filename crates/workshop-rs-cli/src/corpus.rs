@@ -1,16 +1,12 @@
-//! Offline execution for provenance-linked real-project regression manifests.
-//!
-//! The manifest describes source and expectation provenance; this runner only
-//! measures the bundled Workshop text with the canonical parser and WIR
-//! validation. It never creates an expectation from the observed output.
+//! Offline execution for real-project and regression test manifests.
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::Path;
 
 use super::conformance::{
-    Comparison, ConformanceReason, ConformanceResult, ConformanceStatus, Equivalence, Evidence,
-    EvidenceArtifact, EvidenceClass, ExpectationSource, FeatureId, ReasonCode,
+    CONFORMANCE_SCHEMA_VERSION, Comparison, ConformanceReason, ConformanceResult,
+    ConformanceStatus, Equivalence, FeatureId, ReasonCode, TestArtifact,
 };
 use workshop_rs::catalog::{Catalog, CatalogIdentity, Locale};
 use workshop_rs::{parser, validate};
@@ -21,16 +17,15 @@ struct CorpusManifest {
     schema_version: u32,
     id: String,
     locale: String,
-    expectation: ExpectationSource,
+    expected: TestArtifact,
     cases: Vec<CorpusCase>,
 }
 
 #[derive(Debug, Deserialize)]
 struct CorpusCase {
     id: String,
-    class: EvidenceClass,
     fixture: String,
-    source: EvidenceArtifact,
+    source: TestArtifact,
     features: Vec<FeatureId>,
     #[serde(rename = "expectedStatus")]
     expected_status: ExpectedStatus,
@@ -38,9 +33,7 @@ struct CorpusCase {
     failure_contains: Option<String>,
     #[serde(rename = "knownGap")]
     known_gap: Option<KnownGap>,
-    #[serde(rename = "derivedFrom")]
-    derived_from: Option<String>,
-    expectation: Option<ExpectationSource>,
+    expected: Option<TestArtifact>,
 }
 
 #[derive(Debug, Clone, Copy, Deserialize)]
@@ -52,8 +45,6 @@ enum ExpectedStatus {
 #[derive(Debug, Deserialize)]
 struct KnownGap {
     detail: String,
-    #[serde(rename = "trackingRef")]
-    tracking_ref: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -116,9 +107,9 @@ pub(crate) fn run(manifest_path: &Path) -> Result<CorpusReport, String> {
         .map_err(|error| format!("cannot read {}: {error}", manifest_path.display()))?;
     let manifest: CorpusManifest = serde_json::from_str(&manifest_text)
         .map_err(|error| format!("invalid manifest JSON: {error}"))?;
-    if manifest.schema_version != 1 {
+    if manifest.schema_version != 2 {
         return Err(format!(
-            "unsupported manifest schema version {}; expected 1",
+            "unsupported manifest schema version {}; expected 2",
             manifest.schema_version
         ));
     }
@@ -145,35 +136,28 @@ pub(crate) fn run(manifest_path: &Path) -> Result<CorpusReport, String> {
             )
         })?;
         validate_source_artifact(&case.id, &case.source, &input)?;
-        let expectation = case
-            .expectation
+        let expected = case
+            .expected
             .clone()
-            .unwrap_or_else(|| manifest.expectation.clone());
-        validate_expected_artifact(&case.id, &expectation.artifact)?;
-        let evidence = Evidence {
-            class: case.class,
-            fixture: case.source.clone(),
-            expectation: expectation.clone(),
-            catalog: catalog_identity.clone(),
-            locale: Some(locale.clone()),
-            client: None,
-            implementation: Some(crate::conformance::ImplementationIdentity {
-                name: "workshop-rs".to_string(),
-                version: env!("CARGO_PKG_VERSION").to_string(),
-                revision: None,
-                artifact: None,
-            }),
-        };
-        let result = execute_case(&case, &input, &catalog, &locale, evidence, expectation)?;
+            .unwrap_or_else(|| manifest.expected.clone());
+        validate_expected_artifact(&case.id, &expected)?;
+        let result = execute_case(
+            &case,
+            &input,
+            &catalog,
+            &locale,
+            case.source.clone(),
+            expected,
+        )?;
         result
             .validate_against(&catalog)
-            .map_err(|error| format!("case {} produced invalid #18 result: {error}", case.id))?;
+            .map_err(|error| format!("case {} produced invalid result: {error}", case.id))?;
         summary.record(result.status);
         results.push(result);
     }
 
     Ok(CorpusReport {
-        schema_version: 1,
+        schema_version: 2,
         manifest: manifest.id,
         catalog: catalog_identity,
         results,
@@ -186,36 +170,41 @@ fn execute_case(
     input: &str,
     catalog: &Catalog,
     locale: &Locale,
-    evidence: Evidence,
-    expectation: ExpectationSource,
+    source: TestArtifact,
+    expected: TestArtifact,
 ) -> Result<ConformanceResult, String> {
-    let expected = expectation.artifact.clone();
     let parsed = parser::parse_with_context(input, catalog, locale, catalog);
     match (case.expected_status, parsed) {
         (ExpectedStatus::Success, Ok(program)) => {
             if let Err(error) = program.validate() {
                 return Ok(non_match(
                     case,
-                    evidence,
+                    source,
+                    catalog,
+                    locale,
                     ConformanceStatus::UnexpectedRegression,
                     expected,
-                    format!("WIR validation failed: {error}"),
-                    ReasonCode::UnexpectedRegression,
-                    None,
+                    ConformanceReason {
+                        code: ReasonCode::UnexpectedRegression,
+                        detail: format!("WIR validation failed: {error}"),
+                    },
                 ));
             }
             if let Err(error) = validate::validate_canonical_ids(&program, catalog) {
                 return Ok(non_match(
                     case,
-                    evidence,
+                    source,
+                    catalog,
+                    locale,
                     ConformanceStatus::UnexpectedRegression,
                     expected,
-                    format!("canonical identity validation failed: {error}"),
-                    ReasonCode::UnexpectedRegression,
-                    None,
+                    ConformanceReason {
+                        code: ReasonCode::UnexpectedRegression,
+                        detail: format!("canonical identity validation failed: {error}"),
+                    },
                 ));
             }
-            let observed = EvidenceArtifact {
+            let observed = TestArtifact {
                 name: "workshop-rs canonical WIR dump".to_string(),
                 revision: None,
                 path: Some(case.fixture.clone()),
@@ -223,7 +212,7 @@ fn execute_case(
                 license: Some("MIT".to_string()),
             };
             Ok(ConformanceResult {
-                schema_version: 1,
+                schema_version: CONFORMANCE_SCHEMA_VERSION,
                 case_id: case.id.clone(),
                 features: case.features.clone(),
                 status: ConformanceStatus::Matched,
@@ -233,13 +222,15 @@ fn execute_case(
                     observed: Some(observed),
                     normalizer: Some("parse-validate-canonical-wir-v1".to_string()),
                 },
-                evidence,
+                source,
+                catalog: catalog.identity(),
+                locale: Some(locale.clone()),
                 reason: None,
             })
         }
         (ExpectedStatus::Success, Err(error)) => {
-            let detail = format!("offline parser observation: {error}");
-            let declared_gap = case.known_gap.as_ref().filter(|_gap| {
+            let detail = format!("offline parser result: {error}");
+            let declared_gap = case.known_gap.as_ref().filter(|_| {
                 case.failure_contains
                     .as_ref()
                     .is_some_and(|needle| error.to_string().contains(needle))
@@ -247,24 +238,28 @@ fn execute_case(
             if let Some(gap) = declared_gap {
                 Ok(non_match(
                     case,
-                    evidence,
+                    source,
+                    catalog,
+                    locale,
                     ConformanceStatus::KnownGap,
                     expected,
-                    detail,
-                    ReasonCode::KnownGap,
-                    Some((gap.detail.clone(), gap.tracking_ref.clone())),
+                    ConformanceReason {
+                        code: ReasonCode::KnownGap,
+                        detail: gap.detail.clone(),
+                    },
                 ))
             } else {
                 Ok(non_match(
                     case,
-                    evidence,
+                    source,
+                    catalog,
+                    locale,
                     ConformanceStatus::UnexpectedRegression,
                     expected,
-                    detail,
-                    ReasonCode::UnexpectedRegression,
-                    case.derived_from.as_ref().map(|source| {
-                        (format!("case is derived from {source}"), "#20".to_string())
-                    }),
+                    ConformanceReason {
+                        code: ReasonCode::UnexpectedRegression,
+                        detail,
+                    },
                 ))
             }
         }
@@ -273,25 +268,15 @@ fn execute_case(
 
 fn non_match(
     case: &CorpusCase,
-    evidence: Evidence,
+    source: TestArtifact,
+    catalog: &Catalog,
+    locale: &Locale,
     status: ConformanceStatus,
-    expected: EvidenceArtifact,
-    detail: String,
-    code: ReasonCode,
-    gap: Option<(String, String)>,
+    expected: TestArtifact,
+    reason: ConformanceReason,
 ) -> ConformanceResult {
-    let reason = gap.map(|(detail, tracking_ref)| ConformanceReason {
-        code,
-        detail,
-        tracking_ref: Some(tracking_ref),
-    });
-    let reason = reason.or(Some(ConformanceReason {
-        code,
-        detail,
-        tracking_ref: None,
-    }));
     ConformanceResult {
-        schema_version: 1,
+        schema_version: CONFORMANCE_SCHEMA_VERSION,
         case_id: case.id.clone(),
         features: case.features.clone(),
         status,
@@ -301,8 +286,10 @@ fn non_match(
             observed: None,
             normalizer: Some("parse-validate-canonical-wir-v1".to_string()),
         },
-        evidence,
-        reason,
+        source,
+        catalog: catalog.identity(),
+        locale: Some(locale.clone()),
+        reason: Some(reason),
     }
 }
 
@@ -313,7 +300,7 @@ fn sha256(value: &str) -> String {
 
 fn validate_source_artifact(
     case_id: &str,
-    artifact: &EvidenceArtifact,
+    artifact: &TestArtifact,
     input: &str,
 ) -> Result<(), String> {
     validate_expected_artifact(case_id, artifact)?;
@@ -329,23 +316,19 @@ fn validate_source_artifact(
     Ok(())
 }
 
-fn validate_expected_artifact(case_id: &str, artifact: &EvidenceArtifact) -> Result<(), String> {
+fn validate_expected_artifact(case_id: &str, artifact: &TestArtifact) -> Result<(), String> {
     if artifact.name.trim().is_empty() {
-        return Err(format!(
-            "case {case_id} evidence artifact has no repository identity"
-        ));
+        return Err(format!("case {case_id} test artifact has no identity"));
     }
     if artifact.revision.as_deref().is_none_or(str::is_empty) {
-        return Err(format!(
-            "case {case_id} evidence artifact must pin a revision"
-        ));
+        return Err(format!("case {case_id} test artifact must pin a revision"));
     }
     if artifact.path.as_deref().is_none_or(str::is_empty) {
-        return Err(format!("case {case_id} evidence artifact must pin a path"));
+        return Err(format!("case {case_id} test artifact must pin a path"));
     }
     let Some(digest) = artifact.sha256.as_deref() else {
         return Err(format!(
-            "case {case_id} evidence artifact must pin a SHA-256 digest"
+            "case {case_id} test artifact must pin a SHA-256 digest"
         ));
     };
     if digest.len() != 64
@@ -354,12 +337,12 @@ fn validate_expected_artifact(case_id: &str, artifact: &EvidenceArtifact) -> Res
             .all(|character| character.is_ascii_hexdigit())
     {
         return Err(format!(
-            "case {case_id} evidence artifact has an invalid SHA-256 digest"
+            "case {case_id} test artifact has an invalid SHA-256 digest"
         ));
     }
     if artifact.license.as_deref().is_none_or(str::is_empty) {
         return Err(format!(
-            "case {case_id} evidence artifact must record a license"
+            "case {case_id} test artifact must record a license"
         ));
     }
     Ok(())

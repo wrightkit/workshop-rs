@@ -1,9 +1,4 @@
-//! Offline schema and comparison support for provenance-recorded client captures.
-//!
-//! This module admits already-recorded evidence; it does not start, control, or
-//! query an Overwatch client. A valid [`LiveCapture`] is structurally
-//! provenance-rich, but its metadata is still a claim that requires human
-//! review and cannot establish gameplay/runtime correctness by itself.
+//! Offline schema and comparison support for recorded client captures.
 
 use std::collections::{BTreeMap, HashSet};
 
@@ -11,8 +6,7 @@ use serde::{Deserialize, Serialize};
 
 pub use super::census::{CENSUS_IDENTITY_SCHEMA_VERSION, CensusIdentity};
 use super::conformance::{
-    ConformanceResult, ConformanceStatus, Equivalence, EvidenceArtifact, EvidenceBasis,
-    EvidenceClass, FeatureId,
+    ConformanceResult, ConformanceStatus, Equivalence, FeatureId, TestArtifact,
 };
 use workshop_rs::catalog::{Catalog, CatalogIdentity, Locale};
 
@@ -38,8 +32,8 @@ pub struct LiveCapture {
     pub census: CensusIdentity,
     /// The exact exported Workshop text or archive, pinned by revision/path
     /// and SHA-256. The bytes are intentionally not embedded in this schema.
-    pub raw_artifact: EvidenceArtifact,
-    /// #18 feature-attributed observations for the captured probes.
+    pub raw_artifact: TestArtifact,
+    /// Feature-attributed results for the captured probes.
     pub results: Vec<ConformanceResult>,
 }
 
@@ -85,7 +79,7 @@ impl LiveCapture {
         validate_artifact("rawArtifact", &self.raw_artifact, true)?;
         if self.results.is_empty() {
             return Err(invalid(
-                "results must contain at least one #18 conformance result",
+                "results must contain at least one conformance result",
             ));
         }
 
@@ -101,50 +95,25 @@ impl LiveCapture {
                     "results[{index}].caseId duplicates another capture result"
                 )));
             }
-            let evidence = &result.evidence;
-            if evidence.class != EvidenceClass::LiveClient {
+            if result.catalog != self.catalog {
                 return Err(invalid(format!(
-                    "results[{index}].evidence.class must be live-client"
+                    "results[{index}].catalog does not match capture catalog"
                 )));
             }
-            if evidence.expectation.basis != EvidenceBasis::WorkshopClient {
+            if result.locale.as_ref() != Some(&self.locale) {
                 return Err(invalid(format!(
-                    "results[{index}].evidence.expectation.basis must be workshop-client"
+                    "results[{index}].locale does not match capture locale"
                 )));
             }
-            if evidence.catalog != self.catalog {
+            if result.source != self.raw_artifact {
                 return Err(invalid(format!(
-                    "results[{index}].evidence.catalog does not match capture catalog"
-                )));
-            }
-            if evidence.locale.as_ref() != Some(&self.locale) {
-                return Err(invalid(format!(
-                    "results[{index}].evidence.locale does not match capture locale"
-                )));
-            }
-            if evidence.fixture != self.raw_artifact {
-                return Err(invalid(format!(
-                    "results[{index}].evidence.fixture must pin the capture raw artifact"
-                )));
-            }
-            let client = evidence
-                .client
-                .as_ref()
-                .ok_or_else(|| invalid(format!("results[{index}].evidence.client is required")))?;
-            if client.game != self.game
-                || client.client_version.as_deref() != Some(self.client.as_str())
-                || client.season.as_deref() != Some(self.season.as_str())
-                || client.captured_at != self.captured_at
-                || client.environment.as_deref() != Some(self.environment.as_str())
-            {
-                return Err(invalid(format!(
-                    "results[{index}].evidence.client does not match capture client provenance"
+                    "results[{index}].source must pin the capture raw artifact"
                 )));
             }
             if result.status == ConformanceStatus::Matched {
                 let observed = result.comparison.observed.as_ref().ok_or_else(|| {
                     invalid(format!(
-                        "results[{index}].comparison.observed is required for matched evidence"
+                        "results[{index}].comparison.observed is required for matched results"
                     ))
                 })?;
                 if observed.sha256 != self.raw_artifact.sha256 {
@@ -416,7 +385,7 @@ fn validate_catalog(catalog: &CatalogIdentity) -> Result<(), LiveCaptureError> {
     let digest = catalog
         .catalog_digest
         .as_deref()
-        .ok_or_else(|| invalid("catalog.catalogDigest is required to pin live evidence"))?;
+        .ok_or_else(|| invalid("catalog.catalogDigest is required to identify the catalog"))?;
     validate_sha256("catalog.catalogDigest", digest)?;
     validate_name("catalog.target.game", &catalog.target.game)?;
     validate_name("catalog.target.format", &catalog.target.format)?;
@@ -445,7 +414,7 @@ fn validate_census(census: &CensusIdentity) -> Result<(), LiveCaptureError> {
 
 fn validate_artifact(
     field: &str,
-    artifact: &EvidenceArtifact,
+    artifact: &TestArtifact,
     require_pin: bool,
 ) -> Result<(), LiveCaptureError> {
     validate_name(&format!("{field}.name"), &artifact.name)?;
@@ -497,12 +466,9 @@ fn is_runtime_uncertain(result: &ConformanceResult) -> bool {
 
 #[cfg(test)]
 mod tests {
-    //! These are constructed schema/diff unit tests only. They are not live
-    //! client captures or runtime evidence.
-
     use super::super::conformance::{
-        CONFORMANCE_SCHEMA_VERSION, ClientEvidence, Comparison, ConformanceReason, Evidence,
-        ExpectationSource, FeatureKind, FeatureNamespace, ReasonCode,
+        CONFORMANCE_SCHEMA_VERSION, Comparison, ConformanceReason, FeatureKind, FeatureNamespace,
+        ReasonCode,
     };
     use super::*;
     use workshop_rs::catalog::Catalog;
@@ -516,8 +482,8 @@ mod tests {
             .identity()
     }
 
-    fn raw(digest: &str) -> EvidenceArtifact {
-        EvidenceArtifact {
+    fn raw(digest: &str) -> TestArtifact {
+        TestArtifact {
             name: "constructed-unit-test/raw.ws".to_string(),
             revision: Some("unit-test-revision".to_string()),
             path: Some("constructed-unit-test/raw.ws".to_string()),
@@ -534,7 +500,7 @@ mod tests {
     fn result(
         identity: &CatalogIdentity,
         locale: &Locale,
-        raw: &EvidenceArtifact,
+        raw: &TestArtifact,
         case_id: &str,
         status: ConformanceStatus,
         feature_name: &str,
@@ -551,8 +517,8 @@ mod tests {
                 } else {
                     Equivalence::NotComparable
                 },
-                expected: matched.then(|| EvidenceArtifact::new("constructed-unit-test/oracle")),
-                observed: matched.then(|| EvidenceArtifact {
+                expected: matched.then(|| TestArtifact::new("constructed-unit-test/oracle")),
+                observed: matched.then(|| TestArtifact {
                     name: "constructed-unit-test/observed.ws".to_string(),
                     revision: Some("unit-test-revision".to_string()),
                     path: Some("constructed-unit-test/raw.ws".to_string()),
@@ -561,31 +527,12 @@ mod tests {
                 }),
                 normalizer: matched.then(|| "constructed-unit-test-normalizer".to_string()),
             },
-            evidence: Evidence {
-                class: EvidenceClass::LiveClient,
-                fixture: raw.clone(),
-                expectation: ExpectationSource {
-                    basis: EvidenceBasis::WorkshopClient,
-                    artifact: EvidenceArtifact::new("constructed-unit-test/client"),
-                    tracking_ref: None,
-                },
-                catalog: identity.clone(),
-                locale: Some(locale.clone()),
-                client: Some(ClientEvidence {
-                    game: "overwatch-2".to_string(),
-                    client_version: Some("constructed-unit-test-client".to_string()),
-                    season: Some("constructed-unit-test-season".to_string()),
-                    captured_at: "2026-08-18T00:00:00Z".to_string(),
-                    environment: Some(
-                        "constructed schema/diff unit test; not live evidence".to_string(),
-                    ),
-                }),
-                implementation: None,
-            },
+            source: raw.clone(),
+            catalog: identity.clone(),
+            locale: Some(locale.clone()),
             reason: (!matched).then(|| ConformanceReason {
                 code: ReasonCode::Inconclusive,
                 detail: "constructed unit uncertainty".to_string(),
-                tracking_ref: None,
             }),
         }
     }
@@ -607,7 +554,7 @@ mod tests {
             client: "constructed-unit-test-client".to_string(),
             season: "constructed-unit-test-season".to_string(),
             captured_at: "2026-08-18T00:00:00Z".to_string(),
-            environment: "constructed schema/diff unit test; not live evidence".to_string(),
+            environment: "constructed schema/diff unit test; not a client capture".to_string(),
             locale: locale.clone(),
             catalog: identity.clone(),
             census: CensusIdentity {
@@ -628,7 +575,7 @@ mod tests {
     }
 
     #[test]
-    fn constructed_capture_schema_round_trips_without_live_evidence_claim() {
+    fn constructed_capture_schema_round_trips_without_runtime_claim() {
         let capture = make_capture(
             "capture-a",
             "en-US",
@@ -642,7 +589,7 @@ mod tests {
     }
 
     #[test]
-    fn schema_rejects_missing_raw_pin_and_client_provenance() {
+    fn schema_rejects_missing_raw_pin_and_mismatched_capture_metadata() {
         let mut capture = make_capture(
             "capture-a",
             "en-US",
@@ -651,16 +598,6 @@ mod tests {
             "one",
         );
         capture.raw_artifact.sha256 = None;
-        assert!(capture.validate().is_err());
-
-        let mut capture = make_capture(
-            "capture-a",
-            "en-US",
-            DIGEST,
-            ConformanceStatus::Matched,
-            "one",
-        );
-        capture.results[0].evidence.client = None;
         assert!(capture.validate().is_err());
 
         let mut capture = make_capture(
@@ -680,12 +617,7 @@ mod tests {
             ConformanceStatus::Matched,
             "one",
         );
-        capture.results[0]
-            .evidence
-            .client
-            .as_mut()
-            .unwrap()
-            .environment = Some("different environment".to_string());
+        capture.results[0].source.name = "different source".to_string();
         assert!(capture.validate().is_err());
     }
 
@@ -706,7 +638,7 @@ mod tests {
             "two",
         );
         newer.catalog.catalog_digest = Some(OTHER_DIGEST.to_string());
-        newer.results[0].evidence.catalog = newer.catalog.clone();
+        newer.results[0].catalog = newer.catalog.clone();
         let diff = prior.diff(&newer).expect("constructed diff validates");
         let categories: HashSet<_> = diff.changes.iter().map(|entry| entry.category).collect();
         assert!(categories.contains(&DiffCategory::Locale));
@@ -726,7 +658,7 @@ mod tests {
     }
 
     #[test]
-    fn diff_refuses_capture_without_live_client_provenance() {
+    fn diff_refuses_capture_with_invalid_result_metadata() {
         let prior = make_capture(
             "capture-a",
             "en-US",
@@ -741,7 +673,7 @@ mod tests {
             ConformanceStatus::Matched,
             "one",
         );
-        newer.results[0].evidence.expectation.basis = EvidenceBasis::SemanticContract;
+        newer.results[0].catalog.catalog_digest = Some("different".to_string());
         assert!(prior.diff(&newer).is_err());
     }
 }

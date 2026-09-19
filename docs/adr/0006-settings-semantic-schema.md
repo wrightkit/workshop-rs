@@ -18,36 +18,36 @@ identity; hero and logical ability-slot information is represented by
 is separate and can represent global, mode, team, hero, and hero-plus-logical
 ability-slot targets, including team/common hero ability slots. The table's
 wildcard hero entries are projected as definitions whose applicability is
-resolved against gameplay topology and explicit applicability evidence. A
-known hero without explicit applicability evidence is `Unknown`; an unknown
+resolved against gameplay topology and explicit applicability source data. A
+known hero without explicit applicability source data is `Unknown`; an unknown
 hero is `Unknown`. For hero-ability targets, gameplay kit topology is checked
 first; missing slots or variants are `NotApplicable`. When topology is valid
-but explicit applicability evidence is absent, the target is `Unknown`. Locale
+but explicit applicability source data is absent, the target is `Unknown`. Locale
 label quality never changes applicability. `gamemodes.general` is a literal
 Workshop settings group and therefore has a global/no semantic target, not a
 mode target.
 
 `SettingValueDomain` records the value kind and an optional effective numeric
-range. Numeric or percent bounds without independent evidence are explicitly
+range. Numeric or percent bounds without an independent source are explicitly
 unknown (`None`). Unknown bounds do not produce an effective value. A partially
 known range only produces an effective value when the known bound necessarily
 clamps the authored value; otherwise the result remains unknown. Validated
-`NumericBounds` supports evidenced Workshop clamping while preserving the
+`NumericBounds` supports source-backed Workshop clamping while preserving the
 authored value in `EffectiveNumber`; the source-preserving
 `SettingsNode::Number` is not changed by this schema.
 
 Locale names are presentation metadata resolved through the generated
 locale projection, with the primary `en-US` spelling retained directly. Each
-definition reports whether its evidence comes from pinned raw Workshop
+definition reports whether its source comes from pinned raw Workshop
 fixtures or the reviewed `workshop-data` export. Unknown/raw settings continue
-to be carried by `SettingsNode::Raw`; the schema does not turn missing evidence
+to be carried by `SettingsNode::Raw`; the schema does not turn missing source support
 into a guessed definition.
 
 `SettingIdentity::Known(SettingId)` means that a reviewed canonical concept
 identity has been resolved; unresolved projected hero-ability concepts use
 `SettingIdentity::Unknown` and `id() == None`. This is independent from
 `SettingProvenance`: the latter reports whether the underlying table or export
-evidence was reviewed, so reviewed source evidence may still carry an unknown
+source was reviewed, so reviewed source data may still carry an unknown
 semantic identity when no canonical typed identity has been established.
 
 ## Consequences

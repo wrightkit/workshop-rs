@@ -18,7 +18,7 @@ remain data-driven and locale-independent.
 
 ## Decision
 
-1. The catalog may record independently evidenced, positional facts such as
+1. The catalog may record source-supported, positional facts such as
    parameter domains, defaults, and literal coercion/replacement aliases.
    These facts are part of the canonical Workshop catalog and carry the
    repository's normal provenance.
@@ -32,7 +32,7 @@ remain data-driven and locale-independent.
 4. Each materially distinct accepted or rejected branch is protected by
    executable Workshop contract or regression coverage at a valid structural
    context. Temporary source audits and comparison data are not a new
-   long-lived evidence subsystem.
+   long-lived verification subsystem.
 
 ## Consequences
 

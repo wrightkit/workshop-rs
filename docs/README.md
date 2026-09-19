@@ -15,7 +15,7 @@ Issues / PRs / releases      mutable execution state
 source / tests / data        current implementation reality
 ```
 
-An accepted ADR is not current-reality evidence. For implementation work, start
+An accepted ADR is not current-reality proof. For implementation work, start
 from [`architecture/README.md`](architecture/README.md), then inspect the
 relevant code/tests/data and current Issue contract.
 
@@ -50,7 +50,7 @@ compatibility pointer for older links.
   - [Strings & Localization](language-support/strings.md)
   - [Tooling & Semantic Capabilities](language-support/tooling.md)
 
-Support prose is not a substitute for current executable evidence.
+Support prose is not a substitute for current executable tests.
 
 ## Domain contracts and fixture provenance
 

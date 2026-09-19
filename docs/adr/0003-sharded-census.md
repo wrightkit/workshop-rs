@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted as the offline census layer for the #10 evidence corpus.
+Partially superseded by [ADR-0012](0012-tests-first-verification.md). The
+sharded census and feature-attributed results remain; the generic verification
+classification and source model do not.
 
 ## Decision
 

@@ -1,19 +1,16 @@
 # Provenance record
 
-This document records the source and evidence class of every committed dataset
-and fixture in `workshop-rs`, per the workspace evidence
-hierarchy (reproducible behavior > accepted contracts > tests and fixtures >
-consumer projects > upstream references > documented community evidence >
-assumptions) and ADR-0001 Decision 6 (provenance and the reproducible
-catalog-update pipeline).
+This document records the source provenance of committed datasets and fixtures
+in `workshop-rs`, as required for attribution, licensing, and reproducible
+regeneration.
 
 Hero/gameplay data follows the separate identity and evidence contract in
 [`docs/adr/0007-gameplay-domain-api.md`](adr/0007-gameplay-domain-api.md). The
 Workshop catalog identity below does not identify a gameplay dataset.
 
 The repository is MIT-licensed. Committed mapping data is workshop-rs-owned,
-with the source evidence and generation method recorded here. The input JSON
-is a build-time evidence artifact and is not redistributed by workshop-rs.
+with the source and generation method recorded here. The input JSON is a
+build-time source artifact and is not redistributed by workshop-rs.
 
 ## Hero gameplay data (`crates/workshop-rs/src/data/gameplay.json`)
 
@@ -55,21 +52,21 @@ Its machine-readable provenance record (generator, generator version, source,
 license, reviewed) is embedded in the dataset itself and surfaced by
 `workshop-rs-cli version --json`.
 
-### Evidence classes per entry group
+### Source provenance per entry group
 
-| Entry group | Evidence class |
+| Entry group | Source or review basis |
 | --- | --- |
-| en-US spellings of the supported Workshop surface | Transcribed from the Wright compatibility corpus workshop snapshots (pinned OverPy 9.7.10 en-US reference emissions) and the Wright support matrix — classes 1/5 (reproducible behavior; upstream reference emission). |
-| `squareRoot`, receiver-call action/value spellings (`setMoveSpeed`, `isAlive`, …) | Pinned OverPy 9.7.10 en-US emission surface for the `.opy` forms (class 5). |
-| Chase family spellings (`Chase Global Variable Over Time`, `Chase Player Variable At Rate`, …) and their expected enum domains (`ChaseTimeReeval`, `ChaseRateReeval`) | Wright-authored OPY semantic manifest probe data (#109/#110), migrated into the canonical catalog so the standalone core resolves ambiguous bare members without any Wright tooling dependency (classes 1/5; canonical signature data is catalog-owned per ADR-0001 Decision 1). |
-| Rule event identities and filters (`global`, `eachPlayer`, player events, `subroutine`, `EventTeam`, and `EventPlayer`) | User-provided Workshop export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (`other.events`, `other.eventTeams`, `other.eventPlayers`, and computed `other.eventSlots`), cross-checked against documented raw Workshop event blocks; the canonical WIR keeps existing parameterless `eachPlayer` input and requires the evidenced team/player filters for other filtered events. The `Player` filter's accepted union (`EventPlayer` slot/all or a canonical `Hero`) is represented explicitly by `EventTarget` (classes 1/2). |
-| OSTW-exercised params/spellings and enum domains (CreateEffect, Workshop Setting, Hero/Map/Button/Icon/Operation/Rounding/InworldTextRev, …) | Pinned OSTW v3.4.0 reference probe emissions (P4/P5/P6/P6b) and the protect-ban entry-point reachable closure (class 5). |
-| Parameter metadata (`paramDomains`, `paramDefaults`, `paramCoercions`) | Pinned-reference probe evidence (classes 1/5), never copied from upstream game data. Contextual literal substitutions are recorded per parameter position and cross-checked against [OverPy's replacement metadata](https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/types.d.ts), [Workshop emission path](https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/compiler/astToWorkshop.ts), and [Wait Until handling](https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/compiler/functions/waitUntil.ts); they do not establish global type coercions. |
+| en-US spellings of the supported Workshop surface | Transcribed from the Wright compatibility corpus Workshop snapshots (pinned OverPy 9.7.10 en-US reference emissions) and the Wright support matrix. |
+| `squareRoot`, receiver-call action/value spellings (`setMoveSpeed`, `isAlive`, …) | Pinned OverPy 9.7.10 en-US emission surface for the `.opy` forms. |
+| Chase family spellings (`Chase Global Variable Over Time`, `Chase Player Variable At Rate`, …) and their expected enum domains (`ChaseTimeReeval`, `ChaseRateReeval`) | Wright-authored OPY semantic manifest probe data, migrated into the canonical catalog so the standalone core resolves ambiguous bare members without any Wright tooling dependency. |
+| Rule event identities and filters (`global`, `eachPlayer`, player events, `subroutine`, `EventTeam`, and `EventPlayer`) | User-provided Workshop export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (`other.events`, `other.eventTeams`, `other.eventPlayers`, and computed `other.eventSlots`), cross-checked against documented raw Workshop event blocks. |
+| OSTW-exercised params/spellings and enum domains (CreateEffect, Workshop Setting, Hero/Map/Button/Icon/Operation/Rounding/InworldTextRev, …) | Pinned OSTW v3.4.0 reference probe emissions (P4/P5/P6/P6b) and the protect-ban entry-point reachable closure. |
+| Parameter metadata (`paramDomains`, `paramDefaults`, `paramCoercions`) | Pinned-reference probe data, never copied from upstream game data. Contextual literal substitutions are recorded per parameter position and cross-checked against [OverPy's replacement metadata](https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/types.d.ts), [Workshop emission path](https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/compiler/astToWorkshop.ts), and [Wait Until handling](https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/compiler/functions/waitUntil.ts); they do not establish global type coercions. |
 | Localized parameter labels (`paramAliases`) | Separately reviewed owner mappings, stored per declared parameter position and resolved only through the catalog API. The initial `Wait` `zh-CN` labels are `时间` and `等待行为`, as identified by the documented Chinese Workshop action reference at https://overwatch.huijiwiki.com/wiki/%E5%9C%B0%E5%9B%BE%E5%B7%A5%E5%9D%8A/%E5%8A%A8%E4%BD%9C (accessed 2026-09-11); the canonical parameter order and descriptions are cross-checked against the pinned `workshop-data` action definition. They are not generated by the general zh-CN corpus pipeline. |
-| Action/Value parameter and return signatures | Workshop.codes structured article properties (Returns, Parameters, Type, and Default), cross-checked against the pinned OverPy metadata and static OSTW data; entries without convergent evidence remain explicitly evidence-insufficient. Representative article links are embedded in the catalog provenance. |
-| `Create Dummy Bot` hero parameter union (`Hero|Array`) | Workshop behavior accepts a single Hero or Hero array and selects randomly when multiple heroes are provided; pinned OverPy 9.7.10 texture-tag setup emits `getAllHeroes()` into `Create Dummy Bot` (workshop-rs#238). |
-| Action/Value signature cross-check | Representative Workshop.codes article links remain recorded in the catalog provenance; fetched snapshots and acceptance results are CI evidence, not generator or runtime inputs. |
-| Settings emission table (`src/settings/table.rs` and generated data files) | Hand-written fixture surface plus the reviewed `workshop-data` export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; generated entries, names, locale mappings, and source paths are committed together in the declared multi-locale projection, while pinned OverPy 9.7.10 output remains the behavioral check (classes 1/5). |
+| Action/Value parameter and return signatures | Workshop.codes structured article properties (Returns, Parameters, Type, and Default), cross-checked against the pinned OverPy metadata and static OSTW data; entries without convergent sources remain explicitly unresolved. Representative article links are embedded in the catalog provenance. |
+| `Create Dummy Bot` hero parameter union (`Hero|Array`) | Workshop behavior accepts a single Hero or Hero array and selects randomly when multiple heroes are provided; pinned OverPy 9.7.10 texture-tag setup emits `getAllHeroes()` into `Create Dummy Bot`. |
+| Action/Value signature cross-check | Representative Workshop.codes article links remain recorded in the catalog provenance; fetched snapshots and CI results are not generator or runtime inputs. |
+| Settings emission table (`src/settings/table.rs` and generated data files) | Hand-written fixture surface plus the reviewed `workshop-data` export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; generated entries, names, locale mappings, and source paths are committed together in the declared multi-locale projection, while pinned OverPy 9.7.10 output remains the behavioral check. |
 
 ### Native display action boundary (`workshop-rs#129`)
 
@@ -87,7 +84,7 @@ canonical WIR.
 
 * `en-US` is the primary locale and is complete. The committed catalog
   validates that the primary locale is complete.
-* `zh-CN` is an open, evidence-backed locale. Unmapped spellings remain
+* `zh-CN` is an open, source-backed locale. Unmapped spellings remain
   explicit and fail closed; `workshop-catalog-gen check` is the authoritative
   coverage report. The source for the reconciled additions is the user-provided
   `workshop-data/workshop-data.json` export at commit
@@ -103,7 +100,7 @@ canonical WIR.
   continue to fail explicitly.
 
 All committed zh-CN action, value, event, enum, and member spellings come from
-the JSON evidence through the corpus pipeline. Parameter labels are a separate
+the JSON source data through the corpus pipeline. Parameter labels are a separate
 owner mapping: the initial `Wait` labels are `时间` and `等待行为`, as identified
 by the documented Chinese Workshop action reference cited in the table above;
 their parameter order and descriptions are cross-checked against the pinned
@@ -156,7 +153,7 @@ translated.
   by `workshop-catalog-gen build` and verified at load and by the pinned
   digest test (`tests/identity.rs`).
 * `locale-coverage`: declared locales with per-locale mapped/total counts.
-* `target-evidence`: recorded in the dataset `target` record.
+* `target-source`: recorded in the dataset `target` record.
 
 The source-bound settings inventory is regenerated with
 `tools/settings/generate_inventory.py`; its committed output is

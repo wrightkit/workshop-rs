@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted as the repository-owned offline contract for #21.
+Partially superseded by [ADR-0012](0012-tests-first-verification.md). The
+client-capture envelope and offline diff remain; capture results now use the
+ordinary test-result contract.
 
 ## Decision
 

@@ -25,7 +25,7 @@ fn builtin_catalog_loads_and_declares_en_us_and_zh_cn() {
         catalog.locale_coverage(&en()).mapped,
         catalog.locale_coverage(&en()).total
     );
-    // zh-CN is an evidence-backed locale whose missing spellings remain
+    // zh-CN is a source-backed locale whose missing spellings remain
     // explicit as the canonical surface grows.
     assert!(catalog.supports(&Locale::new("zh-CN")));
     let zh = catalog.locale_coverage(&Locale::new("zh-CN"));

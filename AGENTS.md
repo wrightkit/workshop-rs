@@ -20,7 +20,7 @@ This repository owns:
   locale conversion;
 - Workshop-owned source/provenance contracts needed by consumers;
 - reviewed Workshop gameplay/catalog data and semantic query APIs;
-- Workshop conformance, corpus, and seasonal-client evidence.
+- Workshop conformance, corpus, and seasonal-client tests and source provenance.
 
 This repository does **not** own:
 
@@ -69,8 +69,8 @@ Prioritize observable Workshop correctness and real consumer blockers over
 architecture polish. New canonical contracts should normally be justified by at
 least one of:
 
-1. raw Workshop evidence;
-2. seasonal/client/catalog evidence;
+1. raw Workshop behavior and source provenance;
+2. seasonal/client/catalog tests;
 3. a real `opy-rs` or `del-rs` integration blocker demonstrating a missing
    canonical Workshop capability;
 4. a Wright tooling blocker that cannot be solved correctly above the Workshop
@@ -103,7 +103,7 @@ git diff --check
 
 A local pass is not proof of live-client behavior. Claims about current
 Workshop acceptance or seasonal behavior require the corresponding client or
-provenance-backed evidence.
+provenance-backed source identity.
 
 ## Delivery
 
@@ -111,7 +111,7 @@ provenance-backed evidence.
 - Keep commits scoped and avoid unrelated repository changes.
 - Review-time verification results, including hashes, residual counts, and
   pass/fail status, must come from the test/CI run under review. Never hand-write
-  or manually refresh a committed evidence/result file; put results in the PR
+  or manually refresh a committed test/result file; put results in the PR
   description and CI logs/artifacts. Committed fixtures and provenance/input
   manifests are allowed only as reproducible, machine-validated inputs.
 - Never commit credentials, private runtime data, or unreviewed third-party

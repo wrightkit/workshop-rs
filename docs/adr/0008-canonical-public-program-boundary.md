@@ -62,7 +62,7 @@ convenience part of the Workshop contract.
    or unsupported source relationships.
 7. Provider-specific helpers, aliases, runtime layouts, and reconstruction
    carriers do not become canonical Workshop nodes without independent
-   Workshop evidence. Their lowering and source semantics remain owned by the
+   Workshop behavior. Their lowering and source semantics remain owned by the
    corresponding provider.
 
 ## Consequences
