@@ -196,6 +196,41 @@ rule ("empty string")
 }
 
 #[test]
+fn create_dummy_bot_accepts_hero_or_hero_array_only_for_hero_parameter() {
+    let catalog = catalog();
+    assert_eq!(
+        catalog
+            .entry(workshop_rs::catalog::Kind::Action, "createDummyBot")
+            .expect("Create Dummy Bot")
+            .param_type(0),
+        Some("Hero|Array")
+    );
+
+    for hero in ["Hero(Bastion)", "All Heroes"] {
+        let program = program(&format!(
+            "Create Dummy Bot({hero}, Team 2, 0, Vector(0, 0, 0), Vector(0, 0, 0));"
+        ));
+        validate::validate_canonical_ids_wir(&program, &catalog)
+            .expect("Create Dummy Bot accepts a single hero or hero array");
+        assert!(matches!(
+            program
+                .actions
+                .iter()
+                .next()
+                .expect("Create Dummy Bot action"),
+            Action::Call { name, .. } if name == "createDummyBot"
+        ));
+    }
+
+    let invalid =
+        program("Create Dummy Bot(Color(White), Team 2, 0, Vector(0, 0, 0), Vector(0, 0, 0));");
+    let error = validate::validate_canonical_ids_wir(&invalid, &catalog)
+        .expect_err("Create Dummy Bot must reject an unrelated hero argument type");
+    assert!(error.to_string().contains("createDummyBot"));
+    assert!(error.to_string().contains("semantic type"));
+}
+
+#[test]
 fn nested_numeric_boolean_aliases_normalize_inside_vector_components() {
     let program = program("Set Global Variable(probe, Vector(1, True, False));");
     validate_program(&program);

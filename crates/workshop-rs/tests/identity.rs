@@ -5,14 +5,14 @@
 
 use workshop_rs::catalog::{Catalog, Locale};
 
-/// The pinned digest of the committed catalog dataset (version 0.1.6).
+/// The pinned digest of the committed catalog dataset (version 0.1.7).
 ///
 /// Any dataset change (entries, aliases, locale tables, provenance, target)
 /// changes the content digest, and this test fails until the pipeline
 /// (`workshop-catalog-gen build`) recomputes it and the pin is updated
 /// deliberately together with the data.
 const PINNED_CATALOG_DIGEST: &str =
-    "455e97702da49639a5f13d93ecfc4900bb6b2a971978633c686a2ea02544f3fe";
+    "f02d441ed46d66f43b2145b6702a653c8f824b130a39a467a70bef17017cc1d0";
 
 #[test]
 fn committed_catalog_digest_is_pinned() {
@@ -37,7 +37,7 @@ fn identity_reports_all_four_machine_readable_identities() {
     let catalog = Catalog::builtin().expect("built-in catalog");
     let identity = catalog.identity();
     assert_eq!(identity.implementation_version, env!("CARGO_PKG_VERSION"));
-    assert_eq!(identity.catalog_version, "0.1.6");
+    assert_eq!(identity.catalog_version, "0.1.7");
     assert_eq!(
         identity.catalog_digest.as_deref(),
         Some(PINNED_CATALOG_DIGEST)
