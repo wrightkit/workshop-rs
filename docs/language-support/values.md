@@ -234,7 +234,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `String Length` | ✅ Supported | Returns: `Number`; Parameters: (String: String). |
 | `String Replace` | ✅ Supported | Returns: `String`; Parameters: (String: String|Array, Search: String|Array, Replacement: String|Array). |
 | `String Slice` | ✅ Supported | Returns: `String`; Parameters: (String: String, Start Index: Number, Count: Number|Boolean). |
-| `String Split` | ✅ Supported | Returns: `Array`; Parameters: (String: String|Array, Separator: String|Array). |
+| `String Split` | ✅ Supported | Returns: `Array`; Parameters: (String: String|Array|EntityId, Separator: String|Array). |
 | `Subtract` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector, b: Number|Boolean|Vector). |
 | `Tangent From Degrees` | ✅ Supported | Returns: `Number`; Parameters: (Number: Number). |
 | `Tangent From Radians` | ✅ Supported | Returns: `Number`; Parameters: (Number: Number). |

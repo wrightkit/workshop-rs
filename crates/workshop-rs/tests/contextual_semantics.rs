@@ -105,7 +105,7 @@ fn entity_ids_and_boolean_string_slice_counts_match_workshop_contract() {
     validate_program(&setup);
 
     let derived = program(
-        "Set Global Variable(probe, String Slice(String Replace(Custom String(\"x\"), First Of(Last Created Entity), First Of(Last Created Entity)), 126, True));",
+        "Set Global Variable(probe, String Slice(String Replace(Custom String(\"x\"), First Of(Last Created Entity), First Of(Last Created Entity)), 126, True)); Set Global Variable(parts, String Split(First Of(Last Created Entity), Empty Array));",
     );
     validate_program(&derived);
 }
