@@ -1,4 +1,4 @@
-# ADR-0001: Workshop catalog, locale, provenance, and version boundaries
+# ADR-0001: Workshop catalog, locale, source, and version boundaries
 
 - Status: Accepted
 - Date: 2026-08-16
@@ -21,9 +21,9 @@ to absorb data-only Workshop updates without compiler rewrites, and it must
 serve Wright and language providers without leaking locale spellings or
 provider naming into semantic identity. This ADR fixes the first durable
 contract: the boundary between semantic code and catalog/content data, the
-shape of locale coverage, and the identities that pin provenance and versions.
+shape of locale coverage, and the identities that pin source records and versions.
 
-It builds on the workspace source-provenance rules and on Wright's clean-room licensing
+It builds on the workspace source-attribution rules and on Wright's clean-room licensing
 policy, adapted to this repository's MIT license.
 
 ## Decision
@@ -66,7 +66,7 @@ the contract.
 
 Locale coverage is a locale table per declared locale: a mapping from canonical
 identities to client spellings (`en-US` "Set Global Variable"; `zh-CN` spelling
-supplied only from reviewed provenance data). A locale is a declared set of
+supplied only from reviewed source data). A locale is a declared set of
 such mappings. Locale tables never define or change semantics; they bind
 spellings to identities. A spelling without a canonical identity, or two
 spellings bound to one identity in one locale without a declared alias, fails
@@ -98,13 +98,14 @@ bumps `implementation-version` without implying a dataset change. Tooling
 surfaces all four in machine-readable form (for example `--version` or a
 build-info manifest), and tests record them.
 
-### 6. Provenance and the reproducible catalog-update pipeline
+### 6. Source attribution and the reproducible catalog-update pipeline
 
-Every catalog entry and locale table carries provenance: source identity,
-license/review status, and generator identity. Source notes identify whether a
-fact came from Workshop behavior, a project contract, repository test data, a
-consumer project, a reference implementation, or documentation; unresolved
-facts remain explicitly marked rather than being inferred.
+Every catalog entry and locale table records the applicable source identity or
+attribution, license/review metadata, and generator identity. When available,
+the source is pinned by revision, version, or content hash. Source notes identify
+whether a fact came from Workshop behavior, a project contract, repository test
+data, a consumer project, a reference implementation, or documentation;
+unresolved facts remain explicitly marked rather than being inferred.
 
 The dataset is built by a deterministic pipeline: edit the data file -> run
 validation (schema, identity uniqueness, alias collisions, undeclared locales,
@@ -114,12 +115,12 @@ with the source reference. A game patch that changes Workshop strings or
 content is a bounded data update, never a parser or emitter rewrite.
 
 Licensing: this repository is MIT; committed data must be MIT-compatible with
-recorded provenance. OverPy's translation tables are GPL-3.0 reference data and
+recorded source metadata. OverPy's translation tables are GPL-3.0 reference data and
 are not a permissible source for catalog or locale data (Wright ADR-0004,
 `docs/licensing.md`). Observed reference behavior is an interoperability input,
 not permission to copy an implementation; mechanically translating upstream
 data is not permitted. New locale data requires a permissible reference source
-with provenance and license review before inclusion.
+with source attribution and license review before inclusion.
 
 ### 7. Supported categories and missing-target-locale behavior
 
@@ -156,8 +157,8 @@ Deliberately not covered here: Wright/LPP/provider version coordination (those
 components own their versions); runtime downloading of unreviewed or latest
 catalog data by default; treating unknown future Workshop tokens as valid
 semantics; a generic plugin ABI or dynamic grammar system; OPY/DEL source
-semantics; copying third-party catalog/source data without provenance and
-license review.
+semantics; copying third-party catalog/source data without source attribution
+and license review.
 
 ## Consequences
 
@@ -168,7 +169,8 @@ license review.
   knowledge; provider naming never enters the core.
 - The strict allowlist makes unsupported input loud, which is the intended
   safety property for conversion tooling.
-- Costs: every data entry needs provenance; catalog updates require validation
+- Costs: every data entry needs source attribution and applicable license/review
+  metadata; catalog updates require validation
   and deterministic pipeline tooling; unknown-token diagnostics belong in the
   core.
 
@@ -176,7 +178,7 @@ license review.
 
 Runtime compatibility claims are outside this decision; any such claim must be
 tested against a pinned and attributed source. Locale compatibility claims require locale
-data with reviewed provenance under Decision 6.
+data with reviewed source attribution under Decision 6.
 
 ## Acceptance criteria
 
@@ -193,8 +195,8 @@ data with reviewed provenance under Decision 6.
 
 - This decision does not prescribe the exact canonical identity syntax,
   dataset schema, or serialization format; implementations must preserve the
-  identity and provenance properties above.
-- Locale data is admitted only when its reference source passes the provenance
+  identity and source metadata properties above.
+- Locale data is admitted only when its reference source passes the source
   and license review required by Decision 6.
 - `target-source` is recorded according to the source for each
   entry, including when that source is community documentation rather than an
