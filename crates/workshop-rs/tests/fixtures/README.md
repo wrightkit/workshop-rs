@@ -68,4 +68,6 @@ redistributed. The runner validates fixture digests from local files and the
 required pinned oracle digest fields; it never recomputes a historical
 expectation from current content.
 The offline runner records parse/WIR behavior as direct test results and never
-replaces the pinned expectation with current implementation output.
+replaces the pinned reference identity with current implementation output. The
+manifest's pinned oracle is not redistributed, so these offline cases report
+`inconclusive` rather than claiming a reference match.

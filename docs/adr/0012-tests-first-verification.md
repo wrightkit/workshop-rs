@@ -40,6 +40,10 @@ to retain them.
 6. Expected results remain independent test data or reference comparisons.
    Implementation output is never promoted to an expected result merely
    because a local test passes.
+7. A pinned source or oracle identity without materialized expected output is
+   not a comparison: the runner reports `inconclusive` with `NotComparable`,
+   reporting `matched` only after an expected-versus-observed comparison
+   actually runs.
 
 ## Consequences
 
@@ -47,7 +51,9 @@ workshop-rs-cli keeps the smallest shared result shape needed by census,
 corpus, and client-capture tooling. Feature attribution and explicit
 non-matching statuses remain observable, while contributors can understand the
 verification surface through ordinary tests, fixtures, references, and source
-provenance.
+provenance. Real-project manifests that pin an oracle identity without
+redistributing its expected output remain useful parser/WIR tests, but their
+offline result is explicitly inconclusive rather than a fabricated match.
 
 ADRs 0002 through 0005 remain historical records of the superseded model.
 Their surviving fixture, census, and client-workflow decisions are routed

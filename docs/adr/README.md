@@ -25,7 +25,7 @@ ADR.
 - [ADR-0004: Provenance-linked real-project and minimized evidence](0004-real-project-evidence.md) (partially superseded)
 - [ADR-0005: Seasonal Workshop client validation workflow](0005-seasonal-client-validation.md) (partially superseded)
 - [ADR-0006: Canonical typed Workshop settings semantics](0006-settings-semantic-schema.md)
-- [ADR-0007: Hero gameplay domain API and provenance boundary](0007-gameplay-domain-api.md)
+- [ADR-0007: Hero gameplay domain API and source boundary](0007-gameplay-domain-api.md)
 - [ADR-0008: Canonical public Workshop `Program` boundary](0008-canonical-public-program-boundary.md)
 - [ADR-0009: Domain-local Workshop ownership and verification placement](0009-domain-local-ownership.md)
 - [ADR-0010: Canonical Workshop target-layout and resource analysis](0010-target-layout-and-resource-analysis.md)

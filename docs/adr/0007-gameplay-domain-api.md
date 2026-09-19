@@ -1,4 +1,4 @@
-# ADR-0007: Hero gameplay domain API and provenance boundary
+# ADR-0007: Hero gameplay domain API and source boundary
 
 ## Status
 
@@ -15,8 +15,9 @@ consumers. Hero kits are not uniform: a logical slot can be absent, have one
 entry, or contain several variant entries.
 
 The Workshop catalog identity and the gameplay dataset identity have different
-release and evidence lifecycles. Conflating them would make a balance-data
-change look like a parser/catalog change and would make provenance ambiguous.
+release and source lifecycles. Conflating them would make a balance-data
+change look like a parser/catalog change and would make source ownership
+ambiguous.
 
 ## Decisions
 
@@ -36,9 +37,10 @@ change look like a parser/catalog change and would make provenance ambiguous.
 3. Raw gameplay records use `Hero`, `Ability`, `AbilityRef`, `Fact<T>`,
    `StatValue`, and `Quantity`. Ability localized/display names are metadata
    on the hero/slot/variant record and can change without changing its
-   `AbilityRef`. Facts carry one or more `EvidenceRef` values; the enclosing
-   `GameplayDatasetIdentity` carries dataset id, version, digest, source,
-   license, target, and review status. Missing facts stay absent.
+   `AbilityRef`. Facts carry concrete source references with a source,
+   locator, and optional note; the enclosing `GameplayDatasetIdentity` carries
+   dataset id, version, digest, source, license, target, and review status.
+   Missing facts stay absent.
 4. `GameplayDatasetIdentity` is separate from
    `crate::catalog::CatalogIdentity`. A gameplay-data update must not silently
    change Workshop parser/WIR/catalog identity.
@@ -46,7 +48,7 @@ change look like a parser/catalog change and would make provenance ambiguous.
    query/calculation layer may consume this model, but raw records do not
    embed Workshop-specific presentation or provider semantics.
 
-## Topology evidence
+## Gameplay source records
 
 The row-by-row survey for this decision is pinned in
 [`docs/gameplay-roster-survey.md`](../gameplay-roster-survey.md). The
@@ -55,7 +57,7 @@ historical `workshop-data` export at commit
 hero identities and logical-slot records with localized/display names. Its
 topology categories include:
 
-| Shape | Evidence examples | API consequence |
+| Shape | Source examples | API consequence |
 | --- | --- | --- |
 | Normal two-ability kit | Ana, Cassidy, Winston | `ability1`/`ability2` are ordinary data entries. |
 | Extra logical ability | Brigitte, Hanzo, Wrecking Ball | `ability3` is a normal open slot, not a hero-specific field. |
@@ -64,9 +66,9 @@ topology categories include:
 | Passive-heavy kit | Echo, Mercy, Pharah, Juno | `passive` is optional and data-driven. |
 | Data with absent fields | several export entries omit localized names or some slots | absence is represented explicitly; no synthetic values are inferred. |
 
-The export is evidence for canonical Workshop-facing identity and naming, not
+The export is a source for canonical Workshop-facing identity and naming, not
 proof of every live-client balance value. Balance facts require their own
-dataset evidence and remain absent when unsupported.
+source record and remain absent when unsupported.
 
 ## Consequences
 

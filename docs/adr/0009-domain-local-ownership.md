@@ -33,8 +33,8 @@ verification label was itself a semantic boundary.
    Shared homes orchestrate and delegate; they do not become a phase-wide
    implementation bucket for every feature.
 4. Verification is not a semantic implementation domain. Executable contract
-   and regression tests belong with the feature they protect; provenance-
-   linked fixtures and corpus data remain beside those tests; census, capture,
+   and regression tests belong with the feature they protect; source-linked
+   fixtures and corpus data remain beside those tests; census, capture,
    conformance, and similar acquisition/reporting support belongs in tests,
    CLI tooling, or data-generation support according to its responsibility.
 5. External expectations and implementation-derived regressions must remain
@@ -51,7 +51,7 @@ typed semantic behavior.
 Contributors can find a Workshop feature's parser, validator, emitter, and
 related operations from the feature's domain. Shared contexts serve as small
 orchestration boundaries, and verification code has a separate support role.
-Tests and fixtures retain the provenance needed for attribution and
+Tests and fixtures retain the source metadata needed for attribution and
 reproducibility without requiring a replacement verification abstraction.
 
 This decision does not require one file per builtin, a new CST/AST/compiler

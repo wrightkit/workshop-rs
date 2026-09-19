@@ -215,17 +215,20 @@ fn execute_case(
                 schema_version: CONFORMANCE_SCHEMA_VERSION,
                 case_id: case.id.clone(),
                 features: case.features.clone(),
-                status: ConformanceStatus::Matched,
+                status: ConformanceStatus::Inconclusive,
                 comparison: Comparison {
-                    mode: Equivalence::Semantic,
+                    mode: Equivalence::NotComparable,
                     expected: Some(expected),
                     observed: Some(observed),
-                    normalizer: Some("parse-validate-canonical-wir-v1".to_string()),
+                    normalizer: None,
                 },
                 source,
                 catalog: catalog.identity(),
                 locale: Some(locale.clone()),
-                reason: None,
+                reason: Some(ConformanceReason {
+                    code: ReasonCode::Inconclusive,
+                    detail: "parse, WIR, and catalog tests passed, but the pinned reference artifact is not materialized for offline comparison".to_string(),
+                }),
             })
         }
         (ExpectedStatus::Success, Err(error)) => {
@@ -346,4 +349,56 @@ fn validate_expected_artifact(case_id: &str, artifact: &TestArtifact) -> Result<
         ));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::conformance::{FeatureKind, FeatureNamespace};
+
+    fn artifact(name: &str, digest: char) -> TestArtifact {
+        TestArtifact {
+            name: name.to_string(),
+            revision: Some("test-revision".to_string()),
+            path: Some("test/oracle.json".to_string()),
+            sha256: Some(digest.to_string().repeat(64)),
+            license: Some("MIT".to_string()),
+        }
+    }
+
+    #[test]
+    fn divergent_reference_artifact_cannot_be_reported_as_matched() {
+        let catalog = Catalog::builtin().expect("built-in catalog");
+        let locale = Locale::new("en-US");
+        let case = CorpusCase {
+            id: "test/basic-rule".to_string(),
+            fixture: "basic-rule.ws".to_string(),
+            source: artifact("source", 'a'),
+            features: vec![
+                FeatureId::owned(FeatureNamespace::Wir, FeatureKind::Structural, "rule")
+                    .expect("valid feature"),
+            ],
+            expected_status: ExpectedStatus::Success,
+            failure_contains: None,
+            known_gap: None,
+            expected: None,
+        };
+        let result = execute_case(
+            &case,
+            include_str!("../../workshop-rs/tests/fixtures/corpus/basic-rule.ws"),
+            &catalog,
+            &locale,
+            case.source.clone(),
+            artifact("deliberately divergent reference", 'b'),
+        )
+        .expect("test input executes");
+
+        assert_eq!(result.status, ConformanceStatus::Inconclusive);
+        assert_eq!(result.comparison.mode, Equivalence::NotComparable);
+        assert_eq!(
+            result.comparison.expected.as_ref().unwrap().name,
+            "deliberately divergent reference"
+        );
+        assert_ne!(result.status, ConformanceStatus::Matched);
+    }
 }

@@ -320,7 +320,7 @@ fn census_runs_with_machine_readable_results() {
 }
 
 #[test]
-fn corpus_runs_full_and_minimized_cases_with_visible_gap() {
+fn corpus_runs_full_and_minimized_cases_without_materialized_reference_comparison() {
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../workshop-rs/tests/fixtures/corpus/real-projects.json");
     let output = run(&["corpus", manifest.to_str().unwrap()]);
@@ -331,15 +331,17 @@ fn corpus_runs_full_and_minimized_cases_with_visible_gap() {
     );
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(
-        stdout.contains("real-project/overpy-cake/full: Matched"),
+        stdout.contains("real-project/overpy-cake/full: Inconclusive"),
         "{stdout}"
     );
     assert!(
-        stdout.contains("minimized-regression/overpy-cake-loop: Matched"),
+        stdout.contains("minimized-regression/overpy-cake-loop: Inconclusive"),
         "{stdout}"
     );
     assert!(
-        stdout.contains("matched=2") && stdout.contains("known-gap=0"),
+        stdout.contains("matched=0")
+            && stdout.contains("known-gap=0")
+            && stdout.contains("inconclusive=2"),
         "{stdout}"
     );
 
@@ -348,6 +350,7 @@ fn corpus_runs_full_and_minimized_cases_with_visible_gap() {
     let report: serde_json::Value = serde_json::from_slice(&output.stdout).expect("valid report");
     assert_eq!(report["results"].as_array().unwrap().len(), 2);
     assert_eq!(report["summary"]["known-gap"], 0);
+    assert_eq!(report["summary"]["inconclusive"], 2);
 }
 
 #[test]

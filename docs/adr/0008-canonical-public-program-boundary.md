@@ -25,7 +25,7 @@ and phase-oriented compatibility paths. That surface made ordinary raw
 Workshop use and independent source-language lowering depend on implementation
 details rather than Workshop concepts. The contract recorded in #112 and the
 implementation work in #177–#179 replaced that boundary. #32 and #187
-established how source-aware consumers can attach optional provenance without
+established how source-aware consumers can attach optional source metadata without
 making metadata part of ordinary semantic construction.
 
 The same boundary audit found that dedicated `Debug` and `Print` WIR nodes
@@ -54,7 +54,7 @@ convenience part of the Workshop contract.
    facts. They constrain builtin identity and parameter shape while canonical
    validation remains authoritative. Generic catalog-backed calls remain an
    explicit escape hatch for dynamic consumers.
-6. Source documents, spans, comments, trivia, and provenance are optional
+6. Source documents, spans, comments, trivia, and source metadata are optional
    metadata associated with the semantic program. Raw parsing may attach them;
    an external consumer may add a source file and attach authored spans; and
    programmatic construction may omit them. Source-preservation and checked
@@ -73,7 +73,7 @@ it provides analysis or performance value. Public operations share one
 semantic boundary, so a consumer cannot accidentally obtain different
 behavior by choosing a parser, emitter, or storage-shaped API.
 
-Optional provenance supports diagnostics, source-aware edits, comments, and
+Optional source metadata supports diagnostics, source-aware edits, comments, and
 reconstruction without forcing synthetic spans into generated programs.
 Provider conveniences that have no independent Workshop meaning must be
 lowered by their owner instead of being preserved by the canonical core.
