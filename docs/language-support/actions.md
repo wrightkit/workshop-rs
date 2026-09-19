@@ -176,7 +176,7 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Start Damage Modification` | ✅ Supported | Parameters: (Object: Player|Array, Object: Player|Array, Number: Number, DamageReeval: DamageReeval). |
 | `Start Damage Over Time` | ✅ Supported | Parameters: (Object: Player|Array, Player: Player, Number: Number, Number: Number). |
 | `Start Facing` | ✅ Supported | Parameters: (Player: Player|Array, Direction: Vector, Turn Rate: Number, Relativity: Relativity, Reevaluation: FacingReeval). |
-| `Start Forcing Dummy Bot Name` | ✅ Supported | Parameters: (Object: Player|Array, String: String). |
+| `Start Forcing Dummy Bot Name` | ✅ Supported | Parameters: (Object: Player|Array|EntityId, String: String). |
 | `Start Forcing Player Outlines` | ✅ Supported | Parameters: (ViewedPlayers: Player|Array, ViewingPlayers: Player|Array, Visible: Boolean, Color: Color, Visibility: OutlineVisibility). |
 | `Start Forcing Player Position` | ✅ Supported | Parameters: (Player: Player, Position: Vector, Boolean: Boolean). |
 | `Start Forcing Player To Be Hero` | ✅ Supported | Parameters: (Object: Player|Array, Hero: Hero). |

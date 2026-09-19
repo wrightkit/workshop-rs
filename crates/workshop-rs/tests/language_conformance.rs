@@ -728,8 +728,10 @@ fn sample_argument(catalog: &Catalog, parameter_type: &str) -> String {
         "Number" | "Number|Boolean" | "Boolean|Number" | "Boolean|Number|Vector" => "1".to_string(),
         "Vector" | "Vector|Player" | "Vector|Player|Array" => "Vector(0, 0, 0)".to_string(),
         "String" | "String|Array" | "Object|String" => "Custom String(\"probe\")".to_string(),
-        "Array" => "All Players(All Teams)".to_string(),
-        "Player" | "Player|Array" | "Player|EntityId" => "Event Player".to_string(),
+        "Array" | "Array|EntityId" => "All Players(All Teams)".to_string(),
+        "Player" | "Player|Array" | "Player|Array|EntityId" | "Player|EntityId" => {
+            "Event Player".to_string()
+        }
         "Object" | "Object|Array" | "Boolean|Number|Object|Array" => "Event Player".to_string(),
         "Hero|Array" => "D.Va".to_string(),
         "Operation" => "Add".to_string(),

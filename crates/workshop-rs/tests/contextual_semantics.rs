@@ -100,6 +100,17 @@ fn one_sided_contextual_aliases_reject_the_other_boolean() {
 }
 
 #[test]
+fn entity_ids_and_boolean_string_slice_counts_match_workshop_contract() {
+    let setup = program("Start Forcing Dummy Bot Name(Last Created Entity, Custom String(\"x\"));");
+    validate_program(&setup);
+
+    let derived = program(
+        "Set Global Variable(probe, String Slice(String Replace(Custom String(\"x\"), First Of(Last Created Entity), First Of(Last Created Entity)), 126, True));",
+    );
+    validate_program(&derived);
+}
+
+#[test]
 fn wait_until_keeps_numeric_exception_without_global_truthiness() {
     let numeric = program("Wait Until(1, 2);");
     validate_program(&numeric);
