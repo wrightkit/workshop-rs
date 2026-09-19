@@ -5253,7 +5253,7 @@
       ]
     }
   ],
-  "digest": "3b66b40ad924a74384ae826614ef7296dd34f1785291b0e94739c560b878a01e",
+  "digest": "c0f9eac3ef964a58f9368fbf412caecdfcf689fb4e2e9120eac0ef56197fa9cf",
   "enums": [
     {
       "domain": "Impulse",
@@ -11649,7 +11649,9 @@
         {
           "emptyArrayAsString": true
         },
-        null
+        {
+          "emptyArrayAsString": true
+        }
       ],
       "paramNames": [
         "string",
@@ -12437,9 +12439,7 @@
         {
           "emptyArrayAsString": true
         },
-        {
-          "emptyArrayAsString": true
-        }
+        null
       ],
       "paramNames": [
         "string",
