@@ -232,7 +232,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `String` | ✅ Supported | Returns: `String`; Parameters: (String: String, {0}: Object|Array, {1}: Object|Array, {2}: Object|Array). `Custom String` remains supported. |
 | `String Contains` | ✅ Supported | Returns: `Boolean`; Parameters: (String: String, String: String). |
 | `String Length` | ✅ Supported | Returns: `Number`; Parameters: (String: String). |
-| `String Replace` | ✅ Supported | Returns: `String`; Parameters: (String: String|Array, Search: String|Array, Replacement: String|Array). |
+| `String Replace` | ✅ Supported | Returns: `String`; Parameters: (String: String|Array, Search: String|Array|EntityId, Replacement: String|Array|EntityId). |
 | `String Slice` | ✅ Supported | Returns: `String`; Parameters: (String: String, Start Index: Number, Count: Number|Boolean). |
 | `String Split` | ✅ Supported | Returns: `Array`; Parameters: (String: String|Array|EntityId, Separator: String|Array). |
 | `Subtract` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector, b: Number|Boolean|Vector). |
