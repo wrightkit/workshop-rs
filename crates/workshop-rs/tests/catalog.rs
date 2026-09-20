@@ -154,6 +154,23 @@ fn enums_resolve_members_to_canonical_identity() {
 }
 
 #[test]
+fn canonical_color_white_spellings_resolve_through_the_catalog_boundary() {
+    let catalog = builtin();
+    assert_eq!(
+        catalog.localized_enum_spelling("Color", &Locale::new("en-US"), "WHITE"),
+        Some("White")
+    );
+    assert_eq!(
+        catalog.localized_enum_spelling("Color", &Locale::new("fr-FR"), "WHITE"),
+        Some("Blanc")
+    );
+    assert_eq!(
+        catalog.localized_enum_spelling("Color", &Locale::new("zh-TW"), "WHITE"),
+        Some("白色")
+    );
+}
+
+#[test]
 fn localized_enum_domains_and_real_project_values_resolve_canonically() {
     let catalog = builtin();
     let zh = Locale::new("zh-CN");

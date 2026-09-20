@@ -727,9 +727,11 @@ fn sample_argument(catalog: &Catalog, parameter_type: &str) -> String {
         "Boolean" => "True".to_string(),
         "Number" | "Number|Boolean" | "Boolean|Number" | "Boolean|Number|Vector" => "1".to_string(),
         "Vector" | "Vector|Player" | "Vector|Player|Array" => "Vector(0, 0, 0)".to_string(),
-        "String" | "String|Array" | "String|Array|EntityId" | "Object|String" => {
-            "Custom String(\"probe\")".to_string()
-        }
+        "String"
+        | "String|Array"
+        | "String|Array|EntityId"
+        | "String|Array|EntityId|Color"
+        | "Object|String" => "Custom String(\"probe\")".to_string(),
         "Array" | "Array|EntityId" => "All Players(All Teams)".to_string(),
         "Player" | "Player|Array" | "Player|Array|EntityId" | "Player|EntityId" => {
             "Event Player".to_string()

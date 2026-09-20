@@ -7992,7 +7992,7 @@
       ]
     }
   ],
-  "digest": "73ab3a8cdc3a3babd46522b1a01de2d9995d1445c40291836c1092962be45163",
+  "digest": "5a659c741eb68aef35ba3f798805dc646c6a73298d14f3085c5c0459c1864bd4",
   "enums": [
     {
       "domain": "Impulse",
@@ -21315,6 +21315,8 @@
     "reviewed": true,
     "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); rule-event identities and EventTeam/EventPlayer filter aliases are transcribed from the user-provided workshop-data export and its Workshop event annotations, cross-checked against documented raw Workshop event forms; migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; declared-locale action/value/event/enum aliases for the 15-locale Workshop set are generated from the user-provided workshop-data JSON, while the separately declared Wait parameter labels are documented below; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; the exact-match corpus and its exclusions are pinned separately in tools/corpus/zh-cn-corpus.json",
     "sourceNotes": [
+      "The generic localized_enum_spelling fallback for Color.WHITE covers the additional Workshop locales required by the pinned OverPy 9.7.10 translation marker output; OverPy language-code to Workshop-locale mapping remains outside this catalog owner.",
+      "stringSplit accepts Color as a source-backed string-coercible value because the pinned OverPy translation setup uses Color.WHITE.split([]) for its language marker.",
       "Contextual literal substitutions are audited from the reviewed OverPy replacement metadata at https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/types.d.ts and its position-sensitive Workshop emission path at https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/compiler/astToWorkshop.ts; Wait Until's numeric-condition exception is retained from https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/compiler/functions/waitUntil.ts and no global coercion hierarchy is inferred",
       "Action and Value parameter names/order/types/defaults and Value returns reconciled from Workshop.codes structured article Properties and cross-checked with pinned OverPy static metadata; OSTW remains a static-only reference. Variadic array arguments and WIR-normalized indexed-variable actions are represented explicitly; boolean literal aliases are retained only where the reviewed Workshop/OverPy contract permits them.",
       "abort zh-CN retains both 中止 from the reviewed workshop-data export and 中断 observed in the reproducible Bastion c010e1a2d468ec7140f474e334067e5ab8d02d89 build:release/build:main:zh output; the first spelling is emitted deterministically and both are accepted for parsing",
@@ -23915,7 +23917,7 @@
         "separator"
       ],
       "paramTypes": [
-        "String|Array|EntityId",
+        "String|Array|EntityId|Color",
         "String|Array"
       ],
       "params": [

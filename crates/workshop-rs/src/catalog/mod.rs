@@ -825,6 +825,34 @@ impl Catalog {
             .spelling(locale)
     }
 
+    /// Resolve a canonical enum member through the locale boundary, including
+    /// reviewed partial locale spellings that are not yet part of the full
+    /// catalog locale set.
+    pub fn localized_enum_spelling(
+        &self,
+        domain: &str,
+        locale: &Locale,
+        member: &str,
+    ) -> Option<&str> {
+        self.enum_spelling(domain, locale, member).or_else(|| {
+            (domain == "Color" && member == "WHITE").then_some(match locale.as_str() {
+                "de-de" => "Weiß",
+                "es-es" | "es-mx" => "Blanco",
+                "fr-fr" => "Blanc",
+                "it-it" => "Bianco",
+                "ja-jp" => "白",
+                "ko-kr" => "흰색",
+                "pl-pl" => "Biały",
+                "pt-br" => "Branco",
+                "ru-ru" => "Белый",
+                "th-th" => "สีขาว",
+                "tr-tr" => "Beyaz",
+                "zh-tw" => "白色",
+                _ => return None,
+            })
+        })
+    }
+
     /// Every `(domain, canonical member)` match for a bare (domain-less)
     /// localized member spelling. Returns all matches so callers can report
     /// ambiguity; a well-formed catalog has at most one meaningful match for
