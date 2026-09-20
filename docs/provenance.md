@@ -164,3 +164,8 @@ and catalog surface are then checked with `workshop-catalog-gen check`.
 Dataset changes are deliberate: edit the data, update this document and the
 dataset `provenance` record, run `workshop-catalog-gen check` then `build`,
 and commit data and regenerated file together (repo `AGENTS.md`).
+
+The catalog's `localized_enum_spelling` boundary may expose reviewed partial
+locale spellings needed by a consumer while the broader locale remains outside
+the complete catalog locale set. Consumer-specific source-language mappings
+remain outside `workshop-rs`.

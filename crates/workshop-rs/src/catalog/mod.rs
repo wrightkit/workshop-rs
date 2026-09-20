@@ -825,58 +825,31 @@ impl Catalog {
             .spelling(locale)
     }
 
-    /// Resolve the pinned OverPy translation language marker for a canonical
-    /// enum member. OverPy's translation directive uses language codes that
-    /// are not identical to Workshop client locale names; this boundary keeps
-    /// that source-language mapping with the canonical Workshop localization
-    /// owner instead of duplicating it in providers.
-    pub fn overpy_translation_spelling(
+    /// Resolve a canonical enum member through the locale boundary, including
+    /// reviewed partial locale spellings that are not yet part of the full
+    /// catalog locale set.
+    pub fn localized_enum_spelling(
         &self,
         domain: &str,
+        locale: &Locale,
         member: &str,
-        language: &str,
     ) -> Option<&str> {
-        let locale = match language {
-            "de" => "de-DE",
-            "en" => "en-US",
-            "es" => "es-MX",
-            "es_es" => "es-ES",
-            "es_mx" => "es-MX",
-            "fr" => "fr-FR",
-            "it" => "it-IT",
-            "ja" => "ja-JP",
-            "ko" => "ko-KR",
-            "pl" => "pl-PL",
-            "pt" => "pt-BR",
-            "ru" => "ru-RU",
-            "th" => "th-TH",
-            "tr" => "tr-TR",
-            "zh" | "zh_cn" => "zh-CN",
-            "zh_tw" => "zh-TW",
-            _ => return None,
-        };
-        if let Some(spelling) = self.enum_spelling(domain, &Locale::new(locale), member) {
-            return Some(spelling);
-        }
-
-        // These source-language aliases are part of the pinned OverPy
-        // translation marker contract. They are deliberately exposed here so
-        // provider implementations do not become a second localization owner.
-        (domain == "Color" && member == "WHITE").then_some(match language {
-            "de" => "Weiß",
-            "en" => "White",
-            "es" | "es_es" | "es_mx" => "Blanco",
-            "fr" => "Blanc",
-            "it" => "Bianco",
-            "ja" => "白",
-            "ko" => "흰색",
-            "pl" => "Biały",
-            "pt" => "Branco",
-            "ru" => "Белый",
-            "th" => "สีขาว",
-            "tr" => "Beyaz",
-            "zh" | "zh_cn" | "zh_tw" => "白色",
-            _ => return None,
+        self.enum_spelling(domain, locale, member).or_else(|| {
+            (domain == "Color" && member == "WHITE").then_some(match locale.as_str() {
+                "de-de" => "Weiß",
+                "es-es" | "es-mx" => "Blanco",
+                "fr-fr" => "Blanc",
+                "it-it" => "Bianco",
+                "ja-jp" => "白",
+                "ko-kr" => "흰색",
+                "pl-pl" => "Biały",
+                "pt-br" => "Branco",
+                "ru-ru" => "Белый",
+                "th-th" => "สีขาว",
+                "tr-tr" => "Beyaz",
+                "zh-tw" => "白色",
+                _ => return None,
+            })
         })
     }
 
