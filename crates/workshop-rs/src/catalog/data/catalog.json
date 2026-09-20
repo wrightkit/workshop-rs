@@ -366,7 +366,7 @@
         "name"
       ],
       "paramTypes": [
-        "Player|Array",
+        "Player|Array|EntityId",
         "String"
       ],
       "params": [
@@ -1987,10 +1987,7 @@
       "paramCoercions": [
         null,
         null,
-        {
-          "falseAsNumber": true,
-          "trueAsNumber": true
-        },
+        null,
         {
           "nullVectorAsNull": true
         },
@@ -2008,7 +2005,7 @@
       "paramTypes": [
         "Hero|Array",
         "Team",
-        "Number",
+        "Number|Boolean",
         "Vector",
         "Vector"
       ],
@@ -5256,7 +5253,7 @@
       ]
     }
   ],
-  "digest": "d25c1099ed1f23b50612406ea7ff767ba785117a36794f1c45c4d01cd4e0ce29",
+  "digest": "29346860dce77a49f75ad9b4e5f230f91460f2b4c391e2c6fff26e082ac29bdd",
   "enums": [
     {
       "domain": "Impulse",
@@ -12361,7 +12358,7 @@
         "array"
       ],
       "paramTypes": [
-        "Array"
+        "Array|EntityId"
       ],
       "params": [
         "Array"
@@ -12393,7 +12390,7 @@
       "paramTypes": [
         "String|Array",
         "String|Array",
-        "String|Array"
+        "String|Array|EntityId"
       ],
       "params": [
         "String",
@@ -12423,7 +12420,7 @@
       "paramTypes": [
         "String",
         "Number",
-        "Number"
+        "Number|Boolean"
       ],
       "params": [
         "String",
@@ -12442,16 +12439,14 @@
         {
           "emptyArrayAsString": true
         },
-        {
-          "emptyArrayAsString": true
-        }
+        null
       ],
       "paramNames": [
         "string",
         "separator"
       ],
       "paramTypes": [
-        "String|Array",
+        "String|Array|EntityId",
         "String|Array"
       ],
       "params": [

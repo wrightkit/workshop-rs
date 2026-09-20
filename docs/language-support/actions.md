@@ -25,7 +25,7 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Communicate` | ✅ Supported | Parameters: (Object: Player|Array, Comms: Comms). |
 | `Continue` | ✅ Supported | No parameters. |
 | `Create Beam Effect` | ✅ Supported | Parameters: (VisibleTo: Player|Array, Type: Beam, StartPosition: Vector, EndPosition: Vector, Color: Color, Reevaluation: EffectReeval). |
-| `Create Dummy Bot` | ✅ Supported | Parameters: (Hero: Hero|Array, Team: Team, Slot: Number, Position: Vector, Direction: Vector). |
+| `Create Dummy Bot` | ✅ Supported | Parameters: (Hero: Hero|Array, Team: Team, Slot: Number|Boolean, Position: Vector, Direction: Vector). |
 | `Create Effect` | ✅ Supported | Parameters: (VisibleTo: Player|Array, Type: Effect, Color: Color, Position: Vector|Player, Radius: Number, Reevaluation: EffectReeval). |
 | `Create HUD Text` | ✅ Supported | Parameters: (VisibleTo: Player|Array, Header: Object|String, Subheader: Object|String, Text: Object|String, Location: HudPosition, SortOrder: Number|Boolean, HeaderColor: Color, SubheaderColor: Color, TextColor: Color, Reevaluation: HudReeval, Spectators: SpecVisibility). |
 | `Create Homing Projectile` | ✅ Supported | Parameters: (Projectile: Projectile, Object: Player|Array, Position: Vector, Direction: Vector, Relativity: Relativity, ModifyHealth: ModifyHealth, Team: Team, Number: Number, Number: Number, Number: Number, DynamicEffect: DynamicEffect, DynamicEffect: DynamicEffect, Number: Number, Number: Number, Number: Number, Number: Number, Player: Player, Number: Number). |
@@ -176,7 +176,7 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Start Damage Modification` | ✅ Supported | Parameters: (Object: Player|Array, Object: Player|Array, Number: Number, DamageReeval: DamageReeval). |
 | `Start Damage Over Time` | ✅ Supported | Parameters: (Object: Player|Array, Player: Player, Number: Number, Number: Number). |
 | `Start Facing` | ✅ Supported | Parameters: (Player: Player|Array, Direction: Vector, Turn Rate: Number, Relativity: Relativity, Reevaluation: FacingReeval). |
-| `Start Forcing Dummy Bot Name` | ✅ Supported | Parameters: (Object: Player|Array, String: String). |
+| `Start Forcing Dummy Bot Name` | ✅ Supported | Parameters: (Object: Player|Array|EntityId, String: String). |
 | `Start Forcing Player Outlines` | ✅ Supported | Parameters: (ViewedPlayers: Player|Array, ViewingPlayers: Player|Array, Visible: Boolean, Color: Color, Visibility: OutlineVisibility). |
 | `Start Forcing Player Position` | ✅ Supported | Parameters: (Player: Player, Position: Vector, Boolean: Boolean). |
 | `Start Forcing Player To Be Hero` | ✅ Supported | Parameters: (Object: Player|Array, Hero: Hero). |

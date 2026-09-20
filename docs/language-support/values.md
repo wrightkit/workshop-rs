@@ -80,7 +80,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Farthest Player From` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector, Team: Team). |
 | `False` | ✅ Supported | Returns: `BoolLiteral`. |
 | `Filtered Array` | ✅ Supported | Returns: `Array`; Parameters: (Array: Array, Condition: Boolean). |
-| `First Of` | ✅ Supported | Returns: `Object|Array`; Parameters: (Array: Array). |
+| `First Of` | ✅ Supported | Returns: `Object|Array`; Parameters: (Array: Array|EntityId). |
 | `Flag Position` | ✅ Supported | Returns: `Vector`; Parameters: (Team: Team). |
 | `Forward` | ✅ Supported | Returns: `Array`. |
 | `Game Mode` | ✅ Supported | Returns: `Gamemode`; Parameters: (Gamemode: Gamemode). |
@@ -232,9 +232,9 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `String` | ✅ Supported | Returns: `String`; Parameters: (String: String, {0}: Object|Array, {1}: Object|Array, {2}: Object|Array). `Custom String` remains supported. |
 | `String Contains` | ✅ Supported | Returns: `Boolean`; Parameters: (String: String, String: String). |
 | `String Length` | ✅ Supported | Returns: `Number`; Parameters: (String: String). |
-| `String Replace` | ✅ Supported | Returns: `String`; Parameters: (String: String|Array, Search: String|Array, Replacement: String|Array). |
-| `String Slice` | ✅ Supported | Returns: `String`; Parameters: (String: String, Start Index: Number, Count: Number). |
-| `String Split` | ✅ Supported | Returns: `Array`; Parameters: (String: String|Array, Separator: String|Array). |
+| `String Replace` | ✅ Supported | Returns: `String`; Parameters: (String: String|Array, Search: String|Array, Replacement: String|Array|EntityId). |
+| `String Slice` | ✅ Supported | Returns: `String`; Parameters: (String: String, Start Index: Number, Count: Number|Boolean). |
+| `String Split` | ✅ Supported | Returns: `Array`; Parameters: (String: String|Array|EntityId, Separator: String|Array). |
 | `Subtract` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector, b: Number|Boolean|Vector). |
 | `Tangent From Degrees` | ✅ Supported | Returns: `Number`; Parameters: (Number: Number). |
 | `Tangent From Radians` | ✅ Supported | Returns: `Number`; Parameters: (Number: Number). |
