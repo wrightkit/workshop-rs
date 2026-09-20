@@ -731,10 +731,7 @@ fn sample_argument(catalog: &Catalog, parameter_type: &str) -> String {
         | "String|Array"
         | "String|Array|EntityId"
         | "String|Array|EntityId|Color"
-        | "Object|String" =>
-        {
-            "Custom String(\"probe\")".to_string()
-        }
+        | "Object|String" => "Custom String(\"probe\")".to_string(),
         "Array" | "Array|EntityId" => "All Players(All Teams)".to_string(),
         "Player" | "Player|Array" | "Player|Array|EntityId" | "Player|EntityId" => {
             "Event Player".to_string()
