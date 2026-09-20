@@ -107,7 +107,13 @@ fn settings_projection_is_multi_locale_data() {
     let projection: serde_json::Value =
         serde_json::from_str(include_str!("../src/settings/data/locales.json"))
             .expect("multi-locale settings projection");
-    assert_eq!(projection["locales"], serde_json::json!(["en-US", "zh-CN"]));
+    assert_eq!(
+        projection["locales"],
+        serde_json::json!([
+            "en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "ko-KR", "pl-PL",
+            "pt-BR", "ru-RU", "th-TH", "tr-TR", "zh-CN", "zh-TW"
+        ])
+    );
     for (name, zh_name) in [
         ("main", "主程序"),
         ("lobby", "大厅"),
@@ -194,12 +200,94 @@ fn conversion_en_to_zh_cn_uses_evidence_backed_mappings() {
     assert!(output.fallback_ids.is_empty());
 }
 
-const FALLBACK_RULE: &str = "rule (\"setup\") {
+#[test]
+fn representative_catalog_strings_and_settings_convert_in_every_declared_locale() {
+    let catalog = builtin();
+    let source = r#"settings {
+    main {
+        Description: "locale surface"
+    }
+}
+
+variables {
+    global:
+        0: probe
+}
+
+rule ("locale surface") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        Set Global Variable(probe, String(Hello));
+    }
+}
+"#;
+    let english = parser::parse_wir(source, &catalog, &en()).expect("representative source parses");
+
+    for locale in catalog.locales() {
+        let converted =
+            convert::convert(source, &catalog, &en(), locale, &ConvertOptions::default())
+                .unwrap_or_else(|error| panic!("{locale} conversion failed: {error:?}"));
+        assert!(
+            converted.fallback_ids.is_empty(),
+            "{locale} conversion used fallback: {:?}",
+            converted.fallback_ids
+        );
+        let reparsed = parser::parse_wir(&converted.text, &catalog, locale)
+            .unwrap_or_else(|error| panic!("{locale} output failed to parse: {error:?}"));
+        assert!(
+            workshop_rs::roundtrip::equivalent_wir(&english, &reparsed),
+            "{locale} conversion changed WIR"
+        );
+    }
+}
+
+#[test]
+fn french_emitted_curly_apostrophe_aliases_parse_and_round_trip() {
+    let catalog = builtin();
+    let source = r#"rule ("setup") {
     event {
         Ongoing - Global;
     }
     actions {
         Disable Inspector Recording;
+    }
+}
+"#;
+    let english = parser::parse_wir(source, &catalog, &en()).expect("source parses");
+    let converted = convert::convert(
+        source,
+        &catalog,
+        &en(),
+        &Locale::new("fr-FR"),
+        &ConvertOptions::default(),
+    )
+    .expect("French conversion succeeds");
+    assert!(
+        converted
+            .text
+            .contains("Désactiver l’enregistrement du contrôleur"),
+        "{}",
+        converted.text
+    );
+    let reparsed = parser::parse_wir(&converted.text, &catalog, &Locale::new("fr-FR"))
+        .expect("French emitted alias reparses");
+    assert!(workshop_rs::roundtrip::equivalent_wir(&english, &reparsed));
+}
+
+const FALLBACK_RULE: &str = "variables {
+    global:
+        0: probe
+}
+
+rule (\"setup\") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        Disable Inspector Recording;
+        Set Global Variable(probe, Is Firing Secondary Fire(Event Player));
     }
 }
 ";
@@ -216,22 +304,31 @@ fn opt_in_fallback_emits_with_recorded_fallback_ids() {
     let output =
         emitter::emit_wir_with_options(&program, &catalog, &Locale::new("fr-FR"), &options)
             .expect("fallback emits");
-    assert!(output.text.contains("Ongoing - Global"), "{}", output.text);
     assert!(
-        output.text.contains("Disable Inspector Recording"),
+        output.text.contains("Toute la partie - Tout le monde"),
         "{}",
         output.text
     );
-    assert_eq!(
-        output.fallback_ids,
-        vec![
-            "rule".to_string(),
-            "event".to_string(),
-            "global".to_string(),
-            "actions".to_string(),
-            "disableInspector".to_string(),
-        ],
-        "the unsupported target locale records the fallback identity"
+    assert!(
+        output
+            .text
+            .contains("Désactiver l’enregistrement du contrôleur"),
+        "{}",
+        output.text
+    );
+    assert!(
+        output
+            .fallback_ids
+            .contains(&"isFiringSecondaryFire".to_string()),
+        "the unsupported target locale records the fallback identity: {:?}",
+        output.fallback_ids
+    );
+    assert!(
+        output
+            .text
+            .contains("Is Firing Secondary Fire(Joueur exécutant)"),
+        "{}",
+        output.text
     );
 }
 
@@ -251,13 +348,21 @@ fn opt_in_fallback_conversion_round_trips_through_zh_cn() {
     )
     .expect("fallback conversion emits");
     assert!(!out.fallback_ids.is_empty(), "fallback is recorded");
-    assert!(out.text.contains("Ongoing - Global"), "{}", out.text);
     assert!(
-        out.text.contains("Disable Inspector Recording"),
+        out.text.contains("Toute la partie - Tout le monde"),
         "{}",
         out.text
     );
-    assert!(out.fallback_ids.contains(&"disableInspector".to_string()));
+    assert!(
+        out.text
+            .contains("Désactiver l’enregistrement du contrôleur"),
+        "{}",
+        out.text
+    );
+    assert!(
+        out.fallback_ids
+            .contains(&"isFiringSecondaryFire".to_string())
+    );
 }
 
 #[test]
@@ -283,13 +388,19 @@ fn detection_ranks_zh_cn_after_en_us_for_en_us_input() {
     let catalog = builtin();
     let detection = detect::detect(BASIC_RULE, &catalog);
     assert_eq!(detection.locale, en());
-    assert_eq!(
-        detection
-            .candidates
-            .last()
-            .map(|(locale, _)| locale.clone()),
-        Some(zh()),
-        "zh-CN remains behind en-US for en-US input"
+    let en_position = detection
+        .candidates
+        .iter()
+        .position(|(locale, _)| *locale == en())
+        .expect("en-US is detected");
+    let zh_position = detection
+        .candidates
+        .iter()
+        .position(|(locale, _)| *locale == zh())
+        .expect("zh-CN remains declared");
+    assert!(
+        en_position < zh_position,
+        "en-US should rank ahead of zh-CN"
     );
 }
 
