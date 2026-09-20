@@ -145,6 +145,27 @@ fn enums_resolve_members_to_canonical_identity() {
 }
 
 #[test]
+fn overpy_translation_markers_resolve_through_the_catalog_boundary() {
+    let catalog = builtin();
+    assert_eq!(
+        catalog.overpy_translation_spelling("Color", "WHITE", "en"),
+        Some("White")
+    );
+    assert_eq!(
+        catalog.overpy_translation_spelling("Color", "WHITE", "fr"),
+        Some("Blanc")
+    );
+    assert_eq!(
+        catalog.overpy_translation_spelling("Color", "WHITE", "zh_tw"),
+        Some("白色")
+    );
+    assert_eq!(
+        catalog.overpy_translation_spelling("Missing", "BLACK", "en"),
+        None
+    );
+}
+
+#[test]
 fn localized_enum_domains_and_real_project_values_resolve_canonically() {
     let catalog = builtin();
     let zh = Locale::new("zh-CN");
