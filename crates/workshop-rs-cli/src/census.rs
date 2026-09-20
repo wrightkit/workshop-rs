@@ -12,9 +12,8 @@ use sha2::{Digest, Sha256};
 
 use crate::conformance::{
     CONFORMANCE_SCHEMA_VERSION, Comparison, ConformanceReason, ConformanceResult,
-    ConformanceStatus, Equivalence, Evidence, EvidenceArtifact, EvidenceBasis, EvidenceClass,
-    ExpectationSource, FeatureId, FeatureKind, FeatureNamespace, ImplementationIdentity,
-    ReasonCode,
+    ConformanceStatus, Equivalence, FeatureId, FeatureKind, FeatureNamespace, ReasonCode,
+    TestArtifact,
 };
 use workshop_rs::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
 use workshop_rs::settings::{self, KeyKind, PathPart, TableEntry};
@@ -77,7 +76,6 @@ pub const CENSUS_SCHEMA_VERSION: u32 = 1;
 pub const CENSUS_IDENTITY_SCHEMA_VERSION: u32 = 1;
 const EN_US: &str = "en-US";
 const ZH_CN: &str = "zh-CN";
-const CENSUS_TRACKING_REF: &str = "#19";
 const LOCALIZATION_EN_US_SOURCE: &str = r#"rule ("Localization") {
     event {
         Ongoing - Global;
@@ -102,16 +100,9 @@ const LOCALIZATION_ZH_CN_SOURCE: &str = r#"rule ("Localization") {
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum CensusSupport {
     Exercise,
-    Unsupported {
-        detail: String,
-    },
-    KnownGap {
-        detail: String,
-        tracking_ref: String,
-    },
-    Inconclusive {
-        detail: String,
-    },
+    Unsupported { detail: String },
+    KnownGap { detail: String },
+    Inconclusive { detail: String },
 }
 
 /// One deterministic case with explicit source-locale provenance.
@@ -657,7 +648,7 @@ fn control_flow_case(name: &str, actions: &str) -> CensusCase {
 
 fn generated_probe_support() -> CensusSupport {
     CensusSupport::Inconclusive {
-        detail: "generated probe is exportable for independent Workshop/client evidence but has no independently recorded expected result".to_string(),
+        detail: "generated probe has no independently recorded expected result".to_string(),
     }
 }
 
@@ -825,70 +816,32 @@ fn settings_probe(entry: &TableEntry) -> String {
 }
 
 fn run_case(case: &CensusCase, shard_id: &str, catalog: &Catalog) -> ConformanceResult {
-    let fixture = artifact(
+    let source = artifact(
         format!("census/{shard_id}/{}.ws", case.case_id),
         &case.source,
     );
-    let expectation = case
-        .reference_source
-        .as_ref()
-        .map(|source| ExpectationSource {
-            basis: EvidenceBasis::PreservedRegression,
-            artifact: reference_artifact(case, source),
-            tracking_ref: Some(CENSUS_TRACKING_REF.to_string()),
-        })
-        .unwrap_or_else(|| ExpectationSource {
-            basis: EvidenceBasis::SemanticContract,
-            artifact: EvidenceArtifact {
-                name: "docs/adr/0002-conformance-contract.md".to_string(),
-                revision: Some("ADR-0002".to_string()),
-                path: Some("docs/adr/0002-conformance-contract.md".to_string()),
-                sha256: None,
-                license: Some("MIT".to_string()),
-            },
-            tracking_ref: None,
-        });
-    let evidence = |locale: Option<Locale>| Evidence {
-        class: EvidenceClass::Synthetic,
-        fixture: fixture.clone(),
-        expectation: expectation.clone(),
-        catalog: catalog.identity(),
-        locale,
-        client: None,
-        implementation: Some(ImplementationIdentity {
-            name: "workshop-rs".to_string(),
-            version: Catalog::implementation_version().to_string(),
-            revision: None,
-            artifact: None,
-        }),
-    };
     let base = |status, comparison, reason, locale| ConformanceResult {
         schema_version: CONFORMANCE_SCHEMA_VERSION,
         case_id: case.case_id.clone(),
         features: case.features.clone(),
         status,
         comparison,
-        evidence: evidence(locale),
+        source: source.clone(),
+        catalog: catalog.identity(),
+        locale,
         reason,
     };
     match &case.support {
         CensusSupport::Unsupported { detail } => base(
             ConformanceStatus::Unsupported,
             not_comparable(),
-            Some(reason(ReasonCode::Unsupported, detail, None)),
+            Some(reason(ReasonCode::Unsupported, detail)),
             None,
         ),
-        CensusSupport::KnownGap {
-            detail,
-            tracking_ref,
-        } => base(
+        CensusSupport::KnownGap { detail } => base(
             ConformanceStatus::KnownGap,
             not_comparable(),
-            Some(reason(
-                ReasonCode::KnownGap,
-                detail,
-                Some(tracking_ref.clone()),
-            )),
+            Some(reason(ReasonCode::KnownGap, detail)),
             None,
         ),
         CensusSupport::Inconclusive { detail } => execute_case(case, base, catalog, Some(detail)),
@@ -1099,20 +1052,13 @@ fn failed_text(
     } else {
         not_comparable()
     };
-    let tracking = (code == ReasonCode::KnownGap).then(|| CENSUS_TRACKING_REF.to_string());
-    base(
-        status,
-        comparison,
-        Some(reason(code, &detail, tracking)),
-        locale,
-    )
+    base(status, comparison, Some(reason(code, &detail)), locale)
 }
 
-fn reason(code: ReasonCode, detail: &str, tracking_ref: Option<String>) -> ConformanceReason {
+fn reason(code: ReasonCode, detail: &str) -> ConformanceReason {
     ConformanceReason {
         code,
         detail: detail.to_string(),
-        tracking_ref,
     }
 }
 
@@ -1125,8 +1071,8 @@ fn not_comparable() -> Comparison {
     }
 }
 
-fn artifact(name: impl Into<String>, content: &str) -> EvidenceArtifact {
-    EvidenceArtifact {
+fn artifact(name: impl Into<String>, content: &str) -> TestArtifact {
+    TestArtifact {
         name: name.into(),
         revision: None,
         path: None,
@@ -1135,8 +1081,8 @@ fn artifact(name: impl Into<String>, content: &str) -> EvidenceArtifact {
     }
 }
 
-fn reference_artifact(case: &CensusCase, content: &str) -> EvidenceArtifact {
-    EvidenceArtifact {
+fn reference_artifact(case: &CensusCase, content: &str) -> TestArtifact {
+    TestArtifact {
         name: format!("census reference for {}", case.case_id),
         revision: Some("census-v1".to_string()),
         path: Some("tests/fixtures/census/reference.ws".to_string()),
@@ -1209,7 +1155,6 @@ mod tests {
                     "known-gap",
                     CensusSupport::KnownGap {
                         detail: "missing mapping".to_string(),
-                        tracking_ref: "#19".to_string(),
                     },
                 ),
                 feature_case(
@@ -1226,7 +1171,7 @@ mod tests {
             .run(&Catalog::builtin().unwrap());
         report
             .validate()
-            .expect("states use the current #18 adapter");
+            .expect("states use the current conformance adapter");
         let json = report.to_json().unwrap();
         assert!(json.contains("unsupported"));
         assert!(json.contains("known-gap"));

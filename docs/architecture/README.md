@@ -2,7 +2,7 @@
 
 This directory is the routing surface for the **current** architecture contracts of `workshop-rs`.
 
-Current architecture and implementation reality are different evidence classes:
+Current architecture and implementation reality are different sources:
 
 - documents here state durable boundaries that current and future implementation must satisfy;
 - source, Cargo metadata, tests, fixtures, generated data, and consumer integrations establish current implementation reality;
@@ -15,7 +15,7 @@ For substantive implementation work, resolve the smallest relevant current contr
 | Concern | Current contract / authority |
 | --- | --- |
 | Repository ownership, dependency direction, WIR boundary, semantic-code/data boundary | [`core-boundaries.md`](core-boundaries.md) |
-| Declared Workshop language support and current capability state | [`../language-support.md`](../language-support.md) and executable evidence |
+| Declared Workshop language support and current capability state | [`../language-support.md`](../language-support.md) and executable tests |
 | Catalog/localization provenance | [`../provenance.md`](../provenance.md) |
 | Hero/gameplay dataset model | [`../gameplay-data.md`](../gameplay-data.md) |
 | Gameplay semantic queries | [`../gameplay-query.md`](../gameplay-query.md) |
@@ -23,4 +23,4 @@ For substantive implementation work, resolve the smallest relevant current contr
 | Architecture decision history | [`../adr/README.md`](../adr/README.md) |
 | Source layout and domain routing | [`source-layout.md`](source-layout.md) |
 
-Do not add versions, current feature counts, Issue progress, migration sequencing, or release state to this architecture directory. Those belong to executable metadata, Issues/PRs, releases, or other live evidence.
+Do not add versions, current feature counts, Issue progress, migration sequencing, or release state to this architecture directory. Those belong to executable metadata, Issues/PRs, releases, or other live operational records.

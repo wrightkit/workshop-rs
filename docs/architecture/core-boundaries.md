@@ -72,10 +72,10 @@ Existing metadata-driven behavior is implementation reality to audit against thi
 
 Canonical identities are locale-independent and independent from OPY/DEL naming. Semantic code contains no per-locale spelling branches; localization tables map canonical identities to presentation spellings.
 
-Likewise, OverPy or DEL/OSTW names, defaults, helpers, or compiler quirks do not become Workshop identities unless independent Workshop evidence establishes the same concept.
+Likewise, OverPy or DEL/OSTW names, defaults, helpers, or compiler quirks do not become Workshop identities unless an independent Workshop source establishes the same concept.
 
 ## Support and provenance
 
-Architecture does not prove feature support. Current support claims come from the language-support surface and executable evidence: code, tests, corpus/fixtures, catalog checks, real consumer workflows, and live/runtime evidence where applicable.
+Architecture does not prove feature support. Current support claims come from the language-support surface and executable checks: code, tests, corpus/fixtures, catalog checks, real consumer workflows, and live/runtime records where applicable.
 
 ADRs explain why earlier decisions were made. When an ADR, Issue, this current contract, and implementation reality disagree, implementation work must surface the mismatch rather than selecting whichever source is most convenient.

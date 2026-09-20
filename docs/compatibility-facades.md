@@ -76,7 +76,7 @@ Any future retirement must proceed in this order:
    owner-repository changes against the released replacement. A consumer
    migration is not implied by this inventory.
 4. The supported dependency graph is compiled and its integration tests are
-   run against the released replacement, establishing the migration evidence.
+   run against the released replacement, establishing the migration check.
 5. Only after that evidence may `workshop-rs` deprecate or remove the old
    facade in a later release, with any approved deprecation window honored.
 

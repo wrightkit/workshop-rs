@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted as the repository-owned offline contract for #21.
+Partially superseded by [ADR-0012](0012-tests-first-verification.md). The
+client-capture envelope and offline diff remain; capture results now use the
+ordinary test-result contract.
 
 ## Decision
 
@@ -10,10 +12,9 @@ Accepted as the repository-owned offline contract for #21.
 capture derived from a census artifact. It pins the capture ID,
 game/client/season metadata, capture time and environment, client locale,
 catalog identity, census schema/digest/shards, raw exported Workshop artifact
-provenance, and feature-attributed conformance results defined by the contract
-recorded in Issue #18. Validation requires every
-result to be `live-client` evidence with matching catalog, locale, raw
-artifact, game, and capture-time provenance. The bundled runtime is offline; no
+provenance, and feature-attributed test results defined by ADR-0012. Validation
+requires every result to carry matching catalog, locale, raw artifact, game,
+and capture-time metadata. The bundled runtime is offline; no
 network catalog or client integration is introduced.
 
 `workshop-rs-cli seasonal-diff <previous.json> <current.json> [--json]`
@@ -25,7 +26,7 @@ of gameplay behavior: import/export acceptance cannot establish runtime
 correctness.
 
 Synthetic schema and diff inputs exercise the validation contract; they are not
-evidence of an Overwatch client observation.
+client captures.
 
 ## Maintainer procedure
 
@@ -48,12 +49,12 @@ evidence of an Overwatch client observation.
    both raw artifacts; do not replace the prior expectation with the new
    observation.
 6. Review every classified change. Locale-only changes go to localization
-   evidence review; catalog/content or semantic/schema changes become focused
+   source review; catalog/content or semantic/schema changes become focused
    catalog/semantic issues with their raw artifacts and feature IDs attached;
    runtime-only uncertainty requires a separate reproducible gameplay
    experiment. A new capture is never accepted as canonical by automation.
 
-## Evidence boundary
+## Capture boundary
 
 The capture schema and diff command are implemented by `workshop-rs-cli`
 (`crates/workshop-rs-cli/src/live_capture.rs`). The semantic crate supplies
@@ -64,4 +65,4 @@ This workflow proves only what the recorded client import/export and metadata
 support. It does not automate startup, login, locale switching, or gameplay,
 and it does not claim exhaustive runtime correctness. Offline schema and diff
 validation does not establish live-client claims; those claims require a
-recorded capture with the provenance described above.
+recorded capture with the source metadata described above.

@@ -51,8 +51,8 @@ pub enum KeyKind {
     String,
     /// A boolean rendered `On`/`Off`.
     Bool,
-    /// A boolean carrier rendered through an evidenced true-value enum token.
-    /// The false value remains unsupported until independently evidenced.
+    /// A boolean carrier rendered through a source-supported true-value enum
+    /// token. The false value remains unsupported until independently sourced.
     BoolEnum(&'static str),
     /// A plain number.
     Number,
@@ -1096,7 +1096,7 @@ pub fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str> {
     }
 }
 
-/// Resolve an evidence-backed hero-specific setting label.
+/// Resolve a source-backed hero-specific setting label.
 pub fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static str> {
     let generated = GENERATED_HERO_SETTING_NAMES
         .iter()

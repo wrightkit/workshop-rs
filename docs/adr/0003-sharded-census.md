@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted as the offline census layer for the #10 evidence corpus.
+Partially superseded by [ADR-0012](0012-tests-first-verification.md). The
+sharded census and feature-attributed results remain; the generic verification
+classification and source model do not.
 
 ## Decision
 
@@ -12,7 +14,7 @@ the reviewed settings table, and Workshop IR capabilities owned by
 client/runtime behavior.
 
 Each `CensusCase` has a stable case ID, one or more `FeatureId` values from the
-conformance contract recorded in Issue #18, canonical en-US source text, and an
+tests-first result contract, canonical en-US source text, and an
 explicit support classification. Catalog
 entries and enum members are emitted from the loaded canonical catalog;
 content IDs use their domain-qualified canonical enum-member identities.
@@ -36,7 +38,7 @@ also binds catalog feature IDs and result case IDs to the actual catalog and
 declared shards. `Census::export_json` exports shard definitions without
 making the export itself an oracle.
 
-The census localization inputs are probes, not independent locale evidence.
+The census localization inputs are probes, not independent locale source data.
 A census result can be classified as `matched` only when an independent
 expectation source is recorded through the conformance contract.
 
@@ -53,6 +55,6 @@ crate and its contract tests; they are not part of the semantic crate's source
 domain taxonomy.
 
 Live-client workflows may assemble the same shards into probes while retaining
-feature attribution. A census result represents offline evidence; live-client
-or other independent claims require the corresponding expectation source and
-evidence provenance.
+feature attribution. A census result represents offline test output;
+live-client or other independent claims require the corresponding expected
+output or recorded capture and source metadata.

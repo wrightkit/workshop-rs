@@ -4,7 +4,7 @@
 //! deliberately independent from the Workshop [`crate::catalog`] identity
 //! and from any source-language provider. Ability identity is the open
 //! `hero + logical slot + optional hero-local variant` tuple; display names
-//! are localized, evidence-backed metadata and are not semantic identity.
+//! are localized, source-backed metadata and are not semantic identity.
 
 pub mod data;
 pub mod query;

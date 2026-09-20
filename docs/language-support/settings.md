@@ -18,7 +18,7 @@
 The `workshop_rs::settings` module exposes the reviewed settings catalog
 through `definitions()`. Each `SettingDefinition` carries a locale-independent
 `SettingId`, Workshop `SettingScope`, target shape, typed
-`SettingValueDomain`, locale presentation metadata, and evidence provenance.
+`SettingValueDomain`, locale presentation metadata, and source provenance.
 The source-preserving `Settings` / `SettingsNode` tree remains the authored
 value carrier; the catalog does not regenerate or discard unknown settings.
 
