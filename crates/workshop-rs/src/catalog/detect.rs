@@ -102,6 +102,11 @@ fn locale_alias_matches(input: &str, catalog: &Catalog, locale: &Locale) -> usiz
     ] {
         for entry in catalog.entries_of(kind) {
             if let Some(spelling) = entry.spelling(locale) {
+                if locale != catalog.primary_locale()
+                    && entry.spelling(catalog.primary_locale()) == Some(spelling)
+                {
+                    continue;
+                }
                 if contains_word(input, spelling) {
                     matches += 1;
                 }
@@ -112,6 +117,11 @@ fn locale_alias_matches(input: &str, catalog: &Catalog, locale: &Locale) -> usiz
     for domain in catalog.enum_domains() {
         for member in &domain.members {
             if let Some(spelling) = member.spelling(locale) {
+                if locale != catalog.primary_locale()
+                    && member.spelling(catalog.primary_locale()) == Some(spelling)
+                {
+                    continue;
+                }
                 if contains_word(input, spelling) {
                     matches += 1;
                 }
@@ -143,5 +153,5 @@ fn contains_word(haystack: &str, needle: &str) -> bool {
 }
 
 fn is_word_char(ch: char) -> bool {
-    ch.is_alphanumeric() || ch == '_' || ch == '-'
+    unicode_ident::is_xid_continue(ch) || ch == '_' || ch == '-'
 }

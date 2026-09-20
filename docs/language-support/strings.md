@@ -13,7 +13,5 @@
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| `en-US` client locale | ✅ Supported | Primary locale with complete catalog and syntax coverage for parsing, emission, and conversion. |
-| `zh-CN` client locale | ✅ Supported | Reviewed canonical localization with high coverage for parsing, emission, and conversion. |
-| Additional client locales (`ko-KR`, `ja-JP`, `de-DE`, `fr-FR`, `es-ES`, etc.) | 🚧 Coming soon | Planned for addition upon ingestion of provenance-reviewed game client datasets. |
-| Bidirectional conversion (`en-US` ↔ `zh-CN`) | ✅ Supported | Strict conversion with explicit error on unmapped identities, plus opt-in fallback to primary locale. |
+| `en-US`, `de-DE`, `es-ES`, `es-MX`, `fr-FR`, `it-IT`, `ja-JP`, `ko-KR`, `pl-PL`, `pt-BR`, `ru-RU`, `th-TH`, `tr-TR`, `zh-CN`, `zh-TW` | ✅ Supported | Declared from the pinned OverPy 9.7.10 Workshop language set. Locale spellings are provenance-backed catalog/settings data; uncovered identities remain explicit missing mappings. |
+| Bidirectional conversion across the declared locales | ✅ Supported | Conversion resolves locale-independent canonical identities and fails explicitly on missing mappings; opt-in fallback is recorded in the conversion result. |

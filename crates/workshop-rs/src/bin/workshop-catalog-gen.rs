@@ -17,13 +17,14 @@
 //!   identity (with `--json` as a JSON document).
 //! * `build` validates, canonicalizes, and (re)writes the file with a fresh
 //!   content digest. Re-running is byte-idempotent.
-//! * `corpus` applies the zh-CN corpus evidence to the catalog data
-//!   (ADR-0001 Decision 6): it reads the user-provided Workshop data export
-//!   (`--export`, or the `WORKSHOP_DATA_EXPORT` environment variable),
-//!   matches every catalog entry and enum member by its exact en-US spelling
-//!   against the export's localized index, and writes
-//!   - the merged catalog data file (zh-CN aliases added; data change only,
-//!     the declared digest is left stale for `build` to recompute),
+//! * `corpus` applies locale corpus evidence to the catalog data (ADR-0001
+//!   Decision 6): it reads the user-provided Workshop data export (`--export`,
+//!   or the `WORKSHOP_DATA_EXPORT` environment variable), matches every
+//!   catalog entry and enum member by its exact en-US spelling against the
+//!   export's localized index, and writes
+//!   - the merged catalog data file (reviewed locale aliases added; data
+//!     change only, the declared digest is left stale for `build` to
+//!     recompute),
 //!   - the machine-readable corpus manifest with every match, every exclusion
 //!     and its reason, and per-category match statistics, and
 //!   - the settings locale corpus for the declared settings surface.
@@ -32,7 +33,7 @@
 //!     fabricated. Re-running on the merged data is byte-idempotent.
 //!
 //! Updating localization data is a bounded data change: edit the JSON and
-//! re-run the pipeline; no parser or emitter code changes. The full zh-CN
+//! re-run the pipeline; no parser or emitter code changes. The full locale
 //! corpus flow is: `corpus` (data merge) -> `build` (fresh digest) ->
 //! `check` (verify); commit data and regenerated files together.
 
@@ -213,7 +214,7 @@ fn main() -> ExitCode {
     }
 }
 
-/// The zh-CN corpus pipeline (ADR-0001 Decision 6).
+/// The locale corpus pipeline (ADR-0001 Decision 6).
 mod corpus {
     use super::*;
     use serde_json::{Map, Value};
@@ -223,7 +224,6 @@ mod corpus {
     #[derive(Debug, Clone)]
     struct Candidate {
         key: String,
-        zh_cn: String,
         locales: std::collections::BTreeMap<String, String>,
     }
 
@@ -234,8 +234,8 @@ mod corpus {
     }
 
     impl Index {
-        fn add_translations(&mut self, key: &str, en: &str, zh: &str, locales: Map<String, Value>) {
-            if !en.is_empty() && !zh.is_empty() {
+        fn add_translations(&mut self, key: &str, en: &str, locales: Map<String, Value>) {
+            if !en.is_empty() {
                 let aliases = locales
                     .into_iter()
                     .filter_map(|(locale, value)| {
@@ -247,21 +247,28 @@ mod corpus {
                     .or_default()
                     .push(Candidate {
                         key: key.to_string(),
-                        zh_cn: zh.to_string(),
                         locales: aliases,
                     });
             }
         }
 
-        /// Match an exact en-US spelling. Returns `(sources, zh-CN)` when
-        /// every candidate agrees on zh-CN; a `String` reason otherwise.
+        /// Match an exact en-US spelling. The source identities must agree on
+        /// the zh-CN spelling so the existing corpus contract remains strict;
+        /// other locale aliases are merged independently below.
         fn match_spelling(&self, en: &str) -> Result<Vec<Candidate>, String> {
             let Some(candidates) = self.by_en.get(en) else {
                 return Err("no exact en-US match in the export".to_string());
             };
-            let zh = candidates[0].zh_cn.clone();
+            let zh = candidates
+                .iter()
+                .find_map(|candidate| candidate.locales.get("zh-CN"));
             for candidate in candidates {
-                if candidate.zh_cn != zh {
+                if zh.is_some()
+                    && candidate
+                        .locales
+                        .get("zh-CN")
+                        .is_some_and(|value| Some(value) != zh)
+                {
                     let keys: Vec<&str> = candidates.iter().map(|c| c.key.as_str()).collect();
                     return Err(format!(
                         "ambiguous: export candidates disagree on zh-CN ({})",
@@ -270,6 +277,30 @@ mod corpus {
                 }
             }
             Ok(candidates.clone())
+        }
+
+        fn locale_spelling(
+            candidates: &[Candidate],
+            locale: &str,
+        ) -> Result<Option<String>, String> {
+            let mut spelling: Option<&str> = None;
+            for candidate in candidates {
+                let Some(candidate_spelling) = candidate.locales.get(locale) else {
+                    return Ok(None);
+                };
+                if let Some(previous) = spelling {
+                    if previous != candidate_spelling {
+                        let keys: Vec<&str> = candidates.iter().map(|c| c.key.as_str()).collect();
+                        return Err(format!(
+                            "ambiguous: export candidates disagree on {locale} ({})",
+                            keys.join(", ")
+                        ));
+                    }
+                } else {
+                    spelling = Some(candidate_spelling);
+                }
+            }
+            Ok(spelling.map(str::to_string))
         }
     }
 
@@ -288,12 +319,10 @@ mod corpus {
                 continue;
             };
             let en = translations.get("en-US").and_then(Value::as_str);
-            let zh = translations.get("zh-CN").and_then(Value::as_str);
-            if let (Some(en), Some(zh)) = (en, zh) {
+            if let Some(en) = en {
                 index.add_translations(
                     key,
                     en,
-                    zh,
                     translations.as_object().cloned().unwrap_or_default(),
                 );
             }
@@ -301,7 +330,7 @@ mod corpus {
         index
     }
 
-    /// Build an index from a `data.*` section with direct en-US/zh-CN fields
+    /// Build an index from a `data.*` section with direct locale fields
     /// (maps, heroes), keyed `data.<id>` for provenance.
     fn data_index(export: &Value, section: &str) -> Index {
         let mut index = Index::default();
@@ -314,12 +343,10 @@ mod corpus {
         };
         for (id, entry) in entries {
             let en = entry.get("en-US").and_then(Value::as_str);
-            let zh = entry.get("zh-CN").and_then(Value::as_str);
-            if let (Some(en), Some(zh)) = (en, zh) {
+            if let Some(en) = en {
                 index.add_translations(
                     &format!("data.{section}.{id}"),
                     en,
-                    zh,
                     entry.clone().as_object().cloned().unwrap_or_default(),
                 );
             }
@@ -328,7 +355,7 @@ mod corpus {
     }
 
     /// Build an index from a nested `data.<parent>.<section>` table with
-    /// direct en-US/zh-CN fields.
+    /// direct locale fields.
     fn nested_data_index(export: &Value, parent: &str, section: &str) -> Index {
         let mut index = Index::default();
         let Some(entries) = export
@@ -341,12 +368,10 @@ mod corpus {
         };
         for (id, entry) in entries {
             let en = entry.get("en-US").and_then(Value::as_str);
-            let zh = entry.get("zh-CN").and_then(Value::as_str);
-            if let (Some(en), Some(zh)) = (en, zh) {
+            if let Some(en) = en {
                 index.add_translations(
                     &format!("data.{parent}.{section}.{id}"),
                     en,
-                    zh,
                     entry.clone().as_object().cloned().unwrap_or_default(),
                 );
             }
@@ -468,24 +493,20 @@ mod corpus {
             return None;
         }
         let translations = entry.get("translations")?;
-        let export_zh_cn = translations.get("zh-CN")?.as_str()?;
-        if translations.get("en-US")?.as_str()? != en_us || export_zh_cn.is_empty() {
+        if translations.get("en-US")?.as_str()? != en_us {
             return None;
         }
-        let zh_cn = if kind == "operator" {
-            // The export's localized-string entry is a formatted display
-            // template; the catalog operator token is the bare symbol.
-            id
-        } else {
-            export_zh_cn
-        };
         let mut locales = translations.as_object()?.clone();
         if kind == "operator" {
-            locales.insert("zh-CN".to_string(), Value::String(id.to_string()));
+            for locale in [
+                "de-DE", "en-US", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "ko-KR", "pl-PL",
+                "pt-BR", "ru-RU", "th-TH", "tr-TR", "zh-CN", "zh-TW",
+            ] {
+                locales.insert(locale.to_string(), Value::String(id.to_string()));
+            }
         }
         Some(vec![Candidate {
             key: key.to_string(),
-            zh_cn: zh_cn.to_string(),
             locales: locales
                 .into_iter()
                 .filter_map(|(locale, value)| {
@@ -501,7 +522,8 @@ mod corpus {
         kind: String,
         id: String,
         en: String,
-        zh: String,
+        locales: std::collections::BTreeMap<String, String>,
+        locale_exclusions: std::collections::BTreeMap<String, String>,
         sources: Vec<String>,
     }
 
@@ -637,11 +659,21 @@ mod corpus {
         let export: Value = serde_json::from_str(&export_text)
             .map_err(|error| format!("cannot parse export {}: {error}", export_path.display()))?;
         let meta = export.get("meta").cloned().unwrap_or(Value::Null);
+        let locales = export_locales(&meta)?;
         let catalog: Value =
             serde_json::from_str(catalog_data).map_err(|error| format!("catalog data: {error}"))?;
 
         // --- builtin corpus -------------------------------------------------
         let actions = localized_index(&export, &["actions."]);
+        let structural = {
+            let mut index = localized_index(&export, &["other.rules."]);
+            merge_index(&mut index, actions.clone());
+            merge_index(
+                &mut index,
+                localized_index(&export, &["customGameSettings."]),
+            );
+            index
+        };
         let values = localized_index(&export, &["values."]);
         let events = localized_index(&export, &["other.events."]);
         let event_teams = {
@@ -676,6 +708,8 @@ mod corpus {
             index
         };
         let vector = localized_index(&export, &["values.Vector."]);
+        let localized_strings = localized_index(&export, &["localizedStrings."]);
+        let gamemodes = data_index(&export, "gamemodes");
         // Enum domains match the export's constants domain for their exact
         // en-US spellings; the export renames a few domains.
         let mut constants_by_domain: HashMap<String, Index> = HashMap::new();
@@ -711,12 +745,19 @@ mod corpus {
             ("value", "values", catalog.get("values")),
             ("event", "events", catalog.get("events")),
             ("operator", "operators", catalog.get("operators")),
+            (
+                "localizedString",
+                "localizedStrings",
+                catalog.get("localizedStrings"),
+            ),
         ] {
             let index = match category {
-                "structural" | "actions" => &actions,
+                "structural" => &structural,
+                "actions" => &actions,
                 "values" => &values,
                 "events" => &events,
                 "operators" => &operators,
+                "localizedStrings" => &localized_strings,
                 _ => unreachable!(),
             };
             let mut matched = 0;
@@ -738,12 +779,14 @@ mod corpus {
                 match candidates {
                     Ok(candidates) => {
                         matched += 1;
-                        let zh = candidates[0].zh_cn.clone();
+                        let (locale_aliases, locale_exclusions) =
+                            locale_aliases(&candidates, &locales);
                         matches.push(Match {
                             kind: kind.to_string(),
                             id: id.to_string(),
                             en: en.to_string(),
-                            zh: zh.clone(),
+                            locales: locale_aliases,
+                            locale_exclusions,
                             sources: candidates.iter().map(|c| c.key.clone()).collect(),
                         });
                     }
@@ -768,6 +811,7 @@ mod corpus {
                 "Map" => &maps,
                 "Hero" => &heroes,
                 "Vector" => &vector,
+                "Gamemode" => &gamemodes,
                 _ => constants_by_domain.get(domain_name).ok_or_else(|| {
                     format!("missing constants index for enum domain '{domain_name}'")
                 })?,
@@ -814,12 +858,13 @@ mod corpus {
                     }
                 };
                 members_matched += 1;
-                let zh = candidates[0].zh_cn.clone();
+                let (locale_aliases, locale_exclusions) = locale_aliases(&candidates, &locales);
                 matches.push(Match {
                     kind: "enum member".to_string(),
                     id: format!("{domain_name}.{id}"),
                     en: en.to_string(),
-                    zh: zh.clone(),
+                    locales: locale_aliases,
+                    locale_exclusions,
                     sources: candidates.iter().map(|c| c.key.clone()).collect(),
                 });
             }
@@ -829,8 +874,8 @@ mod corpus {
         let total_matched: usize = coverage.iter().map(|(_, m, _)| m).sum();
         let total_entries: usize = coverage.iter().map(|(_, _, t)| t).sum();
 
-        // --- merge zh-CN aliases into the catalog data -----------------------
-        let merged = merge_zh_aliases(&catalog, &matches)?;
+        // --- merge reviewed locale aliases into the catalog data -------------
+        let merged = merge_localized_aliases(&catalog, &matches, &locales)?;
         let merged_text = canonical_json(&merged)?;
         Catalog::load_unverified(&merged_text)
             .map_err(|error| format!("merged catalog is invalid: {error}"))?;
@@ -845,6 +890,7 @@ mod corpus {
             &coverage,
             total_matched,
             total_entries,
+            &locales,
         );
         std::fs::create_dir_all(out_dir)
             .map_err(|error| format!("cannot create {}: {error}", out_dir.display()))?;
@@ -853,7 +899,7 @@ mod corpus {
             .map_err(|error| format!("cannot write {}: {error}", manifest_path.display()))?;
 
         // --- settings locale corpus ------------------------------------------
-        let settings = settings_corpus(&export)?;
+        let settings = settings_corpus(&export, settings_out)?;
         if let Some(parent) = settings_out.parent() {
             std::fs::create_dir_all(parent)
                 .map_err(|error| format!("cannot create {}: {error}", parent.display()))?;
@@ -896,6 +942,48 @@ mod corpus {
         for (en, candidates) in source.by_en {
             target.by_en.entry(en).or_default().extend(candidates);
         }
+    }
+
+    fn export_locales(meta: &Value) -> Result<Vec<String>, String> {
+        let locales = meta
+            .get("locales")
+            .and_then(Value::as_array)
+            .ok_or_else(|| "export metadata has no locale list".to_string())?
+            .iter()
+            .map(|locale| {
+                locale
+                    .as_str()
+                    .map(str::to_string)
+                    .ok_or_else(|| "export metadata contains a non-string locale".to_string())
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        if locales.is_empty() {
+            return Err("export metadata declares no locales".to_string());
+        }
+        Ok(locales)
+    }
+
+    fn locale_aliases(
+        candidates: &[Candidate],
+        locales: &[String],
+    ) -> (
+        std::collections::BTreeMap<String, String>,
+        std::collections::BTreeMap<String, String>,
+    ) {
+        let mut aliases = std::collections::BTreeMap::new();
+        let mut exclusions = std::collections::BTreeMap::new();
+        for locale in locales {
+            match Index::locale_spelling(candidates, locale) {
+                Ok(Some(spelling)) => {
+                    aliases.insert(locale.clone(), spelling);
+                }
+                Ok(None) => {}
+                Err(reason) => {
+                    exclusions.insert(locale.clone(), reason);
+                }
+            }
+        }
+        (aliases, exclusions)
     }
 
     /// The en-US alias of a catalog entry/member.
@@ -956,18 +1044,34 @@ mod corpus {
         Ok(out)
     }
 
-    /// Merge `zh-CN` aliases into the catalog data. Existing zh-CN aliases
-    /// must match the corpus; nothing else changes (data-only, ADR-0001).
-    fn merge_zh_aliases(catalog: &Value, matches: &[Match]) -> Result<Value, String> {
+    /// Merge reviewed locale aliases into the catalog data. Existing aliases
+    /// remain accepted aliases; no spelling is fabricated (ADR-0001).
+    fn merge_localized_aliases(
+        catalog: &Value,
+        matches: &[Match],
+        locales: &[String],
+    ) -> Result<Value, String> {
         let mut merged = catalog.clone();
+        let conflicts = localized_alias_conflicts(&merged, matches);
         let Some(object) = merged.as_object_mut() else {
             return Err("catalog is not an object".to_string());
         };
+        object.insert(
+            "locales".to_string(),
+            Value::Array(locales.iter().cloned().map(Value::String).collect()),
+        );
         let mut by_identity: HashMap<(&str, &str), &Match> = HashMap::new();
         for matched in matches {
             by_identity.insert((matched.kind.as_str(), matched.id.as_str()), matched);
         }
-        for category in ["structural", "actions", "values", "events", "operators"] {
+        for category in [
+            "structural",
+            "actions",
+            "values",
+            "events",
+            "operators",
+            "localizedStrings",
+        ] {
             let Some(list) = object.get_mut(category).and_then(Value::as_array_mut) else {
                 continue;
             };
@@ -981,10 +1085,17 @@ mod corpus {
                     "values" => "value",
                     "events" => "event",
                     "operators" => "operator",
+                    "localizedStrings" => "localizedString",
                     _ => unreachable!(),
                 };
                 if let Some(matched) = by_identity.get(&(kind, id)).copied() {
-                    set_zh_alias(entry, &matched.zh)?;
+                    for (locale, spelling) in &matched.locales {
+                        if conflicts.contains(&(kind.to_string(), locale.clone(), spelling.clone()))
+                        {
+                            continue;
+                        }
+                        set_alias(entry, locale, spelling)?;
+                    }
                 }
             }
         }
@@ -1007,7 +1118,16 @@ mod corpus {
                     let key = format!("{domain_name}.{id}");
                     if let Some(matched) = by_identity.get(&("enum member", key.as_str())).copied()
                     {
-                        set_zh_alias(member, &matched.zh)?;
+                        for (locale, spelling) in &matched.locales {
+                            if conflicts.contains(&(
+                                "enum member".to_string(),
+                                locale.clone(),
+                                spelling.clone(),
+                            )) {
+                                continue;
+                            }
+                            set_alias(member, locale, spelling)?;
+                        }
                     }
                 }
             }
@@ -1015,35 +1135,146 @@ mod corpus {
         Ok(merged)
     }
 
-    /// Set (or extend) the reviewed zh-CN aliases of one catalog entry.
-    fn set_zh_alias(entry: &mut Value, zh: &str) -> Result<(), String> {
+    fn localized_alias_conflicts(
+        catalog: &Value,
+        matches: &[Match],
+    ) -> std::collections::HashSet<(String, String, String)> {
+        let mut owners: HashMap<
+            (String, String, String),
+            std::collections::BTreeSet<(String, String)>,
+        > = HashMap::new();
+        for category in [
+            "structural",
+            "actions",
+            "values",
+            "events",
+            "operators",
+            "localizedStrings",
+        ] {
+            let kind = match category {
+                "structural" => "structural",
+                "actions" => "action",
+                "values" => "value",
+                "events" => "event",
+                "operators" => "operator",
+                "localizedStrings" => "localizedString",
+                _ => unreachable!(),
+            };
+            for entry in catalog
+                .get(category)
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                let Some(id) = entry.get("id").and_then(Value::as_str) else {
+                    continue;
+                };
+                record_alias_owners(&mut owners, kind, id, entry);
+            }
+        }
+        for domain in catalog
+            .get("enums")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+        {
+            let Some(domain_name) = domain.get("domain").and_then(Value::as_str) else {
+                continue;
+            };
+            for member in domain
+                .get("members")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+            {
+                let Some(id) = member.get("id").and_then(Value::as_str) else {
+                    continue;
+                };
+                record_alias_owners(
+                    &mut owners,
+                    "enum member",
+                    &format!("{domain_name}.{id}"),
+                    member,
+                );
+            }
+        }
+        for matched in matches {
+            for (locale, spelling) in &matched.locales {
+                owners
+                    .entry((matched.kind.clone(), locale.clone(), spelling.clone()))
+                    .or_default()
+                    .insert((matched.kind.clone(), matched.id.clone()));
+            }
+        }
+        owners
+            .into_iter()
+            .filter_map(|(alias, owners)| (owners.len() > 1).then_some(alias))
+            .collect()
+    }
+
+    type AliasOwners =
+        HashMap<(String, String, String), std::collections::BTreeSet<(String, String)>>;
+
+    fn record_alias_owners(owners: &mut AliasOwners, kind: &str, id: &str, entry: &Value) {
+        let Some(aliases) = entry.get("aliases").and_then(Value::as_object) else {
+            return;
+        };
+        for (locale, values) in aliases {
+            match values {
+                Value::String(spelling) => {
+                    owners
+                        .entry((kind.to_string(), locale.clone(), spelling.clone()))
+                        .or_default()
+                        .insert((kind.to_string(), id.to_string()));
+                }
+                Value::Array(values) => {
+                    for spelling in values.iter().filter_map(Value::as_str) {
+                        owners
+                            .entry((kind.to_string(), locale.clone(), spelling.to_string()))
+                            .or_default()
+                            .insert((kind.to_string(), id.to_string()));
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    /// Set (or extend) the reviewed aliases of one catalog entry.
+    fn set_alias(entry: &mut Value, locale: &str, spelling: &str) -> Result<(), String> {
         let Some(aliases) = entry.get_mut("aliases").and_then(Value::as_object_mut) else {
             return Err("catalog entry without aliases object".to_string());
         };
-        match aliases.remove("zh-CN") {
-            Some(Value::String(existing)) if existing == zh => {
-                aliases.insert("zh-CN".to_string(), Value::String(existing));
+        match aliases.remove(locale) {
+            Some(Value::String(existing)) if existing == spelling => {
+                aliases.insert(locale.to_string(), Value::String(existing));
             }
             Some(Value::String(existing)) => {
                 aliases.insert(
-                    "zh-CN".to_string(),
-                    Value::Array(vec![Value::String(existing), Value::String(zh.to_string())]),
+                    locale.to_string(),
+                    Value::Array(vec![
+                        Value::String(existing),
+                        Value::String(spelling.to_string()),
+                    ]),
                 );
             }
             Some(Value::Array(existing)) => {
                 let mut existing = existing;
-                if !existing.iter().any(|alias| alias.as_str() == Some(zh)) {
-                    existing.push(Value::String(zh.to_string()));
+                if !existing
+                    .iter()
+                    .any(|alias| alias.as_str() == Some(spelling))
+                {
+                    existing.push(Value::String(spelling.to_string()));
                 }
-                aliases.insert("zh-CN".to_string(), Value::Array(existing));
+                aliases.insert(locale.to_string(), Value::Array(existing));
             }
             Some(existing) => {
                 return Err(format!(
-                    "catalog declares invalid zh-CN aliases value {existing}"
+                    "catalog declares invalid {locale} aliases value {existing}"
                 ));
             }
             None => {
-                aliases.insert("zh-CN".to_string(), Value::String(zh.to_string()));
+                aliases.insert(locale.to_string(), Value::String(spelling.to_string()));
             }
         }
         Ok(())
@@ -1057,6 +1288,7 @@ mod corpus {
         coverage: &[(String, usize, usize)],
         total_matched: usize,
         total_entries: usize,
+        locales: &[String],
     ) -> Value {
         let mut matches_json: Vec<Value> = matches
             .iter()
@@ -1065,7 +1297,9 @@ mod corpus {
                     "kind": m.kind,
                     "id": m.id,
                     "en-US": m.en,
-                    "zh-CN": m.zh,
+                    "zh-CN": m.locales.get("zh-CN"),
+                    "locales": m.locales,
+                    "localeExclusions": m.locale_exclusions,
                     "sources": m.sources,
                 })
             })
@@ -1102,6 +1336,7 @@ mod corpus {
         serde_json::json!({
             "schemaVersion": 2,
             "locale": "zh-CN",
+            "locales": locales,
             "generator": "workshop-catalog-gen corpus",
             "generatorVersion": env!("CARGO_PKG_VERSION"),
             "source": {
@@ -1110,7 +1345,7 @@ mod corpus {
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
             },
-            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/event filters/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; zh-CN is taken from the same export entry; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/event filters/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; every declared locale is retained only when the export provides an unambiguous spelling; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
             "sourceReview": "reviewed: workshop-rs commits its own mapping data; the user-provided JSON is build input only and is not redistributed",
             "coverage": Value::Object(coverage_all),
             "matches": matches_json,
@@ -1119,7 +1354,7 @@ mod corpus {
     }
 
     /// The settings locale corpus for the declared settings surface.
-    fn settings_corpus(export: &Value) -> Result<Value, String> {
+    fn settings_corpus(export: &Value, settings_out: &Path) -> Result<Value, String> {
         let custom_game = {
             let mut index = localized_index(
                 export,
@@ -1151,6 +1386,8 @@ mod corpus {
         );
         let tokens = localized_index(export, &["other.customGameSettings."]);
         let surface = settings_surface();
+        let meta = export.get("meta").cloned().unwrap_or(Value::Null);
+        let locales = export_locales(&meta)?;
 
         let mut sections: Vec<SettingsSection<'_>> = vec![
             ("namespaces", surface.namespaces, &custom_game),
@@ -1181,13 +1418,19 @@ mod corpus {
                 match index.match_spelling(export_en) {
                     Ok(candidates) => {
                         matched += 1;
-                        entries.insert(en.clone(), settings_entry(&candidates, export_en)?);
+                        entries.insert(
+                            en.clone(),
+                            settings_entry(&candidates, export_en, &locales)?,
+                        );
                     }
                     Err(reason) => {
                         match confirmed_settings_identity_match(export, surface_id, en) {
                             Some(candidates) => {
                                 matched += 1;
-                                entries.insert(en.clone(), settings_entry(&candidates, export_en)?);
+                                entries.insert(
+                                    en.clone(),
+                                    settings_entry(&candidates, export_en, &locales)?,
+                                );
                             }
                             None => excluded.push(serde_json::json!({
                                 "surface": surface_id,
@@ -1204,7 +1447,12 @@ mod corpus {
             );
         }
 
-        let meta = export.get("meta").cloned().unwrap_or(Value::Null);
+        if let Ok(previous) = std::fs::read_to_string(settings_out) {
+            if let Ok(previous) = serde_json::from_str::<Value>(&previous) {
+                preserve_existing_settings(&mut entries, &previous);
+            }
+        }
+
         // Split the flat matched entries into per-section maps mirroring the
         // declared settings surface.
         let mut labels = Map::new();
@@ -1234,14 +1482,6 @@ mod corpus {
             }
         }
 
-        let locales: std::collections::BTreeSet<String> = entries
-            .values()
-            .flat_map(Value::as_object)
-            .flat_map(|entry| entry.keys())
-            .filter(|key| key.as_str() != "sources")
-            .cloned()
-            .collect();
-
         Ok(serde_json::json!({
             "schemaVersion": 2,
             "locales": locales,
@@ -1269,33 +1509,36 @@ mod corpus {
         }))
     }
 
-    fn settings_entry(candidates: &[Candidate], expected_en: &str) -> Result<Value, String> {
+    fn settings_entry(
+        candidates: &[Candidate],
+        expected_en: &str,
+        locales: &[String],
+    ) -> Result<Value, String> {
         let mut aliases = Map::new();
+        let mut locale_exclusions = Map::new();
         for candidate in candidates {
             if candidate.locales.get("en-US").map(String::as_str) != Some(expected_en) {
                 continue;
             }
             for (locale, value) in &candidate.locales {
-                if !matches!(locale.as_str(), "en-US" | "zh-CN") {
+                if !locales.contains(locale) {
                     continue;
                 }
                 if let Some(previous) = aliases.get(locale).and_then(Value::as_str) {
                     if previous != value {
-                        return Err(format!(
-                            "ambiguous localized settings alias for {locale}: {previous:?} vs {value:?}"
-                        ));
+                        locale_exclusions.insert(
+                            locale.clone(),
+                            Value::String(format!("ambiguous: {previous:?} vs {value:?}")),
+                        );
+                        aliases.remove(locale);
                     }
-                } else {
+                } else if !locale_exclusions.contains_key(locale) {
                     aliases.insert(locale.clone(), Value::String(value.clone()));
                 }
             }
         }
-        if aliases.get("en-US").and_then(Value::as_str).is_none()
-            || aliases.get("zh-CN").and_then(Value::as_str).is_none()
-        {
-            return Err(
-                "settings match lacks the required primary or reviewed zh-CN alias".to_string(),
-            );
+        if aliases.get("en-US").and_then(Value::as_str).is_none() {
+            return Err("settings match lacks the required primary en-US alias".to_string());
         }
         aliases.insert(
             "sources".to_string(),
@@ -1306,7 +1549,58 @@ mod corpus {
                     .collect(),
             ),
         );
+        if !locale_exclusions.is_empty() {
+            aliases.insert(
+                "localeExclusions".to_string(),
+                Value::Object(locale_exclusions),
+            );
+        }
         Ok(Value::Object(aliases))
+    }
+
+    fn preserve_existing_settings(entries: &mut Map<String, Value>, previous: &Value) {
+        let mut previous_entries = Map::new();
+        for section in [
+            "namespaces",
+            "labels",
+            "modes",
+            "maps",
+            "heroes",
+            "teams",
+            "enums",
+            "tokens",
+        ] {
+            if let Some(section_entries) = previous.get(section).and_then(Value::as_object) {
+                for (name, entry) in section_entries {
+                    previous_entries.insert(name.clone(), entry.clone());
+                }
+            }
+        }
+        for (name, previous_entry) in previous_entries {
+            let current_entry = entries.entry(name).or_insert(previous_entry.clone());
+            let (Some(current), Some(previous)) =
+                (current_entry.as_object_mut(), previous_entry.as_object())
+            else {
+                continue;
+            };
+            for locale in ["en-US", "zh-CN"] {
+                if let Some(value) = previous.get(locale).and_then(Value::as_str) {
+                    current.insert(locale.to_string(), Value::String(value.to_string()));
+                }
+            }
+            if let Some(previous_sources) = previous.get("sources").and_then(Value::as_array) {
+                let sources = current
+                    .entry("sources")
+                    .or_insert_with(|| Value::Array(Vec::new()));
+                if let Some(sources) = sources.as_array_mut() {
+                    for source in previous_sources {
+                        if !sources.contains(source) {
+                            sources.push(source.clone());
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /// Resolve the two hero settings labels whose English surface expands a
@@ -1368,7 +1662,7 @@ mod corpus {
         if hero_translations.get("en-US")?.as_str()? != "Blizzard" {
             return None;
         }
-        let hero_zh = hero_translations.get("zh-CN")?.as_str()?;
+        hero_translations.get("zh-CN")?.as_str()?;
         let mut template_locales = template_translations.as_object()?.clone();
         let hero_locales = hero_translations.as_object()?.clone();
         for (locale, value) in &mut template_locales {
@@ -1378,11 +1672,9 @@ mod corpus {
                 }
             }
         }
-        let zh = template_locales.get("zh-CN")?.as_str()?.to_string();
         Some(vec![
             Candidate {
                 key: template_key.to_string(),
-                zh_cn: zh,
                 locales: template_locales
                     .into_iter()
                     .filter_map(|(locale, value)| {
@@ -1392,7 +1684,6 @@ mod corpus {
             },
             Candidate {
                 key: hero_key.to_string(),
-                zh_cn: hero_zh.to_string(),
                 locales: hero_locales
                     .into_iter()
                     .filter_map(|(locale, value)| {
@@ -1415,7 +1706,7 @@ mod corpus {
             settings_out,
         } = report;
         let mut lines = vec![format!(
-            "corpus: zh-CN matched {total_matched}/{total_entries} canonical entries and enum members"
+            "corpus: locale set matched {total_matched}/{total_entries} canonical entries and enum members"
         )];
         for (category, matched, total) in coverage {
             lines.push(format!("  {category}: {matched}/{total}"));
@@ -1458,8 +1749,9 @@ mod corpus {
 
     #[cfg(test)]
     mod tests {
-        use super::{Index, en_aliases, match_en_aliases, set_zh_alias, settings_corpus};
+        use super::{Index, en_aliases, match_en_aliases, set_alias, settings_corpus};
         use serde_json::json;
+        use std::path::Path;
 
         #[test]
         fn en_aliases_accepts_scalar_and_array_spellings() {
@@ -1483,12 +1775,22 @@ mod corpus {
         #[test]
         fn match_en_aliases_returns_the_first_exact_match() {
             let mut index = Index::default();
-            index.add_translations("heroes.domina", "Domina", "多美娜", Default::default());
+            index.add_translations(
+                "heroes.domina",
+                "Domina",
+                serde_json::json!({"zh-CN": "多美娜"})
+                    .as_object()
+                    .cloned()
+                    .unwrap(),
+            );
 
             let (candidates, en) = match_en_aliases(&index, &["Jinyu", "Domina"])
                 .expect("second alias matches the export spelling");
             assert_eq!(en, "Domina");
-            assert_eq!(candidates[0].zh_cn, "多美娜");
+            assert_eq!(
+                candidates[0].locales.get("zh-CN").map(String::as_str),
+                Some("多美娜")
+            );
 
             assert!(match_en_aliases(&index, &["Jinyu"]).is_err());
         }
@@ -1499,8 +1801,8 @@ mod corpus {
                 "aliases": {"zh-CN": ["中止", "中断"]}
             });
 
-            set_zh_alias(&mut entry, "中断").expect("existing reviewed alias is accepted");
-            set_zh_alias(&mut entry, "中止条件").expect("new corpus alias is appended");
+            set_alias(&mut entry, "zh-CN", "中断").expect("existing reviewed alias is accepted");
+            set_alias(&mut entry, "zh-CN", "中止条件").expect("new corpus alias is appended");
 
             assert_eq!(
                 entry["aliases"]["zh-CN"],
@@ -1514,7 +1816,7 @@ mod corpus {
                 "aliases": {"zh-CN": "中止"}
             });
 
-            set_zh_alias(&mut entry, "中断").expect("conflicting corpus alias is retained");
+            set_alias(&mut entry, "zh-CN", "中断").expect("conflicting corpus alias is retained");
 
             assert_eq!(entry["aliases"]["zh-CN"], json!(["中止", "中断"]));
         }
@@ -1522,6 +1824,7 @@ mod corpus {
         #[test]
         fn settings_corpus_includes_direct_gamemode_data() {
             let export = json!({
+                "meta": { "locales": ["en-US", "zh-CN"] },
                 "data": {
                     "gamemodes": {
                         "ctf": {
@@ -1532,7 +1835,8 @@ mod corpus {
                 }
             });
 
-            let settings = settings_corpus(&export).expect("settings corpus builds");
+            let settings = settings_corpus(&export, Path::new("settings.json"))
+                .expect("settings corpus builds");
             assert_eq!(settings["modes"]["Capture The Flag"]["zh-CN"], "勇夺锦旗");
             assert_eq!(
                 settings["modes"]["Capture The Flag"]["sources"],

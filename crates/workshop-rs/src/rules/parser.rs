@@ -56,7 +56,7 @@ impl ParseContext<'_> {
                 Some(Token {
                     kind: TokenKind::Word(word),
                     ..
-                }) if matches!(canonical_keyword(&word), "Global" | "global") => {
+                }) if matches!(self.canonical_keyword(&word).as_str(), "Global" | "global") => {
                     self.pos += 1;
                     self.expect(TokenKind::Colon, "expected ':' after 'global'")?;
                     while let Some(Token {
@@ -78,7 +78,7 @@ impl ParseContext<'_> {
                 Some(Token {
                     kind: TokenKind::Word(word),
                     ..
-                }) if canonical_keyword(&word) == "player" => {
+                }) if self.canonical_keyword(&word) == "player" => {
                     self.pos += 1;
                     self.expect(TokenKind::Colon, "expected ':' after 'player'")?;
                     while let Some(Token {
