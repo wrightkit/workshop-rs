@@ -1,4 +1,4 @@
-//! Corpus-backed zh-CN conversion contract tests.
+//! Corpus-backed locale conversion contract tests.
 
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::convert::{self, ConvertOptions};
@@ -38,10 +38,32 @@ fn manifest_pins_the_export_and_exact_match_coverage() {
             .expect("generated corpus manifest is valid JSON");
     assert_eq!(manifest["locale"], "zh-CN");
     assert_eq!(
+        manifest["locales"],
+        serde_json::json!([
+            "en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "ko-KR", "pl-PL",
+            "pt-BR", "ru-RU", "th-TH", "tr-TR", "zh-CN", "zh-TW"
+        ])
+    );
+    assert_eq!(
         manifest["source"]["commit"],
         "d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
     );
-    assert_eq!(manifest["excluded"].as_array().unwrap().len(), 0);
+    let excluded = manifest["excluded"].as_array().unwrap();
+    assert_eq!(
+        excluded
+            .iter()
+            .map(|entry| (
+                entry["kind"].as_str().unwrap(),
+                entry["id"].as_str().unwrap()
+            ))
+            .collect::<Vec<_>>(),
+        vec![
+            ("event", "playerReceivedKnockback"),
+            ("operator", "max"),
+            ("operator", "min"),
+            ("value", "isFiringSecondaryFire"),
+        ]
+    );
     for (kind, id, source, zh_cn) in [
         (
             "action",
@@ -119,7 +141,13 @@ fn settings_corpus_includes_general_mode_and_team_labels() {
     let settings: serde_json::Value =
         serde_json::from_str(include_str!("../src/settings/data/locales.json"))
             .expect("generated settings corpus is valid JSON");
-    assert_eq!(settings["locales"], serde_json::json!(["en-US", "zh-CN"]));
+    assert_eq!(
+        settings["locales"],
+        serde_json::json!([
+            "en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "ko-KR", "pl-PL",
+            "pt-BR", "ru-RU", "th-TH", "tr-TR", "zh-CN", "zh-TW"
+        ])
+    );
     assert_eq!(settings["modes"]["General"]["zh-CN"], "综合");
     assert_eq!(settings["teams"]["General"]["zh-CN"], "综合");
     assert_eq!(

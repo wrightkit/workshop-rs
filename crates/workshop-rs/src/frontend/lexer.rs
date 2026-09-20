@@ -404,9 +404,9 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                 let mut word = String::new();
                 while let Some(c) = cursor.peek() {
                     let interior_dash = c == '-'
-                        && cursor
-                            .peek_at(1)
-                            .is_some_and(|next| next.is_alphanumeric() || next == '_');
+                        && cursor.peek_at(1).is_some_and(|next| {
+                            unicode_ident::is_xid_continue(next) || next == '_'
+                        });
                     if is_word_character(c) || interior_dash {
                         word.push(cursor.advance().unwrap());
                     } else {
@@ -438,11 +438,14 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
 }
 
 fn is_word_start(ch: char) -> bool {
-    ch.is_alphabetic() || ch == '_' || is_raw_label_punctuation(ch)
+    unicode_ident::is_xid_start(ch) || ch == '_' || is_raw_label_punctuation(ch)
 }
 
 fn is_word_character(ch: char) -> bool {
-    ch.is_alphanumeric() || ch == '_' || ch == '\'' || is_raw_label_punctuation(ch)
+    unicode_ident::is_xid_continue(ch)
+        || ch == '_'
+        || matches!(ch, '\'' | '’')
+        || is_raw_label_punctuation(ch)
 }
 
 fn is_raw_label_punctuation(ch: char) -> bool {

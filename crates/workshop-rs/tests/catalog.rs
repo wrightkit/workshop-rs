@@ -14,10 +14,20 @@ fn en() -> Locale {
 }
 
 #[test]
-fn builtin_catalog_loads_and_declares_en_us_and_zh_cn() {
+fn builtin_catalog_loads_and_declares_the_pinned_workshop_locales() {
     let catalog = builtin();
     assert!(catalog.supports(&en()));
-    assert_eq!(catalog.locales().len(), 2);
+    assert_eq!(
+        catalog
+            .locales()
+            .iter()
+            .map(Locale::as_str)
+            .collect::<Vec<_>>(),
+        vec![
+            "en-us", "de-de", "es-es", "es-mx", "fr-fr", "it-it", "ja-jp", "ko-kr", "pl-pl",
+            "pt-br", "ru-ru", "th-th", "tr-tr", "zh-cn", "zh-tw",
+        ]
+    );
     // The primary locale is first and complete.
     assert_eq!(catalog.locales()[0], en());
     assert_eq!(catalog.primary_locale(), &en());
@@ -25,11 +35,10 @@ fn builtin_catalog_loads_and_declares_en_us_and_zh_cn() {
         catalog.locale_coverage(&en()).mapped,
         catalog.locale_coverage(&en()).total
     );
-    // zh-CN is a source-backed locale whose missing spellings remain
-    // explicit as the canonical surface grows.
-    assert!(catalog.supports(&Locale::new("zh-CN")));
-    let zh = catalog.locale_coverage(&Locale::new("zh-CN"));
-    assert!(zh.mapped > 0 && zh.mapped < zh.total);
+    for locale in catalog.locales().iter().skip(1) {
+        let coverage = catalog.locale_coverage(locale);
+        assert!(coverage.mapped > 0 && coverage.mapped < coverage.total);
+    }
 }
 
 #[test]
