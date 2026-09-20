@@ -1,6 +1,6 @@
 //! Catalog identity tests (ADR-0001 Decision 5): the machine-readable
 //! identities — implementation version, catalog version + content digest,
-//! locale coverage, target evidence — and the deliberate-change pinning of
+//! locale coverage, target source — and the deliberate-change pinning of
 //! the committed dataset digest.
 
 use workshop_rs::catalog::{Catalog, Locale};
@@ -12,7 +12,7 @@ use workshop_rs::catalog::{Catalog, Locale};
 /// (`workshop-catalog-gen build`) recomputes it and the pin is updated
 /// deliberately together with the data.
 const PINNED_CATALOG_DIGEST: &str =
-    "96c454290f8cdbf6b8c2960a3df428491fc79c7e614cd4453922e52940ab8914";
+    "29346860dce77a49f75ad9b4e5f230f91460f2b4c391e2c6fff26e082ac29bdd";
 
 #[test]
 fn committed_catalog_digest_is_pinned() {
@@ -60,7 +60,7 @@ fn identity_serializes_with_the_adr_kebab_case_names() {
     assert!(json.get("catalog-version").is_some());
     assert!(json.get("catalog-digest").is_some());
     assert!(json.get("locale-coverage").is_some());
-    assert!(json.get("target-evidence").is_none()); // target is the target record
+    assert!(json.get("target-evidence").is_none()); // target is the source record
     assert!(json.get("target").is_some());
     assert!(json.get("provenance").is_some());
 }

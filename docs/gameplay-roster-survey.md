@@ -1,14 +1,14 @@
 # Hero gameplay topology survey
 
-This survey pins the roster evidence used by ADR-0002. It is a data-scope
+This survey pins the roster source data used by ADR-0007. It is a data-scope
 survey, not a claim that every row has a balance fact. The source is the
 user-provided `workshop-data` export at commit
 `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date 2026-08-12), whose
 `meta.topLevelKeyCounts.heroes` is 53. The export records Workshop-facing
 canonical hero and logical-slot topology plus localized/display names; unsupported gameplay
-facts remain absent until separately evidenced.
+facts remain absent until separately sourced.
 
-| Hero identity | Named logical slots in evidence |
+| Hero identity | Named logical slots in source data |
 | --- | --- |
 | ana | ability1, ability2, ultimate |
 | anran | ability1, ability2, ultimate |
@@ -80,6 +80,6 @@ facts remain absent until separately evidenced.
   incomplete locale fields; the API preserves absence and does not infer a
   display name, role, or balance quantity.
 
-The export is intentionally not used as evidence for undocumented cooldown,
+The export is intentionally not used as a source for undocumented cooldown,
 damage, healing, health, or resource values. Those facts belong to the
-versioned gameplay dataset in #24 and must carry their own evidence.
+versioned gameplay dataset in #24 and must carry their own source records.

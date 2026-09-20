@@ -5253,7 +5253,7 @@
       ]
     }
   ],
-  "digest": "96c454290f8cdbf6b8c2960a3df428491fc79c7e614cd4453922e52940ab8914",
+  "digest": "29346860dce77a49f75ad9b4e5f230f91460f2b4c391e2c6fff26e082ac29bdd",
   "enums": [
     {
       "domain": "Impulse",
@@ -10971,12 +10971,12 @@
       "event/control/effect identities added in this slice are transcribed from workshop-data constants and values and exercised by the pinned direct raw Workshop artifacts",
       "93 additional value identities are mechanically reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; parameter names/types and reviewed en-US/zh-CN aliases remain data-backed",
       "enum domains/members and action signatures are reconciled from the pinned workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6; structural aliases remain owned by the parser",
-      "parameter and Value return types for 361 exact-id entries are reconciled from the pinned OverPy static metadata at https://github.com/Zezombye/overpy/tree/d854bf01fc7bbf3b2169f67408c07a8da8989ad6, whose metadata credits the parsed Workshop documentation at https://github.com/arxenix/owws-documentation/blob/master/workshop.json; unmatched or arity-conflicting entries remain evidence-insufficient instead of being inferred",
-      "Workshop.codes structured wiki articles are a direct documentation cross-check for the declared Action/Value properties, including Returns, Parameters, parameter Type, and Default (for example https://workshop.codes/wiki/articles/add, https://workshop.codes/wiki/articles/teleport, and https://workshop.codes/wiki/articles/set-crouch-enabled); entries absent from the reviewed evidence or with source conflicts remain evidence-insufficient instead of being inferred",
+      "parameter and Value return types for 361 exact-id entries are reconciled from the pinned OverPy static metadata at https://github.com/Zezombye/overpy/tree/d854bf01fc7bbf3b2169f67408c07a8da8989ad6, whose metadata credits the parsed Workshop documentation at https://github.com/arxenix/owws-documentation/blob/master/workshop.json; unmatched or arity-conflicting entries remain source-insufficient instead of being inferred",
+      "Workshop.codes structured wiki articles are a direct documentation cross-check for the declared Action/Value properties, including Returns, Parameters, parameter Type, and Default (for example https://workshop.codes/wiki/articles/add, https://workshop.codes/wiki/articles/teleport, and https://workshop.codes/wiki/articles/set-crouch-enabled); entries absent from the reviewed source or with source conflicts remain source-insufficient instead of being inferred",
       "Representative Workshop.codes article links are retained as a source cross-check; fetched snapshots and acceptance results are CI evidence, not generator or runtime inputs",
       "OverPy metadata is a static cross-check only; it is not treated as a runtime or .NET dependency",
       "localized String preset identities hello/goodbye and their en-US/zh-CN aliases are reviewed against OverPy localizedStrings.ts and the existing Workshop Comms aliases; unsupported preset text remains an explicit unknown",
-      "OSTW static Elements.json at https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/tree/817c1db4bace52123f054ffe10d3d8a06052e687 provides an independent cross-check: 210 Action and 250 Value names match the current en-US catalog; its any/any[] declarations keep polymorphic entries evidence-insufficient rather than narrowing them",
+      "OSTW static Elements.json at https://github.com/ItsDeltin/Overwatch-Script-To-Workshop/tree/817c1db4bace52123f054ffe10d3d8a06052e687 provides an independent cross-check: 210 Action and 250 Value names match the current en-US catalog; its any/any[] declarations keep polymorphic entries source-insufficient rather than narrowing them",
       "static type spellings Clip/GamemodeLiteral/HeroLiteral are normalized to the canonical Clipping/Gamemode/Hero enum domains; distance, directionTowards, vector, vectorTowards, getObjectivePosition, charAt, valueInArray, arrayContains, max, and min retain Any parameter contracts where the pinned real-project artifacts demonstrate Workshop polymorphism beyond a narrower static declaration",
       "current vector constants, Game Mode and Modulo values, Gamemode members, Hero and Color domain aliases, and To Nearest alias are reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
       "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",

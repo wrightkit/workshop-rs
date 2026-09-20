@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted for the v0.1 conformance corpus foundation.
+Superseded by [ADR-0012](0012-tests-first-verification.md). This record
+preserves the original result-model decision.
 
 ## Context
 

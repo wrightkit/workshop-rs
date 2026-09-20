@@ -22,7 +22,7 @@ emission changed.
 1. `workshop-rs` owns reusable, source-language-neutral analysis of target
    layout and resource cost over the canonical public `Program` and catalog.
 2. Element count is exposed as a structured report with total, per-rule, and
-   attributable node contributions, provenance where available, and explicit
+   attributable node contributions, source metadata where available, and explicit
    incompleteness/errors for unknown or unsupported constructs. It is
    locale-independent and does not depend on formatted output.
 3. Native action width is computed from the same authoritative recursive
@@ -33,8 +33,8 @@ emission changed.
 4. Consumers may use these APIs for their own lowering, diagnostics, or
    budgets, but source-language control-flow policy, placement, thresholds,
    and user-facing compatibility behavior remain consumer-owned.
-5. A documented or independently evidenced Workshop rule is required for an
-   exact result. Unsupported or evidence-insufficient behavior must not be
+5. A documented Workshop rule or pinned source comparison is required for an
+   exact result. Unsupported or source-insufficient behavior must not be
    silently converted into a zero, partial, or guessed result.
 
 ## Consequences

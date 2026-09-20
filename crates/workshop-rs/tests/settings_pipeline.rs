@@ -835,7 +835,7 @@ fn typed_settings_read_and_write_preserve_unrelated_structure() {
     assert!(matches!(
         primary
             .read(program.settings.as_ref().expect("settings"), &target)
-            .expect("typed reads preserve evidence-insufficient occurrences")
+            .expect("typed reads preserve unresolved occurrences")
             .authored,
         SettingValue::Boolean(true)
     ));

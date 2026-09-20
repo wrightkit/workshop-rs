@@ -151,15 +151,15 @@ pub struct CatalogEntry {
     pub param_domains: Vec<Option<String>>,
     /// Default value per parameter position (parallel to `params`),
     /// resolved when a call omits the argument. See the catalog data
-    /// provenance for the value syntax and evidence.
+    /// provenance for the value syntax and source.
     pub param_defaults: Vec<Option<String>>,
-    /// Evidence-backed semantic type per parameter position. `None` means
-    /// the available sources do not prove a narrower type.
+    /// Source-backed semantic type per parameter position. `None` means
+    /// the available sources do not establish a narrower type.
     pub param_types: Vec<Option<String>>,
     /// Contextual literal substitutions per parameter position.
     pub param_coercions: Vec<Option<ParamCoercions>>,
-    /// Evidence-backed return type for Value entries. Actions must leave this
-    /// unset; an absent value is intentionally evidence-insufficient.
+    /// Source-backed return type for Value entries. Actions must leave this
+    /// unset; an absent value remains unresolved.
     pub return_type: Option<String>,
     /// Whether the final declared parameter repeats for additional arguments.
     pub variadic: bool,
@@ -264,7 +264,7 @@ impl CatalogEntry {
             .and_then(Option::as_deref)
     }
 
-    /// The evidence-backed semantic type for an argument position, when
+    /// The source-backed semantic type for an argument position, when
     /// available. Enum domains remain exposed separately by `param_domain`.
     pub fn param_type(&self, index: usize) -> Option<&str> {
         self.param_types
@@ -281,7 +281,7 @@ impl CatalogEntry {
             .and_then(Option::as_ref)
     }
 
-    /// The evidence-backed return type of a Value, when available.
+    /// The source-backed return type of a Value, when available.
     pub fn return_type(&self) -> Option<&str> {
         self.return_type.as_deref()
     }

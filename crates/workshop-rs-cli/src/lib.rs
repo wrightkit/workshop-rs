@@ -43,14 +43,14 @@ commands:
       List the declared locales with per-locale mapping coverage.
   version [--json]
       Print the machine-readable catalog identity: implementation version,
-      catalog version and content digest, locale coverage, target evidence,
+      catalog version and content digest, locale coverage, target source,
       and provenance.
   census [--json]
       Run the deterministic offline Workshop feature census. Unexpected
       regressions exit with status 1; known gaps remain visible.
   corpus <manifest> [--json]
       Run an offline provenance-linked real-project corpus manifest and print
-      its #18 conformance report. Known gaps remain visible and do not count
+      its conformance report. Known gaps remain visible and do not count
       as matches; unexpected regressions return exit code 1.
   seasonal-diff <previous.json> <current.json> [--json]
       Validate two provenance-rich live-client capture documents and emit a

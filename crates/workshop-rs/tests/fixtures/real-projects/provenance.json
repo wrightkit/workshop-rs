@@ -1,17 +1,8 @@
 {
   "schema": "raw-workshop-real-projects/v1",
-  "purpose": "Durable provenance and rerun manifest for workshop-rs#47 and wright#189",
+  "purpose": "Durable provenance and rerun manifest for vendored raw Workshop inputs",
   "reference_compiler_policy": "Generated artifacts are accepted only with the pinned command and toolchain below; direct raw artifacts are fetched verbatim from the pinned Git blob.",
-  "redistribution": "The five pinned Workshop source inputs are vendored under crates/workshop-rs/tests/fixtures/real-projects; CI verifies their SHA-256 and emits acceptance evidence only in logs/artifacts.",
-  "historicalManifestCorrections": [
-    {
-      "manifestCommit": "b776cf5",
-      "artifactId": "ai-pve-zh-CN",
-      "previousSha256": "b0405707d54fd30e20f285ce4a3fdaf9899e3959fb5dd223c898040c63a18773",
-      "previousRecordedCompiler": {"overpy": "9.7.13", "node": "22", "pnpm": "10.6.3"},
-      "correction": "The previous committed manifest paired b040 with OverPy 9.7.13. It did not record OverPy 9.7.10. The pairing was not reproducible from the recorded source and toolchain; d9c6460 is the independently SHA-verified authoritative rebuild."
-    }
-  ],
+  "redistribution": "The five pinned Workshop source inputs are vendored under crates/workshop-rs/tests/fixtures/real-projects; CI verifies their SHA-256 and emits run output only in logs/artifacts.",
   "artifacts": [
     {
       "id": "ai-pve-zh-CN",
