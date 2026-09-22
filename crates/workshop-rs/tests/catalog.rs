@@ -313,7 +313,7 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
         .entry(Kind::Action, "createEffect")
         .expect("createEffect is in the catalog");
     assert_eq!(
-        effect.params,
+        effect.params(),
         vec![
             "VisibleTo",
             "Type",
@@ -332,7 +332,7 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
     let event_player = catalog
         .entry(Kind::Value, "eventPlayer")
         .expect("eventPlayer is in the catalog");
-    assert!(event_player.params.is_empty());
+    assert!(event_player.params().is_empty());
     assert_eq!(
         catalog.spelling(Kind::Value, &en(), "eventPlayer"),
         Some("Event Player")
@@ -342,16 +342,14 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
     assert_eq!(
         catalog
             .entry(Kind::Action, "wait")
-            .map(|e| e.params.clone()),
+            .map(|e| e.params().to_vec()),
         Some(vec!["Duration".to_string(), "WaitBehavior".to_string()])
     );
-    assert_eq!(
-        catalog
-            .entry(Kind::Action, "setCrouchEnabled")
-            .expect("setCrouchEnabled is in the catalog")
-            .param_names,
-        ["player", "enabled"]
-    );
+    let crouch = catalog
+        .entry(Kind::Action, "setCrouchEnabled")
+        .expect("setCrouchEnabled is in the catalog");
+    assert_eq!(crouch.param_name(0), Some("player"));
+    assert_eq!(crouch.param_name(1), Some("enabled"));
 
     // The exercised param surface resolves by en-US spelling too.
     assert!(
@@ -393,7 +391,7 @@ fn documented_action_and_value_signatures_are_inventory_entries() {
     let indexed = catalog
         .entry(Kind::Action, "setPlayerVariableAtIndex")
         .expect("indexed player-variable action");
-    assert_eq!(indexed.params, ["Variable", "Index", "Value"]);
+    assert_eq!(indexed.params(), ["Variable", "Index", "Value"]);
     assert_eq!(indexed.param_type(0), Some("Player Variable"));
     assert_eq!(indexed.param_type(2), Some("Object|Array"));
 
@@ -405,9 +403,19 @@ fn documented_action_and_value_signatures_are_inventory_entries() {
     assert_eq!(custom_string.return_type(), Some("String"));
 
     let array = catalog.entry(Kind::Value, "array").expect("array");
-    assert!(array.variadic);
+    assert!(array.is_variadic());
     assert_eq!(array.return_type(), Some("Array"));
     assert_eq!(array.param_type(3), Some("Object|Array"));
+}
+
+#[test]
+fn catalog_defaults_remain_available_through_position_queries() {
+    let catalog = builtin();
+    let wait = catalog.entry(Kind::Action, "wait").expect("wait");
+
+    assert!(wait.has_param_defaults());
+    assert_eq!(wait.param_default(0), None);
+    assert_eq!(wait.param_default(1), Some("Wait.IGNORE_CONDITION"));
 }
 
 #[test]

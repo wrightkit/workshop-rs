@@ -264,11 +264,9 @@ fn event_catalog_declares_parameter_and_filter_provenance_surface() {
         let event = catalog
             .entry(Kind::Event, event_id)
             .unwrap_or_else(|| panic!("{event_id} catalog entry"));
-        assert_eq!(event.params, vec!["Team", "Player"]);
-        assert_eq!(
-            event.param_domains,
-            vec![Some("EventTeam".to_string()), None]
-        );
+        assert_eq!(event.params(), ["Team", "Player"]);
+        assert_eq!(event.param_domain(0), Some("EventTeam"));
+        assert_eq!(event.param_domain(1), None);
     }
     assert!(catalog.enum_domain("EventPlayer").is_some());
     assert!(catalog.enum_domain("Hero").is_some());

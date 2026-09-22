@@ -198,7 +198,7 @@ pub(crate) fn validate_call_signature(
     // Trailing defaults may make a signature partial, but every supplied
     // argument is still checked against its declared position.
     if (args.is_empty() && entry.required_param_count() > 0)
-        || (!entry.variadic && args.len() > entry.param_count())
+        || (!entry.is_variadic() && args.len() > entry.param_count())
     {
         return Err(WorkshopError::Unsupported {
             message: format!(
@@ -207,7 +207,7 @@ pub(crate) fn validate_call_signature(
                 entry.id,
                 entry.required_param_count(),
                 entry.param_count(),
-                if entry.variadic { "+" } else { "" },
+                if entry.is_variadic() { "+" } else { "" },
                 args.len()
             ),
             span,
