@@ -1827,6 +1827,11 @@ pub enum EventTarget {
     Hero(String),
 }
 
+/// A non-ongoing player event identity.
+///
+/// Workshop can add player-scoped event identities independently of this
+/// crate. Consumers should use a wildcard arm when matching this type.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PlayerEventKind {
     DealtDamage,
@@ -1925,6 +1930,10 @@ impl Action {
 }
 
 /// The operation used by a Workshop variable modification action.
+///
+/// Workshop can add modification operations independently of this crate.
+/// Consumers should use a wildcard arm when matching this type.
+#[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ModifyOp {
     Add,
