@@ -191,7 +191,7 @@ fn documented_signatures_reject_wrong_arity_and_concrete_types() {
                 continue;
             }
             let contract = documented_contract(&row.notes);
-            if !entry.variadic && !contract.parameters.is_empty() {
+            if !entry.is_variadic() && !contract.parameters.is_empty() {
                 let source = call_program_source_variant(&catalog, entry, &row, value, true, None);
                 expect_rejection(
                     &format!("invalid/{category}/{}-extra-argument", slug(&row.name)),
@@ -277,7 +277,7 @@ fn audited_action_value_inventory_explicitly_has_no_defaults_or_optional_argumen
     let catalog_defaulted_entries = catalog
         .entries_of(Kind::Action)
         .chain(catalog.entries_of(Kind::Value))
-        .filter(|entry| entry.param_defaults.iter().any(Option::is_some))
+        .filter(|entry| entry.has_param_defaults())
         .count();
 
     assert_eq!(
@@ -1032,19 +1032,19 @@ fn assert_documented_contract(
     failures: &mut Vec<String>,
 ) {
     let contract = documented_contract(&row.notes);
-    if entry.params.len() != contract.parameters.len() {
+    if entry.params().len() != contract.parameters.len() {
         failures.push(format!(
             "{case_id}: documented parameter count {} differs from catalog {}",
             contract.parameters.len(),
-            entry.params.len()
+            entry.params().len()
         ));
     }
     for (index, parameter) in contract.parameters.iter().enumerate() {
-        if entry.params.get(index).map(String::as_str) != Some(parameter.label.as_str()) {
+        if entry.params().get(index).map(String::as_str) != Some(parameter.label.as_str()) {
             failures.push(format!(
                 "{case_id}: documented parameter {index} label/order {:?} differs from catalog {:?}",
                 parameter.label,
-                entry.params.get(index)
+                entry.params().get(index)
             ));
         }
         if let Some(value_type) = parameter.value_type.as_deref() {

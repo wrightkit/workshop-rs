@@ -135,12 +135,12 @@ pub struct CatalogEntry {
     pub id: String,
     pub kind: Kind,
     /// Parameter names, when the catalog documents them.
-    pub params: Vec<String>,
+    params: Vec<String>,
     /// Reviewed semantic parameter names for consumer-facing typed APIs,
     /// parallel to `params`.
-    pub param_names: Vec<String>,
+    param_names: Vec<String>,
     /// Reviewed localized spellings for each parameter, parallel to `params`.
-    pub param_aliases: Vec<HashMap<Locale, Vec<String>>>,
+    param_aliases: Vec<HashMap<Locale, Vec<String>>>,
     /// The canonical enum domain expected at each parameter position, when
     /// the parameter takes an enumerated value (parallel to `params`).
     /// `None` for non-enum parameters and for parameters whose accepted
@@ -148,21 +148,21 @@ pub struct CatalogEntry {
     /// rule event's `Player` parameter accepts `EventPlayer` members or
     /// canonical `Hero` members; the WIR [`crate::wir::EventTarget`] carries
     /// that union explicitly.
-    pub param_domains: Vec<Option<String>>,
+    param_domains: Vec<Option<String>>,
     /// Default value per parameter position (parallel to `params`),
     /// resolved when a call omits the argument. See the catalog data
     /// provenance for the value syntax and source.
-    pub param_defaults: Vec<Option<String>>,
+    param_defaults: Vec<Option<String>>,
     /// Source-backed semantic type per parameter position. `None` means
     /// the available sources do not establish a narrower type.
-    pub param_types: Vec<Option<String>>,
+    param_types: Vec<Option<String>>,
     /// Contextual literal substitutions per parameter position.
-    pub param_coercions: Vec<Option<ParamCoercions>>,
+    param_coercions: Vec<Option<ParamCoercions>>,
     /// Source-backed return type for Value entries. Actions must leave this
     /// unset; an absent value remains unresolved.
-    pub return_type: Option<String>,
+    return_type: Option<String>,
     /// Whether the final declared parameter repeats for additional arguments.
-    pub variadic: bool,
+    variadic: bool,
     aliases: HashMap<Locale, Vec<String>>,
 }
 
@@ -228,6 +228,11 @@ impl CatalogEntry {
         (matches.len() == 1).then(|| matches[0])
     }
 
+    /// The canonical parameter names in declaration order.
+    pub fn params(&self) -> &[String] {
+        &self.params
+    }
+
     /// The number of declared arguments for this builtin.
     pub fn param_count(&self) -> usize {
         self.params.len()
@@ -254,6 +259,19 @@ impl CatalogEntry {
                     .is_none()
             })
             .map_or(0, |index| index + 1)
+    }
+
+    /// Whether any declared parameter has a default value.
+    pub fn has_param_defaults(&self) -> bool {
+        self.param_defaults.iter().any(Option::is_some)
+    }
+
+    /// The default value for an argument position, when declared.
+    pub fn param_default(&self, index: usize) -> Option<&str> {
+        self.param_defaults
+            .get(index)
+            .or_else(|| self.variadic.then(|| self.param_defaults.last()).flatten())
+            .and_then(Option::as_deref)
     }
 
     /// The declared enum domain for an argument position, when one exists.
@@ -284,6 +302,11 @@ impl CatalogEntry {
     /// The source-backed return type of a Value, when available.
     pub fn return_type(&self) -> Option<&str> {
         self.return_type.as_deref()
+    }
+
+    /// Whether the final declared parameter repeats for additional arguments.
+    pub fn is_variadic(&self) -> bool {
+        self.variadic
     }
 }
 
@@ -390,12 +413,12 @@ type MemberIndexMap = HashMap<String, HashMap<String, (usize, usize)>>;
 /// The validated canonical Workshop catalog.
 #[derive(Debug, Clone)]
 pub struct Catalog {
-    pub schema_version: u32,
+    schema_version: u32,
     /// The declared locales, normalized; the first one is the primary
     /// locale and must be fully covered.
-    pub locales: Vec<Locale>,
-    pub target: TargetMeta,
-    pub provenance: Provenance,
+    locales: Vec<Locale>,
+    target: TargetMeta,
+    provenance: Provenance,
     /// The catalog dataset version (ADR-0001 `catalog-version`).
     catalog_version: String,
     /// The declared content digest (sha256 hex), verified at load when
@@ -622,6 +645,10 @@ impl Catalog {
     /// The built-in catalog data.
     pub fn builtin() -> Result<Catalog> {
         Self::load(CATALOG_DATA)
+    }
+
+    pub(crate) fn schema_version(&self) -> u32 {
+        self.schema_version
     }
 
     /// The declared locales, normalized; the first one is the primary locale.
@@ -1176,11 +1203,7 @@ impl ExpectedDomain for Catalog {
     fn expected_domain(&self, catalog_id: &str, arg_index: usize) -> Option<&str> {
         for kind in [Kind::Action, Kind::Value] {
             if let Some(entry) = self.entry(kind, catalog_id) {
-                if let Some(domain) = entry
-                    .param_domains
-                    .get(arg_index)
-                    .and_then(Option::as_deref)
-                {
+                if let Some(domain) = entry.param_domain(arg_index) {
                     return Some(domain);
                 }
             }

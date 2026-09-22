@@ -120,9 +120,17 @@ crate, generated catalog data, test support, storage internals, and
 `#[doc(hidden)]` compatibility paths are outside this gate unless they are
 reachable through that documented API.
 
-An intentional breaking change must first have an approved public-contract
-decision and use the corresponding major version release. Once that release is
-published, the compatibility gate automatically uses it as the next baseline.
+Before 1.0, the job treats a `0.x` package as a major compatibility transition
+only when the pull request title uses a Conventional Commit breaking marker
+such as `refactor!: ...`. This permits an approved API-hardening issue to
+remove accidental public implementation details while the feature branch
+remains at the published version; release-plz then proposes the next `0.x`
+compatibility line. Ordinary `0.x` pull requests keep the default release-type
+inference, so the gate continues detecting accidental breaking changes. Once
+the package reaches 1.0, the job derives the normal release type and blocks
+intentional breaking changes unless the corresponding major version release
+is being made. After that release is published, the compatibility gate
+automatically uses it as the next baseline.
 
 Those checks do not prove external publication behavior. A material release-topology change is considered established only after at least one real release completes the declared production path:
 

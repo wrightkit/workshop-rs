@@ -31,10 +31,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Select compatibility release type
+        id: release-type
+        shell: bash
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          version="$(awk -F'"' '$1 ~ /^version = / { print $2; exit }' Cargo.toml)"
+          breaking_title='^[[:alnum:]][[:alnum:].-]*(\([^)]*\))?!:'
+          if [[ "$version" == 0.* && "$PR_TITLE" =~ $breaking_title ]]; then
+            echo "value=major" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=" >> "$GITHUB_OUTPUT"
+          fi
       - name: Check public API compatibility
         uses: obi1kenobi/cargo-semver-checks-action@v2
         with:
           package: workshop-rs
+          release-type: ${{ steps.release-type.outputs.value }}
 
   catalog-check:
     name: Catalog check

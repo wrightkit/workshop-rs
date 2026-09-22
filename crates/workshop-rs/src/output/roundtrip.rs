@@ -54,7 +54,7 @@ pub fn round_trip_with_context(
     let mut record = RoundTripRecord {
         input_identity,
         locale: locale.clone(),
-        catalog_version: catalog.schema_version,
+        catalog_version: catalog.schema_version(),
         parse_ok: false,
         emit_ok: false,
         reparse_ok: false,
