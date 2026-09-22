@@ -34,9 +34,12 @@ jobs:
       - name: Select compatibility release type
         id: release-type
         shell: bash
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
         run: |
           version="$(awk -F'"' '$1 ~ /^version = / { print $2; exit }' Cargo.toml)"
-          if [[ "$version" == 0.* ]]; then
+          breaking_title='^[[:alnum:]][[:alnum:].-]*(\([^)]*\))?!:'
+          if [[ "$version" == 0.* && "$PR_TITLE" =~ $breaking_title ]]; then
             echo "value=major" >> "$GITHUB_OUTPUT"
           else
             echo "value=" >> "$GITHUB_OUTPUT"

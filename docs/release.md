@@ -120,11 +120,14 @@ crate, generated catalog data, test support, storage internals, and
 `#[doc(hidden)]` compatibility paths are outside this gate unless they are
 reachable through that documented API.
 
-Before 1.0, the job treats a `0.x` package as a major compatibility transition.
-This permits an approved API-hardening issue to remove accidental public
-implementation details while the feature branch remains at the published
-version; release-plz then proposes the next `0.x` compatibility line. Once the
-package reaches 1.0, the job derives the normal release type and blocks
+Before 1.0, the job treats a `0.x` package as a major compatibility transition
+only when the pull request title uses a Conventional Commit breaking marker
+such as `refactor!: ...`. This permits an approved API-hardening issue to
+remove accidental public implementation details while the feature branch
+remains at the published version; release-plz then proposes the next `0.x`
+compatibility line. Ordinary `0.x` pull requests keep the default release-type
+inference, so the gate continues detecting accidental breaking changes. Once
+the package reaches 1.0, the job derives the normal release type and blocks
 intentional breaking changes unless the corresponding major version release
 is being made. After that release is published, the compatibility gate
 automatically uses it as the next baseline.
