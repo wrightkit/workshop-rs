@@ -28,7 +28,7 @@ official Blizzard hero-detail URL and access date 2026-08-18 as a separate
 source reference.
 
 The current identity digest is
-`sha256:388a2964056c1cb515ad43fa85050f608e583c1ce076a7dcc846de09e458e734`.
+`sha256:0902a247fb709bf5e326bbdb5475b41d4062b991ba3e0aea9350e5ecd404bc3c`.
 
 Representative ability keywords are semantic labels, not Blizzard or Workshop
 enum values. Their labels and the six variant names/shapes are source-linked to

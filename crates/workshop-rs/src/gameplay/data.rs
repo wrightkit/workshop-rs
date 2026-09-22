@@ -12,7 +12,13 @@ use crate::gameplay::{GameplayCatalog, GameplayDataError, GameplayDatasetIdentit
 /// The canonical gameplay dataset embedded in the crate.
 pub const GAMEPLAY_DATA: &str = include_str!("gameplay.json");
 
-const SCHEMA_VERSION: u32 = 1;
+const SCHEMA_VERSION: u32 = 2;
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GameplaySchema {
+    schema_version: u32,
+}
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -24,9 +30,15 @@ struct GameplayFile {
 
 /// Load and validate a gameplay dataset from its JSON representation.
 pub fn load(json: &str) -> Result<GameplayCatalog, GameplayDataError> {
+    let schema: GameplaySchema = serde_json::from_str(json)
+        .map_err(|error| GameplayDataError::Malformed(error.to_string()))?;
+    if schema.schema_version != SCHEMA_VERSION {
+        return Err(GameplayDataError::UnsupportedSchema(schema.schema_version));
+    }
+
     let file: GameplayFile = serde_json::from_str(json)
         .map_err(|error| GameplayDataError::Malformed(error.to_string()))?;
-    if file.schema_version != SCHEMA_VERSION {
+    if file.schema_version != schema.schema_version {
         return Err(GameplayDataError::UnsupportedSchema(file.schema_version));
     }
 

@@ -612,7 +612,7 @@ fn representative_hero_and_ability_records_round_trip_through_json() {
 #[test]
 fn loader_rejects_stale_digest_and_unsupported_schema() {
     let stale = GAMEPLAY_DATA.replacen(
-        "388a2964056c1cb515ad43fa85050f608e583c1ce076a7dcc846de09e458e734",
+        "0902a247fb709bf5e326bbdb5475b41d4062b991ba3e0aea9350e5ecd404bc3c",
         "e15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
         1,
     );
@@ -621,10 +621,18 @@ fn loader_rejects_stale_digest_and_unsupported_schema() {
         Err(GameplayDataError::DigestMismatch { .. })
     ));
 
-    let unsupported = GAMEPLAY_DATA.replacen("\"schemaVersion\": 1", "\"schemaVersion\": 2", 1);
+    let unsupported = GAMEPLAY_DATA.replacen("\"schemaVersion\": 2", "\"schemaVersion\": 3", 1);
     assert!(matches!(
         load(&unsupported),
-        Err(GameplayDataError::UnsupportedSchema(2))
+        Err(GameplayDataError::UnsupportedSchema(3))
+    ));
+
+    let legacy = GAMEPLAY_DATA
+        .replace("\"sources\"", "\"evidence\"")
+        .replacen("\"schemaVersion\": 2", "\"schemaVersion\": 1", 1);
+    assert!(matches!(
+        load(&legacy),
+        Err(GameplayDataError::UnsupportedSchema(1))
     ));
 }
 

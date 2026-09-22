@@ -9337,12 +9337,12 @@
   ],
   "identity": {
     "datasetId": "overwatch-workshop-hero-gameplay",
-    "digest": "sha256:388a2964056c1cb515ad43fa85050f608e583c1ce076a7dcc846de09e458e734",
+    "digest": "sha256:0902a247fb709bf5e326bbdb5475b41d4062b991ba3e0aea9350e5ecd404bc3c",
     "license": "MIT-compatible user-provided export",
     "reviewed": true,
     "source": "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
     "target": "Overwatch Workshop hero identities and named ability slots",
     "version": "2026-08-12"
   },
-  "schemaVersion": 1
+  "schemaVersion": 2
 }
