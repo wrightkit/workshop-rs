@@ -46,6 +46,48 @@ fn real_settings_fixture_parses_to_wir_and_reemits() {
 }
 
 #[test]
+fn authored_extensions_survive_canonical_program_round_trip() {
+    let source = "settings {
+    extensions {
+        Buff Status Effects
+        Debuff Status Effects
+        Buff and Debuff Sounds
+        Energy Explosion Effects
+        Spawn More Dummy Bots
+    }
+}";
+    let catalog = catalog();
+    let locale = Locale::new("en-US");
+    let program = parser::parse(source, &catalog, &locale).expect("extension settings parse");
+
+    program.validate().expect("extension settings validate");
+    assert!(
+        program
+            .semantic_issues(&catalog)
+            .iter()
+            .all(|issue| issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting),
+        "extension settings must use canonical typed flags"
+    );
+
+    let emitted = emitter::emit(&program, &catalog, &locale).expect("extension settings emit");
+    for extension in [
+        "Buff Status Effects",
+        "Debuff Status Effects",
+        "Buff and Debuff Sounds",
+        "Energy Explosion Effects",
+        "Spawn More Dummy Bots",
+    ] {
+        assert!(
+            emitted.contains(extension),
+            "missing emitted extension: {extension}"
+        );
+    }
+
+    let reparsed = parser::parse(&emitted, &catalog, &locale).expect("extension settings reparse");
+    assert!(roundtrip::equivalent(&program, &reparsed));
+}
+
+#[test]
 fn reviewed_settings_conversion_round_trips_en_us_and_zh_cn() {
     let catalog = catalog();
     let en = Locale::new("en-US");
