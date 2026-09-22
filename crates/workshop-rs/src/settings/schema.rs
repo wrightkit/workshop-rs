@@ -128,8 +128,8 @@ pub enum NumericBoundsError {
     Reversed,
 }
 
-/// Evidence-backed effective numeric bounds. `None` means the current
-/// reviewed evidence does not establish that bound.
+/// Source-backed effective numeric bounds. `None` means the current reviewed
+/// source does not establish that bound.
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct NumericBounds {
     min: Option<f64>,
@@ -220,7 +220,7 @@ pub enum SettingValue {
     PresenceOnly,
 }
 
-/// A typed occurrence together with an evidenced effective numeric value.
+/// A typed occurrence together with a source-backed effective numeric value.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SettingOccurrence {
     pub authored: SettingValue,
@@ -290,7 +290,7 @@ pub enum SettingOperationError {
         message: String,
         span: Option<crate::core::source::Span>,
     },
-    SourceProvenanceUnavailable {
+    SourceUnavailable {
         setting: SettingId,
     },
     SourceMismatch,
@@ -327,11 +327,8 @@ impl fmt::Display for SettingOperationError {
             Self::InvalidValue {
                 setting, message, ..
             } => write!(formatter, "invalid value for setting {setting}: {message}"),
-            Self::SourceProvenanceUnavailable { setting } => {
-                write!(
-                    formatter,
-                    "setting {setting} has no editable source provenance"
-                )
+            Self::SourceUnavailable { setting } => {
+                write!(formatter, "setting {setting} has no editable source")
             }
             Self::SourceMismatch => formatter.write_str("source no longer matches the edit"),
         }
@@ -341,7 +338,7 @@ impl fmt::Display for SettingOperationError {
 impl std::error::Error for SettingOperationError {}
 
 impl SettingValueDomain {
-    /// Apply evidenced effective clamping without changing the authored
+    /// Apply source-backed effective clamping without changing the authored
     /// value held by [`super::SettingsNode`].
     pub fn effective_number(&self, authored: f64) -> Option<EffectiveNumber> {
         match self {
@@ -368,16 +365,16 @@ impl SettingPresentation {
     }
 }
 
-/// Provenance shared by the reviewed table projection.
+/// Source metadata shared by the reviewed table projection.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct SettingProvenance {
-    pub kind: SettingEvidenceKind,
+pub struct SettingSource {
+    pub kind: SettingSourceKind,
     pub source: &'static str,
     pub reviewed: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SettingEvidenceKind {
+pub enum SettingSourceKind {
     RawWorkshopFixture,
     WorkshopDataExport,
 }
@@ -393,7 +390,7 @@ pub struct SettingDefinition {
     target: TargetPattern,
     domain: SettingValueDomain,
     presentation: SettingPresentation,
-    provenance: SettingProvenance,
+    source: SettingSource,
 }
 
 impl SettingDefinition {
@@ -460,8 +457,8 @@ impl SettingDefinition {
         }
     }
 
-    pub fn provenance(&self) -> SettingProvenance {
-        self.provenance
+    pub fn source(&self) -> SettingSource {
+        self.source
     }
 
     /// Query effective applicability without exposing table deduplication.
@@ -607,7 +604,7 @@ impl SettingDefinition {
     }
 
     /// Read an existing source-preserving occurrence with its authored value
-    /// and, when evidenced, its effective numeric value.
+    /// and, when source-backed, its effective numeric value.
     pub fn read(
         &self,
         settings: &Settings,
@@ -681,11 +678,11 @@ impl SettingDefinition {
             }
         })?;
         validate_value(&self.domain, &id, &value, node.span())?;
-        let span =
-            node.span()
-                .ok_or_else(|| SettingOperationError::SourceProvenanceUnavailable {
-                    setting: id.clone(),
-                })?;
+        let span = node
+            .span()
+            .ok_or_else(|| SettingOperationError::SourceUnavailable {
+                setting: id.clone(),
+            })?;
         let range = source_value_range(source, span, &id)?;
         let kind = table::lookup(self.path_parts)
             .expect("settings definition must retain its table entry")
@@ -789,22 +786,22 @@ fn source_value_range(
     setting: &SettingId,
 ) -> Result<Range<usize>, SettingOperationError> {
     let start = byte_offset(source, span.start).ok_or_else(|| {
-        SettingOperationError::SourceProvenanceUnavailable {
+        SettingOperationError::SourceUnavailable {
             setting: setting.clone(),
         }
     })?;
-    let end = byte_offset(source, span.end).ok_or_else(|| {
-        SettingOperationError::SourceProvenanceUnavailable {
+    let end =
+        byte_offset(source, span.end).ok_or_else(|| SettingOperationError::SourceUnavailable {
             setting: setting.clone(),
-        }
-    })?;
-    let member = source.get(start..end).ok_or_else(|| {
-        SettingOperationError::SourceProvenanceUnavailable {
-            setting: setting.clone(),
-        }
-    })?;
+        })?;
+    let member =
+        source
+            .get(start..end)
+            .ok_or_else(|| SettingOperationError::SourceUnavailable {
+                setting: setting.clone(),
+            })?;
     let Some(colon) = member.find(':') else {
-        return Err(SettingOperationError::SourceProvenanceUnavailable {
+        return Err(SettingOperationError::SourceUnavailable {
             setting: setting.clone(),
         });
     };
@@ -815,7 +812,7 @@ fn source_value_range(
             .len();
     let range = value_start + leading..end;
     if range.is_empty() || source.get(range.clone()).is_none() {
-        return Err(SettingOperationError::SourceProvenanceUnavailable {
+        return Err(SettingOperationError::SourceUnavailable {
             setting: setting.clone(),
         });
     }
@@ -903,7 +900,7 @@ fn source_value_spelling(
             })?;
             localized("enums", english)
         }
-        _ => Err(SettingOperationError::SourceProvenanceUnavailable {
+        _ => Err(SettingOperationError::SourceUnavailable {
             setting: setting.clone(),
         }),
     }
@@ -1208,11 +1205,11 @@ impl SettingDefinition {
                 english_name: entry.workshop_name,
                 locale_section: "labels",
             },
-            provenance: SettingProvenance {
+            source: SettingSource {
                 kind: if table::is_generated_entry(entry) {
-                    SettingEvidenceKind::WorkshopDataExport
+                    SettingSourceKind::WorkshopDataExport
                 } else {
-                    SettingEvidenceKind::RawWorkshopFixture
+                    SettingSourceKind::RawWorkshopFixture
                 },
                 source: if table::is_generated_entry(entry) {
                     "workshop-data/workshop-data.json"
@@ -1401,7 +1398,7 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
             ));
             continue;
         };
-        if !definition.provenance.reviewed {
+        if !definition.source.reviewed {
             errors.push(format!(
                 "unreviewed settings definition: {}",
                 definition.path
@@ -1692,8 +1689,8 @@ mod tests {
                 english_name: "Value",
                 locale_section: "labels",
             },
-            provenance: SettingProvenance {
-                kind: SettingEvidenceKind::RawWorkshopFixture,
+            source: SettingSource {
+                kind: SettingSourceKind::RawWorkshopFixture,
                 source: "test",
                 reviewed: true,
             },

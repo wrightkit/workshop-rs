@@ -1,4 +1,4 @@
-//! Embedded, provenance-pinned hero gameplay data.
+//! Embedded gameplay data with a pinned source identity.
 //!
 //! The data file is a checked-in projection of the user-provided
 //! `workshop-data` export. This module owns parsing, schema validation, and

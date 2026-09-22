@@ -46,9 +46,10 @@ into a guessed definition.
 `SettingIdentity::Known(SettingId)` means that a reviewed canonical concept
 identity has been resolved; unresolved projected hero-ability concepts use
 `SettingIdentity::Unknown` and `id() == None`. This is independent from
-`SettingProvenance`: the latter reports whether the underlying table or export
-source was reviewed, so reviewed source data may still carry an unknown
-semantic identity when no canonical typed identity has been established.
+`SettingSource`: the latter reports the source kind, source identity, and
+review status of the underlying table or export, so reviewed source data may
+still carry an unknown semantic identity when no canonical typed identity has
+been established.
 
 ## Consequences
 
@@ -62,7 +63,7 @@ concept identities normalize reusable hero/ability settings
 without embedding localized ability display names; mode-specific enum concepts
 remain distinct when their reviewed domains differ. Query/edit operations can
 use definitions and source-preserving occurrences without inventing another
-identity, scope, target, domain, or provenance model.
+identity, scope, target, domain, or generic source-trust model.
 
 No UI step metadata, source-language carrier parsing, per-hero Rust structs,
 consumer-side applicability hacks, or query/edit API ergonomics are part of this

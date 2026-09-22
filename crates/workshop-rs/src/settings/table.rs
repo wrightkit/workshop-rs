@@ -1,6 +1,6 @@
-//! Fixture-evidenced settings emission table (#86).
+//! Fixture-backed settings emission table (#86).
 //!
-//! PROVENANCE: observed from the pinned oracle 9.7.10 en-US output of the
+//! SOURCE: observed from the pinned oracle 9.7.10 en-US output of the
 //! oracle-success settings programs (`compile.workshop` settings section of
 //! the committed snapshots pixelart/santa/broken-weapons/client-to-server,
 //! plus the parabola/crosshair/inputhud oracle runs) at OverPy commit
@@ -110,16 +110,16 @@ macro_rules! entry {
     };
 }
 
-/// The fixture-evidenced settings surface.
+/// The fixture-backed settings surface.
 ///
-/// Slot sets (evidenced): teams {allTeams}, heroes {mei} config groups +
-/// the 10 ListHero names. `enabled: true` is not evidenced; it renders with
+/// Slot sets (source-backed): teams {allTeams}, heroes {mei} config groups +
+/// the 10 ListHero names. `enabled: true` is not source-backed; it renders with
 /// no prefix. Keys outside this table (e.g. team1Slots, scoreToWin,
 /// gamemodeStartTrigger, spawnHealthPacks, healthPackRespawnTime%,
 /// abilityCooldown%, healingReceived%, primaryFireKb%, enableSpawningWithUlt,
 /// resetPlayersAfterGoalScored, scoreLeadToWin, gameLengthInSec,
 /// heroes.<team>.general, roleLimit under general, heroLimit under a named
-/// mode) are `settings-unknown-key` at validation (only evidenced in
+/// mode) are `settings-unknown-key` at validation (only source-backed in
 /// oracle-failing programs; corpus-bounded).
 pub static ENTRIES: &[TableEntry] = &[
     // main
@@ -591,7 +591,7 @@ pub struct NameMap {
     pub name: &'static str,
 }
 
-/// Game-mode names (evidenced: assault, control, escort, hybrid, skirmish,
+/// Game-mode names (source-backed: assault, control, escort, hybrid, skirmish,
 /// ffa, tdm, general).
 pub static MODE_NAMES: &[NameMap] = &[
     NameMap {
@@ -860,7 +860,7 @@ include!("data/generated_map_entries.rs");
 include!("data/generated_hero_entries.rs");
 include!("data/generated_mode_entries.rs");
 
-/// Team names inside `heroes` (evidenced: allTeams).
+/// Team names inside `heroes` (source-backed: allTeams).
 pub static TEAM_NAMES: &[NameMap] = &[
     NameMap {
         key: "allTeams",

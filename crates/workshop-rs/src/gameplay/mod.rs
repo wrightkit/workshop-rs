@@ -4,7 +4,7 @@
 //! deliberately independent from the Workshop [`crate::catalog`] identity
 //! and from any source-language provider. Ability identity is the open
 //! `hero + logical slot + optional hero-local variant` tuple; display names
-//! are localized, source-backed metadata and are not semantic identity.
+//! are localized source metadata and are not semantic identity.
 
 pub mod data;
 pub mod query;
@@ -274,17 +274,18 @@ impl LocalizedText {
     }
 }
 
-/// A machine-identifiable evidence reference for a gameplay fact.
+/// A machine-identifiable source reference for a gameplay fact.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct EvidenceRef {
+pub struct SourceReference {
     pub source: String,
     pub locator: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
 }
 
-/// Identity and provenance of a gameplay dataset. This is distinct from the Workshop parser/catalog dataset identity.
+/// Identity and source metadata of a gameplay dataset. This is distinct from
+/// the Workshop parser/catalog dataset identity.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct GameplayDatasetIdentity {
@@ -297,22 +298,22 @@ pub struct GameplayDatasetIdentity {
     pub reviewed: bool,
 }
 
-/// A gameplay fact tied to evidence in the dataset version being consumed.
+/// A gameplay fact tied to source references in the dataset version being consumed.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Fact<T> {
     pub value: T,
-    pub evidence: Vec<EvidenceRef>,
+    pub sources: Vec<SourceReference>,
 }
 
 impl<T> Fact<T> {
-    pub fn new(value: T, evidence: Vec<EvidenceRef>) -> Self {
-        Self { value, evidence }
+    pub fn new(value: T, sources: Vec<SourceReference>) -> Self {
+        Self { value, sources }
     }
     pub fn value(&self) -> &T {
         &self.value
     }
-    pub fn evidence(&self) -> &[EvidenceRef] {
-        &self.evidence
+    pub fn sources(&self) -> &[SourceReference] {
+        &self.sources
     }
 }
 
@@ -369,7 +370,7 @@ pub struct Ability {
     keywords: BTreeSet<KeywordId>,
     #[serde(default)]
     stats: BTreeMap<StatKey, Fact<StatValue>>,
-    evidence: Vec<EvidenceRef>,
+    sources: Vec<SourceReference>,
 }
 
 impl Ability {
@@ -377,7 +378,7 @@ impl Ability {
         slot: LogicalSlot,
         variant: Option<AbilityVariant>,
         name: Fact<LocalizedText>,
-        evidence: Vec<EvidenceRef>,
+        sources: Vec<SourceReference>,
     ) -> Self {
         Self {
             slot,
@@ -385,7 +386,7 @@ impl Ability {
             name,
             keywords: BTreeSet::new(),
             stats: BTreeMap::new(),
-            evidence,
+            sources,
         }
     }
     pub fn with_keyword(mut self, keyword: impl Into<KeywordId>) -> Self {
@@ -420,8 +421,8 @@ impl Ability {
     pub fn stats(&self) -> impl Iterator<Item = (&StatKey, &Fact<StatValue>)> {
         self.stats.iter()
     }
-    pub fn evidence(&self) -> &[EvidenceRef] {
-        &self.evidence
+    pub fn sources(&self) -> &[SourceReference] {
+        &self.sources
     }
 }
 
@@ -436,7 +437,7 @@ pub struct Hero {
     #[serde(default)]
     stats: BTreeMap<StatKey, Fact<StatValue>>,
     abilities: Vec<Ability>,
-    evidence: Vec<EvidenceRef>,
+    sources: Vec<SourceReference>,
 }
 
 impl Hero {
@@ -444,7 +445,7 @@ impl Hero {
         id: HeroId,
         name: Fact<LocalizedText>,
         abilities: Vec<Ability>,
-        evidence: Vec<EvidenceRef>,
+        sources: Vec<SourceReference>,
     ) -> Self {
         Self {
             id,
@@ -452,7 +453,7 @@ impl Hero {
             role: None,
             stats: BTreeMap::new(),
             abilities,
-            evidence,
+            sources,
         }
     }
     pub fn with_role(mut self, role: Fact<HeroRole>) -> Self {
@@ -529,8 +530,8 @@ impl Hero {
                 variant: variant.clone(),
             })
     }
-    pub fn evidence(&self) -> &[EvidenceRef] {
-        &self.evidence
+    pub fn sources(&self) -> &[SourceReference] {
+        &self.sources
     }
 }
 
@@ -594,7 +595,7 @@ pub enum GameplayDataError {
         hero: HeroId,
         slot: LogicalSlot,
     },
-    MissingEvidence(String),
+    MissingSource(String),
     EmptyId(&'static str),
     InvalidQuantity {
         value: f64,
@@ -626,7 +627,9 @@ impl std::fmt::Display for GameplayDataError {
                 f,
                 "hero '{hero}' has multiple abilities in slot '{slot}' but not every record has a variant"
             ),
-            Self::MissingEvidence(path) => write!(f, "gameplay fact '{path}' has no evidence"),
+            Self::MissingSource(path) => {
+                write!(f, "gameplay fact '{path}' has no source reference")
+            }
             Self::EmptyId(field) => write!(f, "gameplay identity '{field}' is empty"),
             Self::InvalidQuantity { value } => write!(f, "quantity value '{value}' is not finite"),
             Self::Malformed(message) => write!(f, "malformed gameplay data: {message}"),
@@ -723,20 +726,20 @@ fn validate_hero(hero: &Hero) -> Result<(), GameplayDataError> {
     if hero.id.as_str().is_empty() {
         return Err(GameplayDataError::EmptyId("hero"));
     }
-    if hero.evidence.is_empty() {
-        return Err(GameplayDataError::MissingEvidence(format!(
+    if hero.sources.is_empty() {
+        return Err(GameplayDataError::MissingSource(format!(
             "hero {}",
             hero.id
         )));
     }
-    if hero.name.evidence.is_empty() {
-        return Err(GameplayDataError::MissingEvidence(format!(
+    if hero.name.sources.is_empty() {
+        return Err(GameplayDataError::MissingSource(format!(
             "hero {} name",
             hero.id
         )));
     }
-    validate_evidence(&format!("hero {}", hero.id), &hero.evidence)?;
-    validate_evidence(&format!("hero {} name", hero.id), &hero.name.evidence)?;
+    validate_sources(&format!("hero {}", hero.id), &hero.sources)?;
+    validate_sources(&format!("hero {} name", hero.id), &hero.name.sources)?;
     if let Some(role) = &hero.role {
         if role.value.as_str().is_empty() {
             return Err(GameplayDataError::EmptyId("hero role"));
@@ -763,25 +766,25 @@ fn validate_hero(hero: &Hero) -> Result<(), GameplayDataError> {
         {
             return Err(GameplayDataError::EmptyId("ability variant"));
         }
-        if ability.evidence.is_empty() {
-            return Err(GameplayDataError::MissingEvidence(format!(
+        if ability.sources.is_empty() {
+            return Err(GameplayDataError::MissingSource(format!(
                 "hero {} ability {}",
                 hero.id, ability.slot
             )));
         }
-        validate_evidence(
+        validate_sources(
             &format!("hero {} ability {}", hero.id, ability.slot),
-            &ability.evidence,
+            &ability.sources,
         )?;
-        if ability.name.evidence.is_empty() {
-            return Err(GameplayDataError::MissingEvidence(format!(
+        if ability.name.sources.is_empty() {
+            return Err(GameplayDataError::MissingSource(format!(
                 "hero {} ability {} name",
                 hero.id, ability.slot
             )));
         }
-        validate_evidence(
+        validate_sources(
             &format!("hero {} ability {} name", hero.id, ability.slot),
-            &ability.name.evidence,
+            &ability.name.sources,
         )?;
         let slot_variant = (ability.slot.clone(), ability.variant.clone());
         if !slot_variants.insert(slot_variant) {
@@ -838,16 +841,16 @@ fn validate_stat_value(_path: &str, value: &StatValue) -> Result<(), GameplayDat
 }
 
 fn validate_fact<T>(path: &str, fact: &Fact<T>) -> Result<(), GameplayDataError> {
-    if fact.evidence.is_empty() {
-        return Err(GameplayDataError::MissingEvidence(path.to_string()));
+    if fact.sources.is_empty() {
+        return Err(GameplayDataError::MissingSource(path.to_string()));
     }
-    validate_evidence(path, &fact.evidence)
+    validate_sources(path, &fact.sources)
 }
 
-fn validate_evidence(path: &str, evidence: &[EvidenceRef]) -> Result<(), GameplayDataError> {
-    for item in evidence {
+fn validate_sources(path: &str, sources: &[SourceReference]) -> Result<(), GameplayDataError> {
+    for item in sources {
         if item.source.is_empty() || item.locator.is_empty() {
-            return Err(GameplayDataError::MissingEvidence(path.to_string()));
+            return Err(GameplayDataError::MissingSource(path.to_string()));
         }
     }
     Ok(())

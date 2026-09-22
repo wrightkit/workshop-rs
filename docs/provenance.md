@@ -1,10 +1,10 @@
-# Provenance record
+# Source attribution record
 
-This document records the source provenance of committed datasets and fixtures
+This document records the source attribution of committed datasets and fixtures
 in `workshop-rs`, as required for attribution, licensing, and reproducible
 regeneration.
 
-Hero/gameplay data follows the separate identity and evidence contract in
+Hero/gameplay data follows the separate identity and source-record contract in
 [`docs/adr/0007-gameplay-domain-api.md`](adr/0007-gameplay-domain-api.md). The
 Workshop catalog identity below does not identify a gameplay dataset.
 
@@ -23,18 +23,19 @@ declared named ability-slot topology; no OverPy or OSTW data is copied.
 The committed projection contains hero identities, role facts, and
 export-declared named ability slots, plus official-detail variant records for
 Bastion, D.Va, and Ramattra. Each hero/ability name fact and export record
-carries the export path as an `EvidenceRef`. Each role fact carries its
-official Blizzard hero-detail URL and access date 2026-08-18 as separate
-evidence.
+carries the export path as a `SourceReference`. Each role fact carries its
+official Blizzard hero-detail URL and access date 2026-08-18 as a separate
+source reference.
 
 The current identity digest is
-`sha256:5c01599839834f3599a524c7307d3ceaa493e6a1e845d9884dc9617f2af4068a`.
+`sha256:388a2964056c1cb515ad43fa85050f608e583c1ce076a7dcc846de09e458e734`.
 
 Representative ability keywords are semantic labels, not Blizzard or Workshop
-enum values. Their labels and the six variant names/shapes are evidenced by
+enum values. Their labels and the six variant names/shapes are source-linked to
 the official Blizzard hero-detail URLs for Ana, Brigitte, Ramattra, D.Va,
 Bastion, and Venture, accessed 2026-08-18;
-the variants intentionally carry no fabricated Workshop-export provenance.
+the variants intentionally carry no fabricated Workshop-export source
+attribution.
 Venture base health and Drill Dash cooldown/damage are intentionally absent
 because the cited June 30, 2026 Community Crafted patch source is scoped to a
 limited mode and that scope is not modeled. Other base stats, armor/shields, cooldowns, damage,

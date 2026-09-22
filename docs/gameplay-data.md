@@ -21,7 +21,7 @@ so formatting and input key order do not change the identity. The loader also
 sorts heroes and abilities before building lookup indexes.
 
 The committed dataset identity is version `2026-08-12` with digest
-`sha256:5c01599839834f3599a524c7307d3ceaa493e6a1e845d9884dc9617f2af4068a`.
+`sha256:388a2964056c1cb515ad43fa85050f608e583c1ce076a7dcc846de09e458e734`.
 
 ## Source records and known gaps
 

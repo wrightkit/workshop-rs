@@ -2,7 +2,7 @@
 //!
 //! A typed, non-serde tree for custom-game-settings blocks shared by
 //! validation and emission. The tree is a carrier: settings are carried and
-//! emitted, never interpreted by lowering/analysis. The fixture-evidenced
+//! emitted, never interpreted by lowering/analysis. The source-backed
 //! emission table lives in [`table`].
 //!
 //! Extracted from the Wright-authored `wright-ir` crate; see
@@ -21,8 +21,8 @@ pub use table::{KeyKind, PathPart, TableEntry, entries, enum_name, mode_name, pa
 
 pub use schema::{
     Applicability, EffectiveNumber, NumericBounds, NumericBoundsError, SettingDefinition,
-    SettingEvidenceKind, SettingId, SettingIdentity, SettingOccurrence, SettingOperationError,
-    SettingPresentation, SettingProvenance, SettingScope, SettingSourceEdit, SettingTarget,
+    SettingId, SettingIdentity, SettingOccurrence, SettingOperationError, SettingPresentation,
+    SettingScope, SettingSource, SettingSourceEdit, SettingSourceKind, SettingTarget,
     SettingTargetKind, SettingValue, SettingValueDomain, TeamId, definition, definitions,
     definitions_by_id,
 };

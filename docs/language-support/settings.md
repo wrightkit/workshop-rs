@@ -18,7 +18,7 @@
 The `workshop_rs::settings` module exposes the reviewed settings catalog
 through `definitions()`. Each `SettingDefinition` carries a locale-independent
 `SettingId`, Workshop `SettingScope`, target shape, typed
-`SettingValueDomain`, locale presentation metadata, and source provenance.
+`SettingValueDomain`, locale presentation metadata, and setting source metadata.
 The source-preserving `Settings` / `SettingsNode` tree remains the authored
 value carrier; the catalog does not regenerate or discard unknown settings.
 
@@ -79,8 +79,8 @@ assert!(health
 Hero and ability display names are presentation data only. Consumers use the
 canonical concept and `SettingTarget`; localized aliases remain parser/emitter
 resolution details. Numeric bounds remain unknown until reviewed Workshop
-evidence establishes them; `SettingValueDomain::effective_number` exposes a
-clamped effective value only for a definition carrying such evidence.
+source records establish them; `SettingValueDomain::effective_number` exposes a
+clamped effective value only for a definition carrying such source records.
 
 `SettingDefinition::read` and `write` operate on existing occurrences. A
 write changes only the typed leaf value, preserving its span and all unrelated

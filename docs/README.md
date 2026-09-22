@@ -9,7 +9,7 @@ This directory is the canonical documentation index for `workshop-rs`. The root
 architecture/README.md       current architecture routing
   └─ current domain contracts
 language-support.md          current declared support, backed by executable tests
-domain/provenance docs       durable public contracts and fixture provenance
+domain/source docs           durable public contracts and fixture attribution
 adr/                         point-in-time decisions and rationale
 Issues / PRs / releases      mutable execution state
 source / tests / data        current implementation reality
@@ -30,7 +30,7 @@ relevant code/tests/data and current Issue contract.
   shared implementation boundaries, CLI verification tooling, and test-owned
   fixtures.
 - [Repository agent guidance](../AGENTS.md): implementation routing,
-  verification, provenance, and delivery rules.
+  verification, source attribution, and delivery rules.
 
 [`implementation-role.md`](implementation-role.md) is retained only as a
 compatibility pointer for older links.
@@ -52,17 +52,17 @@ compatibility pointer for older links.
 
 Support prose is not a substitute for current executable tests.
 
-## Domain contracts and fixture provenance
+## Domain contracts and fixture attribution
 
-- [Provenance record](provenance.md): catalog, locale, gameplay, fixture, and
-  dataset provenance.
+- [Source attribution record](provenance.md): catalog, locale, gameplay,
+  fixture, and dataset source attribution.
 - [Source preservation contract](source-preservation.md): optional authored
   source, comment attachment, checked edits, and mixed-source boundaries.
 - [Hero gameplay dataset](gameplay-data.md): embedded data model and validation
   boundaries.
 - [Gameplay query API](gameplay-query.md): read-only semantic queries and
   locale-aware ability resolution.
-- [Hero gameplay topology survey](gameplay-roster-survey.md): evidence used by
+- [Hero gameplay topology survey](gameplay-roster-survey.md): source material used by
   the gameplay domain.
 - [Canonical action layout](action-layout.md): validated WIR action-width and
   structured action expansion behavior.

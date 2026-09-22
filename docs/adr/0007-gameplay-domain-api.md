@@ -37,7 +37,7 @@ ambiguous.
 3. Raw gameplay records use `Hero`, `Ability`, `AbilityRef`, `Fact<T>`,
    `StatValue`, and `Quantity`. Ability localized/display names are metadata
    on the hero/slot/variant record and can change without changing its
-   `AbilityRef`. Facts carry concrete source references with a source,
+   `AbilityRef`. Facts carry concrete `SourceReference` values with a source,
    locator, and optional note; the enclosing `GameplayDatasetIdentity` carries
    dataset id, version, digest, source, license, target, and review status.
    Missing facts stay absent.
