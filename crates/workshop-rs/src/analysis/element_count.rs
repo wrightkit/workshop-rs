@@ -8,14 +8,14 @@
 //! those arguments adds one. Custom game settings and rule parameters cost
 //! zero.
 
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::fmt;
 
 use crate::catalog::{Catalog, Kind};
 use crate::core::source::Span;
 use crate::wir::{self, Action, ActionId, Program, Value, ValueId};
 
-/// The WIR node category represented in an element-count report.
+/// The Workshop node category represented in an element-count report.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ElementNodeKind {
     Rule,
@@ -24,30 +24,34 @@ pub enum ElementNodeKind {
     Value,
 }
 
-/// One node's contribution, including its nested WIR provenance.
+/// One node's contribution and its nested element-count analysis.
 #[derive(Debug, Clone)]
 pub struct ElementCountNode {
     pub kind: ElementNodeKind,
-    /// The arena index of the represented WIR node. Rule nodes use the rule
-    /// arena, action nodes use the action arena, and value nodes use the value
-    /// arena. Synthetic condition nodes use the condition's value index.
+    /// An opaque identity unique within this report. It is not a WIR or
+    /// storage arena index and has no meaning across reports.
     pub id: usize,
+    /// The canonical Workshop or analysis name for this node.
     pub name: String,
+    /// The authored source span, when the program retained one.
     pub span: Option<Span>,
-    /// The contribution before children and adjustment rules.
+    /// The node-local contribution before child counts and adjustments.
     pub base_count: usize,
-    /// The local adjustment from the canonical model, such as a top-level
-    /// argument reduction or hero-pair surcharge.
+    /// The signed node-local adjustment, such as a direct-argument reduction
+    /// or hero-pair surcharge.
     pub adjustment: isize,
-    /// The complete contribution of this node and its children.
+    /// The node's recursive count: `base_count + adjustment + children`.
     pub count: usize,
+    /// Nested values, conditions, and actions in canonical source order.
     pub children: Vec<ElementCountNode>,
 }
 
 /// A structured element-count report for one canonical Workshop program.
 #[derive(Debug, Clone)]
 pub struct ElementCountReport {
+    /// The sum of all rule counts.
     pub total: usize,
+    /// Rule nodes in canonical source/WIR order.
     pub rules: Vec<ElementCountNode>,
 }
 
@@ -63,17 +67,21 @@ impl ElementCountReport {
 /// A construct for which an exact canonical element count cannot be produced.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ElementCountError {
-    InvalidProgram {
-        message: String,
-    },
+    /// The input cannot be materialized or structurally validated as a
+    /// canonical Workshop program.
+    InvalidProgram { message: String },
+    /// The input contains a construct for which this analyzer has no exact
+    /// canonical count.
     Unsupported {
         kind: ElementNodeKind,
         name: String,
         span: Option<Span>,
         reason: String,
     },
+    /// The internal graph contains a recursive value or action reference.
     Cycle {
         kind: ElementNodeKind,
+        /// The opaque identity of the active node involved in the cycle.
         id: usize,
     },
 }
@@ -122,12 +130,13 @@ impl Program {
         let mut counter = Counter {
             program: self,
             catalog,
-            values: HashSet::new(),
-            actions: HashSet::new(),
+            values: HashMap::new(),
+            actions: HashMap::new(),
+            next_node_id: 0,
         };
         let mut rules = Vec::with_capacity(self.rules.len());
-        for (index, rule) in self.rules.iter().enumerate() {
-            rules.push(counter.rule(index, rule)?);
+        for rule in self.rules.iter() {
+            rules.push(counter.rule(rule)?);
         }
         let total = rules.iter().map(|rule| rule.count).sum();
         Ok(ElementCountReport { total, rules })
@@ -187,16 +196,20 @@ impl Counted {
 struct Counter<'a> {
     program: &'a Program,
     catalog: &'a Catalog,
-    values: HashSet<usize>,
-    actions: HashSet<usize>,
+    values: HashMap<usize, usize>,
+    actions: HashMap<usize, usize>,
+    next_node_id: usize,
 }
 
 impl Counter<'_> {
-    fn rule(
-        &mut self,
-        index: usize,
-        rule: &wir::Rule,
-    ) -> Result<ElementCountNode, ElementCountError> {
+    fn next_node_id(&mut self) -> usize {
+        let id = self.next_node_id;
+        self.next_node_id += 1;
+        id
+    }
+
+    fn rule(&mut self, rule: &wir::Rule) -> Result<ElementCountNode, ElementCountError> {
+        let node_id = self.next_node_id();
         let mut children = Vec::with_capacity(rule.conditions.len() + rule.actions.len());
         for condition in &rule.conditions {
             children.push(self.condition(*condition)?.node);
@@ -206,7 +219,7 @@ impl Counter<'_> {
         }
         Ok(Counted::finish(
             ElementNodeKind::Rule,
-            index,
+            node_id,
             &rule.name,
             rule.span,
             1,
@@ -218,6 +231,7 @@ impl Counter<'_> {
     }
 
     fn condition(&mut self, id: ValueId) -> Result<Counted, ElementCountError> {
+        let node_id = self.next_node_id();
         let Some(value) = self.program.values.get(id) else {
             return Err(ElementCountError::InvalidProgram {
                 message: format!("dangling condition value {}", id.index()),
@@ -241,7 +255,7 @@ impl Counter<'_> {
         };
         Ok(Counted::finish(
             ElementNodeKind::Condition,
-            id.index(),
+            node_id,
             "condition",
             value.span,
             1,
@@ -252,26 +266,28 @@ impl Counter<'_> {
     }
 
     fn action(&mut self, id: ActionId) -> Result<Counted, ElementCountError> {
-        if !self.actions.insert(id.index()) {
+        let node_id = self.next_node_id();
+        if let Some(&active_id) = self.actions.get(&id.index()) {
             return Err(ElementCountError::Cycle {
                 kind: ElementNodeKind::Action,
-                id: id.index(),
+                id: active_id,
             });
         }
+        self.actions.insert(id.index(), node_id);
         let Some(action) = self.program.actions.get(id) else {
             return Err(ElementCountError::InvalidProgram {
                 message: format!("dangling action {}", id.index()),
             });
         };
-        let result = self.action_inner(id, action);
+        let result = self.action_inner(action, node_id);
         self.actions.remove(&id.index());
         result
     }
 
     fn action_inner(
         &mut self,
-        id: ActionId,
         action: &Action,
+        node_id: usize,
     ) -> Result<Counted, ElementCountError> {
         let span = action.span();
         let mut children = Vec::new();
@@ -376,7 +392,7 @@ impl Counter<'_> {
         }
         Ok(Counted::finish(
             ElementNodeKind::Action,
-            id.index(),
+            node_id,
             name,
             span,
             1,
@@ -399,12 +415,14 @@ impl Counter<'_> {
     }
 
     fn value(&mut self, id: ValueId, top_level: bool) -> Result<Counted, ElementCountError> {
-        if !self.values.insert(id.index()) {
+        let node_id = self.next_node_id();
+        if let Some(&active_id) = self.values.get(&id.index()) {
             return Err(ElementCountError::Cycle {
                 kind: ElementNodeKind::Value,
-                id: id.index(),
+                id: active_id,
             });
         }
+        self.values.insert(id.index(), node_id);
         let Some(value) = self.program.values.get(id) else {
             return Err(ElementCountError::InvalidProgram {
                 message: format!("dangling value {}", id.index()),
@@ -412,62 +430,67 @@ impl Counter<'_> {
         };
         let span = value.span;
         let result = match &value.value {
-            Value::Number { .. } => self.value_node(id, "number", span, 1, vec![], 0),
-            Value::String(_) => self.value_node(id, "string", span, 1, vec![], 0),
+            Value::Number { .. } => self.value_node(node_id, "number", span, 1, vec![], 0),
+            Value::String(_) => self.value_node(node_id, "string", span, 1, vec![], 0),
             Value::LocalizedString(_) => {
-                self.value_node(id, "localized string", span, 2, vec![], 0)
+                self.value_node(node_id, "localized string", span, 2, vec![], 0)
             }
-            Value::Bool(_) => self.value_node(id, "boolean", span, 1, vec![], 0),
-            Value::Null => self.value_node(id, "null", span, 1, vec![], 0),
-            Value::Array(elements) => self.value_children(id, "array", span, 2, elements),
-            Value::Vector { x, y, z } => self.value_children(id, "vector", span, 1, &[*x, *y, *z]),
+            Value::Bool(_) => self.value_node(node_id, "boolean", span, 1, vec![], 0),
+            Value::Null => self.value_node(node_id, "null", span, 1, vec![], 0),
+            Value::Array(elements) => self.value_children(node_id, "array", span, 2, elements),
+            Value::Vector { x, y, z } => {
+                self.value_children(node_id, "vector", span, 1, &[*x, *y, *z])
+            }
             Value::Enum { value_type, .. } => {
                 let heroes = usize::from(value_type == "Hero");
-                self.value_node(id, value_type, span, 1, vec![], heroes)
+                self.value_node(node_id, value_type, span, 1, vec![], heroes)
             }
-            Value::GlobalVariable(_) => self.value_node(id, "global variable", span, 1, vec![], 0),
+            Value::GlobalVariable(_) => {
+                self.value_node(node_id, "global variable", span, 1, vec![], 0)
+            }
             Value::PlayerVariable { player, .. } => {
-                self.value_children(id, "player variable", span, 1, &[*player])
+                self.value_children(node_id, "player variable", span, 1, &[*player])
             }
-            Value::Subroutine(_) => self.value_node(id, "subroutine", span, 1, vec![], 0),
-            Value::EventPlayer => self.value_node(id, "event player", span, 1, vec![], 0),
+            Value::Subroutine(_) => self.value_node(node_id, "subroutine", span, 1, vec![], 0),
+            Value::EventPlayer => self.value_node(node_id, "event player", span, 1, vec![], 0),
             Value::Call { name, args } => {
                 if name == crate::wir::AMBIGUOUS_ENUM_CALL
                     && crate::wir::ambiguous_enum_parts(self.program, id).is_some()
                 {
-                    return self.value_node(id, "ambiguous enum", span, 1, vec![], 0);
-                }
-                if name != "memberAccess"
-                    && self.catalog.entry(Kind::Value, name).is_none()
-                    && self.catalog.entry(Kind::Operator, name).is_none()
-                    && !is_canonical_helper(name)
-                {
-                    return Err(ElementCountError::Unsupported {
-                        kind: ElementNodeKind::Value,
-                        name: name.clone(),
-                        span,
-                        reason: "the value is not a catalog identity".to_string(),
-                    });
-                }
-                let child_ids: Vec<ValueId> = if name == "memberAccess" {
-                    args.first()
-                        .copied()
-                        .into_iter()
-                        .chain(args.iter().copied().skip(2))
-                        .collect()
+                    self.value_node(node_id, "ambiguous enum", span, 1, vec![], 0)
                 } else {
-                    args.clone()
-                };
-                let base = if name == "array"
-                    || name == "evalOnce"
-                    || name.starts_with("workshopSetting")
-                    || name.starts_with("createWorkshopSetting")
-                {
-                    2
-                } else {
-                    1
-                };
-                self.value_children(id, name, span, base, &child_ids)
+                    if name != "memberAccess"
+                        && self.catalog.entry(Kind::Value, name).is_none()
+                        && self.catalog.entry(Kind::Operator, name).is_none()
+                        && !is_canonical_helper(name)
+                    {
+                        return Err(ElementCountError::Unsupported {
+                            kind: ElementNodeKind::Value,
+                            name: name.clone(),
+                            span,
+                            reason: "the value is not a catalog identity".to_string(),
+                        });
+                    }
+                    let child_ids: Vec<ValueId> = if name == "memberAccess" {
+                        args.first()
+                            .copied()
+                            .into_iter()
+                            .chain(args.iter().copied().skip(2))
+                            .collect()
+                    } else {
+                        args.clone()
+                    };
+                    let base = if name == "array"
+                        || name == "evalOnce"
+                        || name.starts_with("workshopSetting")
+                        || name.starts_with("createWorkshopSetting")
+                    {
+                        2
+                    } else {
+                        1
+                    };
+                    self.value_children(node_id, name, span, base, &child_ids)
+                }
             }
         }?;
         self.values.remove(&id.index());
@@ -481,7 +504,7 @@ impl Counter<'_> {
 
     fn value_node(
         &self,
-        id: ValueId,
+        id: usize,
         name: impl Into<String>,
         span: Option<Span>,
         base: usize,
@@ -490,7 +513,7 @@ impl Counter<'_> {
     ) -> Result<Counted, ElementCountError> {
         Ok(Counted::finish(
             ElementNodeKind::Value,
-            id.index(),
+            id,
             name,
             span,
             base,
@@ -502,7 +525,7 @@ impl Counter<'_> {
 
     fn value_children(
         &mut self,
-        id: ValueId,
+        id: usize,
         name: impl Into<String>,
         span: Option<Span>,
         base: usize,

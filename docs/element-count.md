@@ -2,8 +2,19 @@
 
 `workshop-rs` exposes `Program::element_count(&Catalog)`, which analyzes the
 canonical public `Program` and returns an `ElementCountReport`. The report contains
-the total, one recursive node tree per rule, and per-node analysis indexes,
-source spans, base costs, adjustments, and final subtree costs.
+the total and one recursive node tree per rule. The report types are available
+from the public `workshop_rs::actions` module.
+
+`ElementCountReport::rules` and each `ElementCountNode::children` preserve
+canonical source/WIR order. A node exposes its `kind`, canonical or analysis
+`name`, opaque report-local `id`, optional authored `span`, node-local
+`base_count` and signed `adjustment`, and recursive `count`. The `id` is unique
+only within one report and is not a WIR or storage arena index. The recursive
+count is the node's base count plus its adjustment and child counts. Values and
+nested actions remain nodes in the tree instead of being reduced to an
+aggregate total. Consumers should map nodes by their ordered tree position and
+source span when one is available; report-local IDs have no meaning across
+reports.
 
 The model follows the documented Workshop element-count rules:
 
@@ -26,10 +37,14 @@ element is added. Disabling a rule, action, or condition has no effect.
 
 The calculator is locale-independent: it reads canonical identities and
 never emitted spellings. It validates the public program and catalog identities before
-producing a report. Unknown or unsupported constructs return
-`ElementCountError` instead of yielding a misleading exact total. In
+producing a report. Unknown, unsupported, invalid, or cyclic constructs return
+`ElementCountError` instead of yielding a misleading exact total; no partial
+report is returned. In
 Native display actions such as `Create HUD Text` are counted through their
 canonical catalog-backed action calls.
+
+Element count is a static structural Workshop complexity measure. It is not an
+estimate of runtime CPU cost or execution performance.
 
 The independent behavioral source for the supported rules is the
 [Workshop.codes element-count calculation reference](https://workshop.codes/wiki/articles/element-count-calculation).
