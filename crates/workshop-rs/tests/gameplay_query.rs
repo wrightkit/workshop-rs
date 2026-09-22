@@ -1,7 +1,7 @@
 use workshop_rs::gameplay::{
-    Ability, AbilityRef, AbilityVariant, EvidenceRef, Fact, GameplayCatalog,
-    GameplayDatasetIdentity, Hero, HeroId, LocalizedText, LogicalSlot, Quantity, StatKey,
-    StatValue, Unit, hero_ids, slots, units,
+    Ability, AbilityRef, AbilityVariant, Fact, GameplayCatalog, GameplayDatasetIdentity, Hero,
+    HeroId, LocalizedText, LogicalSlot, Quantity, SourceReference, StatKey, StatValue, Unit,
+    hero_ids, slots, units,
 };
 use workshop_rs::gameplay_data::builtin;
 use workshop_rs::gameplay_query::{
@@ -9,8 +9,8 @@ use workshop_rs::gameplay_query::{
     CooldownPercentageError, GameplayQueryError, StatOwner,
 };
 
-fn evidence(locator: &str) -> EvidenceRef {
-    EvidenceRef {
+fn source_reference(locator: &str) -> SourceReference {
+    SourceReference {
         source: "test-fixture".to_string(),
         locator: locator.to_string(),
         note: None,
@@ -23,7 +23,7 @@ fn names(en: &str, zh: &str, locator: &str) -> Fact<LocalizedText> {
             ("en-US".to_string(), en.to_string()),
             ("zh-CN".to_string(), zh.to_string()),
         ]),
-        vec![evidence(locator)],
+        vec![source_reference(locator)],
     )
 }
 
@@ -32,7 +32,7 @@ fn ability(en: &str, zh: &str, slot: &str, variant: Option<&str>) -> Ability {
         LogicalSlot::new(slot),
         variant.map(AbilityVariant::new),
         names(en, zh, &format!("ability.{slot}")),
-        vec![evidence(&format!("ability.{slot}"))],
+        vec![source_reference(&format!("ability.{slot}"))],
     )
 }
 
@@ -59,7 +59,7 @@ fn catalog() -> GameplayCatalog {
             StatKey::new("cooldown"),
             Fact::new(
                 StatValue::Quantity(seconds(12.0)),
-                vec![evidence("ana.sleep")],
+                vec![source_reference("ana.sleep")],
             ),
         );
     let nano = ability("Nano Boost", "纳米激素", "ultimate", None)
@@ -68,14 +68,14 @@ fn catalog() -> GameplayCatalog {
             StatKey::new("description"),
             Fact::new(
                 StatValue::Text("ultimate".to_string()),
-                vec![evidence("ana.nano.description")],
+                vec![source_reference("ana.nano.description")],
             ),
         );
     let ana = Hero::new(
         HeroId::new("ana"),
         names("Ana", "安娜", "heroes.ana"),
         vec![sleep, nano],
-        vec![evidence("heroes.ana")],
+        vec![source_reference("heroes.ana")],
     );
     let ramattra = Hero::new(
         HeroId::new("ramattra"),
@@ -86,7 +86,7 @@ fn catalog() -> GameplayCatalog {
             ability("Void Barrier", "虚空屏障", "secondaryFire", Some("omnic"))
                 .with_keyword("barrier"),
         ],
-        vec![evidence("heroes.ramattra")],
+        vec![source_reference("heroes.ramattra")],
     );
     GameplayCatalog::new(identity(), vec![ramattra, ana]).unwrap()
 }
@@ -279,28 +279,34 @@ fn cooldown_percentage_and_data_errors_never_default() {
         HeroId::new("missing"),
         names("Missing", "缺失", "heroes.missing"),
         vec![ability("No Cooldown", "无冷却", "ability1", None)],
-        vec![evidence("heroes.missing")],
+        vec![source_reference("heroes.missing")],
     );
     let wrong_type = ability("Text Cooldown", "文本冷却", "ability1", None).with_stat(
         StatKey::new("cooldown"),
-        Fact::new(StatValue::Text("12".to_string()), vec![evidence("text")]),
+        Fact::new(
+            StatValue::Text("12".to_string()),
+            vec![source_reference("text")],
+        ),
     );
     let wrong_unit = ability("Meter Cooldown", "米冷却", "ability2", None).with_stat(
         StatKey::new("cooldown"),
         Fact::new(
             StatValue::Quantity(Quantity::new(12.0, Unit::new("meters")).unwrap()),
-            vec![evidence("meters")],
+            vec![source_reference("meters")],
         ),
     );
     let zero = ability("Zero Cooldown", "零冷却", "ability3", None).with_stat(
         StatKey::new("cooldown"),
-        Fact::new(StatValue::Quantity(seconds(0.0)), vec![evidence("zero")]),
+        Fact::new(
+            StatValue::Quantity(seconds(0.0)),
+            vec![source_reference("zero")],
+        ),
     );
     let edge = Hero::new(
         HeroId::new("edge"),
         names("Edge", "边界", "heroes.edge"),
         vec![wrong_type, wrong_unit, zero],
-        vec![evidence("heroes.edge")],
+        vec![source_reference("heroes.edge")],
     );
     let catalog = GameplayCatalog::new(identity(), vec![missing, edge]).unwrap();
     let query = catalog.query();

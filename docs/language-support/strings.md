@@ -13,5 +13,5 @@
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| `en-US`, `de-DE`, `es-ES`, `es-MX`, `fr-FR`, `it-IT`, `ja-JP`, `ko-KR`, `pl-PL`, `pt-BR`, `ru-RU`, `th-TH`, `tr-TR`, `zh-CN`, `zh-TW` | ✅ Supported | Declared from the pinned OverPy 9.7.10 Workshop language set. Locale spellings are provenance-backed catalog/settings data; uncovered identities remain explicit missing mappings. |
+| `en-US`, `de-DE`, `es-ES`, `es-MX`, `fr-FR`, `it-IT`, `ja-JP`, `ko-KR`, `pl-PL`, `pt-BR`, `ru-RU`, `th-TH`, `tr-TR`, `zh-CN`, `zh-TW` | ✅ Supported | Declared from the pinned OverPy 9.7.10 Workshop language set. Locale spellings are source-attributed catalog/settings data; uncovered identities remain explicit missing mappings. |
 | Bidirectional conversion across the declared locales | ✅ Supported | Conversion resolves locale-independent canonical identities and fails explicitly on missing mappings; opt-in fallback is recorded in the conversion result. |

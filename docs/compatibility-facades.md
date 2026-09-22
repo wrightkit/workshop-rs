@@ -28,7 +28,7 @@ They include source, tests, and checked-in documentation where applicable.
 | `format` | yes | no replacement public path; shared formatter | 0 | 2 | 0 | 1 | retain: external consumers |
 | `ids` | yes | no replacement public path; typed WIR identities | 3 | 0 | 0 | 6 | retain: external consumers |
 | `signatures` | no | `signatures` remains the public signature-context surface | 1 | 1 | 0 | 0 | retain: external consumer |
-| `source` | no | `source` remains the public provenance surface | 8 | 4 | 3 | 12 | retain: external consumers |
+| `source` | no | `source` remains the public source-metadata surface | 8 | 4 | 3 | 12 | retain: external consumers |
 | `element_count` | yes | `Program::element_count`, `actions` re-exports | 1 | 0 | 0 | 0 | retain: in-repo compatibility use |
 | `semantic` | yes | `Program::semantic_issues`, `rules` re-exports | 3 | 0 | 0 | 3 | retain: external consumers |
 | `gameplay_data` | yes | `gameplay::data` | 3 | 0 | 0 | 0 | retain: in-repo/docs use |

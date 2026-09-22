@@ -53,7 +53,7 @@ whole-file formatting or comment preservation.
 The raw Workshop parser accepts a complete supported Workshop document. It does
 not interpret DEL/OSTW, OverPy, or other embedded source-language syntax. A
 consumer embedding Workshop regions owns extraction and source-language
-provenance; it can attach the extracted Workshop source to a canonical program
+source attribution; it can attach the extracted Workshop source to a canonical program
 file when available. Malformed or unsupported mixed content must be rejected or
 reported incomplete by that consumer rather than being assigned guessed
 Workshop semantics.

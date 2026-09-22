@@ -1,11 +1,11 @@
 use workshop_rs::gameplay::{
-    Ability, AbilityLookupError, AbilityRef, AbilityVariant, EvidenceRef, Fact, GameplayCatalog,
+    Ability, AbilityLookupError, AbilityRef, AbilityVariant, Fact, GameplayCatalog,
     GameplayDataError, GameplayDatasetIdentity, Hero, HeroId, LocalizedText, LogicalSlot, Quantity,
-    StatKey, StatValue, Unit, hero_ids, slots,
+    SourceReference, StatKey, StatValue, Unit, hero_ids, slots,
 };
 
-fn evidence(locator: &str) -> EvidenceRef {
-    EvidenceRef {
+fn source_reference(locator: &str) -> SourceReference {
+    SourceReference {
         source: "workshop-data".to_string(),
         locator: locator.to_string(),
         note: None,
@@ -15,7 +15,7 @@ fn evidence(locator: &str) -> EvidenceRef {
 fn names(name: &str, locator: &str) -> Fact<LocalizedText> {
     Fact::new(
         LocalizedText::new([("en-US".to_string(), name.to_string())]),
-        vec![evidence(locator)],
+        vec![source_reference(locator)],
     )
 }
 
@@ -24,7 +24,7 @@ fn ability(slot: &str, variant: Option<&str>, name: &str) -> Ability {
         LogicalSlot::new(slot),
         variant.map(AbilityVariant::new),
         names(name, &format!("heroes.ana.{slot}")),
-        vec![evidence(&format!("heroes.ana.{slot}"))],
+        vec![source_reference(&format!("heroes.ana.{slot}"))],
     )
 }
 
@@ -33,7 +33,7 @@ fn hero(id: &str, abilities: Vec<Ability>) -> Hero {
         HeroId::new(id),
         names(id, &format!("heroes.{id}")),
         abilities,
-        vec![evidence(&format!("heroes.{id}"))],
+        vec![source_reference(&format!("heroes.{id}"))],
     )
 }
 
@@ -131,10 +131,10 @@ fn missing_and_unknown_data_are_explicit() {
 }
 
 #[test]
-fn facts_carry_evidence_and_quantities_reject_non_finite_values() {
+fn facts_carry_sources_and_quantities_reject_non_finite_values() {
     let stat = Fact::new(
         StatValue::Quantity(Quantity::new(12.0, Unit::new("seconds")).unwrap()),
-        vec![evidence("heroes.ana.ability1.cooldown")],
+        vec![source_reference("heroes.ana.ability1.cooldown")],
     );
     let sleep = ability("ability1", None, "Sleep Dart")
         .with_keyword("crowd-control")
@@ -148,14 +148,14 @@ fn facts_carry_evidence_and_quantities_reject_non_finite_values() {
         .stat(&StatKey::new("cooldown"))
         .unwrap();
     assert_eq!(
-        cooldown.evidence()[0].locator,
+        cooldown.sources()[0].locator,
         "heroes.ana.ability1.cooldown"
     );
     assert!(Quantity::new(f64::NAN, Unit::new("seconds")).is_err());
 }
 
 #[test]
-fn gameplay_serialization_preserves_dataset_identity_and_open_data() {
+fn gameplay_serialization_preserves_dataset_identity_and_source_records() {
     let catalog = GameplayCatalog::new(identity(), vec![hero("dva", vec![])]).unwrap();
     let encoded = serde_json::to_string(catalog.identity()).unwrap();
     assert!(encoded.contains("datasetId"));
@@ -164,6 +164,9 @@ fn gameplay_serialization_preserves_dataset_identity_and_open_data() {
         catalog.identity().dataset_id,
         "overwatch-workshop-hero-gameplay"
     );
+    let fact = serde_json::to_value(names("D.Va", "heroes.dva")).unwrap();
+    assert!(fact.get("sources").is_some());
+    assert!(fact.get("evidence").is_none());
 }
 
 #[test]
@@ -223,26 +226,29 @@ fn multiple_entries_require_variants_and_display_names_are_not_identity() {
 }
 
 #[test]
-fn empty_id_and_empty_evidence_are_rejected() {
+fn empty_id_and_empty_sources_are_rejected() {
     let empty_id = Hero::new(
         HeroId::new(""),
         names("Unnamed", "heroes.unnamed"),
         vec![],
-        vec![evidence("heroes.unnamed")],
+        vec![source_reference("heroes.unnamed")],
     );
     assert!(GameplayCatalog::new(identity(), vec![empty_id]).is_err());
-    let empty_evidence = Hero::new(
+    let empty_sources = Hero::new(
         HeroId::new("ana"),
         Fact::new(
             LocalizedText::new([("en-US".to_string(), "Ana".to_string())]),
-            vec![EvidenceRef {
+            vec![SourceReference {
                 source: String::new(),
                 locator: "heroes.ana".to_string(),
                 note: None,
             }],
         ),
         vec![],
-        vec![evidence("heroes.ana")],
+        vec![source_reference("heroes.ana")],
     );
-    assert!(GameplayCatalog::new(identity(), vec![empty_evidence]).is_err());
+    assert!(matches!(
+        GameplayCatalog::new(identity(), vec![empty_sources]),
+        Err(GameplayDataError::MissingSource(_))
+    ));
 }

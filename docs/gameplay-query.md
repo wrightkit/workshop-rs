@@ -35,7 +35,7 @@ query with no matches returns an empty collection because it is a collection
 query rather than a single-result lookup.
 
 `stat()` and `quantity_stat()` take hero + logical slot + optional explicit
-hero-local variant. They return the extensible `Fact<StatValue>` or a
+hero-local variant. They return the extensible source-backed `Fact<StatValue>` or a
 `Quantity`, and report
 `WrongStatType` when the stat is not numeric. Hero-level stats are available
 through `hero_stat()`.
@@ -67,7 +67,7 @@ clamped or silently approximated. A target with another unit is rejected.
 
 ## Locale-aware ability names
 
-`ability_name(hero, slot, variant, locale)` resolves an evidenced client name,
+`ability_name(hero, slot, variant, locale)` resolves a source-backed client name,
 and `resolve_ability_name(hero, locale, display_name)` performs exact,
 hero-context inverse lookup. Unsupported locales, missing mappings, and
 ambiguous names are explicit errors; fuzzy aliases are not admitted. Raw

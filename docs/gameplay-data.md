@@ -7,13 +7,15 @@ content digest before constructing a `GameplayCatalog`.
 
 ## Schema and identity
 
-The file has `schemaVersion: 1`, a `GameplayDatasetIdentity`, and a sorted
+The file has `schemaVersion: 2`, a `GameplayDatasetIdentity`, and a sorted
 hero list. Heroes and abilities carry source references. Hero, slot, and
 variant identities are open strings; an ability is canonically referenced by
 its hero, logical slot, and optional hero-local variant. Display names are
 metadata, not identity. The current dataset uses the seven canonical slots from ADR-0002;
 the open string-backed API also accepts future non-empty slot identities.
 Multiple abilities in one slot must have distinct, non-empty variants.
+Version 1 payloads used the incompatible `evidence` record key and are rejected
+before version-specific records are deserialized.
 
 The dataset digest is `sha256:` followed by the SHA-256 of the canonical JSON
 content with `identity.digest` removed. Object keys are sorted before hashing,
@@ -21,7 +23,7 @@ so formatting and input key order do not change the identity. The loader also
 sorts heroes and abilities before building lookup indexes.
 
 The committed dataset identity is version `2026-08-12` with digest
-`sha256:5c01599839834f3599a524c7307d3ceaa493e6a1e845d9884dc9617f2af4068a`.
+`sha256:0902a247fb709bf5e326bbdb5475b41d4062b991ba3e0aea9350e5ecd404bc3c`.
 
 ## Source records and known gaps
 

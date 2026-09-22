@@ -6,9 +6,9 @@ use std::path::{Path, PathBuf};
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::gameplay::{AbilityVariant, HeroId, LogicalSlot, hero_ids, slots};
 use workshop_rs::settings::{
-    Applicability, NumericBounds, SettingEvidenceKind, SettingId, SettingIdentity,
-    SettingOperationError, SettingScope, SettingTarget, SettingTargetKind, SettingValue,
-    SettingValueDomain, TeamId, definitions, definitions_by_id,
+    Applicability, NumericBounds, SettingId, SettingIdentity, SettingOperationError, SettingScope,
+    SettingSourceKind, SettingTarget, SettingTargetKind, SettingValue, SettingValueDomain, TeamId,
+    definitions, definitions_by_id,
 };
 use workshop_rs::{convert, emitter, parser, roundtrip, semantic};
 
@@ -93,7 +93,7 @@ fn match_voice_chat_rejects_unreviewed_disabled_token() {
     let en = Locale::new("en-US");
     let source = "settings { lobby { Match Voice Chat: Disabled } }";
     let error =
-        parser::parse_wir(source, &catalog, &en).expect_err("disabled state is unevidenced");
+        parser::parse_wir(source, &catalog, &en).expect_err("disabled state is source-unbacked");
     assert!(format!("{error:?}").contains("settings enum"));
 }
 
@@ -366,7 +366,7 @@ fn settings_schema_projects_workshop_facts_without_display_names_in_ids() {
         ),
         Ok(Some("燃火链式机枪"))
     );
-    assert!(hero_ability.provenance().reviewed);
+    assert!(hero_ability.source().reviewed);
     assert_eq!(
         hero_ability.id().map(SettingId::as_str),
         Some("setting.hero.ability.enabled")
@@ -422,7 +422,7 @@ fn settings_schema_exposes_normal_enum_and_list_domains() {
 }
 
 #[test]
-fn settings_schema_distinguishes_applicability_and_unknown_hero_evidence() {
+fn settings_schema_distinguishes_applicability_and_unknown_hero_source_status() {
     let definitions: Vec<_> = definitions().collect();
     let ability3 = definitions
         .iter()
@@ -594,7 +594,7 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
             .find(|definition| definition.path().ends_with(suffix))
             .expect("projected ability setting");
         assert!(definition.id().is_some());
-        assert!(definition.provenance().reviewed);
+        assert!(definition.source().reviewed);
     }
     let automatic_fire = definitions
         .iter()
@@ -705,7 +705,7 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
 }
 
 #[test]
-fn settings_schema_preserves_locale_and_evidence_provenance() {
+fn settings_schema_preserves_locale_and_source_metadata() {
     let definitions: Vec<_> = definitions().collect();
     let main = definitions
         .iter()
@@ -715,18 +715,15 @@ fn settings_schema_preserves_locale_and_evidence_provenance() {
         main.presentation().localized_name("en-US"),
         Some("Description")
     );
-    assert_eq!(
-        main.provenance().kind,
-        SettingEvidenceKind::RawWorkshopFixture
-    );
+    assert_eq!(main.source().kind, SettingSourceKind::RawWorkshopFixture);
 
     let generated = definitions
         .iter()
         .find(|definition| definition.path() == "extensions.beamEffects")
         .expect("generated definition");
     assert_eq!(
-        generated.provenance().kind,
-        SettingEvidenceKind::WorkshopDataExport
+        generated.source().kind,
+        SettingSourceKind::WorkshopDataExport
     );
 }
 
@@ -897,6 +894,39 @@ fn typed_settings_source_edit_replaces_only_the_existing_value_bytes() {
 }
 
 #[test]
+fn typed_settings_source_edit_rejects_missing_source_location() {
+    let definition = definitions_by_id(&SettingId::from("setting.lobby.spectatorSlots"))
+        .next()
+        .expect("spectator-slot definition");
+    let settings = workshop_rs::settings::Settings {
+        span: None,
+        children: vec![workshop_rs::settings::SettingsNode::Group {
+            name: "lobby".to_string(),
+            children: vec![workshop_rs::settings::SettingsNode::Number {
+                name: "spectatorSlots".to_string(),
+                value: 2.0,
+                span: None,
+            }],
+            span: None,
+        }],
+    };
+
+    let error = definition
+        .source_edit(
+            "settings { lobby { Max Spectators: 2 } }",
+            &settings,
+            "en-US",
+            &SettingTarget::Global,
+            SettingValue::Number(4.0),
+        )
+        .expect_err("source edits require a source location");
+    assert!(matches!(
+        error,
+        SettingOperationError::SourceUnavailable { .. }
+    ));
+}
+
+#[test]
 fn typed_settings_source_edit_uses_settings_string_escaping() {
     let catalog = Catalog::builtin().expect("catalog");
     let source = "settings { main { Description: \"old\" } }";
@@ -1052,7 +1082,7 @@ fn typed_settings_writes_fail_closed_for_unknown_applicability() {
             },
             SettingValue::Boolean(false),
         )
-        .expect_err("team-to-hero applicability without evidence must refuse writes");
+        .expect_err("team-to-hero applicability without sources must refuse writes");
     assert!(matches!(
         widening_error,
         SettingOperationError::ApplicabilityUnknown { .. }

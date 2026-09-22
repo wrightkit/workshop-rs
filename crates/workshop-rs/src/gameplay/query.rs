@@ -153,7 +153,7 @@ impl std::fmt::Display for AbilityNameResolutionError {
             ),
             Self::MissingName { reference, locale } => write!(
                 f,
-                "ability {reference:?} has no evidenced name for locale '{locale}'"
+                "ability {reference:?} has no source-backed name for locale '{locale}'"
             ),
             Self::MissingDisplayName { hero, locale, name } => write!(
                 f,

@@ -40,7 +40,7 @@ shared home:
 - `workshop-rs-cli/src/` owns census execution, conformance report schemas,
   capture comparison, and corpus tooling;
 - `tests/` owns executable Workshop contract and regression checks, with
-  provenance-linked fixtures beside the tests that exercise them.
+  source-attributed fixtures beside the tests that exercise them.
 
 The root operation modules (`parser`, `emitter`, `validate`, `convert`, and
 `roundtrip`) are the public Workshop operations over `Program`. Storage,

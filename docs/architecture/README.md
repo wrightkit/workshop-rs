@@ -16,7 +16,7 @@ For substantive implementation work, resolve the smallest relevant current contr
 | --- | --- |
 | Repository ownership, dependency direction, WIR boundary, semantic-code/data boundary | [`core-boundaries.md`](core-boundaries.md) |
 | Declared Workshop language support and current capability state | [`../language-support.md`](../language-support.md) and executable tests |
-| Catalog/localization provenance | [`../provenance.md`](../provenance.md) |
+| Catalog/localization source attribution | [`../provenance.md`](../provenance.md) |
 | Hero/gameplay dataset model | [`../gameplay-data.md`](../gameplay-data.md) |
 | Gameplay semantic queries | [`../gameplay-query.md`](../gameplay-query.md) |
 | Action layout contract | [`../action-layout.md`](../action-layout.md) |

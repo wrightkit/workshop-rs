@@ -1,17 +1,16 @@
 use std::collections::BTreeSet;
 
 use workshop_rs::gameplay::{
-    Ability, AbilityVariant, EvidenceRef, Fact, GameplayCatalog, GameplayDataError,
-    GameplayDatasetIdentity, Hero, HeroId, LocalizedText, LogicalSlot, Quantity, StatKey,
-    StatValue, Unit,
+    Ability, AbilityVariant, Fact, GameplayCatalog, GameplayDataError, GameplayDatasetIdentity,
+    Hero, HeroId, LocalizedText, LogicalSlot, Quantity, SourceReference, StatKey, StatValue, Unit,
 };
 use workshop_rs::gameplay_data::{GAMEPLAY_DATA, builtin, content_digest, load};
 
 const SOURCE: &str = "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6";
 const OFFICIAL_HERO_SOURCE: &str = "Blizzard Entertainment official Overwatch hero detail";
 
-fn evidence(locator: &str) -> EvidenceRef {
-    EvidenceRef {
+fn source_reference(locator: &str) -> SourceReference {
+    SourceReference {
         source: SOURCE.to_string(),
         locator: locator.to_string(),
         note: Some("commitDate=2026-08-12".to_string()),
@@ -21,7 +20,7 @@ fn evidence(locator: &str) -> EvidenceRef {
 fn names(name: &str, locator: &str) -> Fact<LocalizedText> {
     Fact::new(
         LocalizedText::new([("en-US".to_string(), name.to_string())]),
-        vec![evidence(locator)],
+        vec![source_reference(locator)],
     )
 }
 
@@ -37,12 +36,12 @@ fn identity() -> GameplayDatasetIdentity {
     }
 }
 
-fn assert_evidence(evidence: &[EvidenceRef], source: &str, locator: &str) {
+fn assert_sources(sources: &[SourceReference], source: &str, locator: &str) {
     assert!(
-        evidence
+        sources
             .iter()
             .any(|item| item.source == source && item.locator == locator),
-        "missing evidence {source} at {locator}"
+        "missing source {source} at {locator}"
     );
 }
 
@@ -51,7 +50,7 @@ fn ability(name: &str, slot: &str, variant: Option<&str>) -> Ability {
         LogicalSlot::new(slot),
         variant.map(AbilityVariant::new),
         names(name, "data.heroes.test.ability1"),
-        vec![evidence("data.heroes.test.ability1")],
+        vec![source_reference("data.heroes.test.ability1")],
     )
 }
 
@@ -317,12 +316,12 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
             .collect();
         let expected_slots: BTreeSet<_> = expected_slots.iter().copied().collect();
         assert_eq!(actual_slots, expected_slots, "slot topology for {hero_id}");
-        let role = hero.role().expect("official role evidence for every hero");
+        let role = hero.role().expect("official role sources for every hero");
         assert!(matches!(
             role.value().as_str(),
             "tank" | "damage" | "support"
         ));
-        assert_eq!(role.evidence().len(), 1);
+        assert_eq!(role.sources().len(), 1);
         for ability in hero.abilities() {
             assert!(ability.name().value().get("en-US").is_some());
         }
@@ -409,7 +408,7 @@ fn embedded_catalog_is_deterministic_and_preserves_representative_ids() {
 }
 
 #[test]
-fn embedded_facts_have_representative_names_values_and_official_provenance() {
+fn embedded_facts_have_representative_names_values_and_official_sources() {
     let catalog = builtin().unwrap();
 
     let ana = catalog.hero_by_id("ana").unwrap();
@@ -422,8 +421,8 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
         let ability = ana.ability(&LogicalSlot::new(slot)).unwrap();
         assert_eq!(ability.name().value().get("en-US"), Some(name));
         assert!(ability.has_keyword(keyword));
-        assert_evidence(
-            ability.evidence(),
+        assert_sources(
+            ability.sources(),
             OFFICIAL_HERO_SOURCE,
             "https://overwatch.blizzard.com/en-us/heroes/ana/",
         );
@@ -438,8 +437,8 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
         let ability = brigitte.ability(&LogicalSlot::new(slot)).unwrap();
         assert_eq!(ability.name().value().get("en-US"), Some(name));
         assert!(ability.has_keyword(keyword));
-        assert_evidence(
-            ability.evidence(),
+        assert_sources(
+            ability.sources(),
             OFFICIAL_HERO_SOURCE,
             "https://overwatch.blizzard.com/en-us/heroes/brigitte/",
         );
@@ -450,8 +449,8 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
     let vortex = ramattra.ability(&LogicalSlot::new("ability2")).unwrap();
     assert_eq!(vortex.name().value().get("en-US"), Some("Ravenous Vortex"));
     assert!(vortex.has_keyword("crowdControl"));
-    assert_evidence(
-        vortex.evidence(),
+    assert_sources(
+        vortex.sources(),
         OFFICIAL_HERO_SOURCE,
         "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
     );
@@ -464,8 +463,8 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
             .unwrap();
         assert_eq!(ability.variant().unwrap().as_str(), variant);
         assert_eq!(ability.name().value().get("en-US"), Some(name));
-        assert_evidence(
-            ability.evidence(),
+        assert_sources(
+            ability.sources(),
             OFFICIAL_HERO_SOURCE,
             "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
         );
@@ -476,8 +475,8 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
     let matrix = dva.ability(&LogicalSlot::new("secondaryFire")).unwrap();
     assert!(matrix.has_keyword("barrier"));
     assert!(matrix.has_keyword("resource"));
-    assert_evidence(
-        matrix.evidence(),
+    assert_sources(
+        matrix.sources(),
         OFFICIAL_HERO_SOURCE,
         "https://overwatch.blizzard.com/en-us/heroes/dva/",
     );
@@ -490,8 +489,8 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
             .unwrap();
         assert_eq!(ability.variant().unwrap().as_str(), variant);
         assert_eq!(ability.name().value().get("en-US"), Some(name));
-        assert_evidence(
-            ability.evidence(),
+        assert_sources(
+            ability.sources(),
             OFFICIAL_HERO_SOURCE,
             "https://overwatch.blizzard.com/en-us/heroes/dva/",
         );
@@ -501,8 +500,8 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
     assert_eq!(bastion.role().unwrap().value().as_str(), "damage");
     let reconfigure = bastion.ability(&LogicalSlot::new("ability1")).unwrap();
     assert!(reconfigure.has_keyword("form"));
-    assert_evidence(
-        reconfigure.evidence(),
+    assert_sources(
+        reconfigure.sources(),
         OFFICIAL_HERO_SOURCE,
         "https://overwatch.blizzard.com/en-us/heroes/bastion/",
     );
@@ -518,8 +517,8 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
             .unwrap();
         assert_eq!(ability.variant().unwrap().as_str(), variant);
         assert_eq!(ability.name().value().get("en-US"), Some(name));
-        assert_evidence(
-            ability.evidence(),
+        assert_sources(
+            ability.sources(),
             OFFICIAL_HERO_SOURCE,
             "https://overwatch.blizzard.com/en-us/heroes/bastion/",
         );
@@ -530,8 +529,8 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
     assert!(venture.stat(&StatKey::new("health")).is_none());
     let drill_dash = venture.ability(&LogicalSlot::new("secondaryFire")).unwrap();
     assert!(drill_dash.has_keyword("mobility"));
-    assert_evidence(
-        drill_dash.evidence(),
+    assert_sources(
+        drill_dash.sources(),
         OFFICIAL_HERO_SOURCE,
         "https://overwatch.blizzard.com/en-us/heroes/venture/",
     );
@@ -540,45 +539,48 @@ fn embedded_facts_have_representative_names_values_and_official_provenance() {
 }
 
 #[test]
-fn embedded_records_keep_pinned_provenance_on_every_fact() {
+fn embedded_records_keep_pinned_source_metadata_on_every_fact() {
     let catalog = builtin().unwrap();
     for hero in catalog.heroes() {
-        for evidence in hero.evidence().iter().chain(hero.name().evidence()) {
-            assert_eq!(evidence.source, SOURCE);
-            assert_eq!(evidence.note.as_deref(), Some("commitDate=2026-08-12"));
+        for source_record in hero.sources().iter().chain(hero.name().sources()) {
+            assert_eq!(source_record.source, SOURCE);
+            assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-08-12"));
         }
-        let role = hero.role().expect("official role evidence for every hero");
-        let role_evidence = &role.evidence()[0];
+        let role = hero.role().expect("official role sources for every hero");
+        let role_source = &role.sources()[0];
         assert_eq!(
-            role_evidence.source,
+            role_source.source,
             "Blizzard Entertainment official Overwatch hero detail"
         );
         assert!(
-            role_evidence
+            role_source
                 .locator
                 .starts_with("https://overwatch.blizzard.com/en-us/heroes/")
         );
         assert_eq!(
-            role_evidence.note.as_deref(),
+            role_source.note.as_deref(),
             Some("role metadata; accessed 2026-08-18")
         );
         for ability in hero.abilities() {
-            for evidence in ability.evidence().iter().chain(ability.name().evidence()) {
-                if evidence.source == SOURCE {
-                    assert!(evidence.locator.starts_with("data.heroes."));
-                    assert_eq!(evidence.note.as_deref(), Some("commitDate=2026-08-12"));
-                } else if evidence.source == OFFICIAL_HERO_SOURCE {
+            for source_record in ability.sources().iter().chain(ability.name().sources()) {
+                if source_record.source == SOURCE {
+                    assert!(source_record.locator.starts_with("data.heroes."));
+                    assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-08-12"));
+                } else if source_record.source == OFFICIAL_HERO_SOURCE {
                     assert!(
-                        evidence
+                        source_record
                             .locator
                             .starts_with("https://overwatch.blizzard.com/en-us/heroes/")
                     );
                     assert_eq!(
-                        evidence.note.as_deref(),
+                        source_record.note.as_deref(),
                         Some("official ability description; accessed 2026-08-18")
                     );
                 } else {
-                    panic!("unexpected ability evidence source: {}", evidence.source);
+                    panic!(
+                        "unexpected ability source reference: {}",
+                        source_record.source
+                    );
                 }
             }
         }
@@ -610,7 +612,7 @@ fn representative_hero_and_ability_records_round_trip_through_json() {
 #[test]
 fn loader_rejects_stale_digest_and_unsupported_schema() {
     let stale = GAMEPLAY_DATA.replacen(
-        "5c01599839834f3599a524c7307d3ceaa493e6a1e845d9884dc9617f2af4068a",
+        "0902a247fb709bf5e326bbdb5475b41d4062b991ba3e0aea9350e5ecd404bc3c",
         "e15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
         1,
     );
@@ -619,10 +621,18 @@ fn loader_rejects_stale_digest_and_unsupported_schema() {
         Err(GameplayDataError::DigestMismatch { .. })
     ));
 
-    let unsupported = GAMEPLAY_DATA.replacen("\"schemaVersion\": 1", "\"schemaVersion\": 2", 1);
+    let unsupported = GAMEPLAY_DATA.replacen("\"schemaVersion\": 2", "\"schemaVersion\": 3", 1);
     assert!(matches!(
         load(&unsupported),
-        Err(GameplayDataError::UnsupportedSchema(2))
+        Err(GameplayDataError::UnsupportedSchema(3))
+    ));
+
+    let legacy = GAMEPLAY_DATA
+        .replace("\"sources\"", "\"evidence\"")
+        .replacen("\"schemaVersion\": 2", "\"schemaVersion\": 1", 1);
+    assert!(matches!(
+        load(&legacy),
+        Err(GameplayDataError::UnsupportedSchema(1))
     ));
 }
 
@@ -632,7 +642,7 @@ fn catalog_rejects_invalid_slots_unqualified_variants_and_non_finite_values() {
         HeroId::new("test"),
         names("Test", "data.heroes.test"),
         vec![ability("testAbility", " ", None)],
-        vec![evidence("data.heroes.test")],
+        vec![source_reference("data.heroes.test")],
     );
     assert!(matches!(
         GameplayCatalog::new(identity(), vec![empty_slot]),
@@ -643,7 +653,7 @@ fn catalog_rejects_invalid_slots_unqualified_variants_and_non_finite_values() {
         HeroId::new("test"),
         names("Test", "data.heroes.test"),
         vec![ability("testAbility", "futureSlot", None)],
-        vec![evidence("data.heroes.test")],
+        vec![source_reference("data.heroes.test")],
     );
     assert!(GameplayCatalog::new(identity(), vec![future_slot]).is_ok());
 
@@ -654,7 +664,7 @@ fn catalog_rejects_invalid_slots_unqualified_variants_and_non_finite_values() {
             ability("one", "ability1", None),
             ability("two", "ability1", Some("alternate")),
         ],
-        vec![evidence("data.heroes.test")],
+        vec![source_reference("data.heroes.test")],
     );
     assert!(matches!(
         GameplayCatalog::new(identity(), vec![unqualified]),
@@ -671,10 +681,10 @@ fn catalog_rejects_invalid_slots_unqualified_variants_and_non_finite_values() {
                     value: f64::INFINITY,
                     unit: Unit::new("damage"),
                 }),
-                vec![evidence("data.heroes.test.ability1.damage")],
+                vec![source_reference("data.heroes.test.ability1.damage")],
             ),
         )],
-        vec![evidence("data.heroes.test")],
+        vec![source_reference("data.heroes.test")],
     );
     assert!(matches!(
         GameplayCatalog::new(identity(), vec![non_finite]),

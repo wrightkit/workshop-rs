@@ -2,7 +2,7 @@ use crate::output::emitter::*;
 
 impl EmitContext<'_> {
     /// Emit the `settings { ... }` section from the validated settings
-    /// carrier, table-driven (fixture-evidenced names). Only runs on
+    /// carrier, table-driven (fixture-backed names). Only runs on
     /// validated programs, so unknown keys cannot reach this point.
     pub(crate) fn emit_settings(&mut self, settings: &SettingsTree) -> Result<()> {
         let settings_keyword = self.structural("settings")?;
@@ -92,7 +92,7 @@ impl EmitContext<'_> {
                 None => name.clone(),
             };
             // `enabled: false` prefixes the mode header; true renders with no
-            // prefix (only false is evidenced in the corpus, #86).
+            // prefix (only false is source-backed in the corpus, #86).
             let disabled = children.iter().any(|member| {
                 matches!(
                     member,

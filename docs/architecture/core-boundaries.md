@@ -12,7 +12,7 @@ It owns:
 - the public `Program` model and locale-independent Workshop identities;
 - Workshop catalog, settings, localization, and Workshop-owned gameplay facts;
 - Workshop semantic/query contracts used by downstream tooling;
-- Workshop contract tests, provenance-linked fixtures, and the semantic
+- Workshop contract tests, source-attributed fixtures, and the semantic
   contracts consumed by the CLI verification tooling.
 
 It does not own OverPy or DEL/OSTW syntax, preprocessing, project models, source-language semantics, runtime/compiler lowering policy, reconstruction policy, or Wright tooling behavior.
@@ -54,7 +54,7 @@ Use data for large declarative fact sets whose meaning is already defined by the
 - signatures and declared parameter domains when they are factual catalog properties;
 - locale spellings and aliases;
 - roster/catalog/settings inventories;
-- provenance and evidence references.
+- source attribution and source references.
 
 Use typed Rust code for behavior and invariants, including:
 
@@ -74,7 +74,7 @@ Canonical identities are locale-independent and independent from OPY/DEL naming.
 
 Likewise, OverPy or DEL/OSTW names, defaults, helpers, or compiler quirks do not become Workshop identities unless an independent Workshop source establishes the same concept.
 
-## Support and provenance
+## Support and source attribution
 
 Architecture does not prove feature support. Current support claims come from the language-support surface and executable checks: code, tests, corpus/fixtures, catalog checks, real consumer workflows, and live/runtime records where applicable.
 
