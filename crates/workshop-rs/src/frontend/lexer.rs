@@ -9,7 +9,7 @@ use crate::core::source::Position;
 
 /// A lexical token kind.
 #[derive(Debug, Clone, PartialEq)]
-pub enum TokenKind {
+pub(crate) enum TokenKind {
     /// A run of identifier characters (`[A-Za-z_][A-Za-z0-9_]*`).
     Word(String),
     /// A numeric literal with its source spelling.
@@ -36,17 +36,17 @@ pub enum TokenKind {
 
 /// A token with its source span.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Token {
-    pub kind: TokenKind,
-    pub start: Position,
-    pub end: Position,
+pub(crate) struct Token {
+    pub(crate) kind: TokenKind,
+    pub(crate) start: Position,
+    pub(crate) end: Position,
 }
 
 /// A lexing error with a source position.
 #[derive(Debug, Clone, PartialEq)]
-pub struct LexError {
-    pub message: String,
-    pub position: Position,
+pub(crate) struct LexError {
+    pub(crate) message: String,
+    pub(crate) position: Position,
 }
 
 struct Cursor<'a> {
@@ -91,7 +91,7 @@ impl<'a> Cursor<'a> {
 }
 
 /// Tokenize Workshop text.
-pub fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
+pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
     let mut cursor = Cursor::new(input);
     let mut tokens = Vec::new();
 

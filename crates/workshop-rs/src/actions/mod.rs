@@ -13,6 +13,4 @@ pub use crate::analysis::element_count::{
     ElementCountError, ElementCountNode, ElementCountReport, ElementNodeKind,
 };
 pub use crate::program::{Action, ModifyOp};
-pub use layout::{
-    ActionLayout, ActionLayoutError, WIRActionLayoutError, action_width, action_width_wir,
-};
+pub use layout::{ActionLayout, ActionLayoutError, action_width};

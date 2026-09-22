@@ -7,7 +7,7 @@
 use std::{fmt, ops::Range};
 
 use crate::gameplay::{AbilityVariant, HeroId, LogicalSlot};
-use crate::{gameplay::GameplayDataError, gameplay_data};
+use crate::gameplay::{GameplayDataError, data};
 
 use super::reconciliation;
 use super::table::{self, KeyKind, PathPart, TableEntry};
@@ -1143,14 +1143,12 @@ fn hero_ability_exists(
     slot: &LogicalSlot,
     variant: Option<&AbilityVariant>,
 ) -> Result<Option<bool>, GameplayDataError> {
-    gameplay_data::builtin_ref()
-        .map_err(Clone::clone)
-        .map(|catalog| {
-            catalog.hero(hero).map(|hero| match variant {
-                Some(variant) => hero.ability_variant(slot, variant).is_ok(),
-                None => !hero.abilities_in_slot(slot).is_empty(),
-            })
+    data::builtin_ref().map_err(Clone::clone).map(|catalog| {
+        catalog.hero(hero).map(|hero| match variant {
+            Some(variant) => hero.ability_variant(slot, variant).is_ok(),
+            None => !hero.abilities_in_slot(slot).is_empty(),
         })
+    })
 }
 
 /// Project all currently reviewed table entries into the canonical semantic

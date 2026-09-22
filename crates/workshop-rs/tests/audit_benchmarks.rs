@@ -3,7 +3,6 @@ use std::process::Command;
 use std::time::{Duration, Instant};
 use workshop_rs::catalog::{Catalog, Kind, Locale};
 use workshop_rs::emitter;
-use workshop_rs::lexer;
 use workshop_rs::parser;
 use workshop_rs::validate;
 
@@ -96,49 +95,6 @@ fn benchmark_audit_optimizations() {
     let zh = Locale::new("zh-CN");
 
     println!("\n=== AUDIT OPTIMIZATION & ABLATION MEASUREMENTS ===");
-
-    // ==========================================
-    // 1. Lexer Benchmark & Ablation (Issue #214)
-    // ==========================================
-    let lex_iters = 500;
-    // Optimized: Cursor on &str
-    let start = Instant::now();
-    for _ in 0..lex_iters {
-        let _ = lexer::tokenize(bastion_text).unwrap();
-    }
-    let lex_opt_dur = start.elapsed();
-
-    // Ablated Baseline: materialize Vec<char> first
-    let start = Instant::now();
-    for _ in 0..lex_iters {
-        let _chars: Vec<char> = bastion_text.chars().collect();
-        let _ = lexer::tokenize(bastion_text).unwrap();
-    }
-    let lex_abl_dur = start.elapsed();
-
-    println!("--- Issue #214: Lexer ---");
-    println!(
-        "  Input size: {} bytes (~{} chars)",
-        bastion_text.len(),
-        bastion_text.chars().count()
-    );
-    println!(
-        "  Optimized (direct &str Cursor): {:?} total ({:?}/op)",
-        lex_opt_dur,
-        lex_opt_dur / lex_iters
-    );
-    println!(
-        "  Ablated Baseline (Vec<char> allocation): {:?} total ({:?}/op)",
-        lex_abl_dur,
-        lex_abl_dur / lex_iters
-    );
-    println!(
-        "  Delta: {:?} saved per tokenization run (~{:.1}% speedup + 220KB heap allocation eliminated)",
-        (lex_abl_dur - lex_opt_dur) / lex_iters,
-        ((lex_abl_dur.as_nanos() as f64 - lex_opt_dur.as_nanos() as f64)
-            / lex_abl_dur.as_nanos() as f64)
-            * 100.0
-    );
 
     // ==========================================
     // 2. Catalog Query & Ablation (Issue #213)
@@ -247,86 +203,6 @@ fn benchmark_audit_optimizations() {
         "  Delta: {:?} saved per lookup pair (~{:.1}x speedup)",
         (bare_abl_dur - bare_opt_dur) / bare_iters,
         bare_abl_dur.as_nanos() as f64 / bare_opt_dur.as_nanos() as f64
-    );
-
-    // ==========================================
-    // 4. Dotted Phrase Probing & Ablation (Issue #213)
-    // ==========================================
-    let probe_iters = 100_000;
-    let non_dotted_tokens = vec![
-        lexer::Token {
-            kind: lexer::TokenKind::Word("Create".to_string()),
-            start: workshop_rs::source::Position::new(1, 1),
-            end: workshop_rs::source::Position::new(1, 7),
-        },
-        lexer::Token {
-            kind: lexer::TokenKind::Word("Icon".to_string()),
-            start: workshop_rs::source::Position::new(1, 8),
-            end: workshop_rs::source::Position::new(1, 12),
-        },
-        lexer::Token {
-            kind: lexer::TokenKind::LParen,
-            start: workshop_rs::source::Position::new(1, 12),
-            end: workshop_rs::source::Position::new(1, 13),
-        },
-    ];
-
-    // Optimized: has_dot_ahead check takes while word/number/dot, returns None with 0 allocations
-    let start = Instant::now();
-    for _ in 0..probe_iters {
-        let has_dot_ahead = non_dotted_tokens
-            .iter()
-            .take_while(|t| {
-                matches!(
-                    t.kind,
-                    lexer::TokenKind::Word(_)
-                        | lexer::TokenKind::Number { .. }
-                        | lexer::TokenKind::Dot
-                )
-            })
-            .any(|t| matches!(t.kind, lexer::TokenKind::Dot));
-        assert!(!has_dot_ahead);
-    }
-    let dot_opt_dur = start.elapsed();
-
-    // Ablated Baseline: eagerly allocates Vec<String> and clones words before checking has_dot
-    let start = Instant::now();
-    for _ in 0..probe_iters {
-        let mut parts = Vec::new();
-        let mut has_dot = false;
-        for token in &non_dotted_tokens {
-            match &token.kind {
-                lexer::TokenKind::Word(w) => parts.push(w.clone()),
-                lexer::TokenKind::Number { text, .. } => parts.push(text.clone()),
-                lexer::TokenKind::Dot => {
-                    has_dot = true;
-                    parts.push(".".to_string());
-                }
-                _ => break,
-            }
-        }
-        if !has_dot {
-            // discarded
-            drop(parts);
-        }
-    }
-    let dot_abl_dur = start.elapsed();
-
-    println!("\n--- Issue #213: Dotted Phrase Early-Exit ---");
-    println!(
-        "  Optimized (zero-alloc has_dot_ahead check x100k): {:?} ({:?}/probe)",
-        dot_opt_dur,
-        dot_opt_dur / probe_iters
-    );
-    println!(
-        "  Ablated Baseline (eager Vec<String> collection x100k): {:?} ({:?}/probe)",
-        dot_abl_dur,
-        dot_abl_dur / probe_iters
-    );
-    println!(
-        "  Delta: {:?} saved per non-dotted probe (~{:.1}x speedup + 100k Vec & 200k String allocations eliminated)",
-        (dot_abl_dur - dot_opt_dur) / probe_iters,
-        dot_abl_dur.as_nanos() as f64 / dot_opt_dur.as_nanos() as f64
     );
 
     // ==========================================

@@ -1,3 +1,3 @@
-//! Compatibility path for shared Workshop formatting helpers.
+//! Canonical numeric formatting used for computed Workshop values.
 
 pub use crate::core::format::*;

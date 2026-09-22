@@ -7,8 +7,7 @@ invent missing facts, or mutate the catalog.
 ## Deterministic lookup
 
 ```rust
-use workshop_rs::gameplay::{hero_ids, slots};
-use workshop_rs::gameplay_query::GameplayQueryError;
+use workshop_rs::gameplay::{hero_ids, query::GameplayQueryError, slots};
 
 let query = catalog.query();
 let ana = query.hero(hero_ids::ANA)?;

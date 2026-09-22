@@ -1,83 +1,52 @@
-# Public compatibility facade inventory
+# Public API and compatibility inventory
 
-This inventory records the compatibility modules retained after the domain
-layout introduced by #149. It is a migration preflight, not authorization to
-remove a public module. A `#[doc(hidden)]` module remains part of the compile
-surface for downstream crates.
+This is the current `workshop-rs#253` audit of legacy, hidden, and
+implementation-shaped public paths. A `#[doc(hidden)]` item is still public
+Rust API, so its disposition must be explicit before 1.0.
 
-## Audit method
+## Audit baseline
 
-The inventory was produced with tracked-file `git grep` for each
-`workshop_rs::<facade>` path across the four repositories. Untracked audit
-notes and generated build directories were excluded. The snapshot commits
-were:
+The tracked-code audit used these fetched `origin/main` revisions before the
+issue changes:
 
-| Repository | Snapshot |
+| Repository | Revision |
 | --- | --- |
-| `workshop-rs` | `3d5fe504` |
-| `opy-rs` | `5e65d504` |
-| `deltin-rs` | `4c0c04ec` |
-| `wright` | `637d2baf` |
+| `workshop-rs` | `09f2ef5bc15d96d61044d73fe26ca66a90cbf68a` |
+| `opy-rs` | `4b91f59b5e4e1caa444335823a8970175ed44925` |
+| `deltin-rs` | `4c0c04ec118277ad823ce5e4001c5e10dc60f186` |
+| `wright` | `50689d22aaf557868b7086abbb6025e9f50ca181` |
 
-The counts below are repository files containing the path, not call counts.
-They include source, tests, and checked-in documentation where applicable.
+The audit used tracked source, tests, and documentation in those revisions.
+Generated build output and untracked files were excluded. First-party use was
+checked by repository, not inferred from the earlier inventory.
 
-| Facade | Hidden | Canonical current surface | `workshop-rs` | `opy-rs` | `deltin-rs` | `wright` | Result |
-| --- | :---: | --- | ---: | ---: | ---: | ---: | --- |
-| `arena` | yes | no replacement public path; shared arena type | 0 | 0 | 1 | 3 | retain: external consumers |
-| `format` | yes | no replacement public path; shared formatter | 0 | 2 | 0 | 1 | retain: external consumers |
-| `ids` | yes | no replacement public path; typed WIR identities | 3 | 0 | 0 | 6 | retain: external consumers |
-| `signatures` | no | `signatures` remains the public signature-context surface | 1 | 1 | 0 | 0 | retain: external consumer |
-| `source` | no | `source` remains the public source-metadata surface | 8 | 4 | 3 | 12 | retain: external consumers |
-| `element_count` | yes | `Program::element_count`, `actions` re-exports | 1 | 0 | 0 | 0 | retain: in-repo compatibility use |
-| `semantic` | yes | `Program::semantic_issues`, `rules` re-exports | 3 | 0 | 0 | 3 | retain: external consumers |
-| `gameplay_data` | yes | `gameplay::data` | 3 | 0 | 0 | 0 | retain: in-repo/docs use |
-| `gameplay_query` | yes | `gameplay::query` | 2 | 0 | 0 | 0 | retain: in-repo/docs use |
-| `detect` | no | `catalog::detect` | 3 | 0 | 0 | 4 | retain: external consumers |
-| `lexer` | yes | no replacement public path; frontend implementation is private | 2 | 0 | 0 | 0 | retain: in-repo compatibility use |
-| `convert` | no | `convert` remains the public conversion operation | 7 | 0 | 0 | 0 | retain: in-repo/README use |
-| `emitter` | no | `emitter` remains the public emission operation | 13 | 2 | 1 | 2 | retain: external consumers |
-| `roundtrip` | no | `roundtrip` remains the public comparison operation | 8 | 21 | 1 | 1 | retain: external consumers |
-| `parser` | no | `parser` remains the public parsing operation | 14 | 20 | 5 | 6 | retain: external consumers |
-| `validate` | no | `rules::validate_canonical_ids` plus public facade | 8 | 1 | 2 | 0 | retain: external consumers |
+## Current consumer inventory
 
-The private `error` module is not a public facade. Its crate-root error
-re-exports are inventoried separately because they are part of the public
-compatibility surface. These counts use tracked-file grep for fully-qualified
-crate-root symbols in the same snapshot commits; local private-module
-declarations are not counted as downstream use.
+| Public path | Observed first-party use at the audit baseline | Status in this owner PR |
+| --- | --- | --- |
+| `arena` | DEL source bridge; Wright analyzer CFG/symbol storage and driver diagnostics | Still public and used by Wright. `deltin-rs#113` proposes replacing DEL's bridge storage; that PR is open and has not landed. |
+| `ids` | Wright analyzer, language document, and transform code; Workshop WIR tests | Still public and used by Wright and WIR-backed tests. No removal is included here. |
+| `wir` and WIR adapters | OPY and DEL reconstruction; Wright analyzer and transform; Workshop integration tests | Still public and used by first-party consumers. This PR does not remove `parser::{parse_wir, parse_wir_with_context}`, `emitter::{emit_wir, emit_wir_with_options}`, `roundtrip::equivalent_wir`, or `rules::validate_canonical_ids_wir`. |
+| `semantic` | Wright provider maps semantic issues; Workshop tests | Still public and used by Wright and tests. The `rules` exports and `Program` inspection do not yet replace all observed uses. |
+| `element_count` | OPY compiler | Still public and used by OPY. `opy-rs#356` proposes moving the imports to `actions`; that PR is open and has not landed. |
+| `actions::{WIRActionLayoutError, action_width_wir}`, re-exported from `emitter` | Workshop action-layout tests only | Removed in this PR. The tests now use the public `Program` action sequence and `actions::action_width`. |
+| `gameplay_data`, `gameplay_query` | Workshop tests, internal schema code, and docs only | Removed in this PR. The canonical paths are `gameplay::data` and `gameplay::query`. |
+| `lexer` | Workshop parser-error tests and benchmark only | Removed in this PR. Lexer implementation types are crate-private; parser behavior and source spans are covered through `parser`. |
+| `format` | OPY numeric lowering/reconstruction; Wright constant folding | Documented as public in this PR; `format::format_number` formats computed Workshop numbers. |
+| `settings::table` | CLI census and catalog generator; parser/emitter internals and static-data benchmark; OPY imported `PathPart` through this module | Still public and used by the CLI, catalog generator, parser/emitter, and benchmark. The CLI import change is in this PR. OPY's `settings::PathPart` migration is proposed in open PR #356 and has not landed. |
+| `source`, `signatures`, `parser`, `emitter`, `roundtrip`, `validate`, `convert`, `catalog`, `detect`, `actions`, `events`, `rules`, `settings`, `gameplay`, `values`, `program` | Public domain operations and types used by first-party consumers | No compatibility-facade removal in this PR. |
+| `WorkshopError`, `CatalogError` | `WorkshopError` is used throughout first-party callers; no tracked external `CatalogError` path was found | Remain public; this PR makes no change to either error type. |
 
-| Public root export | `workshop-rs` | `opy-rs` | `deltin-rs` | `wright` | Result |
-| --- | ---: | ---: | ---: | ---: | --- |
-| `WorkshopError` | 5 | 1 | 1 | 2 | retain: external consumers |
-| `CatalogError` | 0 | 0 | 0 | 0 | retain: downstream use unknown |
+The hidden root re-exports `settings::{KeyKind, TableEntry, entries,
+enum_name, mode_name, path_string}` were used by `workshop-rs-cli`. This PR
+moves that consumer to `settings::table`; the table itself remains public.
 
-The absence of a match means “unreferenced in this verified snapshot”, not
-“safe to remove”: arbitrary downstream crates are outside the repository set,
-and public semver compatibility still applies. In particular, no facade has a
-complete replacement-and-migration proof in this audit.
+## Scope status
 
-## Decisions and migration sequence
-
-No facade is proposed for retirement by this inventory. The active consumer
-set prevents removal of `arena`, `format`, `ids`, `signatures`, `source`,
-`semantic`, `detect`, `emitter`, `roundtrip`, `parser`, and `validate`. The
-remaining paths either have repository-owned uses or have no verified
-downstream use but still expose an unresolved public compatibility obligation.
-
-Any future retirement must proceed in this order:
-
-1. `workshop-rs` defines a reviewed public replacement for each facade whose
-   implementation path is currently private, preserving the accepted type and
-   error contracts.
-2. `workshop-rs` releases that replacement before any consumer migration; this
-   release is the first point at which consumers may adopt it.
-3. `opy-rs`, `deltin-rs`, and `wright` migrate verified imports in independent
-   owner-repository changes against the released replacement. A consumer
-   migration is not implied by this inventory.
-4. The supported dependency graph is compiled and its integration tests are
-   run against the released replacement, establishing the migration check.
-5. Only after that evidence may `workshop-rs` deprecate or remove the old
-   facade in a later release, with any approved deprecation window honored.
-
-Until those steps have independent evidence, all facades remain in place.
+The owner and consumer changes in this PR set do not complete `workshop-rs#253`:
+the OPY and DEL migration PRs are still open, and Wright remains a current
+consumer of `arena`, `ids`, WIR, and `semantic`. This PR makes no final 1.x
+retention or removal decision for those still-used paths. Issue #253 remains
+open until the remaining consumer evidence is landed and every retained or
+removed facade has a final disposition. The public `Program` and domain APIs
+are available to new consumers.

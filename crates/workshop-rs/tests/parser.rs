@@ -73,25 +73,21 @@ rule("colonated enum")
 }
 
 #[test]
-fn evidenced_uppercase_hex_literal_matches_decimal_semantic_wir() {
+fn evidenced_uppercase_hex_literal_matches_decimal_program() {
     let hex_source = corpus_workshop_text("minimized/opy-syntax-surface-hex");
     let decimal_source = hex_source.replace("0X20", "32");
     let catalog = catalog();
     let locale = Locale::new("en-US");
-    let hex_program = parser::parse_wir_with_context(&hex_source, &catalog, &locale, &catalog)
+    let hex_program = parser::parse(&hex_source, &catalog, &locale)
         .expect("pinned OverPy Workshop output with 0X20 must parse");
     let decimal_program =
-        parser::parse_wir_with_context(&decimal_source, &catalog, &locale, &catalog)
-            .expect("decimal equivalent must parse");
+        parser::parse(&decimal_source, &catalog, &locale).expect("decimal equivalent must parse");
 
     assert!(hex_program.semantic_issues(&catalog).is_empty());
-    validate::validate_canonical_ids_wir(&hex_program, &catalog)
-        .expect("hexadecimal value must produce canonical WIR");
-    assert!(hex_program.values.iter().any(|node| matches!(
-        node.value,
-        wir::Value::Number { value, ref text } if value == 32.0 && text == "0X20"
-    )));
-    assert!(workshop_rs::roundtrip::equivalent_wir(
+    hex_program
+        .validate()
+        .expect("hexadecimal value must be valid canonical Workshop");
+    assert!(workshop_rs::roundtrip::equivalent(
         &hex_program,
         &decimal_program
     ));
