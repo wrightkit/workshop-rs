@@ -30,8 +30,6 @@ pub mod catalog;
 pub mod convert;
 mod core;
 pub mod detect;
-#[doc(hidden)]
-pub mod element_count;
 pub mod emitter;
 mod error;
 pub mod events;
