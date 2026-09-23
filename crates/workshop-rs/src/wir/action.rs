@@ -6,12 +6,12 @@ use super::{ActionId, GlobalVarId, PlayerVarId, SubroutineId, ValueId};
 
 /// A workshop action.
 #[derive(Debug, Clone)]
-pub enum Action {
+pub(crate) enum Action {
     SetGlobalVariable {
         variable: GlobalVarId,
         value: ValueId,
         span: Option<Span>,
-        /// The exact span of the assigned variable identifier.
+        #[allow(dead_code)]
         target_span: Option<Span>,
     },
     ModifyGlobalVariable {
@@ -19,7 +19,7 @@ pub enum Action {
         op: ModifyOp,
         value: ValueId,
         span: Option<Span>,
-        /// The exact span of the modified variable identifier.
+        #[allow(dead_code)]
         target_span: Option<Span>,
     },
     SetPlayerVariable {
@@ -27,7 +27,7 @@ pub enum Action {
         variable: PlayerVarId,
         value: ValueId,
         span: Option<Span>,
-        /// The exact span of the assigned variable identifier.
+        #[allow(dead_code)]
         target_span: Option<Span>,
     },
     ModifyPlayerVariable {
@@ -36,7 +36,7 @@ pub enum Action {
         op: ModifyOp,
         value: ValueId,
         span: Option<Span>,
-        /// The exact span of the modified variable identifier.
+        #[allow(dead_code)]
         target_span: Option<Span>,
     },
     /// Assignment to a canonical Workshop member-access target, optionally
@@ -51,7 +51,7 @@ pub enum Action {
     CallSubroutine {
         subroutine: SubroutineId,
         span: Option<Span>,
-        /// The exact span of the callee identifier occurrence.
+        #[allow(dead_code)]
         callee_span: Option<Span>,
     },
     If {
@@ -71,7 +71,7 @@ pub enum Action {
         step: ValueId,
         body: Vec<ActionId>,
         span: Option<Span>,
-        /// The exact span of the loop variable identifier.
+        #[allow(dead_code)]
         target_span: Option<Span>,
     },
     /// `For Player Variable(player, name, start, stop, step)`: the
@@ -97,7 +97,7 @@ pub enum Action {
 
 impl Action {
     /// The source span of this action, if any.
-    pub fn span(&self) -> Option<Span> {
+    pub(crate) fn span(&self) -> Option<Span> {
         match self {
             Action::SetGlobalVariable { span, .. }
             | Action::ModifyGlobalVariable { span, .. }
@@ -116,14 +116,14 @@ impl Action {
 
 /// One condition/body pair of an `If` action.
 #[derive(Debug, Clone)]
-pub struct IfBranch {
-    pub condition: ValueId,
-    pub body: Vec<ActionId>,
+pub(crate) struct IfBranch {
+    pub(crate) condition: ValueId,
+    pub(crate) body: Vec<ActionId>,
 }
 
 /// The modify operators of the v0.1 surface.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ModifyOp {
+pub(crate) enum ModifyOp {
     Add,
     Subtract,
     Multiply,
@@ -139,7 +139,7 @@ pub enum ModifyOp {
 
 impl ModifyOp {
     /// A short canonical name for dumps and diagnostics.
-    pub fn as_str(self) -> &'static str {
+    pub(crate) fn as_str(self) -> &'static str {
         match self {
             ModifyOp::Add => "Add",
             ModifyOp::Subtract => "Subtract",
@@ -156,7 +156,7 @@ impl ModifyOp {
     }
 
     /// The canonical catalog identity for this modification operation.
-    pub fn catalog_id(self) -> &'static str {
+    pub(crate) fn catalog_id(self) -> &'static str {
         match self {
             ModifyOp::Add => "add",
             ModifyOp::Subtract => "subtract",

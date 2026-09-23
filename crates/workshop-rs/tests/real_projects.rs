@@ -4,7 +4,7 @@ use common::real_projects::{
     REAL_PROJECT_CORPUS_ID, REAL_PROJECT_EXPECTATION, REAL_PROJECT_EXPECTATION_SCHEMA_VERSION,
     RealProjectGapKind, RealProjectStage,
 };
-use workshop_rs::{WorkshopError, semantic::ResidualClassification};
+use workshop_rs::{WorkshopError, rules::ResidualClassification};
 
 mod common;
 

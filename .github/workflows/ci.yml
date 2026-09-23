@@ -7,6 +7,7 @@ on:
       - "**/*.md"
       - "docs/**"
   pull_request:
+    types: [opened, synchronize, reopened, edited]
     paths-ignore:
       - "**/*.md"
       - "docs/**"
@@ -98,11 +99,11 @@ jobs:
           overall_status=0
           run_scenario() {
             scenario="$1"
-            test_target="$2"
+            test_filter="$2"
             log_path="$artifact_dir/$scenario.log"
 
             set +e
-            cargo test --locked -p workshop-rs --test "$test_target" pinned_real_projects -- --nocapture 2>&1 | tee "$log_path"
+            cargo test --locked -p workshop-rs --lib "$test_filter" -- --nocapture 2>&1 | tee "$log_path"
             scenario_status=${PIPESTATUS[0]}
             set -e
 
@@ -126,9 +127,9 @@ jobs:
             } >> "$artifact_dir/all.log"
           }
 
-          run_scenario parser parser
-          run_scenario emitter emitter
-          run_scenario locale locale
+          run_scenario parser tests::parser::pinned_real_projects
+          run_scenario emitter tests::emitter::pinned_real_projects
+          run_scenario locale tests::locale::pinned_real_projects
 
           write_summary ''
           write_summary "Detailed logs and machine-readable results are in the \`real-project-scenarios\` artifact."

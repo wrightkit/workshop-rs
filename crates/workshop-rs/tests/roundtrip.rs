@@ -142,7 +142,7 @@ fn equivalence_detects_semantic_differences() {
         actions: a
             .actions
             .iter()
-            .map(|_| workshop_rs::ids::Id::from_index(0))
+            .map(|_| workshop_rs::core::ids::Id::from_index(0))
             .collect(),
     });
     b.rules.push(workshop_rs::wir::Rule {
@@ -155,7 +155,7 @@ fn equivalence_detects_semantic_differences() {
         actions: b
             .actions
             .iter()
-            .map(|_| workshop_rs::ids::Id::from_index(0))
+            .map(|_| workshop_rs::core::ids::Id::from_index(0))
             .collect(),
     });
     assert!(

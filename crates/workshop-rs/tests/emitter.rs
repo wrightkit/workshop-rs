@@ -8,7 +8,7 @@ use workshop_rs::emitter;
 use workshop_rs::parser;
 use workshop_rs::wir;
 
-mod common;
+use super::common;
 
 fn corpus_path(fixture_id: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -859,7 +859,7 @@ fn constant_format_calls_fold_to_the_substituted_text() {
         None,
     ));
     let action = program.actions.push(wir::Action::SetGlobalVariable {
-        variable: workshop_rs::ids::Id::from_index(0),
+        variable: workshop_rs::core::ids::Id::from_index(0),
         value: folded,
         span: None,
         target_span: None,
@@ -919,7 +919,7 @@ fn constant_float_format_arguments_use_two_decimals() {
         None,
     ));
     let action = program.actions.push(wir::Action::SetGlobalVariable {
-        variable: workshop_rs::ids::Id::from_index(0),
+        variable: workshop_rs::core::ids::Id::from_index(0),
         value: folded,
         span: None,
         target_span: None,
@@ -964,13 +964,13 @@ fn split_and_reescaped_value_strings_round_trip_byte_identically() {
         None,
     ));
     let first = program.actions.push(wir::Action::SetGlobalVariable {
-        variable: workshop_rs::ids::Id::from_index(0),
+        variable: workshop_rs::core::ids::Id::from_index(0),
         value: long,
         span: None,
         target_span: None,
     });
     let second = program.actions.push(wir::Action::SetGlobalVariable {
-        variable: workshop_rs::ids::Id::from_index(1),
+        variable: workshop_rs::core::ids::Id::from_index(1),
         value: escaped,
         span: None,
         target_span: None,
@@ -1030,7 +1030,7 @@ fn implicit_format_placeholders_renumber_to_the_oracle_form() {
         None,
     ));
     let variable = program.values.push(workshop_rs::wir::ValueNode::new(
-        workshop_rs::wir::Value::GlobalVariable(workshop_rs::ids::Id::from_index(0)),
+        workshop_rs::wir::Value::GlobalVariable(workshop_rs::core::ids::Id::from_index(0)),
         None,
     ));
     let call = program.values.push(workshop_rs::wir::ValueNode::new(
@@ -1041,7 +1041,7 @@ fn implicit_format_placeholders_renumber_to_the_oracle_form() {
         None,
     ));
     let action = program.actions.push(wir::Action::SetGlobalVariable {
-        variable: workshop_rs::ids::Id::from_index(1),
+        variable: workshop_rs::core::ids::Id::from_index(1),
         value: call,
         span: None,
         target_span: None,
@@ -1102,7 +1102,7 @@ fn partial_constant_format_folds_and_renumbers() {
         None,
     ));
     let variable = program.values.push(workshop_rs::wir::ValueNode::new(
-        workshop_rs::wir::Value::GlobalVariable(workshop_rs::ids::Id::from_index(0)),
+        workshop_rs::wir::Value::GlobalVariable(workshop_rs::core::ids::Id::from_index(0)),
         None,
     ));
     let call = program.values.push(workshop_rs::wir::ValueNode::new(
@@ -1113,7 +1113,7 @@ fn partial_constant_format_folds_and_renumbers() {
         None,
     ));
     let action = program.actions.push(wir::Action::SetGlobalVariable {
-        variable: workshop_rs::ids::Id::from_index(1),
+        variable: workshop_rs::core::ids::Id::from_index(1),
         value: call,
         span: None,
         target_span: None,
@@ -1163,12 +1163,12 @@ fn playervar_reads_parenthesize_the_receiver() {
     let read = program.values.push(workshop_rs::wir::ValueNode::new(
         workshop_rs::wir::Value::PlayerVariable {
             player,
-            variable: workshop_rs::ids::Id::from_index(0),
+            variable: workshop_rs::core::ids::Id::from_index(0),
         },
         None,
     ));
     let action = program.actions.push(wir::Action::SetGlobalVariable {
-        variable: workshop_rs::ids::Id::from_index(0),
+        variable: workshop_rs::core::ids::Id::from_index(0),
         value: read,
         span: None,
         target_span: None,

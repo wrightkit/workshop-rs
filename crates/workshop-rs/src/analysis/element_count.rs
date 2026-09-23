@@ -113,7 +113,7 @@ impl Program {
     /// The catalog is used to reject unknown action/value identities before a
     /// report is produced. Native display actions are represented by their
     /// canonical catalog-backed action calls.
-    pub fn element_count(
+    pub(crate) fn element_count(
         &self,
         catalog: &Catalog,
     ) -> Result<ElementCountReport, ElementCountError> {

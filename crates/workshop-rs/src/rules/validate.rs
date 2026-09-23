@@ -13,8 +13,8 @@ pub fn validate_canonical_ids(program: &crate::Program, catalog: &Catalog) -> Re
     validate_wir(&storage, catalog)
 }
 
-#[doc(hidden)]
-pub fn validate_canonical_ids_wir(program: &wir::Program, catalog: &Catalog) -> Result<()> {
+#[cfg(test)]
+pub(crate) fn validate_canonical_ids_wir(program: &wir::Program, catalog: &Catalog) -> Result<()> {
     validate_wir(program, catalog)
 }
 

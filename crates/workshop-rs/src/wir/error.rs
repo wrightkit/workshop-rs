@@ -8,11 +8,9 @@ use crate::core::source::Span;
 
 /// A structured IR error.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum IrError {
+pub(crate) enum IrError {
     /// A node reference is dangling or out of range.
     DanglingReference { what: &'static str, id: u32 },
-    /// A construct the IR does not support, with its source location.
-    Unsupported { message: String, span: Option<Span> },
     /// A structural or invariant violation.
     Invalid {
         code: &'static str,
@@ -23,29 +21,26 @@ pub enum IrError {
 
 impl IrError {
     /// Stable machine-readable code.
-    pub fn code(&self) -> &'static str {
+    pub(crate) fn code(&self) -> &'static str {
         match self {
             IrError::DanglingReference { .. } => "dangling-reference",
-            IrError::Unsupported { .. } => "unsupported",
             IrError::Invalid { code, .. } => code,
         }
     }
 
     /// Human-readable message.
-    pub fn message(&self) -> String {
+    pub(crate) fn message(&self) -> String {
         match self {
             IrError::DanglingReference { what, id } => {
                 format!("dangling {what} reference: id {id}")
             }
-            IrError::Unsupported { message, .. } => message.clone(),
             IrError::Invalid { message, .. } => message.clone(),
         }
     }
 
     /// The offending source span, when known.
-    pub fn span(&self) -> Option<Span> {
+    pub(crate) fn span(&self) -> Option<Span> {
         match self {
-            IrError::Unsupported { span, .. } => *span,
             IrError::Invalid { span, .. } => *span,
             IrError::DanglingReference { .. } => None,
         }

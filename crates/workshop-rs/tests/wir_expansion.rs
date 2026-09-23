@@ -208,7 +208,7 @@ fn assign_member_rejects_non_lvalue_member_access_targets() {
     );
 }
 
-fn span(file: workshop_rs::ids::Id<SourceFile>, line: u32, col: u32, end_col: u32) -> Span {
+fn span(file: workshop_rs::core::ids::Id<SourceFile>, line: u32, col: u32, end_col: u32) -> Span {
     Span::new(file, Position::new(line, col), Position::new(line, end_col))
 }
 
@@ -401,7 +401,7 @@ fn unknown_action_id_is_rejected_with_location() {
         .files
         .iter()
         .next()
-        .map(|_| workshop_rs::ids::Id::from_index(0))
+        .map(|_| workshop_rs::core::ids::Id::from_index(0))
         .expect("one file");
     let action = program
         .actions

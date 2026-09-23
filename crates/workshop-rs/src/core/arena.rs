@@ -10,18 +10,18 @@ use super::ids::Id;
 
 /// An append-only store of `T` nodes addressed by [`Id<T>`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Arena<T> {
+pub(crate) struct Arena<T> {
     items: Vec<T>,
 }
 
 impl<T> Arena<T> {
     /// An empty arena.
-    pub const fn new() -> Self {
+    pub(crate) const fn new() -> Self {
         Arena { items: Vec::new() }
     }
 
     /// Append a node and return its stable ID.
-    pub fn push(&mut self, value: T) -> Id<T> {
+    pub(crate) fn push(&mut self, value: T) -> Id<T> {
         let id = Id::from_index(self.items.len());
         self.items.push(value);
         id
@@ -29,34 +29,34 @@ impl<T> Arena<T> {
 
     /// Borrow the node with the given ID, or `None` when the ID is out of
     /// range (a dangling reference).
-    pub fn get(&self, id: Id<T>) -> Option<&T> {
+    pub(crate) fn get(&self, id: Id<T>) -> Option<&T> {
         self.items.get(id.index())
     }
 
     /// Mutably borrow the node with the given ID, or `None` when the ID is
     /// out of range.
-    pub fn get_mut(&mut self, id: Id<T>) -> Option<&mut T> {
+    pub(crate) fn get_mut(&mut self, id: Id<T>) -> Option<&mut T> {
         self.items.get_mut(id.index())
     }
 
     /// Iterate over all nodes in insertion order.
-    pub fn iter(&self) -> impl Iterator<Item = &T> {
+    pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
         self.items.iter()
     }
 
     /// The number of nodes.
-    pub fn len(&self) -> usize {
+    pub(crate) fn len(&self) -> usize {
         self.items.len()
     }
 
     /// Whether the arena is empty.
-    pub fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
 
     /// True when `id` is within this arena's range (it may still refer to a
     /// node; see [`get`](Arena::get)).
-    pub fn contains(&self, id: Id<T>) -> bool {
+    pub(crate) fn contains(&self, id: Id<T>) -> bool {
         id.index() < self.items.len()
     }
 }

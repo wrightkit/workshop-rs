@@ -12,7 +12,7 @@ use workshop_rs::roundtrip;
 use workshop_rs::validate;
 use workshop_rs::wir;
 
-mod common;
+use super::common;
 
 fn fixture_path(fixture_id: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -175,7 +175,7 @@ fn unresolved_dotted_value_remains_a_source_located_issue() {
     let issues = program.semantic_issues(&catalog);
     let issue = issues
         .iter()
-        .find(|issue| issue.kind == workshop_rs::semantic::IncompletenessKind::UnknownValue)
+        .find(|issue| issue.kind == workshop_rs::rules::IncompletenessKind::UnknownValue)
         .expect("unknown dotted prefix is reported");
     assert_eq!(issue.name, "D");
     assert!(
@@ -619,7 +619,7 @@ fn current_loop_action_resolves_to_canonical_generic_wir() {
     ));
     validate::validate_canonical_ids_wir(&program, &catalog).expect("Loop has canonical identity");
     assert!(
-        workshop_rs::semantic::inspect_wir(&program, &catalog)
+        workshop_rs::analysis::semantic::inspect_wir(&program, &catalog)
             .iter()
             .all(|issue| issue.name != "rawWorkshopAction"),
         "declared Loop must not use the opaque action path"

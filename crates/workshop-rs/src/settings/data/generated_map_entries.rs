@@ -1,4 +1,4 @@
-pub static GENERATED_MAP_NAMES: &[NameMap] = &[
+pub(crate) static GENERATED_MAP_NAMES: &[NameMap] = &[
 NameMap {
     key: "aatlis",
     name: "Aatlis",

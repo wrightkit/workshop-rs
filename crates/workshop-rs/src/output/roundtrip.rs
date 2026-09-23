@@ -98,8 +98,7 @@ pub fn equivalent(a: &crate::Program, b: &crate::Program) -> bool {
     equivalent_wir(&a, &b)
 }
 
-#[doc(hidden)]
-pub fn equivalent_wir(a: &wir::Program, b: &wir::Program) -> bool {
+pub(crate) fn equivalent_wir(a: &wir::Program, b: &wir::Program) -> bool {
     if !settings_equivalent(a.settings.as_ref(), b.settings.as_ref()) {
         return false;
     }

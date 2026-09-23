@@ -13,7 +13,8 @@ pub(crate) use std::fmt::Write;
 pub(crate) use crate::catalog::{Catalog, Kind, Locale};
 pub(crate) use crate::core::error::{Result, WorkshopError};
 pub(crate) use crate::core::format::format_number;
-pub(crate) use crate::settings::table::{self, KeyKind, PathPart};
+pub(crate) use crate::settings::table::KeyKind;
+pub(crate) use crate::settings::{PathPart, table};
 pub(crate) use crate::settings::{Settings as SettingsTree, SettingsNode};
 pub(crate) use crate::wir;
 
@@ -44,8 +45,12 @@ pub fn emit(program: &crate::Program, catalog: &Catalog, locale: &Locale) -> Res
     emit_with_options(program, catalog, locale, &EmitOptions::default()).map(|out| out.text)
 }
 
-#[doc(hidden)]
-pub fn emit_wir(program: &wir::Program, catalog: &Catalog, locale: &Locale) -> Result<String> {
+#[cfg(test)]
+pub(crate) fn emit_wir(
+    program: &wir::Program,
+    catalog: &Catalog,
+    locale: &Locale,
+) -> Result<String> {
     emit_with_options_inner(program, catalog, locale, &EmitOptions::default(), false)
         .map(|out| out.text)
 }
@@ -72,8 +77,8 @@ pub(crate) fn emit_with_options_for_conversion(
     emit_with_options_inner(&storage, catalog, locale, options, true)
 }
 
-#[doc(hidden)]
-pub fn emit_wir_with_options(
+#[cfg(test)]
+pub(crate) fn emit_wir_with_options(
     program: &wir::Program,
     catalog: &Catalog,
     locale: &Locale,

@@ -6,14 +6,14 @@ use super::{GlobalVarId, PlayerVarId, SubroutineId, ValueId};
 
 /// A workshop value (expression) node with its source span.
 #[derive(Debug, Clone)]
-pub struct ValueNode {
-    pub value: Value,
-    pub span: Option<Span>,
+pub(crate) struct ValueNode {
+    pub(crate) value: Value,
+    pub(crate) span: Option<Span>,
 }
 
 /// A workshop value (expression).
 #[derive(Debug, Clone)]
-pub enum Value {
+pub(crate) enum Value {
     /// A numeric literal with its source spelling (`5`, `0.0`, `-22.05`);
     /// computed values (constant folding) carry the formatted spelling.
     Number {
@@ -54,7 +54,7 @@ pub enum Value {
 
 impl ValueNode {
     /// Build a value node with a source span.
-    pub fn new(value: Value, span: Option<Span>) -> Self {
+    pub(crate) fn new(value: Value, span: Option<Span>) -> Self {
         ValueNode { value, span }
     }
 }

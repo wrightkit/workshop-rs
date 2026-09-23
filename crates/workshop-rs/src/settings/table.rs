@@ -12,6 +12,8 @@ use serde::Deserialize;
 use serde_json::Value;
 use std::sync::OnceLock;
 
+use super::PathPart;
+
 /// Locale-specific settings names generated from the reviewed Workshop data
 /// export. The projection contains every reviewed locale as data; adding a
 /// locale changes this file, not the parser or emitter architecture.
@@ -29,7 +31,7 @@ fn locale_data() -> &'static Value {
 /// The English table names are intentionally not duplicated in the locale
 /// data. A missing entry means the target locale is not covered and callers
 /// must preserve the explicit missing-mapping contract.
-pub fn localized_name(locale: &str, section: &str, english: &str) -> Option<&'static str> {
+pub(crate) fn localized_name(locale: &str, section: &str, english: &str) -> Option<&'static str> {
     let data = locale_data();
     let aliases = data.get(section)?.get(english)?.as_object()?;
     aliases.get(locale).and_then(Value::as_str).or_else(|| {
@@ -44,7 +46,7 @@ pub fn localized_name(locale: &str, section: &str, english: &str) -> Option<&'st
 
 /// A leaf key kind: how a settings leaf renders and validates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum KeyKind {
+pub(crate) enum KeyKind {
     /// A presence-only extension setting.
     Flag,
     /// A quoted string (`Description: "..."`).
@@ -67,37 +69,12 @@ pub enum KeyKind {
     ListHero,
 }
 
-/// One segment of an exact settings path.
-#[derive(Debug, Clone, Copy, Hash)]
-pub enum PathPart<'a> {
-    /// A literal key (mode names under `gamemodes` are literal keys too:
-    /// per-key subsets are exact-path entries, #86).
-    Part(&'a str),
-    /// Any team slot (allTeams), rendered through [`team_name`].
-    Team,
-    /// Any hero-config slot, rendered through [`hero_name`].
-    Hero,
-}
-
-impl<'b> PartialEq<PathPart<'b>> for PathPart<'_> {
-    fn eq(&self, other: &PathPart<'b>) -> bool {
-        match (self, other) {
-            (PathPart::Part(left), PathPart::Part(right)) => left == right,
-            (PathPart::Team, PathPart::Team) => true,
-            (PathPart::Hero, PathPart::Hero) => true,
-            _ => false,
-        }
-    }
-}
-
-impl Eq for PathPart<'_> {}
-
 /// One table entry: an exact key path, its workshop name, and its kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct TableEntry {
-    pub path: &'static [PathPart<'static>],
-    pub workshop_name: &'static str,
-    pub kind: KeyKind,
+pub(crate) struct TableEntry {
+    pub(crate) path: &'static [PathPart<'static>],
+    pub(crate) workshop_name: &'static str,
+    pub(crate) kind: KeyKind,
 }
 
 macro_rules! entry {
@@ -121,7 +98,7 @@ macro_rules! entry {
 /// heroes.<team>.general, roleLimit under general, heroLimit under a named
 /// mode) are `settings-unknown-key` at validation (only source-backed in
 /// oracle-failing programs; corpus-bounded).
-pub static ENTRIES: &[TableEntry] = &[
+pub(crate) static ENTRIES: &[TableEntry] = &[
     // main
     entry!(
         [PathPart::Part("main"), PathPart::Part("description")],
@@ -586,14 +563,14 @@ pub static ENTRIES: &[TableEntry] = &[
 
 /// A slot name mapping (key -> localized workshop name).
 #[derive(Debug, Clone, Copy)]
-pub struct NameMap {
-    pub key: &'static str,
-    pub name: &'static str,
+pub(crate) struct NameMap {
+    pub(crate) key: &'static str,
+    pub(crate) name: &'static str,
 }
 
 /// Game-mode names (source-backed: assault, control, escort, hybrid, skirmish,
 /// ffa, tdm, general).
-pub static MODE_NAMES: &[NameMap] = &[
+pub(crate) static MODE_NAMES: &[NameMap] = &[
     NameMap {
         key: "assault",
         name: "Assault",
@@ -629,7 +606,7 @@ pub static MODE_NAMES: &[NameMap] = &[
 ];
 
 /// Map names inside `enabledMaps` lists.
-pub static MAP_NAMES: &[NameMap] = &[
+pub(crate) static MAP_NAMES: &[NameMap] = &[
     NameMap {
         key: "workshopIsland",
         name: "Workshop Island",
@@ -641,7 +618,7 @@ pub static MAP_NAMES: &[NameMap] = &[
 ];
 
 /// Hero names inside hero lists and hero-config groups.
-pub static HERO_NAMES: &[NameMap] = &[
+pub(crate) static HERO_NAMES: &[NameMap] = &[
     NameMap {
         key: "anran",
         name: "Anran",
@@ -861,7 +838,7 @@ include!("data/generated_hero_entries.rs");
 include!("data/generated_mode_entries.rs");
 
 /// Team names inside `heroes` (source-backed: allTeams).
-pub static TEAM_NAMES: &[NameMap] = &[
+pub(crate) static TEAM_NAMES: &[NameMap] = &[
     NameMap {
         key: "allTeams",
         name: "General",
@@ -878,10 +855,10 @@ pub static TEAM_NAMES: &[NameMap] = &[
 
 /// An enum domain member (domain -> localized workshop name).
 #[derive(Debug, Clone, Copy)]
-pub struct EnumMember {
-    pub domain: &'static str,
-    pub member: &'static str,
-    pub name: &'static str,
+pub(crate) struct EnumMember {
+    pub(crate) domain: &'static str,
+    pub(crate) member: &'static str,
+    pub(crate) name: &'static str,
 }
 
 include!("data/generated_entries.rs");
@@ -891,7 +868,7 @@ include!("data/generated_hero_settings.rs");
 /// Workshop-data export members are retained through
 /// `projection_reconciliation.json`, which maps their source identities into
 /// these canonical domains without replacing fixture-backed display names.
-pub static ENUM_MEMBERS: &[EnumMember] = &[
+pub(crate) static ENUM_MEMBERS: &[EnumMember] = &[
     EnumMember {
         domain: "mapRotation",
         member: "afterAGame",
@@ -1005,7 +982,7 @@ pub static ENUM_MEMBERS: &[EnumMember] = &[
 ];
 
 /// Look up a settings leaf entry by its exact path.
-pub fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
+pub(crate) fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
     entries().find(|entry| {
         entry.path.len() == path.len() && entry.path.iter().zip(path.iter()).all(|(a, b)| a == b)
     })
@@ -1015,7 +992,7 @@ pub fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
 /// taking precedence over the generated export projection. Duplicate paths
 /// are represented once in the semantic catalog while the parser and emitter
 /// continue to use the same lookup table.
-pub fn entries() -> impl Iterator<Item = &'static TableEntry> {
+pub(crate) fn entries() -> impl Iterator<Item = &'static TableEntry> {
     deduplicated_entries(ENTRIES.iter().chain(GENERATED_ENTRIES.iter()))
 }
 
@@ -1074,7 +1051,7 @@ pub(crate) fn is_generated_entry(entry: &TableEntry) -> bool {
 /// Map the existing hero-settings leaf keys to canonical gameplay slots.
 /// The setting tree remains the owner of the keys; display names are resolved
 /// from the gameplay catalog by the parser/emitter when a hero context exists.
-pub fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str> {
+pub(crate) fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str> {
     match path.last() {
         Some(PathPart::Part("ability1Cooldown%" | "enableAbility1")) => Some("ability1"),
         Some(PathPart::Part("ability2Cooldown%" | "enableAbility2")) => Some("ability2"),
@@ -1097,7 +1074,7 @@ pub fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str> {
 }
 
 /// Resolve a source-backed hero-specific setting label.
-pub fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static str> {
+pub(crate) fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static str> {
     let generated = GENERATED_HERO_SETTING_NAMES
         .iter()
         .find(|entry| entry.hero == hero && entry.key == key)
@@ -1150,7 +1127,7 @@ fn hero_setting_aliases() -> &'static [HeroSettingAlias] {
 /// Reviewed producer aliases observed in the pinned AI-PVE artifact. These
 /// labels omit the export's `倍率` suffix or use the producer's shorter
 /// ability label, but identify the same canonical setting path.
-pub fn hero_setting_alias(hero: &str, key: &str, locale: &str, display: &str) -> bool {
+pub(crate) fn hero_setting_alias(hero: &str, key: &str, locale: &str, display: &str) -> bool {
     hero_setting_aliases().iter().any(|alias| {
         alias.hero == hero
             && alias.key == key
@@ -1164,27 +1141,27 @@ fn name_in(maps: &[NameMap], key: &str) -> Option<&'static str> {
 }
 
 /// The localized name of a game mode.
-pub fn mode_name(key: &str) -> Option<&'static str> {
+pub(crate) fn mode_name(key: &str) -> Option<&'static str> {
     name_in(MODE_NAMES, key).or_else(|| name_in(GENERATED_MODE_NAMES, key))
 }
 
 /// The localized name of a map.
-pub fn map_name(key: &str) -> Option<&'static str> {
+pub(crate) fn map_name(key: &str) -> Option<&'static str> {
     name_in(MAP_NAMES, key).or_else(|| name_in(GENERATED_MAP_NAMES, key))
 }
 
 /// The localized name of a hero.
-pub fn hero_name(key: &str) -> Option<&'static str> {
+pub(crate) fn hero_name(key: &str) -> Option<&'static str> {
     name_in(HERO_NAMES, key).or_else(|| name_in(GENERATED_HERO_NAMES, key))
 }
 
 /// The localized name of a team.
-pub fn team_name(key: &str) -> Option<&'static str> {
+pub(crate) fn team_name(key: &str) -> Option<&'static str> {
     name_in(TEAM_NAMES, key)
 }
 
 /// The localized name of an enum member in a domain.
-pub fn enum_name(domain: &str, member: &str) -> Option<&'static str> {
+pub(crate) fn enum_name(domain: &str, member: &str) -> Option<&'static str> {
     ENUM_MEMBERS
         .iter()
         .find(|m| m.domain == domain && m.member == member)
@@ -1197,8 +1174,15 @@ pub fn enum_name(domain: &str, member: &str) -> Option<&'static str> {
         })
 }
 
+pub(crate) fn enum_members(domain: &str) -> impl Iterator<Item = &'static EnumMember> {
+    ENUM_MEMBERS
+        .iter()
+        .chain(GENERATED_ENUM_MEMBERS.iter())
+        .filter(move |member| member.domain == domain)
+}
+
 /// A human-readable rendering of a path (diagnostics).
-pub fn path_string(path: &[PathPart<'_>]) -> String {
+pub(crate) fn path_string(path: &[PathPart<'_>]) -> String {
     path.iter()
         .map(|part| match part {
             PathPart::Part(name) => (*name).to_string(),

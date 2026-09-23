@@ -77,7 +77,7 @@ pub fn inspect(program: &crate::Program, catalog: &Catalog) -> Vec<SemanticIssue
 }
 
 #[doc(hidden)]
-pub fn inspect_wir(program: &Program, catalog: &Catalog) -> Vec<SemanticIssue> {
+pub(crate) fn inspect_wir(program: &Program, catalog: &Catalog) -> Vec<SemanticIssue> {
     let mut issues = Vec::new();
     if let Some(settings) = &program.settings {
         for node in &settings.children {

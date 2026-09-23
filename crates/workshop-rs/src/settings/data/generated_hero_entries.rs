@@ -1,4 +1,4 @@
-pub static GENERATED_HERO_NAMES: &[NameMap] = &[
+pub(crate) static GENERATED_HERO_NAMES: &[NameMap] = &[
 NameMap {
     key: "ana",
     name: "Ana",

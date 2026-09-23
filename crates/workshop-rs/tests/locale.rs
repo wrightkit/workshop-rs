@@ -14,7 +14,7 @@ use workshop_rs::emitter::{self, EmitOptions};
 use workshop_rs::parser;
 use workshop_rs::settings::SettingsNode;
 
-mod common;
+use super::common;
 
 fn builtin() -> Catalog {
     Catalog::builtin().expect("built-in catalog")
