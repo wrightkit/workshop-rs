@@ -46,9 +46,9 @@ struct ActionProvenance {
     arguments: Vec<Option<Span>>,
 }
 
-/// A failure while attaching source metadata to a public [`Program`].
+/// A failure while attaching source mappings to a public [`Program`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ProvenanceError {
+pub enum SourceMappingError {
     UnknownFile(FileId),
     InvalidSpan(Span),
     InvalidRule(usize),
@@ -70,7 +70,7 @@ pub enum ProvenanceError {
     InvalidSubroutine(usize),
 }
 
-impl std::fmt::Display for ProvenanceError {
+impl std::fmt::Display for SourceMappingError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::UnknownFile(file) => {
@@ -108,7 +108,7 @@ impl std::fmt::Display for ProvenanceError {
     }
 }
 
-impl std::error::Error for ProvenanceError {}
+impl std::error::Error for SourceMappingError {}
 
 impl Program {
     pub fn new() -> Self {
@@ -153,7 +153,7 @@ impl Program {
         &mut self,
         rule: usize,
         span: Option<Span>,
-    ) -> std::result::Result<(), ProvenanceError> {
+    ) -> std::result::Result<(), SourceMappingError> {
         self.validate_span(span)?;
         self.rule_provenance_mut(rule)?.span = span;
         Ok(())
@@ -165,16 +165,16 @@ impl Program {
         rule: usize,
         condition: usize,
         span: Option<Span>,
-    ) -> std::result::Result<(), ProvenanceError> {
+    ) -> std::result::Result<(), SourceMappingError> {
         self.validate_span(span)?;
         let condition_count = self
             .rules
             .get(rule)
-            .ok_or(ProvenanceError::InvalidRule(rule))?
+            .ok_or(SourceMappingError::InvalidRule(rule))?
             .conditions
             .len();
         if condition >= condition_count {
-            return Err(ProvenanceError::InvalidCondition { rule, condition });
+            return Err(SourceMappingError::InvalidCondition { rule, condition });
         }
         let rule_data = self.rule_provenance_mut(rule)?;
         rule_data.conditions.resize(condition + 1, None);
@@ -188,16 +188,16 @@ impl Program {
         rule: usize,
         action: usize,
         span: Option<Span>,
-    ) -> std::result::Result<(), ProvenanceError> {
+    ) -> std::result::Result<(), SourceMappingError> {
         self.validate_span(span)?;
         let action_count = self
             .rules
             .get(rule)
-            .ok_or(ProvenanceError::InvalidRule(rule))?
+            .ok_or(SourceMappingError::InvalidRule(rule))?
             .actions
             .len();
         if action >= action_count {
-            return Err(ProvenanceError::InvalidAction { rule, action });
+            return Err(SourceMappingError::InvalidAction { rule, action });
         }
         let rule_data = self.rule_provenance_mut(rule)?;
         rule_data
@@ -214,18 +214,18 @@ impl Program {
         action: usize,
         argument: usize,
         span: Option<Span>,
-    ) -> std::result::Result<(), ProvenanceError> {
+    ) -> std::result::Result<(), SourceMappingError> {
         self.validate_span(span)?;
         let action_value = self
             .rules
             .get(rule)
-            .ok_or(ProvenanceError::InvalidRule(rule))?
+            .ok_or(SourceMappingError::InvalidRule(rule))?
             .actions
             .get(action)
-            .ok_or(ProvenanceError::InvalidAction { rule, action })?;
+            .ok_or(SourceMappingError::InvalidAction { rule, action })?;
         let argument_count = action_argument_count(action_value);
         if argument >= argument_count {
-            return Err(ProvenanceError::InvalidActionArgument {
+            return Err(SourceMappingError::InvalidActionArgument {
                 rule,
                 action,
                 argument,
@@ -243,11 +243,11 @@ impl Program {
         variable: usize,
         span: Option<Span>,
         name_span: Option<Span>,
-    ) -> std::result::Result<(), ProvenanceError> {
+    ) -> std::result::Result<(), SourceMappingError> {
         self.validate_span(span)?;
         self.validate_span(name_span)?;
         if variable >= self.global_variables.len() {
-            return Err(ProvenanceError::InvalidGlobalVariable(variable));
+            return Err(SourceMappingError::InvalidGlobalVariable(variable));
         }
         let variable_count = self.global_variables.len();
         let provenance = self.provenance_mut();
@@ -264,11 +264,11 @@ impl Program {
         variable: usize,
         span: Option<Span>,
         name_span: Option<Span>,
-    ) -> std::result::Result<(), ProvenanceError> {
+    ) -> std::result::Result<(), SourceMappingError> {
         self.validate_span(span)?;
         self.validate_span(name_span)?;
         if variable >= self.player_variables.len() {
-            return Err(ProvenanceError::InvalidPlayerVariable(variable));
+            return Err(SourceMappingError::InvalidPlayerVariable(variable));
         }
         let variable_count = self.player_variables.len();
         let provenance = self.provenance_mut();
@@ -285,11 +285,11 @@ impl Program {
         subroutine: usize,
         span: Option<Span>,
         name_span: Option<Span>,
-    ) -> std::result::Result<(), ProvenanceError> {
+    ) -> std::result::Result<(), SourceMappingError> {
         self.validate_span(span)?;
         self.validate_span(name_span)?;
         if subroutine >= self.subroutines.len() {
-            return Err(ProvenanceError::InvalidSubroutine(subroutine));
+            return Err(SourceMappingError::InvalidSubroutine(subroutine));
         }
         let subroutine_count = self.subroutines.len();
         let provenance = self.provenance_mut();
@@ -383,15 +383,15 @@ impl Program {
         )
     }
 
-    fn validate_span(&self, span: Option<Span>) -> std::result::Result<(), ProvenanceError> {
+    fn validate_span(&self, span: Option<Span>) -> std::result::Result<(), SourceMappingError> {
         let Some(span) = span else {
             return Ok(());
         };
         if !span.is_valid() {
-            return Err(ProvenanceError::InvalidSpan(span));
+            return Err(SourceMappingError::InvalidSpan(span));
         }
         if self.files.get(span.file.index()).is_none() {
-            return Err(ProvenanceError::UnknownFile(span.file));
+            return Err(SourceMappingError::UnknownFile(span.file));
         }
         Ok(())
     }
@@ -405,9 +405,9 @@ impl Program {
     fn rule_provenance_mut(
         &mut self,
         rule: usize,
-    ) -> std::result::Result<&mut RuleProvenance, ProvenanceError> {
+    ) -> std::result::Result<&mut RuleProvenance, SourceMappingError> {
         if rule >= self.rules.len() {
-            return Err(ProvenanceError::InvalidRule(rule));
+            return Err(SourceMappingError::InvalidRule(rule));
         }
         let rule_count = self.rules.len();
         let provenance = self.provenance_mut();
@@ -421,15 +421,15 @@ impl Program {
         &mut self,
         rule: usize,
         action: usize,
-    ) -> std::result::Result<&mut ActionProvenance, ProvenanceError> {
+    ) -> std::result::Result<&mut ActionProvenance, SourceMappingError> {
         let action_count = self
             .rules
             .get(rule)
-            .ok_or(ProvenanceError::InvalidRule(rule))?
+            .ok_or(SourceMappingError::InvalidRule(rule))?
             .actions
             .len();
         if action >= action_count {
-            return Err(ProvenanceError::InvalidAction { rule, action });
+            return Err(SourceMappingError::InvalidAction { rule, action });
         }
         let rule_data = self.rule_provenance_mut(rule)?;
         rule_data
