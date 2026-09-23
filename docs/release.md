@@ -115,8 +115,10 @@ The `Public API compatibility` CI job runs `cargo-semver-checks` for the
 `workshop-rs` library against the latest normal release published on crates.io.
 This automatically advances the accepted baseline after each release, so
 semver-safe additive changes do not require baseline updates. The protected
-surface is the documented public library API established by #112. The CLI
-crate, generated catalog data, test support, storage internals, and
+surface is the documented public library API established by #112 and
+listed in the
+[Public API and compatibility contract](compatibility-facades.md).
+The CLI crate, generated catalog data, test support, storage internals, and
 `#[doc(hidden)]` compatibility paths are outside this gate unless they are
 reachable through that documented API.
 
