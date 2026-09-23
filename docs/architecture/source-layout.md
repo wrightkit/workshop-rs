@@ -42,7 +42,13 @@ shared home:
 - `tests/` owns executable Workshop contract and regression checks, with
   source-attributed fixtures beside the tests that exercise them.
 
-The root operation modules (`parser`, `emitter`, `validate`, `convert`, and
-`roundtrip`) are the public Workshop operations over `Program`. Storage,
-lexer, arena, ID, and census compatibility paths are documentation-hidden
-support surfaces and are not ordinary 1.0 contracts.
+The crate-root module and re-export inventory, including the public operations
+and the supported `detect` and `signatures` entry points, is maintained in the
+[Public API and compatibility contract](../compatibility-facades.md). This
+document describes source ownership rather than maintaining a second export
+list.
+
+The former public `arena`, `ids`, and root `semantic` modules, WIR-facing
+operations, and `settings::table` path are no longer public paths. Storage,
+tokenization, typed IDs, and normalized WIR remain implementation details;
+they are private or crate-private, not `#[doc(hidden)]` public exports.

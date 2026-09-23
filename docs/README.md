@@ -29,6 +29,8 @@ relevant code/tests/data and current Issue contract.
 - [Workshop source layout](architecture/source-layout.md): domain entry points,
   shared implementation boundaries, CLI verification tooling, and test-owned
   fixtures.
+- [Public API and compatibility contract](compatibility-facades.md): crate-root
+  module exports, root re-exports, and retired compatibility paths.
 - [Repository agent guidance](../AGENTS.md): implementation routing,
   verification, source attribution, and delivery rules.
 

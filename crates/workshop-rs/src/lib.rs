@@ -10,7 +10,7 @@
 //!   semantic identities, kinds, parameters, and locale tables binding
 //!   identities to client spellings; catalog version/digest identity and
 //!   per-locale coverage;
-//! * [`format`] — canonical number formatting for computed Workshop values;
+//! * [`mod@format`] — canonical number formatting for computed Workshop values;
 //! * [`actions`], [`events`], [`rules`], [`values`], [`settings`], and
 //!   [`gameplay`] — the discoverable Workshop domains;
 //! * [`program`] — the canonical public Workshop program model;

@@ -20,6 +20,7 @@ For substantive implementation work, resolve the smallest relevant current contr
 | Hero/gameplay dataset model | [`../gameplay-data.md`](../gameplay-data.md) |
 | Gameplay semantic queries | [`../gameplay-query.md`](../gameplay-query.md) |
 | Action layout contract | [`../action-layout.md`](../action-layout.md) |
+| Public API modules, re-exports, and compatibility boundary | [`../compatibility-facades.md`](../compatibility-facades.md) |
 | Architecture decision history | [`../adr/README.md`](../adr/README.md) |
 | Source layout and domain routing | [`source-layout.md`](source-layout.md) |
 

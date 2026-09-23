@@ -7,27 +7,27 @@ internal storage or parser implementation details.
 
 ## Supported public API
 
-| Contract area | Public paths |
-| --- | --- |
-| Canonical program model | `program`, the crate-root model re-exports |
-| Workshop domains and data | `actions`, `catalog`, `events`, `gameplay`, `rules`, `settings`, `values`, `source` |
-| Workshop operations | `parser`, `validate`, `convert`, `roundtrip`, `emitter`, `format` |
-| Locale detection | `detect` is the crate-root entry point; `catalog::detect` owns the implementation |
-| Parse-context contract | `signatures::{ExpectedDomain, NoExpectedDomain, ChainedExpectedDomain}` |
-| Public errors | crate-root `WorkshopError` and `CatalogError` |
+The table lists every crate-root public module and re-export from
+[`crates/workshop-rs/src/lib.rs`](../crates/workshop-rs/src/lib.rs). Rustdoc
+remains the item-level reference for symbols nested under those modules.
 
-These are API areas, not a complete item-level inventory. Their public
-contracts express Workshop concepts and operations independently of the
-current internal representation.
+| Contract area | Crate-root public paths |
+| --- | --- |
+| Canonical program model | `program` |
+| Root model re-exports | `Action`, `Condition`, `Event`, `EventTarget`, `EventTeam`, `ModifyOp`, `PlayerEventKind`, `Program`, `ProvenanceError`, `Rule`, `Subroutine`, `Value`, `Variable` |
+| Workshop domains | `actions`, `catalog`, `events`, `gameplay`, `rules`, `settings`, `values` |
+| Source and provenance | `source` |
+| Workshop operations | `convert`, `detect`, `emitter`, `format`, `parser`, `roundtrip`, `validate` |
+| Parse-context contract | `signatures` |
+| Public errors | `CatalogError`, `WorkshopError` |
 
 ## Supported public aliases
 
-`detect` and `signatures` are intentionally supported public entry points,
-even though their modules forward to canonical implementations elsewhere.
-`detect` keeps locale detection discoverable at the crate root, while
-`signatures` defines the parse-context contract shared by Workshop parsing and
-frontends that supply expected enum domains. The catalog remains the sole
-source of signature data.
+`detect` keeps locale detection discoverable at the crate root while
+`catalog::detect` owns its implementation. `signatures` exposes the
+parse-context contract shared by Workshop parsing and frontends that supply
+expected enum domains. Both are intentional public APIs, not compatibility-only
+facades; the catalog remains the sole source of signature data.
 
 ## Compatibility-only facades
 

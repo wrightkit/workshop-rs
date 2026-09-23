@@ -6,7 +6,7 @@
 //! back, so parser, emitter, analyzer, and tooling never embed
 //! locale-specific strings as identity.
 //!
-//! Locale coverage is data ([`docs/adr/0001-catalog-boundaries.md`]):
+//! Locale coverage is data ([ADR-0001](https://github.com/wrightkit/workshop-rs/blob/main/docs/adr/0001-catalog-boundaries.md)):
 //! the primary locale (the first declared one, `en-US`) is complete — every
 //! entry and enum member carries a primary-locale alias — while additional
 //! declared locales may be partially covered. Missing target-locale mappings
