@@ -10,7 +10,7 @@ reference emissions) on 2026-08-16. The spellings are Blizzard game content
 (functional/interoperability data); the texts are observed reference
 behavior, not OverPy source. Full provenance, extraction method, and
 per-file SHA-256 verification are recorded in
-[`crates/workshop-rs/tests/fixtures/README.md`](../crates/workshop-rs/tests/fixtures/README.md).
+[`crates/workshop-rs/tests/fixtures/README.md`](../../crates/workshop-rs/tests/fixtures/README.md).
 The committed fixtures are reference-emission inputs with per-file hashes;
 the JSON evidence used to generate locale mappings is not committed.
 
