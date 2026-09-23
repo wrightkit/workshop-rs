@@ -16,7 +16,8 @@ use crate::conformance::{
     TestArtifact,
 };
 use workshop_rs::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
-use workshop_rs::settings::{self, KeyKind, PathPart, TableEntry};
+use workshop_rs::settings::PathPart;
+use workshop_rs::settings::table::{self as settings_table, KeyKind, TableEntry};
 use workshop_rs::{WorkshopError, convert, emitter, parser, roundtrip};
 
 #[derive(Clone, Copy)]
@@ -507,9 +508,9 @@ fn content_id_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
 }
 
 fn settings_shard() -> Result<CensusShard, CensusError> {
-    let cases = settings::entries()
+    let cases = settings_table::entries()
         .map(|entry| {
-            let path = settings::path_string(entry.path);
+            let path = settings_table::path_string(entry.path);
             CensusCase {
                 case_id: format!("settings/{path}"),
                 features: vec![feature(
@@ -775,7 +776,7 @@ fn settings_probe(entry: &TableEntry) -> String {
             PathPart::Part("heroes") => "heroes",
             PathPart::Part("main") => "main",
             PathPart::Part("lobby") => "lobby",
-            PathPart::Part(value) => settings::mode_name(value).unwrap_or(value),
+            PathPart::Part(value) => settings_table::mode_name(value).unwrap_or(value),
             PathPart::Team => "General",
             PathPart::Hero => "Mei",
         };
@@ -788,7 +789,7 @@ fn settings_probe(entry: &TableEntry) -> String {
         KeyKind::String => lines.push(format!("{indent}{}: \"census\"", entry.workshop_name)),
         KeyKind::Bool => lines.push(format!("{indent}{}: On", entry.workshop_name)),
         KeyKind::BoolEnum(domain) => {
-            let value = settings::enum_name(domain, "enabled").unwrap_or("Enabled");
+            let value = settings_table::enum_name(domain, "enabled").unwrap_or("Enabled");
             lines.push(format!("{indent}{}: {value}", entry.workshop_name));
         }
         KeyKind::Number => lines.push(format!("{indent}{}: 1", entry.workshop_name)),
@@ -799,7 +800,7 @@ fn settings_probe(entry: &TableEntry) -> String {
             } else {
                 "off"
             };
-            let value = settings::enum_name(domain, member).unwrap_or("Off");
+            let value = settings_table::enum_name(domain, member).unwrap_or("Off");
             lines.push(format!("{indent}{}: {value}", entry.workshop_name));
         }
         KeyKind::ListMap | KeyKind::ListHero => {

@@ -10,6 +10,7 @@
 //!   semantic identities, kinds, parameters, and locale tables binding
 //!   identities to client spellings; catalog version/digest identity and
 //!   per-locale coverage;
+//! * [`format`] — canonical number formatting for computed Workshop values;
 //! * [`actions`], [`events`], [`rules`], [`values`], [`settings`], and
 //!   [`gameplay`] — the discoverable Workshop domains;
 //! * [`program`] — the canonical public Workshop program model;
@@ -34,18 +35,11 @@ pub mod element_count;
 pub mod emitter;
 mod error;
 pub mod events;
-#[doc(hidden)]
 pub mod format;
 mod frontend;
 pub mod gameplay;
 #[doc(hidden)]
-pub mod gameplay_data;
-#[doc(hidden)]
-pub mod gameplay_query;
-#[doc(hidden)]
 pub mod ids;
-#[doc(hidden)]
-pub mod lexer;
 mod output;
 pub mod parser;
 pub mod program;

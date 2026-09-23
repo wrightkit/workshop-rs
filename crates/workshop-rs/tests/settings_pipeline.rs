@@ -315,10 +315,6 @@ fn workshop_namespace_preserves_custom_settings_without_residuals() {
 
 #[test]
 fn localized_workshop_namespace_is_known() {
-    assert_eq!(
-        workshop_rs::settings::table::localized_name("zh-CN", "namespaces", "workshop"),
-        Some("地图工坊")
-    );
     let source = "settings { 地图工坊 { 自定义: 1 } }";
     let catalog = Catalog::builtin().expect("catalog");
     let program = parser::parse_wir(source, &catalog, &Locale::new("zh-CN")).expect("parse");

@@ -2,8 +2,8 @@
 //!
 //! A typed, non-serde tree for custom-game-settings blocks shared by
 //! validation and emission. The tree is a carrier: settings are carried and
-//! emitted, never interpreted by lowering/analysis. The source-backed
-//! emission table lives in [`table`].
+//! emitted, never interpreted by lowering/analysis. Source-backed path and
+//! display data remain implementation details behind this module's APIs.
 //!
 //! Extracted from the Wright-authored `wright-ir` crate; see
 //! [`docs/provenance.md`](https://github.com/wrightkit/workshop-rs/blob/main/docs/provenance.md).
@@ -16,8 +16,8 @@ pub mod schema;
 #[doc(hidden)]
 pub mod table;
 
-#[doc(hidden)]
-pub use table::{KeyKind, PathPart, TableEntry, entries, enum_name, mode_name, path_string};
+/// A segment of a path accepted by settings schema lookups.
+pub use table::PathPart;
 
 pub use schema::{
     Applicability, EffectiveNumber, NumericBounds, NumericBoundsError, SettingDefinition,

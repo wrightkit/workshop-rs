@@ -4,7 +4,7 @@ use crate::catalog::{Catalog, Locale};
 use crate::output::emitter::EmitContext;
 use crate::wir;
 
-/// The number of native Workshop actions emitted by a canonical WIR action
+/// The number of native Workshop actions emitted by a canonical Program action
 /// sequence.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ActionLayout {
@@ -32,9 +32,8 @@ impl std::fmt::Display for ActionLayoutError {
 
 impl std::error::Error for ActionLayoutError {}
 
-#[doc(hidden)]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum WIRActionLayoutError {
+enum WIRActionLayoutError {
     InvalidWIR(crate::wir::error::IrError),
     Emission(crate::WorkshopError),
 }
@@ -91,8 +90,7 @@ pub fn action_width(
     })
 }
 
-#[doc(hidden)]
-pub fn action_width_wir(
+fn action_width_wir(
     program: &wir::Program,
     catalog: &Catalog,
     locale: &Locale,

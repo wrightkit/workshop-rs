@@ -1,10 +1,10 @@
 use std::collections::BTreeSet;
 
+use workshop_rs::gameplay::data::{GAMEPLAY_DATA, builtin, content_digest, load};
 use workshop_rs::gameplay::{
     Ability, AbilityVariant, Fact, GameplayCatalog, GameplayDataError, GameplayDatasetIdentity,
     Hero, HeroId, LocalizedText, LogicalSlot, Quantity, SourceReference, StatKey, StatValue, Unit,
 };
-use workshop_rs::gameplay_data::{GAMEPLAY_DATA, builtin, content_digest, load};
 
 const SOURCE: &str = "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6";
 const OFFICIAL_HERO_SOURCE: &str = "Blizzard Entertainment official Overwatch hero detail";
