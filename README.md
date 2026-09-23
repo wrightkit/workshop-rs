@@ -148,7 +148,7 @@ cargo run -p workshop-rs --bin workshop-catalog-gen -- check
 cargo run -p workshop-rs --bin workshop-catalog-gen -- build
 ```
 
-See [`docs/provenance.md`](docs/provenance.md) and [`AGENTS.md`](AGENTS.md) for
+See [`docs/provenance/README.md`](docs/provenance/README.md) and [`AGENTS.md`](AGENTS.md) for
 provenance requirements and pipeline details.
 
 ## Validation
@@ -176,4 +176,4 @@ to GitHub Releases. Release automation is documented in [`docs/release.md`](docs
 ## License
 
 `workshop-rs` is distributed under the [MIT License](LICENSE). Committed dataset
-and fixture mappings carry recorded provenance in [`docs/provenance.md`](docs/provenance.md).
+and fixture mappings carry recorded provenance in [`docs/provenance/README.md`](docs/provenance/README.md).

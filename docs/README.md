@@ -56,8 +56,8 @@ Support prose is not a substitute for current executable tests.
 
 ## Domain contracts and fixture attribution
 
-- [Source attribution record](provenance.md): catalog, locale, gameplay,
-  fixture, and dataset source attribution.
+- [Source attribution](provenance/README.md): routed catalog, locale, gameplay,
+  fixture, code, and pipeline provenance contracts.
 - [Source preservation contract](source-preservation.md): optional authored
   source, comment attachment, checked edits, and mixed-source boundaries.
 - [Hero gameplay dataset](gameplay-data.md): embedded data model and validation
