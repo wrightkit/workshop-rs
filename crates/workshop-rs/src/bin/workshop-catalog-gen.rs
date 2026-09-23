@@ -613,14 +613,7 @@ mod corpus {
                 let name = if key == "general" {
                     "General".to_string()
                 } else {
-                    let member = match key.as_str() {
-                        "ffa" => "DEATHMATCH",
-                        "tdm" => "TDM",
-                        "ctf" => "CTF",
-                        _ => key.as_str(),
-                    };
-                    enum_spelling(catalog, "Gamemode", member, &locale)
-                        .unwrap_or_else(|| key.clone())
+                    enum_spelling(catalog, "Gamemode", &key, &locale).unwrap_or_else(|| key.clone())
                 };
                 (format!("mode.{}.name", key), name)
             })
@@ -704,7 +697,7 @@ mod corpus {
             .enum_domain(domain)?
             .members
             .iter()
-            .find(|candidate| candidate.member == member)?;
+            .find(|candidate| candidate.member.eq_ignore_ascii_case(member))?;
         member.spelling(locale).map(str::to_string)
     }
 
@@ -1831,7 +1824,9 @@ mod corpus {
 
     #[cfg(test)]
     mod tests {
-        use super::{Index, en_aliases, match_en_aliases, set_alias, settings_corpus};
+        use super::{
+            Index, en_aliases, match_en_aliases, set_alias, settings_corpus, settings_surface,
+        };
         use serde_json::json;
         use std::path::Path;
         use workshop_rs::catalog::Catalog;
@@ -1926,6 +1921,26 @@ mod corpus {
                 settings["modes"]["Capture The Flag"]["sources"],
                 json!(["data.gamemodes.ctf"])
             );
+        }
+
+        #[test]
+        fn settings_surface_uses_catalog_gamemode_ids() {
+            let catalog = Catalog::builtin().expect("built-in catalog");
+            let surface = settings_surface(&catalog);
+
+            for (mode, expected) in [
+                ("ffa", "Deathmatch"),
+                ("tdm", "Team Deathmatch"),
+                ("ctf", "Capture The Flag"),
+            ] {
+                let id = format!("mode.{mode}.name");
+                let actual = surface
+                    .modes
+                    .iter()
+                    .find(|(candidate, _)| candidate == &id)
+                    .map(|(_, name)| name.as_str());
+                assert_eq!(actual, Some(expected), "mode surface for {mode}");
+            }
         }
     }
 }

@@ -826,13 +826,7 @@ fn settings_probe(definition: &SettingDefinition, catalog: &Catalog) -> String {
 }
 
 fn mode_spelling(catalog: &Catalog, key: &str) -> String {
-    let member = match key {
-        "ffa" => "DEATHMATCH",
-        "tdm" => "TEAM_DEATHMATCH",
-        "ctf" => "CAPTURE_THE_FLAG",
-        _ => key,
-    };
-    catalog_enum_spelling(catalog, "Gamemode", member).unwrap_or_else(|| key.to_string())
+    catalog_enum_spelling(catalog, "Gamemode", key).unwrap_or_else(|| key.to_string())
 }
 
 fn catalog_enum_spelling(catalog: &Catalog, domain: &str, key: &str) -> Option<String> {
@@ -1170,6 +1164,27 @@ mod tests {
         assert_eq!(first.export_json().unwrap(), second.export_json().unwrap());
         assert_eq!(first.identity(), second.identity());
         assert_eq!(first.identity().digest.len(), 64);
+    }
+
+    #[test]
+    fn settings_probes_use_catalog_gamemode_spellings() {
+        let catalog = Catalog::builtin().expect("builtin catalog");
+
+        for (mode, expected) in [
+            ("ffa", "Deathmatch"),
+            ("tdm", "Team Deathmatch"),
+            ("ctf", "Capture The Flag"),
+        ] {
+            let prefix = format!("gamemodes.{mode}.");
+            let definition = settings_schema::definitions()
+                .find(|definition| definition.path().starts_with(&prefix))
+                .unwrap_or_else(|| panic!("missing settings definition for {mode}"));
+            let probe = settings_probe(&definition, &catalog);
+            assert!(
+                probe.contains(&format!("{expected} {{")),
+                "{mode} probe used the wrong mode spelling:\n{probe}"
+            );
+        }
     }
 
     #[test]
