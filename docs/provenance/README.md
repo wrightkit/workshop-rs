@@ -12,9 +12,8 @@ data is workshop-rs-owned, with source and generation method recorded in the
 relevant document.
 
 - [Hero gameplay data](gameplay.md)
-- [Catalog and locale data](catalog.md)
+- [Catalog, locale, and update pipeline](catalog.md)
 - [Test fixtures and code provenance](fixtures-and-code.md)
-- [Catalog identity and update pipeline](catalog-pipeline.md)
 
 The repository's source-attribution requirement remains unchanged by this split.
 Current generated data and tests establish implementation reality; these
