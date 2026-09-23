@@ -6,7 +6,7 @@
 //! validate the same inputs without maintaining a second expectation list.
 
 use workshop_rs::WorkshopError;
-use workshop_rs::semantic::{IncompletenessKind, ResidualClassification, SemanticIssue};
+use workshop_rs::rules::{IncompletenessKind, ResidualClassification, SemanticIssue};
 
 /// The schema version of [`REAL_PROJECT_EXPECTATION`].
 pub(crate) const REAL_PROJECT_EXPECTATION_SCHEMA_VERSION: u32 = 1;
@@ -55,7 +55,7 @@ impl RealProjectGapKind {
 /// An admitted semantic residual for one real-project source case.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct RealProjectResidualExpectation {
-    /// The semantic issue kind reported by [`workshop_rs::semantic::inspect`].
+    /// The semantic issue kind reported by [`workshop_rs::rules::inspect`].
     pub(crate) kind: IncompletenessKind,
     /// The locale-independent Workshop identity of the residual.
     pub(crate) identity: &'static str,

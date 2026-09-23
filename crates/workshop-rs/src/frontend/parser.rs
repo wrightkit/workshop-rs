@@ -12,7 +12,8 @@ use std::sync::OnceLock;
 pub(crate) use crate::core::signatures::ExpectedDomain;
 pub(crate) use crate::core::source::{Position, SourceFile, Span};
 use crate::program::Program;
-pub(crate) use crate::settings::table::{self, KeyKind, PathPart};
+pub(crate) use crate::settings::table::KeyKind;
+pub(crate) use crate::settings::{PathPart, table};
 pub(crate) use crate::settings::{Settings, SettingsListElement, SettingsNode};
 pub(crate) use crate::wir::{
     self, Action, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Value, ValueNode,
@@ -49,13 +50,13 @@ pub fn parse(input: &str, catalog: &Catalog, locale: &Locale) -> Result<Program>
     parse_with_context(input, catalog, locale, catalog)
 }
 
-/// Compatibility entry point for crate-internal storage tests and migration
-/// checks. Ordinary consumers should use [`parse`], which returns [`Program`].
-#[doc(hidden)]
-pub fn parse_wir(input: &str, catalog: &Catalog, locale: &Locale) -> Result<wir::Program> {
+#[cfg(test)]
+pub(crate) fn parse_wir(input: &str, catalog: &Catalog, locale: &Locale) -> Result<wir::Program> {
     parse_wir_with_context(input, catalog, locale, catalog)
 }
 
+/// Compatibility entry point for crate-internal storage tests and migration
+/// checks. Ordinary consumers should use [`parse`], which returns [`Program`].
 /// Parse localized Workshop text into Workshop IR, resolving ambiguous bare
 /// enum members from the enclosing call's canonical signature context (#111).
 ///
@@ -73,8 +74,7 @@ pub fn parse_with_context(
     parse_wir_with_context(input, catalog, locale, context).and_then(Program::from_wir)
 }
 
-#[doc(hidden)]
-pub fn parse_wir_with_context(
+pub(crate) fn parse_wir_with_context(
     input: &str,
     catalog: &Catalog,
     locale: &Locale,

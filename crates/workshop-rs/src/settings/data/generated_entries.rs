@@ -1,5 +1,5 @@
 // Generated from the reviewed workshop-data export; do not edit by hand.
-pub static GENERATED_ENTRIES: &[TableEntry] = &[
+pub(crate) static GENERATED_ENTRIES: &[TableEntry] = &[
     entry!(
         [PathPart::Part("extensions"), PathPart::Part("beamEffects")],
         "Beam Effects",
@@ -1706,7 +1706,7 @@ pub static GENERATED_ENTRIES: &[TableEntry] = &[
         KeyKind::String
     ),
 ];
-pub static GENERATED_ENUM_MEMBERS: &[EnumMember] = &[
+pub(crate) static GENERATED_ENUM_MEMBERS: &[EnumMember] = &[
     EnumMember {
         domain: "setting_gamemodes_controlAprilFools_setValidControlPoints",
         member: "all",

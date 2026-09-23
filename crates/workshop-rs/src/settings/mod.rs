@@ -13,18 +13,39 @@ pub(crate) mod parser;
 
 pub(crate) mod reconciliation;
 pub mod schema;
-#[doc(hidden)]
-pub mod table;
+pub(crate) mod table;
 
 /// A segment of a path accepted by settings schema lookups.
-pub use table::PathPart;
+#[derive(Debug, Clone, Copy, Hash)]
+pub enum PathPart<'a> {
+    /// A literal key (mode names under `gamemodes` are literal keys too:
+    /// per-key subsets are exact-path entries).
+    Part(&'a str),
+    /// Any team slot (allTeams).
+    Team,
+    /// Any hero-config slot.
+    Hero,
+}
+
+impl<'b> PartialEq<PathPart<'b>> for PathPart<'_> {
+    fn eq(&self, other: &PathPart<'b>) -> bool {
+        match (self, other) {
+            (PathPart::Part(left), PathPart::Part(right)) => left == right,
+            (PathPart::Team, PathPart::Team) => true,
+            (PathPart::Hero, PathPart::Hero) => true,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for PathPart<'_> {}
 
 pub use schema::{
     Applicability, EffectiveNumber, NumericBounds, NumericBoundsError, SettingDefinition,
-    SettingId, SettingIdentity, SettingOccurrence, SettingOperationError, SettingPresentation,
-    SettingScope, SettingSource, SettingSourceEdit, SettingSourceKind, SettingTarget,
-    SettingTargetKind, SettingValue, SettingValueDomain, TeamId, definition, definitions,
-    definitions_by_id,
+    SettingEnumMember, SettingId, SettingIdentity, SettingOccurrence, SettingOperationError,
+    SettingPresentation, SettingScope, SettingSource, SettingSourceEdit, SettingSourceKind,
+    SettingTarget, SettingTargetKind, SettingValue, SettingValueDomain, TeamId, definition,
+    definitions, definitions_by_id,
 };
 
 use crate::core::source::Span;

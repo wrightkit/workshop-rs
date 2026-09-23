@@ -10,8 +10,8 @@ use crate::gameplay::{AbilityVariant, HeroId, LogicalSlot};
 use crate::gameplay::{GameplayDataError, data};
 
 use super::reconciliation;
-use super::table::{self, KeyKind, PathPart, TableEntry};
-use super::{Settings, SettingsNode};
+use super::table::{self, KeyKind, TableEntry};
+use super::{PathPart, Settings, SettingsNode};
 
 /// A locale-independent Workshop setting concept identity.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -207,6 +207,28 @@ pub enum SettingValueDomain {
     PresenceOnly,
 }
 
+/// One accepted spelling of a setting enum member.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SettingEnumMember {
+    domain: &'static str,
+    id: &'static str,
+    english_name: &'static str,
+}
+
+impl SettingEnumMember {
+    pub fn domain(&self) -> &str {
+        self.domain
+    }
+
+    pub fn id(&self) -> &str {
+        self.id
+    }
+
+    pub fn english_name(&self) -> &str {
+        self.english_name
+    }
+}
+
 /// A typed authored value in the settings carrier.
 #[derive(Debug, Clone, PartialEq)]
 pub enum SettingValue {
@@ -389,6 +411,7 @@ pub struct SettingDefinition {
     key: &'static str,
     target: TargetPattern,
     domain: SettingValueDomain,
+    enum_domain: Option<&'static str>,
     presentation: SettingPresentation,
     source: SettingSource,
 }
@@ -415,6 +438,20 @@ impl SettingDefinition {
 
     pub fn domain(&self) -> &SettingValueDomain {
         &self.domain
+    }
+
+    /// Enumerate the accepted members when this setting uses an enum value.
+    /// Boolean settings backed by an enum token (such as `Enabled`) expose
+    /// that token here as well.
+    pub fn enum_members(&self) -> impl Iterator<Item = SettingEnumMember> + '_ {
+        self.enum_domain
+            .into_iter()
+            .flat_map(table::enum_members)
+            .map(|member| SettingEnumMember {
+                domain: member.domain,
+                id: member.member,
+                english_name: member.name,
+            })
     }
 
     pub fn target_kind(&self) -> SettingTargetKind {
@@ -1199,6 +1236,10 @@ impl SettingDefinition {
             key,
             target,
             domain,
+            enum_domain: match entry.kind {
+                KeyKind::BoolEnum(domain) | KeyKind::Enum(domain) => Some(domain),
+                _ => None,
+            },
             presentation: SettingPresentation {
                 english_name: entry.workshop_name,
                 locale_section: "labels",
@@ -1683,6 +1724,7 @@ mod tests {
             key: "value",
             target,
             domain: SettingValueDomain::Boolean,
+            enum_domain: None,
             presentation: SettingPresentation {
                 english_name: "Value",
                 locale_section: "labels",

@@ -41,8 +41,8 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use workshop_rs::catalog::{Catalog, build_canonical};
-use workshop_rs::settings::{schema, table};
+use workshop_rs::catalog::{Catalog, Locale, build_canonical};
+use workshop_rs::settings::schema;
 
 /// The committed catalog data, relative to the workspace root (where CI and
 /// the documented pipeline commands run); `--file` overrides it.
@@ -536,7 +536,7 @@ mod corpus {
         reason: String,
     }
 
-    /// The declared settings surface (mirrors `settings::table`).
+    /// The declared settings surface projected from `settings::schema`.
     #[derive(Debug)]
     struct SettingsSurface {
         namespaces: Vec<(String, String)>,
@@ -565,7 +565,7 @@ mod corpus {
         settings_out: &'a Path,
     }
 
-    fn settings_surface() -> SettingsSurface {
+    fn settings_surface(catalog: &Catalog) -> SettingsSurface {
         // The declared label surface is the set of distinct rendered names;
         // per-mode repeats (enabled maps, Limit Roles, Competitive Rules)
         // share one label. The per-mode `enabled` members render no label
@@ -583,45 +583,73 @@ mod corpus {
         .collect();
         let mut labels: Vec<(String, String)> = Vec::new();
         let mut seen = std::collections::HashSet::new();
-        for entry in table::entries() {
-            if matches!(entry.path.last(), Some(table::PathPart::Part("enabled"))) {
+        let definitions: Vec<_> = schema::definitions().collect();
+        for definition in &definitions {
+            if definition.path().ends_with(".enabled") {
                 continue;
             }
-            if seen.insert(entry.workshop_name) {
-                labels.push((
-                    table::path_string(entry.path),
-                    entry.workshop_name.to_string(),
-                ));
+            let name = definition.presentation().english_name;
+            if seen.insert(name) {
+                labels.push((definition.path().to_string(), name.to_string()));
             }
         }
-        let modes = table::MODE_NAMES
-            .iter()
-            .chain(table::GENERATED_MODE_NAMES.iter())
-            .map(|m| (format!("mode.{}.name", m.key), m.name.to_string()))
-            .collect();
-        let maps = table::MAP_NAMES
-            .iter()
-            .chain(table::GENERATED_MAP_NAMES.iter())
-            .map(|m| (format!("map.{}.name", m.key), m.name.to_string()))
-            .collect();
-        let heroes = table::HERO_NAMES
-            .iter()
-            .chain(table::GENERATED_HERO_NAMES.iter())
-            .map(|m| (format!("hero.{}.name", m.key), m.name.to_string()))
-            .collect();
-        let teams = table::TEAM_NAMES
-            .iter()
-            .map(|m| (format!("team.{}.name", m.key), m.name.to_string()))
-            .collect();
-        let enums = table::ENUM_MEMBERS
-            .iter()
-            .chain(table::GENERATED_ENUM_MEMBERS.iter())
-            .map(|m| {
-                (
-                    format!("enum.{}.{}", m.domain, m.member),
-                    m.name.to_string(),
-                )
+        let locale = Locale::new("en-US");
+        let mut mode_keys = std::collections::BTreeSet::new();
+        for definition in &definitions {
+            if let Some(mode) = definition
+                .path()
+                .strip_prefix("gamemodes.")
+                .and_then(|path| path.split('.').next())
+            {
+                mode_keys.insert(mode.to_string());
+            }
+        }
+        mode_keys.insert("tdm".to_string());
+        mode_keys.insert("ctf".to_string());
+        mode_keys.insert("general".to_string());
+        let modes = mode_keys
+            .into_iter()
+            .map(|key| {
+                let name = if key == "general" {
+                    "General".to_string()
+                } else {
+                    let member = match key.as_str() {
+                        "ffa" => "DEATHMATCH",
+                        "tdm" => "TDM",
+                        "ctf" => "CTF",
+                        _ => key.as_str(),
+                    };
+                    enum_spelling(catalog, "Gamemode", member, &locale)
+                        .unwrap_or_else(|| key.clone())
+                };
+                (format!("mode.{}.name", key), name)
             })
+            .collect();
+        let mut maps = catalog_name_surface(catalog, "Map", "map", &locale);
+        if !maps.iter().any(|(_, name)| name == "Workshop Island") {
+            maps.push((
+                "map.workshopIsland.name".to_string(),
+                "Workshop Island".to_string(),
+            ));
+        }
+        let heroes = catalog_name_surface(catalog, "Hero", "hero", &locale);
+        let teams = vec![
+            ("team.allTeams.name".to_string(), "General".to_string()),
+            ("team.team1.name".to_string(), "Team 1".to_string()),
+            ("team.team2.name".to_string(), "Team 2".to_string()),
+        ];
+        let enums = definitions
+            .iter()
+            .flat_map(|definition| {
+                definition.enum_members().map(|member| {
+                    (
+                        format!("enum.{}.{}", member.domain(), member.id()),
+                        member.english_name().to_string(),
+                    )
+                })
+            })
+            .collect::<std::collections::BTreeSet<_>>()
+            .into_iter()
             .collect();
         let tokens = [
             ("token.on", "On"),
@@ -644,6 +672,55 @@ mod corpus {
         }
     }
 
+    fn catalog_name_surface(
+        catalog: &Catalog,
+        domain: &str,
+        prefix: &str,
+        locale: &Locale,
+    ) -> Vec<(String, String)> {
+        let Some(domain) = catalog.enum_domain(domain) else {
+            return Vec::new();
+        };
+        domain
+            .members
+            .iter()
+            .filter_map(|member| {
+                let name = member.spelling(locale)?;
+                Some((
+                    format!("{prefix}.{}.name", lower_camel(&member.member)),
+                    name.to_string(),
+                ))
+            })
+            .collect()
+    }
+
+    fn enum_spelling(
+        catalog: &Catalog,
+        domain: &str,
+        member: &str,
+        locale: &Locale,
+    ) -> Option<String> {
+        let member = catalog
+            .enum_domain(domain)?
+            .members
+            .iter()
+            .find(|candidate| candidate.member == member)?;
+        member.spelling(locale).map(str::to_string)
+    }
+
+    fn lower_camel(value: &str) -> String {
+        let mut parts = value.split('_');
+        let mut result = parts.next().unwrap_or_default().to_ascii_lowercase();
+        for part in parts {
+            let mut chars = part.to_ascii_lowercase().chars().collect::<Vec<_>>();
+            if let Some(first) = chars.first_mut() {
+                first.make_ascii_uppercase();
+            }
+            result.extend(chars);
+        }
+        result
+    }
+
     /// The corpus pipeline report lines.
     pub(crate) fn generate(
         catalog_data: &str,
@@ -653,7 +730,8 @@ mod corpus {
         settings_out: &Path,
     ) -> Result<Vec<String>, String> {
         // The base catalog must be valid before merging corpus data.
-        Catalog::load_unverified(catalog_data).map_err(|error| format!("catalog data: {error}"))?;
+        let settings_catalog = Catalog::load_unverified(catalog_data)
+            .map_err(|error| format!("catalog data: {error}"))?;
         let export_text = std::fs::read_to_string(export_path)
             .map_err(|error| format!("cannot read export {}: {error}", export_path.display()))?;
         let export: Value = serde_json::from_str(&export_text)
@@ -899,7 +977,7 @@ mod corpus {
             .map_err(|error| format!("cannot write {}: {error}", manifest_path.display()))?;
 
         // --- settings locale corpus ------------------------------------------
-        let settings = settings_corpus(&export, settings_out)?;
+        let settings = settings_corpus(&export, settings_out, &settings_catalog)?;
         if let Some(parent) = settings_out.parent() {
             std::fs::create_dir_all(parent)
                 .map_err(|error| format!("cannot create {}: {error}", parent.display()))?;
@@ -1354,7 +1432,11 @@ mod corpus {
     }
 
     /// The settings locale corpus for the declared settings surface.
-    fn settings_corpus(export: &Value, settings_out: &Path) -> Result<Value, String> {
+    fn settings_corpus(
+        export: &Value,
+        settings_out: &Path,
+        catalog: &Catalog,
+    ) -> Result<Value, String> {
         let custom_game = {
             let mut index = localized_index(
                 export,
@@ -1385,7 +1467,7 @@ mod corpus {
             &["heroes.teams.", "customGameSettings.heroes.teams."],
         );
         let tokens = localized_index(export, &["other.customGameSettings."]);
-        let surface = settings_surface();
+        let surface = settings_surface(catalog);
         let meta = export.get("meta").cloned().unwrap_or(Value::Null);
         let locales = export_locales(&meta)?;
 
@@ -1492,7 +1574,7 @@ mod corpus {
                 "commit": meta.get("commit").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
-                "method": "exact en-US spelling match between the declared settings surface (settings::table) and every locale translation carried by the export's customGameSettings/gamemodes/maps/heroes labels, direct data.gamemodes entries, and other.customGameSettings tokens; the two hero Ultimate Generation labels are composed per reviewed locale from exact export templates and hero identities; entries without an accepted match keep fail-explicit behavior (ADR-0001 Decision 7)",
+                "method": "exact en-US spelling match between the declared settings surface (settings::schema) and every locale translation carried by the export's customGameSettings/gamemodes/maps/heroes labels, direct data.gamemodes entries, and other.customGameSettings tokens; the two hero Ultimate Generation labels are composed per reviewed locale from exact export templates and hero identities; entries without an accepted match keep fail-explicit behavior (ADR-0001 Decision 7)",
             "sourceReview": "reviewed: workshop-rs commits its own settings mapping data; the user-provided JSON is build input only and is not redistributed",
             },
             "namespaces": namespaces,
@@ -1752,6 +1834,7 @@ mod corpus {
         use super::{Index, en_aliases, match_en_aliases, set_alias, settings_corpus};
         use serde_json::json;
         use std::path::Path;
+        use workshop_rs::catalog::Catalog;
 
         #[test]
         fn en_aliases_accepts_scalar_and_array_spellings() {
@@ -1835,7 +1918,8 @@ mod corpus {
                 }
             });
 
-            let settings = settings_corpus(&export, Path::new("settings.json"))
+            let catalog = Catalog::builtin().expect("built-in catalog");
+            let settings = settings_corpus(&export, Path::new("settings.json"), &catalog)
                 .expect("settings corpus builds");
             assert_eq!(settings["modes"]["Capture The Flag"]["zh-CN"], "勇夺锦旗");
             assert_eq!(

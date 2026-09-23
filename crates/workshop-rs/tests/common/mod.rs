@@ -4,7 +4,7 @@ use sha2::{Digest, Sha256};
 use workshop_rs::{
     WorkshopError,
     catalog::{Catalog, Locale},
-    semantic,
+    rules as semantic,
 };
 
 pub(crate) mod real_projects;

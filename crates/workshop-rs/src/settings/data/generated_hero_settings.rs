@@ -1,9 +1,9 @@
 // Generated from the reviewed workshop-data hero settings export. This
 // projection is locale presentation data only; absence or emptiness is not an
 // applicability fact. Applicability requires a reviewed semantic source.
-pub struct GeneratedHeroSettingName { pub hero: &'static str, pub key: &'static str, pub locales: &'static [(&'static str, &'static str)] }
+pub(crate) struct GeneratedHeroSettingName { pub(crate) hero: &'static str, pub(crate) key: &'static str, pub(crate) locales: &'static [(&'static str, &'static str)] }
 impl GeneratedHeroSettingName {
-    pub fn localized(&self, locale: &str) -> Option<&'static str> {
+    pub(crate) fn localized(&self, locale: &str) -> Option<&'static str> {
         self.locales
             .iter()
             .find(|(known, value)| {
@@ -12,7 +12,7 @@ impl GeneratedHeroSettingName {
             .map(|(_, value)| *value)
     }
 }
-pub static GENERATED_HERO_SETTING_NAMES: &[GeneratedHeroSettingName] = &[
+pub(crate) static GENERATED_HERO_SETTING_NAMES: &[GeneratedHeroSettingName] = &[
     GeneratedHeroSettingName {
         hero: "ana",
         key: "ability1Cooldown%",

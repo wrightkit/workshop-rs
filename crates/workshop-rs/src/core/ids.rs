@@ -13,7 +13,7 @@
 
 use std::marker::PhantomData;
 
-/// A typed, stable index into an [`Arena`](crate::arena::Arena).
+/// A typed, stable index into an [`Arena`](crate::core::arena::Arena).
 ///
 /// `T` is the referenced type and is used only as a marker; `Id<T>` has the
 /// size of `u32` and is `Copy`, `Send`, and `Sync` regardless of `T`. The
@@ -87,18 +87,6 @@ impl<T> Id<T> {
 impl<T> std::fmt::Display for Id<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.index)
-    }
-}
-
-/// Any typed ID: exposes the arena index, usable in generic contexts.
-pub trait IdLike {
-    /// The arena index this ID refers to.
-    fn index(self) -> usize;
-}
-
-impl<T> IdLike for Id<T> {
-    fn index(self) -> usize {
-        Id::index(self)
     }
 }
 

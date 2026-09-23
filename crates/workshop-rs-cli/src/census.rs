@@ -16,8 +16,9 @@ use crate::conformance::{
     TestArtifact,
 };
 use workshop_rs::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
-use workshop_rs::settings::PathPart;
-use workshop_rs::settings::table::{self as settings_table, KeyKind, TableEntry};
+use workshop_rs::settings::schema::{
+    self as settings_schema, SettingDefinition, SettingValueDomain,
+};
 use workshop_rs::{WorkshopError, convert, emitter, parser, roundtrip};
 
 #[derive(Clone, Copy)]
@@ -244,7 +245,7 @@ impl Census {
             catalog_shard(catalog, Kind::Operator, "catalog-operators")?,
             catalog_shard(catalog, Kind::Structural, "catalog-structural")?,
             enum_shard(catalog)?,
-            settings_shard()?,
+            settings_shard(catalog)?,
             wir_shard()?,
             localization_shard()?,
             content_id_shard(catalog)?,
@@ -507,10 +508,10 @@ fn content_id_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
     CensusShard::new("content-ids", cases)
 }
 
-fn settings_shard() -> Result<CensusShard, CensusError> {
-    let cases = settings_table::entries()
-        .map(|entry| {
-            let path = settings_table::path_string(entry.path);
+fn settings_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
+    let cases = settings_schema::definitions()
+        .map(|definition| {
+            let path = definition.path().to_string();
             CensusCase {
                 case_id: format!("settings/{path}"),
                 features: vec![feature(
@@ -519,7 +520,7 @@ fn settings_shard() -> Result<CensusShard, CensusError> {
                     path,
                 )],
                 source_locale: EN_US.to_string(),
-                source: settings_probe(entry),
+                source: settings_probe(&definition, catalog),
                 reference_source: None,
                 support: generated_probe_support(),
             }
@@ -767,44 +768,52 @@ fn enum_probe(catalog: &Catalog, domain: &EnumDomain, member: &str) -> String {
     )
 }
 
-fn settings_probe(entry: &TableEntry) -> String {
+fn settings_probe(definition: &SettingDefinition, catalog: &Catalog) -> String {
     let mut lines = vec!["settings {".to_string()];
     let mut depth = 1;
-    for part in entry.path {
-        let name = match part {
-            PathPart::Part("gamemodes") => "modes",
-            PathPart::Part("heroes") => "heroes",
-            PathPart::Part("main") => "main",
-            PathPart::Part("lobby") => "lobby",
-            PathPart::Part(value) => settings_table::mode_name(value).unwrap_or(value),
-            PathPart::Team => "General",
-            PathPart::Hero => "Mei",
+    let parts: Vec<_> = definition.path().split('.').collect();
+    for (index, part) in parts.iter().enumerate() {
+        let name = match *part {
+            "gamemodes" => "modes".to_string(),
+            "heroes" => "heroes".to_string(),
+            "<team>" => "General".to_string(),
+            "<hero>" => {
+                catalog_enum_spelling(catalog, "Hero", "mei").unwrap_or_else(|| "Mei".to_string())
+            }
+            "general" => "General".to_string(),
+            value if index == 1 && parts.first() == Some(&"gamemodes") => {
+                mode_spelling(catalog, value)
+            }
+            value => value.to_string(),
         };
         lines.push(format!("{}{} {{", "    ".repeat(depth), name));
         depth += 1;
     }
     let indent = "    ".repeat(depth);
-    match entry.kind {
-        KeyKind::Flag => lines.push(format!("{indent}{}", entry.workshop_name)),
-        KeyKind::String => lines.push(format!("{indent}{}: \"census\"", entry.workshop_name)),
-        KeyKind::Bool => lines.push(format!("{indent}{}: On", entry.workshop_name)),
-        KeyKind::BoolEnum(domain) => {
-            let value = settings_table::enum_name(domain, "enabled").unwrap_or("Enabled");
-            lines.push(format!("{indent}{}: {value}", entry.workshop_name));
+    let name = definition.presentation().english_name;
+    match definition.domain() {
+        SettingValueDomain::PresenceOnly => lines.push(format!("{indent}{name}")),
+        SettingValueDomain::String => lines.push(format!("{indent}{name}: \"census\"")),
+        SettingValueDomain::Boolean => {
+            let value = definition
+                .enum_members()
+                .next()
+                .map(|member| member.english_name().to_string())
+                .unwrap_or_else(|| "On".to_string());
+            lines.push(format!("{indent}{name}: {value}"));
         }
-        KeyKind::Number => lines.push(format!("{indent}{}: 1", entry.workshop_name)),
-        KeyKind::Percent => lines.push(format!("{indent}{}: 100%", entry.workshop_name)),
-        KeyKind::Enum(domain) => {
-            let member = if domain == "roleLimit" {
-                "2OfEachRolePerTeam"
-            } else {
-                "off"
-            };
-            let value = settings_table::enum_name(domain, member).unwrap_or("Off");
-            lines.push(format!("{indent}{}: {value}", entry.workshop_name));
+        SettingValueDomain::Number(_) => lines.push(format!("{indent}{name}: 1")),
+        SettingValueDomain::Percent(_) => lines.push(format!("{indent}{name}: 100%")),
+        SettingValueDomain::Enum { .. } => {
+            let value = definition
+                .enum_members()
+                .next()
+                .map(|member| member.english_name().to_string())
+                .unwrap_or_else(|| "Off".to_string());
+            lines.push(format!("{indent}{name}: {value}"));
         }
-        KeyKind::ListMap | KeyKind::ListHero => {
-            lines.push(format!("{indent}{} {{", entry.workshop_name));
+        SettingValueDomain::HeroList | SettingValueDomain::MapList => {
+            lines.push(format!("{indent}{name} {{"));
             lines.push(format!("{indent}}}"));
         }
     }
@@ -814,6 +823,36 @@ fn settings_probe(entry: &TableEntry) -> String {
     }
     lines.push("}".to_string());
     lines.join("\n")
+}
+
+fn mode_spelling(catalog: &Catalog, key: &str) -> String {
+    let member = match key {
+        "ffa" => "DEATHMATCH",
+        "tdm" => "TEAM_DEATHMATCH",
+        "ctf" => "CAPTURE_THE_FLAG",
+        _ => key,
+    };
+    catalog_enum_spelling(catalog, "Gamemode", member).unwrap_or_else(|| key.to_string())
+}
+
+fn catalog_enum_spelling(catalog: &Catalog, domain: &str, key: &str) -> Option<String> {
+    let normalize = |value: &str| {
+        value
+            .chars()
+            .filter(|character| character.is_ascii_alphanumeric())
+            .flat_map(char::to_lowercase)
+            .collect::<String>()
+    };
+    let normalized = normalize(key);
+    let member = catalog
+        .enum_domains()
+        .find(|candidate| candidate.domain == domain)?
+        .members
+        .iter()
+        .find(|candidate| normalize(&candidate.member) == normalized)?;
+    catalog
+        .enum_spelling(domain, &Locale::new(EN_US), &member.member)
+        .map(str::to_string)
 }
 
 fn run_case(case: &CensusCase, shard_id: &str, catalog: &Catalog) -> ConformanceResult {

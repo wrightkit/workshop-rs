@@ -4,7 +4,7 @@ use super::SubroutineId;
 
 /// The team filter attached to a player-scoped Workshop event.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EventTeam {
+pub(crate) enum EventTeam {
     All,
     Team1,
     Team2,
@@ -12,7 +12,7 @@ pub enum EventTeam {
 
 /// The player filter attached to a player-scoped Workshop event.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum EventTarget {
+pub(crate) enum EventTarget {
     All,
     Slot(u8),
     Hero(String),
@@ -20,7 +20,7 @@ pub enum EventTarget {
 
 /// A non-ongoing player event identity.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PlayerEventKind {
+pub(crate) enum PlayerEventKind {
     DealtDamage,
     DealtFinalBlow,
     DealtHealing,
@@ -36,7 +36,7 @@ pub enum PlayerEventKind {
 
 impl PlayerEventKind {
     /// The locale-independent catalog identity for this event.
-    pub fn catalog_id(self) -> &'static str {
+    pub(crate) fn catalog_id(self) -> &'static str {
         match self {
             PlayerEventKind::DealtDamage => "playerDealtDamage",
             PlayerEventKind::DealtFinalBlow => "playerDealtFinalBlow",
@@ -55,7 +55,7 @@ impl PlayerEventKind {
 
 /// A workshop event.
 #[derive(Debug, Clone)]
-pub enum Event {
+pub(crate) enum Event {
     /// `Ongoing - Global` (from `@Event global`).
     Global,
     /// `Ongoing - Each Player` (from `@Event eachPlayer`).

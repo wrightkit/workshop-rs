@@ -10,7 +10,7 @@ use workshop_rs::settings::{
     SettingSourceKind, SettingTarget, SettingTargetKind, SettingValue, SettingValueDomain, TeamId,
     definitions, definitions_by_id,
 };
-use workshop_rs::{convert, emitter, parser, roundtrip, semantic};
+use workshop_rs::{analysis::semantic, convert, emitter, parser, roundtrip};
 
 fn fixture_path(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -157,7 +157,7 @@ fn generated_capture_the_flag_settings_surface_is_canonical() {
         program
             .semantic_issues(&catalog)
             .iter()
-            .all(|issue| { issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting })
+            .all(|issue| { issue.kind != workshop_rs::rules::IncompletenessKind::RawSetting })
     );
 }
 
@@ -170,7 +170,7 @@ fn pinned_ai_hero_setting_aliases_are_canonical() {
         program
             .semantic_issues(&catalog)
             .iter()
-            .all(|issue| { issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting })
+            .all(|issue| { issue.kind != workshop_rs::rules::IncompletenessKind::RawSetting })
     );
 }
 
@@ -184,7 +184,7 @@ fn mixed_locale_primary_hero_setting_name_is_canonical() {
         program
             .semantic_issues(&catalog)
             .iter()
-            .all(|issue| { issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting })
+            .all(|issue| { issue.kind != workshop_rs::rules::IncompletenessKind::RawSetting })
     );
 }
 
@@ -266,7 +266,7 @@ fn disabled_maps_is_a_known_symmetric_settings_list() {
     assert!(
         issues
             .iter()
-            .all(|issue| issue.kind != workshop_rs::semantic::IncompletenessKind::RawSetting),
+            .all(|issue| issue.kind != workshop_rs::rules::IncompletenessKind::RawSetting),
         "known disabled-map settings must not remain raw: {issues:?}"
     );
     let emitted = emitter::emit_wir(&program, &catalog, &Locale::new("en-US")).expect("emits");
@@ -282,7 +282,7 @@ fn unknown_settings_list_members_remain_semantically_incomplete() {
     let source = "settings { modes { Skirmish { enabled maps { Future Map } } } }";
     let program = parser::parse_wir(source, &catalog, &Locale::new("en-US")).expect("preserves");
     assert!(program.semantic_issues(&catalog).iter().any(|issue| {
-        issue.kind == workshop_rs::semantic::IncompletenessKind::RawSetting
+        issue.kind == workshop_rs::rules::IncompletenessKind::RawSetting
             && issue.name == "enabledMaps"
     }));
 }

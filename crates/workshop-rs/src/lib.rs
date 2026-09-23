@@ -24,8 +24,6 @@
 
 pub mod actions;
 mod analysis;
-#[doc(hidden)]
-pub mod arena;
 pub mod catalog;
 pub mod convert;
 mod core;
@@ -36,25 +34,26 @@ pub mod events;
 pub mod format;
 mod frontend;
 pub mod gameplay;
-#[doc(hidden)]
-pub mod ids;
 mod output;
 pub mod parser;
 pub mod program;
 pub mod roundtrip;
 pub mod rules;
-#[doc(hidden)]
-pub mod semantic;
 pub mod settings;
 pub mod signatures;
 pub mod source;
 pub mod validate;
 pub mod values;
-#[doc(hidden)]
-pub mod wir;
+pub(crate) mod wir;
 
 pub use error::{CatalogError, WorkshopError};
 pub use program::{
     Action, Condition, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Program,
     ProvenanceError, Rule, Subroutine, Value, Variable,
 };
+
+#[cfg(test)]
+extern crate self as workshop_rs;
+
+#[cfg(test)]
+mod tests;
