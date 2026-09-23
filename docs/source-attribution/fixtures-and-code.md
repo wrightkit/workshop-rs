@@ -1,6 +1,6 @@
-# Test fixtures and code provenance
+# Test fixture and code source attribution
 
-[← Provenance index](README.md)
+[← Source attribution index](README.md)
 
 ## Test fixtures (`crates/workshop-rs/tests/fixtures/`)
 
@@ -8,13 +8,13 @@ The corpus Workshop texts and settings sections were extracted from the
 Wright repository's compatibility fixtures (pinned OverPy 9.7.10 en-US
 reference emissions) on 2026-08-16. The spellings are Blizzard game content
 (functional/interoperability data); the texts are observed reference
-behavior, not OverPy source. Full provenance, extraction method, and
+behavior, not OverPy source. Full source attribution, extraction method, and
 per-file SHA-256 verification are recorded in
 [`crates/workshop-rs/tests/fixtures/README.md`](../../crates/workshop-rs/tests/fixtures/README.md).
 The committed fixtures are reference-emission inputs with per-file hashes;
-the JSON evidence used to generate locale mappings is not committed.
+the source data used to generate locale mappings is not committed.
 
-## Code provenance
+## Code attribution
 
 The implementation modules are Wright-authored code extracted from the
 `wright-workshop`, `wright-ir` (the `wir`, `settings`, `source` subset), and

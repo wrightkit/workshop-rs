@@ -148,8 +148,8 @@ cargo run -p workshop-rs --bin workshop-catalog-gen -- check
 cargo run -p workshop-rs --bin workshop-catalog-gen -- build
 ```
 
-See [`docs/provenance/README.md`](docs/provenance/README.md) and [`AGENTS.md`](AGENTS.md) for
-provenance requirements and pipeline details.
+See [`docs/source-attribution/README.md`](docs/source-attribution/README.md) and [`AGENTS.md`](AGENTS.md) for
+source-attribution requirements and pipeline details.
 
 ## Validation
 
@@ -165,7 +165,7 @@ CI runs the same checks on stable and the pinned toolchain.
 ## Documentation
 
 Current architecture contracts, ADR history, catalog/gameplay contracts,
-contract tests and fixture provenance, and release procedures are indexed in
+contract tests and fixture source attribution, and release procedures are indexed in
 [`docs/README.md`](docs/README.md).
 
 ## Releases
@@ -176,4 +176,4 @@ to GitHub Releases. Release automation is documented in [`docs/release.md`](docs
 ## License
 
 `workshop-rs` is distributed under the [MIT License](LICENSE). Committed dataset
-and fixture mappings carry recorded provenance in [`docs/provenance/README.md`](docs/provenance/README.md).
+and fixture mappings carry source attribution in [`docs/source-attribution/README.md`](docs/source-attribution/README.md).

@@ -2,10 +2,10 @@
 
 Source attribution is now routed by data surface:
 
-- [Provenance index](provenance/README.md)
-- [Hero gameplay data](provenance/gameplay.md)
-- [Catalog, locale, and update pipeline](provenance/catalog.md)
-- [Test fixtures and code provenance](provenance/fixtures-and-code.md)
+- [Source attribution index](source-attribution/README.md)
+- [Hero gameplay data](source-attribution/gameplay.md)
+- [Catalog, locale, and update pipeline](source-attribution/catalog.md)
+- [Test fixtures and code attribution](source-attribution/fixtures-and-code.md)
 
-This path is retained for older links and is not a separate provenance
+This path remains only for older links and is not a separate source-attribution
 authority.

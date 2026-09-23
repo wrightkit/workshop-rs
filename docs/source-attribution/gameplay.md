@@ -1,6 +1,6 @@
-# Hero gameplay data provenance
+# Hero gameplay source attribution
 
-[← Provenance index](README.md)
+[← Source attribution index](README.md)
 
 ## Hero gameplay data (`crates/workshop-rs/src/data/gameplay.json`)
 
