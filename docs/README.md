@@ -56,8 +56,8 @@ Support prose is not a substitute for current executable tests.
 
 ## Domain contracts and fixture attribution
 
-- [Source attribution record](provenance.md): catalog, locale, gameplay,
-  fixture, and dataset source attribution.
+- [Source attribution](source-attribution/README.md): catalog, locale, gameplay,
+  fixture, code, and pipeline source records.
 - [Source preservation contract](source-preservation.md): optional authored
   source, comment attachment, checked edits, and mixed-source boundaries.
 - [Hero gameplay dataset](gameplay-data.md): embedded data model and validation
@@ -68,7 +68,7 @@ Support prose is not a substitute for current executable tests.
   the gameplay domain.
 - [Canonical action layout](action-layout.md): validated WIR action-width and
   structured action expansion behavior.
-- [Test fixture provenance](../crates/workshop-rs/tests/fixtures/README.md):
+- [Test fixture source attribution](../crates/workshop-rs/tests/fixtures/README.md):
   source origin and verification for raw Workshop/settings fixtures.
 
 ## Architecture decision history
