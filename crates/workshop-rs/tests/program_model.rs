@@ -252,7 +252,7 @@ fn provenance_attachment_rejects_foreign_files() {
 
     assert_eq!(
         program.set_rule_span(0, Some(foreign)),
-        Err(workshop_rs::ProvenanceError::UnknownFile(foreign.file))
+        Err(workshop_rs::SourceMappingError::UnknownFile(foreign.file))
     );
     assert!(program.rule_span(0).is_none());
 }
