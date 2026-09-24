@@ -263,7 +263,7 @@ fn comparisons_preserve_polymorphic_operand_types() {
     validate_program(&program);
     let condition = program
         .values
-        .get(program.rules.iter().next().expect("rule").conditions[0])
+        .get(program.rules.iter().next().expect("rule").conditions[0].value)
         .expect("comparison");
     let Value::Call { name, args } = &condition.value else {
         panic!("expected comparison call, got {:?}", condition.value);

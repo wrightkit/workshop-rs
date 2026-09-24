@@ -25,6 +25,14 @@ pub(crate) struct WorkshopSubroutine {
     pub(crate) name_span: Option<Span>,
 }
 
+/// A rule condition; `disabled` conditions stay in the rule but are not
+/// evaluated.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct Condition {
+    pub(crate) value: ValueId,
+    pub(crate) disabled: bool,
+}
+
 /// A workshop rule.
 #[derive(Debug, Clone)]
 pub(crate) struct Rule {
@@ -34,6 +42,6 @@ pub(crate) struct Rule {
     pub(crate) name_span: Option<Span>,
     pub(crate) disabled: bool,
     pub(crate) event: Event,
-    pub(crate) conditions: Vec<ValueId>,
+    pub(crate) conditions: Vec<Condition>,
     pub(crate) actions: Vec<ActionId>,
 }

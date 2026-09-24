@@ -54,11 +54,15 @@ impl<'a> EmitContext<'a> {
             let conditions = self.structural("conditions")?;
             self.line(1, &format!("{conditions} {{"))?;
             for condition in &rule.conditions {
+                let condition_value = condition.value;
                 let mut text = String::new();
                 // Reference normalization: comparison conditions render
                 // infix; other conditions render as `value == True`.
-                if let Some(wir::Value::Call { name, args }) =
-                    self.program.values.get(*condition).map(|node| &node.value)
+                if let Some(wir::Value::Call { name, args }) = self
+                    .program
+                    .values
+                    .get(condition_value)
+                    .map(|node| &node.value)
                 {
                     if is_comparison_operator(name) && args.len() == 2 {
                         self.value(args[0], &mut text)?;
@@ -66,16 +70,21 @@ impl<'a> EmitContext<'a> {
                         write!(text, " {operator} ").unwrap();
                         self.value(args[1], &mut text)?;
                     } else {
-                        self.value(*condition, &mut text)?;
+                        self.value(condition_value, &mut text)?;
                         let true_spelling = self.spelling(Kind::Value, "true")?;
                         write!(text, " == {true_spelling}").unwrap();
                     }
                 } else {
-                    self.value(*condition, &mut text)?;
+                    self.value(condition_value, &mut text)?;
                     let true_spelling = self.spelling(Kind::Value, "true")?;
                     write!(text, " == {true_spelling}").unwrap();
                 }
-                self.line(2, &format!("{text};"))?;
+                let prefix = if condition.disabled {
+                    format!("{} ", self.structural("disabled")?)
+                } else {
+                    String::new()
+                };
+                self.line(2, &format!("{prefix}{text};"))?;
             }
             self.line(1, "}")?;
         }

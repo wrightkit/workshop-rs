@@ -229,7 +229,7 @@ fn public_api_rejects_unsupported_and_invalid_programs_explicitly() {
         .expect_err("unsupported condition must not produce an exact count");
     assert!(matches!(
         invalid_error,
-        ElementCountError::InvalidProgram { message } if message.contains("disabled condition")
+        ElementCountError::Unsupported { name, .. } if name == "disabled condition"
     ));
 }
 

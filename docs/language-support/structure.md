@@ -14,8 +14,8 @@
 | `conditions` block | ✅ Supported | Rule precondition block evaluated before rule actions run. |
 | `actions` block | ✅ Supported | Rule action sequence executed when event triggers and conditions pass. |
 | `disabled` rule modifier | ✅ Supported | `disabled rule ("...")` disables execution of the entire rule. |
-| `disabled` condition modifier | ✅ Supported | `disabled <condition>;` skips evaluation of a single condition within a rule. |
-| `disabled` action modifier | ✅ Supported | `disabled <action>;` skips execution of a single action within a rule. |
+| `disabled` condition modifier | ✅ Supported | `disabled <condition>;` skips evaluation of a single condition within a rule. Preserved through parse, canonical model, validation, emission, and round-trip comparison. |
+| `disabled` action modifier | ✅ Supported | `disabled <action>;` skips execution of a single action within a rule. Preserved as for conditions; on `If`/`While` groups it applies to the group header only. |
 
 ## Variables & Subroutines
 

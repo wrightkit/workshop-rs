@@ -48,7 +48,7 @@ fn check_rule(program: &Program, rule: &Rule) -> Result<(), IrError> {
         }
     }
     for condition in &rule.conditions {
-        check_value(program, *condition)?;
+        check_value(program, condition.value)?;
     }
     for action in &rule.actions {
         check_action(program, *action)?;
@@ -180,6 +180,7 @@ fn check_action(program: &Program, id: super::ActionId) -> Result<(), IrError> {
             }
             Ok(())
         }
+        Action::Disabled { action, .. } => check_action(program, *action),
         Action::Call { args, .. } => {
             for arg in args {
                 check_value(program, *arg)?;

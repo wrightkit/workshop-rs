@@ -38,7 +38,10 @@ fn member_access_has_a_canonical_shape_contract() {
         name_span: None,
         disabled: false,
         event: Event::Global,
-        conditions: vec![access],
+        conditions: vec![workshop_rs::wir::Condition {
+            value: access,
+            disabled: false,
+        }],
         actions: vec![],
     });
     let error =
@@ -582,7 +585,10 @@ fn canonical_validation_returns_first_error_and_short_circuits() {
         name_span: None,
         disabled: false,
         event: Event::Global,
-        conditions: vec![bad_cond],
+        conditions: vec![workshop_rs::wir::Condition {
+            value: bad_cond,
+            disabled: false,
+        }],
         actions: vec![bad_action],
     });
     let action_cond_error = validate::validate_canonical_ids_wir(&program_action_cond, &catalog)

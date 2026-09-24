@@ -1,7 +1,7 @@
 use crate::frontend::parser::*;
 
 impl ParseContext<'_> {
-    pub(crate) fn conditions_section(&mut self) -> Result<Vec<wir::ValueId>> {
+    pub(crate) fn conditions_section(&mut self) -> Result<Vec<wir::Condition>> {
         self.expect_keyword("conditions")?;
         self.expect(TokenKind::LBrace, "expected '{' after 'conditions'")?;
         let mut conditions = Vec::new();
@@ -31,6 +31,7 @@ impl ParseContext<'_> {
                         self.pos += 1;
                         continue;
                     }
+                    let mut disabled = false;
                     if let Some(Token {
                         kind: TokenKind::Word(word),
                         ..
@@ -38,14 +39,12 @@ impl ParseContext<'_> {
                     {
                         if self.settings_name_matches("tokens", "disabled", &word) {
                             self.pos += 1;
-                            let _disabled_condition = self.value()?;
-                            self.expect(TokenKind::Semi, "expected ';' after condition")?;
-                            continue;
+                            disabled = true;
                         }
                     }
-                    let condition = self.value()?;
+                    let value = self.value()?;
                     self.expect(TokenKind::Semi, "expected ';' after condition")?;
-                    conditions.push(condition);
+                    conditions.push(wir::Condition { value, disabled });
                 }
                 None => {
                     return Err(self.malformed("unexpected end of input in conditions", self.eof()));
@@ -101,11 +100,13 @@ impl ParseContext<'_> {
                         if let Some(structural) = self.resolve_entry(Kind::Structural, rest) {
                             match structural.id.as_str() {
                                 "while" => {
-                                    actions.push(self.while_group()?);
+                                    let group = self.while_group()?;
+                                    actions.push(self.disabled_action(group));
                                     continue;
                                 }
                                 "if" => {
-                                    actions.push(self.if_group()?);
+                                    let group = self.if_group()?;
+                                    actions.push(self.disabled_action(group));
                                     continue;
                                 }
                                 _ => {}
@@ -113,11 +114,9 @@ impl ParseContext<'_> {
                         }
                         if self.resolve_entry(Kind::Action, rest).is_some() {
                             let canonical = rest;
-                            actions.push(self.action_call_from_phrase(
-                                canonical.to_string(),
-                                start,
-                                end,
-                            )?);
+                            let call =
+                                self.action_call_from_phrase(canonical.to_string(), start, end)?;
+                            actions.push(self.disabled_action(call));
                             continue;
                         }
                     }
@@ -131,7 +130,8 @@ impl ParseContext<'_> {
                         )
                     {
                         self.pos += 1;
-                        actions.push(self.while_group()?);
+                        let group = self.while_group()?;
+                        actions.push(self.disabled_action(group));
                         continue;
                     }
                     match self.canonical_keyword(&phrase).as_str() {
@@ -191,6 +191,12 @@ impl ParseContext<'_> {
                 }
             }
         }
+    }
+
+    /// Wrap a parsed action in the `disabled` modifier.
+    fn disabled_action(&mut self, action: wir::ActionId) -> wir::ActionId {
+        let span = self.target.actions.get(action).and_then(Action::span);
+        self.target.actions.push(Action::Disabled { action, span })
     }
 
     /// Return the action spelling after the locale-declared disabled
