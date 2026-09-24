@@ -29,7 +29,8 @@ are attached.
    former conflicts with the public construction API (#178) and the latter
    cannot be carried by public enum variants.
 2. **Shape guard.** Attached mappings record the program shape they were
-   attached to (rule count, per-rule condition and action counts). Span
+   attached to (rule count, per-rule condition and action counts, and the
+   variable and subroutine declaration counts). Span
    accessors return `None` when the current shape differs, instead of
    returning a displaced span.
 3. **Granularity.** The durable mapping granularity is rule, condition, action,
