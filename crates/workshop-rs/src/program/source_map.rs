@@ -76,6 +76,10 @@ pub enum SourceMapError {
     },
     /// An entry addresses a node outside the program shape.
     InvalidPosition,
+    /// Two entries map the same node.
+    DuplicateEntry,
+    /// A declaration entry carries neither a span nor a name span.
+    EmptyEntry,
     /// A span references a file outside the file table.
     UnknownFile(usize),
     /// A span is not a valid 1-based interval.
@@ -128,6 +132,8 @@ impl std::fmt::Display for SourceMapError {
             Self::InvalidPosition => {
                 write!(formatter, "source map entry is outside the program shape")
             }
+            Self::DuplicateEntry => write!(formatter, "source map maps a node twice"),
+            Self::EmptyEntry => write!(formatter, "source map declaration entry has no span"),
             Self::UnknownFile(file) => {
                 write!(formatter, "source map span references unknown file {file}")
             }
@@ -266,7 +272,11 @@ impl SourceMap {
                         .global_variables
                         .get_mut(*index)
                         .ok_or(SourceMapError::InvalidPosition)?;
-                    *declaration = self.declaration(*span, *name_span)?;
+                    let mapped = self.declaration(*span, *name_span)?;
+                    if declaration.span.is_some() || declaration.name_span.is_some() {
+                        return Err(SourceMapError::DuplicateEntry);
+                    }
+                    *declaration = mapped;
                 }
                 MappedNode::PlayerVariable {
                     index,
@@ -277,7 +287,11 @@ impl SourceMap {
                         .player_variables
                         .get_mut(*index)
                         .ok_or(SourceMapError::InvalidPosition)?;
-                    *declaration = self.declaration(*span, *name_span)?;
+                    let mapped = self.declaration(*span, *name_span)?;
+                    if declaration.span.is_some() || declaration.name_span.is_some() {
+                        return Err(SourceMapError::DuplicateEntry);
+                    }
+                    *declaration = mapped;
                 }
                 MappedNode::Subroutine {
                     index,
@@ -288,15 +302,22 @@ impl SourceMap {
                         .subroutines
                         .get_mut(*index)
                         .ok_or(SourceMapError::InvalidPosition)?;
-                    *declaration = self.declaration(*span, *name_span)?;
+                    let mapped = self.declaration(*span, *name_span)?;
+                    if declaration.span.is_some() || declaration.name_span.is_some() {
+                        return Err(SourceMapError::DuplicateEntry);
+                    }
+                    *declaration = mapped;
                 }
                 MappedNode::Rule { rule, span } => {
                     let span = self.span(*span)?;
-                    provenance
+                    let slot = &mut provenance
                         .rules
                         .get_mut(*rule)
                         .ok_or(SourceMapError::InvalidPosition)?
-                        .span = Some(span);
+                        .span;
+                    if slot.replace(span).is_some() {
+                        return Err(SourceMapError::DuplicateEntry);
+                    }
                 }
                 MappedNode::Condition {
                     rule,
@@ -304,20 +325,26 @@ impl SourceMap {
                     span,
                 } => {
                     let span = self.span(*span)?;
-                    *provenance
+                    let slot = provenance
                         .rules
                         .get_mut(*rule)
                         .and_then(|rule| rule.conditions.get_mut(*condition))
-                        .ok_or(SourceMapError::InvalidPosition)? = Some(span);
+                        .ok_or(SourceMapError::InvalidPosition)?;
+                    if slot.replace(span).is_some() {
+                        return Err(SourceMapError::DuplicateEntry);
+                    }
                 }
                 MappedNode::Action { rule, action, span } => {
                     let span = self.span(*span)?;
-                    provenance
+                    let slot = &mut provenance
                         .rules
                         .get_mut(*rule)
                         .and_then(|rule| rule.actions.get_mut(*action))
                         .ok_or(SourceMapError::InvalidPosition)?
-                        .span = Some(span);
+                        .span;
+                    if slot.replace(span).is_some() {
+                        return Err(SourceMapError::DuplicateEntry);
+                    }
                 }
                 MappedNode::ActionArgument {
                     rule,
@@ -342,7 +369,9 @@ impl SourceMap {
                         .ok_or(SourceMapError::InvalidPosition)?
                         .arguments;
                     fit(arguments, count);
-                    arguments[*argument] = Some(span);
+                    if arguments[*argument].replace(span).is_some() {
+                        return Err(SourceMapError::DuplicateEntry);
+                    }
                 }
             }
         }
@@ -371,6 +400,9 @@ impl SourceMap {
         span: Option<WireSpan>,
         name_span: Option<WireSpan>,
     ) -> Result<DeclarationProvenance, SourceMapError> {
+        if span.is_none() && name_span.is_none() {
+            return Err(SourceMapError::EmptyEntry);
+        }
         Ok(DeclarationProvenance {
             span: span.map(|span| self.span(span)).transpose()?,
             name_span: name_span.map(|span| self.span(span)).transpose()?,

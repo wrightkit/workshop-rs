@@ -101,9 +101,12 @@ applies it to a `Program` parsed from the same Workshop text. `MappedText`
 pairs the text with its `SourceMap` and encodes the second format. Application
 replaces the program's file table with the map's file table and its mapping with
 the map's spans, so nodes without an entry carry no span and consumers report
-evidence on them as unmapped. The whole mapping is rejected with a typed
-`SourceMapError`, leaving the program unchanged, when the program shape differs
-from the recorded shape or when any entry is invalid.
+evidence on them as unmapped. Mapped files are represented by path only, so
+the program's retained source documents, including the Workshop text parsed
+from the artifact, are dropped and `Program::source` returns `None` for them.
+The whole mapping is rejected with a typed `SourceMapError`, leaving the
+program unchanged, when the program shape differs from the recorded shape or
+when any entry is invalid, duplicated, or an empty declaration entry.
 
 A `mapped-text-v1` document has these members:
 
@@ -120,7 +123,8 @@ The `node` tags and their keys are `rule` (`rule`), `condition` (`rule`,
 `argument`), and `global_variable`, `player_variable`, and `subroutine`
 (`index`). The first four carry a `span`; declarations carry `span`,
 `name_span`, or both. A span is `{"file", "start", "end"}` with positions
-`{"line", "column"}`. Only nodes with an authored origin have an entry. The
+`{"line", "column"}`. Only nodes with an authored origin have an entry, so
+`spans` may be empty. Decoders ignore unknown members. The
 mapping granularity is rule, condition, action, direct action argument, and
 declarations; nested value mappings are not part of the format.
 
