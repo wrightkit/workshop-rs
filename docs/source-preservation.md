@@ -48,6 +48,33 @@ uses the same expected-byte/fail-closed principle. Canonical `emitter::emit`
 continues to be deterministic semantic regeneration and does not claim exact
 whole-file formatting or comment preservation.
 
+## Mapped artifacts
+
+Source mappings are keyed by public position: rule, condition, action, direct
+action argument, and declaration. `Rule::actions` is a linear stream including
+explicit control-flow lines, so these positions survive deterministic emission
+and re-parsing. The decision record is
+[ADR-0013](adr/0013-source-mapping-across-provider-boundary.md).
+
+- **Shape guard.** Attached mappings record the program shape they were
+  attached to: the rule count and each rule's condition and action counts. When
+  the current shape differs, span accessors return `None` rather than a
+  displaced span. Consumers that change program shape lose the affected
+  mappings; they do not receive wrong locations.
+- **Artifact formats.** `workshop-rs` defines the canonical Workshop artifact
+  formats carried by provider protocols as opaque payloads:
+  `workshop-rs/text-v1` is Workshop text; `workshop-rs/mapped-text-v1` is
+  Workshop text plus a file table, the program shape, and position-keyed spans.
+- **`SourceMap`.** `SourceMap` extracts the mapping from a span-bearing
+  `Program` and applies it to a `Program` parsed from the same Workshop text.
+  A shape mismatch rejects the whole mapping. Nodes without an authored origin
+  carry no span and are reported as unmapped by consumers; source-language
+  implementations own attribution for includes, macro expansion, and generated
+  helpers.
+- **Column units.** Columns follow `Position`: 1-based counts of Unicode scalar
+  values. Producers convert into this unit; editor presentation converts to
+  UTF-16.
+
 ## Mixed-source boundary
 
 The raw Workshop parser accepts a complete supported Workshop document. It does
