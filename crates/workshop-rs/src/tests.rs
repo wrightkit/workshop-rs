@@ -22,6 +22,8 @@ mod roundtrip;
 mod rule_events;
 #[path = "../tests/settings_pipeline.rs"]
 mod settings_pipeline;
+#[path = "../tests/source_map.rs"]
+mod source_map;
 #[path = "../tests/source_preservation.rs"]
 mod source_preservation;
 #[path = "../tests/wir_expansion.rs"]

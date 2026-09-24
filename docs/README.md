@@ -59,7 +59,8 @@ Support prose is not a substitute for current executable tests.
 - [Source attribution](source-attribution/README.md): catalog, locale, gameplay,
   fixture, code, and pipeline source records.
 - [Source preservation contract](source-preservation.md): optional authored
-  source, comment attachment, checked edits, and mixed-source boundaries.
+  source, comment attachment, checked edits, source-mapping shape guard,
+  canonical artifact formats, and mixed-source boundaries.
 - [Hero gameplay dataset](gameplay-data.md): embedded data model and validation
   boundaries.
 - [Gameplay query API](gameplay-query.md): read-only semantic queries and

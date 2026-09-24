@@ -75,6 +75,58 @@ and re-parsing. The decision record is
   values. Producers convert into this unit; editor presentation converts to
   UTF-16.
 
+## Shape guard
+
+Attached mappings record the program shape they were attached to: the number
+of rules, per-rule conditions and actions, and the declaration counts. The span
+accessors return `None` once the public `Vec` fields no longer have that shape,
+for example after inserting or removing a rule, condition, or action, instead
+of returning a displaced span. Attaching a span again records the current shape
+of the affected scope, so a consumer that changes the program shape re-attaches
+the mapping it still wants, and one that builds a program incrementally attaches
+after each addition; attaching `None` records the shape without a span.
+
+## Canonical artifact formats
+
+`workshop-rs` owns two canonical Workshop artifact formats. Provider protocols
+carry them as opaque artifacts; they do not give the protocol Workshop
+semantics.
+
+- `workshop-rs/text-v1`: Workshop text alone.
+- `workshop-rs/mapped-text-v1`: Workshop text plus a file table, the program
+  shape, and position-keyed spans, encoded as one JSON document.
+
+The public `SourceMap` extracts a mapping from a span-bearing `Program` and
+applies it to a `Program` parsed from the same Workshop text. `MappedText`
+pairs the text with its `SourceMap` and encodes the second format. Application
+replaces the program's file table with the map's file table and its mapping with
+the map's spans, so nodes without an entry carry no span and consumers report
+evidence on them as unmapped. The whole mapping is rejected with a typed
+`SourceMapError`, leaving the program unchanged, when the program shape differs
+from the recorded shape or when any entry is invalid.
+
+A `mapped-text-v1` document has these members:
+
+| Member | Content |
+| --- | --- |
+| `format` | `"workshop-rs/mapped-text-v1"` |
+| `text` | The Workshop text |
+| `files` | The file table: `{"path": ...}` entries; spans refer to entries by index |
+| `shape` | `global_variables`, `player_variables`, `subroutines` counts and `rules`, a list of `{"conditions", "actions"}` counts |
+| `spans` | Position-keyed entries, each tagged by `node` |
+
+The `node` tags and their keys are `rule` (`rule`), `condition` (`rule`,
+`condition`), `action` (`rule`, `action`), `action_argument` (`rule`, `action`,
+`argument`), and `global_variable`, `player_variable`, and `subroutine`
+(`index`). The first four carry a `span`; declarations carry `span`,
+`name_span`, or both. A span is `{"file", "start", "end"}` with positions
+`{"line", "column"}`. Only nodes with an authored origin have an entry. The
+mapping granularity is rule, condition, action, direct action argument, and
+declarations; nested value mappings are not part of the format.
+
+Columns follow `Position`: 1-based Unicode scalar values. Producers convert
+from other units, and editor presentation converts to UTF-16.
+
 ## Mixed-source boundary
 
 The raw Workshop parser accepts a complete supported Workshop document. It does
