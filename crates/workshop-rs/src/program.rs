@@ -7,6 +7,9 @@ use crate::settings::Settings;
 use crate::source::{FileId, SourceDocument, SourceFile, Span};
 use crate::wir;
 
+mod source_map;
+pub use source_map::{MAPPED_TEXT_V1, MappedText, SourceMap, SourceMapError, TEXT_V1};
+
 /// A complete Workshop program built from Workshop concepts.
 #[derive(Debug, Clone, Default)]
 pub struct Program {
@@ -177,7 +180,7 @@ impl Program {
             return Err(SourceMappingError::InvalidCondition { rule, condition });
         }
         let rule_data = self.rule_provenance_mut(rule)?;
-        rule_data.conditions.resize(condition + 1, None);
+        fit(&mut rule_data.conditions, condition_count);
         rule_data.conditions[condition] = span;
         Ok(())
     }
@@ -200,9 +203,7 @@ impl Program {
             return Err(SourceMappingError::InvalidAction { rule, action });
         }
         let rule_data = self.rule_provenance_mut(rule)?;
-        rule_data
-            .actions
-            .resize_with(action + 1, ActionProvenance::default);
+        fit(&mut rule_data.actions, action_count);
         rule_data.actions[action].span = span;
         Ok(())
     }
@@ -251,9 +252,7 @@ impl Program {
         }
         let variable_count = self.global_variables.len();
         let provenance = self.provenance_mut();
-        provenance
-            .global_variables
-            .resize_with(variable_count, DeclarationProvenance::default);
+        fit(&mut provenance.global_variables, variable_count);
         provenance.global_variables[variable] = DeclarationProvenance { span, name_span };
         Ok(())
     }
@@ -272,9 +271,7 @@ impl Program {
         }
         let variable_count = self.player_variables.len();
         let provenance = self.provenance_mut();
-        provenance
-            .player_variables
-            .resize_with(variable_count, DeclarationProvenance::default);
+        fit(&mut provenance.player_variables, variable_count);
         provenance.player_variables[variable] = DeclarationProvenance { span, name_span };
         Ok(())
     }
@@ -293,38 +290,32 @@ impl Program {
         }
         let subroutine_count = self.subroutines.len();
         let provenance = self.provenance_mut();
-        provenance
-            .subroutines
-            .resize_with(subroutine_count, DeclarationProvenance::default);
+        fit(&mut provenance.subroutines, subroutine_count);
         provenance.subroutines[subroutine] = DeclarationProvenance { span, name_span };
         Ok(())
     }
 
     /// Return the authored span of a public rule, when source metadata exists.
+    ///
+    /// Attached mappings record the program shape they were attached to. Every
+    /// span accessor returns `None` once the public rules, conditions, or
+    /// actions have been inserted or removed since the mapping was attached.
     pub fn rule_span(&self, rule: usize) -> Option<crate::source::Span> {
-        self.provenance
-            .as_deref()
-            .and_then(|provenance| provenance.rules.get(rule))
-            .and_then(|rule| rule.span)
+        self.rule_provenance(rule)?.span
     }
 
     /// Return the authored span of a public rule condition value.
     pub fn condition_span(&self, rule: usize, condition: usize) -> Option<crate::source::Span> {
-        self.provenance
-            .as_deref()
-            .and_then(|provenance| provenance.rules.get(rule))
-            .and_then(|rule| rule.conditions.get(condition))
-            .copied()
-            .flatten()
+        let recorded = self.rule_provenance(rule)?;
+        if recorded.conditions.len() != self.rules[rule].conditions.len() {
+            return None;
+        }
+        recorded.conditions.get(condition).copied().flatten()
     }
 
     /// Return the authored span of a public action in its linear rule order.
     pub fn action_span(&self, rule: usize, action: usize) -> Option<crate::source::Span> {
-        self.provenance
-            .as_deref()
-            .and_then(|provenance| provenance.rules.get(rule))
-            .and_then(|rule| rule.actions.get(action))
-            .and_then(|action| action.span)
+        self.action_provenance(rule, action)?.span
     }
 
     /// Return the authored span of a direct value argument of a public action.
@@ -334,11 +325,9 @@ impl Program {
         action: usize,
         argument: usize,
     ) -> Option<crate::source::Span> {
-        self.provenance
-            .as_deref()
-            .and_then(|provenance| provenance.rules.get(rule))
-            .and_then(|rule| rule.actions.get(action))
-            .and_then(|action| action.arguments.get(argument))
+        self.action_provenance(rule, action)?
+            .arguments
+            .get(argument)
             .copied()
             .flatten()
     }
@@ -383,6 +372,37 @@ impl Program {
         )
     }
 
+    fn rule_provenance(&self, rule: usize) -> Option<&RuleProvenance> {
+        let recorded = &self.provenance.as_deref()?.rules;
+        if recorded.len() != self.rules.len() {
+            return None;
+        }
+        recorded.get(rule)
+    }
+
+    fn action_provenance(&self, rule: usize, action: usize) -> Option<&ActionProvenance> {
+        let recorded = self.rule_provenance(rule)?;
+        if recorded.actions.len() != self.rules[rule].actions.len() {
+            return None;
+        }
+        recorded.actions.get(action)
+    }
+
+    fn declaration_provenance(
+        &self,
+        recorded: impl Fn(&ProgramProvenance) -> &[DeclarationProvenance],
+        count: usize,
+        position: usize,
+    ) -> DeclarationProvenance {
+        self.provenance
+            .as_deref()
+            .map(recorded)
+            .filter(|recorded| recorded.len() == count)
+            .and_then(|recorded| recorded.get(position))
+            .copied()
+            .unwrap_or_default()
+    }
+
     fn validate_span(&self, span: Option<Span>) -> std::result::Result<(), SourceMappingError> {
         let Some(span) = span else {
             return Ok(());
@@ -411,9 +431,7 @@ impl Program {
         }
         let rule_count = self.rules.len();
         let provenance = self.provenance_mut();
-        provenance
-            .rules
-            .resize_with(rule_count, RuleProvenance::default);
+        fit(&mut provenance.rules, rule_count);
         Ok(&mut provenance.rules[rule])
     }
 
@@ -432,9 +450,7 @@ impl Program {
             return Err(SourceMappingError::InvalidAction { rule, action });
         }
         let rule_data = self.rule_provenance_mut(rule)?;
-        rule_data
-            .actions
-            .resize_with(action + 1, ActionProvenance::default);
+        fit(&mut rule_data.actions, action_count);
         Ok(&mut rule_data.actions[action])
     }
 
@@ -538,55 +554,46 @@ impl Program {
 
         let mut globals = HashMap::new();
         for (position, variable) in self.global_variables.iter().enumerate() {
+            let declaration = self.declaration_provenance(
+                |provenance| &provenance.global_variables,
+                self.global_variables.len(),
+                position,
+            );
             let id = storage.global_variables.push(wir::WorkshopVariable {
                 name: variable.name.clone(),
                 index: variable.index.unwrap_or(position as u32),
-                span: self
-                    .provenance
-                    .as_deref()
-                    .and_then(|provenance| provenance.global_variables.get(position))
-                    .and_then(|provenance| provenance.span),
-                name_span: self
-                    .provenance
-                    .as_deref()
-                    .and_then(|provenance| provenance.global_variables.get(position))
-                    .and_then(|provenance| provenance.name_span),
+                span: declaration.span,
+                name_span: declaration.name_span,
             });
             globals.insert(variable.name.clone(), id);
         }
         let mut players = HashMap::new();
         for (position, variable) in self.player_variables.iter().enumerate() {
+            let declaration = self.declaration_provenance(
+                |provenance| &provenance.player_variables,
+                self.player_variables.len(),
+                position,
+            );
             let id = storage.player_variables.push(wir::WorkshopVariable {
                 name: variable.name.clone(),
                 index: variable.index.unwrap_or(position as u32),
-                span: self
-                    .provenance
-                    .as_deref()
-                    .and_then(|provenance| provenance.player_variables.get(position))
-                    .and_then(|provenance| provenance.span),
-                name_span: self
-                    .provenance
-                    .as_deref()
-                    .and_then(|provenance| provenance.player_variables.get(position))
-                    .and_then(|provenance| provenance.name_span),
+                span: declaration.span,
+                name_span: declaration.name_span,
             });
             players.insert(variable.name.clone(), id);
         }
         let mut subroutines = HashMap::new();
         for (position, subroutine) in self.subroutines.iter().enumerate() {
+            let declaration = self.declaration_provenance(
+                |provenance| &provenance.subroutines,
+                self.subroutines.len(),
+                position,
+            );
             let id = storage.subroutines.push(wir::WorkshopSubroutine {
                 name: subroutine.name.clone(),
                 index: subroutine.index.unwrap_or(position as u32),
-                span: self
-                    .provenance
-                    .as_deref()
-                    .and_then(|provenance| provenance.subroutines.get(position))
-                    .and_then(|provenance| provenance.span),
-                name_span: self
-                    .provenance
-                    .as_deref()
-                    .and_then(|provenance| provenance.subroutines.get(position))
-                    .and_then(|provenance| provenance.name_span),
+                span: declaration.span,
+                name_span: declaration.name_span,
             });
             subroutines.insert(subroutine.name.clone(), id);
         }
@@ -631,9 +638,8 @@ impl Program {
                 &subroutines,
             )?;
             if let Some(provenance) = self
-                .provenance
-                .as_deref()
-                .and_then(|provenance| provenance.rules.get(rule_index))
+                .rule_provenance(rule_index)
+                .filter(|provenance| provenance.actions.len() == rule.actions.len())
             {
                 let mut public_position = 0;
                 apply_action_provenance(
@@ -661,6 +667,11 @@ impl Program {
         }
         Ok(storage)
     }
+}
+
+fn fit<T: Default>(items: &mut Vec<T>, len: usize) {
+    items.truncate(len);
+    items.resize_with(len, T::default);
 }
 
 fn public_event(storage: &wir::Program, event: &wir::Event) -> Result<Event> {

@@ -14,7 +14,7 @@ remains the item-level reference for symbols nested under those modules.
 | Contract area | Crate-root public paths |
 | --- | --- |
 | Canonical program model | `program` |
-| Root model re-exports | `Action`, `Condition`, `Event`, `EventTarget`, `EventTeam`, `ModifyOp`, `PlayerEventKind`, `Program`, `SourceMappingError`, `Rule`, `Subroutine`, `Value`, `Variable` |
+| Root model re-exports | `Action`, `Condition`, `Event`, `EventTarget`, `EventTeam`, `ModifyOp`, `PlayerEventKind`, `MappedText`, `Program`, `SourceMap`, `SourceMapError`, `SourceMappingError`, `Rule`, `Subroutine`, `Value`, `Variable` |
 | Workshop domains | `actions`, `catalog`, `events`, `gameplay`, `rules`, `settings`, `values` |
 | Source and provenance | `source` |
 | Workshop operations | `convert`, `detect`, `emitter`, `format`, `parser`, `roundtrip`, `validate` |

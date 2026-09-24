@@ -48,8 +48,8 @@ pub(crate) mod wir;
 
 pub use error::{CatalogError, WorkshopError};
 pub use program::{
-    Action, Condition, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Program, Rule,
-    SourceMappingError, Subroutine, Value, Variable,
+    Action, Condition, Event, EventTarget, EventTeam, MappedText, ModifyOp, PlayerEventKind,
+    Program, Rule, SourceMap, SourceMapError, SourceMappingError, Subroutine, Value, Variable,
 };
 
 #[cfg(test)]
