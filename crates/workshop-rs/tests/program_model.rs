@@ -278,7 +278,9 @@ fn declaration_provenance_reaches_structural_diagnostics() {
     ));
 }
 
-const DISABLED_SOURCE: &str = r#"rule ("disabled modifiers") {
+const DISABLED_SOURCE: &str = r#"variables { global: 0: g }
+subroutines { 0: sub }
+rule ("disabled modifiers") {
     event { Ongoing - Global; }
     conditions { disabled Is Alive(Event Player) == True; }
     actions {
@@ -287,6 +289,13 @@ const DISABLED_SOURCE: &str = r#"rule ("disabled modifiers") {
         disabled If(True);
             Wait(1, Ignore Condition);
         End;
+        disabled Set Global Variable(g, 1);
+        disabled Modify Global Variable(g, Add, 1);
+        disabled Call Subroutine(sub);
+        disabled For Global Variable(g, 0, 2, 1);
+            Wait(1, Ignore Condition);
+        End;
+        disabled Event Player.x = 1;
     }
 }"#;
 

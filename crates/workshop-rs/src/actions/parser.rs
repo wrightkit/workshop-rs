@@ -90,6 +90,10 @@ impl ParseContext<'_> {
                     kind: TokenKind::Word(_),
                     ..
                 }) => {
+                    if let Some(action) = self.disabled_assignment_action()? {
+                        actions.push(action);
+                        continue;
+                    }
                     if let Some(action) = self.assignment_action()? {
                         actions.push(action);
                         continue;
@@ -109,7 +113,12 @@ impl ParseContext<'_> {
                                     actions.push(self.disabled_action(group));
                                     continue;
                                 }
-                                _ => {}
+                                _ => {
+                                    let action =
+                                        self.action_call_from_phrase(rest.to_string(), start, end)?;
+                                    actions.push(self.disabled_action(action));
+                                    continue;
+                                }
                             }
                         }
                         if self.resolve_entry(Kind::Action, rest).is_some() {
@@ -189,6 +198,30 @@ impl ParseContext<'_> {
                 None => {
                     return Err(self.malformed("unexpected end of input in actions", self.eof()));
                 }
+            }
+        }
+    }
+
+    /// Parse `disabled <assignment>;`, restoring the position when the
+    /// modifier is not followed by an assignment form.
+    fn disabled_assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
+        let saved = self.pos;
+        let Some(Token {
+            kind: TokenKind::Word(word),
+            ..
+        }) = self.peek()
+        else {
+            return Ok(None);
+        };
+        if !self.settings_name_matches("tokens", "disabled", &word) {
+            return Ok(None);
+        }
+        self.pos += 1;
+        match self.assignment_action()? {
+            Some(action) => Ok(Some(self.disabled_action(action))),
+            None => {
+                self.pos = saved;
+                Ok(None)
             }
         }
     }
