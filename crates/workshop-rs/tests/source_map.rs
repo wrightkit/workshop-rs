@@ -284,6 +284,11 @@ fn invalid_entries_reject_the_whole_mapping_without_changing_the_program() {
             "span": {"file": 0, "start": {"line": 1, "column": 1}, "end": {"line": 1, "column": 2}},
         }));
 
+    let mut duplicate: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let first_rule = duplicate["spans"][0].clone();
+    assert_eq!(first_rule["node"], "rule");
+    duplicate["spans"].as_array_mut().unwrap().push(first_rule);
+
     for (artifact, matches) in [
         (
             unknown_file,
@@ -295,6 +300,9 @@ fn invalid_entries_reject_the_whole_mapping_without_changing_the_program() {
         }),
         (outside_shape, |error| {
             matches!(error, SourceMapError::InvalidPosition)
+        }),
+        (duplicate, |error| {
+            matches!(error, SourceMapError::DuplicateEntry)
         }),
     ] {
         let decoded = MappedText::from_json(&artifact.to_string()).expect("structure decodes");
@@ -386,4 +394,30 @@ fn columns_count_unicode_scalar_values() {
     let mut reparsed = parsed(&decoded.text);
     decoded.map.apply(&mut reparsed).expect("applies");
     assert_eq!(reparsed.action_span(0, 0), Some(action));
+}
+
+#[test]
+fn declaration_entries_need_a_span_and_are_unique() {
+    let program = authored_program();
+    let json = MappedText {
+        text: String::new(),
+        map: SourceMap::extract(&program),
+    }
+    .to_json();
+    let mut target = authored_program();
+    target.set_rule_span(0, None).unwrap();
+
+    let mut empty: serde_json::Value = serde_json::from_str(&json).unwrap();
+    empty["spans"][0] = serde_json::json!({"node": "global_variable", "index": 0});
+    let mut duplicate: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let declaration = duplicate["spans"][0].clone();
+    duplicate["spans"].as_array_mut().unwrap().push(declaration);
+
+    for (artifact, expected) in [
+        (empty, SourceMapError::EmptyEntry),
+        (duplicate, SourceMapError::DuplicateEntry),
+    ] {
+        let decoded = MappedText::from_json(&artifact.to_string()).expect("structure decodes");
+        assert_eq!(decoded.map.apply(&mut target), Err(expected));
+    }
 }
