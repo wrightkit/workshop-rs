@@ -89,6 +89,8 @@ Current registry:
 - [ADR-0009: Domain-local Workshop ownership and verification placement](adr/0009-domain-local-ownership.md)
 - [ADR-0010: Canonical Workshop target-layout and resource analysis](adr/0010-target-layout-and-resource-analysis.md)
 - [ADR-0011: Contextual Workshop semantics at the catalog/code boundary](adr/0011-contextual-semantic-placement.md)
+- [ADR-0012: Tests-first Workshop verification](adr/0012-tests-first-verification.md)
+- [ADR-0013: Source mapping across the provider boundary](adr/0013-source-mapping-across-provider-boundary.md)
 
 ## Release and operations
 
