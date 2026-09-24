@@ -1247,7 +1247,10 @@ fn receiver_call_actions_and_values_emit_catalog_spellings() {
         name_span: None,
         disabled: false,
         event: wir::Event::EachPlayer,
-        conditions: vec![alive],
+        conditions: vec![workshop_rs::wir::Condition {
+            value: alive,
+            disabled: false,
+        }],
         actions: vec![move_speed],
     });
 

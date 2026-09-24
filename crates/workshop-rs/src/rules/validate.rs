@@ -29,7 +29,7 @@ pub(crate) fn validate_wir(program: &wir::Program, catalog: &Catalog) -> Result<
             crate::actions::validate::validate_action(program, catalog, *action)?;
         }
         for condition in &rule_data.conditions {
-            crate::values::validate::validate_value(program, catalog, *condition)?;
+            crate::values::validate::validate_value(program, catalog, condition.value)?;
         }
     }
     Ok(())

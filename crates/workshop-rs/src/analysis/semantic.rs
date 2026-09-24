@@ -183,6 +183,9 @@ fn inspect_action(
         | Action::ForPlayerVariable { body, .. } => {
             inspect_action_id(body.as_slice(), program, catalog, issues);
         }
+        Action::Disabled { action, .. } => {
+            inspect_action_id(std::slice::from_ref(action), program, catalog, issues);
+        }
         Action::SetGlobalVariable { .. }
         | Action::ModifyGlobalVariable { .. }
         | Action::SetPlayerVariable { .. }

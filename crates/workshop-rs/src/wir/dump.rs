@@ -48,8 +48,12 @@ pub(crate) fn dump(program: &Program) -> String {
         ));
         render_event(program, &rule.event, &mut out, 2);
         for condition in &rule.conditions {
-            out.push_str("    condition ");
-            render_value(program, *condition, &mut out);
+            out.push_str(if condition.disabled {
+                "    disabled condition "
+            } else {
+                "    condition "
+            });
+            render_value(program, condition.value, &mut out);
             out.push('\n');
         }
         for action in &rule.actions {
@@ -310,6 +314,14 @@ fn render_action(program: &Program, id: super::ActionId, out: &mut String, level
             for action in body {
                 render_action(program, *action, out, level + 1);
             }
+        }
+        Action::Disabled { action, span } => {
+            out.push_str(&format!(
+                "{}disabled{}\n",
+                indent(level),
+                span_suffix(*span)
+            ));
+            render_action(program, *action, out, level + 1);
         }
         Action::Call { name, args, span } => {
             out.push_str(&format!("{}call {name}(", indent(level)));

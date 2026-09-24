@@ -24,7 +24,7 @@ pub(crate) mod error;
 
 pub(crate) use action::{Action, IfBranch, ModifyOp};
 pub(crate) use event::{Event, EventTarget, EventTeam, PlayerEventKind};
-pub(crate) use rule::{Rule, WorkshopSubroutine, WorkshopVariable};
+pub(crate) use rule::{Condition, Rule, WorkshopSubroutine, WorkshopVariable};
 pub(crate) use value::{Value, ValueNode};
 
 use crate::core::arena::Arena;

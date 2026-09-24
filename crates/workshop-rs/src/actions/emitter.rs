@@ -222,6 +222,12 @@ impl EmitContext<'_> {
                 };
                 self.line(level, &format!("{target_text} {operator} {value_text};"))?;
             }
+            wir::Action::Disabled { action, .. } => {
+                let start = self.out.len();
+                self.action(*action, level, rule_final)?;
+                let modifier = format!("{} ", self.structural("disabled")?);
+                self.out.insert_str(start + level * 4, &modifier);
+            }
             wir::Action::Call { name, args, .. } => {
                 // The chase family dispatches on the first argument's
                 // variable kind, mirroring the pinned reference: a global

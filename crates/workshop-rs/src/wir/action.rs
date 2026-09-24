@@ -87,6 +87,13 @@ pub(crate) enum Action {
         body: Vec<ActionId>,
         span: Option<Span>,
     },
+    /// An action carrying the `disabled` modifier: the wrapped action stays
+    /// in the program but does not execute. For a control-flow group the
+    /// modifier applies to the group header; the body is unchanged.
+    Disabled {
+        action: ActionId,
+        span: Option<Span>,
+    },
     /// Any other action call with side effects.
     Call {
         name: String,
@@ -109,6 +116,7 @@ impl Action {
             | Action::While { span, .. }
             | Action::ForGlobalVariable { span, .. }
             | Action::ForPlayerVariable { span, .. }
+            | Action::Disabled { span, .. }
             | Action::Call { span, .. } => *span,
         }
     }

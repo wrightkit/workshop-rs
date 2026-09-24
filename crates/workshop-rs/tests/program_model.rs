@@ -278,28 +278,107 @@ fn declaration_provenance_reaches_structural_diagnostics() {
     ));
 }
 
+const DISABLED_SOURCE: &str = r#"variables { global: 0: g }
+subroutines { 0: sub }
+rule ("disabled modifiers") {
+    event { Ongoing - Global; }
+    conditions { disabled Is Alive(Event Player) == True; }
+    actions {
+        Wait(1, Ignore Condition);
+        disabled Abort;
+        disabled If(True);
+            Wait(1, Ignore Condition);
+        End;
+        disabled Set Global Variable(g, 1);
+        disabled Modify Global Variable(g, Add, 1);
+        disabled Call Subroutine(sub);
+        disabled For Global Variable(g, 0, 2, 1);
+            Wait(1, Ignore Condition);
+        End;
+        disabled Event Player.x = 1;
+    }
+}"#;
+
 #[test]
-fn disabled_public_semantics_fail_explicitly_at_the_storage_boundary() {
+fn disabled_actions_and_conditions_parse_validate_emit_and_round_trip() {
     let catalog = catalog();
     let locale = workshop_rs::catalog::Locale::new("en-US");
 
-    let mut disabled_condition = Program::new();
-    disabled_condition.rule(
-        Rule::new("disabled condition", Event::Global)
-            .condition(Condition::disabled(Value::Bool(true))),
+    let parsed = workshop_rs::parser::parse(DISABLED_SOURCE, &catalog, &locale).expect("parse");
+    parsed.validate().expect("disabled modifiers validate");
+    let rule = &parsed.rules[0];
+    assert!(rule.conditions[0].disabled);
+    assert!(matches!(&rule.actions[0], Action::Call { .. }));
+    assert!(
+        matches!(&rule.actions[1], Action::Disabled { action } if matches!(**action, Action::Call { .. }))
     );
+    assert!(
+        matches!(&rule.actions[2], Action::Disabled { action } if matches!(**action, Action::If { .. }))
+    );
+
+    let emitted = workshop_rs::emitter::emit(&parsed, &catalog, &locale).expect("emit");
+    assert!(emitted.contains("        disabled Abort;\n"), "{emitted}");
+    assert!(
+        emitted.contains("        disabled If(True);\n"),
+        "{emitted}"
+    );
+    assert!(
+        emitted.contains("disabled Is Alive(Event Player) == True;"),
+        "{emitted}"
+    );
+    let reparsed = workshop_rs::parser::parse(&emitted, &catalog, &locale).expect("reparse");
+    assert!(workshop_rs::roundtrip::equivalent(&parsed, &reparsed));
+}
+
+#[test]
+fn programs_built_with_disabled_modifiers_validate_and_emit() {
+    let catalog = catalog();
+    let locale = workshop_rs::catalog::Locale::new("en-US");
+
+    let mut program = Program::new();
+    program.rule(
+        Rule::new("disabled", Event::Global)
+            .condition(Condition::disabled(Value::Bool(true)))
+            .action(Action::disabled(Action::call("abort", std::iter::empty()))),
+    );
+    program.validate().expect("disabled modifiers validate");
+    let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emit");
+    assert!(emitted.contains("disabled Abort;"), "{emitted}");
+    assert!(emitted.contains("disabled True == True;"), "{emitted}");
+}
+
+#[test]
+fn disabled_modifier_wrapping_a_terminator_is_rejected() {
+    let mut program = Program::new();
+    program.rule(Rule::new("bad", Event::Global).action(Action::disabled(Action::End)));
     assert!(matches!(
-        disabled_condition.validate(),
+        program.validate(),
         Err(workshop_rs::WorkshopError::Unsupported { .. })
     ));
+}
 
-    let mut disabled_action = Program::new();
-    disabled_action.rule(
-        Rule::new("disabled action", Event::Global)
-            .action(Action::disabled(Action::call("Wait", [Value::number(1.0)]))),
-    );
-    assert!(matches!(
-        workshop_rs::emitter::emit(&disabled_action, &catalog, &locale),
-        Err(workshop_rs::WorkshopError::Unsupported { .. })
+#[test]
+fn round_trip_equivalence_distinguishes_disabled_from_active() {
+    let catalog = catalog();
+    let locale = workshop_rs::catalog::Locale::new("en-US");
+    let parse = |body: &str| {
+        let source = format!(
+            "rule (\"r\") {{ event {{ Ongoing - Global; }} conditions {{ {} }} actions {{ {} }} }}",
+            body.split('|').next().unwrap(),
+            body.split('|').nth(1).unwrap(),
+        );
+        workshop_rs::parser::parse(&source, &catalog, &locale).expect("parse")
+    };
+    let active = parse("Is Alive(Event Player) == True;|Abort;");
+    let disabled_action = parse("Is Alive(Event Player) == True;|disabled Abort;");
+    let disabled_condition = parse("disabled Is Alive(Event Player) == True;|Abort;");
+    assert!(workshop_rs::roundtrip::equivalent(&active, &active));
+    assert!(!workshop_rs::roundtrip::equivalent(
+        &active,
+        &disabled_action
+    ));
+    assert!(!workshop_rs::roundtrip::equivalent(
+        &active,
+        &disabled_condition
     ));
 }

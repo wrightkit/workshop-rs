@@ -64,6 +64,15 @@ convenience part of the Workshop contract.
    carriers do not become canonical Workshop nodes without independent
    Workshop behavior. Their lowering and source semantics remain owned by the
    corresponding provider.
+8. The `disabled` modifier is part of canonical Workshop semantics for rules,
+   conditions, and actions. `Condition::disabled` and `Action::Disabled`
+   validate, emit as `disabled <condition>;` and `disabled <action>;`, and
+   participate in round-trip equivalence, so a disabled `Abort` never
+   compares equal to an active one. On a control-flow group the modifier
+   applies to the group header only; the body is unchanged. The canonical
+   storage model keeps the marker as `Action::Disabled` (wrapping the
+   action) and a per-condition flag. Element counting reports disabled
+   actions and conditions as unsupported until their cost is established.
 
 ## Consequences
 

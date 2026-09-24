@@ -307,7 +307,7 @@ fn rule_equivalent(
         return false;
     }
     for (ca, cb) in left.conditions.iter().zip(right.conditions.iter()) {
-        if !value_equivalent(a, b, *ca, *cb) {
+        if ca.disabled != cb.disabled || !value_equivalent(a, b, ca.value, cb.value) {
             return false;
         }
     }
@@ -540,6 +540,9 @@ fn action_equivalent(
                 && value_equivalent(a, b, *ea, *eb)
                 && value_equivalent(a, b, *sta, *stb)
                 && actions_equivalent(a, b, ba, bb)
+        }
+        (wir::Action::Disabled { action: x, .. }, wir::Action::Disabled { action: y, .. }) => {
+            action_equivalent(a, b, *x, *y)
         }
         (
             wir::Action::Call {

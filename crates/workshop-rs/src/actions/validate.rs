@@ -104,6 +104,7 @@ pub(crate) fn validate_action(
                 validate_action(program, catalog, *action)?;
             }
         }
+        wir::Action::Disabled { action, .. } => validate_action(program, catalog, *action)?,
         wir::Action::CallSubroutine { .. } => {}
     }
     Ok(())

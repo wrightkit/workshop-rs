@@ -368,7 +368,7 @@ fn parsed_conditions_resolve_infix_operators() {
         .expect("rule");
     assert_eq!(rule.conditions.len(), 1, "one condition");
     // The condition is `==(hasSpawned(eventPlayer), true)`.
-    let condition = program.values.get(rule.conditions[0]).unwrap();
+    let condition = program.values.get(rule.conditions[0].value).unwrap();
     match &condition.value {
         wir::Value::Call { name, args } => {
             assert_eq!(name, "==");
@@ -993,7 +993,7 @@ fn raw_workshop_member_access_and_disabled_groups_parse() {
 }
 
 #[test]
-fn disabled_condition_is_ignored_as_inactive() {
+fn disabled_condition_is_preserved_as_disabled() {
     let text = r#"
         rule ("disabled condition") {
             event { Ongoing - Global; }
@@ -1007,7 +1007,38 @@ fn disabled_condition_is_ignored_as_inactive() {
         parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
             .expect("disabled conditions must parse");
     let rule = program.rules.iter().next().expect("rule");
-    assert!(rule.conditions.is_empty());
+    assert_eq!(rule.conditions.len(), 1);
+    assert!(rule.conditions[0].disabled);
+}
+
+#[test]
+fn disabled_action_is_preserved_as_disabled() {
+    let text = r#"
+        rule ("disabled action") {
+            event { Ongoing - Global; }
+            actions {
+                "pass"
+                disabled Abort;
+                disabled Wait(1, Ignore Condition);
+                Abort;
+            }
+        }
+    "#;
+    let program =
+        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
+            .expect("disabled actions must parse");
+    let rule = program.rules.iter().next().expect("rule");
+    let kinds: Vec<_> = rule
+        .actions
+        .iter()
+        .map(|id| match program.actions.get(*id).unwrap() {
+            wir::Action::Disabled { action, .. } => (true, program.actions.get(*action).unwrap()),
+            other => (false, other),
+        })
+        .collect();
+    assert_eq!(kinds.len(), 3);
+    assert!(kinds[0].0 && kinds[1].0 && !kinds[2].0);
+    assert!(matches!(kinds[0].1, wir::Action::Call { name, .. } if name == "abort"));
 }
 
 #[test]

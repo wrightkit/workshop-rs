@@ -507,7 +507,12 @@ impl Program {
             let conditions = rule
                 .conditions
                 .iter()
-                .map(|condition| public_value(&storage, *condition))
+                .map(|condition| {
+                    Ok(Condition {
+                        value: public_value(&storage, condition.value)?,
+                        disabled: condition.disabled,
+                    })
+                })
                 .collect::<Result<Vec<_>>>()?;
             let mut actions = Vec::new();
             let mut action_provenance = Vec::new();
@@ -526,7 +531,10 @@ impl Program {
                         .conditions
                         .iter()
                         .map(|condition| {
-                            storage.values.get(*condition).and_then(|value| value.span)
+                            storage
+                                .values
+                                .get(condition.value)
+                                .and_then(|value| value.span)
                         })
                         .collect(),
                     actions: action_provenance,
@@ -535,7 +543,7 @@ impl Program {
                 name: rule.name.clone(),
                 disabled: rule.disabled,
                 event,
-                conditions: conditions.into_iter().map(Condition::new).collect(),
+                conditions,
                 actions,
             });
         }
@@ -605,13 +613,6 @@ impl Program {
                 .iter()
                 .enumerate()
                 .map(|(condition_index, condition)| {
-                    if condition.disabled {
-                        return Err(WorkshopError::Unsupported {
-                            message: "disabled conditions are not representable by the canonical storage model"
-                                .to_string(),
-                            span: self.condition_span(rule_index, condition_index),
-                        });
-                    }
                     wir_value(
                         &condition.value,
                         &mut storage,
@@ -623,6 +624,10 @@ impl Program {
                         if let Some(span) = self.condition_span(rule_index, condition_index) {
                             storage.values.get_mut(value).unwrap().span = Some(span);
                         }
+                    })
+                    .map(|value| wir::Condition {
+                        value,
+                        disabled: condition.disabled,
                     })
                 })
                 .collect::<Result<Vec<_>>>()?;
@@ -963,6 +968,12 @@ fn public_actions(
             }
             output.push(Action::End);
         }
+        wir::Action::Disabled { action, .. } => {
+            let first = output.len();
+            public_actions(storage, *action, output)?;
+            let inner = output.remove(first);
+            output.insert(first, Action::disabled(inner));
+        }
         wir::Action::Call { name, args, .. } => output.push(Action::Call {
             name: name.clone(),
             args: args
@@ -1072,6 +1083,9 @@ fn public_action_provenance(
             }
             push_without_span(output, &[]);
         }
+        wir::Action::Disabled { action, .. } => {
+            public_action_provenance(storage, *action, output)?;
+        }
         wir::Action::Call { args, .. } => push(output, args),
     }
     Ok(())
@@ -1087,7 +1101,22 @@ fn lower_actions(
     subroutines: &HashMap<String, wir::SubroutineId>,
 ) -> Result<()> {
     while *position < actions.len() {
-        match &actions[*position] {
+        let (disabled, current) = match &actions[*position] {
+            Action::Disabled { action } => (true, action.as_ref()),
+            action => (false, action),
+        };
+        if disabled
+            && matches!(
+                current,
+                Action::ElseIf { .. } | Action::Else | Action::End | Action::Disabled { .. }
+            )
+        {
+            return Err(WorkshopError::Unsupported {
+                message: "the disabled modifier applies to a single executable action".to_string(),
+                span: None,
+            });
+        }
+        match current {
             Action::ElseIf { .. } | Action::Else | Action::End => return Ok(()),
             Action::If { condition } => {
                 *position += 1;
@@ -1246,6 +1275,14 @@ fn lower_actions(
                 output.push(lowered);
             }
         }
+        if disabled {
+            let action = output.pop().expect("a lowered action was just pushed");
+            output.push(
+                storage
+                    .actions
+                    .push(wir::Action::Disabled { action, span: None }),
+            );
+        }
     }
     Ok(())
 }
@@ -1339,6 +1376,14 @@ fn apply_action_provenance(
                     set_value_span(storage, value, span);
                 }
             }
+            wir::Action::Disabled { action, .. } => {
+                let start = *position;
+                apply_action_provenance(storage, &[action], provenance, position)?;
+                let source = provenance.get(start).cloned().unwrap_or_default();
+                if let Some(wir::Action::Disabled { span, .. }) = storage.actions.get_mut(*id) {
+                    *span = source.span;
+                }
+            }
             _ => {
                 let source = provenance.get(*position).cloned().unwrap_or_default();
                 *position += 1;
@@ -1363,6 +1408,7 @@ fn apply_action_source(storage: &mut wir::Program, id: wir::ActionId, source: &A
             | wir::Action::While { span, .. }
             | wir::Action::ForGlobalVariable { span, .. }
             | wir::Action::ForPlayerVariable { span, .. }
+            | wir::Action::Disabled { span, .. }
             | wir::Action::Call { span, .. } => *span = source.span,
         }
     }
@@ -1398,7 +1444,7 @@ fn action_value_ids(action: &wir::Action) -> Vec<wir::ValueId> {
             ..
         } => vec![*player, *start, *stop, *step],
         wir::Action::Call { args, .. } => args.clone(),
-        wir::Action::CallSubroutine { .. } => Vec::new(),
+        wir::Action::CallSubroutine { .. } | wir::Action::Disabled { .. } => Vec::new(),
     }
 }
 
@@ -1494,11 +1540,7 @@ fn wir_action(
             callee_span: None,
         },
         Action::Disabled { .. } => {
-            return Err(WorkshopError::Unsupported {
-                message: "disabled actions are not representable by the canonical storage model"
-                    .to_string(),
-                span: None,
-            });
+            unreachable!("disabled actions are lowered by lower_actions")
         }
         Action::Call { name, args } => wir::Action::Call {
             name: name.clone(),
@@ -1803,7 +1845,8 @@ fn action_argument_count(action: &Action) -> usize {
         Action::ForGlobalVariable { .. } => 3,
         Action::ForPlayerVariable { .. } => 4,
         Action::Call { args, .. } => args.len(),
-        Action::CallSubroutine { .. } | Action::Else | Action::End | Action::Disabled { .. } => 0,
+        Action::CallSubroutine { .. } | Action::Else | Action::End => 0,
+        Action::Disabled { action } => action_argument_count(action),
     }
 }
 

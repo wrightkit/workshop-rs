@@ -212,7 +212,20 @@ impl Counter<'_> {
         let node_id = self.next_node_id();
         let mut children = Vec::with_capacity(rule.conditions.len() + rule.actions.len());
         for condition in &rule.conditions {
-            children.push(self.condition(*condition)?.node);
+            if condition.disabled {
+                return Err(ElementCountError::Unsupported {
+                    kind: ElementNodeKind::Condition,
+                    name: "disabled condition".to_string(),
+                    span: self
+                        .program
+                        .values
+                        .get(condition.value)
+                        .and_then(|v| v.span),
+                    reason: "the element cost of a disabled condition is not established"
+                        .to_string(),
+                });
+            }
+            children.push(self.condition(condition.value)?.node);
         }
         for action in &rule.actions {
             children.push(self.action(*action)?.node);
@@ -370,6 +383,14 @@ impl Counter<'_> {
                 for nested in body {
                     children.push(self.action(*nested)?.node);
                 }
+            }
+            Action::Disabled { .. } => {
+                return Err(ElementCountError::Unsupported {
+                    kind: ElementNodeKind::Action,
+                    name: "disabled action".to_string(),
+                    span,
+                    reason: "the element cost of a disabled action is not established".to_string(),
+                });
             }
             Action::Call {
                 name: action_name,
