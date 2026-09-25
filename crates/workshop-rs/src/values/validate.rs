@@ -378,6 +378,13 @@ fn value_matches_type(
     let Some(node) = program.values.get(value_id) else {
         return false;
     };
+    // ADR-0014: every value is accepted in a Boolean parameter; the client
+    // decides at runtime, and structural checks stay with the caller. Only a
+    // union led by `Boolean` (`Boolean|Number`) is a Boolean parameter;
+    // `Number|Boolean` is a Number position with a Boolean alias.
+    if expected.split('|').next() == Some("Boolean") {
+        return true;
+    }
     if let wir::Value::Call { name, .. } = &node.value {
         if name == wir::AMBIGUOUS_ENUM_CALL {
             return expected.split('|').any(|alternative| {
