@@ -364,6 +364,20 @@ fn audited_catalog_parameters_cover_boolean_numeric_aliases() {
                 .value,
             Value::Number { value, .. } if *value == expected
         ));
+
+        let source = format!(
+            "rule (\"dummy bot slot\")\n{{\n    event {{ Ongoing - Global; }}\n    actions {{ Create Dummy Bot(Hero(D.Va), All Teams, {boolean}, Up, Up); }}\n}}"
+        );
+        let reparsed = roundtrip::round_trip_with_context(
+            &source,
+            &catalog(),
+            &Locale::new("en-US"),
+            &catalog(),
+        );
+        assert!(
+            reparsed.equivalent,
+            "Create Dummy Bot slot {boolean} must round-trip"
+        );
     }
 
     let parsed = program("Set Global Variable(probe, Is Objective Complete(True));");
