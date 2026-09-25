@@ -151,6 +151,36 @@ fn boolean_parameters_accept_any_value_but_keep_structural_checks() {
 }
 
 #[test]
+fn first_of_wrapper_accepts_any_value_and_round_trips() {
+    let values = [
+        "Vector(1, 2, 3)",
+        "Hero(Ana)",
+        "Team Of(Event Player)",
+        "Map(Hanamura)",
+        "Color(Red)",
+        "Button(Jump)",
+        "Game Mode(Skirmish)",
+    ];
+    for value in values {
+        let source = format!(
+            "variables\n{{\n    global:\n        0: probe\n}}\nrule (\"wrapper\")\n{{\n    event {{ Ongoing - Global; }}\n    actions {{ Wait Until(First Of({value}), 2); }}\n}}"
+        );
+        let reparsed = roundtrip::round_trip_with_context(
+            &source,
+            &catalog(),
+            &Locale::new("en-US"),
+            &catalog(),
+        );
+        assert!(reparsed.equivalent, "First Of({value}) must round-trip");
+        validate_program(&program(&format!("Wait Until(First Of({value}), 2);")));
+    }
+
+    let arity = program("Wait Until(First Of(Vector(1, 2, 3), 1), 2);");
+    validate::validate_canonical_ids_wir(&arity, &catalog())
+        .expect_err("First Of arity is still checked");
+}
+
+#[test]
 fn null_and_empty_string_contexts_normalize_at_their_positions() {
     let teleport = program("Teleport(Event Player, 0);");
     validate_program(&teleport);
