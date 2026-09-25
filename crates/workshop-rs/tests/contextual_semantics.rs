@@ -351,6 +351,21 @@ fn audited_catalog_parameters_cover_boolean_numeric_aliases() {
         ));
     }
 
+    for (boolean, expected) in [("False", 0.0), ("True", 1.0)] {
+        let parsed = program(&format!(
+            "Create Dummy Bot(Hero(D.Va), All Teams, {boolean}, Up, Up);"
+        ));
+        validate_program(&parsed);
+        assert!(matches!(
+            &parsed
+                .values
+                .get(first_action_args(&parsed)[2])
+                .expect("dummy bot slot")
+                .value,
+            Value::Number { value, .. } if *value == expected
+        ));
+    }
+
     let parsed = program("Set Global Variable(probe, Is Objective Complete(True));");
     validate_program(&parsed);
     let args = first_value_call(&parsed, "isObjectiveComplete");
