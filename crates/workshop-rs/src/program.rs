@@ -1774,6 +1774,7 @@ impl Subroutine {
 
 /// A Workshop rule with explicit conditions and a linear action stream.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct Rule {
     pub name: String,
     pub disabled: bool,
@@ -1806,6 +1807,7 @@ impl Rule {
 
 /// A rule condition. Conditions remain distinct from general value expressions.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct Condition {
     pub value: Value,
     pub disabled: bool,
