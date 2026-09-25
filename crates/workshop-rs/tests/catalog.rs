@@ -111,24 +111,32 @@ fn localized_string_presets_resolve_and_translate_by_identity() {
 }
 
 #[test]
-fn reviewed_locale_alias_conflicts_resolve_to_one_canonical_identity() {
+fn zh_cn_break_and_abort_spellings_stay_distinct() {
     let catalog = builtin();
-    for spelling in ["中止", "中断"] {
+    let zh = Locale::new("zh-CN");
+    for (spelling, id) in [("中断", "break"), ("跳出循环", "break"), ("中止", "abort")] {
         let entry = catalog
-            .resolve(Kind::Action, &Locale::new("zh-CN"), spelling)
-            .expect("reviewed alias resolves");
-        assert_eq!(entry.id, "abort");
+            .resolve(Kind::Action, &zh, spelling)
+            .expect("reviewed spelling resolves");
+        assert_eq!(entry.id, id, "{spelling}");
+    }
+    assert_eq!(catalog.spelling(Kind::Action, &zh, "break"), Some("中断"));
+    assert_eq!(catalog.spelling(Kind::Action, &zh, "abort"), Some("中止"));
+}
+
+#[test]
+fn zh_cn_is_firing_secondary_uses_the_pinned_overpy_spelling() {
+    let catalog = builtin();
+    let zh = Locale::new("zh-CN");
+    for spelling in ["正在使用辅助武器", "正在发射辅助攻击"] {
+        let entry = catalog
+            .resolve(Kind::Value, &zh, spelling)
+            .expect("reviewed spelling resolves");
+        assert_eq!(entry.id, "isFiringSecondary", "{spelling}");
     }
     assert_eq!(
-        catalog.spelling(Kind::Action, &Locale::new("zh-CN"), "abort"),
-        Some("中止")
-    );
-    assert_eq!(
-        catalog
-            .entry(Kind::Action, "abort")
-            .expect("abort entry")
-            .spellings(&Locale::new("zh-CN")),
-        &["中止".to_string(), "中断".to_string()]
+        catalog.spelling(Kind::Value, &zh, "isFiringSecondary"),
+        Some("正在使用辅助武器")
     );
 }
 

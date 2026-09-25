@@ -3945,7 +3945,10 @@
         "ru-RU": "Break",
         "th-TH": "Break",
         "tr-TR": "Kesme",
-        "zh-CN": "跳出循环",
+        "zh-CN": [
+          "中断",
+          "跳出循环"
+        ],
         "zh-TW": "Break"
       },
       "id": "break",
@@ -6424,10 +6427,7 @@
         "ru-RU": "Abort",
         "th-TH": "ยกเลิก",
         "tr-TR": "Yarıda Kes",
-        "zh-CN": [
-          "中止",
-          "中断"
-        ],
+        "zh-CN": "中止",
         "zh-TW": "Abort"
       },
       "id": "abort",
@@ -7995,7 +7995,7 @@
       ]
     }
   ],
-  "digest": "2d98f50b523e38bfbff59a952c0e4c3c80e8c7f972bb9b30a81fdabc0c46de19",
+  "digest": "3283113d49f3ff8f294b092c0a15e2bcef9e14805ed28fac71baf803e804014f",
   "enums": [
     {
       "domain": "Impulse",
@@ -22272,8 +22272,7 @@
     },
     {
       "aliases": {
-        "en-US": "Is Firing Secondary Fire",
-        "zh-CN": "正在使用辅助武器"
+        "en-US": "Is Firing Secondary Fire"
       },
       "id": "isFiringSecondaryFire",
       "paramNames": [
@@ -23080,7 +23079,10 @@
         "ru-RU": "Is Firing Secondary",
         "th-TH": "Is Firing Secondary",
         "tr-TR": "İkincil Saldırıyı Kullanıyor",
-        "zh-CN": "正在发射辅助攻击",
+        "zh-CN": [
+          "正在使用辅助武器",
+          "正在发射辅助攻击"
+        ],
         "zh-TW": "Is Firing Secondary"
       },
       "id": "isFiringSecondary",
