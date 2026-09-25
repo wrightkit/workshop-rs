@@ -68,6 +68,16 @@ A data field may describe a fact consumed by typed behavior; it should not becom
 
 Existing metadata-driven behavior is implementation reality to audit against this boundary, not proof that further semantics belong in metadata.
 
+## Validation acceptance
+
+Canonical validation always rejects structural failures: unknown identities,
+arity, enum domain, and reference category. A mismatch against a declared
+parameter type is a presumption that holds until acceptance evidence exists;
+a rejection stricter than the declared type needs rejection evidence. Accepting
+a program does not claim that the live client imports or runs it. There is one
+validation contract for every consumer. The evidence classes and their scope
+are defined in [`ADR-0014`](../adr/0014-validation-evidence-for-slot-acceptance.md).
+
 ## Localization and source-language separation
 
 Canonical identities are locale-independent and independent from OPY/DEL naming. Semantic code contains no per-locale spelling branches; localization tables map canonical identities to presentation spellings.

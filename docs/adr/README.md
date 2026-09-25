@@ -32,6 +32,7 @@ ADR.
 - [ADR-0011: Contextual Workshop semantics at the catalog/code boundary](0011-contextual-semantic-placement.md)
 - [ADR-0012: Tests-first Workshop verification](0012-tests-first-verification.md)
 - [ADR-0013: Source mapping across the provider boundary](0013-source-mapping-across-provider-boundary.md)
+- [ADR-0014: Evidence for canonical validation of slot acceptance](0014-validation-evidence-for-slot-acceptance.md)
 
 ADR-0007 was originally committed with a duplicate `ADR-0002` identifier. The
 number was corrected to ADR-0007; the recorded gameplay decision is unchanged.
