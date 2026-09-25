@@ -512,16 +512,16 @@ fn remaining_value_contracts_are_canonical_and_type_checked() {
 #[test]
 fn canonical_validation_enforces_literal_types_and_value_return_types() {
     let catalog = catalog();
-    let wrong_literal = r#"rule ("type") { event { Ongoing - Global; } actions { Set Crouch Enabled(All Players(All Teams), Color(White)); } }"#;
+    let wrong_literal = r#"rule ("type") { event { Ongoing - Global; } actions { Teleport(Event Player, Color(White)); } }"#;
     let program =
         parser::parse_wir_with_context(wrong_literal, &catalog, &Locale::new("en-US"), &catalog)
             .expect("parser preserves a typed call for canonical validation");
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
-        .expect_err("a Color is not a Boolean action parameter");
+        .expect_err("a Color is not a Vector action parameter");
     assert!(
         error
             .to_string()
-            .contains("must have semantic type 'Boolean'")
+            .contains("must have semantic type 'Vector'")
     );
 
     let wrong_return = r#"rule ("return") { event { Ongoing - Global; } actions { Teleport(Event Player, Max Health(Event Player)); } }"#;
@@ -565,7 +565,7 @@ fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
     let multi_arg_source = r#"rule ("multi-arg-error") {
         event { Ongoing - Global; }
         actions {
-            Set Crouch Enabled(Color(White), Color(White));
+            Teleport(Color(White), Color(White));
         }
     }"#;
     let program =
@@ -574,9 +574,7 @@ fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("multi-arg error must fail with first argument error");
     assert!(
-        error
-            .to_string()
-            .contains("action 'setCrouchEnabled' argument 1"),
+        error.to_string().contains("action 'teleport' argument 1"),
         "expected error for argument 1 (first argument), got: {error}"
     );
 
@@ -584,7 +582,7 @@ fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
     let multi_action_source = r#"rule ("multi-action-error") {
         event { Ongoing - Global; }
         actions {
-            Set Crouch Enabled(All Players(All Teams), Color(White));
+            Teleport(Event Player, Color(White));
             Teleport(Event Player, Max Health(Event Player));
         }
     }"#;
@@ -598,10 +596,8 @@ fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("multi-action error must fail validation with first action error");
     assert!(
-        error
-            .to_string()
-            .contains("action 'setCrouchEnabled' argument 2"),
-        "expected first error for setCrouchEnabled, got: {error}"
+        error.to_string().contains("action 'teleport' argument 2"),
+        "expected first error for teleport, got: {error}"
     );
 }
 

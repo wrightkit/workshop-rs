@@ -126,9 +126,28 @@ fn wait_until_keeps_numeric_exception_without_global_truthiness() {
     ));
 
     let vector = program("Wait Until(Vector(1, 2, 3), 2);");
-    let error = validate::validate_canonical_ids_wir(&vector, &catalog())
-        .expect_err("Wait Until must not accept arbitrary values as conditions");
-    assert!(format!("{error:?}").contains("semantic type"));
+    validate_program(&vector);
+}
+
+#[test]
+fn boolean_parameters_accept_any_value_but_keep_structural_checks() {
+    for condition in [
+        "Position Of(Event Player)",
+        "Vector(1, 2, 3)",
+        "Custom String(\"x\")",
+        "Global Variable(probe)",
+        "Event Player",
+    ] {
+        validate_program(&program(&format!("Wait Until({condition}, 2);")));
+    }
+
+    let arity = program("Wait Until(Position Of(Event Player), 2, 3);");
+    validate::validate_canonical_ids_wir(&arity, &catalog())
+        .expect_err("arity is still checked with a non-Boolean value");
+
+    let inner = program("Wait Until(Position Of(Event Player, 1), 2);");
+    validate::validate_canonical_ids_wir(&inner, &catalog())
+        .expect_err("the accepted value itself is still validated structurally");
 }
 
 #[test]

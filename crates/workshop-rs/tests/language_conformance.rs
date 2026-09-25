@@ -776,7 +776,7 @@ fn sample_argument(catalog: &Catalog, parameter_type: &str) -> String {
 }
 
 fn is_concrete_type(value_type: &str) -> bool {
-    !value_type.contains('|') && !matches!(value_type, "Any" | "Object" | "Array")
+    !value_type.contains('|') && !matches!(value_type, "Any" | "Object" | "Array" | "Boolean")
 }
 
 fn incompatible_argument(value_type: &str) -> String {

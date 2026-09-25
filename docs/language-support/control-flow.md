@@ -59,6 +59,10 @@ The reviewed contract includes these examples:
   condition as a documented exception, but does not normalize it to Boolean;
   non-zero numbers are not treated as true by that action. Callers should use
   an explicit comparison when Boolean behavior is intended.
+- A parameter whose primary declared type is `Boolean` (`Boolean` or
+  `Boolean|Number`, not `Number|Boolean`) accepts any value in
+  canonical validation. This is a typed rule, not per-parameter catalog data;
+  identity, arity, enum-domain, and reference-category checks still apply.
 
 These distinctions are cross-checked against
 [OverPy's replacement metadata](https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/types.d.ts),
