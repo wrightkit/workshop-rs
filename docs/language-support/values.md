@@ -80,7 +80,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Farthest Player From` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector, Team: Team). |
 | `False` | ✅ Supported | Returns: `BoolLiteral`. |
 | `Filtered Array` | ✅ Supported | Returns: `Array`; Parameters: (Array: Array, Condition: Boolean). |
-| `First Of` | ✅ Supported | Returns: `Object|Array`; Parameters: (Array: Array|EntityId). |
+| `First Of` | ✅ Supported | Returns: `Object|Array`; Parameters: (Array: Any). |
 | `Flag Position` | ✅ Supported | Returns: `Vector`; Parameters: (Team: Team). |
 | `Forward` | ✅ Supported | Returns: `Array`. |
 | `Game Mode` | ✅ Supported | Returns: `Gamemode`; Parameters: (Gamemode: Gamemode). |

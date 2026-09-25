@@ -7995,7 +7995,7 @@
       ]
     }
   ],
-  "digest": "b436f6107f2c77cc39abc9dba74780a9a85facebd7aaaec4f87437a89b9d4655",
+  "digest": "2d98f50b523e38bfbff59a952c0e4c3c80e8c7f972bb9b30a81fdabc0c46de19",
   "enums": [
     {
       "domain": "Impulse",
@@ -23793,7 +23793,7 @@
         "array"
       ],
       "paramTypes": [
-        "Array|EntityId"
+        "Any"
       ],
       "params": [
         "Array"
