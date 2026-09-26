@@ -268,18 +268,13 @@ fn french_emitted_curly_apostrophe_aliases_parse_and_round_trip() {
     assert!(workshop_rs::roundtrip::equivalent_wir(&english, &reparsed));
 }
 
-const FALLBACK_RULE: &str = "variables {
-    global:
-        0: probe
-}
-
-rule (\"setup\") {
+const FALLBACK_RULE: &str = "rule (\"setup\") {
     event {
         Ongoing - Global;
     }
     actions {
         Disable Inspector Recording;
-        Set Global Variable(probe, Is Firing Secondary Fire(Event Player));
+        Stop Forcing Player To Be Hero(Event Player);
     }
 }
 ";
@@ -311,14 +306,14 @@ fn opt_in_fallback_emits_with_recorded_fallback_ids() {
     assert!(
         output
             .fallback_ids
-            .contains(&"isFiringSecondaryFire".to_string()),
+            .contains(&"stopForcingCurrentHero".to_string()),
         "the unsupported target locale records the fallback identity: {:?}",
         output.fallback_ids
     );
     assert!(
         output
             .text
-            .contains("Is Firing Secondary Fire(Joueur exécutant)"),
+            .contains("Stop Forcing Player To Be Hero(Joueur exécutant)"),
         "{}",
         output.text
     );
@@ -353,7 +348,7 @@ fn opt_in_fallback_conversion_round_trips_through_zh_cn() {
     );
     assert!(
         out.fallback_ids
-            .contains(&"isFiringSecondaryFire".to_string())
+            .contains(&"stopForcingCurrentHero".to_string())
     );
 }
 

@@ -1,8 +1,8 @@
 {
   "coverage": {
     "actions": {
-      "matched": 219,
-      "total": 219
+      "matched": 215,
+      "total": 215
     },
     "enums": {
       "matched": 727,
@@ -25,12 +25,12 @@
       "total": 23
     },
     "total": {
-      "matched": 1258,
-      "total": 1262
+      "matched": 1254,
+      "total": 1257
     },
     "values": {
       "matched": 259,
-      "total": 260
+      "total": 259
     }
   },
   "excluded": [
@@ -51,12 +51,6 @@
       "id": "min",
       "kind": "operator",
       "reason": "ambiguous: export candidates disagree on zh-CN (constants.__Operation__.__min__, values.min)"
-    },
-    {
-      "en-US": "Is Firing Secondary Fire",
-      "id": "isFiringSecondaryFire",
-      "kind": "value",
-      "reason": "no exact en-US match in the export"
     }
   ],
   "generator": "workshop-catalog-gen corpus",
@@ -2590,60 +2584,6 @@
         "actions..forceButtonPress"
       ],
       "zh-CN": "按下按键"
-    },
-    {
-      "en-US": "Force Player Hero",
-      "id": "forcePlayerHero",
-      "kind": "action",
-      "localeExclusions": {},
-      "locales": {
-        "de-DE": "Start Forcing Player To Be Hero",
-        "en-US": "Start Forcing Player To Be Hero",
-        "es-ES": "Start Forcing Player To Be Hero",
-        "es-MX": "Comenzar a forzar a un jugador a usar un héroe",
-        "fr-FR": "Forcer un héros",
-        "it-IT": "Start Forcing Player To Be Hero",
-        "ja-JP": "プレイヤーへのヒーロー強制を開始",
-        "ko-KR": "Start Forcing Player To Be Hero",
-        "pl-PL": "Start Forcing Player To Be Hero",
-        "pt-BR": "Começar a Forçar Jogador a Ser o Herói",
-        "ru-RU": "Start Forcing Player To Be Hero",
-        "th-TH": "เริ่มบังคับให้ผู้เล่นเป็นฮีโร่",
-        "tr-TR": "Oyuncu'yu Kahraman Olmaya Zorlamayı Başlat",
-        "zh-CN": "开始强制玩家选择英雄",
-        "zh-TW": "Start Forcing Player To Be Hero"
-      },
-      "sources": [
-        "actions..startForcingHero"
-      ],
-      "zh-CN": "开始强制玩家选择英雄"
-    },
-    {
-      "en-US": "Force Throttle",
-      "id": "forceThrottle",
-      "kind": "action",
-      "localeExclusions": {},
-      "locales": {
-        "de-DE": "Start Forcing Throttle",
-        "en-US": "Start Forcing Throttle",
-        "es-ES": "Start Forcing Throttle",
-        "es-MX": "Comenzar a forzar la aceleración",
-        "fr-FR": "Forcer l’accélération",
-        "it-IT": "Start Forcing Throttle",
-        "ja-JP": "強制スロットル開始",
-        "ko-KR": "Start Forcing Throttle",
-        "pl-PL": "Start Forcing Throttle",
-        "pt-BR": "Começar a Forçar Aceleração",
-        "ru-RU": "Start Forcing Throttle",
-        "th-TH": "เริ่มบังคับคันบังคับ",
-        "tr-TR": "Hızlandırmayı Zorlamayı Başlat",
-        "zh-CN": "开始限制阈值",
-        "zh-TW": "Start Forcing Throttle"
-      },
-      "sources": [
-        "actions..startForcingThrottle"
-      ],
-      "zh-CN": "开始限制阈值"
     },
     {
       "en-US": "Go To Assemble Heroes",
@@ -5373,33 +5313,6 @@
       "zh-CN": "停止追踪玩家变量"
     },
     {
-      "en-US": "Stop Chasing Variable",
-      "id": "stopChasingVariable",
-      "kind": "action",
-      "localeExclusions": {},
-      "locales": {
-        "de-DE": "Stop Chasing Global Variable",
-        "en-US": "Stop Chasing Global Variable",
-        "es-ES": "Stop Chasing Global Variable",
-        "es-MX": "Detener seguimiento de variable global",
-        "fr-FR": "Arrêter de modifier une variable globale",
-        "it-IT": "Stop Chasing Global Variable",
-        "ja-JP": "グローバル変数の追跡を中止",
-        "ko-KR": "Stop Chasing Global Variable",
-        "pl-PL": "Stop Chasing Global Variable",
-        "pt-BR": "Parar de Acompanhar Variável Global",
-        "ru-RU": "Stop Chasing Global Variable",
-        "th-TH": "หยุดติดตามตัวแปรสากล",
-        "tr-TR": "Küresel Değişken'i İzlemeyi Bırak",
-        "zh-CN": "停止追踪全局变量",
-        "zh-TW": "Stop Chasing Global Variable"
-      },
-      "sources": [
-        "actions.__stopChasingGlobalVariable__"
-      ],
-      "zh-CN": "停止追踪全局变量"
-    },
-    {
       "en-US": "Stop Damage Modification",
       "id": "stopDamageModification",
       "kind": "action",
@@ -5510,33 +5423,6 @@
     {
       "en-US": "Stop Forcing Player To Be Hero",
       "id": "stopForcingCurrentHero",
-      "kind": "action",
-      "localeExclusions": {},
-      "locales": {
-        "de-DE": "Stop Forcing Player To Be Hero",
-        "en-US": "Stop Forcing Player To Be Hero",
-        "es-ES": "Stop Forcing Player To Be Hero",
-        "es-MX": "Dejar de forzar a un jugador a usar un héroe",
-        "fr-FR": "Arrêter de forcer un héros",
-        "it-IT": "Stop Forcing Player To Be Hero",
-        "ja-JP": "プレイヤーへのヒーロー強制を停止",
-        "ko-KR": "Stop Forcing Player To Be Hero",
-        "pl-PL": "Stop Forcing Player To Be Hero",
-        "pt-BR": "Parar de Forçar Jogador a Ser o Herói",
-        "ru-RU": "Stop Forcing Player To Be Hero",
-        "th-TH": "หยุดบังคับให้ผู้เล่นเป็นฮีโร่",
-        "tr-TR": "Oyuncu'yu Kahraman Olmaya Zorlamayı Bırak",
-        "zh-CN": "停止强制玩家选择英雄",
-        "zh-TW": "Stop Forcing Player To Be Hero"
-      },
-      "sources": [
-        "actions..stopForcingCurrentHero"
-      ],
-      "zh-CN": "停止强制玩家选择英雄"
-    },
-    {
-      "en-US": "Stop Forcing Hero",
-      "id": "stopForcingHero",
       "kind": "action",
       "localeExclusions": {},
       "locales": {
@@ -33741,7 +33627,7 @@
       "zh-CN": "地图矢量"
     }
   ],
-  "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/event filters/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; every declared locale is retained only when the export provides an unambiguous spelling; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+  "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/event filters/maps/heroes), plus confirmed legacy identity/GUID mappings for Set Player Allowed Heroes, and bare comparison-symbol entries; every declared locale is retained only when the export provides an unambiguous spelling; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
   "schemaVersion": 2,
   "source": {
     "commit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",

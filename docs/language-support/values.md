@@ -123,7 +123,6 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Is Duplicating` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player). |
 | `Is Firing Primary` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player). |
 | `Is Firing Secondary` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player). |
-| `Is Firing Secondary Fire` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player). |
 | `Is Flag At Base` | ✅ Supported | Returns: `Boolean`; Parameters: (Team: Team). |
 | `Is Flag Being Carried` | ✅ Supported | Returns: `Boolean`; Parameters: (Team: Team). |
 | `Is Game In Progress` | ✅ Supported | Returns: `Boolean`. |

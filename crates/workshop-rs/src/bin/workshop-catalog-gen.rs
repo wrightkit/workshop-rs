@@ -122,6 +122,12 @@ fn main() -> ExitCode {
     match command.as_deref() {
         Some("check") => match Catalog::load(&content) {
             Ok(catalog) => {
+                if let Err(errors) = native_spellings(&content) {
+                    for error in errors {
+                        eprintln!("workshop-catalog-gen: {error}");
+                    }
+                    return ExitCode::from(1);
+                }
                 if let Err(errors) = schema::validate_catalog() {
                     for error in errors {
                         eprintln!("workshop-catalog-gen: settings catalog: {error}");
@@ -211,6 +217,51 @@ fn main() -> ExitCode {
             eprintln!("{}", usage());
             ExitCode::from(2)
         }
+    }
+}
+
+/// The Workshop.codes wiki article titles of every native action and value.
+const WIKI_INVENTORY: &str = include_str!("../catalog/data/wiki-inventory.json");
+
+/// Every action and value en-US spelling must be a native Workshop name from
+/// the wiki inventory (compared case-insensitively, since the wiki
+/// capitalizes some connecting words differently). A spelling outside it is a
+/// non-native identity or alias, which the catalog does not hold.
+fn native_spellings(catalog_json: &str) -> Result<(), Vec<String>> {
+    let inventory: serde_json::Value =
+        serde_json::from_str(WIKI_INVENTORY).map_err(|error| vec![error.to_string()])?;
+    let catalog: serde_json::Value =
+        serde_json::from_str(catalog_json).map_err(|error| vec![error.to_string()])?;
+    let mut errors = Vec::new();
+    for (section, kind) in [("actions", "action"), ("values", "value")] {
+        let native: std::collections::HashSet<String> = inventory[section]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(|name| name.as_str().map(str::to_lowercase))
+            .collect();
+        for entry in catalog[section].as_array().into_iter().flatten() {
+            let spellings = match &entry["aliases"]["en-US"] {
+                serde_json::Value::String(name) => vec![name.as_str()],
+                serde_json::Value::Array(names) => {
+                    names.iter().filter_map(serde_json::Value::as_str).collect()
+                }
+                _ => Vec::new(),
+            };
+            for name in spellings {
+                if !native.contains(&name.to_lowercase()) {
+                    errors.push(format!(
+                        "{kind} '{}': en-US spelling '{name}' is not a native Workshop name in the wiki inventory",
+                        entry["id"].as_str().unwrap_or("?")
+                    ));
+                }
+            }
+        }
+    }
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors)
     }
 }
 
@@ -391,34 +442,6 @@ mod corpus {
                 ".setAllowedHeroes",
                 "00000000BA5B",
                 "Set Player Allowed Heroes",
-            ),
-            ("action", "stopChasingVariable") => (
-                "actions.__stopChasingGlobalVariable__",
-                "actions",
-                "__stopChasingGlobalVariable__",
-                "00000000B83E",
-                "Stop Chasing Global Variable",
-            ),
-            ("action", "forcePlayerHero") => (
-                "actions..startForcingHero",
-                "actions",
-                ".startForcingHero",
-                "00000000ABFB",
-                "Start Forcing Player To Be Hero",
-            ),
-            ("action", "stopForcingHero") => (
-                "actions..stopForcingCurrentHero",
-                "actions",
-                ".stopForcingCurrentHero",
-                "00000000AC1B",
-                "Stop Forcing Player To Be Hero",
-            ),
-            ("action", "forceThrottle") => (
-                "actions..startForcingThrottle",
-                "actions",
-                ".startForcingThrottle",
-                "00000000BB0F",
-                "Start Forcing Throttle",
             ),
             ("operator", "==") => (
                 "localizedStrings.{0} == {1}",
@@ -1416,7 +1439,7 @@ mod corpus {
                 "commitDate": meta.get("commitDate").and_then(Value::as_str).unwrap_or("<unknown>"),
                 "fetchedAt": meta.get("fetchedAt").and_then(Value::as_str).unwrap_or("<unknown>"),
             },
-            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/event filters/maps/heroes), plus confirmed legacy identity/GUID mappings for global stop-chasing, force hero/throttle, Set Player Allowed Heroes, and bare comparison-symbol entries; every declared locale is retained only when the export provides an unambiguous spelling; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
+            "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/event filters/maps/heroes), plus confirmed legacy identity/GUID mappings for Set Player Allowed Heroes, and bare comparison-symbol entries; every declared locale is retained only when the export provides an unambiguous spelling; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
             "sourceReview": "reviewed: workshop-rs commits its own mapping data; the user-provided JSON is build input only and is not redistributed",
             "coverage": Value::Object(coverage_all),
             "matches": matches_json,
@@ -1942,5 +1965,24 @@ mod corpus {
                 assert_eq!(actual, Some(expected), "mode surface for {mode}");
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::native_spellings;
+
+    #[test]
+    fn committed_catalog_uses_only_native_spellings() {
+        let catalog = include_str!("../catalog/data/catalog.json");
+        native_spellings(catalog).expect("catalog holds only native Workshop spellings");
+    }
+
+    #[test]
+    fn non_native_spelling_is_rejected() {
+        let catalog = r#"{"actions":[{"id":"forceThrottle","aliases":{"en-US":"Force Throttle"}}],
+            "values":[{"id":"isFiringSecondary","aliases":{"en-US":["Is Firing Secondary","Is Firing Secondary Fire"]}}]}"#;
+        let errors = native_spellings(catalog).expect_err("non-native spellings fail");
+        assert_eq!(errors.len(), 2, "{errors:?}");
     }
 }

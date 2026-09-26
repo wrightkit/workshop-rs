@@ -96,8 +96,6 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Enable Text Chat` | ✅ Supported | Parameters: (Object: Player|Array). |
 | `Enable Voice Chat` | ✅ Supported | Parameters: (Object: Player|Array). |
 | `For Player Variable` | ✅ Supported | Parameters: (Player: Player, PlayerVariable: Variable, Number: Number, Number: Number, Number: Number). |
-| `Force Player Hero` | ✅ Supported | Parameters: (Player: Player|Array, Hero: Hero). |
-| `Force Throttle` | ✅ Supported | Parameters: (Player: Player|Array, MoveSpeed: Number|Boolean, InAirSpeed: Number|Boolean, SpectatorSpeed: Number|Boolean, GrappleBoost: Number|Boolean, JumpPower: Number|Boolean, MoveSpeed: Number|Boolean). |
 | `Go To Assemble Heroes` | ✅ Supported | No parameters. |
 | `Heal` | ✅ Supported | Parameters: (Object: Player|Array, Player: Player, Number: Number). |
 | `Kill` | ✅ Supported | Parameters: (Object: Player|Array, Player: Player). |
@@ -130,7 +128,6 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Set Ability Cooldown` | ✅ Supported | Parameters: (Object: Player|Array, Button: Button, Number: Number). |
 | `Set Ability Resource` | ✅ Supported | Parameters: (Object: Player|Array, Button: Button, Number: Number). |
 | `Set Aim Speed` | ✅ Supported | Parameters: (player: Player|Array, turnSpeedPercent: Number). |
-| `Set Allowed Heroes` | ✅ Supported | Parameters: (Player: Player|Array, Heroes: Hero|Array). |
 | `Set Ammo` | ✅ Supported | Parameters: (Object: Player|Array, Number: Number, Number: Number). |
 | `Set Crouch Enabled` | ✅ Supported | Parameters: (Object: Player|Array, Boolean: Boolean). |
 | `Set Damage Dealt` | ✅ Supported | Parameters: (player: Player|Array, damageDealtPercent: Number). |
@@ -152,6 +149,7 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Set Melee Enabled` | ✅ Supported | Parameters: (Object: Player|Array, Boolean: Boolean). |
 | `Set Move Speed` | ✅ Supported | Parameters: (player: Player|Array, moveSpeedPercent: Number). |
 | `Set Objective Description` | ✅ Supported | Parameters: (Object: Player|Array, Object: Object, HudReeval: HudReeval). |
+| `Set Player Allowed Heroes` | ✅ Supported | Parameters: (Player: Player|Array, Heroes: Hero|Array). |
 | `Set Player Health` | ✅ Supported | Parameters: (player: Player|Array, amount: Number). |
 | `Set Player Score` | ✅ Supported | Parameters: (Object: Player|Array, Number: Number). |
 | `Set Player Variable At Index` | ✅ Supported | Parameters: (Variable: Player Variable, Index: Number|Boolean, Value: Object|Array). |
@@ -202,12 +200,10 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Stop Camera` | ✅ Supported | Parameters: (Player: Player|Array). |
 | `Stop Chasing Global Variable` | ✅ Supported | Parameters: (Variable: Variable). |
 | `Stop Chasing Player Variable` | ✅ Supported | Parameters: (Player: Player|Array, PlayerVariable: Variable). |
-| `Stop Chasing Variable` | ✅ Supported | Parameters: (Variable: Variable). |
 | `Stop Damage Modification` | ✅ Supported | Parameters: (DamageModificationId: DamageModificationId). |
 | `Stop Damage Over Time` | ✅ Supported | Parameters: (DotId: DotId). |
 | `Stop Facing` | ✅ Supported | Parameters: (Object: Player|Array). |
 | `Stop Forcing Dummy Bot Name` | ✅ Supported | Parameters: (Object: Player|Array). |
-| `Stop Forcing Hero` | ✅ Supported | Parameters: (Player: Player|Array). |
 | `Stop Forcing Player Outlines` | ✅ Supported | Parameters: (Object: Player|Array, Object: Player|Array). |
 | `Stop Forcing Player Position` | ✅ Supported | Parameters: (Object: Player|Array). |
 | `Stop Forcing Player To Be Hero` | ✅ Supported | Parameters: (Object: Player|Array). |

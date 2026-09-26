@@ -5560,10 +5560,7 @@
     {
       "aliases": {
         "de-DE": "Set Player Allowed Heroes",
-        "en-US": [
-          "Set Allowed Heroes",
-          "Set Player Allowed Heroes"
-        ],
+        "en-US": "Set Player Allowed Heroes",
         "es-ES": "Set Player Allowed Heroes",
         "es-MX": "Establecer héroes permitidos para los jugadores",
         "fr-FR": "Définir les héros autorisés pour un joueur",
@@ -5590,91 +5587,6 @@
       "params": [
         "Player",
         "Heroes"
-      ]
-    },
-    {
-      "aliases": {
-        "en-US": "Force Player Hero",
-        "zh-CN": "开始强制玩家选择英雄"
-      },
-      "id": "forcePlayerHero",
-      "paramDomains": [
-        null,
-        "Hero"
-      ],
-      "paramNames": [
-        "player",
-        "hero"
-      ],
-      "paramTypes": [
-        "Player|Array",
-        "Hero"
-      ],
-      "params": [
-        "Player",
-        "Hero"
-      ]
-    },
-    {
-      "aliases": {
-        "en-US": "Stop Forcing Hero",
-        "zh-CN": "停止强制玩家选择英雄"
-      },
-      "id": "stopForcingHero",
-      "paramDomains": [
-        null
-      ],
-      "paramNames": [
-        "player"
-      ],
-      "paramTypes": [
-        "Player|Array"
-      ],
-      "params": [
-        "Player"
-      ]
-    },
-    {
-      "aliases": {
-        "en-US": "Force Throttle",
-        "zh-CN": "开始限制阈值"
-      },
-      "id": "forceThrottle",
-      "paramDomains": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
-      ],
-      "paramNames": [
-        "player",
-        "minForward",
-        "maxForward",
-        "minBackward",
-        "maxBackward",
-        "minSideways",
-        "maxSideways"
-      ],
-      "paramTypes": [
-        "Player|Array",
-        "Number|Boolean",
-        "Number|Boolean",
-        "Number|Boolean",
-        "Number|Boolean",
-        "Number|Boolean",
-        "Number|Boolean"
-      ],
-      "params": [
-        "Player",
-        "MoveSpeed",
-        "InAirSpeed",
-        "SpectatorSpeed",
-        "GrappleBoost",
-        "JumpPower",
-        "MoveSpeed"
       ]
     },
     {
@@ -6392,25 +6304,6 @@
       "id": "destroyAllProgressBarInWorldText",
       "paramTypes": [],
       "params": []
-    },
-    {
-      "aliases": {
-        "en-US": "Stop Chasing Variable",
-        "zh-CN": "停止追踪全局变量"
-      },
-      "id": "stopChasingVariable",
-      "paramDomains": [
-        null
-      ],
-      "paramNames": [
-        "Variable"
-      ],
-      "paramTypes": [
-        "Variable"
-      ],
-      "params": [
-        "Variable"
-      ]
     },
     {
       "aliases": {
@@ -7995,7 +7888,7 @@
       ]
     }
   ],
-  "digest": "3283113d49f3ff8f294b092c0a15e2bcef9e14805ed28fac71baf803e804014f",
+  "digest": "e022d56f95c4870a4e1abfeb82b33674da3a8e983f9aed986b21285e181a404d",
   "enums": [
     {
       "domain": "Impulse",
@@ -22269,22 +22162,6 @@
         "Max"
       ],
       "returnType": "Number"
-    },
-    {
-      "aliases": {
-        "en-US": "Is Firing Secondary Fire"
-      },
-      "id": "isFiringSecondaryFire",
-      "paramNames": [
-        "player"
-      ],
-      "paramTypes": [
-        "Player"
-      ],
-      "params": [
-        "Player"
-      ],
-      "returnType": "Boolean"
     },
     {
       "aliases": {
