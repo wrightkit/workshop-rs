@@ -120,20 +120,26 @@ fn wrapper_counts(text: &str) -> Vec<usize> {
         .collect()
 }
 
+/// Tokens of everything after the leading settings block. Settings labels and
+/// number formatting are outside the wrapper rule, and a leading `.` (variable
+/// member access) is not a new token.
 fn tokens(text: &str) -> BTreeSet<String> {
+    let body = text.split_once("\n}\n").map_or(text, |(_, rest)| rest);
     regex::Regex::new(r"[\p{L}\p{N}_.]+")
         .unwrap()
-        .find_iter(text)
-        .map(|token| token.as_str().to_string())
+        .find_iter(body)
+        .map(|token| token.as_str().trim_start_matches('.').to_string())
         .collect()
 }
 
 #[test]
 fn overpy_generated_projects_keep_wrapper_counts_and_add_no_tokens() {
-    for case in common::cases()
+    let cases: Vec<_> = common::cases()
         .iter()
-        .filter(|case| matches!(case.id, "ai-pve-zh-CN" | "bastion-en-US"))
-    {
+        .filter(|case| matches!(case.id, "ai-pve" | "bastion"))
+        .collect();
+    assert_eq!(cases.len(), 2, "both OverPy-generated fixtures must run");
+    for case in cases {
         let (source, locale) = common::source(case);
         let emitted = round_trip(&source, locale.as_str());
         assert_eq!(

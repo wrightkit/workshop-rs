@@ -7888,7 +7888,7 @@
       ]
     }
   ],
-  "digest": "4a2702e63611573541c0880b942fed0cfec63190ef44f994739174e21d10e000",
+  "digest": "d9cca56119ddb28dbb9363ca1a2a22db2efb70c9bcd7ac738a7fd985099b7e9a",
   "enums": [
     {
       "domain": "Impulse",
@@ -14694,8 +14694,8 @@
         {
           "aliases": {
             "en-US": [
-              "Jinyu",
-              "Domina"
+              "Domina",
+              "Jinyu"
             ],
             "zh-CN": "金驭",
             "zh-TW": "多米娜"

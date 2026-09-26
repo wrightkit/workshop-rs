@@ -51,3 +51,7 @@ OverPy 9.7.10 spells differently (`消除所有图标`, `消除所有地图文�
 `消除所有效果`, `消除所有HUD文本`, `关闭游戏预设通告模式`,
 `关闭游戏预设完成条件`, `关闭游戏预设音乐模式`, `关闭游戏预设计分模式`,
 `开启游戏预设音乐模式`, `比赛时间继续`), the OverPy spelling is first.
+
+The same rule applies to the Jinyu hero: pinned OverPy 9.7.10 and the Bastion
+fixture spell it `Domina`, so `Domina` is emitted and `Jinyu` remains a parse
+alias.
