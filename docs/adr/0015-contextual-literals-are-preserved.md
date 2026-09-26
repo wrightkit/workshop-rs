@@ -59,6 +59,11 @@ in another locale lost it.
    [ADR-0005](0005-seasonal-client-validation.md) and does not change this
    decision.
 
+   Update: OverPy's per-action element counts agree with the client's total on
+   a production project to 0.01%, and the model now charges the difference
+   (see [element-count.md](../element-count.md)); a numeric literal costs one
+   element more than `False`, `True`, or `Null` in the same position.
+
 ## Alternatives considered
 
 - **Keep normalization and document that round trips are lossy.** Rejected:
