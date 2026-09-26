@@ -20,7 +20,7 @@ fn round_trip(text: &str, locale: &str) -> String {
 fn assert_lines_preserved(actions: &[&str], locale: &str, event: &str, section: &str) {
     let body: String = actions
         .iter()
-        .map(|line| format!("        {line}\n"))
+        .map(|line| ["        ", line, "\n"].concat())
         .collect();
     let text = format!(
         "{section} (\"t\") {{\n    {event} {{\n        {}\n    }}\n    actions {{\n{body}    }}\n}}\n",
@@ -170,7 +170,7 @@ fn zh_cn_action_spellings_follow_the_pinned_overpy_emission() {
     ];
     let body: String = spellings
         .iter()
-        .map(|line| format!("        {line}\n"))
+        .map(|line| ["        ", line, "\n"].concat())
         .collect();
     let text = format!(
         "规则 (\"t\") {{\n    事件 {{\n        持续 - 全局;\n    }}\n    动作 {{\n{body}    }}\n}}\n"
