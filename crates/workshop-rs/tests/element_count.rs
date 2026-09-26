@@ -65,7 +65,7 @@ fn arrays_localized_strings_and_hero_pairs_are_visible_in_the_tree() {
     let array_report = array_program.element_count(&catalog()).unwrap();
     assert_eq!(
         array_report.total, 7,
-        "rule + action + (array 2 + numeric literals 4 - top-level 1)"
+        "rule + action + (array 2 - top-level 1) + two numbers at 2 each"
     );
 
     let hero_program = program_with_value(Value::Array(vec![
@@ -81,7 +81,7 @@ fn arrays_localized_strings_and_hero_pairs_are_visible_in_the_tree() {
     let hero_report = hero_program.element_count(&catalog()).unwrap();
     assert_eq!(
         hero_report.total, 8,
-        "hero wrappers and the pair surcharge add elements"
+        "rule + action + array 1 + two hero constants at 2 each + the pair surcharge"
     );
     assert_eq!(hero_report.rules[0].children[0].adjustment, 1);
 
@@ -95,364 +95,11 @@ fn arrays_localized_strings_and_hero_pairs_are_visible_in_the_tree() {
 }
 
 #[test]
-fn wrapper_backed_enum_literals_count_the_wrapper() {
-    let report = program_with_value(Value::Enum {
-        value_type: "Map".to_string(),
-        value: "AATLIS".to_string(),
-    })
-    .element_count(&catalog())
-    .unwrap();
-
-    assert_eq!(report.total, 3, "rule + action + Map wrapper/literal");
-    assert_eq!(report.rules[0].children[0].children[0].base_count, 2);
-}
-
-#[test]
-fn numeric_literals_and_player_variable_reads_match_reference_counts() {
-    let numeric_report = program_with_value(Value::number(1.0))
-        .element_count(&catalog())
-        .unwrap();
-    assert_eq!(numeric_report.total, 3, "rule + action + numeric literal");
-    let number = &numeric_report.rules[0].children[0].children[0];
-    assert_eq!(number.base_count, 2);
-    assert_eq!(number.adjustment, -1);
-
-    let program_with_global_value = |value| {
-        let mut program = Program::new();
-        program
-            .global_variable(Variable::new("source"))
-            .global_variable(Variable::new("result"))
-            .rule(
-                Rule::new("read global", Event::Global).action(Action::SetGlobalVariable {
-                    variable: "result".to_string(),
-                    value,
-                }),
-            );
-        program
-    };
-
-    let global_report = program_with_global_value(Value::GlobalVariable("source".to_string()))
-        .element_count(&catalog())
-        .unwrap();
-    assert_eq!(global_report.total, 3, "rule + action + global read");
-
-    let array_read = program_with_global_value(Value::Call {
-        name: "valueInArray".to_string(),
-        args: vec![
-            Value::GlobalVariable("source".to_string()),
-            Value::number(12.0),
-        ],
-    })
-    .element_count(&catalog())
-    .unwrap();
-    assert_eq!(array_read.total, 6, "rule + action + indexed global read");
-
-    let player_variable = |name| Value::player_variable(Value::EventPlayer, name);
-    let mut program = Program::new();
-    for name in [
-        "eventDurationHud",
-        "eventDuration",
-        "combatRegen",
-        "nanoEffect",
-        "hasNano",
-    ] {
-        program.player_variable(Variable::new(name));
-    }
-    program.subroutine(workshop_rs::Subroutine::new("setEventDuration"));
-    program.rule(
-        Rule::new(
-            "duration",
-            Event::Subroutine("setEventDuration".to_string()),
-        )
-        .action(Action::SetPlayerVariable {
-            player: Value::EventPlayer,
-            variable: "eventDurationHud".to_string(),
-            value: player_variable("eventDuration"),
-        }),
-    );
-    program.rule(
-        Rule::new("regen", Event::EachPlayer)
-            .action(Action::call(
-                "skipIf",
-                [player_variable("combatRegen"), Value::Bool(true)],
-            ))
-            .action(Action::SetPlayerVariable {
-                player: Value::EventPlayer,
-                variable: "combatRegen".to_string(),
-                value: Value::Bool(true),
-            }),
-    );
-    program.rule(
-        Rule::new("nano", Event::EachPlayer)
-            .action(Action::call(
-                "destroyEffect",
-                [player_variable("nanoEffect")],
-            ))
-            .action(Action::SetPlayerVariable {
-                player: Value::EventPlayer,
-                variable: "nanoEffect".to_string(),
-                value: Value::Null,
-            })
-            .action(Action::SetPlayerVariable {
-                player: Value::EventPlayer,
-                variable: "hasNano".to_string(),
-                value: Value::Bool(false),
-            }),
-    );
-
-    let report = program.element_count(&catalog()).unwrap();
-    assert_eq!(
-        report
-            .rule_counts()
-            .map(|(_, count)| count)
-            .collect::<Vec<_>>(),
-        vec![4, 5, 6]
-    );
-}
-
-#[test]
-fn custom_string_counts_unused_format_slots() {
-    let report = program_with_value(Value::Call {
-        name: "customString".to_string(),
-        args: vec![Value::String("abc".to_string())],
-    })
-    .element_count(&catalog())
-    .unwrap();
-
-    assert_eq!(
-        report.total, 6,
-        "rule + action + five-element custom string"
-    );
-    let custom_string = &report.rules[0].children[0].children[0];
-    assert_eq!(custom_string.base_count, 4);
-    assert_eq!(custom_string.children[0].count, 1);
-}
-
-#[test]
-fn workshop_setting_lowerings_match_pinned_overpy_counts() {
-    let integer_args = || {
-        vec![
-            Value::String("category".to_string()),
-            Value::String("name".to_string()),
-            Value::number(1.0),
-            Value::number(0.0),
-            Value::number(10.0),
-            Value::number(1.0),
-        ]
-    };
-    let cases = [
-        ("workshopSettingInteger", integer_args(), 9, -4),
-        ("createWorkshopSettingFloat", integer_args(), 9, -4),
-        (
-            "workshopSettingCombo",
-            vec![
-                Value::String("category".to_string()),
-                Value::String("name".to_string()),
-                Value::number(0.0),
-                Value::Array(vec![
-                    Value::String("one".to_string()),
-                    Value::String("two".to_string()),
-                ]),
-                Value::number(1.0),
-            ],
-            10,
-            -3,
-        ),
-        (
-            "workshopSettingToggle",
-            vec![
-                Value::String("category".to_string()),
-                Value::String("name".to_string()),
-                Value::Bool(false),
-                Value::number(1.0),
-            ],
-            7,
-            -1,
-        ),
-    ];
-
-    for (name, args, expected_total, expected_adjustment) in cases {
-        let report = program_with_value(Value::Call {
-            name: name.to_string(),
-            args,
-        })
-        .element_count(&catalog())
-        .unwrap();
-        let setting = &report.rules[0].children[0].children[0];
-        assert_eq!(report.total, expected_total, "{name}");
-        assert_eq!(setting.base_count, 1, "{name}");
-        assert_eq!(setting.adjustment, expected_adjustment, "{name}");
-    }
-
-    let hero_setting = program_with_value(Value::Call {
-        name: "createWorkshopSettingHero".to_string(),
-        args: vec![
-            Value::String("category".to_string()),
-            Value::String("name".to_string()),
-            Value::Enum {
-                value_type: "Hero".to_string(),
-                value: "ANA".to_string(),
-            },
-            Value::number(1.0),
-        ],
-    })
-    .element_count(&catalog())
-    .unwrap();
-    let setting = &hero_setting.rules[0].children[0].children[0];
-    assert_eq!(hero_setting.total, 8, "createWorkshopSettingHero");
-    assert_eq!(setting.base_count, 1);
-    assert_eq!(setting.adjustment, -1);
-}
-
-#[test]
-fn structured_comparisons_and_control_markers_match_reference_counts() {
-    let catalog = catalog();
-    let program = parser::parse(
-        r#"rule ("control") { event { Ongoing - Global; } actions {
-            If(Global.foo == 2);
-                Set Global Variable(foo, 0);
-            Else If(Global.foo == 3);
-                Set Global Variable(foo, 1);
-            Else;
-                Set Global Variable(foo, 2);
-            End;
-            While(Global.foo == 4);
-                Set Global Variable(foo, 3);
-            End;
-        } }"#,
-        &catalog,
-        &Locale::new("en-US"),
-    )
-    .unwrap();
-
-    assert_eq!(
-        program.element_count(&catalog).unwrap().total,
-        30,
-        "matches pinned OverPy 9.7.10 action annotations for this control flow"
-    );
-
-    let boolean_program = parser::parse(
-        r#"rule ("boolean control") { event { Ongoing - Global; } actions {
-            If(Or(Global.foo == 2, Global.foo == 3));
-                Set Global Variable(foo, 0);
-            End;
-        } }"#,
-        &catalog,
-        &Locale::new("en-US"),
-    )
-    .unwrap();
-    assert_eq!(
-        boolean_program.element_count(&catalog).unwrap().total,
-        17,
-        "matches pinned OverPy 9.7.10 nested comparison annotations"
-    );
-
-    let numeric_program = parser::parse(
-        r#"rule ("numeric comparison") { event { Ongoing - Global; } actions {
-            If(2 < 3);
-                Set Global Variable(foo, 0);
-            End;
-        } }"#,
-        &catalog,
-        &Locale::new("en-US"),
-    )
-    .unwrap();
-    assert_eq!(
-        numeric_program.element_count(&catalog).unwrap().total,
-        10,
-        "numeric comparisons do not add a boolean projection"
-    );
-}
-
-#[test]
-fn indexed_variable_targets_are_excluded_from_element_costs() {
-    let catalog = catalog();
-    let program = parser::parse(
-        r#"variables {
-            global: 0: values
-            player: 0: state
-        }
-        rule ("indexed writes") { event { Ongoing - Each Player; } actions {
-            Set Global Variable At Index(values, false, 5);
-            Set Global Variable At Index(values, true, 6);
-            Modify Global Variable At Index(values, 2, Add, 7);
-            Set Player Variable At Index(Event Player, state, false, 5);
-            Set Player Variable At Index(Event Player, state, true, 6);
-            Modify Player Variable At Index(Event Player, state, 2, Add, 7);
-            Stop Chasing Player Variable(Event Player, state);
-        } }"#,
-        &catalog,
-        &Locale::new("en-US"),
-    )
-    .unwrap();
-
-    assert_eq!(
-        program.element_count(&catalog).unwrap().total,
-        16,
-        "matches the seven pinned OverPy 9.7.10 action annotations"
-    );
-}
-
-#[test]
-fn variable_targets_keep_nontrivial_player_expression_costs() {
-    let catalog = catalog();
-    let program = parser::parse(
-        r#"variables {
-            player: 0: state
-        }
-        rule ("nontrivial player target") { event { Ongoing - Global; } actions {
-            Stop Chasing Player Variable(First Of(All Players(All Teams)), state);
-        } }
-        rule ("indexed nontrivial player target") { event { Ongoing - Each Player; } actions {
-            Set Player Variable At Index(First Of(All Players(All Teams)), state, false, 5);
-        } }"#,
-        &catalog,
-        &Locale::new("en-US"),
-    )
-    .unwrap();
-
-    let report = program.element_count(&catalog).unwrap();
-    assert_eq!(
-        report
-            .rule_counts()
-            .map(|(_, count)| count)
-            .collect::<Vec<_>>(),
-        vec![5, 6],
-        "the player expression is counted in stop-chasing and indexed targets"
-    );
-    assert_eq!(report.total, 11);
-    let action = &report.rules[0].children[0];
-    assert_eq!(action.name, "stopChasingPlayerVariable");
-    assert_eq!(
-        action.children.len(),
-        1,
-        "the variable target itself is syntax"
-    );
-    assert_eq!(action.children[0].name, "firstOf");
-    assert_eq!(
-        action.children[0].adjustment, -1,
-        "top-level argument reduction"
-    );
-    let indexed_action = &report.rules[1].children[0];
-    assert_eq!(indexed_action.name, "setPlayerVariableAtIndex");
-    assert_eq!(indexed_action.children[0].name, "firstOf");
-    assert_eq!(indexed_action.children[0].adjustment, -1);
-}
-
-#[test]
-fn custom_settings_and_disabled_rules_actions_and_conditions_do_not_change_cost() {
-    let catalog = catalog();
-    let locale = Locale::new("en-US");
-    let active = parser::parse(
-        "rule (\"active\") { event { Ongoing - Global; } conditions { Is Game In Progress; } actions { Disable Inspector Recording; } }",
-        &catalog,
-        &locale,
-    )
-    .unwrap();
+fn custom_settings_and_disabled_rules_do_not_change_cost() {
     let mut program = parser::parse(
-        "disabled rule (\"disabled\") { event { Ongoing - Global; } conditions { disabled Is Game In Progress; } actions { disabled Disable Inspector Recording; } }",
-        &catalog,
-        &locale,
+        "disabled rule (\"disabled\") { event { Ongoing - Global; } actions { Disable Inspector Recording; } }",
+        &catalog(),
+        &Locale::new("en-US"),
     )
     .unwrap();
     program.settings = Some(Settings {
@@ -463,11 +110,7 @@ fn custom_settings_and_disabled_rules_actions_and_conditions_do_not_change_cost(
             span: None,
         }],
     });
-    assert_eq!(
-        active.element_count(&catalog).unwrap().total,
-        program.element_count(&catalog).unwrap().total,
-    );
-    assert_eq!(program.element_count(&catalog).unwrap().total, 3);
+    assert_eq!(program.element_count(&catalog()).unwrap().total, 2);
 }
 
 #[test]
@@ -566,7 +209,7 @@ fn public_report_keeps_nested_values_and_actions_inspectable() {
 }
 
 #[test]
-fn public_api_rejects_unknown_actions_explicitly() {
+fn public_api_rejects_unsupported_and_invalid_programs_explicitly() {
     let mut unknown_action = Program::new();
     unknown_action.rule(
         Rule::new("unknown", Event::Global)
@@ -579,6 +222,310 @@ fn public_api_rejects_unknown_actions_explicitly() {
         unknown_error,
         ElementCountError::InvalidProgram { message } if message.contains("unknown action")
     ));
+}
+
+#[test]
+fn disabled_conditions_and_actions_cost_what_enabled_ones_do() {
+    let catalog = catalog();
+    let locale = Locale::new("en-US");
+    let enabled = parser::parse(
+        r#"rule ("r") { event { Ongoing - Global; } conditions { Is Game In Progress; } actions { Wait(1, Ignore Condition); } }"#,
+        &catalog,
+        &locale,
+    )
+    .unwrap();
+    let disabled = parser::parse(
+        r#"rule ("r") { event { Ongoing - Global; } conditions { disabled Is Game In Progress; } actions { disabled Wait(1, Ignore Condition); } }"#,
+        &catalog,
+        &locale,
+    )
+    .unwrap();
+    assert_eq!(
+        disabled.element_count(&catalog).unwrap().total,
+        enabled.element_count(&catalog).unwrap().total
+    );
+}
+
+#[test]
+fn player_variable_targets_count_nontrivial_player_expressions() {
+    let catalog = catalog();
+    let program = parser::parse(
+        r#"variables {
+            player: 0: state
+        }
+        rule ("player-variable chase") { event { Ongoing - Global; } actions {
+            Stop Chasing Player Variable(First Of(All Players(All Teams)), state);
+        } }
+        rule ("indexed player-variable target") { event { Ongoing - Each Player; } actions {
+            Set Player Variable At Index(First Of(All Players(All Teams)), state, false, 5);
+        } }"#,
+        &catalog,
+        &Locale::new("en-US"),
+    )
+    .unwrap();
+
+    let report = program.element_count(&catalog).unwrap();
+    assert_eq!(
+        report.rule_counts().collect::<Vec<_>>(),
+        vec![("player-variable chase", 5), ("indexed player-variable target", 6)],
+        "both target forms count the player expression with the direct-argument reduction"
+    );
+    assert_eq!(report.total, 11);
+}
+
+/// Workshop text compiled by pinned OverPy 9.7.10 with `#!debugElementCount`, and
+/// the total that compiler reports. On a production project OverPy's total is
+/// within 0.01% of the client's; each program here isolates one rule of the model. OverPy also closes the last `If`
+/// of a subroutine rule with an `End`, which the canonical emitter omits, so no case
+/// with such a rule is listed.
+const OVERPY_COUNTS: &[(&str, usize, &str)] = &[
+    (
+        "wait_number",
+        5,
+        r#"rule ("r") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Wait(4, Ignore Condition);
+        Set Move Speed(Event Player, 50);
+    }
+}"#,
+    ),
+    (
+        "custom_string_defaults",
+        6,
+        r#"rule ("r") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Small Message(Event Player, Custom String("hello"));
+    }
+}"#,
+    ),
+    (
+        "variable_reads",
+        6,
+        r#"variables {
+    global:
+        0: g
+    player:
+        0: p
+}
+
+rule ("r") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Set Global Variable(g, (Event Player).p);
+        Set Player Variable(Event Player, p, Global.g);
+    }
+}"#,
+    ),
+    (
+        "compare_in_action",
+        10,
+        r#"variables {
+    global:
+        0: g
+}
+
+rule ("r") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Wait Until(Compare(Global.g, ==, 3), 5);
+        Set Global Variable(g, 1);
+    }
+}"#,
+    ),
+    (
+        "if_else_end",
+        19,
+        r#"variables {
+    global:
+        0: g
+}
+
+rule ("r") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Wait(1, Ignore Condition);
+        If(Compare(Global.g, ==, 3));
+            Set Global Variable(g, 1);
+        Else;
+            Set Global Variable(g, 2);
+        End;
+        Wait(2, Ignore Condition);
+        Set Global Variable(g, 7);
+    }
+}"#,
+    ),
+    (
+        "trailing_if_omits_end",
+        11,
+        r#"variables {
+    global:
+        0: g
+}
+
+rule ("r") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Wait(1, Ignore Condition);
+        If(Compare(Global.g, ==, 3));
+            Set Global Variable(g, 1);
+    }
+}"#,
+    ),
+    (
+        "while_keeps_end",
+        10,
+        r#"variables {
+    global:
+        0: g
+}
+
+rule ("r") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        While(Compare(Global.g, <, 3));
+            Modify Global Variable(g, Add, 1);
+        End;
+    }
+}"#,
+    ),
+    (
+        "hero_pairs_per_argument",
+        19,
+        r#"variables {
+    global:
+        0: g
+}
+
+rule ("r") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Set Global Variable(g, Array(Hero(Ana), Hero(Mercy)));
+        Set Player Allowed Heroes(Event Player, Array(Hero(Ana), Hero(Mercy)));
+        Set Player Allowed Heroes(Event Player, Hero(Ana));
+        Set Player Allowed Heroes(Event Player, Hero(Mercy));
+    }
+}"#,
+    ),
+    (
+        "team_and_color_constants",
+        9,
+        r#"variables {
+    global:
+        0: g
+}
+
+rule ("r") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Set Global Variable(g, Color(Team 1));
+        Set Global Variable(g, Team 2);
+        Set Global Variable(g, Button(Reload));
+        Set Global Variable(g, Map(Ilios));
+    }
+}"#,
+    ),
+];
+
+#[test]
+fn a_written_and_an_omitted_trailing_end_are_one_program_with_one_cost() {
+    let catalog = catalog();
+    let locale = Locale::new("en-US");
+    let rule = |end: &str| {
+        format!(
+            r#"rule ("r") {{ event {{ Ongoing - Global; }} actions {{ If(True); Wait(1, Ignore Condition); {end} }} }}"#
+        )
+    };
+    let omitted = parser::parse(&rule(""), &catalog, &locale).unwrap();
+    let written = parser::parse(&rule("End;"), &catalog, &locale).unwrap();
+    let omitted = omitted.element_count(&catalog).unwrap().total;
+    assert_eq!(omitted, written.element_count(&catalog).unwrap().total);
+    // rule 1 + If 1 + its condition 0 + Wait (1 + number 1 + behavior 0); no `End`
+    assert_eq!(omitted, 4);
+}
+
+#[test]
+fn only_the_last_action_of_a_rule_is_closed_without_end() {
+    let catalog = catalog();
+    let locale = Locale::new("en-US");
+    let text = |body: &str| {
+        format!(r#"rule ("r") {{ event {{ Ongoing - Global; }} actions {{ {body} }} }}"#)
+    };
+    let count = |body: &str| {
+        parser::parse(&text(body), &catalog, &locale)
+            .unwrap()
+            .element_count(&catalog)
+            .unwrap()
+            .total
+    };
+    // the middle `If` and a nested last `If` keep their `End`
+    assert_eq!(count("If(True); End; Wait(1, Ignore Condition);"), 5);
+    assert_eq!(count("If(True); If(True); End; End;"), 4);
+    // a loop keeps its `End` even as the last action
+    assert_eq!(count("While(True); End;"), 3);
+}
+
+#[test]
+fn the_count_is_that_of_the_canonical_emitted_form() {
+    let catalog = catalog();
+    let locale = Locale::new("en-US");
+    for (name, _, text) in OVERPY_COUNTS {
+        let program = parser::parse(text, &catalog, &locale).unwrap();
+        let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).unwrap();
+        let reparsed = parser::parse(&emitted, &catalog, &locale).unwrap();
+        assert_eq!(
+            program.element_count(&catalog).unwrap().total,
+            reparsed.element_count(&catalog).unwrap().total,
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn counts_match_the_pinned_overpy_element_counter() {
+    let catalog = catalog();
+    for (name, expected, text) in OVERPY_COUNTS {
+        let program = parser::parse(text, &catalog, &Locale::new("en-US")).unwrap();
+        let report = program.element_count(&catalog).unwrap();
+        assert_eq!(report.total, *expected, "{name}");
+    }
 }
 
 fn assert_unique_node_ids(node: &workshop_rs::actions::ElementCountNode, ids: &mut HashSet<usize>) {

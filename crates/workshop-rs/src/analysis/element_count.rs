@@ -1,3 +1,12 @@
+//! Canonical Workshop element-count analysis.
+//!
+//! The calculator operates on the canonical public program, not source-language syntax or
+//! emitted text. Every occurrence of a component costs its base amount at any
+//! nesting depth, direct action and condition arguments cost one less, and
+//! every pair of hero literals in one direct argument adds one. The base costs
+//! and the block-closing rules are documented, with their evidence, in
+//! `docs/element-count.md`.
+
 use std::collections::HashMap;
 use std::fmt;
 
@@ -123,6 +132,7 @@ impl Program {
             values: HashMap::new(),
             actions: HashMap::new(),
             next_node_id: 0,
+            name_slot: false,
         };
         let mut rules = Vec::with_capacity(self.rules.len());
         for rule in self.rules.iter() {
@@ -189,6 +199,8 @@ struct Counter<'a> {
     values: HashMap<usize, usize>,
     actions: HashMap<usize, usize>,
     next_node_id: usize,
+    /// Set while counting an argument that names a variable rather than reads it.
+    name_slot: bool,
 }
 
 impl Counter<'_> {
@@ -204,8 +216,9 @@ impl Counter<'_> {
         for condition in &rule.conditions {
             children.push(self.condition(condition.value)?.node);
         }
-        for action in &rule.actions {
-            children.push(self.action(*action)?.node);
+        for (index, action) in rule.actions.iter().enumerate() {
+            let rule_final = index + 1 == rule.actions.len();
+            children.push(self.action(*action, rule_final)?.node);
         }
         Ok(Counted::finish(
             ElementNodeKind::Rule,
@@ -233,7 +246,7 @@ impl Counter<'_> {
                 let mut heroes = 0;
                 for argument in args {
                     let counted = self.value(*argument, true)?;
-                    heroes += counted.heroes;
+                    heroes += counted.heroes / 2 * 2;
                     children.push(counted.node);
                 }
                 (children, heroes)
@@ -255,7 +268,7 @@ impl Counter<'_> {
         ))
     }
 
-    fn action(&mut self, id: ActionId) -> Result<Counted, ElementCountError> {
+    fn action(&mut self, id: ActionId, rule_final: bool) -> Result<Counted, ElementCountError> {
         let node_id = self.next_node_id();
         if let Some(&active_id) = self.actions.get(&id.index()) {
             return Err(ElementCountError::Cycle {
@@ -264,12 +277,16 @@ impl Counter<'_> {
             });
         }
         self.actions.insert(id.index(), node_id);
-        let Some(action) = self.program.actions.get(id) else {
+        let mut action = self.program.actions.get(id);
+        while let Some(Action::Disabled { action: inner, .. }) = action {
+            action = self.program.actions.get(*inner);
+        }
+        let Some(action) = action else {
             return Err(ElementCountError::InvalidProgram {
                 message: format!("dangling action {}", id.index()),
             });
         };
-        let result = self.action_inner(action, node_id);
+        let result = self.action_inner(action, node_id, rule_final);
         self.actions.remove(&id.index());
         result
     }
@@ -278,11 +295,12 @@ impl Counter<'_> {
         &mut self,
         action: &Action,
         node_id: usize,
+        rule_final: bool,
     ) -> Result<Counted, ElementCountError> {
         let span = action.span();
         let mut children = Vec::new();
         let mut heroes = 0;
-        let mut adjustment = 0;
+        let mut base = 1;
         let name;
         match action {
             Action::SetGlobalVariable { value, .. }
@@ -310,36 +328,33 @@ impl Counter<'_> {
                 ..
             } => {
                 name = "if";
-                for (index, branch) in branches.iter().enumerate() {
+                // `Else If` and `Else` are actions of their own; so is `End`. The
+                // canonical emitter closes the last action of a rule without its
+                // `End`, and only that one: nested and loop blocks keep theirs.
+                base += branches.len().saturating_sub(1)
+                    + usize::from(else_body.is_some())
+                    + usize::from(!rule_final);
+                for branch in branches {
                     self.push_action_value(&mut children, &mut heroes, branch.condition)?;
                     for nested in &branch.body {
-                        children.push(self.action(*nested)?.node);
-                    }
-                    if index > 0 {
-                        adjustment += 1;
+                        children.push(self.action(*nested, false)?.node);
                     }
                 }
                 if let Some(body) = else_body {
-                    adjustment += 1;
                     for nested in body {
-                        children.push(self.action(*nested)?.node);
+                        children.push(self.action(*nested, false)?.node);
                     }
-                }
-                if !branches.is_empty() {
-                    adjustment += 1;
                 }
             }
             Action::While {
-                condition: condition_id,
-                body,
-                ..
+                condition, body, ..
             } => {
                 name = "while";
-                self.push_action_value(&mut children, &mut heroes, *condition_id)?;
+                base += 1;
+                self.push_action_value(&mut children, &mut heroes, *condition)?;
                 for nested in body {
-                    children.push(self.action(*nested)?.node);
+                    children.push(self.action(*nested, false)?.node);
                 }
-                adjustment += 1;
             }
             Action::ForGlobalVariable {
                 start,
@@ -349,13 +364,13 @@ impl Counter<'_> {
                 ..
             } => {
                 name = "for global variable";
+                base += 1;
                 for value in [start, stop, step] {
                     self.push_action_value(&mut children, &mut heroes, *value)?;
                 }
                 for nested in body {
-                    children.push(self.action(*nested)?.node);
+                    children.push(self.action(*nested, false)?.node);
                 }
-                adjustment += 1;
             }
             Action::ForPlayerVariable {
                 player,
@@ -366,15 +381,19 @@ impl Counter<'_> {
                 ..
             } => {
                 name = "for player variable";
+                base += 1;
                 for value in [player, start, stop, step] {
                     self.push_action_value(&mut children, &mut heroes, *value)?;
                 }
                 for nested in body {
-                    children.push(self.action(*nested)?.node);
+                    children.push(self.action(*nested, false)?.node);
                 }
-                adjustment += 1;
             }
-            Action::Disabled { action, .. } => return self.action(*action),
+            Action::Disabled { .. } => {
+                return Err(ElementCountError::InvalidProgram {
+                    message: "a disabled action wraps no enabled action".to_string(),
+                });
+            }
             Action::Call {
                 name: action_name,
                 args,
@@ -390,24 +409,21 @@ impl Counter<'_> {
                 }
                 name = action_name.as_str();
                 for (index, argument) in args.iter().enumerate() {
-                    if parameter_is_variable_reference(self.catalog, action_name, index) {
-                        if let Some(player) = variable_reference_player_expression(
-                            self.program,
-                            self.catalog,
-                            action_name,
-                            index,
-                            *argument,
-                        ) {
-                            let counted = self.value(player, true)?;
-                            heroes += counted.heroes;
-                            children.push(counted.node);
-                        }
-                        continue;
-                    }
-                    let counted = self.value(*argument, true)?;
-                    heroes += counted.heroes;
-                    children.push(counted.node);
+                    self.name_slot = variable_slot(self.catalog, Kind::Action, action_name, index)
+                        || (index == 0 && takes_variable(self.catalog, Kind::Action, action_name));
+                    self.push_action_value(&mut children, &mut heroes, *argument)?;
                 }
+                // An omitted argument is still a filled slot; its default is a
+                // direct argument, so it costs its own value minus one.
+                base = (base as isize
+                    + omitted_default_cost(
+                        self.catalog,
+                        Kind::Action,
+                        action_name,
+                        args.len(),
+                        true,
+                    ))
+                .max(0) as usize;
             }
         }
         Ok(Counted::finish(
@@ -415,8 +431,8 @@ impl Counter<'_> {
             node_id,
             name,
             span,
-            1,
-            adjustment + pair_surcharge(heroes),
+            base,
+            pair_surcharge(heroes),
             children,
             heroes,
         ))
@@ -429,12 +445,14 @@ impl Counter<'_> {
         id: ValueId,
     ) -> Result<(), ElementCountError> {
         let counted = self.value(id, true)?;
-        *heroes += counted.heroes;
+        // Pairs are counted within each direct argument, not across them.
+        *heroes += counted.heroes / 2 * 2;
         children.push(counted.node);
         Ok(())
     }
 
     fn value(&mut self, id: ValueId, top_level: bool) -> Result<Counted, ElementCountError> {
+        let name_slot = std::mem::take(&mut self.name_slot);
         let node_id = self.next_node_id();
         if let Some(&active_id) = self.values.get(&id.index()) {
             return Err(ElementCountError::Cycle {
@@ -457,20 +475,25 @@ impl Counter<'_> {
             }
             Value::Bool(_) => self.value_node(node_id, "boolean", span, 1, vec![], 0),
             Value::Null => self.value_node(node_id, "null", span, 1, vec![], 0),
-            Value::Array(elements) => self.value_children(node_id, "array", span, 2, elements),
+            Value::Array(elements) => {
+                self.value_children(node_id, "array", span, 2, elements, None)
+            }
             Value::Vector { x, y, z } => {
-                self.value_children(node_id, "vector", span, 1, &[*x, *y, *z])
+                self.value_children(node_id, "vector", span, 1, &[*x, *y, *z], None)
             }
             Value::Enum { value_type, .. } => {
                 let heroes = usize::from(value_type == "Hero");
-                let base = if is_wrapped_enum(value_type) { 2 } else { 1 };
+                let base = literal_enum_cost(value_type);
                 self.value_node(node_id, value_type, span, base, vec![], heroes)
             }
             Value::GlobalVariable(_) => {
-                self.value_node(node_id, "global variable", span, 2, vec![], 0)
+                let base = if name_slot { 1 } else { 2 };
+                self.value_node(node_id, "global variable", span, base, vec![], 0)
             }
             Value::PlayerVariable { player, .. } => {
-                self.value_children(node_id, "player variable", span, 2, &[*player])
+                // A named player variable is two direct arguments (player, name).
+                let base = if name_slot { 0 } else { 2 };
+                self.value_children(node_id, "player variable", span, base, &[*player], None)
             }
             Value::Subroutine(_) => self.value_node(node_id, "subroutine", span, 1, vec![], 0),
             Value::EventPlayer => self.value_node(node_id, "event player", span, 1, vec![], 0),
@@ -501,16 +524,28 @@ impl Counter<'_> {
                     } else {
                         args.clone()
                     };
-                    let setting_adjustment = workshop_setting_adjustment(name);
-                    let base = if name == "customString" {
-                        1 + 4usize.saturating_sub(args.len())
-                    } else if is_comparison(name) || name == "array" || name == "evalOnce" {
+                    let base = if is_comparison(name) {
+                        // The operator is a literal of its own.
+                        2
+                    } else if name == "array" || name == "evaluateOnce" {
                         2
                     } else {
                         1
                     };
-                    let counted = self.value_children(node_id, name, span, base, &child_ids)?;
-                    Ok(apply_adjustment(counted, setting_adjustment.unwrap_or(0)))
+                    let omitted =
+                        omitted_default_cost(self.catalog, Kind::Value, name, args.len(), false);
+                    let mut counted = self.value_children(
+                        node_id,
+                        name,
+                        span,
+                        (base as isize + omitted) as usize,
+                        &child_ids,
+                        Some((Kind::Value, name)),
+                    )?;
+                    let setting = workshop_setting_adjustment(name);
+                    counted.node.adjustment += setting;
+                    counted.node.count = (counted.node.count as isize + setting).max(0) as usize;
+                    Ok(counted)
                 }
             }
         }?;
@@ -551,10 +586,13 @@ impl Counter<'_> {
         span: Option<Span>,
         base: usize,
         ids: &[ValueId],
+        owner: Option<(Kind, &str)>,
     ) -> Result<Counted, ElementCountError> {
         let mut children = Vec::with_capacity(ids.len());
         let mut heroes = 0;
-        for child in ids {
+        for (index, child) in ids.iter().enumerate() {
+            self.name_slot =
+                owner.is_some_and(|(kind, name)| variable_slot(self.catalog, kind, name, index));
             let counted = self.value(*child, false)?;
             heroes += counted.heroes;
             children.push(counted.node);
@@ -569,78 +607,6 @@ fn pair_surcharge(heroes: usize) -> isize {
 
 fn is_comparison(name: &str) -> bool {
     matches!(name, "==" | "!=" | "<" | "<=" | ">" | ">=")
-}
-
-fn is_wrapped_enum(value_type: &str) -> bool {
-    matches!(
-        value_type,
-        "Button" | "Color" | "Gamemode" | "Hero" | "Map" | "Team"
-    )
-}
-
-fn workshop_setting_adjustment(name: &str) -> Option<isize> {
-    match name {
-        "createWorkshopSettingFloat" | "workshopSettingInteger" => Some(-3),
-        "workshopSettingCombo" => Some(-2),
-        "createWorkshopSettingHero" | "workshopSettingToggle" => Some(0),
-        _ => None,
-    }
-}
-
-fn apply_adjustment(mut counted: Counted, adjustment: isize) -> Counted {
-    counted.node.adjustment += adjustment;
-    let children_count = counted
-        .node
-        .children
-        .iter()
-        .map(|child| child.count)
-        .sum::<usize>();
-    counted.node.count =
-        (counted.node.base_count as isize + counted.node.adjustment + children_count as isize)
-            .max(0) as usize;
-    counted
-}
-
-fn parameter_is_variable_reference(catalog: &Catalog, name: &str, index: usize) -> bool {
-    if name == "stopChasingPlayerVariable" && index == 0 {
-        return true;
-    }
-    catalog
-        .entry(Kind::Action, name)
-        .and_then(|entry| entry.param_type(index))
-        .is_some_and(|types| {
-            types.split('|').any(|value_type| {
-                matches!(
-                    value_type,
-                    "Variable" | "Global Variable" | "Player Variable"
-                )
-            })
-        })
-}
-
-fn variable_reference_player_expression(
-    program: &Program,
-    catalog: &Catalog,
-    name: &str,
-    index: usize,
-    argument: ValueId,
-) -> Option<ValueId> {
-    let is_player_variable_parameter = name == "stopChasingPlayerVariable" && index == 0
-        || catalog
-            .entry(Kind::Action, name)
-            .and_then(|entry| entry.param_type(index))
-            .is_some_and(|types| {
-                types
-                    .split('|')
-                    .any(|value_type| value_type == "Player Variable")
-            });
-    if !is_player_variable_parameter {
-        return None;
-    }
-    match &program.values.get(argument)?.value {
-        Value::PlayerVariable { player, .. } => Some(*player),
-        _ => None,
-    }
 }
 
 fn is_canonical_helper(name: &str) -> bool {
@@ -665,4 +631,70 @@ fn is_canonical_helper(name: &str) -> bool {
             | "removeFromArrayByValue"
             | "removeFromArrayByIndex"
     )
+}
+
+/// The cost of the defaults filled in for arguments a call leaves out.
+fn omitted_default_cost(
+    catalog: &Catalog,
+    kind: Kind,
+    name: &str,
+    given: usize,
+    direct: bool,
+) -> isize {
+    let Some(entry) = catalog.entry(kind, name) else {
+        return 0;
+    };
+    (given..entry.param_count())
+        .filter_map(|index| entry.param_default(index))
+        .map(|default| {
+            let cost = if default.parse::<f64>().is_ok() {
+                2
+            } else {
+                default.split('.').next().map_or(1, literal_enum_cost) as isize
+            };
+            cost - isize::from(direct)
+        })
+        .sum()
+}
+
+/// Enum constants the client spells as a value wrapping a literal (`Team(Team 1)`,
+/// `Hero(Ana)`, `Color(White)`, `Button(Reload)`, `Map(...)`) cost both nodes.
+fn literal_enum_cost(value_type: &str) -> usize {
+    if matches!(value_type, "Team" | "Hero" | "Color" | "Button" | "Map") {
+        2
+    } else {
+        1
+    }
+}
+
+/// Whether argument `index` of a call names a variable instead of reading one.
+fn variable_slot(catalog: &Catalog, kind: Kind, name: &str, index: usize) -> bool {
+    catalog.entry(kind, name).is_some_and(|entry| {
+        entry.param_type(index) == Some("Variable")
+            || entry
+                .params()
+                .get(index)
+                .is_some_and(|param| param == "Variable")
+    })
+}
+
+/// Whether a call has a parameter that names a variable; the player and the
+/// variable of a player variable are then one argument here.
+fn takes_variable(catalog: &Catalog, kind: Kind, name: &str) -> bool {
+    catalog.entry(kind, name).is_some_and(|entry| {
+        (0..entry.param_count()).any(|index| variable_slot(catalog, kind, name, index))
+    })
+}
+
+/// The fixed adjustment the client applies to a Workshop setting value, whose
+/// category, name and bounds are literals that are not separate elements.
+fn workshop_setting_adjustment(name: &str) -> isize {
+    match name {
+        "workshopSettingInteger"
+        | "workshopSettingFloat"
+        | "createWorkshopSettingInt"
+        | "createWorkshopSettingFloat" => -3,
+        "workshopSettingCombo" | "createWorkshopSettingEnum" => -2,
+        _ => 0,
+    }
 }

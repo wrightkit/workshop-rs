@@ -297,6 +297,33 @@ fn create_dummy_bot_accepts_hero_or_hero_array_only_for_hero_parameter() {
 }
 
 #[test]
+fn team_members_shared_with_color_are_valid_in_color_slots() {
+    let accepted = program(
+        "Play Effect(All Players(All Teams), Echo Sticky Bomb Explosion Effect, Team 2, Event Player, 200);",
+    );
+    validate_program(&accepted);
+    assert!(matches!(
+        &accepted
+            .values
+            .get(first_action_args(&accepted)[2])
+            .expect("play effect color")
+            .value,
+        Value::Enum { value_type, value } if value_type == "Team" && value == "TEAM_2"
+    ));
+
+    let unsupported = program(
+        "Play Effect(All Players(All Teams), Echo Sticky Bomb Explosion Effect, All Teams, Event Player, 200);",
+    );
+    let error = validate::validate_canonical_ids_wir(&unsupported, &catalog())
+        .expect_err("a Team member absent from Color must still be rejected in a Color slot");
+    assert!(
+        error
+            .to_string()
+            .contains("semantic type 'Color', got Team")
+    );
+}
+
+#[test]
 fn nested_numeric_boolean_aliases_are_preserved_inside_vector_components() {
     let program = program("Set Global Variable(probe, Vector(1, True, False));");
     validate_program(&program);
