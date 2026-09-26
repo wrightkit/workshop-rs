@@ -1,182 +1,6 @@
 use crate::frontend::parser::*;
 
 impl ParseContext<'_> {
-    pub(crate) fn contextual_coercions(
-        &self,
-        call_id: &str,
-        arg_index: usize,
-    ) -> Option<crate::catalog::ParamCoercions> {
-        [Kind::Action, Kind::Value].into_iter().find_map(|kind| {
-            self.catalog
-                .entry(kind, call_id)
-                .and_then(|entry| entry.param_coercions(arg_index))
-                .copied()
-        })
-    }
-
-    pub(crate) fn is_zero_number(&self, value_id: wir::ValueId) -> bool {
-        matches!(
-            self.target.values.get(value_id),
-            Some(ValueNode {
-                value: Value::Number { value, .. },
-                ..
-            }) if *value == 0.0
-        )
-    }
-
-    pub(crate) fn is_empty_string(&self, value_id: wir::ValueId) -> bool {
-        matches!(
-            self.target.values.get(value_id),
-            Some(ValueNode {
-                value: Value::String(value),
-                ..
-            }) if value.is_empty()
-        )
-    }
-
-    pub(crate) fn normalize_contextual_argument(
-        &mut self,
-        call_id: &str,
-        arg_index: usize,
-        value_id: wir::ValueId,
-    ) -> wir::ValueId {
-        let Some(coercions) = self.contextual_coercions(call_id, arg_index) else {
-            return value_id;
-        };
-        self.normalize_value_with_coercions(coercions, value_id)
-    }
-
-    pub(crate) fn normalize_value_with_coercions(
-        &mut self,
-        coercions: ParamCoercions,
-        value_id: wir::ValueId,
-    ) -> wir::ValueId {
-        let Some(node) = self.target.values.get(value_id) else {
-            return value_id;
-        };
-        let span = node.span;
-        let replacement = match &node.value {
-            Value::Bool(false) if coercions.false_as_number => Some(Value::Number {
-                value: 0.0,
-                text: "0".to_string(),
-            }),
-            Value::Bool(true) if coercions.true_as_number => Some(Value::Number {
-                value: 1.0,
-                text: "1".to_string(),
-            }),
-            Value::Number { value, .. } if coercions.zero_as_null && *value == 0.0 => {
-                Some(Value::Null)
-            }
-            Value::Vector { x, y, z }
-                if coercions.null_vector_as_null
-                    && self.is_zero_number(*x)
-                    && self.is_zero_number(*y)
-                    && self.is_zero_number(*z) =>
-            {
-                Some(Value::Null)
-            }
-            Value::Call { name, args }
-                if coercions.null_vector_as_null
-                    && name == "vector"
-                    && args.len() == 3
-                    && args.iter().all(|value_id| self.is_zero_number(*value_id)) =>
-            {
-                Some(Value::Null)
-            }
-            Value::Call { name, args }
-                if coercions.empty_array_as_string && name == "emptyArray" && args.is_empty() =>
-            {
-                Some(Value::String(String::new()))
-            }
-            Value::Call { name, args }
-                if coercions.empty_array_as_string
-                    && name == "customString"
-                    && args.len() == 1
-                    && self.is_empty_string(args[0]) =>
-            {
-                Some(Value::String(String::new()))
-            }
-            Value::Array(elements) if coercions.empty_array_as_string && elements.is_empty() => {
-                Some(Value::String(String::new()))
-            }
-            _ => None,
-        };
-        let Some(value) = replacement else {
-            return value_id;
-        };
-        self.target.values.push(ValueNode::new(value, span))
-    }
-
-    pub(crate) fn normalize_modify_value(
-        &mut self,
-        op: ModifyOp,
-        value_id: wir::ValueId,
-    ) -> wir::ValueId {
-        let coercions = match op {
-            ModifyOp::Add
-            | ModifyOp::Subtract
-            | ModifyOp::Modulo
-            | ModifyOp::Min
-            | ModifyOp::Max
-            | ModifyOp::RemoveFromArrayByIndex => ParamCoercions {
-                false_as_number: true,
-                true_as_number: true,
-                ..Default::default()
-            },
-            ModifyOp::AppendToArray | ModifyOp::RemoveFromArrayByValue => ParamCoercions {
-                zero_as_null: true,
-                ..Default::default()
-            },
-            ModifyOp::Multiply | ModifyOp::Divide | ModifyOp::RaiseToPower => return value_id,
-        };
-        self.normalize_value_with_coercions(coercions, value_id)
-    }
-
-    pub(crate) fn modify_op_from_value(&self, value_id: wir::ValueId) -> Option<ModifyOp> {
-        let Value::Call { name, args } = &self.target.values.get(value_id)?.value else {
-            return None;
-        };
-        if !args.is_empty() {
-            return None;
-        }
-        match name.as_str() {
-            "add" => Some(ModifyOp::Add),
-            "subtract" => Some(ModifyOp::Subtract),
-            "multiply" => Some(ModifyOp::Multiply),
-            "divide" => Some(ModifyOp::Divide),
-            "modulo" => Some(ModifyOp::Modulo),
-            "min" => Some(ModifyOp::Min),
-            "max" => Some(ModifyOp::Max),
-            "raiseToPower" => Some(ModifyOp::RaiseToPower),
-            "appendToArray" => Some(ModifyOp::AppendToArray),
-            "removeFromArrayByValue" => Some(ModifyOp::RemoveFromArrayByValue),
-            "removeFromArrayByIndex" => Some(ModifyOp::RemoveFromArrayByIndex),
-            _ => None,
-        }
-    }
-
-    pub(crate) fn normalize_modify_call_value(
-        &mut self,
-        call_id: &str,
-        arg_index: usize,
-        args: &[wir::ValueId],
-        value_id: wir::ValueId,
-    ) -> wir::ValueId {
-        if matches!(
-            call_id,
-            "modifyGlobalVariableAtIndex" | "modifyPlayerVariableAtIndex"
-        ) && arg_index == 3
-        {
-            if let Some(op) = args
-                .get(2)
-                .and_then(|value_id| self.modify_op_from_value(*value_id))
-            {
-                return self.normalize_modify_value(op, value_id);
-            }
-        }
-        value_id
-    }
-
     pub(crate) fn resolve_enum_domain_mixed(&self, spelling: &str) -> Option<&str> {
         self.catalog
             .resolve_enum_domain(&self.locale, spelling)
@@ -229,7 +53,6 @@ impl ParseContext<'_> {
             {
                 self.pos += 1;
                 let index = self.value()?;
-                let index = self.normalize_contextual_argument("valueInArray", 1, index);
                 let end = self.peek().map(|token| token.end).unwrap_or(start);
                 self.expect(TokenKind::RBracket, "expected ']' after array index")?;
                 value = self.target.values.push(ValueNode::new(
@@ -286,9 +109,6 @@ impl ParseContext<'_> {
                     let when_true = self.value()?;
                     self.expect(TokenKind::Colon, "expected ':' in conditional value")?;
                     let when_false = self.value()?;
-                    let when_true = self.normalize_contextual_argument("ifThenElse", 1, when_true);
-                    let when_false =
-                        self.normalize_contextual_argument("ifThenElse", 2, when_false);
                     value = self.target.values.push(ValueNode::new(
                         Value::Call {
                             name: "ifThenElse".to_string(),
@@ -316,12 +136,10 @@ impl ParseContext<'_> {
                         "%" => "modulo",
                         _ => op.as_str(),
                     };
-                    let left = self.normalize_contextual_argument(name, 0, value);
-                    let right = self.normalize_contextual_argument(name, 1, right);
                     value = self.target.values.push(ValueNode::new(
                         Value::Call {
                             name: name.to_string(),
-                            args: vec![left, right],
+                            args: vec![value, right],
                         },
                         Some(Span::new(self.file(), start, end)),
                     ));
@@ -1099,11 +917,7 @@ impl ParseContext<'_> {
                         self.context.expected_domain(call_id, canonical_arg_index);
                     let arg = self.value();
                     self.expected_domain = saved_domain;
-                    args.push(self.normalize_contextual_argument(
-                        call_id,
-                        canonical_arg_index,
-                        arg?,
-                    ));
+                    args.push(arg?);
                 }
             } else if matches!(
                 call_id,
@@ -1148,13 +962,7 @@ impl ParseContext<'_> {
                     });
                 let arg = self.value();
                 self.expected_domain = saved;
-                let arg = self.normalize_contextual_argument(call_id, canonical_arg_index, arg?);
-                args.push(self.normalize_modify_call_value(
-                    call_id,
-                    canonical_arg_index,
-                    &args,
-                    arg,
-                ));
+                args.push(arg?);
             }
             arg_index += 1;
             match self.peek() {

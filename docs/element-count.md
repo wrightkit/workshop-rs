@@ -49,7 +49,17 @@ estimate of runtime CPU cost or execution performance.
 The independent behavioral source for the supported rules is the
 [Workshop.codes element-count calculation reference](https://workshop.codes/wiki/articles/element-count-calculation).
 
-Known evidence gap: this initial API does not claim live-client/editor
+Known evidence gap: the model charges a numeric literal and `False`, `True`, or
+`Null` the same cost, as the Workshop.codes reference groups them under one
+literal cost. OverPy's `#!debugElementCount` charges a numeric literal argument
+one element and `False`, `True`, or `Null` none, and its `#!optimizeForSize`
+substitutions rely on that difference. No client capture establishes either
+rule, so counts for programs that use these substitutions are unverified.
+Parsing keeps the authored literal
+([ADR-0015](adr/0015-contextual-literals-are-preserved.md)), so the analysis
+can apply the rule a capture establishes.
+
+This initial API does not claim live-client/editor
 validation or source-language debug-count compatibility. Those belong to later
 client-backed/consumer integration work after the canonical Program surface is
 stable. The current real-project `rework.ow` fixture still stops in the parser

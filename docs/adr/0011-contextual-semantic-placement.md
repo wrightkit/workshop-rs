@@ -1,6 +1,7 @@
 # ADR-0011: Contextual Workshop semantics at the catalog/code boundary
 
-- Status: Accepted (backfilled)
+- Status: Accepted (backfilled); decision 2 superseded by
+  [ADR-0015](0015-contextual-literals-are-preserved.md)
 - Date: 2026-09-12
 - Related:
   [Issue #135](https://github.com/wrightkit/workshop-rs/issues/135);

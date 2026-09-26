@@ -290,11 +290,6 @@ impl ParseContext<'_> {
             };
             let variable = self.global_by_name(&name)?;
             let value = self.value()?;
-            let value = if let AssignmentOperator::Modify(op) = &operator {
-                self.normalize_modify_value(*op, value)
-            } else {
-                value
-            };
             self.expect(TokenKind::Semi, "expected ';' after assignment")?;
             let span = Some(Span::new(self.file(), start, self.previous_span().1));
             let target_span = Some(Span::new(self.file(), start, target_end));
@@ -386,11 +381,6 @@ impl ParseContext<'_> {
             return self.member_assignment_action(saved, start);
         };
         let value = self.value()?;
-        let value = if let AssignmentOperator::Modify(op) = &operator {
-            self.normalize_modify_value(*op, value)
-        } else {
-            value
-        };
         self.expect(TokenKind::Semi, "expected ';' after assignment")?;
         let span = Some(Span::new(self.file(), start, self.previous_span().1));
         let target_span = Some(Span::new(self.file(), target_start, target_end));
@@ -466,10 +456,9 @@ impl ParseContext<'_> {
                 }
             }
         };
-        let index = self.normalize_contextual_argument(name, 1, index);
         let (value, modify_op) = match operator {
             AssignmentOperator::Set => (value, None),
-            AssignmentOperator::Modify(op) => (self.normalize_modify_value(op, value), Some(op)),
+            AssignmentOperator::Modify(op) => (value, Some(op)),
         };
         let args = match modify_op {
             None => vec![variable, index, value],
@@ -763,7 +752,6 @@ impl ParseContext<'_> {
                     let op = self.modify_op()?;
                     self.expect(TokenKind::Comma, "expected ',' after modify operator")?;
                     let value = self.value()?;
-                    let value = self.normalize_modify_value(op, value);
                     self.expect(TokenKind::RParen, "expected ')'")?;
                     self.expect(TokenKind::Semi, "expected ';'")?;
                     Ok(self.target.actions.push(Action::ModifyGlobalVariable {
@@ -802,7 +790,6 @@ impl ParseContext<'_> {
                     let op = self.modify_op()?;
                     self.expect(TokenKind::Comma, "expected ',' after modify operator")?;
                     let value = self.value()?;
-                    let value = self.normalize_modify_value(op, value);
                     self.expect(TokenKind::RParen, "expected ')'")?;
                     self.expect(TokenKind::Semi, "expected ';'")?;
                     Ok(self.target.actions.push(Action::ModifyPlayerVariable {

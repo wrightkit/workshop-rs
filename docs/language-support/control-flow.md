@@ -43,7 +43,9 @@
 ## Contextual Literal Semantics
 
 Literal substitutions are catalog facts attached to an exact action or value
-parameter. They are normalized into canonical WIR only at that position; the
+parameter. They are accepted only at that position and kept as written, so
+parsing and emitting Workshop text preserves them
+([ADR-0015](../adr/0015-contextual-literals-are-preserved.md)); the
 catalog does not define a global Boolean/Number, Null/Vector, or String/Array
 coercion hierarchy.
 
