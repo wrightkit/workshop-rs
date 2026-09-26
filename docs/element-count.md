@@ -41,11 +41,12 @@ plus one for each unused trailing slot, in addition to the text and supplied
 value arguments. For example, `Custom String("abc")` costs five elements.
 
 Rule event parameters, action syntax parameters such as a variable name or
-modify operator, comments, and custom game settings do not contribute. A
-catalog action's `Variable`, `Global Variable`, or `Player Variable` target
-parameter is syntax and is excluded. A direct action or condition argument is
-reduced by one. A comparison value counts its operator syntax as a second base
-element. `Else If`, `Else`, and `End` control markers each cost one element.
+modify operator, comments, and custom game settings do not contribute. In a
+catalog action's variable target parameter, the variable name is syntax; a
+`Player Variable` target still counts its player expression as a direct action
+argument. A direct action or condition argument is reduced by one. A comparison
+value counts its operator syntax as a second base element. `Else If`, `Else`,
+and `End` control markers each cost one element.
 For each pair of hero literals anywhere below the direct arguments of one
 action or condition, one element is added. Disabling a rule, action, or
 condition has no effect.
@@ -71,9 +72,9 @@ and setting expressions. Those checks establish compiler agreement for the
 tested constructs, not independent client costs for each construct.
 
 For the Bastion OverPy build, the client capture is 30,070 elements, OverPy
-reports 30,067, and this model reports 30,091 across 309 rules. The model is
-within the stated 1% aggregate tolerance of the client (21 elements, about
-0.07%). The client capture establishes the aggregate target; it does not
+reports 30,067, and this model reports 30,095 across 309 rules. The model is
+within the stated 1% aggregate tolerance of the client (25 elements, about
+0.08%). The client capture establishes the aggregate target; it does not
 isolate individual construct costs.
 
 This API counts the canonical program representation. Source-language debug

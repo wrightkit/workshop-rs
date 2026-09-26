@@ -394,6 +394,52 @@ fn indexed_variable_targets_are_excluded_from_element_costs() {
 }
 
 #[test]
+fn variable_targets_keep_nontrivial_player_expression_costs() {
+    let catalog = catalog();
+    let program = parser::parse(
+        r#"variables {
+            player: 0: state
+        }
+        rule ("nontrivial player target") { event { Ongoing - Global; } actions {
+            Stop Chasing Player Variable(First Of(All Players(All Teams)), state);
+        } }
+        rule ("indexed nontrivial player target") { event { Ongoing - Each Player; } actions {
+            Set Player Variable At Index(First Of(All Players(All Teams)), state, false, 5);
+        } }"#,
+        &catalog,
+        &Locale::new("en-US"),
+    )
+    .unwrap();
+
+    let report = program.element_count(&catalog).unwrap();
+    assert_eq!(
+        report
+            .rule_counts()
+            .map(|(_, count)| count)
+            .collect::<Vec<_>>(),
+        vec![5, 6],
+        "the player expression is counted in stop-chasing and indexed targets"
+    );
+    assert_eq!(report.total, 11);
+    let action = &report.rules[0].children[0];
+    assert_eq!(action.name, "stopChasingPlayerVariable");
+    assert_eq!(
+        action.children.len(),
+        1,
+        "the variable target itself is syntax"
+    );
+    assert_eq!(action.children[0].name, "firstOf");
+    assert_eq!(
+        action.children[0].adjustment, -1,
+        "top-level argument reduction"
+    );
+    let indexed_action = &report.rules[1].children[0];
+    assert_eq!(indexed_action.name, "setPlayerVariableAtIndex");
+    assert_eq!(indexed_action.children[0].name, "firstOf");
+    assert_eq!(indexed_action.children[0].adjustment, -1);
+}
+
+#[test]
 fn custom_settings_and_disabled_rules_actions_and_conditions_do_not_change_cost() {
     let catalog = catalog();
     let locale = Locale::new("en-US");

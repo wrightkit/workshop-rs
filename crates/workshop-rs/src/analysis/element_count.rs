@@ -391,6 +391,17 @@ impl Counter<'_> {
                 name = action_name.as_str();
                 for (index, argument) in args.iter().enumerate() {
                     if parameter_is_variable_reference(self.catalog, action_name, index) {
+                        if let Some(player) = variable_reference_player_expression(
+                            self.program,
+                            self.catalog,
+                            action_name,
+                            index,
+                            *argument,
+                        ) {
+                            let counted = self.value(player, true)?;
+                            heroes += counted.heroes;
+                            children.push(counted.node);
+                        }
                         continue;
                     }
                     let counted = self.value(*argument, true)?;
@@ -605,6 +616,31 @@ fn parameter_is_variable_reference(catalog: &Catalog, name: &str, index: usize) 
                 )
             })
         })
+}
+
+fn variable_reference_player_expression(
+    program: &Program,
+    catalog: &Catalog,
+    name: &str,
+    index: usize,
+    argument: ValueId,
+) -> Option<ValueId> {
+    let is_player_variable_parameter = name == "stopChasingPlayerVariable" && index == 0
+        || catalog
+            .entry(Kind::Action, name)
+            .and_then(|entry| entry.param_type(index))
+            .is_some_and(|types| {
+                types
+                    .split('|')
+                    .any(|value_type| value_type == "Player Variable")
+            });
+    if !is_player_variable_parameter {
+        return None;
+    }
+    match &program.values.get(argument)?.value {
+        Value::PlayerVariable { player, .. } => Some(*player),
+        _ => None,
+    }
 }
 
 fn is_canonical_helper(name: &str) -> bool {
