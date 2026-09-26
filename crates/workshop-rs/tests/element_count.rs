@@ -246,6 +246,36 @@ fn disabled_conditions_and_actions_cost_what_enabled_ones_do() {
     );
 }
 
+#[test]
+fn player_variable_targets_count_nontrivial_player_expressions() {
+    let catalog = catalog();
+    let program = parser::parse(
+        r#"variables {
+            player: 0: state
+        }
+        rule ("player-variable chase") { event { Ongoing - Global; } actions {
+            Stop Chasing Player Variable(First Of(All Players(All Teams)), state);
+        } }
+        rule ("indexed player-variable target") { event { Ongoing - Each Player; } actions {
+            Set Player Variable At Index(First Of(All Players(All Teams)), state, false, 5);
+        } }"#,
+        &catalog,
+        &Locale::new("en-US"),
+    )
+    .unwrap();
+
+    let report = program.element_count(&catalog).unwrap();
+    assert_eq!(
+        report.rule_counts().collect::<Vec<_>>(),
+        vec![
+            ("player-variable chase", 5),
+            ("indexed player-variable target", 6)
+        ],
+        "both target forms count the player expression with the direct-argument reduction"
+    );
+    assert_eq!(report.total, 11);
+}
+
 /// Workshop text compiled by pinned OverPy 9.7.10 with `#!debugElementCount`, and
 /// the total that compiler reports. On a production project OverPy's total is
 /// within 0.01% of the client's; each program here isolates one rule of the model. OverPy also closes the last `If`
