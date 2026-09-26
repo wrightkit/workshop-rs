@@ -900,6 +900,9 @@ fn source_value_spelling(
         (SettingValueDomain::Boolean, KeyKind::Bool, SettingValue::Boolean(value)) => {
             localized("tokens", if value { "On" } else { "Off" })
         }
+        (SettingValueDomain::Boolean, KeyKind::YesNo, SettingValue::Boolean(value)) => {
+            localized("tokens", if value { "Yes" } else { "No" })
+        }
         (SettingValueDomain::Boolean, KeyKind::BoolEnum(domain), SettingValue::Boolean(true)) => {
             let english = table::enum_name(domain, "enabled").ok_or_else(|| {
                 SettingOperationError::InvalidValue {
@@ -1343,7 +1346,7 @@ fn domain_for(kind: KeyKind) -> SettingValueDomain {
     match kind {
         KeyKind::Flag => SettingValueDomain::PresenceOnly,
         KeyKind::String => SettingValueDomain::String,
-        KeyKind::Bool | KeyKind::BoolEnum(_) => SettingValueDomain::Boolean,
+        KeyKind::Bool | KeyKind::YesNo | KeyKind::BoolEnum(_) => SettingValueDomain::Boolean,
         KeyKind::Number => SettingValueDomain::Number(NumericBounds::unknown()),
         KeyKind::Percent => SettingValueDomain::Percent(NumericBounds::unknown()),
         KeyKind::Enum(domain) => SettingValueDomain::Enum {
@@ -1536,6 +1539,7 @@ fn key_kind_matches(kind: KeyKind, expected: &reconciliation::EntryContract) -> 
         (KeyKind::Flag, "flag", None)
         | (KeyKind::String, "string", None)
         | (KeyKind::Bool, "bool", None)
+        | (KeyKind::YesNo, "yesNo", None)
         | (KeyKind::Number, "number", None)
         | (KeyKind::Percent, "percent", None)
         | (KeyKind::ListMap, "mapList", None)

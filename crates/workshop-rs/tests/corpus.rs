@@ -171,7 +171,7 @@ fn confirmed_set_allowed_heroes_mapping_converts_in_both_directions() {
         Ongoing - Global;
     }
     actions {
-        Set Player Allowed Heroes(All Players(Team(All Teams)), Ana);
+        Set Player Allowed Heroes(All Players(All Teams), Hero(Ana));
     }
 }
 ";
@@ -206,7 +206,7 @@ rule (\"legacy-aliases\") {
     }
     actions {
         Stop Chasing Global Variable(Global.value);
-        Start Forcing Player To Be Hero(Event Player, Ana);
+        Start Forcing Player To Be Hero(Event Player, Hero(Ana));
         Stop Forcing Player To Be Hero(Event Player);
         Start Forcing Throttle(Event Player, 100, 100, 100, 100, 100, 100);
     }

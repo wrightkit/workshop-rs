@@ -3796,8 +3796,8 @@
         "th-TH": "เปิดใช้งานเสียงเพลงโหมดเกมในตัว",
         "tr-TR": "Dâhilî Oyun Modu Müziğini Etkinleştir",
         "zh-CN": [
-          "启用内置游戏模式音乐",
-          "开启游戏预设音乐模式"
+          "开启游戏预设音乐模式",
+          "启用内置游戏模式音乐"
         ],
         "zh-TW": "Enable Built-In Game Mode Music"
       },
@@ -3821,8 +3821,8 @@
         "th-TH": "ทำลายข้อความในโลกทั้งหมด",
         "tr-TR": "Tüm Oyun İçi Metinleri Yok Et",
         "zh-CN": [
-          "摧毁所有世界内文本",
-          "消除所有地图文本"
+          "消除所有地图文本",
+          "摧毁所有世界内文本"
         ],
         "zh-TW": "Destroy All In-World Text"
       },
@@ -3846,8 +3846,8 @@
         "th-TH": "ทำลายไอคอนทั้งหมด",
         "tr-TR": "Tüm Simgeleri Yok Et",
         "zh-CN": [
-          "摧毁所有图标",
-          "消除所有图标"
+          "消除所有图标",
+          "摧毁所有图标"
         ],
         "zh-TW": "Destroy All Icons"
       },
@@ -3871,8 +3871,8 @@
         "th-TH": "ทำลายข้อความ HUD ทั้งหมด",
         "tr-TR": "Tüm Ekran Göstergeleri Metinlerini Yok Et",
         "zh-CN": [
-          "摧毁所有HUD文本",
-          "消除所有HUD文本"
+          "消除所有HUD文本",
+          "摧毁所有HUD文本"
         ],
         "zh-TW": "Destroy All HUD Text"
       },
@@ -3896,8 +3896,8 @@
         "th-TH": "ทําลายเอฟเฟกต์ทั้งหมด",
         "tr-TR": "Tüm Efektleri Yok Et",
         "zh-CN": [
-          "摧毁所有效果",
-          "消除所有效果"
+          "消除所有效果",
+          "摧毁所有效果"
         ],
         "zh-TW": "Destroy All Effects"
       },
@@ -3921,8 +3921,8 @@
         "th-TH": "ปิดใช้งานเพลงโหมดเกมในตัว",
         "tr-TR": "Dâhilî Oyun Modu Müziğini Devre Dışı Bırak",
         "zh-CN": [
-          "禁用内置游戏模式音乐",
-          "关闭游戏预设音乐模式"
+          "关闭游戏预设音乐模式",
+          "禁用内置游戏模式音乐"
         ],
         "zh-TW": "Disable Built-In Game Mode Music"
       },
@@ -3971,8 +3971,8 @@
         "th-TH": "ปิดใช้งานการจบโหมดเกมในตัว",
         "tr-TR": "Dâhilî Oyun Modu Sonuçlandırma'yı Devre Dışı Bırak",
         "zh-CN": [
-          "禁用内置游戏模式完成",
-          "关闭游戏预设完成条件"
+          "关闭游戏预设完成条件",
+          "禁用内置游戏模式完成"
         ],
         "zh-TW": "Disable Built-In Game Mode Completion"
       },
@@ -3996,8 +3996,8 @@
         "th-TH": "ปิดใช้งานผู้ประกาศโหมดเกมในตัว",
         "tr-TR": "Dâhilî Oyun Modu Anonsçusunu Devre Dışı Bırak",
         "zh-CN": [
-          "禁用内置游戏模式播报员",
-          "关闭游戏预设通告模式"
+          "关闭游戏预设通告模式",
+          "禁用内置游戏模式播报员"
         ],
         "zh-TW": "Disable Built-In Game Mode Announcer"
       },
@@ -4021,8 +4021,8 @@
         "th-TH": "ปิดใช้งานการให้คะแนนโหมดเกมในตัว",
         "tr-TR": "Dâhilî Oyun Modu Puanlama'yı Devre Dışı Bırak",
         "zh-CN": [
-          "禁用内置游戏模式计分",
-          "关闭游戏预设计分模式"
+          "关闭游戏预设计分模式",
+          "禁用内置游戏模式计分"
         ],
         "zh-TW": "Disable Built-In Game Mode Scoring"
       },
@@ -4046,8 +4046,8 @@
         "th-TH": "เลิกหยุดเวลาแมตช์ชั่วคราว",
         "tr-TR": "Maç Süresini Sürdür",
         "zh-CN": [
-          "继续比赛时间",
-          "比赛时间继续"
+          "比赛时间继续",
+          "继续比赛时间"
         ],
         "zh-TW": "Unpause Match Time"
       },
@@ -7888,7 +7888,7 @@
       ]
     }
   ],
-  "digest": "e022d56f95c4870a4e1abfeb82b33674da3a8e983f9aed986b21285e181a404d",
+  "digest": "4a2702e63611573541c0880b942fed0cfec63190ef44f994739174e21d10e000",
   "enums": [
     {
       "domain": "Impulse",

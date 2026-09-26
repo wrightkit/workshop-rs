@@ -252,6 +252,14 @@ impl EmitContext<'_> {
                 )?;
                 self.line(level, &format!("{display_name}: {rendered}"))?;
             }
+            (SettingsNode::Bool { value, .. }, KeyKind::YesNo) => {
+                let rendered = self.setting_name(
+                    "tokens",
+                    if *value { "Yes" } else { "No" },
+                    if *value { "token.yes" } else { "token.no" },
+                )?;
+                self.line(level, &format!("{display_name}: {rendered}"))?;
+            }
             (SettingsNode::Bool { value, .. }, KeyKind::BoolEnum(domain)) => {
                 if !*value {
                     return Err(self
