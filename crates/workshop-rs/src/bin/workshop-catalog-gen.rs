@@ -240,6 +240,7 @@ fn native_spellings(catalog_json: &str) -> Result<(), Vec<String>> {
             .flatten()
             .filter_map(|name| name.as_str().map(str::to_lowercase))
             .collect();
+        let mut owners = std::collections::HashMap::new();
         for entry in catalog[section].as_array().into_iter().flatten() {
             let spellings = match &entry["aliases"]["en-US"] {
                 serde_json::Value::String(name) => vec![name.as_str()],
@@ -248,7 +249,13 @@ fn native_spellings(catalog_json: &str) -> Result<(), Vec<String>> {
                 }
                 _ => Vec::new(),
             };
+            let id = entry["id"].as_str().unwrap_or("?");
             for name in spellings {
+                if let Some(owner) = owners.insert(name.to_lowercase(), id) {
+                    errors.push(format!(
+                        "{kind} '{id}': en-US spelling '{name}' repeats the native name of '{owner}'"
+                    ));
+                }
                 if !native.contains(&name.to_lowercase()) {
                     errors.push(format!(
                         "{kind} '{}': en-US spelling '{name}' is not a native Workshop name in the wiki inventory",
@@ -1976,6 +1983,16 @@ mod tests {
     fn committed_catalog_uses_only_native_spellings() {
         let catalog = include_str!("../catalog/data/catalog.json");
         native_spellings(catalog).expect("catalog holds only native Workshop spellings");
+    }
+
+    #[test]
+    fn case_variant_of_a_native_name_is_a_duplicate() {
+        let catalog = r#"{"actions":[
+            {"id":"movePlayerToTeam","aliases":{"en-US":"Move Player to Team"}},
+            {"id":"moveToTeamAgain","aliases":{"en-US":"Move Player To Team"}}],"values":[]}"#;
+        let errors = native_spellings(catalog).expect_err("case-only duplicate fails");
+        assert_eq!(errors.len(), 1, "{errors:?}");
+        assert!(errors[0].contains("repeats the native name"), "{errors:?}");
     }
 
     #[test]
