@@ -248,7 +248,9 @@ fn disabled_conditions_and_actions_cost_what_enabled_ones_do() {
 
 /// Workshop text compiled by pinned OverPy 9.7.10 with `#!debugElementCount`, and
 /// the total that compiler reports. On a production project OverPy's total is
-/// within 0.01% of the client's; each program here isolates one rule of the model.
+/// within 0.01% of the client's; each program here isolates one rule of the model. OverPy also closes the last `If`
+/// of a subroutine rule with an `End`, which the canonical emitter omits, so no case
+/// with such a rule is listed.
 const OVERPY_COUNTS: &[(&str, usize, &str)] = &[
     (
         "wait_number",
@@ -369,42 +371,6 @@ rule ("r") {
 }"#,
     ),
     (
-        "subroutine_keeps_end",
-        14,
-        r#"variables {
-    global:
-        0: g
-}
-
-subroutines {
-    0: s
-}
-
-rule ("Subroutine s") {
-    event {
-        Subroutine;
-        s;
-    }
-    actions {
-        Wait(1, Ignore Condition);
-        If(Compare(Global.g, ==, 3));
-            Set Global Variable(g, 1);
-        End;
-    }
-}
-
-rule ("r") {
-    event {
-        Ongoing - Each Player;
-        All;
-        All;
-    }
-    actions {
-        Call Subroutine(s);
-    }
-}"#,
-    ),
-    (
         "while_keeps_end",
         10,
         r#"variables {
@@ -470,6 +436,60 @@ rule ("r") {
 }"#,
     ),
 ];
+
+#[test]
+fn a_written_and_an_omitted_trailing_end_are_one_program_with_one_cost() {
+    let catalog = catalog();
+    let locale = Locale::new("en-US");
+    let rule = |end: &str| {
+        format!(
+            r#"rule ("r") {{ event {{ Ongoing - Global; }} actions {{ If(True); Wait(1, Ignore Condition); {end} }} }}"#
+        )
+    };
+    let omitted = parser::parse(&rule(""), &catalog, &locale).unwrap();
+    let written = parser::parse(&rule("End;"), &catalog, &locale).unwrap();
+    let omitted = omitted.element_count(&catalog).unwrap().total;
+    assert_eq!(omitted, written.element_count(&catalog).unwrap().total);
+    // rule 1 + If 1 + its condition 0 + Wait (1 + number 1 + behavior 0); no `End`
+    assert_eq!(omitted, 4);
+}
+
+#[test]
+fn only_the_last_action_of_a_rule_is_closed_without_end() {
+    let catalog = catalog();
+    let locale = Locale::new("en-US");
+    let text = |body: &str| {
+        format!(r#"rule ("r") {{ event {{ Ongoing - Global; }} actions {{ {body} }} }}"#)
+    };
+    let count = |body: &str| {
+        parser::parse(&text(body), &catalog, &locale)
+            .unwrap()
+            .element_count(&catalog)
+            .unwrap()
+            .total
+    };
+    // the middle `If` and a nested last `If` keep their `End`
+    assert_eq!(count("If(True); End; Wait(1, Ignore Condition);"), 5);
+    assert_eq!(count("If(True); If(True); End; End;"), 4);
+    // a loop keeps its `End` even as the last action
+    assert_eq!(count("While(True); End;"), 3);
+}
+
+#[test]
+fn the_count_is_that_of_the_canonical_emitted_form() {
+    let catalog = catalog();
+    let locale = Locale::new("en-US");
+    for (name, _, text) in OVERPY_COUNTS {
+        let program = parser::parse(text, &catalog, &locale).unwrap();
+        let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).unwrap();
+        let reparsed = parser::parse(&emitted, &catalog, &locale).unwrap();
+        assert_eq!(
+            program.element_count(&catalog).unwrap().total,
+            reparsed.element_count(&catalog).unwrap().total,
+            "{name}"
+        );
+    }
+}
 
 #[test]
 fn counts_match_the_pinned_overpy_element_counter() {

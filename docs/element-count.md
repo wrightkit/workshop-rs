@@ -45,9 +45,11 @@ argument, not across arguments. An argument a call leaves out still fills its
 slot: the catalog default counts at its cost (the three replacement slots of
 `Custom String` each count a `Null`).
 
-`End` closes a block, with two exceptions. An `If` still open where a rule ends
-is closed by the rule and its `End` is neither written nor counted; a `While`,
-a `For`, and any block in a subroutine keep theirs. Disabling a rule, action,
+`End` closes a block. The count follows the canonical emitted form: the emitter
+writes the last action of a rule, when it is an `If`, without its `End`, and
+the count omits it too, in a subroutine rule as well; a written and an omitted
+trailing `End` are the same program and cost the same. Nested blocks, `While`,
+and `For` always have theirs. Disabling a rule, action,
 or condition has no effect on the count.
 
 The calculator is locale-independent: it reads canonical identities and
@@ -69,8 +71,11 @@ The independent behavioral source for the supported rules is the
 The rules above were derived and checked against `#!debugElementCount` of pinned
 OverPy 9.7.10, which reports an element count for every action and condition.
 On the `main` entry of a production project (309 rules, 2867 leaf actions)
-every action count and every rule count agrees, and the total is 30067, OverPy's
-own figure. The client counted OverPy's build of that project at 30070, three
+every action count agrees, and the total is 30065 against OverPy's 30067. Eight
+rules differ by one element, all because the count follows the canonical emitter
+where OverPy's spelling differs: five subroutine rules whose final `If` OverPy
+closes with an `End` (the emitter omits it), and three rules whose last `If`
+ends in a nested `If` that OverPy closes without `End` (the emitter writes it). The client counted OverPy's build of that project at 30070, three
 elements more; the cause of those three is not known. Small programs that
 isolate one rule each, with OverPy's totals, are in
 `tests/element_count.rs`.

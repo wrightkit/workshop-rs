@@ -216,11 +216,9 @@ impl Counter<'_> {
         for condition in &rule.conditions {
             children.push(self.condition(condition.value)?.node);
         }
-        // A subroutine keeps its closing `End`; any other rule closes an open `If`.
-        let closes_open_blocks = !matches!(rule.event, wir::Event::Subroutine(_));
         for (index, action) in rule.actions.iter().enumerate() {
-            let trailing = closes_open_blocks && index + 1 == rule.actions.len();
-            children.push(self.action(*action, trailing)?.node);
+            let rule_final = index + 1 == rule.actions.len();
+            children.push(self.action(*action, rule_final)?.node);
         }
         Ok(Counted::finish(
             ElementNodeKind::Rule,
@@ -270,7 +268,7 @@ impl Counter<'_> {
         ))
     }
 
-    fn action(&mut self, id: ActionId, trailing: bool) -> Result<Counted, ElementCountError> {
+    fn action(&mut self, id: ActionId, rule_final: bool) -> Result<Counted, ElementCountError> {
         let node_id = self.next_node_id();
         if let Some(&active_id) = self.actions.get(&id.index()) {
             return Err(ElementCountError::Cycle {
@@ -288,7 +286,7 @@ impl Counter<'_> {
                 message: format!("dangling action {}", id.index()),
             });
         };
-        let result = self.action_inner(action, node_id, trailing);
+        let result = self.action_inner(action, node_id, rule_final);
         self.actions.remove(&id.index());
         result
     }
@@ -297,7 +295,7 @@ impl Counter<'_> {
         &mut self,
         action: &Action,
         node_id: usize,
-        trailing: bool,
+        rule_final: bool,
     ) -> Result<Counted, ElementCountError> {
         let span = action.span();
         let mut children = Vec::new();
@@ -330,24 +328,21 @@ impl Counter<'_> {
                 ..
             } => {
                 name = "if";
-                // `Else If` and `Else` are actions of their own; so is `End`,
-                // except that an `If` still open where the rule ends is closed
-                // by the rule. Loops keep their `End`.
+                // `Else If` and `Else` are actions of their own; so is `End`. The
+                // canonical emitter closes the last action of a rule without its
+                // `End`, and only that one: nested and loop blocks keep theirs.
                 base += branches.len().saturating_sub(1)
                     + usize::from(else_body.is_some())
-                    + usize::from(!trailing);
-                for (branch_index, branch) in branches.iter().enumerate() {
+                    + usize::from(!rule_final);
+                for branch in branches {
                     self.push_action_value(&mut children, &mut heroes, branch.condition)?;
-                    let last_body = else_body.is_none() && branch_index + 1 == branches.len();
-                    for (index, nested) in branch.body.iter().enumerate() {
-                        let end = trailing && last_body && index + 1 == branch.body.len();
-                        children.push(self.action(*nested, end)?.node);
+                    for nested in &branch.body {
+                        children.push(self.action(*nested, false)?.node);
                     }
                 }
                 if let Some(body) = else_body {
-                    for (index, nested) in body.iter().enumerate() {
-                        let end = trailing && index + 1 == body.len();
-                        children.push(self.action(*nested, end)?.node);
+                    for nested in body {
+                        children.push(self.action(*nested, false)?.node);
                     }
                 }
             }
