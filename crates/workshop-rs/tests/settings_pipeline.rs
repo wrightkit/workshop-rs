@@ -164,7 +164,7 @@ fn generated_capture_the_flag_settings_surface_is_canonical() {
 #[test]
 fn pinned_ai_hero_setting_aliases_are_canonical() {
     let catalog = catalog();
-    let source = "设置 { 英雄 { 综合 { 索杰恩 { 充能速度 充能射击: 200% } 路霸 { 呼吸器充能速度: 150% } 骇灾 { 尖刺护体资源恢复: 150% 尖刺护体资源消耗: 50% } } } }";
+    let source = "设置 { 英雄 { 综合 { 索杰恩 { 充能速度 充能射击: 200% } 路霸 { secondaryFireRechargeRate%: 150 } 骇灾 { 尖刺护体资源恢复: 150% 尖刺护体资源消耗: 50% } } } }";
     let program = parser::parse_wir(source, &catalog, &Locale::new("zh-CN")).expect("parses");
     assert!(
         program
