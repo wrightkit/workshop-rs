@@ -677,6 +677,7 @@ mod corpus {
         let tokens = [
             ("token.on", "On"),
             ("token.off", "Off"),
+            ("token.yes", "Yes"),
             ("token.no", "No"),
             ("token.disabled", "disabled"),
         ]

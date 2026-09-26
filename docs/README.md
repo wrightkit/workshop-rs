@@ -67,6 +67,8 @@ Support prose is not a substitute for current executable tests.
   locale-aware ability resolution.
 - [Hero gameplay topology survey](gameplay-roster-survey.md): source material used by
   the gameplay domain.
+- [Constant wrapper and settings-boolean forms](wrapper-forms.md): which
+  constants are written with a wrapper and which boolean word settings use.
 - [Canonical action layout](action-layout.md): validated WIR action-width and
   structured action expansion behavior.
 - [Test fixture source attribution](../crates/workshop-rs/tests/fixtures/README.md):

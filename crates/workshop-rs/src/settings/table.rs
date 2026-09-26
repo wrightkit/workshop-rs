@@ -53,6 +53,8 @@ pub(crate) enum KeyKind {
     String,
     /// A boolean rendered `On`/`Off`.
     Bool,
+    /// A boolean rendered `Yes`/`No`.
+    YesNo,
     /// A boolean carrier rendered through a source-supported true-value enum
     /// token. The false value remains unsupported until independently sourced.
     BoolEnum(&'static str),
@@ -155,7 +157,7 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
             PathPart::Part("allowPlayersInQueue")
         ],
         "Allow Players Who Are In Queue",
-        KeyKind::Bool
+        KeyKind::YesNo
     ),
     entry!(
         [
@@ -163,7 +165,7 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
             PathPart::Part("swapTeamsAfterMatch")
         ],
         "Swap Teams After Match",
-        KeyKind::Bool
+        KeyKind::YesNo
     ),
     // gamemodes.<mode> — per-key subsets (exact-path entries, #86):
     // enabledMaps under modes {assault, control, escort, hybrid, skirmish,
@@ -1075,20 +1077,19 @@ pub(crate) fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static st
 
 /// Resolve a source-backed hero-specific setting label.
 pub(crate) fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static str> {
-    let generated = GENERATED_HERO_SETTING_NAMES
+    // A producer alias is the spelling pinned OverPy writes, so it is emitted
+    // in preference to the export label.
+    hero_setting_aliases()
         .iter()
-        .find(|entry| entry.hero == hero && entry.key == key)
-        .and_then(|entry| entry.localized(locale));
-    generated
+        .find(|alias| {
+            alias.hero == hero && alias.key == key && alias.locale.eq_ignore_ascii_case(locale)
+        })
+        .map(|alias| alias.display.as_str())
         .or_else(|| {
-            hero_setting_aliases()
+            GENERATED_HERO_SETTING_NAMES
                 .iter()
-                .find(|alias| {
-                    alias.hero == hero
-                        && alias.key == key
-                        && alias.locale.eq_ignore_ascii_case(locale)
-                })
-                .map(|alias| alias.display.as_str())
+                .find(|entry| entry.hero == hero && entry.key == key)
+                .and_then(|entry| entry.localized(locale))
         })
         .or_else(|| {
             if locale.eq_ignore_ascii_case("en-US") {

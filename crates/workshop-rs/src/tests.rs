@@ -28,3 +28,5 @@ mod source_map;
 mod source_preservation;
 #[path = "../tests/wir_expansion.rs"]
 mod wir_expansion;
+#[path = "../tests/wrapper_forms.rs"]
+mod wrapper_forms;

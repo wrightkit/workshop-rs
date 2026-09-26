@@ -12,7 +12,6 @@ pub(crate) use std::fmt::Write;
 
 pub(crate) use crate::catalog::{Catalog, Kind, Locale};
 pub(crate) use crate::core::error::{Result, WorkshopError};
-pub(crate) use crate::core::format::format_number;
 pub(crate) use crate::settings::table::KeyKind;
 pub(crate) use crate::settings::{PathPart, table};
 pub(crate) use crate::settings::{Settings as SettingsTree, SettingsNode};
@@ -51,8 +50,7 @@ pub(crate) fn emit_wir(
     catalog: &Catalog,
     locale: &Locale,
 ) -> Result<String> {
-    emit_with_options_inner(program, catalog, locale, &EmitOptions::default(), false)
-        .map(|out| out.text)
+    emit_with_options_inner(program, catalog, locale, &EmitOptions::default()).map(|out| out.text)
 }
 
 /// Emit a public Workshop program as localized Workshop text with emission
@@ -64,17 +62,7 @@ pub fn emit_with_options(
     options: &EmitOptions,
 ) -> Result<EmitOutput> {
     let storage = program.to_wir()?;
-    emit_with_options_inner(&storage, catalog, locale, options, false)
-}
-
-pub(crate) fn emit_with_options_for_conversion(
-    program: &crate::Program,
-    catalog: &Catalog,
-    locale: &Locale,
-    options: &EmitOptions,
-) -> Result<EmitOutput> {
-    let storage = program.to_wir()?;
-    emit_with_options_inner(&storage, catalog, locale, options, true)
+    emit_with_options_inner(&storage, catalog, locale, options)
 }
 
 #[cfg(test)]
@@ -84,7 +72,7 @@ pub(crate) fn emit_wir_with_options(
     locale: &Locale,
     options: &EmitOptions,
 ) -> Result<EmitOutput> {
-    emit_with_options_inner(program, catalog, locale, options, false)
+    emit_with_options_inner(program, catalog, locale, options)
 }
 
 fn emit_with_options_inner(
@@ -92,14 +80,12 @@ fn emit_with_options_inner(
     catalog: &Catalog,
     locale: &Locale,
     options: &EmitOptions,
-    force_hero_constructors: bool,
 ) -> Result<EmitOutput> {
     let mut emitter = EmitContext {
         program,
         catalog,
         locale: locale.clone(),
         fallback: options.fallback_locale.clone(),
-        force_hero_constructors,
         fallback_ids: Vec::new(),
         out: String::new(),
         line_count: 0,
@@ -119,7 +105,6 @@ pub(crate) struct EmitContext<'a> {
     pub(crate) fallback: Option<Locale>,
     /// Canonical ids emitted with a fallback-locale spelling.
     pub(crate) fallback_ids: Vec<String>,
-    pub(crate) force_hero_constructors: bool,
     pub(crate) out: String,
     pub(crate) line_count: usize,
 }

@@ -105,7 +105,6 @@ fn action_width_wir(
         locale: locale.clone(),
         fallback: None,
         fallback_ids: Vec::new(),
-        force_hero_constructors: false,
         out: String::new(),
         line_count: 0,
     };

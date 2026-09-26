@@ -57,26 +57,10 @@ impl<'a> EmitContext<'a> {
             }
             wir::Value::Enum { value_type, value } => {
                 let spelling = self.enum_spelling(value_type, value)?;
-                // Color, Team, and Hero values use the constructor form;
-                // other domains use bare member spellings (the canonical
-                // corpus form). The
-                // Team/Color spelling collision (`Team 2` is both a Team and
-                // a Team color) is the one ambiguity unpinned by the
-                // catalog's paramDomains, so Team members qualify with the
-                // constructor form and the emitted text reparses
-                // deterministically (round-trip contract; pinned P4
-                // evidence).
-                if matches!(value_type.as_str(), "Color" | "Map" | "Team")
-                    || value_type == "Hero"
-                        && (spelling.contains('.')
-                            || self.locale != *self.catalog.primary_locale()
-                            || (self.force_hero_constructors
-                                && self
-                                    .program
-                                    .global_variables
-                                    .iter()
-                                    .any(|variable| variable.name == spelling)))
-                {
+                // Constructor-form domains are written `Domain(Member)` in
+                // every position and locale; Team members and every other
+                // domain are written bare (docs/wrapper-forms.md).
+                if matches!(value_type.as_str(), "Hero" | "Button" | "Color" | "Map") {
                     let domain = self
                         .catalog
                         .enum_domain(value_type)

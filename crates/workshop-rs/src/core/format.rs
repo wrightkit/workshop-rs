@@ -36,6 +36,15 @@ pub fn format_number(value: f64) -> String {
     }
 }
 
+/// Format a settings number: the shortest decimal that round-trips, so a
+/// value read from a project is written back unchanged.
+pub fn format_setting_number(value: f64) -> String {
+    if value.fract() == 0.0 && value.abs() < 1e15 {
+        return format_number(value);
+    }
+    format!("{value}")
+}
+
 /// Keep at most `max_digits` significant digits of a decimal string,
 /// truncating (not rounding) and expanding any exponent form.
 fn truncate_significant(text: &str, max_digits: usize) -> String {

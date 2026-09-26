@@ -317,7 +317,7 @@ impl ParseContext<'_> {
                     span: Some(Span::new(self.file(), start, self.previous_span().1)),
                 })
             }
-            KeyKind::Bool => {
+            KeyKind::Bool | KeyKind::YesNo => {
                 let value = self.settings_bool()?;
                 Ok(SettingsNode::Bool {
                     name: name.to_string(),

@@ -29,8 +29,8 @@
       "total": 3
     },
     "tokens": {
-      "matched": 4,
-      "total": 4
+      "matched": 5,
+      "total": 5
     }
   },
   "enums": {
@@ -9369,6 +9369,26 @@
       "tr-TR": "Açık",
       "zh-CN": "开启",
       "zh-TW": "開啟"
+    },
+    "Yes": {
+      "de-DE": "Ja",
+      "en-US": "Yes",
+      "es-ES": "Sí",
+      "es-MX": "Sí",
+      "fr-FR": "Oui",
+      "it-IT": "Sì",
+      "ja-JP": "はい",
+      "ko-KR": "네",
+      "pl-PL": "Tak",
+      "pt-BR": "Sim",
+      "ru-RU": "Да",
+      "sources": [
+        "other.customGameSettings.__yes__"
+      ],
+      "th-TH": "ใช่",
+      "tr-TR": "Evet",
+      "zh-CN": "是",
+      "zh-TW": "是"
     },
     "disabled": {
       "de-DE": "Deaktiviert",

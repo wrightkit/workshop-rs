@@ -9,9 +9,11 @@
     { "path": "heroes.<team>.<hero>.enableAbility2", "fixture": { "name": "Ability 2", "kind": "bool" }, "generated": { "name": "%1$s", "kind": "bool" } },
     { "path": "heroes.<team>.<hero>.enableSecondaryFire", "fixture": { "name": "Secondary Fire", "kind": "bool" }, "generated": { "name": "%1$s", "kind": "bool" } },
     { "path": "heroes.<team>.<hero>.passiveUltGen%", "fixture": { "name": "Ultimate Generation - Passive Blizzard", "kind": "percent" }, "generated": { "name": "Ultimate Generation - Passive %1$s", "kind": "percent" } },
+    { "path": "lobby.allowPlayersInQueue", "fixture": { "name": "Allow Players Who Are In Queue", "kind": "yesNo" }, "generated": { "name": "Allow Players Who Are In Queue", "kind": "bool" } },
     { "path": "lobby.enableMatchVoiceChat", "fixture": { "name": "Match Voice Chat", "kind": "boolEnum", "domain": "matchVoiceChat" }, "generated": { "name": "Match Voice Chat", "kind": "bool" } },
     { "path": "lobby.mapRotation", "fixture": { "name": "Map Rotation", "kind": "enum", "domain": "mapRotation" }, "generated": { "name": "Map Rotation", "kind": "enum", "domain": "setting_lobby_mapRotation" } },
     { "path": "lobby.returnToLobby", "fixture": { "name": "Return To Lobby", "kind": "enum", "domain": "returnToLobby" }, "generated": { "name": "Return To Lobby", "kind": "enum", "domain": "setting_lobby_returnToLobby" } },
+    { "path": "lobby.swapTeamsAfterMatch", "fixture": { "name": "Swap Teams After Match", "kind": "yesNo" }, "generated": { "name": "Swap Teams After Match", "kind": "bool" } },
     { "path": "lobby.team1Slots", "fixture": { "name": "Max Team 1 Players", "kind": "number" }, "generated": { "name": "Max %1$s Players", "kind": "number" } },
     { "path": "lobby.team2Slots", "fixture": { "name": "Max Team 2 Players", "kind": "number" }, "generated": { "name": "Max %1$s Players", "kind": "number" } }
   ],

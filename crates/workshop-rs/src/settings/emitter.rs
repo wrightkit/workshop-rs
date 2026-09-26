@@ -236,12 +236,21 @@ impl EmitContext<'_> {
                 self.line(level, &format!("{display_name}: {display}"))?;
             }
             (SettingsNode::Number { value, .. }, KeyKind::Number) => {
-                self.line(level, &format!("{display_name}: {}", format_number(*value)))?;
+                self.line(
+                    level,
+                    &format!(
+                        "{display_name}: {}",
+                        crate::format::format_setting_number(*value)
+                    ),
+                )?;
             }
             (SettingsNode::Number { value, .. }, KeyKind::Percent) => {
                 self.line(
                     level,
-                    &format!("{display_name}: {}%", format_number(*value)),
+                    &format!(
+                        "{display_name}: {}%",
+                        crate::format::format_setting_number(*value)
+                    ),
                 )?;
             }
             (SettingsNode::Bool { value, .. }, KeyKind::Bool) => {
@@ -249,6 +258,14 @@ impl EmitContext<'_> {
                     "tokens",
                     if *value { "On" } else { "Off" },
                     if *value { "token.on" } else { "token.off" },
+                )?;
+                self.line(level, &format!("{display_name}: {rendered}"))?;
+            }
+            (SettingsNode::Bool { value, .. }, KeyKind::YesNo) => {
+                let rendered = self.setting_name(
+                    "tokens",
+                    if *value { "Yes" } else { "No" },
+                    if *value { "token.yes" } else { "token.no" },
                 )?;
                 self.line(level, &format!("{display_name}: {rendered}"))?;
             }
