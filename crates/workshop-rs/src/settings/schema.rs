@@ -921,10 +921,10 @@ fn source_value_spelling(
             })
         }
         (SettingValueDomain::Number(_), KeyKind::Number, SettingValue::Number(value)) => {
-            Ok(crate::format::format_number(value))
+            Ok(crate::format::format_setting_number(value))
         }
         (SettingValueDomain::Percent(_), KeyKind::Percent, SettingValue::Percent(value)) => {
-            Ok(format!("{}%", crate::format::format_number(value)))
+            Ok(format!("{}%", crate::format::format_setting_number(value)))
         }
         (SettingValueDomain::String, KeyKind::String, SettingValue::String(value)) => Ok(format!(
             "\"{}\"",

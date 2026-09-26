@@ -12,7 +12,6 @@ pub(crate) use std::fmt::Write;
 
 pub(crate) use crate::catalog::{Catalog, Kind, Locale};
 pub(crate) use crate::core::error::{Result, WorkshopError};
-pub(crate) use crate::core::format::format_number;
 pub(crate) use crate::settings::table::KeyKind;
 pub(crate) use crate::settings::{PathPart, table};
 pub(crate) use crate::settings::{Settings as SettingsTree, SettingsNode};

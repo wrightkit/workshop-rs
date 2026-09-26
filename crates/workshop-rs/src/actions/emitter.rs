@@ -322,6 +322,24 @@ impl EmitContext<'_> {
                         if index > 0 {
                             args_text.push_str(", ");
                         }
+                        // The frontend merges the leading `player, name` pair of
+                        // the indexed player-variable actions into one
+                        // player-variable value; split it back.
+                        if index == 0
+                            && matches!(
+                                name.as_str(),
+                                "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex"
+                            )
+                        {
+                            if let Some(wir::Value::PlayerVariable { player, variable }) =
+                                self.program.values.get(*arg).map(|node| &node.value)
+                            {
+                                self.value(*player, &mut args_text)?;
+                                args_text.push_str(", ");
+                                args_text.push_str(self.player_name(*variable)?);
+                                continue;
+                            }
+                        }
                         let variable_position = match name.as_str() {
                             "setGlobalVariableAtIndex" | "modifyGlobalVariableAtIndex" => {
                                 index == 0

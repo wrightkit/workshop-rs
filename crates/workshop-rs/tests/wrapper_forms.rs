@@ -120,15 +120,11 @@ fn wrapper_counts(text: &str) -> Vec<usize> {
         .collect()
 }
 
-/// Tokens of everything after the leading settings block. Settings labels and
-/// number formatting are outside the wrapper rule, and a leading `.` (variable
-/// member access) is not a new token.
 fn tokens(text: &str) -> BTreeSet<String> {
-    let body = text.split_once("\n}\n").map_or(text, |(_, rest)| rest);
     regex::Regex::new(r"[\p{L}\p{N}_.]+")
         .unwrap()
-        .find_iter(body)
-        .map(|token| token.as_str().trim_start_matches('.').to_string())
+        .find_iter(text)
+        .map(|token| token.as_str().to_string())
         .collect()
 }
 

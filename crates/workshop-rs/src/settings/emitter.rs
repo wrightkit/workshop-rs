@@ -236,12 +236,21 @@ impl EmitContext<'_> {
                 self.line(level, &format!("{display_name}: {display}"))?;
             }
             (SettingsNode::Number { value, .. }, KeyKind::Number) => {
-                self.line(level, &format!("{display_name}: {}", format_number(*value)))?;
+                self.line(
+                    level,
+                    &format!(
+                        "{display_name}: {}",
+                        crate::format::format_setting_number(*value)
+                    ),
+                )?;
             }
             (SettingsNode::Number { value, .. }, KeyKind::Percent) => {
                 self.line(
                     level,
-                    &format!("{display_name}: {}%", format_number(*value)),
+                    &format!(
+                        "{display_name}: {}%",
+                        crate::format::format_setting_number(*value)
+                    ),
                 )?;
             }
             (SettingsNode::Bool { value, .. }, KeyKind::Bool) => {
