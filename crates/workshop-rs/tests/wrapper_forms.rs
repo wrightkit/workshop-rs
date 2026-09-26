@@ -95,6 +95,34 @@ fn a_team_wrapper_in_the_input_is_written_bare_in_every_locale() {
 }
 
 #[test]
+fn team_constants_in_color_slots_keep_their_authored_form() {
+    for (locale, section, event, actions) in [
+        (
+            "en-US",
+            "rule",
+            "event",
+            &[
+                "Play Effect(All Players(All Teams), Echo Sticky Bomb Explosion Effect, Team 1, Event Player, 200);",
+                "Play Effect(All Players(All Teams), Echo Sticky Bomb Explosion Effect, Team 2, Event Player, 200);",
+                "Play Effect(All Players(All Teams), Echo Sticky Bomb Explosion Effect, Color(Team 2), Event Player, 200);",
+            ][..],
+        ),
+        (
+            "zh-CN",
+            "规则",
+            "事件",
+            &[
+                "播放效果(所有玩家(所有队伍), “回声”黏性炸弹爆炸效果, 队伍1, 事件玩家, 200);",
+                "播放效果(所有玩家(所有队伍), “回声”黏性炸弹爆炸效果, 队伍2, 事件玩家, 200);",
+                "播放效果(所有玩家(所有队伍), “回声”黏性炸弹爆炸效果, 颜色(队伍2), 事件玩家, 200);",
+            ][..],
+        ),
+    ] {
+        assert_lines_preserved(actions, locale, event, section);
+    }
+}
+
+#[test]
 fn yes_no_settings_are_written_with_the_client_word() {
     for (locale, text) in [
         (
@@ -111,13 +139,15 @@ fn yes_no_settings_are_written_with_the_client_word() {
 }
 
 fn wrapper_counts(text: &str) -> Vec<usize> {
-    ["Team", "队伍", "Hero", "英雄", "Button", "按钮"]
-        .iter()
-        .map(|name| {
-            let pattern = format!(r"(^|[^\p{{L}}\p{{N}}_]){name}\(");
-            regex::Regex::new(&pattern).unwrap().find_iter(text).count()
-        })
-        .collect()
+    [
+        "Team", "队伍", "Hero", "英雄", "Button", "按钮", "Color", "颜色",
+    ]
+    .iter()
+    .map(|name| {
+        let pattern = format!(r"(^|[^\p{{L}}\p{{N}}_]){name}\(");
+        regex::Regex::new(&pattern).unwrap().find_iter(text).count()
+    })
+    .collect()
 }
 
 fn tokens(text: &str) -> BTreeSet<String> {

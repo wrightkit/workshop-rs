@@ -734,15 +734,21 @@ impl ParseContext<'_> {
                 Some(Span::new(self.file(), start, end)),
             )));
         }
-        if let Some(expected) = self.expected_domain {
-            if let Some((value_type, value)) = self.resolve_enum_member_mixed(expected, phrase) {
-                return Ok(self.target.values.push(ValueNode::new(
-                    Value::Enum { value_type, value },
-                    Some(Span::new(self.file(), start, end)),
-                )));
-            }
-        }
-        if let Some((value_type, value)) = self.resolve_enum_member_mixed("Team", phrase) {
+        let member = self
+            .expected_domain
+            .filter(|domain| *domain == "Color")
+            .and_then(|_| self.resolve_enum_member_mixed("Team", phrase))
+            .filter(|(_, member)| {
+                self.catalog
+                    .enum_spelling("Color", self.catalog.primary_locale(), member)
+                    .is_some()
+            })
+            .or_else(|| {
+                self.expected_domain
+                    .and_then(|domain| self.resolve_enum_member_mixed(domain, phrase))
+            })
+            .or_else(|| self.resolve_enum_member_mixed("Team", phrase));
+        if let Some((value_type, value)) = member {
             return Ok(self.target.values.push(ValueNode::new(
                 Value::Enum { value_type, value },
                 Some(Span::new(self.file(), start, end)),
