@@ -1,13 +1,3 @@
-//! Canonical Workshop element-count analysis.
-//!
-//! The calculator operates on the canonical public program, not source-language syntax or
-//! emitted text. Its rules are the documented Workshop.codes model: rules,
-//! actions, conditions, and ordinary values cost one element; arrays and
-//! evaluate-once values cost two; localized strings cost two; direct action or
-//! condition arguments are reduced by one; and every pair of hero literals in
-//! those arguments adds one. Custom game settings and rule parameters cost
-//! zero.
-
 use std::collections::HashMap;
 use std::fmt;
 
@@ -212,19 +202,6 @@ impl Counter<'_> {
         let node_id = self.next_node_id();
         let mut children = Vec::with_capacity(rule.conditions.len() + rule.actions.len());
         for condition in &rule.conditions {
-            if condition.disabled {
-                return Err(ElementCountError::Unsupported {
-                    kind: ElementNodeKind::Condition,
-                    name: "disabled condition".to_string(),
-                    span: self
-                        .program
-                        .values
-                        .get(condition.value)
-                        .and_then(|v| v.span),
-                    reason: "the element cost of a disabled condition is not established"
-                        .to_string(),
-                });
-            }
             children.push(self.condition(condition.value)?.node);
         }
         for action in &rule.actions {
@@ -305,6 +282,7 @@ impl Counter<'_> {
         let span = action.span();
         let mut children = Vec::new();
         let mut heroes = 0;
+        let mut adjustment = 0;
         let name;
         match action {
             Action::SetGlobalVariable { value, .. }
@@ -332,26 +310,36 @@ impl Counter<'_> {
                 ..
             } => {
                 name = "if";
-                for branch in branches {
+                for (index, branch) in branches.iter().enumerate() {
                     self.push_action_value(&mut children, &mut heroes, branch.condition)?;
                     for nested in &branch.body {
                         children.push(self.action(*nested)?.node);
                     }
+                    if index > 0 {
+                        adjustment += 1;
+                    }
                 }
                 if let Some(body) = else_body {
+                    adjustment += 1;
                     for nested in body {
                         children.push(self.action(*nested)?.node);
                     }
                 }
+                if !branches.is_empty() {
+                    adjustment += 1;
+                }
             }
             Action::While {
-                condition, body, ..
+                condition: condition_id,
+                body,
+                ..
             } => {
                 name = "while";
-                self.push_action_value(&mut children, &mut heroes, *condition)?;
+                self.push_action_value(&mut children, &mut heroes, *condition_id)?;
                 for nested in body {
                     children.push(self.action(*nested)?.node);
                 }
+                adjustment += 1;
             }
             Action::ForGlobalVariable {
                 start,
@@ -367,6 +355,7 @@ impl Counter<'_> {
                 for nested in body {
                     children.push(self.action(*nested)?.node);
                 }
+                adjustment += 1;
             }
             Action::ForPlayerVariable {
                 player,
@@ -383,15 +372,9 @@ impl Counter<'_> {
                 for nested in body {
                     children.push(self.action(*nested)?.node);
                 }
+                adjustment += 1;
             }
-            Action::Disabled { .. } => {
-                return Err(ElementCountError::Unsupported {
-                    kind: ElementNodeKind::Action,
-                    name: "disabled action".to_string(),
-                    span,
-                    reason: "the element cost of a disabled action is not established".to_string(),
-                });
-            }
+            Action::Disabled { action, .. } => return self.action(*action),
             Action::Call {
                 name: action_name,
                 args,
@@ -406,8 +389,13 @@ impl Counter<'_> {
                     });
                 }
                 name = action_name.as_str();
-                for argument in args {
-                    self.push_action_value(&mut children, &mut heroes, *argument)?;
+                for (index, argument) in args.iter().enumerate() {
+                    if parameter_is_variable_reference(self.catalog, action_name, index) {
+                        continue;
+                    }
+                    let counted = self.value(*argument, true)?;
+                    heroes += counted.heroes;
+                    children.push(counted.node);
                 }
             }
         }
@@ -417,7 +405,7 @@ impl Counter<'_> {
             name,
             span,
             1,
-            pair_surcharge(heroes),
+            adjustment + pair_surcharge(heroes),
             children,
             heroes,
         ))
@@ -451,7 +439,7 @@ impl Counter<'_> {
         };
         let span = value.span;
         let result = match &value.value {
-            Value::Number { .. } => self.value_node(node_id, "number", span, 1, vec![], 0),
+            Value::Number { .. } => self.value_node(node_id, "number", span, 2, vec![], 0),
             Value::String(_) => self.value_node(node_id, "string", span, 1, vec![], 0),
             Value::LocalizedString(_) => {
                 self.value_node(node_id, "localized string", span, 2, vec![], 0)
@@ -464,13 +452,14 @@ impl Counter<'_> {
             }
             Value::Enum { value_type, .. } => {
                 let heroes = usize::from(value_type == "Hero");
-                self.value_node(node_id, value_type, span, 1, vec![], heroes)
+                let base = if is_wrapped_enum(value_type) { 2 } else { 1 };
+                self.value_node(node_id, value_type, span, base, vec![], heroes)
             }
             Value::GlobalVariable(_) => {
-                self.value_node(node_id, "global variable", span, 1, vec![], 0)
+                self.value_node(node_id, "global variable", span, 2, vec![], 0)
             }
             Value::PlayerVariable { player, .. } => {
-                self.value_children(node_id, "player variable", span, 1, &[*player])
+                self.value_children(node_id, "player variable", span, 2, &[*player])
             }
             Value::Subroutine(_) => self.value_node(node_id, "subroutine", span, 1, vec![], 0),
             Value::EventPlayer => self.value_node(node_id, "event player", span, 1, vec![], 0),
@@ -501,16 +490,18 @@ impl Counter<'_> {
                     } else {
                         args.clone()
                     };
-                    let base = if name == "array"
-                        || name == "evalOnce"
-                        || name.starts_with("workshopSetting")
-                        || name.starts_with("createWorkshopSetting")
-                    {
+                    let setting_adjustment = workshop_setting_adjustment(name);
+                    let base = if name == "customString" {
+                        1 + 4usize.saturating_sub(args.len())
+                    } else if is_comparison(name) {
+                        2
+                    } else if name == "array" || name == "evalOnce" {
                         2
                     } else {
                         1
                     };
-                    self.value_children(node_id, name, span, base, &child_ids)
+                    let counted = self.value_children(node_id, name, span, base, &child_ids)?;
+                    Ok(apply_adjustment(counted, setting_adjustment.unwrap_or(0)))
                 }
             }
         }?;
@@ -569,6 +560,53 @@ fn pair_surcharge(heroes: usize) -> isize {
 
 fn is_comparison(name: &str) -> bool {
     matches!(name, "==" | "!=" | "<" | "<=" | ">" | ">=")
+}
+
+fn is_wrapped_enum(value_type: &str) -> bool {
+    matches!(
+        value_type,
+        "Button" | "Color" | "Gamemode" | "Hero" | "Map" | "Team"
+    )
+}
+
+fn workshop_setting_adjustment(name: &str) -> Option<isize> {
+    match name {
+        "createWorkshopSettingFloat" | "workshopSettingInteger" => Some(-3),
+        "workshopSettingCombo" => Some(-2),
+        "createWorkshopSettingHero" | "workshopSettingToggle" => Some(0),
+        _ => None,
+    }
+}
+
+fn apply_adjustment(mut counted: Counted, adjustment: isize) -> Counted {
+    counted.node.adjustment += adjustment;
+    let children_count = counted
+        .node
+        .children
+        .iter()
+        .map(|child| child.count)
+        .sum::<usize>();
+    counted.node.count =
+        (counted.node.base_count as isize + counted.node.adjustment + children_count as isize)
+            .max(0) as usize;
+    counted
+}
+
+fn parameter_is_variable_reference(catalog: &Catalog, name: &str, index: usize) -> bool {
+    if name == "stopChasingPlayerVariable" && index == 0 {
+        return true;
+    }
+    catalog
+        .entry(Kind::Action, name)
+        .and_then(|entry| entry.param_type(index))
+        .is_some_and(|types| {
+            types.split('|').any(|value_type| {
+                matches!(
+                    value_type,
+                    "Variable" | "Global Variable" | "Player Variable"
+                )
+            })
+        })
 }
 
 fn is_canonical_helper(name: &str) -> bool {
