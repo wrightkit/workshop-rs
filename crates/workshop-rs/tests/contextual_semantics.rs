@@ -1,6 +1,7 @@
 //! Executable witnesses for contextual Workshop literal semantics.
 
 use workshop_rs::catalog::{Catalog, Locale};
+use workshop_rs::emitter;
 use workshop_rs::parser;
 use workshop_rs::roundtrip;
 use workshop_rs::validate;
@@ -62,20 +63,23 @@ fn first_value_call<'a>(program: &'a wir::Program, name: &str) -> &'a [wir::Valu
 }
 
 #[test]
-fn numeric_boolean_aliases_share_canonical_wir_only_when_declared() {
-    for (boolean, number, expected) in [("True", "1", 1.0), ("False", "0", 0.0)] {
+fn numeric_boolean_aliases_are_accepted_and_preserved() {
+    for (boolean, number, expected) in [("True", "1", true), ("False", "0", false)] {
         let boolean_program = program(&format!("Wait({boolean}, Ignore Condition);"));
         let number_program = program(&format!("Wait({number}, Ignore Condition);"));
         validate_program(&boolean_program);
         validate_program(&number_program);
-        assert!(roundtrip::equivalent_wir(&boolean_program, &number_program));
+        assert!(!roundtrip::equivalent_wir(
+            &boolean_program,
+            &number_program
+        ));
         assert!(matches!(
             &boolean_program
                 .values
                 .get(first_action_args(&boolean_program)[0])
                 .expect("wait duration")
                 .value,
-            Value::Number { value, .. } if *value == expected
+            Value::Bool(value) if *value == expected
         ));
     }
 }
@@ -90,7 +94,7 @@ fn one_sided_contextual_aliases_reject_the_other_boolean() {
             .get(first_action_args(&accepted)[1])
             .expect("spawn room")
             .value,
-        Value::Number { value, .. } if *value == 0.0
+        Value::Bool(false)
     ));
 
     let rejected = program("Start Forcing Spawn Room(Team 1, True);");
@@ -181,7 +185,7 @@ fn first_of_wrapper_accepts_any_value_and_round_trips() {
 }
 
 #[test]
-fn null_and_empty_string_contexts_normalize_at_their_positions() {
+fn null_and_empty_string_aliases_are_preserved_at_their_positions() {
     let teleport = program("Teleport(Event Player, 0);");
     validate_program(&teleport);
     assert!(matches!(
@@ -190,7 +194,7 @@ fn null_and_empty_string_contexts_normalize_at_their_positions() {
             .get(first_action_args(&teleport)[1])
             .expect("teleport position")
             .value,
-        Value::Null
+        Value::Number { value, .. } if *value == 0.0
     ));
 
     let position = program("Start Forcing Player Position(Event Player, 0, False);");
@@ -201,7 +205,7 @@ fn null_and_empty_string_contexts_normalize_at_their_positions() {
             .get(first_action_args(&position)[1])
             .expect("forced position")
             .value,
-        Value::Null
+        Value::Number { value, .. } if *value == 0.0
     ));
 
     let dummy =
@@ -214,7 +218,7 @@ fn null_and_empty_string_contexts_normalize_at_their_positions() {
             .get(dummy_args[3])
             .expect("dummy position")
             .value,
-        Value::Null
+        Value::Call { name, .. } if name == "vector"
     ));
     assert!(matches!(
         &dummy
@@ -222,7 +226,7 @@ fn null_and_empty_string_contexts_normalize_at_their_positions() {
             .get(dummy_args[4])
             .expect("dummy direction")
             .value,
-        Value::Null
+        Value::Call { name, .. } if name == "vector"
     ));
 
     let name = program("Start Forcing Dummy Bot Name(Event Player, Empty Array);");
@@ -232,7 +236,7 @@ fn null_and_empty_string_contexts_normalize_at_their_positions() {
             .get(first_action_args(&name)[1])
             .expect("forced name")
             .value,
-        Value::String(value) if value.is_empty()
+        Value::Call { name, .. } if name == "emptyArray"
     ));
 
     let string_source = r#"variables
@@ -293,17 +297,23 @@ fn create_dummy_bot_accepts_hero_or_hero_array_only_for_hero_parameter() {
 }
 
 #[test]
-fn nested_numeric_boolean_aliases_normalize_inside_vector_components() {
+fn nested_numeric_boolean_aliases_are_preserved_inside_vector_components() {
     let program = program("Set Global Variable(probe, Vector(1, True, False));");
     validate_program(&program);
     let args = first_value_call(&program, "vector");
     assert_eq!(args.len(), 3);
-    for (value_id, expected) in [(args[0], 1.0), (args[1], 1.0), (args[2], 0.0)] {
-        assert!(matches!(
-            &program.values.get(value_id).expect("vector component").value,
-            Value::Number { value, .. } if *value == expected
-        ));
-    }
+    assert!(matches!(
+        &program.values.get(args[0]).expect("vector x").value,
+        Value::Number { value, .. } if *value == 1.0
+    ));
+    assert!(matches!(
+        &program.values.get(args[1]).expect("vector y").value,
+        Value::Bool(true)
+    ));
+    assert!(matches!(
+        &program.values.get(args[2]).expect("vector z").value,
+        Value::Bool(false)
+    ));
 }
 
 #[test]
@@ -329,13 +339,13 @@ fn comparisons_preserve_polymorphic_operand_types() {
 }
 
 #[test]
-fn arithmetic_operators_apply_contextual_aliases_but_comparisons_do_not() {
+fn arithmetic_operators_accept_contextual_aliases() {
     let program = program("Set Global Variable(probe, True + 1);");
     validate_program(&program);
     let args = first_value_call(&program, "add");
     assert!(matches!(
         &program.values.get(args[0]).expect("left operand").value,
-        Value::Number { value, .. } if *value == 1.0
+        Value::Bool(true)
     ));
 }
 
@@ -366,27 +376,27 @@ rule ("indexed contextual semantics")
     };
     assert!(matches!(
         &parsed.values.get(args[1]).expect("index").value,
-        Value::Number { value, .. } if *value == 1.0
+        Value::Bool(true)
     ));
 }
 
 #[test]
-fn conditional_operator_applies_branch_contextual_aliases() {
+fn conditional_operator_accepts_branch_contextual_aliases() {
     let parsed = program("Set Global Variable(probe, True ? 0 : 1);");
     validate_program(&parsed);
     let args = first_value_call(&parsed, "ifThenElse");
     assert!(matches!(
         &parsed.values.get(args[1]).expect("true branch").value,
-        Value::Null
+        Value::Number { value, .. } if *value == 0.0
     ));
 }
 
 #[test]
 fn audited_catalog_parameters_cover_boolean_numeric_aliases() {
     for (source, expected) in [
-        ("Set Gravity(Event Player, True);", 1.0),
-        ("Set Ultimate Charge(Event Player, False);", 0.0),
-        ("Set Team Score(Team 1, True);", 1.0),
+        ("Set Gravity(Event Player, True);", true),
+        ("Set Ultimate Charge(Event Player, False);", false),
+        ("Set Team Score(Team 1, True);", true),
     ] {
         let parsed = program(source);
         validate_program(&parsed);
@@ -396,11 +406,11 @@ fn audited_catalog_parameters_cover_boolean_numeric_aliases() {
                 .get(first_action_args(&parsed)[1])
                 .expect("numeric parameter")
                 .value,
-            Value::Number { value, .. } if *value == expected
+            Value::Bool(value) if *value == expected
         ));
     }
 
-    for (boolean, expected) in [("False", 0.0), ("True", 1.0)] {
+    for (boolean, expected) in [("False", false), ("True", true)] {
         let parsed = program(&format!(
             "Create Dummy Bot(Hero(D.Va), All Teams, {boolean}, Up, Up);"
         ));
@@ -411,7 +421,7 @@ fn audited_catalog_parameters_cover_boolean_numeric_aliases() {
                 .get(first_action_args(&parsed)[2])
                 .expect("dummy bot slot")
                 .value,
-            Value::Number { value, .. } if *value == expected
+            Value::Bool(value) if *value == expected
         ));
 
         let source = format!(
@@ -434,23 +444,23 @@ fn audited_catalog_parameters_cover_boolean_numeric_aliases() {
     let args = first_value_call(&parsed, "isObjectiveComplete");
     assert!(matches!(
         &parsed.values.get(args[0]).expect("objective index").value,
-        Value::Number { value, .. } if *value == 1.0
+        Value::Bool(true)
     ));
 }
 
 #[test]
-fn array_index_sugar_applies_value_in_array_context() {
+fn array_index_sugar_accepts_value_in_array_aliases() {
     let parsed = program("Set Global Variable(probe, Array(1)[True]);");
     validate_program(&parsed);
     let args = first_value_call(&parsed, "valueInArray");
     assert!(matches!(
         &parsed.values.get(args[1]).expect("array index").value,
-        Value::Number { value, .. } if *value == 1.0
+        Value::Bool(true)
     ));
 }
 
 #[test]
-fn modify_contexts_apply_operation_specific_replacements() {
+fn modify_contexts_preserve_operation_specific_aliases() {
     let source = r#"variables
 {
     global:
@@ -483,8 +493,12 @@ rule ("modify contextual semantics")
         })
         .collect();
     assert!(matches!(
-        &parsed.values.get(*direct_values[0]).expect("add value").value,
-        Value::Number { value, .. } if *value == 0.0
+        &parsed
+            .values
+            .get(*direct_values[0])
+            .expect("add value")
+            .value,
+        Value::Bool(false)
     ));
     assert!(matches!(
         &parsed
@@ -492,11 +506,15 @@ rule ("modify contextual semantics")
             .get(*direct_values[1])
             .expect("append value")
             .value,
-        Value::Null
+        Value::Number { value, .. } if *value == 0.0
     ));
     assert!(matches!(
-        &parsed.values.get(*direct_values[2]).expect("subtract value").value,
-        Value::Number { value, .. } if *value == 1.0
+        &parsed
+            .values
+            .get(*direct_values[2])
+            .expect("subtract value")
+            .value,
+        Value::Bool(true)
     ));
 
     let indexed: Vec<_> = parsed
@@ -514,7 +532,7 @@ rule ("modify contextual semantics")
             .get(indexed[0][3])
             .expect("indexed modify value")
             .value,
-        Value::Null
+        Value::Number { value, .. } if *value == 0.0
     ));
     assert!(matches!(
         &parsed
@@ -522,6 +540,40 @@ rule ("modify contextual semantics")
             .get(indexed[1][1])
             .expect("indexed assignment index")
             .value,
-        Value::Number { value, .. } if *value == 0.0
+        Value::Bool(false)
     ));
+}
+
+#[test]
+fn contextual_aliases_survive_parse_and_emit_in_each_locale() {
+    let catalog = catalog();
+    let en = Locale::new("en-US");
+    let zh = Locale::new("zh-CN");
+    let actions = [
+        "Set Move Speed(Event Player, False);",
+        "Set Gravity(Event Player, True);",
+        "Teleport(Event Player, 0);",
+        "Set Global Variable(probe, Vector(False, 1, 0));",
+    ];
+    let source = format!(
+        "variables\n{{\n    global:\n        0: probe\n}}\nrule (\"aliases\")\n{{\n    event {{ Ongoing - Global; }}\n    actions {{ {} }}\n}}",
+        actions.join(" ")
+    );
+    let authored = parser::parse(&source, &catalog, &en).expect("en-US source parses");
+
+    let en_text = emitter::emit(&authored, &catalog, &en).expect("en-US emits");
+    for action in actions {
+        assert!(
+            en_text.contains(action),
+            "{action} must survive en-US parse and emit"
+        );
+    }
+
+    let zh_text = emitter::emit(&authored, &catalog, &zh).expect("zh-CN emits");
+    let reparsed = parser::parse(&zh_text, &catalog, &zh).expect("zh-CN text parses");
+    assert!(roundtrip::equivalent(&authored, &reparsed));
+    assert_eq!(
+        emitter::emit(&reparsed, &catalog, &zh).expect("zh-CN re-emits"),
+        zh_text
+    );
 }

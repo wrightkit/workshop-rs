@@ -20,7 +20,7 @@ pub(crate) use crate::wir::{
 };
 
 pub(crate) use super::lexer::{Token, TokenKind, tokenize};
-pub(crate) use crate::catalog::{Catalog, Kind, Locale, ParamCoercions};
+pub(crate) use crate::catalog::{Catalog, Kind, Locale};
 pub(crate) use crate::core::error::{Result, WorkshopError};
 
 /// Where action parsing stopped.

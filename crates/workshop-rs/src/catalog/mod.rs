@@ -103,8 +103,8 @@ impl Kind {
     }
 }
 
-/// Literal substitutions accepted at one parameter position and normalized
-/// into the parameter's declared semantic type before it enters WIR.
+/// Literal substitutions accepted at one parameter position. The authored
+/// literal is kept in WIR; these facts only decide acceptance.
 ///
 /// These are deliberately per-parameter facts. They do not establish a
 /// global relationship between Workshop booleans, numbers, arrays, strings,
