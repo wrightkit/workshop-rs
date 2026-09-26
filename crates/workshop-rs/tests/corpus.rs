@@ -61,34 +61,9 @@ fn manifest_pins_the_export_and_exact_match_coverage() {
             ("event", "playerReceivedKnockback"),
             ("operator", "max"),
             ("operator", "min"),
-            ("value", "isFiringSecondaryFire"),
         ]
     );
     for (kind, id, source, zh_cn) in [
-        (
-            "action",
-            "stopChasingVariable",
-            "actions.__stopChasingGlobalVariable__",
-            "停止追踪全局变量",
-        ),
-        (
-            "action",
-            "forcePlayerHero",
-            "actions..startForcingHero",
-            "开始强制玩家选择英雄",
-        ),
-        (
-            "action",
-            "stopForcingHero",
-            "actions..stopForcingCurrentHero",
-            "停止强制玩家选择英雄",
-        ),
-        (
-            "action",
-            "forceThrottle",
-            "actions..startForcingThrottle",
-            "开始限制阈值",
-        ),
         ("operator", "==", "localizedStrings.{0} == {1}", "=="),
         ("operator", "!=", "localizedStrings.{0} != {1}", "!="),
         ("operator", "<=", "localizedStrings.{0} <= {1}", "<="),
@@ -196,7 +171,7 @@ fn confirmed_set_allowed_heroes_mapping_converts_in_both_directions() {
         Ongoing - Global;
     }
     actions {
-        Set Allowed Heroes(All Players(Team(All Teams)), Ana);
+        Set Player Allowed Heroes(All Players(Team(All Teams)), Ana);
     }
 }
 ";
@@ -219,7 +194,7 @@ fn confirmed_set_allowed_heroes_mapping_converts_in_both_directions() {
 }
 
 #[test]
-fn confirmed_legacy_aliases_convert_in_both_directions() {
+fn native_forcing_and_chasing_spellings_convert_in_both_directions() {
     let source = "variables {
     global:
         0: value
@@ -230,16 +205,16 @@ rule (\"legacy-aliases\") {
         Ongoing - Global;
     }
     actions {
-        Stop Chasing Variable(Global.value);
-        Force Player Hero(Event Player, Ana);
-        Stop Forcing Hero(Event Player);
-        Force Throttle(Event Player, 100, 100, 100, 100, 100, 100);
+        Stop Chasing Global Variable(Global.value);
+        Start Forcing Player To Be Hero(Event Player, Ana);
+        Stop Forcing Player To Be Hero(Event Player);
+        Start Forcing Throttle(Event Player, 100, 100, 100, 100, 100, 100);
     }
 }
 ";
     let catalog = catalog();
     let to_zh = convert::convert(source, &catalog, &en(), &zh(), &ConvertOptions::default())
-        .expect("confirmed legacy aliases convert to zh-CN");
+        .expect("native spellings convert to zh-CN");
     assert_eq!(to_zh.fallback_ids, Vec::<String>::new());
     for spelling in [
         "停止追踪全局变量",
@@ -261,7 +236,7 @@ rule (\"legacy-aliases\") {
         &en(),
         &ConvertOptions::default(),
     )
-    .expect("confirmed legacy aliases convert back to en-US");
+    .expect("native spellings convert back to en-US");
     assert_eq!(back_to_en.fallback_ids, Vec::<String>::new());
     assert_eq!(back_to_en.text.trim_end(), source.trim_end());
 }

@@ -207,7 +207,7 @@ fn convert_to_zh_cn_with_fallback_reports_the_choice() {
     let file = dir.join("unmapped.ws");
     std::fs::write(
         &file,
-        "variables { global: 0: probe } rule (\"setup\") { event { Ongoing - Global; } actions { Disable Inspector Recording; Set Global Variable(probe, Is Firing Secondary Fire(Event Player)); } }",
+        "rule (\"setup\") { event { Ongoing - Global; } actions { Disable Inspector Recording; Stop Forcing Player To Be Hero(Event Player); } }",
     )
     .unwrap();
     let output = run(&[
@@ -231,12 +231,12 @@ fn convert_to_zh_cn_with_fallback_reports_the_choice() {
         "{stdout}"
     );
     assert!(
-        stdout.contains("Is Firing Secondary Fire(Joueur exécutant)"),
+        stdout.contains("Stop Forcing Player To Be Hero(Joueur exécutant)"),
         "{stdout}"
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("fallback-locale spelling") && stderr.contains("isFiringSecondaryFire"),
+        stderr.contains("fallback-locale spelling") && stderr.contains("stopForcingCurrentHero"),
         "the fallback choice is visible in tooling output: {stderr}"
     );
     let _ = std::fs::remove_dir_all(&dir);

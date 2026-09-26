@@ -29,6 +29,24 @@ is embedded in the dataset and surfaced by `workshop-rs-cli version --json`.
 | Action/Value signature cross-check | Representative Workshop.codes article links remain recorded with the catalog entries; fetched snapshots and CI results are not generator or runtime inputs. |
 | Settings emission table (`src/settings/table.rs` and generated data files) | Hand-written fixture surface plus the reviewed `workshop-data` export at commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6`; generated entries, names, locale mappings, and source paths are committed together in the declared multi-locale projection, while pinned OverPy 9.7.10 output remains the behavioral check. |
 
+### Native identity boundary
+
+Every action and value has one identity under its native Workshop name. The
+committed inventory `crates/workshop-rs/src/catalog/data/wiki-inventory.json`
+records the article titles of the independent
+[Workshop.codes actions](https://workshop.codes/wiki/categories/actions) and
+[values](https://workshop.codes/wiki/categories/values) categories, and
+`workshop-catalog-gen check` fails when an action or value carries an en-US
+spelling outside it (compared case-insensitively). OverPy and OSTW names do not
+enter the catalog: source-language names are mapped by `opy-rs` and `del-rs`.
+The retired non-native identities `forcePlayerHero`, `stopForcingHero`,
+`forceThrottle`, `stopChasingVariable`, and `isFiringSecondaryFire` duplicated
+`startForcingHero`, `stopForcingCurrentHero`, `startForcingThrottle`,
+`stopChasingGlobalVariable`/`stopChasingPlayerVariable`, and `isFiringSecondary`;
+their zh-CN spellings were already carried by the native entries, so none moved.
+The wiki covers en-US only; no independent source for other locales is named,
+so no locale spelling was kept from the retired entries.
+
 ### Native display action boundary
 
 The independent [Workshop.codes action inventory](https://workshop.codes/wiki/categories/actions)
@@ -70,8 +88,7 @@ by the documented Chinese Workshop action reference cited in the table above;
 their parameter order and descriptions are cross-checked against the pinned
 `workshop-data` export. The
 confirmed legacy mappings use the export identities/GUIDs for
-global stop-chasing, force hero/throttle, `Set Player Allowed Heroes`, and
-the four bare comparison symbols. The three enum aliases use exact export
+`Set Player Allowed Heroes` and the four bare comparison symbols. The three enum aliases use exact export
 identity/GUID matches: Lijiang Tower Lunar New Year, Visible To and Values,
 and To Nearest. The two hero settings labels are composed only after exact
 template and Blizzard hero identity/GUID checks. Following the explicit
