@@ -267,7 +267,10 @@ fn player_variable_targets_count_nontrivial_player_expressions() {
     let report = program.element_count(&catalog).unwrap();
     assert_eq!(
         report.rule_counts().collect::<Vec<_>>(),
-        vec![("player-variable chase", 5), ("indexed player-variable target", 6)],
+        vec![
+            ("player-variable chase", 5),
+            ("indexed player-variable target", 6)
+        ],
         "both target forms count the player expression with the direct-argument reduction"
     );
     assert_eq!(report.total, 11);
