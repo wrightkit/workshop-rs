@@ -493,9 +493,7 @@ impl Counter<'_> {
                     let setting_adjustment = workshop_setting_adjustment(name);
                     let base = if name == "customString" {
                         1 + 4usize.saturating_sub(args.len())
-                    } else if is_comparison(name) {
-                        2
-                    } else if name == "array" || name == "evalOnce" {
+                    } else if is_comparison(name) || name == "array" || name == "evalOnce" {
                         2
                     } else {
                         1
