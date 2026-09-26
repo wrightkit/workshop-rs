@@ -257,12 +257,7 @@ pub(crate) fn validate_call_signature(
         let valid = match &node.value {
             wir::Value::Enum {
                 value_type, value, ..
-            } => {
-                value_type == domain
-                    && catalog
-                        .enum_spelling(domain, catalog.primary_locale(), value)
-                        .is_some()
-            }
+            } => enum_member_matches_domain(catalog, value_type, value, domain),
             wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
                 wir::ambiguous_enum_parts(program, *arg_id).is_some_and(|(_, candidate_ids)| {
                     candidate_ids.iter().any(|candidate_id| {
@@ -271,10 +266,7 @@ pub(crate) fn validate_call_signature(
                             Some(wir::ValueNode {
                                 value: wir::Value::Enum { value_type, value },
                                 ..
-                            }) if value_type == domain
-                                && catalog
-                                    .enum_spelling(domain, catalog.primary_locale(), value)
-                                    .is_some()
+                            }) if enum_member_matches_domain(catalog, value_type, value, domain)
                         )
                     })
                 })
@@ -395,9 +387,14 @@ fn value_matches_type(
                                 matches!(
                                     program.values.get(*candidate_id),
                                     Some(wir::ValueNode {
-                                        value: wir::Value::Enum { value_type, .. },
+                                        value: wir::Value::Enum { value_type, value },
                                         ..
-                                    }) if value_type == alternative
+                                    }) if enum_type_matches_domain(
+                                        catalog,
+                                        value_type,
+                                        value,
+                                        alternative,
+                                    )
                                 )
                             })
                         },
@@ -426,8 +423,9 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
             | wir::Value::Vector { .. },
             "Object",
         ) => true,
-        (wir::Value::Enum { value_type, .. }, domain) => {
-            matches!(domain, "Any" | "Unknown" | "Object") || value_type == domain
+        (wir::Value::Enum { value_type, value }, domain) => {
+            matches!(domain, "Any" | "Unknown" | "Object")
+                || enum_type_matches_domain(catalog, value_type, value, domain)
         }
         (wir::Value::Call { name, .. }, expected) => {
             if expected == "Operation"
@@ -481,6 +479,32 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
         ),
         _ => false,
     }
+}
+
+fn enum_type_matches_domain(
+    catalog: &Catalog,
+    value_type: &str,
+    value: &str,
+    expected_domain: &str,
+) -> bool {
+    value_type == expected_domain
+        || (value_type == "Team"
+            && expected_domain == "Color"
+            && catalog
+                .enum_spelling(expected_domain, catalog.primary_locale(), value)
+                .is_some())
+}
+
+fn enum_member_matches_domain(
+    catalog: &Catalog,
+    value_type: &str,
+    value: &str,
+    expected_domain: &str,
+) -> bool {
+    enum_type_matches_domain(catalog, value_type, value, expected_domain)
+        && catalog
+            .enum_spelling(expected_domain, catalog.primary_locale(), value)
+            .is_some()
 }
 
 fn semantic_types_compatible(actual: &str, expected: &str) -> bool {
