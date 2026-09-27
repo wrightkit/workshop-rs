@@ -418,10 +418,8 @@ fn documented_action_and_value_signatures_are_inventory_entries() {
 
 #[test]
 fn builtin_entries_with_parameters_declare_reviewed_parameter_names() {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/src/catalog/data/catalog.json");
     let raw: serde_json::Value =
-        serde_json::from_str(&std::fs::read_to_string(path).expect("catalog source"))
-            .expect("catalog source is JSON");
+        serde_json::from_str(workshop_rs::catalog::CATALOG_DATA).expect("embedded catalog is JSON");
     for section in ["actions", "values"] {
         for entry in raw[section].as_array().expect("catalog section") {
             let id = entry["id"].as_str().expect("entry id");

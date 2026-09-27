@@ -88,18 +88,19 @@ fn catalog_actions_and_values_are_built_by_canonical_id() {
     );
 
     let reparsed = parser::parse(&emitted, &catalog, &locale).expect("emitted Workshop reparses");
-    assert!(roundtrip::equivalent(&program, &reparsed));
+    assert!(roundtrip::equivalent(&program, &reparsed), "{emitted}");
 
     let actions = &reparsed.rules[0].actions;
     assert!(matches!(
         &actions[0],
         Action::Call { name, args } if name == "damage"
-            && matches!(&args[..], [Value::EventPlayer, Value::Null, Value::Number(amount)] if *amount == 10.0)
+            && matches!(&args[..], [Value::EventPlayer, Value::Null, amount] if is_number(amount, 10.0))
     ));
     assert!(matches!(
         &actions[1],
         Action::Call { name, args } if name == "teleport"
-            && matches!(&args[..], [Value::EventPlayer, position] if is_call(position, "vector", &[1.0, 2.0, 3.0]))
+            && matches!(&args[..], [Value::EventPlayer, position]
+                if is_call(position, "vector", &[1.0, 2.0, 3.0]))
     ));
     assert!(matches!(
         &actions[2],
@@ -114,8 +115,10 @@ fn is_call(value: &Value, id: &str, numbers: &[f64]) -> bool {
         value,
         Value::Call { name, args } if name == id
             && args.len() == numbers.len()
-            && args.iter().zip(numbers).all(|(arg, expected)| {
-                matches!(arg, Value::Number(actual) if actual == expected)
-            })
+            && args.iter().zip(numbers).all(|(arg, expected)| is_number(arg, *expected))
     )
+}
+
+fn is_number(value: &Value, expected: f64) -> bool {
+    matches!(value, Value::Number(actual) if *actual == expected)
 }

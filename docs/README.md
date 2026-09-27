@@ -94,6 +94,8 @@ Current registry:
 - [ADR-0011: Contextual Workshop semantics at the catalog/code boundary](adr/0011-contextual-semantic-placement.md)
 - [ADR-0012: Tests-first Workshop verification](adr/0012-tests-first-verification.md)
 - [ADR-0013: Source mapping across the provider boundary](adr/0013-source-mapping-across-provider-boundary.md)
+- [ADR-0014: Evidence for canonical validation of slot acceptance](adr/0014-validation-evidence-for-slot-acceptance.md)
+- [ADR-0015: Contextual literal substitutions are accepted, not normalized](adr/0015-contextual-literals-are-preserved.md)
 - [ADR-0016: Catalog content stays outside the Rust public API](adr/0016-catalog-content-outside-rust-api.md)
 
 ## Release and operations

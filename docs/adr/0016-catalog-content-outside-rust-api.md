@@ -38,10 +38,15 @@ No WrightKit consumer used the generated constructors. `opy-rs`, Wright, and
    from the canonical id and the arguments in catalog parameter order.
    Canonical validation against a catalog decides whether a call is valid.
    Hand-written constructors and the public `Action` / `Value` variants remain
-   supported.
+   supported. `null` and `eventPlayer` are built with `Value::Null` and
+   `Value::EventPlayer`, the shape the parser produces; the parser produces
+   `Value::Call` for other catalog values, including `vector`, `array`, and
+   `emptyArray`.
 3. A catalog-only change (adding, removing, or renaming an entry or parameter)
-   produces no Rust public-API difference. Its compatibility is a Workshop data
-   question, reported through catalog identity and validation, not a
+   does not change any Rust item's name, signature, or type. Only the value of
+   the embedded catalog text (`catalog::CATALOG_DATA`) and the data behind
+   `Catalog::builtin()` change. Its compatibility is a Workshop data question,
+   reported through catalog identity and validation, not a
    `cargo semver-checks` question.
 
 ## Alternatives considered
@@ -49,7 +54,9 @@ No WrightKit consumer used the generated constructors. `opy-rs`, Wright, and
 - **Keep the constructors and ship catalog changes as breaking releases.**
   Rejected: every seasonal update would need a new major version under 1.x.
 - **Keep the constructors behind `#[doc(hidden)]`.** Rejected: hidden items are
-  still public Rust API, so the semver consequence is unchanged.
+  still public Rust API, so a catalog edit would still break any caller of an
+  affected method. The `Public API compatibility` CI job excludes
+  `#[doc(hidden)]` paths, so it would no longer report those breaks.
 - **A catalog-versioned typed builder, or a separate typed-constructor crate.**
   Not decided here. It would be additive and needs its own decision.
 
@@ -58,4 +65,8 @@ No WrightKit consumer used the generated constructors. `opy-rs`, Wright, and
 - Catalog updates can ship as minor releases.
 - Consumers get no compile-time check of catalog ids or parameter counts from
   the Rust API; canonical validation reports them instead.
+- The removed constructors built `Value::Vector` and `Value::Array` for
+  `vector`, `array`, and `emptyArray`. Code migrating to `Value::call` gets the
+  `Value::Call` shape the parser produces, and an empty array built this way
+  counts as the parsed `Empty Array` element rather than an `Array` value.
 - The build no longer runs a catalog code generator.
