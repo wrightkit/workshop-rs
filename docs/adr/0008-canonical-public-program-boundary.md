@@ -1,6 +1,7 @@
 # ADR-0008: Canonical public Workshop `Program` boundary
 
-- Status: Accepted (backfilled)
+- Status: Accepted (backfilled); decision 5 superseded by
+  [ADR-0016](0016-catalog-content-outside-rust-api.md)
 - Date: 2026-09-12
 - Related:
   [Issue #32](https://github.com/wrightkit/workshop-rs/issues/32),
