@@ -40,13 +40,15 @@ the crate's top-level docs; every one of these paths is an intentional public
 API and a separate 1.x compatibility commitment.
 
 Every other public item is reachable through exactly one path. `actions`
-re-exports only the `Program` model types above; action layout and
-element-count operations (`ActionLayout`, `ActionLayoutError`, `action_width`)
-are public only from `emitter`. `rules` re-exports only the `Program` model
-types above; canonical validation (`validate_canonical_ids`) is public only
-from `validate`. `settings::schema` is an internal module; its types and
-functions (including `validate_catalog`) are public only from `settings`
-directly.
+re-exports the `Program` model types above and its own element-count analysis
+types (`ElementCountError`, `ElementCountNode`, `ElementCountReport`,
+`ElementNodeKind`); action layout and element-count operations (`ActionLayout`,
+`ActionLayoutError`, `action_width`) are public only from `emitter`. `rules`
+re-exports the `Program` model types above and its own inspection types
+(`IncompletenessKind`, `ResidualClassification`, `SemanticIssue`, `inspect`);
+canonical validation (`validate_canonical_ids`) is public only from
+`validate`. `settings::schema` is an internal module; its types and functions
+(including `validate_catalog`) are public only from `settings` directly.
 
 ## Catalog-backed actions and values
 
