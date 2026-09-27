@@ -68,11 +68,12 @@ not need to precede an owner-side breaking release.
 
 Public types expected to grow in 1.x are `#[non_exhaustive]`: error enums and
 error records, options, operation outputs and reports, catalog and gameplay
-identity/metadata records, and the settings scope and value-domain enums.
-Consumers match them with a wildcard arm and read their fields, but do not
-build them with struct literals. Options are built from `Default` and then
-assigned field by field; records that consumers need to build, such as
-`MappedText`, `gameplay::SourceReference`, and
+identity/metadata records, settings source metadata, and the settings scope and
+value-domain enums. `Rule`, `Condition`, `PlayerEventKind`, and `ModifyOp` are
+also `#[non_exhaustive]`. Consumers match them with a wildcard arm and read
+their fields, but do not build them with struct literals. Options are built
+from `Default` and then assigned field by field; records that consumers need to
+build, such as `MappedText`, `gameplay::SourceReference`, and
 `gameplay::GameplayDatasetIdentity`, have a `new` constructor.
 
 The canonical program model (`Action`, `Value`, `Event`, `EventTeam`,
