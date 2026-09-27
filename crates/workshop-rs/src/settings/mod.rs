@@ -12,7 +12,7 @@ pub(crate) mod emitter;
 pub(crate) mod parser;
 
 pub(crate) mod reconciliation;
-pub mod schema;
+pub(crate) mod schema;
 pub(crate) mod table;
 
 /// A segment of a path accepted by settings schema lookups.
@@ -45,7 +45,7 @@ pub use schema::{
     SettingEnumMember, SettingId, SettingIdentity, SettingOccurrence, SettingOperationError,
     SettingPresentation, SettingScope, SettingSource, SettingSourceEdit, SettingSourceKind,
     SettingTarget, SettingTargetKind, SettingValue, SettingValueDomain, TeamId, definition,
-    definitions, definitions_by_id,
+    definitions, definitions_by_id, validate_catalog,
 };
 
 use crate::core::source::Span;

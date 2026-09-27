@@ -1,8 +1,8 @@
 //! The Workshop rule and declaration domain.
 //!
 //! Rule, variable, and subroutine data is modeled canonically in [`crate::Program`].
-//! Whole-program inspection and validation are available from this domain
-//! entry point as well as their compatibility modules.
+//! Whole-program inspection is available from this domain entry point;
+//! canonical validation is at [`crate::validate::validate_canonical_ids`].
 
 pub(crate) mod emitter;
 pub(crate) mod parser;
@@ -12,4 +12,3 @@ pub use crate::analysis::semantic::{
     IncompletenessKind, ResidualClassification, SemanticIssue, inspect,
 };
 pub use crate::program::{Condition, Program, Rule, Subroutine, Variable};
-pub use validate::validate_canonical_ids;

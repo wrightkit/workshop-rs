@@ -1,7 +1,8 @@
 use workshop_rs::catalog::{Catalog, Locale};
-use workshop_rs::settings::{PathPart, schema};
+use workshop_rs::settings::{self, PathPart};
 use workshop_rs::{
-    Action, Event, MappedText, Program, Rule, SourceMap, Value, emitter, parser, roundtrip, rules,
+    Action, Event, MappedText, Program, Rule, SourceMap, Value, emitter, parser, roundtrip,
+    validate,
 };
 
 #[test]
@@ -18,8 +19,8 @@ fn canonical_program_operations_cover_parse_validate_inspect_emit_and_roundtrip(
     program
         .validate()
         .expect("canonical program is structurally valid");
-    rules::validate_canonical_ids(&program, &catalog)
-        .expect("canonical ids resolve through the public rule API");
+    validate::validate_canonical_ids(&program, &catalog)
+        .expect("canonical ids resolve through the public validate API");
     assert!(program.semantic_issues(&catalog).is_empty());
 
     let emitted = emitter::emit(&program, &catalog, &locale).expect("canonical emission");
@@ -29,7 +30,7 @@ fn canonical_program_operations_cover_parse_validate_inspect_emit_and_roundtrip(
 
 #[test]
 fn settings_schema_exposes_enum_values_without_the_internal_table() {
-    let definition = schema::definition(&[
+    let definition = settings::definition(&[
         PathPart::Part("lobby"),
         PathPart::Part("enableMatchVoiceChat"),
     ])
@@ -73,7 +74,7 @@ fn catalog_actions_and_values_are_built_by_canonical_id() {
             )),
     );
     program.validate().expect("catalog calls validate");
-    rules::validate_canonical_ids(&program, &catalog).expect("catalog ids resolve");
+    validate::validate_canonical_ids(&program, &catalog).expect("catalog ids resolve");
 
     let emitted = emitter::emit(&program, &catalog, &locale).expect("catalog calls emit");
     assert!(

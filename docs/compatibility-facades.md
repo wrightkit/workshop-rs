@@ -29,6 +29,25 @@ parse-context contract shared by Workshop parsing and frontends that supply
 expected enum domains. Both are intentional public APIs, not compatibility-only
 facades; the catalog remains the sole source of signature data.
 
+The canonical `Program` model types are also reachable from the domain module
+that owns their concept, so contributors and consumers can start from either
+the model or the domain: `actions::{Action, ModifyOp}`, `events::{Event,
+EventTarget, EventTeam, PlayerEventKind}`, `rules::{Condition, Program, Rule,
+Subroutine, Variable}`, and `values::Value` are the same items as their
+crate-root and `program::` re-exports, not copies. `program`, the crate root,
+and these domain modules are the discoverable Workshop domains described in
+the crate's top-level docs; every one of these paths is an intentional public
+API and a separate 1.x compatibility commitment.
+
+Every other public item is reachable through exactly one path. `actions`
+re-exports only the `Program` model types above; action layout and
+element-count operations (`ActionLayout`, `ActionLayoutError`, `action_width`)
+are public only from `emitter`. `rules` re-exports only the `Program` model
+types above; canonical validation (`validate_canonical_ids`) is public only
+from `validate`. `settings::schema` is an internal module; its types and
+functions (including `validate_catalog`) are public only from `settings`
+directly.
+
 ## Catalog-backed actions and values
 
 Catalog actions and values are built with `Action::call` and `Value::call`,

@@ -42,7 +42,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use workshop_rs::catalog::{Catalog, Locale, build_canonical};
-use workshop_rs::settings::schema;
+use workshop_rs::settings;
 
 /// The committed catalog data, relative to the workspace root (where CI and
 /// the documented pipeline commands run); `--file` overrides it.
@@ -128,7 +128,7 @@ fn main() -> ExitCode {
                     }
                     return ExitCode::from(1);
                 }
-                if let Err(errors) = schema::validate_catalog() {
+                if let Err(errors) = settings::validate_catalog() {
                     for error in errors {
                         eprintln!("workshop-catalog-gen: settings catalog: {error}");
                     }
@@ -613,7 +613,7 @@ mod corpus {
         .collect();
         let mut labels: Vec<(String, String)> = Vec::new();
         let mut seen = std::collections::HashSet::new();
-        let definitions: Vec<_> = schema::definitions().collect();
+        let definitions: Vec<_> = settings::definitions().collect();
         for definition in &definitions {
             if definition.path().ends_with(".enabled") {
                 continue;
