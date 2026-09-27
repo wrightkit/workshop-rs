@@ -7,7 +7,10 @@ Query and edit API ergonomics are outside this decision.
 
 ## Decision
 
-`workshop-rs` exposes typed setting facts through `settings::schema`.
+`workshop-rs` exposes typed setting facts through `settings` (implemented in
+the internal `settings::schema` module; see
+[`docs/compatibility-facades.md`](../compatibility-facades.md) for the public
+path).
 `SettingId` is an open, locale-independent identity for a Workshop setting
 concept. A concrete hero or ability display label is never required in that
 identity; hero and logical ability-slot information is represented by

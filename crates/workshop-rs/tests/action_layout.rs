@@ -1,6 +1,5 @@
-use workshop_rs::actions::{self, ActionLayoutError};
 use workshop_rs::catalog::{Catalog, Locale};
-use workshop_rs::emitter;
+use workshop_rs::emitter::{self, ActionLayoutError};
 use workshop_rs::{Action, Event, Program, Rule, Value, Variable};
 
 fn program_with_structured_actions() -> (Program, Vec<Action>) {
@@ -67,7 +66,7 @@ fn structured_action_widths_count_native_expansion() {
 
     for (range, width) in [((0..5), 5), ((5..8), 3), ((8..11), 3), ((11..18), 7)] {
         assert_eq!(
-            actions::action_width(&program, &catalog, &locale, &actions[range])
+            emitter::action_width(&program, &catalog, &locale, &actions[range])
                 .unwrap()
                 .width,
             width
@@ -92,7 +91,7 @@ fn layout_matches_canonical_emission_for_a_nested_sequence() {
         .lines()
         .filter(|line| !line.trim().is_empty())
         .count();
-    let layout = actions::action_width(&program, &catalog, &locale, &actions).unwrap();
+    let layout = emitter::action_width(&program, &catalog, &locale, &actions).unwrap();
     assert_eq!(layout.width, emitted_width);
     assert_eq!(layout.width, 19);
 }
@@ -105,7 +104,7 @@ fn invalid_layout_requests_fail_as_invalid_programs() {
     let actions = rule.actions.clone();
     program.rules.push(rule);
 
-    let error = actions::action_width(
+    let error = emitter::action_width(
         &program,
         &Catalog::builtin().unwrap(),
         &Locale::new("en-US"),

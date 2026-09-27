@@ -116,7 +116,7 @@ fn independently_constructed_program_uses_the_same_operations() {
     program.validate().expect("structurally validates");
     workshop_rs::validate::validate_canonical_ids(&program, &catalog).expect("catalog validates");
     let layout =
-        workshop_rs::actions::action_width(&program, &catalog, &locale, &program.rules[0].actions)
+        workshop_rs::emitter::action_width(&program, &catalog, &locale, &program.rules[0].actions)
             .expect("lays out");
     assert_eq!(layout.width, 1);
     let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emits");

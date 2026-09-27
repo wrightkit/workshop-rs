@@ -16,9 +16,7 @@ use crate::conformance::{
     TestArtifact,
 };
 use workshop_rs::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
-use workshop_rs::settings::schema::{
-    self as settings_schema, SettingDefinition, SettingValueDomain,
-};
+use workshop_rs::settings::{self as settings_schema, SettingDefinition, SettingValueDomain};
 use workshop_rs::{WorkshopError, convert, emitter, parser, roundtrip};
 
 #[derive(Clone, Copy)]
