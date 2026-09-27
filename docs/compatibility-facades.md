@@ -29,6 +29,16 @@ parse-context contract shared by Workshop parsing and frontends that supply
 expected enum domains. Both are intentional public APIs, not compatibility-only
 facades; the catalog remains the sole source of signature data.
 
+## Catalog-backed actions and values
+
+Catalog actions and values are built with `Action::call` and `Value::call`,
+passing the canonical catalog id and the arguments in catalog parameter order.
+Canonical validation against a catalog decides whether the call is valid. The
+crate exposes no Rust items generated from catalog data, so adding, removing,
+or renaming a catalog entry or parameter does not change the Rust public API
+and can ship in a minor release
+([ADR-0016](adr/0016-catalog-content-outside-rust-api.md)).
+
 ## Compatibility-only facades
 
 No compatibility-only public facades are intentionally retained. WIR storage

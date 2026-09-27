@@ -136,8 +136,7 @@ pub struct CatalogEntry {
     pub kind: Kind,
     /// Parameter names, when the catalog documents them.
     params: Vec<String>,
-    /// Reviewed semantic parameter names for consumer-facing typed APIs,
-    /// parallel to `params`.
+    /// Reviewed semantic parameter names, parallel to `params`.
     param_names: Vec<String>,
     /// Reviewed localized spellings for each parameter, parallel to `params`.
     param_aliases: Vec<HashMap<Locale, Vec<String>>>,
@@ -475,8 +474,7 @@ struct EntryFile {
     aliases: HashMap<String, AliasFile>,
     #[serde(default)]
     params: Vec<String>,
-    /// Reviewed semantic parameter names for consumer-facing typed APIs,
-    /// parallel to `params`.
+    /// Reviewed semantic parameter names, parallel to `params`.
     #[serde(default)]
     param_names: Vec<String>,
     #[serde(default)]

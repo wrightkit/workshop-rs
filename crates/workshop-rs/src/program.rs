@@ -2122,5 +2122,3 @@ impl<T: Into<Value>, const N: usize> From<[T; N]> for Value {
         Self::Array(values.into_iter().map(Into::into).collect())
     }
 }
-
-include!(concat!(env!("OUT_DIR"), "/typed_api.rs"));

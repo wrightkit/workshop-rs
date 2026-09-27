@@ -1,6 +1,6 @@
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::settings::{PathPart, schema};
-use workshop_rs::{emitter, parser, roundtrip, rules};
+use workshop_rs::{Action, Event, Program, Rule, Value, emitter, parser, roundtrip, rules};
 
 #[test]
 fn canonical_program_operations_cover_parse_validate_inspect_emit_and_roundtrip() {
@@ -40,4 +40,82 @@ fn settings_schema_exposes_enum_values_without_the_internal_table() {
     assert_eq!(enabled.domain(), "matchVoiceChat");
     assert_eq!(enabled.id(), "enabled");
     assert_eq!(enabled.english_name(), "Enabled");
+}
+
+#[test]
+fn catalog_actions_and_values_are_built_by_canonical_id() {
+    let catalog = Catalog::builtin().expect("built-in catalog");
+    let locale = Locale::new("en-US");
+    let numbers = |values: &[i32]| values.iter().copied().map(Value::from).collect::<Vec<_>>();
+
+    let mut program = Program::new();
+    program.rule(
+        Rule::new("catalog calls", Event::Global)
+            .action(Action::call(
+                "damage",
+                [Value::EventPlayer, Value::Null, Value::from(10)],
+            ))
+            .action(Action::call(
+                "teleport",
+                [
+                    Value::EventPlayer,
+                    Value::call("vector", numbers(&[1, 2, 3])),
+                ],
+            ))
+            .action(Action::call(
+                "setSlowMotion",
+                [Value::call(
+                    "countOf",
+                    [Value::call("array", numbers(&[4, 5, 6]))],
+                )],
+            )),
+    );
+    program.validate().expect("catalog calls validate");
+    rules::validate_canonical_ids(&program, &catalog).expect("catalog ids resolve");
+
+    let emitted = emitter::emit(&program, &catalog, &locale).expect("catalog calls emit");
+    assert!(
+        emitted.contains("Damage(Event Player, Null, 10);"),
+        "{emitted}"
+    );
+    assert!(
+        emitted.contains("Teleport(Event Player, Vector(1, 2, 3));"),
+        "{emitted}"
+    );
+    assert!(
+        emitted.contains("Set Slow Motion(Count Of(Array(4, 5, 6)));"),
+        "{emitted}"
+    );
+
+    let reparsed = parser::parse(&emitted, &catalog, &locale).expect("emitted Workshop reparses");
+    assert!(roundtrip::equivalent(&program, &reparsed));
+
+    let actions = &reparsed.rules[0].actions;
+    assert!(matches!(
+        &actions[0],
+        Action::Call { name, args } if name == "damage"
+            && matches!(&args[..], [Value::EventPlayer, Value::Null, Value::Number(amount)] if *amount == 10.0)
+    ));
+    assert!(matches!(
+        &actions[1],
+        Action::Call { name, args } if name == "teleport"
+            && matches!(&args[..], [Value::EventPlayer, position] if is_call(position, "vector", &[1.0, 2.0, 3.0]))
+    ));
+    assert!(matches!(
+        &actions[2],
+        Action::Call { name, args } if name == "setSlowMotion"
+            && matches!(&args[..], [Value::Call { name, args }] if name == "countOf"
+                && matches!(&args[..], [array] if is_call(array, "array", &[4.0, 5.0, 6.0])))
+    ));
+}
+
+fn is_call(value: &Value, id: &str, numbers: &[f64]) -> bool {
+    matches!(
+        value,
+        Value::Call { name, args } if name == id
+            && args.len() == numbers.len()
+            && args.iter().zip(numbers).all(|(arg, expected)| {
+                matches!(arg, Value::Number(actual) if actual == expected)
+            })
+    )
 }

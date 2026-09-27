@@ -24,5 +24,3 @@ mod program_model;
 mod public_api;
 #[path = "real_projects.rs"]
 mod real_projects;
-#[path = "typed_api.rs"]
-mod typed_api;

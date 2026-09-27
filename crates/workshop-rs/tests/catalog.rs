@@ -417,6 +417,31 @@ fn documented_action_and_value_signatures_are_inventory_entries() {
 }
 
 #[test]
+fn builtin_entries_with_parameters_declare_reviewed_parameter_names() {
+    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/src/catalog/data/catalog.json");
+    let raw: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("catalog source"))
+            .expect("catalog source is JSON");
+    for section in ["actions", "values"] {
+        for entry in raw[section].as_array().expect("catalog section") {
+            let id = entry["id"].as_str().expect("entry id");
+            let params = entry["params"].as_array().map_or(0, Vec::len);
+            if params == 0 {
+                continue;
+            }
+            let names = entry["paramNames"]
+                .as_array()
+                .unwrap_or_else(|| panic!("{section} entry '{id}' must declare paramNames"));
+            assert_eq!(
+                names.len(),
+                params,
+                "{section} entry '{id}' must declare one paramNames entry per params entry"
+            );
+        }
+    }
+}
+
+#[test]
 fn catalog_defaults_remain_available_through_position_queries() {
     let catalog = builtin();
     let wait = catalog.entry(Kind::Action, "wait").expect("wait");
