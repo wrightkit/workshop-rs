@@ -111,6 +111,7 @@ impl Kind {
 /// vectors, or null.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct ParamCoercions {
     /// Accept `False` as numeric zero.
     #[serde(default)]
@@ -351,6 +352,7 @@ impl EnumDomain {
 
 /// Target-format metadata recorded in the catalog.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[non_exhaustive]
 pub struct TargetMeta {
     pub game: String,
     pub format: String,
@@ -360,6 +362,7 @@ pub struct TargetMeta {
 /// Provenance of the catalog data.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct Provenance {
     pub generator: String,
     pub generator_version: String,
@@ -376,6 +379,7 @@ pub struct Provenance {
 /// localized preset identities, and enum members) carry a mapping for the
 /// locale out of the declared total.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[non_exhaustive]
 pub struct LocaleCoverage {
     pub locale: Locale,
     /// Canonical entries with a declared mapping in this locale.
@@ -391,6 +395,7 @@ pub struct LocaleCoverage {
 /// identity names.
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
+#[non_exhaustive]
 pub struct CatalogIdentity {
     /// The `workshop-rs` package version (semver); bumped by code changes.
     pub implementation_version: String,

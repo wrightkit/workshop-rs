@@ -816,6 +816,7 @@ fn settings_probe(definition: &SettingDefinition, catalog: &Catalog) -> String {
             lines.push(format!("{indent}{name} {{"));
             lines.push(format!("{indent}}}"));
         }
+        other => unreachable!("census has no probe for settings value domain {other:?}"),
     }
     while depth > 1 {
         depth -= 1;

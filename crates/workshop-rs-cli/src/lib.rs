@@ -229,9 +229,8 @@ fn emit_command(args: Vec<String>) -> i32 {
             return 1;
         }
     };
-    let options = EmitOptions {
-        fallback_locale: fallback,
-    };
+    let mut options = EmitOptions::default();
+    options.fallback_locale = fallback;
     match emitter::emit_with_options(&program, &catalog, &locale, &options) {
         Ok(output) => {
             report_fallbacks(&output.fallback_ids);
@@ -283,9 +282,8 @@ fn convert_command(args: Vec<String>) -> i32 {
             return 1;
         }
     };
-    let options = ConvertOptions {
-        fallback_locale: fallback,
-    };
+    let mut options = ConvertOptions::default();
+    options.fallback_locale = fallback;
     match convert::convert(&input, &catalog, &from, &to, &options) {
         Ok(output) => {
             report_fallbacks(&output.fallback_ids);

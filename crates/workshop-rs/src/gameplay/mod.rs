@@ -277,6 +277,7 @@ impl LocalizedText {
 /// A machine-identifiable source reference for a gameplay fact.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct SourceReference {
     pub source: String,
     pub locator: String,
@@ -284,10 +285,25 @@ pub struct SourceReference {
     pub note: Option<String>,
 }
 
+impl SourceReference {
+    pub fn new(source: impl Into<String>, locator: impl Into<String>) -> Self {
+        Self {
+            source: source.into(),
+            locator: locator.into(),
+            note: None,
+        }
+    }
+    pub fn with_note(mut self, note: impl Into<String>) -> Self {
+        self.note = Some(note.into());
+        self
+    }
+}
+
 /// Identity and source metadata of a gameplay dataset. This is distinct from
 /// the Workshop parser/catalog dataset identity.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[non_exhaustive]
 pub struct GameplayDatasetIdentity {
     pub dataset_id: String,
     pub version: String,
@@ -296,6 +312,28 @@ pub struct GameplayDatasetIdentity {
     pub license: String,
     pub target: String,
     pub reviewed: bool,
+}
+
+impl GameplayDatasetIdentity {
+    pub fn new(
+        dataset_id: impl Into<String>,
+        version: impl Into<String>,
+        digest: impl Into<String>,
+        source: impl Into<String>,
+        license: impl Into<String>,
+        target: impl Into<String>,
+        reviewed: bool,
+    ) -> Self {
+        Self {
+            dataset_id: dataset_id.into(),
+            version: version.into(),
+            digest: digest.into(),
+            source: source.into(),
+            license: license.into(),
+            target: target.into(),
+            reviewed,
+        }
+    }
 }
 
 /// A gameplay fact tied to source references in the dataset version being consumed.
@@ -537,6 +575,7 @@ impl Hero {
 
 /// Explicit failure for a logical-slot lookup.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum AbilityLookupError {
     Missing {
         hero: HeroId,
@@ -583,6 +622,7 @@ impl std::error::Error for AbilityLookupError {}
 
 /// Validation and construction errors for gameplay data.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum GameplayDataError {
     EmptyIdentity(&'static str),
     DuplicateHero(HeroId),

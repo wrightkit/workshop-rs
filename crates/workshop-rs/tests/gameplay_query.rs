@@ -10,11 +10,7 @@ use workshop_rs::gameplay::{
 };
 
 fn source_reference(locator: &str) -> SourceReference {
-    SourceReference {
-        source: "test-fixture".to_string(),
-        locator: locator.to_string(),
-        note: None,
-    }
+    SourceReference::new("test-fixture", locator)
 }
 
 fn names(en: &str, zh: &str, locator: &str) -> Fact<LocalizedText> {
@@ -41,15 +37,15 @@ fn seconds(value: f64) -> Quantity {
 }
 
 fn identity() -> GameplayDatasetIdentity {
-    GameplayDatasetIdentity {
-        dataset_id: "gameplay-test".to_string(),
-        version: "2026-08-18".to_string(),
-        digest: "sha256:test".to_string(),
-        source: "test-fixture".to_string(),
-        license: "MIT".to_string(),
-        target: "gameplay query tests".to_string(),
-        reviewed: true,
-    }
+    GameplayDatasetIdentity::new(
+        "gameplay-test",
+        "2026-08-18",
+        "sha256:test",
+        "test-fixture",
+        "MIT",
+        "gameplay query tests",
+        true,
+    )
 }
 
 fn catalog() -> GameplayCatalog {

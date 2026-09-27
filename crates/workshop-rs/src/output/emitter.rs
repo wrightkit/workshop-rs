@@ -19,6 +19,7 @@ pub(crate) use crate::wir;
 
 /// Emission options: opt-in fallback for missing target-locale mappings.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct EmitOptions {
     /// When a canonical identity has no spelling for the target locale, its
     /// spelling in this declared locale is used instead. `None` (the default)
@@ -29,6 +30,7 @@ pub struct EmitOptions {
 
 /// The result of a localized emission.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct EmitOutput {
     /// The emitted localized Workshop text.
     pub text: String,

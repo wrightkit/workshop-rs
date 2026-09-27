@@ -231,6 +231,7 @@ impl SourceEdit {
 
 /// Failure while creating or applying source edits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum SourceEditError {
     InvalidRange,
     SourceMismatch,

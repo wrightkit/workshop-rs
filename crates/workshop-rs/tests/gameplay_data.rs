@@ -10,11 +10,7 @@ const SOURCE: &str = "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f6740
 const OFFICIAL_HERO_SOURCE: &str = "Blizzard Entertainment official Overwatch hero detail";
 
 fn source_reference(locator: &str) -> SourceReference {
-    SourceReference {
-        source: SOURCE.to_string(),
-        locator: locator.to_string(),
-        note: Some("commitDate=2026-08-12".to_string()),
-    }
+    SourceReference::new(SOURCE, locator).with_note("commitDate=2026-08-12")
 }
 
 fn names(name: &str, locator: &str) -> Fact<LocalizedText> {
@@ -25,15 +21,15 @@ fn names(name: &str, locator: &str) -> Fact<LocalizedText> {
 }
 
 fn identity() -> GameplayDatasetIdentity {
-    GameplayDatasetIdentity {
-        dataset_id: "test-gameplay".to_string(),
-        version: "test".to_string(),
-        digest: "sha256:test".to_string(),
-        source: SOURCE.to_string(),
-        license: "MIT-compatible test data".to_string(),
-        target: "test".to_string(),
-        reviewed: true,
-    }
+    GameplayDatasetIdentity::new(
+        "test-gameplay",
+        "test",
+        "sha256:test",
+        SOURCE,
+        "MIT-compatible test data",
+        "test",
+        true,
+    )
 }
 
 fn assert_sources(sources: &[SourceReference], source: &str, locator: &str) {

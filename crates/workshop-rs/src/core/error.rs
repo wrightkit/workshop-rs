@@ -5,6 +5,7 @@ use crate::core::source::Span;
 
 /// A structured Workshop-language error.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum WorkshopError {
     /// Catalog data is malformed or fails validation.
     Catalog(CatalogError),
@@ -33,6 +34,7 @@ pub enum WorkshopError {
 
 /// Catalog-specific error.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct CatalogError {
     pub code: &'static str,
     pub message: String,

@@ -25,6 +25,7 @@ pub enum ElementNodeKind {
 
 /// One node's contribution and its nested element-count analysis.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct ElementCountNode {
     pub kind: ElementNodeKind,
     /// An opaque identity unique within this report. It is not a WIR or
@@ -47,6 +48,7 @@ pub struct ElementCountNode {
 
 /// A structured element-count report for one canonical Workshop program.
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct ElementCountReport {
     /// The sum of all rule counts.
     pub total: usize,
@@ -65,6 +67,7 @@ impl ElementCountReport {
 
 /// A construct for which an exact canonical element count cannot be produced.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ElementCountError {
     /// The input cannot be materialized or structurally validated as a
     /// canonical Workshop program.

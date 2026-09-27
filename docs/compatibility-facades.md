@@ -63,3 +63,19 @@ public Rust item private or remove its compatibility consequences. Before 1.0,
 implementation-only public exports may be removed as intentional breaking
 changes. Consumer migrations are owned by their respective repositories and do
 not need to precede an owner-side breaking release.
+
+## Growth without breaking changes
+
+Public types expected to grow in 1.x are `#[non_exhaustive]`: error enums and
+error records, options, operation outputs and reports, catalog and gameplay
+identity/metadata records, and the settings scope and value-domain enums.
+Consumers match them with a wildcard arm and read their fields, but do not
+build them with struct literals. Options are built from `Default` and then
+assigned field by field; records that consumers need to build, such as
+`MappedText`, `gameplay::SourceReference`, and
+`gameplay::GameplayDatasetIdentity`, have a `new` constructor.
+
+The canonical program model (`Action`, `Value`, `Event`, `EventTeam`,
+`EventTarget`), `catalog::Kind`, source positions and spans, and values that
+consumers construct stay exhaustive. New Workshop content reaches them through
+catalog ids and `Call`, not new variants.
