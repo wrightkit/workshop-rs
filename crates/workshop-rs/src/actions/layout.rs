@@ -14,6 +14,7 @@ pub struct ActionLayout {
 
 /// Errors returned while querying public canonical native action layout.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ActionLayoutError {
     /// The public program cannot be materialized as a valid Workshop program.
     InvalidProgram { message: String },

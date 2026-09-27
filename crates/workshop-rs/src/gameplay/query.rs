@@ -22,6 +22,7 @@ pub enum StatOwner {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum GameplayQueryError {
     MissingHero {
         hero: HeroId,
@@ -93,6 +94,7 @@ impl std::error::Error for GameplayQueryError {}
 
 /// Explicit failures from locale-aware display-name resolution.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum AbilityNameResolutionError {
     MissingHero {
         hero: HeroId,
@@ -203,6 +205,7 @@ impl TryFrom<f64> for CooldownPercentage {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum CooldownPercentageError {
     NotFinite { value: f64 },
     OutOfRange { value: f64 },
@@ -228,6 +231,7 @@ pub enum CooldownNonApplicability {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum CooldownError {
     Missing {
         ability: AbilityRef,

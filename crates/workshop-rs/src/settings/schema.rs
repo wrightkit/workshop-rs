@@ -48,6 +48,7 @@ pub enum SettingIdentity {
 
 /// The Workshop-native section that owns a setting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum SettingScope {
     Main,
     Lobby,
@@ -123,6 +124,7 @@ pub enum Applicability {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum NumericBoundsError {
     NonFinite,
     Reversed,
@@ -196,6 +198,7 @@ pub struct EffectiveNumber {
 
 /// The machine-readable value domain of a setting.
 #[derive(Debug, Clone, PartialEq, PartialOrd)]
+#[non_exhaustive]
 pub enum SettingValueDomain {
     Boolean,
     Number(NumericBounds),
@@ -288,6 +291,7 @@ impl SettingSourceEdit {
 
 /// Failure from a typed settings query or source-preserving edit.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum SettingOperationError {
     NotApplicable {
         setting: SettingId,
@@ -389,6 +393,7 @@ impl SettingPresentation {
 
 /// Source metadata shared by the reviewed table projection.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct SettingSource {
     pub kind: SettingSourceKind,
     pub source: &'static str,

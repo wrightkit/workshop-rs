@@ -3,6 +3,7 @@ use crate::core::error::{Result, WorkshopError};
 
 /// A language-detection result with ranked evidence.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub struct Detection {
     /// The best-matching locale.
     pub locale: Locale,

@@ -14,6 +14,7 @@ use crate::output::emitter;
 
 /// A recorded round-trip result for regression and contract checks.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub struct RoundTripRecord {
     /// SHA-256 of the input Workshop text.
     pub input_identity: String,

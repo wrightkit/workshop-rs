@@ -16,6 +16,7 @@ use crate::output::emitter::{self, EmitOptions};
 
 /// Conversion options: opt-in fallback for missing target-locale mappings.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct ConvertOptions {
     /// When a canonical identity has no spelling for the target locale, its
     /// spelling in this declared locale is used instead. `None` (the
@@ -26,6 +27,7 @@ pub struct ConvertOptions {
 
 /// The result of a raw Workshop locale conversion.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct Conversion {
     /// The converted localized Workshop text.
     pub text: String,

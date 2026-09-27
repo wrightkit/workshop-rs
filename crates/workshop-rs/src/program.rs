@@ -51,6 +51,7 @@ struct ActionProvenance {
 
 /// A failure while attaching source mappings to a public [`Program`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum SourceMappingError {
     UnknownFile(FileId),
     InvalidSpan(Span),

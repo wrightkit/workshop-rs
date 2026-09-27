@@ -60,6 +60,7 @@ impl ResidualClassification {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct SemanticIssue {
     pub kind: IncompletenessKind,
     pub name: String,

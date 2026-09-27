@@ -34,6 +34,7 @@ pub struct SourceMap {
 /// Workshop text together with the [`SourceMap`] of its authored origin: the
 /// `workshop-rs/mapped-text-v1` artifact.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct MappedText {
     /// The Workshop text, itself a `workshop-rs/text-v1` artifact.
     pub text: String,
@@ -411,6 +412,13 @@ impl SourceMap {
 }
 
 impl MappedText {
+    pub fn new(text: impl Into<String>, map: SourceMap) -> Self {
+        Self {
+            text: text.into(),
+            map,
+        }
+    }
+
     /// Serialize as a `workshop-rs/mapped-text-v1` JSON document.
     pub fn to_json(&self) -> String {
         let artifact = Artifact {

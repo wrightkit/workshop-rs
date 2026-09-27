@@ -5,11 +5,7 @@ use workshop_rs::gameplay::{
 };
 
 fn source_reference(locator: &str) -> SourceReference {
-    SourceReference {
-        source: "workshop-data".to_string(),
-        locator: locator.to_string(),
-        note: None,
-    }
+    SourceReference::new("workshop-data", locator)
 }
 
 fn names(name: &str, locator: &str) -> Fact<LocalizedText> {
@@ -38,15 +34,15 @@ fn hero(id: &str, abilities: Vec<Ability>) -> Hero {
 }
 
 fn identity() -> GameplayDatasetIdentity {
-    GameplayDatasetIdentity {
-        dataset_id: "overwatch-workshop-hero-gameplay".to_string(),
-        version: "2026-08-12".to_string(),
-        digest: "sha256:test".to_string(),
-        source: "workshop-data@d854bf01fc7bbf3b2169f67408c07a8da8989ad6".to_string(),
-        license: "MIT-compatible user-provided export".to_string(),
-        target: "Overwatch Workshop hero identity and gameplay facts".to_string(),
-        reviewed: true,
-    }
+    GameplayDatasetIdentity::new(
+        "overwatch-workshop-hero-gameplay",
+        "2026-08-12",
+        "sha256:test",
+        "workshop-data@d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
+        "MIT-compatible user-provided export",
+        "Overwatch Workshop hero identity and gameplay facts",
+        true,
+    )
 }
 
 #[test]
@@ -238,11 +234,7 @@ fn empty_id_and_empty_sources_are_rejected() {
         HeroId::new("ana"),
         Fact::new(
             LocalizedText::new([("en-US".to_string(), "Ana".to_string())]),
-            vec![SourceReference {
-                source: String::new(),
-                locator: "heroes.ana".to_string(),
-                note: None,
-            }],
+            vec![SourceReference::new("", "heroes.ana")],
         ),
         vec![],
         vec![source_reference("heroes.ana")],

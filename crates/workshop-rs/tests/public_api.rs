@@ -1,6 +1,8 @@
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::settings::{PathPart, schema};
-use workshop_rs::{Action, Event, Program, Rule, Value, emitter, parser, roundtrip, rules};
+use workshop_rs::{
+    Action, Event, MappedText, Program, Rule, SourceMap, Value, emitter, parser, roundtrip, rules,
+};
 
 #[test]
 fn canonical_program_operations_cover_parse_validate_inspect_emit_and_roundtrip() {
@@ -121,4 +123,25 @@ fn is_call(value: &Value, id: &str, numbers: &[f64]) -> bool {
 
 fn is_number(value: &Value, expected: f64) -> bool {
     matches!(value, Value::Number(actual) if *actual == expected)
+}
+
+#[test]
+fn mapped_text_is_constructible_outside_the_crate() {
+    let catalog = Catalog::builtin().expect("built-in catalog");
+    let locale = Locale::new("en-US");
+    let program = parser::parse(
+        r#"rule ("mapped") {
+        event { Ongoing - Global; }
+        actions { Wait(1, Ignore Condition); }
+    }"#,
+        &catalog,
+        &locale,
+    )
+    .expect("Workshop parses");
+    let text = emitter::emit(&program, &catalog, &locale).expect("canonical emission");
+
+    let artifact = MappedText::new(text.clone(), SourceMap::extract(&program));
+    assert_eq!(artifact.text, text);
+    let decoded = MappedText::from_json(&artifact.to_json()).expect("artifact decodes");
+    assert_eq!(decoded, artifact);
 }
