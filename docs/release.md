@@ -121,6 +121,9 @@ listed in the
 The CLI crate, generated catalog data, test support, storage internals, and
 `#[doc(hidden)]` compatibility paths are outside this gate unless they are
 reachable through that documented API.
+Catalog, parse, validation, and emit changes are outside this gate; how they
+are versioned and labeled in release notes is defined in
+[Versioning of catalog, behavior, and output changes](compatibility-facades.md#versioning-of-catalog-behavior-and-output-changes).
 
 Before 1.0, the job treats a `0.x` package as a major compatibility transition
 only when the pull request title uses a Conventional Commit breaking marker
