@@ -101,3 +101,50 @@ The canonical program model (`Action`, `Value`, `Event`, `EventTeam`,
 `EventTarget`), `catalog::Kind`, source positions and spans, and values that
 consumers construct stay exhaustive. New Workshop content reaches them through
 catalog ids and `Call`, not new variants.
+
+## Versioning of catalog, behavior, and output changes
+
+`cargo-semver-checks` sees only the Rust API. Catalog content, parse results,
+validation results, and emitted text also change between releases, and
+consumers with a caret requirement pick up every minor release. From 1.0 on,
+releases are versioned as follows.
+
+- **Major:** an incompatible change to the documented public Rust API, as
+  reported by `cargo-semver-checks`.
+- **Minor:**
+  - catalog updates: added actions, values, heroes, maps, and settings;
+    changed parameters; new or changed locale spellings; corrections that
+    remove ids which were never native Workshop elements (such as [#299](https://github.com/wrightkit/workshop-rs/pull/299));
+  - parse, validation, or emit changes that align behavior or output with the
+    live client (such as [#300](https://github.com/wrightkit/workshop-rs/pull/300) and [#303](https://github.com/wrightkit/workshop-rs/pull/303));
+  - new public API;
+  - MSRV increases.
+- **Patch:** fixes with no observable change to the parsed `Program`, emitted
+  text, validation results, or catalog content.
+
+Catalog corrections do not keep the removed id: the parser rejects it like any
+other unknown id, matching the live client.
+
+Overwatch has not removed a native Workshop action or value so far; its updates
+change parameters, spellings, and engine behavior instead. `workshop-rs` keeps
+no legacy ids for that case. If a native element is ever removed, the catalog
+follows the client and the release notes declare the removal as a breaking
+behavior change; the maintainer decides at that point whether it ships in a
+minor or a major release.
+
+The catalog dataset carries its own version, `catalog_version` in
+`catalog::CatalogIdentity`, which changes with any dataset change independently
+of the crate version.
+
+GitHub Release notes are generated from merged pull request titles, so the
+title marks the kind of change. This applies to every pull request, before
+and after 1.0:
+
+- catalog updates use `feat(catalog): ...`;
+- other changes to parse, validation, or emit results use `feat(<area>): ...`
+  rather than `fix`, and the pull request body has a `## Behavior change`
+  section describing the observable difference;
+- `fix` is reserved for changes that qualify as a patch under the rules above.
+
+release-plz derives a minor release from `feat`, so these titles also select
+the right version.
