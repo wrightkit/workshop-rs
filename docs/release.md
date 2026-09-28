@@ -63,6 +63,24 @@ vX.Y.Z
 
 There is no normal draft/published GitHub Release state machine. Build outputs remain GitHub Actions artifacts until all required jobs succeed; the GitHub Release is created only at the final publication boundary.
 
+## First stable API release
+
+The public API freeze and required downstream verification recorded in #252
+are complete. The first stable release therefore sets the shared `workshop-rs`
+version group to `1.0.0` in a dedicated release PR. A breaking change on a
+`0.x` crate normally advances the pre-1.0 minor line (for example, `0.11.0` to
+`0.12.0`), following [release-plz's major semver bump
+rule](https://release-plz.ieni.dev/docs/semver-check), so the stable API
+transition needs this one-time exact version target.
+
+Merging the version PR starts the existing main-branch release-plz workflow,
+which publishes both crates and pushes `v1.0.0`. The tag then starts the binary
+workflow described above. This PR selects the release version; crates.io
+publication, tag creation, and GitHub Release creation remain owned by the
+existing automation. After `1.0.0`, release-plz continues to manage ordinary
+version updates and the compatibility check uses the latest published
+release as its baseline.
+
 ## Binary targets
 
 The release matrix is intentionally explicit because it is small and stable:
