@@ -4,7 +4,7 @@ impl ParseContext<'_> {
     pub(crate) fn event_section(&mut self) -> Result<Event> {
         self.expect_keyword("event")?;
         self.expect(TokenKind::LBrace, "expected '{' after 'event'")?;
-        let mut lines: Vec<String> = Vec::new();
+        let mut lines: Vec<(String, Option<Span>)> = Vec::new();
         loop {
             match self.peek() {
                 Some(Token {
@@ -19,16 +19,16 @@ impl ParseContext<'_> {
                     ..
                 }) => {
                     self.pos += 1;
-                    lines.push(String::new());
+                    lines.push((String::new(), None));
                 }
                 Some(_) => {
-                    let text = self.line_text()?;
-                    lines.push(text);
+                    let (text, span) = self.line_text()?;
+                    lines.push((text, span));
                 }
                 None => return Err(self.malformed("unexpected end of input in event", self.eof())),
             }
         }
-        let Some(name_line) = lines.first().cloned() else {
+        let Some((name_line, _)) = lines.first() else {
             return Err(self.malformed("event section is empty", self.previous()));
         };
         let name_line = name_line.trim();
@@ -43,13 +43,13 @@ impl ParseContext<'_> {
             })?;
         match entry.id.as_str() {
             "global" => {
-                if lines[1..].iter().any(|line| !line.trim().is_empty()) {
+                if lines[1..].iter().any(|(line, _)| !line.trim().is_empty()) {
                     return Err(self.unsupported_event_parameters("global"));
                 }
                 Ok(Event::Global)
             }
             "eachPlayer" => {
-                if lines[1..].iter().all(|line| line.trim().is_empty()) {
+                if lines[1..].iter().all(|(line, _)| line.trim().is_empty()) {
                     return Ok(Event::EachPlayer);
                 }
                 let (team, target) = self.event_filters(&lines, "eachPlayer", true)?;
@@ -75,18 +75,21 @@ impl ParseContext<'_> {
                     .get(2..)
                     .unwrap_or(&[])
                     .iter()
-                    .any(|line| !line.trim().is_empty())
+                    .any(|(line, _)| !line.trim().is_empty())
                 {
                     return Err(self.unsupported_event_parameters("subroutine"));
                 }
-                let Some(sub_name) = lines.get(1).map(|s| s.trim()) else {
+                let Some((sub_name, sub_span)) = lines.get(1) else {
                     return Err(self.malformed(
                         "subroutine event requires a subroutine name",
                         self.previous(),
                     ));
                 };
-                let id = self.subroutine_by_name(sub_name)?;
-                Ok(Event::Subroutine(id))
+                let id = self.subroutine_by_name(sub_name.trim())?;
+                Ok(Event::Subroutine {
+                    subroutine: id,
+                    name_span: *sub_span,
+                })
             }
             other => Err(WorkshopError::Unsupported {
                 message: format!("unsupported event '{other}'"),
@@ -95,21 +98,24 @@ impl ParseContext<'_> {
         }
     }
 
-    pub(crate) fn player_event(&self, lines: &[String], kind: PlayerEventKind) -> Result<Event> {
+    pub(crate) fn player_event(
+        &self,
+        lines: &[(String, Option<Span>)],
+        kind: PlayerEventKind,
+    ) -> Result<Event> {
         let (team, target) = self.event_filters(lines, kind.catalog_id(), false)?;
         Ok(Event::Player { kind, team, target })
     }
 
     pub(crate) fn event_filters(
         &self,
-        lines: &[String],
+        lines: &[(String, Option<Span>)],
         event_id: &str,
         allow_empty: bool,
     ) -> Result<(EventTeam, EventTarget)> {
         let parameters: Vec<&str> = lines[1..]
             .iter()
-            .map(String::as_str)
-            .map(str::trim)
+            .map(|(line, _)| line.trim())
             .filter(|line| !line.is_empty())
             .collect();
         if parameters.is_empty() {

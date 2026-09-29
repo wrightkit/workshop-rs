@@ -14,12 +14,15 @@ pub(crate) fn validate(program: &Program) -> Result<(), IrError> {
     }
     for variable in program.global_variables.iter() {
         check_span(variable.span, program)?;
+        check_span(variable.name_span, program)?;
     }
     for variable in program.player_variables.iter() {
         check_span(variable.span, program)?;
+        check_span(variable.name_span, program)?;
     }
     for subroutine in program.subroutines.iter() {
         check_span(subroutine.span, program)?;
+        check_span(subroutine.name_span, program)?;
     }
     for rule in program.rules.iter() {
         check_rule(program, rule)?;
@@ -29,7 +32,13 @@ pub(crate) fn validate(program: &Program) -> Result<(), IrError> {
 
 fn check_rule(program: &Program, rule: &Rule) -> Result<(), IrError> {
     check_span(rule.span, program)?;
-    if let Event::Subroutine(subroutine) = &rule.event {
+    check_span(rule.name_span, program)?;
+    if let Event::Subroutine {
+        subroutine,
+        name_span,
+    } = &rule.event
+    {
+        check_span(*name_span, program)?;
         if !program.subroutines.contains(*subroutine) {
             return Err(dangling("subroutine", subroutine.index()));
         }
@@ -62,6 +71,7 @@ fn check_action(program: &Program, id: super::ActionId) -> Result<(), IrError> {
         .get(id)
         .ok_or_else(|| dangling("action", id.index()))?;
     check_span(action.span(), program)?;
+    check_span(action_identifier_span(action), program)?;
     match action {
         Action::SetGlobalVariable {
             variable, value, ..
@@ -196,6 +206,7 @@ fn check_value(program: &Program, id: super::ValueId) -> Result<(), IrError> {
         .get(id)
         .ok_or_else(|| dangling("value", id.index()))?;
     check_span(node.span, program)?;
+    check_span(node.identifier, program)?;
     let value = &node.value;
     match value {
         Value::Array(elements) => {
@@ -238,6 +249,21 @@ fn check_value(program: &Program, id: super::ValueId) -> Result<(), IrError> {
         | Value::EventPlayer => {}
     }
     Ok(())
+}
+
+/// The recorded identifier span a WIR action carries, when its variant has
+/// one.
+fn action_identifier_span(action: &Action) -> Option<Span> {
+    match action {
+        Action::SetGlobalVariable { target_span, .. }
+        | Action::ModifyGlobalVariable { target_span, .. }
+        | Action::SetPlayerVariable { target_span, .. }
+        | Action::ModifyPlayerVariable { target_span, .. }
+        | Action::ForGlobalVariable { target_span, .. }
+        | Action::ForPlayerVariable { target_span, .. } => *target_span,
+        Action::CallSubroutine { callee_span, .. } => *callee_span,
+        _ => None,
+    }
 }
 
 fn check_span(span: Option<Span>, program: &Program) -> Result<(), IrError> {

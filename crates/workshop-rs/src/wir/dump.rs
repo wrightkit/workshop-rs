@@ -80,7 +80,7 @@ fn render_event(program: &Program, event: &Event, out: &mut String, level: usize
             event_team_name(*team),
             event_target_name(target)
         )),
-        Event::Subroutine(subroutine) => {
+        Event::Subroutine { subroutine, .. } => {
             let name = program
                 .subroutines
                 .get(*subroutine)
@@ -299,6 +299,7 @@ fn render_action(program: &Program, id: super::ActionId, out: &mut String, level
             step,
             body,
             span,
+            ..
         } => {
             out.push_str(&format!("{}forPlayerVariable ", indent(level)));
             render_value(program, *player, out);

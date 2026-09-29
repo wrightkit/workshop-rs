@@ -37,7 +37,7 @@ impl<'a> EmitContext<'a> {
                 self.line(2, &format!("{spelling};"))?;
                 self.event_filters(*team, target)?;
             }
-            wir::Event::Subroutine(subroutine) => {
+            wir::Event::Subroutine { subroutine, .. } => {
                 let spelling = self.spelling(Kind::Event, "subroutine")?;
                 self.line(2, &format!("{spelling};"))?;
                 let name = self

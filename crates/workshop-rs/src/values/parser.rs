@@ -237,24 +237,25 @@ impl ParseContext<'_> {
                     {
                         self.pos += 1;
                         self.expect(TokenKind::LParen, "expected '(' after 'Global Variable'")?;
-                        let (name, _, _) = self.phrase()?;
+                        let (name, name_start, name_end) = self.phrase()?;
                         let variable = self.global_by_name(&name)?;
                         self.expect(TokenKind::RParen, "expected ')' after Global Variable")?;
                         let span = Some(Span::new(self.file(), start, end));
-                        return Ok(self
-                            .target
-                            .values
-                            .push(ValueNode::new(Value::GlobalVariable(variable), span)));
+                        return Ok(self.target.values.push(
+                            ValueNode::new(Value::GlobalVariable(variable), span).with_identifier(
+                                Some(Span::new(self.file(), name_start, name_end)),
+                            ),
+                        ));
                     }
                 }
                 self.expect(TokenKind::Dot, "expected '.' after 'Global'")?;
-                let (name, _, _) = self.phrase()?;
+                let (name, name_start, name_end) = self.phrase()?;
                 let variable = self.global_by_name(&name)?;
                 let span = Some(Span::new(self.file(), start, end));
-                Ok(self
-                    .target
-                    .values
-                    .push(ValueNode::new(Value::GlobalVariable(variable), span)))
+                Ok(self.target.values.push(
+                    ValueNode::new(Value::GlobalVariable(variable), span)
+                        .with_identifier(Some(Span::new(self.file(), name_start, name_end))),
+                ))
             }
             Some(Token {
                 kind: TokenKind::Word(word),
@@ -280,13 +281,20 @@ impl ParseContext<'_> {
                     self.expect(TokenKind::LParen, "expected '(' after 'Player Variable'")?;
                     let player = self.value()?;
                     self.expect(TokenKind::Comma, "expected ',' after player")?;
-                    let (name, _, _) = self.phrase()?;
+                    let (name, name_start, name_end) = self.phrase()?;
                     let variable = self.player_by_name(&name)?;
                     self.expect(TokenKind::RParen, "expected ')' after Player Variable")?;
-                    Ok(self.target.values.push(ValueNode::new(
-                        Value::PlayerVariable { player, variable },
-                        Some(Span::new(self.file(), start, end)),
-                    )))
+                    Ok(self.target.values.push(
+                        ValueNode::new(
+                            Value::PlayerVariable { player, variable },
+                            Some(Span::new(self.file(), start, end)),
+                        )
+                        .with_identifier(Some(Span::new(
+                            self.file(),
+                            name_start,
+                            name_end,
+                        ))),
+                    ))
                 })();
                 self.expected_domain = saved;
                 result
@@ -312,10 +320,17 @@ impl ParseContext<'_> {
                         self.pos += 1;
                         let (name, name_start, name_end) = self.phrase()?;
                         let variable = self.player_by_name(&name)?;
-                        return Ok(self.target.values.push(ValueNode::new(
-                            Value::PlayerVariable { player, variable },
-                            Some(Span::new(self.file(), name_start, name_end)),
-                        )));
+                        return Ok(self.target.values.push(
+                            ValueNode::new(
+                                Value::PlayerVariable { player, variable },
+                                Some(Span::new(self.file(), name_start, name_end)),
+                            )
+                            .with_identifier(Some(Span::new(
+                                self.file(),
+                                name_start,
+                                name_end,
+                            ))),
+                        ));
                     }
                     return Ok(player);
                 }
@@ -337,10 +352,17 @@ impl ParseContext<'_> {
                         self.pos += 1;
                         let (name, name_start, name_end) = self.phrase()?;
                         let variable = self.player_by_name(&name)?;
-                        return Ok(self.target.values.push(ValueNode::new(
-                            Value::PlayerVariable { player, variable },
-                            Some(Span::new(self.file(), name_start, name_end)),
-                        )));
+                        return Ok(self.target.values.push(
+                            ValueNode::new(
+                                Value::PlayerVariable { player, variable },
+                                Some(Span::new(self.file(), name_start, name_end)),
+                            )
+                            .with_identifier(Some(Span::new(
+                                self.file(),
+                                name_start,
+                                name_end,
+                            ))),
+                        ));
                     }
                     return Ok(player);
                 }
@@ -422,7 +444,7 @@ impl ParseContext<'_> {
                 }) = self.peek()
                 {
                     self.pos += 1;
-                    let (name, _, _) = self.phrase()?;
+                    let (name, name_start, name_end) = self.phrase()?;
                     if matches!(
                         self.target.values.get(inner),
                         Some(ValueNode {
@@ -436,13 +458,20 @@ impl ParseContext<'_> {
                             .get(&name)
                             .copied()
                             .unwrap_or(self.player_by_name(&name)?);
-                        Ok(self.target.values.push(ValueNode::new(
-                            Value::PlayerVariable {
-                                player: inner,
-                                variable,
-                            },
-                            None,
-                        )))
+                        Ok(self.target.values.push(
+                            ValueNode::new(
+                                Value::PlayerVariable {
+                                    player: inner,
+                                    variable,
+                                },
+                                None,
+                            )
+                            .with_identifier(Some(Span::new(
+                                self.file(),
+                                name_start,
+                                name_end,
+                            ))),
+                        ))
                     } else {
                         let member = self
                             .target
@@ -729,10 +758,13 @@ impl ParseContext<'_> {
             _ => {}
         }
         if let Some(variable) = self.globals.get(phrase).copied() {
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::GlobalVariable(variable),
-                Some(Span::new(self.file(), start, end)),
-            )));
+            return Ok(self.target.values.push(
+                ValueNode::new(
+                    Value::GlobalVariable(variable),
+                    Some(Span::new(self.file(), start, end)),
+                )
+                .with_identifier(Some(Span::new(self.file(), start, end))),
+            ));
         }
         let member = self
             .expected_domain
@@ -899,10 +931,19 @@ impl ParseContext<'_> {
             {
                 let (name, start, end) = self.phrase()?;
                 let variable = self.global_by_name(&name)?;
-                args.push(self.target.values.push(ValueNode::new(
-                    Value::GlobalVariable(variable),
-                    Some(Span::new(self.file(), start, end)),
-                )));
+                args.push(
+                    self.target.values.push(
+                        ValueNode::new(
+                            Value::GlobalVariable(variable),
+                            Some(Span::new(self.file(), start, end)),
+                        )
+                        .with_identifier(Some(Span::new(
+                            self.file(),
+                            start,
+                            end,
+                        ))),
+                    ),
+                );
             } else if matches!(
                 call_id,
                 "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex"
@@ -912,10 +953,17 @@ impl ParseContext<'_> {
                 let (name, start, end) = self.phrase()?;
                 if let Some(variable) = self.players.get(&name).copied() {
                     let player = args[0];
-                    args[0] = self.target.values.push(ValueNode::new(
-                        Value::PlayerVariable { player, variable },
-                        Some(Span::new(self.file(), start, end)),
-                    ));
+                    args[0] = self.target.values.push(
+                        ValueNode::new(
+                            Value::PlayerVariable { player, variable },
+                            Some(Span::new(self.file(), start, end)),
+                        )
+                        .with_identifier(Some(Span::new(
+                            self.file(),
+                            start,
+                            end,
+                        ))),
+                    );
                 } else {
                     self.pos = saved;
                     let saved_domain = self.expected_domain;

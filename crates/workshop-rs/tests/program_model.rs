@@ -382,6 +382,26 @@ rule ("identifiers") {
         Call Subroutine(tick);
         Set Global Variable(cakePos, Add(Event Player.playerScore, 1));
         disabled Modify Global Variable(cakePos, Add, Event Player.playerScore);
+        Start Rule(tick, Restart Rule);
+        Set Global Variable At Index(cakePos, 0, 1);
+        Big Message(All Players(All Teams), Custom String("cakePos in a string is not a reference", cakePos));
+        // cakePos inside a comment is not a reference either
+        For Global Variable(cakePos, 0, 10, 1);
+            Abort;
+        End;
+        For Player Variable(Event Player, playerScore, 0, 5, 1);
+            Abort;
+        End;
+    }
+}
+
+rule ("subroutine runner") {
+    event {
+        Subroutine;
+        tick;
+    }
+    actions {
+        Call Subroutine(tick);
     }
 }
 "#;
@@ -410,24 +430,32 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         "tick"
     );
 
-    // Infix assignments record a target span: `Event Player.name` records the
-    // identifier itself, while `Global.name` records the qualified target.
+    // Every variable write names its target identifier: standard-form
+    // `Set`/`Modify`, infix `Global.name`/`Event Player.name` assignments,
+    // `For` loops, and `Call Subroutine` callees.
+    for action in [0, 1, 2, 6, 7, 11] {
+        assert_eq!(
+            span_text(&program, program.action_identifier_span(0, action).unwrap()),
+            "cakePos",
+            "action {action}"
+        );
+    }
+    for action in [3, 4, 14] {
+        assert_eq!(
+            span_text(&program, program.action_identifier_span(0, action).unwrap()),
+            "playerScore",
+            "action {action}"
+        );
+    }
     assert_eq!(
-        span_text(&program, program.action_identifier_span(0, 3).unwrap()),
-        "playerScore"
+        span_text(&program, program.action_identifier_span(0, 5).unwrap()),
+        "tick"
     );
-    assert_eq!(
-        span_text(&program, program.action_identifier_span(0, 1).unwrap()),
-        "Global.cakePos"
-    );
-    // Standard-form variable writes and `Call Subroutine` record no
-    // identifier span; these `None`s describe current parser coverage, not
-    // the eventual contract (#325 records the remaining spans).
-    assert_eq!(program.action_identifier_span(0, 0), None);
-    assert_eq!(program.action_identifier_span(0, 2), None);
-    assert_eq!(program.action_identifier_span(0, 4), None);
-    assert_eq!(program.action_identifier_span(0, 5), None);
-    assert_eq!(program.action_identifier_span(0, 7), None);
+    // Generic calls carry no action-level identifier; the subroutine or
+    // variable they name is provenance of a value argument instead.
+    assert_eq!(program.action_identifier_span(0, 8), None);
+    assert_eq!(program.action_identifier_span(0, 9), None);
+    assert_eq!(program.action_identifier_span(0, 10), None);
 
     // A read nested inside another value is addressed by a path into the
     // public value tree: `Add(Event Player.playerScore, 1)` argument 0.
@@ -464,7 +492,7 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         ),
         "playerScore"
     );
-    // The same spelling inside a condition resolves to the identifier.
+    // The same spellings inside a condition resolve to their identifiers.
     assert_eq!(
         span_text(
             &program,
@@ -472,14 +500,52 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         ),
         "playerScore"
     );
-    // A `Global.name` read records the `Global` keyword, not the identifier.
     assert_eq!(
         span_text(
             &program,
             program.condition_value_span(0, 0, &[0, 1]).unwrap(),
         ),
-        "Global"
+        "cakePos"
     );
+    // `Start Rule`'s subroutine argument and an `... At Index` variable name
+    // record their identifiers as value provenance.
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 8, 0, &[]).unwrap(),
+        ),
+        "tick"
+    );
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 9, 0, &[]).unwrap(),
+        ),
+        "cakePos"
+    );
+    // A string literal carrying the same spelling is string provenance, not
+    // the identifier; the real argument next to it inside `Custom String` is.
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 10, 1, &[0]).unwrap(),
+        ),
+        "\"cakePos in a string is not a reference\""
+    );
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 10, 1, &[1]).unwrap(),
+        ),
+        "cakePos"
+    );
+
+    // A `Subroutine` event binding records the bound name.
+    assert_eq!(
+        span_text(&program, program.rule_event_name_span(1).unwrap()),
+        "tick"
+    );
+    assert_eq!(program.rule_event_name_span(0), None);
 
     // An empty path addresses the argument or condition value itself.
     assert_eq!(
@@ -527,6 +593,7 @@ fn programs_without_source_carry_no_identifier_provenance() {
     assert_eq!(program.global_variable_name_span(0), None);
     assert_eq!(program.player_variable_name_span(0), None);
     assert_eq!(program.subroutine_name_span(0), None);
+    assert_eq!(program.rule_event_name_span(0), None);
     assert_eq!(program.action_identifier_span(0, 0), None);
     assert_eq!(program.action_identifier_span(0, 1), None);
     assert_eq!(program.condition_value_span(0, 0, &[]), None);

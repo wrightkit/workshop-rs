@@ -9,6 +9,9 @@ use super::{GlobalVarId, PlayerVarId, SubroutineId, ValueId};
 pub(crate) struct ValueNode {
     pub(crate) value: Value,
     pub(crate) span: Option<Span>,
+    /// The span of the identifier a variable or subroutine reference names;
+    /// `None` for nodes that do not reference a declared identifier.
+    pub(crate) identifier: Option<Span>,
 }
 
 /// A workshop value (expression).
@@ -55,6 +58,16 @@ pub(crate) enum Value {
 impl ValueNode {
     /// Build a value node with a source span.
     pub(crate) fn new(value: Value, span: Option<Span>) -> Self {
-        ValueNode { value, span }
+        ValueNode {
+            value,
+            span,
+            identifier: None,
+        }
+    }
+
+    /// Record the identifier span a variable or subroutine reference names.
+    pub(crate) fn with_identifier(mut self, identifier: Option<Span>) -> Self {
+        self.identifier = identifier;
+        self
     }
 }

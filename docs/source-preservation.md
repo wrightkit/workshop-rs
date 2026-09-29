@@ -45,18 +45,22 @@ nested-value provenance is exposed separately:
 - `Program::action_identifier_span` returns the span recorded for the
   variable or subroutine an action names — a set/modify/for target or a
   `Call Subroutine` callee.
+- `Program::rule_event_name_span` returns the span recorded for the
+  subroutine name a `Subroutine` event binding names.
 - `Program::condition_value_span` and `Program::action_argument_value_span`
   return the span recorded for a value nested inside a condition or action
-  argument, addressed by a path into the public `Value` tree.
+  argument, addressed by a path into the public `Value` tree. For a variable
+  or subroutine reference the recorded identifier span is returned; other
+  nodes return the span recorded for the node itself.
 
-Only the identifier spans the parser actually records are returned. Raw
-Workshop records a target for `Global.name`/`Event Player.name` infix
-assignments — `Global.name` covers the qualified name, `Event Player.name`
-the identifier alone — while standard-form `Set`/`Modify` writes, `For`
-variable loops, and `Call Subroutine` record none. Variable reads record the
-declared name for `Event Player.name`, bare-name, and `... At Index` argument
-spellings; `Global.name` and `Global/Player Variable(...)` reads record the
-leading keyword instead.
+Raw Workshop parses record the declared identifier at every position that
+names a variable or subroutine: `Set`/`Modify` standard forms and infix
+`Global.name`/`Event Player.name` assignments, `For` variable loops,
+`Call Subroutine` and `Start Rule` callees, `Subroutine` event bindings,
+`... At Index` name arguments, and reads written as `Global.name`,
+`Global/Player Variable(name)`, `Event Player.name`, or a bare declared name.
+Positions with no recorded provenance return `None` rather than a neighboring
+or enclosing span.
 
 Consumers that construct a program can attach the same metadata with
 `Program::set_rule_span`, `Program::set_condition_span`,

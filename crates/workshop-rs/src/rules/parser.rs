@@ -135,9 +135,7 @@ impl ParseContext<'_> {
             } else {
                 span
             }),
-            // Workshop-text sources carry no `.opy` identifier provenance;
-            // exact rename occurrences are only produced by the native path.
-            name_span: None,
+            name_span: Some(name_span),
         })
     }
 
@@ -162,7 +160,7 @@ impl ParseContext<'_> {
                 name,
                 index,
                 span: Some(Span::new(self.file(), start, end)),
-                name_span: None,
+                name_span: Some(Span::new(self.file(), start, end)),
             });
             self.subroutines
                 .insert(self.target.subroutines.get(id).unwrap().name.clone(), id);
