@@ -138,7 +138,7 @@ the program's retained source documents, including the Workshop text parsed
 from the artifact, are dropped and `Program::source` returns `None` for them.
 The whole mapping is rejected with a typed `SourceMapError`, leaving the
 program unchanged, when the program shape differs from the recorded shape or
-when any entry is invalid, duplicated, or an empty declaration entry.
+when any entry is invalid, duplicated, or carries no position at all.
 
 A `mapped-text-v1` document has these members:
 
@@ -153,13 +153,32 @@ A `mapped-text-v1` document has these members:
 The `node` tags and their keys are `rule` (`rule`), `condition` (`rule`,
 `condition`), `action` (`rule`, `action`), `action_argument` (`rule`, `action`,
 `argument`), and `global_variable`, `player_variable`, and `subroutine`
-(`index`). The first four carry a `span`; declarations carry `span`,
-`name_span`, or both. A span is `{"file", "start", "end"}` with positions
+(`index`). A span is `{"file", "start", "end"}` with positions
 `{"line", "column"}`. Only nodes with an authored origin have an entry, so
-`spans` may be empty. Decoders ignore unknown members. The
-mapping granularity is rule, condition, action, direct action argument, and
-declarations; nested-value and action-identifier mappings are not part of the
-format.
+`spans` may be empty. Decoders ignore unknown members.
+
+Every entry carries `span` optionally; an entry may instead carry only the
+finer-grained members below, which is how identifier-only provenance such as
+a `(expr).member` variable read maps. Additional optional members:
+
+- `rule`: `name_span` for the `rule("name")` string and `event_name_span`
+  for the subroutine name a `Subroutine` event binding names.
+- `action`: `identifier_span` for the target or callee the action names.
+- `condition` and `action_argument`: `identifier_span` for the value's own
+  variable or subroutine identifier, and `children`, a list of
+  `{"span", "identifier_span", "children"}` members addressing the value's
+  children by position in the public `Value` tree — `Array` elements and
+  `Call` arguments by index, `Vector` components as `0`/`1`/`2` for x/y/z,
+  and a `PlayerVariable` player at `0`. All three members are optional at
+  every level. Children attach positionally when the mapped text reparses to
+  a differently shaped value — emission can canonicalize a member access into
+  a variable read — so children beyond the applied value's tree are dropped
+  and positions without an entry stay unmapped.
+- declarations: `name_span` for the declared name in addition to `span`.
+
+Artifacts produced before these members existed decode and apply unchanged;
+an artifact whose entries omit `span` requires a consumer built on this
+contract.
 
 Columns follow `Position`: 1-based Unicode scalar values. Producers convert
 from other units, and editor presentation converts to UTF-16.
