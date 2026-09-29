@@ -2,7 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::{DeclarationProvenance, Program, ProgramProvenance, action_argument_count, fit};
+use super::{
+    DeclarationProvenance, Program, ProgramProvenance, Value, ValueProvenance,
+    action_argument_count, action_argument_values, fit, value_children,
+};
 use crate::source::{FileId, Position, SourceFile, Span};
 
 /// Identifier of the canonical Workshop text artifact: the Workshop text alone.
@@ -22,8 +25,15 @@ pub const MAPPED_TEXT_V1: &str = "workshop-rs/mapped-text-v1";
 /// values.
 ///
 /// The mapping granularity is rule, condition, action, direct action argument,
-/// and variable and subroutine declarations. Nodes without an authored origin
-/// have no entry, so consumers report evidence on them as unmapped.
+/// and variable and subroutine declarations. Entries may additionally carry the
+/// identifier span the node names — a rule's name, a rule's subroutine event
+/// binding, an action's target or callee, a value's variable or subroutine
+/// identifier — and condition and action-argument entries carry the provenance
+/// of the value's children, keyed by position in the public [`Value`] tree.
+/// Every field of an entry is optional: a node with only finer-grained
+/// provenance, such as a member read that records just its identifier,
+/// appears as an entry without `span`. Nodes without an authored origin have
+/// no entry, so consumers report evidence on them as unmapped.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SourceMap {
     files: Vec<String>,
@@ -79,7 +89,7 @@ pub enum SourceMapError {
     InvalidPosition,
     /// Two entries map the same node.
     DuplicateEntry,
-    /// A declaration entry carries neither a span nor a name span.
+    /// An entry carries no position at all.
     EmptyEntry,
     /// A span references a file outside the file table.
     UnknownFile(usize),
@@ -134,7 +144,7 @@ impl std::fmt::Display for SourceMapError {
                 write!(formatter, "source map entry is outside the program shape")
             }
             Self::DuplicateEntry => write!(formatter, "source map maps a node twice"),
-            Self::EmptyEntry => write!(formatter, "source map declaration entry has no span"),
+            Self::EmptyEntry => write!(formatter, "source map entry has no position"),
             Self::UnknownFile(file) => {
                 write!(formatter, "source map span references unknown file {file}")
             }
@@ -190,36 +200,65 @@ impl SourceMap {
             &mut spans,
         );
         for (rule, public) in program.rules.iter().enumerate() {
-            if let Some(span) = program.rule_span(rule) {
-                spans.push(MappedNode::Rule {
-                    rule,
-                    span: span.into(),
-                });
+            if let Some(provenance) = program.rule_provenance(rule) {
+                if provenance.span.is_some()
+                    || provenance.name.is_some()
+                    || provenance.event_name.is_some()
+                {
+                    spans.push(MappedNode::Rule {
+                        rule,
+                        span: provenance.span.map(WireSpan::from),
+                        name_span: provenance.name.map(WireSpan::from),
+                        event_name_span: provenance.event_name.map(WireSpan::from),
+                    });
+                }
             }
             for condition in 0..public.conditions.len() {
-                if let Some(span) = program.condition_span(rule, condition) {
+                let Some(provenance) = program.condition_provenance(rule, condition) else {
+                    continue;
+                };
+                let children = wire_children(&provenance.children);
+                if provenance.span.is_some()
+                    || provenance.identifier.is_some()
+                    || !children.is_empty()
+                {
                     spans.push(MappedNode::Condition {
                         rule,
                         condition,
-                        span: span.into(),
+                        span: provenance.span.map(WireSpan::from),
+                        identifier_span: provenance.identifier.map(WireSpan::from),
+                        children,
                     });
                 }
             }
             for (action, public_action) in public.actions.iter().enumerate() {
-                if let Some(span) = program.action_span(rule, action) {
+                let Some(provenance) = program.action_provenance(rule, action) else {
+                    continue;
+                };
+                if provenance.span.is_some() || provenance.identifier.is_some() {
                     spans.push(MappedNode::Action {
                         rule,
                         action,
-                        span: span.into(),
+                        span: provenance.span.map(WireSpan::from),
+                        identifier_span: provenance.identifier.map(WireSpan::from),
                     });
                 }
                 for argument in 0..action_argument_count(public_action) {
-                    if let Some(span) = program.action_argument_span(rule, action, argument) {
+                    let Some(argument_provenance) = provenance.arguments.get(argument) else {
+                        continue;
+                    };
+                    let children = wire_children(&argument_provenance.children);
+                    if argument_provenance.span.is_some()
+                        || argument_provenance.identifier.is_some()
+                        || !children.is_empty()
+                    {
                         spans.push(MappedNode::ActionArgument {
                             rule,
                             action,
                             argument,
-                            span: span.into(),
+                            span: argument_provenance.span.map(WireSpan::from),
+                            identifier_span: argument_provenance.identifier.map(WireSpan::from),
+                            children,
                         });
                     }
                 }
@@ -309,60 +348,108 @@ impl SourceMap {
                     }
                     *declaration = mapped;
                 }
-                MappedNode::Rule { rule, span } => {
-                    let span = self.span(*span)?;
-                    let slot = &mut provenance
+                MappedNode::Rule {
+                    rule,
+                    span,
+                    name_span,
+                    event_name_span,
+                } => {
+                    let span = span.map(|span| self.span(span)).transpose()?;
+                    let name = name_span.map(|span| self.span(span)).transpose()?;
+                    let event_name = event_name_span.map(|span| self.span(span)).transpose()?;
+                    let slot = provenance
                         .rules
                         .get_mut(*rule)
-                        .ok_or(SourceMapError::InvalidPosition)?
-                        .span;
-                    if slot.replace(span).is_some() {
+                        .ok_or(SourceMapError::InvalidPosition)?;
+                    if slot.span.is_some() || slot.name.is_some() || slot.event_name.is_some() {
                         return Err(SourceMapError::DuplicateEntry);
                     }
+                    if span.is_none() && name.is_none() && event_name.is_none() {
+                        return Err(SourceMapError::EmptyEntry);
+                    }
+                    slot.span = span;
+                    slot.name = name;
+                    slot.event_name = event_name;
                 }
                 MappedNode::Condition {
                     rule,
                     condition,
                     span,
+                    identifier_span,
+                    children,
                 } => {
-                    let span = self.span(*span)?;
+                    let span = span.map(|span| self.span(span)).transpose()?;
+                    let identifier = identifier_span.map(|span| self.span(span)).transpose()?;
+                    let has_children = children.iter().any(|child| !wire_value_unmapped(child));
+                    let children = self.mapped_children(
+                        children,
+                        &program
+                            .rules
+                            .get(*rule)
+                            .and_then(|rule| rule.conditions.get(*condition))
+                            .ok_or(SourceMapError::InvalidPosition)?
+                            .value,
+                    )?;
                     let slot = provenance
                         .rules
                         .get_mut(*rule)
                         .and_then(|rule| rule.conditions.get_mut(*condition))
                         .ok_or(SourceMapError::InvalidPosition)?;
-                    if slot.span.replace(span).is_some() {
+                    if slot.span.is_some() || slot.identifier.is_some() || !slot.children.is_empty()
+                    {
                         return Err(SourceMapError::DuplicateEntry);
                     }
+                    if span.is_none() && identifier.is_none() && !has_children {
+                        return Err(SourceMapError::EmptyEntry);
+                    }
+                    slot.span = span;
+                    slot.identifier = identifier;
+                    slot.children = children;
                 }
-                MappedNode::Action { rule, action, span } => {
-                    let span = self.span(*span)?;
-                    let slot = &mut provenance
+                MappedNode::Action {
+                    rule,
+                    action,
+                    span,
+                    identifier_span,
+                } => {
+                    let span = span.map(|span| self.span(span)).transpose()?;
+                    let identifier = identifier_span.map(|span| self.span(span)).transpose()?;
+                    let slot = provenance
                         .rules
                         .get_mut(*rule)
                         .and_then(|rule| rule.actions.get_mut(*action))
-                        .ok_or(SourceMapError::InvalidPosition)?
-                        .span;
-                    if slot.replace(span).is_some() {
+                        .ok_or(SourceMapError::InvalidPosition)?;
+                    if slot.span.is_some() || slot.identifier.is_some() {
                         return Err(SourceMapError::DuplicateEntry);
                     }
+                    if span.is_none() && identifier.is_none() {
+                        return Err(SourceMapError::EmptyEntry);
+                    }
+                    slot.span = span;
+                    slot.identifier = identifier;
                 }
                 MappedNode::ActionArgument {
                     rule,
                     action,
                     argument,
                     span,
+                    identifier_span,
+                    children,
                 } => {
-                    let span = self.span(*span)?;
-                    let count = program
+                    let span = span.map(|span| self.span(span)).transpose()?;
+                    let identifier = identifier_span.map(|span| self.span(span)).transpose()?;
+                    let argument_values = program
                         .rules
                         .get(*rule)
                         .and_then(|rule| rule.actions.get(*action))
-                        .map(action_argument_count)
+                        .map(action_argument_values)
                         .ok_or(SourceMapError::InvalidPosition)?;
-                    if *argument >= count {
+                    let Some(&value) = argument_values.get(*argument) else {
                         return Err(SourceMapError::InvalidPosition);
-                    }
+                    };
+                    let count = argument_values.len();
+                    let has_children = children.iter().any(|child| !wire_value_unmapped(child));
+                    let children = self.mapped_children(children, value)?;
                     let arguments = &mut provenance
                         .rules
                         .get_mut(*rule)
@@ -370,9 +457,17 @@ impl SourceMap {
                         .ok_or(SourceMapError::InvalidPosition)?
                         .arguments;
                     fit(arguments, count);
-                    if arguments[*argument].span.replace(span).is_some() {
+                    let slot = &mut arguments[*argument];
+                    if slot.span.is_some() || slot.identifier.is_some() || !slot.children.is_empty()
+                    {
                         return Err(SourceMapError::DuplicateEntry);
                     }
+                    if span.is_none() && identifier.is_none() && !has_children {
+                        return Err(SourceMapError::EmptyEntry);
+                    }
+                    slot.span = span;
+                    slot.identifier = identifier;
+                    slot.children = children;
                 }
             }
         }
@@ -407,6 +502,43 @@ impl SourceMap {
         Ok(DeclarationProvenance {
             span: span.map(|span| self.span(span)).transpose()?,
             name_span: name_span.map(|span| self.span(span)).transpose()?,
+        })
+    }
+
+    /// Map serialized children onto a public value's children by position.
+    ///
+    /// Emission can canonicalize a value into a form with a different public
+    /// arity — `(expr).member` reparse as a variable read drops the member-name
+    /// child, for example — so children are matched positionally: entries
+    /// beyond the value's children are dropped and positions with no entry are
+    /// left unmapped.
+    fn mapped_children(
+        &self,
+        wire: &[WireValue],
+        value: &Value,
+    ) -> Result<Vec<ValueProvenance>, SourceMapError> {
+        let children = value_children(value);
+        let mut mapped = wire
+            .iter()
+            .zip(children.iter().copied())
+            .map(|(wire, value)| self.mapped_value(wire, value))
+            .collect::<Result<Vec<_>, _>>()?;
+        mapped.resize_with(children.len(), ValueProvenance::default);
+        Ok(mapped)
+    }
+
+    fn mapped_value(
+        &self,
+        wire: &WireValue,
+        value: &Value,
+    ) -> Result<ValueProvenance, SourceMapError> {
+        Ok(ValueProvenance {
+            span: wire.span.map(|span| self.span(span)).transpose()?,
+            identifier: wire
+                .identifier_span
+                .map(|span| self.span(span))
+                .transpose()?,
+            children: self.mapped_children(&wire.children, value)?,
         })
     }
 }
@@ -459,6 +591,37 @@ impl MappedText {
             },
         })
     }
+}
+
+/// The wire form of recorded value-provenance children: children keep their
+/// position up to the last mapped one, and a level with no recorded provenance
+/// at all is omitted.
+fn wire_children(children: &[ValueProvenance]) -> Vec<WireValue> {
+    let Some(last) = children.iter().rposition(|child| !value_unmapped(child)) else {
+        return Vec::new();
+    };
+    children[..=last].iter().map(wire_value).collect()
+}
+
+fn wire_value(provenance: &ValueProvenance) -> WireValue {
+    WireValue {
+        span: provenance.span.map(WireSpan::from),
+        identifier_span: provenance.identifier.map(WireSpan::from),
+        children: wire_children(&provenance.children),
+    }
+}
+
+fn value_unmapped(provenance: &ValueProvenance) -> bool {
+    provenance.span.is_none()
+        && provenance.identifier.is_none()
+        && provenance.children.iter().all(value_unmapped)
+}
+
+/// Whether a serialized value entry contributes any position.
+fn wire_value_unmapped(value: &WireValue) -> bool {
+    value.span.is_none()
+        && value.identifier_span.is_none()
+        && value.children.iter().all(wire_value_unmapped)
 }
 
 fn push_declarations(
@@ -576,23 +739,41 @@ impl Shape {
 enum MappedNode {
     Rule {
         rule: usize,
-        span: WireSpan,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<WireSpan>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        name_span: Option<WireSpan>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        event_name_span: Option<WireSpan>,
     },
     Condition {
         rule: usize,
         condition: usize,
-        span: WireSpan,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<WireSpan>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        identifier_span: Option<WireSpan>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        children: Vec<WireValue>,
     },
     Action {
         rule: usize,
         action: usize,
-        span: WireSpan,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<WireSpan>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        identifier_span: Option<WireSpan>,
     },
     ActionArgument {
         rule: usize,
         action: usize,
         argument: usize,
-        span: WireSpan,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        span: Option<WireSpan>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        identifier_span: Option<WireSpan>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        children: Vec<WireValue>,
     },
     GlobalVariable {
         index: usize,
@@ -615,6 +796,18 @@ enum MappedNode {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         name_span: Option<WireSpan>,
     },
+}
+
+/// The mapped provenance of one value node, mirroring the structure of the
+/// public [`Value`] tree: `children` addresses child values by position.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+struct WireValue {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    span: Option<WireSpan>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    identifier_span: Option<WireSpan>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    children: Vec<WireValue>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

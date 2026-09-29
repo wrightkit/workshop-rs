@@ -19,21 +19,41 @@ fn span(file: FileId, line: u32, start: u32, end: u32) -> Span {
     Span::new(file, Position::new(line, start), Position::new(line, end))
 }
 
-/// Every mapped position of a program in a stable order.
-fn mapped_positions(program: &Program) -> Vec<(String, Option<Span>)> {
+/// Every mapped position of `program` in a stable order.
+///
+/// Value paths are enumerated on `public` so a reparsed program is compared
+/// against the tree the map was extracted from: emission can canonicalize
+/// value forms (a boolean condition becomes a comparison), and positions only
+/// addressable in the reparsed tree hold no provenance by construction.
+fn mapped_positions(program: &Program, public: &Program) -> Vec<(String, Option<Span>)> {
     let mut positions = Vec::new();
-    for (rule, public) in program.rules.iter().enumerate() {
+    for (rule, public) in public.rules.iter().enumerate() {
         positions.push((format!("rule {rule}"), program.rule_span(rule)));
-        for condition in 0..public.conditions.len() {
+        positions.push((format!("rule {rule} name"), program.rule_name_span(rule)));
+        positions.push((
+            format!("rule {rule} event name"),
+            program.rule_event_name_span(rule),
+        ));
+        for (condition, public_condition) in public.conditions.iter().enumerate() {
             positions.push((
                 format!("rule {rule} condition {condition}"),
                 program.condition_span(rule, condition),
             ));
+            for path in value_paths(&public_condition.value) {
+                positions.push((
+                    format!("rule {rule} condition {condition} value {path:?}"),
+                    program.condition_value_span(rule, condition, &path),
+                ));
+            }
         }
-        for action in 0..public.actions.len() {
+        for (action, public_action) in public.actions.iter().enumerate() {
             positions.push((
                 format!("rule {rule} action {action}"),
                 program.action_span(rule, action),
+            ));
+            positions.push((
+                format!("rule {rule} action {action} identifier"),
+                program.action_identifier_span(rule, action),
             ));
             for argument in 0..6 {
                 positions.push((
@@ -41,13 +61,437 @@ fn mapped_positions(program: &Program) -> Vec<(String, Option<Span>)> {
                     program.action_argument_span(rule, action, argument),
                 ));
             }
+            for (argument, argument_value) in action_arguments(public_action).iter().enumerate() {
+                for path in value_paths(argument_value) {
+                    positions.push((
+                        format!("rule {rule} action {action} argument {argument} value {path:?}"),
+                        program.action_argument_value_span(rule, action, argument, &path),
+                    ));
+                }
+            }
         }
     }
     positions
 }
 
+fn value_paths(value: &Value) -> Vec<Vec<usize>> {
+    fn walk(value: &Value, path: &mut Vec<usize>, paths: &mut Vec<Vec<usize>>) {
+        paths.push(path.clone());
+        for (index, child) in value_children(value).into_iter().enumerate() {
+            path.push(index);
+            walk(child, path, paths);
+            path.pop();
+        }
+    }
+    let mut paths = Vec::new();
+    walk(value, &mut Vec::new(), &mut paths);
+    paths
+}
+
+fn value_children(value: &Value) -> Vec<&Value> {
+    match value {
+        Value::Array(values) => values.iter().collect(),
+        Value::Vector { x, y, z } => vec![x.as_ref(), y.as_ref(), z.as_ref()],
+        Value::PlayerVariable { player, .. } => vec![player.as_ref()],
+        Value::Call { args, .. } => args.iter().collect(),
+        _ => Vec::new(),
+    }
+}
+
+fn action_arguments(action: &Action) -> Vec<&Value> {
+    match action {
+        Action::SetGlobalVariable { value, .. } | Action::ModifyGlobalVariable { value, .. } => {
+            vec![value]
+        }
+        Action::SetPlayerVariable { player, value, .. }
+        | Action::ModifyPlayerVariable { player, value, .. } => vec![player, value],
+        Action::AssignMember { target, value, .. } => vec![target, value],
+        Action::If { condition } | Action::ElseIf { condition } | Action::While { condition } => {
+            vec![condition]
+        }
+        Action::ForGlobalVariable {
+            start, stop, step, ..
+        } => vec![start, stop, step],
+        Action::ForPlayerVariable {
+            player,
+            start,
+            stop,
+            step,
+            ..
+        } => vec![player, start, stop, step],
+        Action::Call { args, .. } => args.iter().collect(),
+        Action::CallSubroutine { .. } | Action::Else | Action::End => Vec::new(),
+        Action::Disabled { action } => action_arguments(action),
+    }
+}
+
 fn parsed(source: &str) -> Program {
     parser::parse(source, &catalog(), &en()).expect("parses")
+}
+
+const PROVENANCE_SOURCE: &str = r#"variables {
+    global:
+        0: counter
+    player:
+        1: score
+}
+
+subroutines {
+    0: tick
+}
+
+rule ("writes") {
+    event { Ongoing - Global; }
+    conditions {
+        Global.counter > 0;
+    }
+    actions {
+        Set Global Variable(counter, Add(Global.counter, Event Player.score));
+        Call Subroutine(tick);
+        Global.counter = 2;
+    }
+}
+
+rule ("on tick") {
+    event {
+        Subroutine;
+        tick;
+    }
+    actions {
+        Wait(1);
+    }
+}
+"#;
+
+#[test]
+fn extraction_and_application_preserve_identifier_and_nested_value_provenance() {
+    let catalog = catalog();
+    let program = parsed(PROVENANCE_SOURCE);
+    let artifact = MappedText {
+        text: emitter::emit(&program, &catalog, &en()).expect("emits"),
+        map: SourceMap::extract(&program),
+    };
+    let json: serde_json::Value = serde_json::from_str(&artifact.to_json()).unwrap();
+
+    let entries = json["spans"].as_array().unwrap();
+    let entries_of = |node: &str| {
+        entries
+            .iter()
+            .filter(|entry| entry["node"] == node)
+            .collect::<Vec<_>>()
+    };
+    for rule in entries_of("rule") {
+        assert!(rule["name_span"].is_object(), "{rule}");
+    }
+    let subroutine_rule = entries_of("rule")
+        .into_iter()
+        .find(|entry| entry["rule"] == 1)
+        .expect("second rule entry");
+    assert!(subroutine_rule["event_name_span"].is_object());
+    assert!(
+        entries_of("action")
+            .iter()
+            .any(|entry| entry["identifier_span"].is_object()),
+        "no action entry carries an identifier span"
+    );
+    assert!(
+        entries_of("action_argument")
+            .iter()
+            .any(|entry| entry["children"]
+                .as_array()
+                .is_some_and(|children| !children.is_empty())),
+        "no action argument entry carries children"
+    );
+    assert!(
+        entries_of("condition").iter().any(|entry| entry["children"]
+            .as_array()
+            .is_some_and(|children| !children.is_empty())),
+        "no condition entry carries children"
+    );
+
+    let decoded = MappedText::from_json(&artifact.to_json()).expect("decodes");
+    let mut reparsed = parsed(&decoded.text);
+    decoded.map.apply(&mut reparsed).expect("applies");
+    assert_eq!(
+        mapped_positions(&reparsed, &program),
+        mapped_positions(&program, &program)
+    );
+    assert_eq!(SourceMap::extract(&reparsed), decoded.map);
+}
+
+fn wire_span(file: usize, line: u32, start: u32, end: u32) -> serde_json::Value {
+    serde_json::json!({
+        "file": file,
+        "start": {"line": line, "column": start},
+        "end": {"line": line, "column": end},
+    })
+}
+
+#[test]
+fn authored_entries_attach_identifier_and_nested_value_provenance() {
+    // A provider authors the entries directly: `name_span`, `event_name_span`,
+    // `identifier_span`, and `children` are optional members of the existing
+    // entries, and spans may address any file in the table.
+    let artifact = serde_json::json!({
+        "format": "workshop-rs/mapped-text-v1",
+        "text": PROVENANCE_SOURCE,
+        "files": [{"path": "src/main.opy"}, {"path": "src/generated.opy"}],
+        "shape": {
+            "global_variables": 1,
+            "player_variables": 1,
+            "subroutines": 1,
+            "rules": [
+                {"conditions": 1, "actions": 3},
+                {"conditions": 0, "actions": 1},
+            ],
+        },
+        "spans": [
+            {
+                "node": "rule", "rule": 0,
+                "span": wire_span(0, 1, 1, 30),
+                "name_span": wire_span(0, 1, 7, 13),
+            },
+            {
+                "node": "condition", "rule": 0, "condition": 0,
+                "span": wire_span(0, 2, 1, 20),
+                "children": [
+                    {"identifier_span": wire_span(0, 2, 8, 15)},
+                    {"span": wire_span(0, 2, 19, 20)},
+                ],
+            },
+            {
+                "node": "action", "rule": 0, "action": 0,
+                "span": wire_span(0, 3, 1, 50),
+                "identifier_span": wire_span(0, 3, 22, 29),
+            },
+            {
+                "node": "action_argument", "rule": 0, "action": 0, "argument": 0,
+                "span": wire_span(0, 3, 31, 49),
+                "children": [
+                    {"identifier_span": wire_span(0, 3, 35, 48)},
+                    {"span": wire_span(0, 3, 50, 68)},
+                ],
+            },
+            {
+                "node": "action", "rule": 0, "action": 1,
+                "span": wire_span(0, 4, 1, 20),
+                "identifier_span": wire_span(0, 4, 16, 20),
+            },
+            {"node": "action", "rule": 0, "action": 2, "span": wire_span(0, 5, 1, 15)},
+            {
+                "node": "rule", "rule": 1,
+                "span": wire_span(1, 1, 1, 25),
+                "name_span": wire_span(1, 1, 7, 14),
+                "event_name_span": wire_span(1, 3, 9, 13),
+            },
+            {
+                "node": "action", "rule": 1, "action": 0,
+                "span": wire_span(1, 5, 5, 12),
+                "identifier_span": wire_span(1, 5, 9, 11),
+            },
+        ],
+    });
+    let decoded = MappedText::from_json(&artifact.to_string()).expect("decodes");
+    let mut program = parsed(&decoded.text);
+    decoded.map.apply(&mut program).expect("applies");
+
+    let authored = FileId::from_index(0);
+    let generated = FileId::from_index(1);
+    assert_eq!(program.rule_span(0), Some(span(authored, 1, 1, 30)));
+    assert_eq!(program.rule_name_span(0), Some(span(authored, 1, 7, 13)));
+    assert_eq!(program.rule_name_span(1), Some(span(generated, 1, 7, 14)));
+    assert_eq!(program.rule_event_name_span(0), None);
+    assert_eq!(
+        program.rule_event_name_span(1),
+        Some(span(generated, 3, 9, 13))
+    );
+    assert_eq!(
+        program.action_identifier_span(0, 0),
+        Some(span(authored, 3, 22, 29))
+    );
+    assert_eq!(
+        program.action_identifier_span(0, 1),
+        Some(span(authored, 4, 16, 20))
+    );
+    assert_eq!(program.action_identifier_span(0, 2), None);
+    assert_eq!(
+        program.action_identifier_span(1, 0),
+        Some(span(generated, 5, 9, 11))
+    );
+    assert_eq!(
+        program.condition_value_span(0, 0, &[]),
+        Some(span(authored, 2, 1, 20))
+    );
+    assert_eq!(
+        program.condition_value_span(0, 0, &[0]),
+        Some(span(authored, 2, 8, 15))
+    );
+    assert_eq!(
+        program.condition_value_span(0, 0, &[1]),
+        Some(span(authored, 2, 19, 20))
+    );
+    assert_eq!(program.condition_value_span(0, 0, &[2]), None);
+    assert_eq!(
+        program.action_argument_value_span(0, 0, 0, &[]),
+        Some(span(authored, 3, 31, 49))
+    );
+    assert_eq!(
+        program.action_argument_value_span(0, 0, 0, &[0]),
+        Some(span(authored, 3, 35, 48))
+    );
+    assert_eq!(
+        program.action_argument_value_span(0, 0, 0, &[1]),
+        Some(span(authored, 3, 50, 68))
+    );
+    assert_eq!(SourceMap::extract(&program), decoded.map);
+}
+
+#[test]
+fn nested_value_entries_are_validated_against_the_value_tree() {
+    let map = SourceMap::extract(&parsed(PROVENANCE_SOURCE));
+    let base: serde_json::Value =
+        serde_json::from_str(&MappedText::new("", map).to_json()).unwrap();
+    let argument_with_children = base["spans"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .position(|entry| {
+            entry["node"] == "action_argument"
+                && entry["children"]
+                    .as_array()
+                    .is_some_and(|children| !children.is_empty())
+        })
+        .expect("a child-bearing action argument entry");
+    let mut target = parsed(PROVENANCE_SOURCE);
+    let before = mapped_positions(&target, &target);
+
+    let mut unknown_child_file = base.clone();
+    unknown_child_file["spans"][argument_with_children]["children"][0]["identifier_span"]["file"] =
+        serde_json::json!(9);
+    let mut invalid_child_span = base.clone();
+    invalid_child_span["spans"][argument_with_children]["children"][0]["identifier_span"]["end"] =
+        serde_json::json!({"line": 0, "column": 0});
+    let mut invalid_name_span = base.clone();
+    invalid_name_span["spans"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .find(|entry| entry["node"] == "rule")
+        .expect("a rule entry")["name_span"]["file"] = serde_json::json!(9);
+    let mut empty_entry = base.clone();
+    let fieldless = serde_json::json!({"node": "action", "rule": 1, "action": 0});
+    empty_entry["spans"].as_array_mut().unwrap().push(fieldless);
+
+    for (artifact, matches) in [
+        (
+            unknown_child_file,
+            (|error: &SourceMapError| matches!(error, SourceMapError::UnknownFile(9)))
+                as fn(&SourceMapError) -> bool,
+        ),
+        (invalid_child_span, |error| {
+            matches!(error, SourceMapError::InvalidSpan(_))
+        }),
+        (invalid_name_span, |error| {
+            matches!(error, SourceMapError::UnknownFile(9))
+        }),
+        (empty_entry, |error| {
+            matches!(error, SourceMapError::DuplicateEntry)
+        }),
+    ] {
+        let decoded = MappedText::from_json(&artifact.to_string()).expect("structure decodes");
+        let error = decoded
+            .map
+            .apply(&mut target)
+            .expect_err("entry is invalid");
+        assert!(matches(&error), "{error:?}");
+        assert_eq!(mapped_positions(&target, &target), before);
+    }
+
+    // Children beyond the applied value's tree are dropped rather than
+    // rejected: emission can canonicalize a value into a form with fewer
+    // children (a member access reparses as a variable read).
+    let mut extra_child = base.clone();
+    extra_child["spans"][argument_with_children]["children"]
+        .as_array_mut()
+        .unwrap()
+        .push(serde_json::json!({"span": wire_span(0, 1, 1, 2)}));
+    let mut grandchild_of_a_leaf = base.clone();
+    grandchild_of_a_leaf["spans"][argument_with_children]["children"][0]["children"] =
+        serde_json::json!([{"span": wire_span(0, 1, 1, 2)}]);
+    for artifact in [extra_child, grandchild_of_a_leaf] {
+        let decoded = MappedText::from_json(&artifact.to_string()).expect("structure decodes");
+        let mut reparsed = parsed(PROVENANCE_SOURCE);
+        decoded
+            .map
+            .apply(&mut reparsed)
+            .expect("excess children attach positionally");
+        assert_eq!(reparsed.action_argument_value_span(0, 0, 0, &[2]), None);
+        assert!(reparsed.action_argument_value_span(0, 0, 0, &[0]).is_some());
+    }
+
+    // An entry carrying no position at all is rejected.
+    let mut no_position = base.clone();
+    let action = no_position["spans"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .find(|entry| entry["node"] == "action")
+        .expect("an action entry");
+    action.as_object_mut().unwrap().remove("span");
+    action.as_object_mut().unwrap().remove("identifier_span");
+    let decoded = MappedText::from_json(&no_position.to_string()).expect("structure decodes");
+    assert_eq!(
+        decoded.map.apply(&mut target),
+        Err(SourceMapError::EmptyEntry)
+    );
+    assert_eq!(mapped_positions(&target, &target), before);
+}
+
+#[test]
+fn artifacts_without_identifier_or_children_members_apply_as_before() {
+    // An artifact produced before these members existed decodes and applies
+    // unchanged: coarse spans map and the finer positions report unmapped.
+    fn strip_new_members(value: &mut serde_json::Value) {
+        if let Some(object) = value.as_object_mut() {
+            for member in [
+                "name_span",
+                "event_name_span",
+                "identifier_span",
+                "children",
+            ] {
+                object.remove(member);
+            }
+        }
+        if let Some(array) = value.as_array_mut() {
+            for item in array {
+                strip_new_members(item);
+            }
+        } else if let Some(object) = value.as_object_mut() {
+            for item in object.values_mut() {
+                strip_new_members(item);
+            }
+        }
+    }
+
+    let map = SourceMap::extract(&parsed(PROVENANCE_SOURCE));
+    let mut json: serde_json::Value =
+        serde_json::from_str(&MappedText::new("", map).to_json()).unwrap();
+    strip_new_members(&mut json);
+    json["spans"][0]["future_member"] = serde_json::json!(true);
+    let decoded = MappedText::from_json(&json.to_string()).expect("decodes");
+    let mut program = parsed(PROVENANCE_SOURCE);
+    decoded.map.apply(&mut program).expect("applies");
+
+    assert_eq!(program.rule_name_span(0), None);
+    assert_eq!(program.rule_event_name_span(1), None);
+    assert_eq!(program.action_identifier_span(0, 0), None);
+    let coarse_condition = program.condition_span(0, 0);
+    assert!(coarse_condition.is_some());
+    assert_eq!(program.condition_value_span(0, 0, &[]), coarse_condition);
+    assert_eq!(program.condition_value_span(0, 0, &[0]), None);
+    assert!(program.action_argument_span(0, 0, 0).is_some());
+    assert_eq!(program.action_argument_value_span(0, 0, 0, &[0]), None);
+    assert_eq!(SourceMap::extract(&program), decoded.map);
 }
 
 const TWO_RULES: &str = r#"rule ("first") {
@@ -118,8 +562,13 @@ fn extract_emit_parse_apply_round_trips_every_mapped_position() {
             .unwrap_or_else(|error| panic!("{} apply failed: {error}", case.id));
 
         assert!(reparsed.source(FileId::from_index(0)).is_none());
-        let expected = mapped_positions(&program);
-        assert_eq!(mapped_positions(&reparsed), expected, "{}", case.id);
+        let expected = mapped_positions(&program, &program);
+        assert_eq!(
+            mapped_positions(&reparsed, &program),
+            expected,
+            "{}",
+            case.id
+        );
         compared += expected.iter().filter(|(_, span)| span.is_some()).count();
     }
     assert!(compared > 0, "no real-project positions were compared");
@@ -140,7 +589,10 @@ fn programmatic_mapping_round_trips_through_text_and_declarations() {
 
     let mut reparsed = parser::parse(&decoded.text, &catalog, &en()).expect("reparses");
     decoded.map.apply(&mut reparsed).expect("applies");
-    assert_eq!(mapped_positions(&reparsed), mapped_positions(&program));
+    assert_eq!(
+        mapped_positions(&reparsed, &program),
+        mapped_positions(&program, &program)
+    );
     assert!(reparsed.rule_span(0).is_some());
     assert!(reparsed.source(FileId::from_index(0)).is_none());
     assert_eq!(SourceMap::extract(&reparsed), decoded.map);
@@ -242,9 +694,13 @@ fn shape_mismatch_rejects_the_whole_mapping() {
             },
         ),
     ] {
-        let before = mapped_positions(&mutated);
+        let before = mapped_positions(&mutated, &mutated);
         assert_eq!(map.apply(&mut mutated), Err(expected));
-        assert_eq!(mapped_positions(&mutated), before, "no partial application");
+        assert_eq!(
+            mapped_positions(&mutated, &mutated),
+            before,
+            "no partial application"
+        );
     }
 }
 
@@ -257,7 +713,7 @@ fn invalid_entries_reject_the_whole_mapping_without_changing_the_program() {
     }
     .to_json();
     let mut target = parsed(TWO_RULES);
-    let before = mapped_positions(&target);
+    let before = mapped_positions(&target, &target);
 
     let mut unknown_file: serde_json::Value = serde_json::from_str(&json).unwrap();
     unknown_file["spans"]
@@ -311,7 +767,7 @@ fn invalid_entries_reject_the_whole_mapping_without_changing_the_program() {
             .apply(&mut target)
             .expect_err("entry is invalid");
         assert!(matches(&error), "{error:?}");
-        assert_eq!(mapped_positions(&target), before);
+        assert_eq!(mapped_positions(&target, &target), before);
     }
 }
 
@@ -333,9 +789,13 @@ fn inserting_or_removing_nodes_hides_displaced_spans() {
     for program in [&inserted_rule, &removed_rule] {
         assert_eq!(program.rule_span(0), None);
         assert_eq!(program.rule_span(1), None);
+        assert_eq!(program.rule_name_span(0), None);
         assert_eq!(program.condition_span(0, 0), None);
+        assert_eq!(program.condition_value_span(0, 0, &[]), None);
         assert_eq!(program.action_span(0, 0), None);
+        assert_eq!(program.action_identifier_span(0, 0), None);
         assert_eq!(program.action_argument_span(0, 0, 0), None);
+        assert_eq!(program.action_argument_value_span(0, 0, 0, &[]), None);
     }
 
     let mut inserted_condition = base.clone();

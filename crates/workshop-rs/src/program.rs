@@ -2033,6 +2033,46 @@ impl From<Value> for Condition {
     }
 }
 
+/// The direct value arguments of a public action, in their mapped order.
+fn action_argument_values(action: &Action) -> Vec<&Value> {
+    match action {
+        Action::SetGlobalVariable { value, .. } | Action::ModifyGlobalVariable { value, .. } => {
+            vec![value]
+        }
+        Action::SetPlayerVariable { player, value, .. }
+        | Action::ModifyPlayerVariable { player, value, .. } => vec![player, value],
+        Action::AssignMember { target, value, .. } => vec![target, value],
+        Action::If { condition } | Action::ElseIf { condition } | Action::While { condition } => {
+            vec![condition]
+        }
+        Action::ForGlobalVariable {
+            start, stop, step, ..
+        } => vec![start, stop, step],
+        Action::ForPlayerVariable {
+            player,
+            start,
+            stop,
+            step,
+            ..
+        } => vec![player, start, stop, step],
+        Action::Call { args, .. } => args.iter().collect(),
+        Action::CallSubroutine { .. } | Action::Else | Action::End => Vec::new(),
+        Action::Disabled { action } => action_argument_values(action),
+    }
+}
+
+/// The children a public value exposes to provenance addressing, in the order
+/// [`Program::condition_value_span`] documents.
+fn value_children(value: &Value) -> Vec<&Value> {
+    match value {
+        Value::Array(values) => values.iter().collect(),
+        Value::Vector { x, y, z } => vec![x.as_ref(), y.as_ref(), z.as_ref()],
+        Value::PlayerVariable { player, .. } => vec![player.as_ref()],
+        Value::Call { args, .. } => args.iter().collect(),
+        _ => Vec::new(),
+    }
+}
+
 fn action_argument_count(action: &Action) -> usize {
     match action {
         Action::SetGlobalVariable { .. }
