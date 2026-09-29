@@ -381,6 +381,7 @@ rule ("identifiers") {
         Set Player Variable(Event Player, playerScore, 7);
         Call Subroutine(tick);
         Set Global Variable(cakePos, Add(Event Player.playerScore, 1));
+        disabled Modify Global Variable(cakePos, Add, Event Player.playerScore);
     }
 }
 "#;
@@ -420,10 +421,13 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         "Global.cakePos"
     );
     // Standard-form variable writes and `Call Subroutine` record no
-    // identifier span.
+    // identifier span; these `None`s describe current parser coverage, not
+    // the eventual contract (#325 records the remaining spans).
     assert_eq!(program.action_identifier_span(0, 0), None);
     assert_eq!(program.action_identifier_span(0, 2), None);
+    assert_eq!(program.action_identifier_span(0, 4), None);
     assert_eq!(program.action_identifier_span(0, 5), None);
+    assert_eq!(program.action_identifier_span(0, 7), None);
 
     // A read nested inside another value is addressed by a path into the
     // public value tree: `Add(Event Player.playerScore, 1)` argument 0.
@@ -431,6 +435,32 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         span_text(
             &program,
             program.action_argument_value_span(0, 6, 0, &[0]).unwrap(),
+        ),
+        "playerScore"
+    );
+    // `PlayerVariable` exposes its player expression as child 0.
+    assert_eq!(
+        span_text(
+            &program,
+            program
+                .action_argument_value_span(0, 6, 0, &[0, 0])
+                .unwrap(),
+        ),
+        "Event Player"
+    );
+    // `Vector` components are addressed as children 0/1/2.
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 1, 0, &[2]).unwrap(),
+        ),
+        "3"
+    );
+    // A `disabled` action's provenance is that of the wrapped action.
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 7, 0, &[]).unwrap(),
         ),
         "playerScore"
     );
@@ -465,6 +495,7 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         program.action_argument_value_span(0, 6, 0, &[0, 0, 0]),
         None
     );
+    assert_eq!(program.action_argument_value_span(0, 6, 1, &[]), None);
     assert_eq!(program.condition_value_span(0, 0, &[9]), None);
 }
 
