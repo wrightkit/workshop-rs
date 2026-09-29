@@ -39,6 +39,8 @@ struct DeclarationProvenance {
 #[derive(Debug, Clone, Default)]
 struct RuleProvenance {
     span: Option<crate::source::Span>,
+    /// The recorded span of the rule's quoted name in `rule("name")`.
+    name: Option<Span>,
     /// The recorded span of the subroutine name a `Subroutine` event binds.
     event_name: Option<Span>,
     conditions: Vec<ValueProvenance>,
@@ -385,11 +387,20 @@ impl Program {
     /// or the callee of a [`Call Subroutine`](Action::CallSubroutine) action.
     ///
     /// Raw Workshop parses record the variable name for `Set`/`Modify`
-    /// variable actions, `For` variable loops, `Global.name`/`Event
-    /// Player.name` infix assignments, and indexed writes, and the callee name
-    /// for `Call Subroutine`. Other action forms always return `None`.
+    /// variable actions, `For` variable loops, and `Global.name`/`Event
+    /// Player.name` infix assignments, and the callee name for `Call
+    /// Subroutine`. Indexed writes lower to `... Variable At Index` calls and
+    /// record the name on their variable argument — see
+    /// [`action_argument_value_span`](Self::action_argument_value_span).
+    /// Other action forms always return `None`.
     pub fn action_identifier_span(&self, rule: usize, action: usize) -> Option<Span> {
         self.action_provenance(rule, action)?.identifier
+    }
+
+    /// Return the span recorded for a rule's name inside its `rule("name")`
+    /// string, or `None` when no provenance was recorded.
+    pub fn rule_name_span(&self, rule: usize) -> Option<Span> {
+        self.rule_provenance(rule)?.name
     }
 
     /// Return the span recorded for the subroutine name a rule's `Subroutine`
@@ -669,6 +680,7 @@ impl Program {
                 .rules
                 .push(RuleProvenance {
                     span: rule.span,
+                    name: rule.name_span,
                     event_name,
                     conditions: rule
                         .conditions
@@ -808,7 +820,9 @@ impl Program {
             storage.rules.push(wir::Rule {
                 name: rule.name.clone(),
                 span: self.rule_span(rule_index),
-                name_span: None,
+                name_span: self
+                    .rule_provenance(rule_index)
+                    .and_then(|provenance| provenance.name),
                 disabled: rule.disabled,
                 event,
                 conditions,
@@ -1473,53 +1487,20 @@ fn apply_action_provenance(
                 }
                 *position += 1;
             }
-            wir::Action::While {
-                condition, body, ..
-            } => {
+            wir::Action::While { body, .. } => {
                 let source = provenance.get(*position).cloned().unwrap_or_default();
                 *position += 1;
                 apply_action_source(storage, *id, &source);
                 apply_action_provenance(storage, &body, provenance, position)?;
                 *position += 1;
-                if let Some(provenance) = source.arguments.first() {
-                    apply_value_provenance(storage, condition, provenance);
-                }
             }
-            wir::Action::ForGlobalVariable {
-                start,
-                stop,
-                step,
-                body,
-                ..
-            } => {
+            wir::Action::ForGlobalVariable { body, .. }
+            | wir::Action::ForPlayerVariable { body, .. } => {
                 let source = provenance.get(*position).cloned().unwrap_or_default();
                 *position += 1;
                 apply_action_source(storage, *id, &source);
                 apply_action_provenance(storage, &body, provenance, position)?;
                 *position += 1;
-                for (value, provenance) in [start, stop, step].into_iter().zip(&source.arguments) {
-                    apply_value_provenance(storage, value, provenance);
-                }
-            }
-            wir::Action::ForPlayerVariable {
-                player,
-                start,
-                stop,
-                step,
-                body,
-                ..
-            } => {
-                let source = provenance.get(*position).cloned().unwrap_or_default();
-                *position += 1;
-                apply_action_source(storage, *id, &source);
-                apply_action_provenance(storage, &body, provenance, position)?;
-                *position += 1;
-                for (value, provenance) in [player, start, stop, step]
-                    .into_iter()
-                    .zip(&source.arguments)
-                {
-                    apply_value_provenance(storage, value, provenance);
-                }
             }
             wir::Action::Disabled { action, .. } => {
                 let start = *position;

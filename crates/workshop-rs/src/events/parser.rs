@@ -85,7 +85,7 @@ impl ParseContext<'_> {
                         self.previous(),
                     ));
                 };
-                let id = self.subroutine_by_name(sub_name.trim())?;
+                let id = self.subroutine_by_name(sub_name.trim(), *sub_span)?;
                 Ok(Event::Subroutine {
                     subroutine: id,
                     name_span: *sub_span,

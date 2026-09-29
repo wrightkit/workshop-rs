@@ -453,11 +453,7 @@ impl ParseContext<'_> {
                         })
                     ) || self.players.contains_key(&name)
                     {
-                        let variable = self
-                            .players
-                            .get(&name)
-                            .copied()
-                            .unwrap_or(self.player_by_name(&name)?);
+                        let variable = self.player_by_name(&name)?;
                         Ok(self.target.values.push(
                             ValueNode::new(
                                 Value::PlayerVariable {

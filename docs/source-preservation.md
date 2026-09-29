@@ -44,7 +44,10 @@ nested-value provenance is exposed separately:
   name itself.
 - `Program::action_identifier_span` returns the span recorded for the
   variable or subroutine an action names — a set/modify/for target or a
-  `Call Subroutine` callee.
+  `Call Subroutine` callee. Indexed `... Variable At Index` writes are calls
+  and record the name on their variable argument instead.
+- `Program::rule_name_span` returns the span of the name inside a rule's
+  `rule("name")` string.
 - `Program::rule_event_name_span` returns the span recorded for the
   subroutine name a `Subroutine` event binding names.
 - `Program::condition_value_span` and `Program::action_argument_value_span`
@@ -62,10 +65,12 @@ names a variable or subroutine: `Set`/`Modify` standard forms and infix
 Positions with no recorded provenance return `None` rather than a neighboring
 or enclosing span.
 
-Consumers that construct a program can attach the same metadata with
-`Program::set_rule_span`, `Program::set_condition_span`,
-`Program::set_action_span`, and `Program::set_action_argument_span`; declaration
-spans use the corresponding variable and subroutine methods. `Program::edit_source`
+Consumers that construct a program can attach rule, condition, action, and
+direct-argument spans with `Program::set_rule_span`,
+`Program::set_condition_span`, `Program::set_action_span`, and
+`Program::set_action_argument_span`; declaration spans use the corresponding
+variable and subroutine methods. Identifier-level provenance is recorded by
+raw parsing only — no `set_*` method exists for it. `Program::edit_source`
 creates a checked edit from those public spans without exposing normalized WIR
 storage. Programmatic construction remains source-free when no files or spans
 are attached.

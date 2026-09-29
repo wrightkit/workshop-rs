@@ -360,6 +360,7 @@ fn disabled_modifier_wrapping_a_terminator_is_rejected() {
 const IDENTIFIER_SOURCE: &str = r#"variables {
     global:
         0: cakePos
+        2: my var
     player:
         1: playerScore
 }
@@ -392,6 +393,24 @@ rule ("identifiers") {
         For Player Variable(Event Player, playerScore, 0, 5, 1);
             Abort;
         End;
+        Global.cakePos[0] = 4;
+        Event Player.playerScore[0] = 9;
+        Set Global Variable At Index(my var, 1, 2);
+        Set Player Variable At Index(Event Player, playerScore, 0, 3);
+        Modify Player Variable At Index(Event Player, playerScore, 0, Add, 5);
+        Set Global Variable(my var, Add(Global Variable(cakePos), Player Variable(Event Player, playerScore)));
+        Set Global Variable(cakePos, Add((Event Player).playerScore, 0));
+        Stop Chasing Player Variable(Event Player, playerScore);
+        Chase Player Variable Over Time(Event Player, playerScore, 0, 30, None);
+        Chase Global Variable Over Time(my var, 0, 30, None);
+        Stop Chasing Global Variable(cakePos);
+        If(cakePos > 0);
+            Abort;
+        Else If(playerScore > 1);
+            Abort;
+        Else;
+            Abort;
+        End;
     }
 }
 
@@ -422,12 +441,25 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         "cakePos"
     );
     assert_eq!(
+        span_text(&program, program.global_variable_name_span(1).unwrap()),
+        "my var"
+    );
+    assert_eq!(
         span_text(&program, program.player_variable_name_span(0).unwrap()),
         "playerScore"
     );
     assert_eq!(
         span_text(&program, program.subroutine_name_span(0).unwrap()),
         "tick"
+    );
+    // Rule names sit inside their `rule("name")` string token.
+    assert_eq!(
+        span_text(&program, program.rule_name_span(0).unwrap()),
+        "identifiers"
+    );
+    assert_eq!(
+        span_text(&program, program.rule_name_span(1).unwrap()),
+        "subroutine runner"
     );
 
     // Every variable write names its target identifier: standard-form
@@ -538,6 +570,118 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
             program.action_argument_value_span(0, 10, 1, &[1]).unwrap(),
         ),
         "cakePos"
+    );
+
+    // `For` action spans cover the full `For ... End;` block, starting at
+    // the `For` keyword rather than the last word of its phrase.
+    assert!(
+        span_text(&program, program.action_span(0, 11).unwrap())
+            .starts_with("For Global Variable(cakePos, 0, 10, 1);")
+    );
+    assert!(span_text(&program, program.action_span(0, 11).unwrap()).ends_with("End;"));
+    assert!(
+        span_text(&program, program.action_span(0, 14).unwrap())
+            .starts_with("For Player Variable(Event Player, playerScore, 0, 5, 1);")
+    );
+
+    // Indexed writes are `... Variable At Index` calls: the action itself
+    // carries no identifier, the variable argument records the name.
+    for action in [17, 18, 19, 20, 21] {
+        assert_eq!(
+            program.action_identifier_span(0, action),
+            None,
+            "action {action}"
+        );
+    }
+    for (action, expected) in [
+        (17, "cakePos"),
+        (18, "playerScore"),
+        (19, "my var"),
+        (20, "playerScore"),
+        (21, "playerScore"),
+    ] {
+        assert_eq!(
+            span_text(
+                &program,
+                program
+                    .action_argument_value_span(0, action, 0, &[])
+                    .unwrap(),
+            ),
+            expected,
+            "action {action}"
+        );
+    }
+
+    // `Global Variable(name)` and `Player Variable(player, name)` read forms
+    // inside a `Set` value argument.
+    assert_eq!(
+        span_text(&program, program.action_identifier_span(0, 22).unwrap(),),
+        "my var"
+    );
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 22, 0, &[0]).unwrap(),
+        ),
+        "cakePos"
+    );
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 22, 0, &[1]).unwrap(),
+        ),
+        "playerScore"
+    );
+    assert_eq!(
+        span_text(
+            &program,
+            program
+                .action_argument_value_span(0, 22, 0, &[1, 0])
+                .unwrap(),
+        ),
+        "Event Player"
+    );
+    // A parenthesized `(Event Player).name` read.
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 23, 0, &[0]).unwrap(),
+        ),
+        "playerScore"
+    );
+    // `Stop Chasing`/`Chase` variable forms record the name on the folded
+    // variable argument.
+    for (action, expected) in [
+        (24, "playerScore"),
+        (25, "playerScore"),
+        (26, "my var"),
+        (27, "cakePos"),
+    ] {
+        assert_eq!(
+            span_text(
+                &program,
+                program
+                    .action_argument_value_span(0, action, 0, &[])
+                    .unwrap(),
+            ),
+            expected,
+            "action {action}"
+        );
+    }
+    // `If` and `Else If` conditions carry their reads as value provenance.
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 28, 0, &[0]).unwrap(),
+        ),
+        "cakePos"
+    );
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 30, 0, &[0]).unwrap(),
+        ),
+        "playerScore"
     );
 
     // A `Subroutine` event binding records the bound name.

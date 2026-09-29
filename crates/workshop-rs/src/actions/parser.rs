@@ -104,12 +104,12 @@ impl ParseContext<'_> {
                         if let Some(structural) = self.resolve_entry(Kind::Structural, rest) {
                             match structural.id.as_str() {
                                 "while" => {
-                                    let group = self.while_group()?;
+                                    let group = self.while_group(self.previous_span().0)?;
                                     actions.push(self.disabled_action(group));
                                     continue;
                                 }
                                 "if" => {
-                                    let group = self.if_group()?;
+                                    let group = self.if_group(self.previous_span().0)?;
                                     actions.push(self.disabled_action(group));
                                     continue;
                                 }
@@ -139,7 +139,7 @@ impl ParseContext<'_> {
                         )
                     {
                         self.pos += 1;
-                        let group = self.while_group()?;
+                        let group = self.while_group(self.previous_span().0)?;
                         actions.push(self.disabled_action(group));
                         continue;
                     }
@@ -156,10 +156,10 @@ impl ParseContext<'_> {
                             self.pos = saved;
                             return Ok((actions, Stop::Else));
                         }
-                        "if" => actions.push(self.if_group()?),
-                        "forGlobalVariable" => actions.push(self.for_group()?),
-                        "forPlayerVariable" => actions.push(self.for_player_group()?),
-                        "while" => actions.push(self.while_group()?),
+                        "if" => actions.push(self.if_group(start)?),
+                        "forGlobalVariable" => actions.push(self.for_group(start)?),
+                        "forPlayerVariable" => actions.push(self.for_player_group(start)?),
+                        "while" => actions.push(self.while_group(start)?),
                         "Loop" => actions.push(self.action_call_from_phrase(phrase, start, end)?),
                         "Loop If Condition Is True" => {
                             actions.push(self.action_call_from_phrase(phrase, start, end)?)
@@ -568,8 +568,7 @@ impl ParseContext<'_> {
         }))
     }
 
-    pub(crate) fn if_group(&mut self) -> Result<wir::ActionId> {
-        let start = self.previous_span().0;
+    pub(crate) fn if_group(&mut self, start: Position) -> Result<wir::ActionId> {
         self.expect(TokenKind::LParen, "expected '(' after 'If'")?;
         let condition = self.value()?;
         self.expect(TokenKind::RParen, "expected ')' after If condition")?;
@@ -626,8 +625,7 @@ impl ParseContext<'_> {
         Ok(self.target.actions.push(action))
     }
 
-    pub(crate) fn for_group(&mut self) -> Result<wir::ActionId> {
-        let start = self.previous_span().0;
+    pub(crate) fn for_group(&mut self, start: Position) -> Result<wir::ActionId> {
         self.expect(
             TokenKind::LParen,
             "expected '(' after 'For Global Variable'",
@@ -664,8 +662,7 @@ impl ParseContext<'_> {
         Ok(self.target.actions.push(action))
     }
 
-    pub(crate) fn while_group(&mut self) -> Result<wir::ActionId> {
-        let start = self.previous_span().0;
+    pub(crate) fn while_group(&mut self, start: Position) -> Result<wir::ActionId> {
         self.expect(TokenKind::LParen, "expected '(' after 'While'")?;
         let condition = self.value()?;
         self.expect(TokenKind::RParen, "expected ')' after While condition")?;
@@ -689,8 +686,7 @@ impl ParseContext<'_> {
     /// reference's per-player loop form (parsed from pinned reference
     /// evidence; the differential gate normalizes it to the declared global
     /// form, #119).
-    pub(crate) fn for_player_group(&mut self) -> Result<wir::ActionId> {
-        let start = self.previous_span().0;
+    pub(crate) fn for_player_group(&mut self, start: Position) -> Result<wir::ActionId> {
         self.expect(
             TokenKind::LParen,
             "expected '(' after 'For Player Variable'",
@@ -816,12 +812,15 @@ impl ParseContext<'_> {
                         target_span: Some(Span::new(self.file(), name_start, name_end)),
                     }))
                 }
-                "forGlobalVariable" => self.for_group(),
-                "forPlayerVariable" => self.for_player_group(),
+                "forGlobalVariable" => self.for_group(start),
+                "forPlayerVariable" => self.for_player_group(start),
                 "callSubroutine" => {
                     self.expect(TokenKind::LParen, "expected '('")?;
                     let (name, name_start, name_end) = self.phrase()?;
-                    let subroutine = self.subroutine_by_name(&name)?;
+                    let subroutine = self.subroutine_by_name(
+                        &name,
+                        Some(Span::new(self.file(), name_start, name_end)),
+                    )?;
                     self.expect(TokenKind::RParen, "expected ')'")?;
                     self.expect(TokenKind::Semi, "expected ';'")?;
                     Ok(self.target.actions.push(Action::CallSubroutine {
@@ -918,7 +917,10 @@ impl ParseContext<'_> {
                     "startRule" => {
                         self.expect(TokenKind::LParen, "expected '('")?;
                         let (name, name_start, name_end) = self.phrase()?;
-                        let subroutine = self.subroutine_by_name(&name)?;
+                        let subroutine = self.subroutine_by_name(
+                            &name,
+                            Some(Span::new(self.file(), name_start, name_end)),
+                        )?;
                         self.expect(TokenKind::Comma, "expected ',' after subroutine")?;
                         let saved = self.expected_domain;
                         self.expected_domain = self.context.expected_domain(action.id.as_str(), 1);
