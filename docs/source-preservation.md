@@ -52,11 +52,11 @@ nested-value provenance is exposed separately:
 Only the identifier spans the parser actually records are returned. Raw
 Workshop records a target for `Global.name`/`Event Player.name` infix
 assignments — `Global.name` covers the qualified name, `Event Player.name`
-the identifier alone — while standard-form `Set`/`Modify` writes and
-`Call Subroutine` record none. Variable reads record the declared name for
-`Event Player.name`, bare-name, and `... At Index` argument spellings;
-`Global.name` and `Global/Player Variable(...)` reads record the leading
-keyword instead.
+the identifier alone — while standard-form `Set`/`Modify` writes, `For`
+variable loops, and `Call Subroutine` record none. Variable reads record the
+declared name for `Event Player.name`, bare-name, and `... At Index` argument
+spellings; `Global.name` and `Global/Player Variable(...)` reads record the
+leading keyword instead.
 
 Consumers that construct a program can attach the same metadata with
 `Program::set_rule_span`, `Program::set_condition_span`,

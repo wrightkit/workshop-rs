@@ -383,8 +383,8 @@ impl Program {
     /// records a target span for `Global.name` and `Event Player.name` infix
     /// assignments — the `Global.name` form's span covers the qualified name
     /// including the `Global.` qualifier — while standard-form `Set`/`Modify`
-    /// variable actions and `Call Subroutine` carry no recorded identifier and
-    /// return `None`. Other action forms always return `None`.
+    /// variable actions, `For` variable loops, and `Call Subroutine` record
+    /// none. Other action forms always return `None`.
     pub fn action_identifier_span(&self, rule: usize, action: usize) -> Option<Span> {
         self.action_provenance(rule, action)?.identifier
     }
