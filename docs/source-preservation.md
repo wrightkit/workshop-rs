@@ -34,8 +34,31 @@ comments, whitespace, and mixed source structure are preserved.
 
 Parsed programs expose rule, condition, action, and direct action-argument
 spans through `Program::rule_span`, `Program::condition_span`,
-`Program::action_span`, and `Program::action_argument_span`. Consumers that
-construct a program can attach the same metadata with
+`Program::action_span`, and `Program::action_argument_span`. Identifier and
+nested-value provenance is exposed separately:
+
+- `Program::global_variable_name_span`, `Program::player_variable_name_span`,
+  and `Program::subroutine_name_span` return the span of a declared name: the
+  attached identifier span when a source-language provider supplies one,
+  otherwise the recorded declaration span, which raw parses record as the
+  name itself.
+- `Program::action_identifier_span` returns the span recorded for the
+  variable or subroutine an action names — a set/modify/for target or a
+  `Call Subroutine` callee.
+- `Program::condition_value_span` and `Program::action_argument_value_span`
+  return the span recorded for a value nested inside a condition or action
+  argument, addressed by a path into the public `Value` tree.
+
+Only the identifier spans the parser actually records are returned. Raw
+Workshop records a target for `Global.name`/`Event Player.name` infix
+assignments — `Global.name` covers the qualified name, `Event Player.name`
+the identifier alone — while standard-form `Set`/`Modify` writes and
+`Call Subroutine` record none. Variable reads record the declared name for
+`Event Player.name`, bare-name, and `... At Index` argument spellings;
+`Global.name` and `Global/Player Variable(...)` reads record the leading
+keyword instead.
+
+Consumers that construct a program can attach the same metadata with
 `Program::set_rule_span`, `Program::set_condition_span`,
 `Program::set_action_span`, and `Program::set_action_argument_span`; declaration
 spans use the corresponding variable and subroutine methods. `Program::edit_source`
@@ -126,7 +149,8 @@ The `node` tags and their keys are `rule` (`rule`), `condition` (`rule`,
 `{"line", "column"}`. Only nodes with an authored origin have an entry, so
 `spans` may be empty. Decoders ignore unknown members. The
 mapping granularity is rule, condition, action, direct action argument, and
-declarations; nested value mappings are not part of the format.
+declarations; nested-value and action-identifier mappings are not part of the
+format.
 
 Columns follow `Position`: 1-based Unicode scalar values. Producers convert
 from other units, and editor presentation converts to UTF-16.

@@ -11,7 +11,6 @@ pub(crate) enum Action {
         variable: GlobalVarId,
         value: ValueId,
         span: Option<Span>,
-        #[allow(dead_code)]
         target_span: Option<Span>,
     },
     ModifyGlobalVariable {
@@ -19,7 +18,6 @@ pub(crate) enum Action {
         op: ModifyOp,
         value: ValueId,
         span: Option<Span>,
-        #[allow(dead_code)]
         target_span: Option<Span>,
     },
     SetPlayerVariable {
@@ -27,7 +25,6 @@ pub(crate) enum Action {
         variable: PlayerVarId,
         value: ValueId,
         span: Option<Span>,
-        #[allow(dead_code)]
         target_span: Option<Span>,
     },
     ModifyPlayerVariable {
@@ -36,7 +33,6 @@ pub(crate) enum Action {
         op: ModifyOp,
         value: ValueId,
         span: Option<Span>,
-        #[allow(dead_code)]
         target_span: Option<Span>,
     },
     /// Assignment to a canonical Workshop member-access target, optionally
@@ -51,7 +47,6 @@ pub(crate) enum Action {
     CallSubroutine {
         subroutine: SubroutineId,
         span: Option<Span>,
-        #[allow(dead_code)]
         callee_span: Option<Span>,
     },
     If {
@@ -71,7 +66,6 @@ pub(crate) enum Action {
         step: ValueId,
         body: Vec<ActionId>,
         span: Option<Span>,
-        #[allow(dead_code)]
         target_span: Option<Span>,
     },
     /// `For Player Variable(player, name, start, stop, step)`: the

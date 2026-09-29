@@ -1,5 +1,5 @@
 use workshop_rs::source::{Position, SourceFile, Span};
-use workshop_rs::{Action, Condition, Event, Program, Rule, Value, Variable};
+use workshop_rs::{Action, Condition, Event, Program, Rule, Subroutine, Value, Variable};
 
 fn catalog() -> workshop_rs::catalog::Catalog {
     workshop_rs::catalog::Catalog::builtin().expect("builtin catalog")
@@ -355,6 +355,183 @@ fn disabled_modifier_wrapping_a_terminator_is_rejected() {
         program.validate(),
         Err(workshop_rs::WorkshopError::Unsupported { .. })
     ));
+}
+
+const IDENTIFIER_SOURCE: &str = r#"variables {
+    global:
+        0: cakePos
+    player:
+        1: playerScore
+}
+
+subroutines {
+    0: tick
+}
+
+rule ("identifiers") {
+    event { Ongoing - Global; }
+    conditions {
+        Add(Event Player.playerScore, Global.cakePos) > 0;
+    }
+    actions {
+        Set Global Variable(cakePos, 1);
+        Global.cakePos = Vector(1, 2, 3);
+        Modify Global Variable(cakePos, Add, 1);
+        Event Player.playerScore = 5;
+        Set Player Variable(Event Player, playerScore, 7);
+        Call Subroutine(tick);
+        Set Global Variable(cakePos, Add(Event Player.playerScore, 1));
+    }
+}
+"#;
+
+fn span_text(program: &Program, span: Span) -> &str {
+    let document = program.source(span.file).expect("source file");
+    &document.text()[document.byte_range(span).expect("span range")]
+}
+
+#[test]
+fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
+    let catalog = catalog();
+    let locale = workshop_rs::catalog::Locale::new("en-US");
+    let program = workshop_rs::parser::parse(IDENTIFIER_SOURCE, &catalog, &locale).expect("parses");
+
+    assert_eq!(
+        span_text(&program, program.global_variable_name_span(0).unwrap()),
+        "cakePos"
+    );
+    assert_eq!(
+        span_text(&program, program.player_variable_name_span(0).unwrap()),
+        "playerScore"
+    );
+    assert_eq!(
+        span_text(&program, program.subroutine_name_span(0).unwrap()),
+        "tick"
+    );
+
+    // Infix assignments record a target span: `Event Player.name` records the
+    // identifier itself, while `Global.name` records the qualified target.
+    assert_eq!(
+        span_text(&program, program.action_identifier_span(0, 3).unwrap()),
+        "playerScore"
+    );
+    assert_eq!(
+        span_text(&program, program.action_identifier_span(0, 1).unwrap()),
+        "Global.cakePos"
+    );
+    // Standard-form variable writes and `Call Subroutine` record no
+    // identifier span.
+    assert_eq!(program.action_identifier_span(0, 0), None);
+    assert_eq!(program.action_identifier_span(0, 2), None);
+    assert_eq!(program.action_identifier_span(0, 5), None);
+
+    // A read nested inside another value is addressed by a path into the
+    // public value tree: `Add(Event Player.playerScore, 1)` argument 0.
+    assert_eq!(
+        span_text(
+            &program,
+            program.action_argument_value_span(0, 6, 0, &[0]).unwrap(),
+        ),
+        "playerScore"
+    );
+    // The same spelling inside a condition resolves to the identifier.
+    assert_eq!(
+        span_text(
+            &program,
+            program.condition_value_span(0, 0, &[0, 0]).unwrap(),
+        ),
+        "playerScore"
+    );
+    // A `Global.name` read records the `Global` keyword, not the identifier.
+    assert_eq!(
+        span_text(
+            &program,
+            program.condition_value_span(0, 0, &[0, 1]).unwrap(),
+        ),
+        "Global"
+    );
+
+    // An empty path addresses the argument or condition value itself.
+    assert_eq!(
+        program.action_argument_value_span(0, 6, 0, &[]),
+        program.action_argument_span(0, 6, 0)
+    );
+    assert_eq!(
+        program.condition_value_span(0, 0, &[]),
+        program.condition_span(0, 0)
+    );
+    // Positions outside the value tree carry no span.
+    assert_eq!(
+        program.action_argument_value_span(0, 6, 0, &[0, 0, 0]),
+        None
+    );
+    assert_eq!(program.condition_value_span(0, 0, &[9]), None);
+}
+
+#[test]
+fn programs_without_source_carry_no_identifier_provenance() {
+    let mut program = Program::new();
+    program
+        .global_variable(Variable::new("cakePos"))
+        .player_variable(Variable::new("playerScore"))
+        .subroutine(Subroutine::new("tick"))
+        .rule(
+            Rule::new("no source", Event::Global)
+                .condition(Condition::new(Value::call(
+                    "add",
+                    [
+                        Value::player_variable(Value::EventPlayer, "playerScore"),
+                        Value::number(1.0),
+                    ],
+                )))
+                .action(Action::SetGlobalVariable {
+                    variable: "cakePos".to_string(),
+                    value: Value::number(1.0),
+                })
+                .action(Action::CallSubroutine {
+                    subroutine: "tick".to_string(),
+                }),
+        );
+
+    assert_eq!(program.global_variable_name_span(0), None);
+    assert_eq!(program.player_variable_name_span(0), None);
+    assert_eq!(program.subroutine_name_span(0), None);
+    assert_eq!(program.action_identifier_span(0, 0), None);
+    assert_eq!(program.action_identifier_span(0, 1), None);
+    assert_eq!(program.condition_value_span(0, 0, &[]), None);
+    assert_eq!(program.condition_value_span(0, 0, &[0]), None);
+    assert_eq!(program.action_argument_value_span(0, 0, 0, &[]), None);
+    assert_eq!(program.action_argument_value_span(0, 0, 0, &[0]), None);
+}
+
+#[test]
+fn identifier_provenance_drops_out_when_the_shape_changes() {
+    let catalog = catalog();
+    let locale = workshop_rs::catalog::Locale::new("en-US");
+    let mut program =
+        workshop_rs::parser::parse(IDENTIFIER_SOURCE, &catalog, &locale).expect("parses");
+
+    program.global_variable(Variable::new("extra"));
+    assert_eq!(program.global_variable_name_span(0), None);
+
+    program.rules[0].actions.push(Action::End);
+    assert_eq!(program.action_identifier_span(0, 3), None);
+    assert_eq!(program.action_argument_value_span(0, 6, 0, &[0]), None);
+}
+
+#[test]
+fn attached_identifier_spans_take_priority_over_declaration_spans() {
+    let mut program = Program::new();
+    program.global_variable(Variable::new("Score"));
+    let file = program.add_file(SourceFile::with_source("main.opy", "globalvar 0: Score\n"));
+    let declaration_span = Span::new(file, Position::new(1, 1), Position::new(1, 18));
+    let name_span = Span::new(file, Position::new(1, 14), Position::new(1, 19));
+
+    program
+        .set_global_variable_spans(0, Some(declaration_span), Some(name_span))
+        .expect("declaration spans attach");
+
+    assert_eq!(program.global_variable_name_span(0), Some(name_span));
 }
 
 #[test]
