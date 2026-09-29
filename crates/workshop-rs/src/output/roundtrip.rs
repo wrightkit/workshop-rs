@@ -358,7 +358,10 @@ fn event_equivalent(
                 target: target_b,
             },
         ) => kind_a == kind_b && team_a == team_b && target_a == target_b,
-        (wir::Event::Subroutine(sa), wir::Event::Subroutine(sb)) => {
+        (
+            wir::Event::Subroutine { subroutine: sa, .. },
+            wir::Event::Subroutine { subroutine: sb, .. },
+        ) => {
             let name_a = a.subroutines.get(*sa).map(|s| s.name.as_str());
             let name_b = b.subroutines.get(*sb).map(|s| s.name.as_str());
             name_a == name_b

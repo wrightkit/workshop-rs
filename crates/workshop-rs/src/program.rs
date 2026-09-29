@@ -39,14 +39,32 @@ struct DeclarationProvenance {
 #[derive(Debug, Clone, Default)]
 struct RuleProvenance {
     span: Option<crate::source::Span>,
-    conditions: Vec<Option<crate::source::Span>>,
+    /// The recorded span of the rule's quoted name in `rule("name")`.
+    name: Option<Span>,
+    /// The recorded span of the subroutine name a `Subroutine` event binds.
+    event_name: Option<Span>,
+    conditions: Vec<ValueProvenance>,
     actions: Vec<ActionProvenance>,
 }
 
 #[derive(Debug, Clone, Default)]
 struct ActionProvenance {
     span: Option<Span>,
-    arguments: Vec<Option<Span>>,
+    /// The recorded span of the variable or subroutine the action names: a
+    /// set/modify/for target or a `Call Subroutine` callee.
+    identifier: Option<Span>,
+    arguments: Vec<ValueProvenance>,
+}
+
+/// The recorded span of one value node and its children, mirroring the
+/// structure of the public [`Value`] tree.
+#[derive(Debug, Clone, Default)]
+struct ValueProvenance {
+    span: Option<Span>,
+    /// The recorded span of the variable or subroutine identifier the value
+    /// names, when the value is such a reference.
+    identifier: Option<Span>,
+    children: Vec<ValueProvenance>,
 }
 
 /// A failure while attaching source mappings to a public [`Program`].
@@ -182,7 +200,7 @@ impl Program {
         }
         let rule_data = self.rule_provenance_mut(rule)?;
         fit(&mut rule_data.conditions, condition_count);
-        rule_data.conditions[condition] = span;
+        rule_data.conditions[condition].span = span;
         Ok(())
     }
 
@@ -234,8 +252,10 @@ impl Program {
             });
         }
         let action_data = self.action_provenance_mut(rule, action)?;
-        action_data.arguments.resize(argument + 1, None);
-        action_data.arguments[argument] = span;
+        action_data
+            .arguments
+            .resize_with(argument + 1, ValueProvenance::default);
+        action_data.arguments[argument].span = span;
         Ok(())
     }
 
@@ -307,11 +327,7 @@ impl Program {
 
     /// Return the authored span of a public rule condition value.
     pub fn condition_span(&self, rule: usize, condition: usize) -> Option<crate::source::Span> {
-        let recorded = self.rule_provenance(rule)?;
-        if recorded.conditions.len() != self.rules[rule].conditions.len() {
-            return None;
-        }
-        recorded.conditions.get(condition).copied().flatten()
+        self.condition_provenance(rule, condition)?.span
     }
 
     /// Return the authored span of a public action in its linear rule order.
@@ -328,9 +344,123 @@ impl Program {
     ) -> Option<crate::source::Span> {
         self.action_provenance(rule, action)?
             .arguments
-            .get(argument)
-            .copied()
-            .flatten()
+            .get(argument)?
+            .span
+    }
+
+    /// Return the authored span of the declared name of a global variable.
+    ///
+    /// Source-language providers attach an explicit identifier span through
+    /// [`set_global_variable_spans`](Self::set_global_variable_spans). For raw
+    /// Workshop parses the recorded declaration span already covers exactly
+    /// the declared name and is returned as the identifier span.
+    pub fn global_variable_name_span(&self, variable: usize) -> Option<Span> {
+        self.declaration_name_span(
+            |provenance| &provenance.global_variables,
+            self.global_variables.len(),
+            variable,
+        )
+    }
+
+    /// Return the authored span of the declared name of a player variable.
+    /// See [`global_variable_name_span`](Self::global_variable_name_span).
+    pub fn player_variable_name_span(&self, variable: usize) -> Option<Span> {
+        self.declaration_name_span(
+            |provenance| &provenance.player_variables,
+            self.player_variables.len(),
+            variable,
+        )
+    }
+
+    /// Return the authored span of the declared name of a subroutine.
+    /// See [`global_variable_name_span`](Self::global_variable_name_span).
+    pub fn subroutine_name_span(&self, subroutine: usize) -> Option<Span> {
+        self.declaration_name_span(
+            |provenance| &provenance.subroutines,
+            self.subroutines.len(),
+            subroutine,
+        )
+    }
+
+    /// Return the span recorded for the variable or subroutine identifier a
+    /// public action names: the target of set/modify and for-variable actions,
+    /// or the callee of a [`Call Subroutine`](Action::CallSubroutine) action.
+    ///
+    /// Raw Workshop parses record the variable name for `Set`/`Modify`
+    /// variable actions, `For` variable loops, and `Global.name`/`Event
+    /// Player.name` infix assignments, and the callee name for `Call
+    /// Subroutine`. Indexed writes lower to `... Variable At Index` calls and
+    /// record the name on their variable argument — see
+    /// [`action_argument_value_span`](Self::action_argument_value_span).
+    /// Other action forms always return `None`.
+    pub fn action_identifier_span(&self, rule: usize, action: usize) -> Option<Span> {
+        self.action_provenance(rule, action)?.identifier
+    }
+
+    /// Return the span recorded for a rule's name inside its `rule("name")`
+    /// string, or `None` when no provenance was recorded.
+    pub fn rule_name_span(&self, rule: usize) -> Option<Span> {
+        self.rule_provenance(rule)?.name
+    }
+
+    /// Return the span recorded for the subroutine name a rule's `Subroutine`
+    /// event binding names, or `None` for other event kinds and when no
+    /// provenance was recorded.
+    pub fn rule_event_name_span(&self, rule: usize) -> Option<Span> {
+        self.rule_provenance(rule)?.event_name
+    }
+
+    /// Return the authored span of a value nested inside a public rule
+    /// condition.
+    ///
+    /// `path` walks the public [`Value`] tree: each element selects a child by
+    /// position — `Value::Array` elements and `Value::Call` arguments by
+    /// index, `Value::Vector` components as `0`/`1`/`2` for x/y/z, and a
+    /// `Value::PlayerVariable` player at `0`. An empty path returns the
+    /// condition value's own span, matching [`condition_span`](Self::condition_span).
+    ///
+    /// For a variable or subroutine reference the identifier span is returned
+    /// when the parser recorded one: raw Workshop records the variable name
+    /// for `Global.name`, `Global/Player Variable(name)`, `Event Player.name`,
+    /// bare-name, and `... At Index` argument spellings. Other nodes return
+    /// the span recorded for the node itself.
+    pub fn condition_value_span(
+        &self,
+        rule: usize,
+        condition: usize,
+        path: &[usize],
+    ) -> Option<crate::source::Span> {
+        let mut value = self.condition_provenance(rule, condition)?;
+        for &index in path {
+            value = value.children.get(index)?;
+        }
+        value.identifier.or(value.span)
+    }
+
+    /// Return the authored span of a value nested inside a direct value
+    /// argument of a public action.
+    ///
+    /// `argument` selects the same direct argument as
+    /// [`action_argument_span`](Self::action_argument_span) and `path` walks
+    /// into it the way [`condition_value_span`](Self::condition_value_span)
+    /// describes; an empty path returns the argument's own span. Like
+    /// `condition_value_span`, a variable or subroutine reference returns its
+    /// recorded identifier span.
+    pub fn action_argument_value_span(
+        &self,
+        rule: usize,
+        action: usize,
+        argument: usize,
+        path: &[usize],
+    ) -> Option<crate::source::Span> {
+        let mut value = self
+            .action_provenance(rule, action)?
+            .arguments
+            .get(argument)?;
+        for &index in path {
+            value = value.children.get(index)?;
+        }
+        value.identifier.or(value.span)
     }
 
     /// Create a checked source edit through the authored source attached to
@@ -387,6 +517,24 @@ impl Program {
             return None;
         }
         recorded.actions.get(action)
+    }
+
+    fn condition_provenance(&self, rule: usize, condition: usize) -> Option<&ValueProvenance> {
+        let recorded = self.rule_provenance(rule)?;
+        if recorded.conditions.len() != self.rules[rule].conditions.len() {
+            return None;
+        }
+        recorded.conditions.get(condition)
+    }
+
+    fn declaration_name_span(
+        &self,
+        recorded: impl Fn(&ProgramProvenance) -> &[DeclarationProvenance],
+        count: usize,
+        position: usize,
+    ) -> Option<Span> {
+        let declaration = self.declaration_provenance(recorded, count, position);
+        declaration.name_span.or(declaration.span)
     }
 
     fn declaration_provenance(
@@ -521,6 +669,10 @@ impl Program {
                 public_actions(&storage, *action, &mut actions)?;
                 public_action_provenance(&storage, *action, &mut action_provenance)?;
             }
+            let event_name = match &rule.event {
+                wir::Event::Subroutine { name_span, .. } => *name_span,
+                _ => None,
+            };
             program
                 .provenance
                 .as_mut()
@@ -528,15 +680,12 @@ impl Program {
                 .rules
                 .push(RuleProvenance {
                     span: rule.span,
+                    name: rule.name_span,
+                    event_name,
                     conditions: rule
                         .conditions
                         .iter()
-                        .map(|condition| {
-                            storage
-                                .values
-                                .get(condition.value)
-                                .and_then(|value| value.span)
-                        })
+                        .map(|condition| value_provenance(&storage, condition.value))
                         .collect(),
                     actions: action_provenance,
                 });
@@ -608,7 +757,12 @@ impl Program {
         }
 
         for (rule_index, rule) in self.rules.iter().enumerate() {
-            let event = wir_event(&rule.event, &subroutines)?;
+            let mut event = wir_event(&rule.event, &subroutines)?;
+            if let wir::Event::Subroutine { name_span, .. } = &mut event {
+                *name_span = self
+                    .rule_provenance(rule_index)
+                    .and_then(|provenance| provenance.event_name);
+            }
             let conditions = rule
                 .conditions
                 .iter()
@@ -622,8 +776,10 @@ impl Program {
                         &subroutines,
                     )
                     .inspect(|&value| {
-                        if let Some(span) = self.condition_span(rule_index, condition_index) {
-                            storage.values.get_mut(value).unwrap().span = Some(span);
+                        if let Some(provenance) =
+                            self.condition_provenance(rule_index, condition_index)
+                        {
+                            apply_value_provenance(&mut storage, value, provenance);
                         }
                     })
                     .map(|value| wir::Condition {
@@ -664,7 +820,9 @@ impl Program {
             storage.rules.push(wir::Rule {
                 name: rule.name.clone(),
                 span: self.rule_span(rule_index),
-                name_span: None,
+                name_span: self
+                    .rule_provenance(rule_index)
+                    .and_then(|provenance| provenance.name),
                 disabled: rule.disabled,
                 event,
                 conditions,
@@ -693,11 +851,11 @@ fn public_event(storage: &wir::Program, event: &wir::Event) -> Result<Event> {
             team: public_team(*team),
             target: public_target(target),
         },
-        wir::Event::Subroutine(id) => Event::Subroutine(
+        wir::Event::Subroutine { subroutine, .. } => Event::Subroutine(
             storage
                 .subroutines
-                .get(*id)
-                .ok_or_else(|| malformed_id("subroutine", id.index()))?
+                .get(*subroutine)
+                .ok_or_else(|| malformed_id("subroutine", subroutine.index()))?
                 .name
                 .clone(),
         ),
@@ -995,21 +1153,24 @@ fn public_action_provenance(
         .actions
         .get(id)
         .ok_or_else(|| malformed_id("action", id.index()))?;
+    let identifier = action_identifier(action);
     let push = |output: &mut Vec<ActionProvenance>, arguments: &[wir::ValueId]| {
         output.push(ActionProvenance {
             span: action.span(),
+            identifier,
             arguments: arguments
                 .iter()
-                .map(|value| storage.values.get(*value).and_then(|value| value.span))
+                .map(|value| value_provenance(storage, *value))
                 .collect(),
         });
     };
     let push_without_span = |output: &mut Vec<ActionProvenance>, arguments: &[wir::ValueId]| {
         output.push(ActionProvenance {
             span: None,
+            identifier: None,
             arguments: arguments
                 .iter()
-                .map(|value| storage.values.get(*value).and_then(|value| value.span))
+                .map(|value| value_provenance(storage, *value))
                 .collect(),
         });
     };
@@ -1268,6 +1429,7 @@ fn lower_actions(
                     step,
                     body,
                     span: None,
+                    target_span: None,
                 }));
             }
             action => {
@@ -1313,11 +1475,9 @@ fn apply_action_provenance(
                     if branch_index > 0 {
                         let source = provenance.get(*position).cloned().unwrap_or_default();
                         *position += 1;
-                        set_value_span(
-                            storage,
-                            branch.condition,
-                            source.arguments.first().copied().flatten(),
-                        );
+                        if let Some(provenance) = source.arguments.first() {
+                            apply_value_provenance(storage, branch.condition, provenance);
+                        }
                     }
                     apply_action_provenance(storage, &branch.body, provenance, position)?;
                 }
@@ -1327,55 +1487,20 @@ fn apply_action_provenance(
                 }
                 *position += 1;
             }
-            wir::Action::While {
-                condition, body, ..
-            } => {
+            wir::Action::While { body, .. } => {
                 let source = provenance.get(*position).cloned().unwrap_or_default();
                 *position += 1;
                 apply_action_source(storage, *id, &source);
                 apply_action_provenance(storage, &body, provenance, position)?;
                 *position += 1;
-                set_value_span(
-                    storage,
-                    condition,
-                    source.arguments.first().copied().flatten(),
-                );
             }
-            wir::Action::ForGlobalVariable {
-                start,
-                stop,
-                step,
-                body,
-                ..
-            } => {
+            wir::Action::ForGlobalVariable { body, .. }
+            | wir::Action::ForPlayerVariable { body, .. } => {
                 let source = provenance.get(*position).cloned().unwrap_or_default();
                 *position += 1;
                 apply_action_source(storage, *id, &source);
                 apply_action_provenance(storage, &body, provenance, position)?;
                 *position += 1;
-                for (value, span) in [start, stop, step].into_iter().zip(source.arguments) {
-                    set_value_span(storage, value, span);
-                }
-            }
-            wir::Action::ForPlayerVariable {
-                player,
-                start,
-                stop,
-                step,
-                body,
-                ..
-            } => {
-                let source = provenance.get(*position).cloned().unwrap_or_default();
-                *position += 1;
-                apply_action_source(storage, *id, &source);
-                apply_action_provenance(storage, &body, provenance, position)?;
-                *position += 1;
-                for (value, span) in [player, start, stop, step]
-                    .into_iter()
-                    .zip(source.arguments)
-                {
-                    set_value_span(storage, value, span);
-                }
             }
             wir::Action::Disabled { action, .. } => {
                 let start = *position;
@@ -1396,19 +1521,38 @@ fn apply_action_provenance(
 }
 
 fn apply_action_source(storage: &mut wir::Program, id: wir::ActionId, source: &ActionProvenance) {
-    let arguments = source.arguments.clone();
     if let Some(action) = storage.actions.get_mut(id) {
         match action {
-            wir::Action::SetGlobalVariable { span, .. }
-            | wir::Action::ModifyGlobalVariable { span, .. }
-            | wir::Action::SetPlayerVariable { span, .. }
-            | wir::Action::ModifyPlayerVariable { span, .. }
-            | wir::Action::AssignMember { span, .. }
-            | wir::Action::CallSubroutine { span, .. }
+            wir::Action::SetGlobalVariable {
+                span, target_span, ..
+            }
+            | wir::Action::ModifyGlobalVariable {
+                span, target_span, ..
+            }
+            | wir::Action::SetPlayerVariable {
+                span, target_span, ..
+            }
+            | wir::Action::ModifyPlayerVariable {
+                span, target_span, ..
+            }
+            | wir::Action::ForGlobalVariable {
+                span, target_span, ..
+            }
+            | wir::Action::ForPlayerVariable {
+                span, target_span, ..
+            } => {
+                *span = source.span;
+                *target_span = source.identifier;
+            }
+            wir::Action::CallSubroutine {
+                span, callee_span, ..
+            } => {
+                *span = source.span;
+                *callee_span = source.identifier;
+            }
+            wir::Action::AssignMember { span, .. }
             | wir::Action::If { span, .. }
             | wir::Action::While { span, .. }
-            | wir::Action::ForGlobalVariable { span, .. }
-            | wir::Action::ForPlayerVariable { span, .. }
             | wir::Action::Disabled { span, .. }
             | wir::Action::Call { span, .. } => *span = source.span,
         }
@@ -1418,8 +1562,8 @@ fn apply_action_source(storage: &mut wir::Program, id: wir::ActionId, source: &A
         .get(id)
         .map(action_value_ids)
         .unwrap_or_default();
-    for (value, span) in value_ids.into_iter().zip(arguments) {
-        set_value_span(storage, value, span);
+    for (value, provenance) in value_ids.into_iter().zip(&source.arguments) {
+        apply_value_provenance(storage, value, provenance);
     }
 }
 
@@ -1449,13 +1593,65 @@ fn action_value_ids(action: &wir::Action) -> Vec<wir::ValueId> {
     }
 }
 
-fn set_value_span(
+/// The recorded span of the variable or subroutine a WIR action names, when
+/// the parse produced one.
+fn action_identifier(action: &wir::Action) -> Option<Span> {
+    match action {
+        wir::Action::SetGlobalVariable { target_span, .. }
+        | wir::Action::ModifyGlobalVariable { target_span, .. }
+        | wir::Action::SetPlayerVariable { target_span, .. }
+        | wir::Action::ModifyPlayerVariable { target_span, .. }
+        | wir::Action::ForGlobalVariable { target_span, .. }
+        | wir::Action::ForPlayerVariable { target_span, .. } => *target_span,
+        wir::Action::CallSubroutine { callee_span, .. } => *callee_span,
+        _ => None,
+    }
+}
+
+/// The recorded provenance of a WIR value node and its children, mirroring
+/// the public [`Value`] tree.
+fn value_provenance(storage: &wir::Program, id: wir::ValueId) -> ValueProvenance {
+    let Some(node) = storage.values.get(id) else {
+        return ValueProvenance::default();
+    };
+    ValueProvenance {
+        span: node.span,
+        identifier: node.identifier,
+        children: wir_value_children(&node.value)
+            .into_iter()
+            .map(|child| value_provenance(storage, child))
+            .collect(),
+    }
+}
+
+/// The child value ids of a WIR value, in the order the public [`Value`]
+/// exposes them.
+fn wir_value_children(value: &wir::Value) -> Vec<wir::ValueId> {
+    match value {
+        wir::Value::Array(values) => values.clone(),
+        wir::Value::Vector { x, y, z } => vec![*x, *y, *z],
+        wir::Value::PlayerVariable { player, .. } => vec![*player],
+        wir::Value::Call { args, .. } => args.clone(),
+        _ => Vec::new(),
+    }
+}
+
+/// Write a recorded value-provenance tree back onto a WIR value subtree.
+fn apply_value_provenance(
     storage: &mut wir::Program,
     value: wir::ValueId,
-    span: Option<crate::source::Span>,
+    source: &ValueProvenance,
 ) {
+    let Some(node) = storage.values.get(value) else {
+        return;
+    };
+    let children = wir_value_children(&node.value);
     if let Some(node) = storage.values.get_mut(value) {
-        node.span = span;
+        node.span = source.span;
+        node.identifier = source.identifier;
+    }
+    for (child, source) in children.into_iter().zip(&source.children) {
+        apply_value_provenance(storage, child, source);
     }
 }
 
@@ -1639,11 +1835,12 @@ fn wir_event(
             team: wir_team(*team),
             target: wir_target(target),
         },
-        Event::Subroutine(name) => wir::Event::Subroutine(
-            *subroutines
+        Event::Subroutine(name) => wir::Event::Subroutine {
+            subroutine: *subroutines
                 .get(name)
                 .ok_or_else(|| unknown_name("subroutine", name))?,
-        ),
+            name_span: None,
+        },
     })
 }
 

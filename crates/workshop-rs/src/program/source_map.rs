@@ -331,7 +331,7 @@ impl SourceMap {
                         .get_mut(*rule)
                         .and_then(|rule| rule.conditions.get_mut(*condition))
                         .ok_or(SourceMapError::InvalidPosition)?;
-                    if slot.replace(span).is_some() {
+                    if slot.span.replace(span).is_some() {
                         return Err(SourceMapError::DuplicateEntry);
                     }
                 }
@@ -370,7 +370,7 @@ impl SourceMap {
                         .ok_or(SourceMapError::InvalidPosition)?
                         .arguments;
                     fit(arguments, count);
-                    if arguments[*argument].replace(span).is_some() {
+                    if arguments[*argument].span.replace(span).is_some() {
                         return Err(SourceMapError::DuplicateEntry);
                     }
                 }

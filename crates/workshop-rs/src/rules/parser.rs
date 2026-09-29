@@ -112,15 +112,11 @@ impl ParseContext<'_> {
     }
 
     pub(crate) fn variable_line(&mut self) -> Result<wir::WorkshopVariable> {
-        let (index, span) = match self.next() {
+        let index = match self.next() {
             Some(Token {
                 kind: TokenKind::Number { value, .. },
-                start,
-                end,
-            }) => (
-                value as u32,
-                Span::new(synthetic_span(start).file, start, end),
-            ),
+                ..
+            }) => value as u32,
             Some(token) => return Err(self.malformed("expected a variable index", &token)),
             None => return Err(self.malformed("expected a variable index", self.eof())),
         };
@@ -130,14 +126,8 @@ impl ParseContext<'_> {
         Ok(wir::WorkshopVariable {
             name,
             index,
-            span: Some(if span.file.index() == 0 {
-                name_span
-            } else {
-                span
-            }),
-            // Workshop-text sources carry no `.opy` identifier provenance;
-            // exact rename occurrences are only produced by the native path.
-            name_span: None,
+            span: Some(name_span),
+            name_span: Some(name_span),
         })
     }
 
@@ -162,7 +152,7 @@ impl ParseContext<'_> {
                 name,
                 index,
                 span: Some(Span::new(self.file(), start, end)),
-                name_span: None,
+                name_span: Some(Span::new(self.file(), start, end)),
             });
             self.subroutines
                 .insert(self.target.subroutines.get(id).unwrap().name.clone(), id);
@@ -175,13 +165,25 @@ impl ParseContext<'_> {
         self.expect_keyword("rule")?;
         self.expect(TokenKind::LParen, "expected '(' after 'rule'")?;
         let name = self.expect_string("expected a rule name string")?;
+        let (name_start, name_end) = self.previous_span();
+        // The name sits inside the quotes of its string token; a quoted name
+        // spanning lines keeps the whole token extent instead.
+        let name_span = if name_start.line == name_end.line && name_end.col > name_start.col + 1 {
+            Span::new(
+                self.file(),
+                Position::new(name_start.line, name_start.col + 1),
+                Position::new(name_end.line, name_end.col - 1),
+            )
+        } else {
+            Span::new(self.file(), name_start, name_end)
+        };
         self.expect(TokenKind::RParen, "expected ')' after rule name")?;
         self.expect(TokenKind::LBrace, "expected '{' after rule header")?;
 
         let mut rule = wir::Rule {
             name,
             span: None,
-            name_span: None,
+            name_span: Some(name_span),
             disabled,
             event: Event::Global,
             conditions: Vec::new(),
@@ -284,7 +286,11 @@ impl ParseContext<'_> {
         }
     }
 
-    pub(crate) fn subroutine_by_name(&self, name: &str) -> Result<wir::SubroutineId> {
+    pub(crate) fn subroutine_by_name(
+        &self,
+        name: &str,
+        span: Option<Span>,
+    ) -> Result<wir::SubroutineId> {
         self.subroutines
             .get(name)
             .copied()
@@ -292,7 +298,7 @@ impl ParseContext<'_> {
                 kind: "subroutine",
                 spelling: name.to_string(),
                 locale: self.locale.clone(),
-                span: None,
+                span,
             })
     }
 }

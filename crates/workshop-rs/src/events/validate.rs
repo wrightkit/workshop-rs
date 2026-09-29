@@ -12,7 +12,7 @@ pub(crate) fn validate_event(
         wir::Event::EachPlayer => ("eachPlayer", None),
         wir::Event::EachPlayerWithFilters { team, target } => ("eachPlayer", Some((*team, target))),
         wir::Event::Player { kind, team, target } => (kind.catalog_id(), Some((*team, target))),
-        wir::Event::Subroutine(_) => ("subroutine", None),
+        wir::Event::Subroutine { .. } => ("subroutine", None),
     };
     if catalog.entry(Kind::Event, id).is_none() {
         return Err(WorkshopError::Unknown {

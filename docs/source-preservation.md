@@ -34,11 +34,43 @@ comments, whitespace, and mixed source structure are preserved.
 
 Parsed programs expose rule, condition, action, and direct action-argument
 spans through `Program::rule_span`, `Program::condition_span`,
-`Program::action_span`, and `Program::action_argument_span`. Consumers that
-construct a program can attach the same metadata with
-`Program::set_rule_span`, `Program::set_condition_span`,
-`Program::set_action_span`, and `Program::set_action_argument_span`; declaration
-spans use the corresponding variable and subroutine methods. `Program::edit_source`
+`Program::action_span`, and `Program::action_argument_span`. Identifier and
+nested-value provenance is exposed separately:
+
+- `Program::global_variable_name_span`, `Program::player_variable_name_span`,
+  and `Program::subroutine_name_span` return the span of a declared name: the
+  attached identifier span when a source-language provider supplies one,
+  otherwise the recorded declaration span, which raw parses record as the
+  name itself.
+- `Program::action_identifier_span` returns the span recorded for the
+  variable or subroutine an action names — a set/modify/for target or a
+  `Call Subroutine` callee. Indexed `... Variable At Index` writes are calls
+  and record the name on their variable argument instead.
+- `Program::rule_name_span` returns the span of the name inside a rule's
+  `rule("name")` string.
+- `Program::rule_event_name_span` returns the span recorded for the
+  subroutine name a `Subroutine` event binding names.
+- `Program::condition_value_span` and `Program::action_argument_value_span`
+  return the span recorded for a value nested inside a condition or action
+  argument, addressed by a path into the public `Value` tree. For a variable
+  or subroutine reference the recorded identifier span is returned; other
+  nodes return the span recorded for the node itself.
+
+Raw Workshop parses record the declared identifier at every position that
+names a variable or subroutine: `Set`/`Modify` standard forms and infix
+`Global.name`/`Event Player.name` assignments, `For` variable loops,
+`Call Subroutine` and `Start Rule` callees, `Subroutine` event bindings,
+`... At Index` name arguments, and reads written as `Global.name`,
+`Global/Player Variable(name)`, `Event Player.name`, or a bare declared name.
+Positions with no recorded provenance return `None` rather than a neighboring
+or enclosing span.
+
+Consumers that construct a program can attach rule, condition, action, and
+direct-argument spans with `Program::set_rule_span`,
+`Program::set_condition_span`, `Program::set_action_span`, and
+`Program::set_action_argument_span`; declaration spans use the corresponding
+variable and subroutine methods. Identifier-level provenance is recorded by
+raw parsing only — no `set_*` method exists for it. `Program::edit_source`
 creates a checked edit from those public spans without exposing normalized WIR
 storage. Programmatic construction remains source-free when no files or spans
 are attached.
@@ -126,7 +158,8 @@ The `node` tags and their keys are `rule` (`rule`), `condition` (`rule`,
 `{"line", "column"}`. Only nodes with an authored origin have an entry, so
 `spans` may be empty. Decoders ignore unknown members. The
 mapping granularity is rule, condition, action, direct action argument, and
-declarations; nested value mappings are not part of the format.
+declarations; nested-value and action-identifier mappings are not part of the
+format.
 
 Columns follow `Position`: 1-based Unicode scalar values. Producers convert
 from other units, and editor presentation converts to UTF-16.

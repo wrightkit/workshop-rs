@@ -336,7 +336,7 @@ fn parsed_events_are_canonical() {
             wir::Event::EachPlayer => "eachPlayer".to_string(),
             wir::Event::EachPlayerWithFilters { .. } => "eachPlayer".to_string(),
             wir::Event::Player { kind, .. } => kind.catalog_id().to_string(),
-            wir::Event::Subroutine(subroutine) => format!(
+            wir::Event::Subroutine { subroutine, .. } => format!(
                 "subroutine:{}",
                 program.subroutines.get(*subroutine).unwrap().name
             ),

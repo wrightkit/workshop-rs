@@ -38,7 +38,7 @@ pub(crate) struct Condition {
 pub(crate) struct Rule {
     pub(crate) name: String,
     pub(crate) span: Option<Span>,
-    #[allow(dead_code)]
+    /// The exact span of the rule name string, when recorded.
     pub(crate) name_span: Option<Span>,
     pub(crate) disabled: bool,
     pub(crate) event: Event,

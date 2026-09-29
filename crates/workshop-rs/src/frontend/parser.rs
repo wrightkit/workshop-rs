@@ -364,9 +364,12 @@ impl<'a> ParseContext<'a> {
     }
 
     /// Read a text line (tokens until `;`), joining words and dashes into
-    /// the literal text, and consume the terminating `;`.
-    pub(crate) fn line_text(&mut self) -> Result<String> {
+    /// the literal text, and consume the terminating `;`. Returns the text
+    /// and the span covering the line's content tokens.
+    pub(crate) fn line_text(&mut self) -> Result<(String, Option<Span>)> {
         let mut parts = Vec::new();
+        let mut start = None;
+        let mut end = None;
         loop {
             match self.peek() {
                 Some(Token {
@@ -376,50 +379,34 @@ impl<'a> ParseContext<'a> {
                     self.pos += 1;
                     break;
                 }
-                Some(Token {
-                    kind: TokenKind::Word(word),
-                    ..
-                }) => {
-                    parts.push(word.clone());
+                Some(token) => {
+                    start.get_or_insert(token.start);
+                    end = Some(token.end);
+                    match &token.kind {
+                        TokenKind::Word(word) => parts.push(word.clone()),
+                        TokenKind::Op(op) if op == "-" => parts.push("-".to_string()),
+                        TokenKind::Number { value, .. } => parts.push(value.to_string()),
+                        TokenKind::Dot => parts.push(".".to_string()),
+                        TokenKind::Colon => parts.push(":".to_string()),
+                        _ => return Err(self.malformed("expected a text line", &token)),
+                    }
                     self.pos += 1;
                 }
-                Some(Token {
-                    kind: TokenKind::Op(op),
-                    ..
-                }) if op == "-" => {
-                    parts.push("-".to_string());
-                    self.pos += 1;
+                None => {
+                    return Err(self.malformed("unexpected end of input in line", self.eof()));
                 }
-                Some(Token {
-                    kind: TokenKind::Number { value, .. },
-                    ..
-                }) => {
-                    parts.push(value.to_string());
-                    self.pos += 1;
-                }
-                Some(Token {
-                    kind: TokenKind::Dot,
-                    ..
-                }) => {
-                    parts.push(".".to_string());
-                    self.pos += 1;
-                }
-                Some(Token {
-                    kind: TokenKind::Colon,
-                    ..
-                }) => {
-                    parts.push(":".to_string());
-                    self.pos += 1;
-                }
-                Some(token) => return Err(self.malformed("expected a text line", &token)),
-                None => return Err(self.malformed("unexpected end of input in line", self.eof())),
             }
         }
-        Ok(parts
-            .join(" ")
-            .replace(" .", ".")
-            .replace(". ", ".")
-            .replace(" : ", ":"))
+        Ok((
+            parts
+                .join(" ")
+                .replace(" .", ".")
+                .replace(". ", ".")
+                .replace(" : ", ":"),
+            start
+                .zip(end)
+                .map(|(start, end)| Span::new(self.file(), start, end)),
+        ))
     }
 
     /// Consume a known keyword phrase, verifying its spelling.
