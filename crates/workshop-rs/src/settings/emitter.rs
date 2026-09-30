@@ -1,9 +1,10 @@
 use crate::output::emitter::*;
 
 impl EmitContext<'_> {
-    /// Emit the `settings { ... }` section from the validated settings
-    /// carrier, table-driven (fixture-backed names). Only runs on
-    /// validated programs, so unknown keys cannot reach this point.
+    /// Emit the `settings { ... }` section from the settings carrier,
+    /// table-driven (fixture-backed names). Programs that build settings
+    /// trees directly (rather than parsing raw Workshop) check table
+    /// acceptance through [`crate::settings::check_emission`] first.
     pub(crate) fn emit_settings(&mut self, settings: &SettingsTree) -> Result<()> {
         let settings_keyword = self.structural("settings")?;
         self.line(0, &format!("{settings_keyword} {{"))?;

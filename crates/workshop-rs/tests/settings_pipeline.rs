@@ -1084,3 +1084,175 @@ fn typed_settings_writes_fail_closed_for_unknown_applicability() {
         SettingOperationError::ApplicabilityUnknown { .. }
     ));
 }
+
+#[test]
+fn declared_modes_inherit_general_settings_entries() {
+    use workshop_rs::settings::{Settings, SettingsListElement, SettingsNode, check_emission};
+
+    let bool_node = |name: &str, value: bool| SettingsNode::Bool {
+        name: name.to_string(),
+        value,
+        span: None,
+    };
+    let list_node = |name: &str, elements: &[&str]| SettingsNode::List {
+        name: name.to_string(),
+        elements: elements
+            .iter()
+            .map(|value| SettingsListElement {
+                value: value.to_string(),
+                span: None,
+            })
+            .collect(),
+        span: None,
+    };
+    let group = |name: &str, children: Vec<SettingsNode>| SettingsNode::Group {
+        name: name.to_string(),
+        children,
+        span: None,
+    };
+
+    // The opy-rs #411 reproducer shape: `enableKillCam` is a `general` leaf
+    // that every declared mode inherits.
+    let settings = Settings {
+        span: None,
+        children: vec![
+            group(
+                "main",
+                vec![SettingsNode::String {
+                    name: "description".to_string(),
+                    value: "t".to_string(),
+                    span: None,
+                }],
+            ),
+            group(
+                "gamemodes",
+                vec![group(
+                    "ffa",
+                    vec![
+                        list_node("enabledMaps", &["workshopIsland"]),
+                        bool_node("enableKillCam", false),
+                    ],
+                )],
+            ),
+        ],
+    };
+    assert!(check_emission(&settings).is_empty());
+    // The inherited path resolves to the same canonical definition as the
+    // `general` leaf.
+    let inherited = workshop_rs::settings::definition(&[
+        workshop_rs::settings::PathPart::Part("gamemodes"),
+        workshop_rs::settings::PathPart::Part("ffa"),
+        workshop_rs::settings::PathPart::Part("enableKillCam"),
+    ])
+    .expect("inherited general setting resolves");
+    assert_eq!(
+        inherited.id(),
+        Some(&SettingId::new("setting.gameMode.enableKillCam"))
+    );
+    let mut program = workshop_rs::Program::new();
+    program.settings = Some(settings);
+    let emitted =
+        emitter::emit(&program, &catalog(), &Locale::new("en-US")).expect("emits settings");
+    let deathmatch = emitted.find("Deathmatch").expect("Deathmatch mode block");
+    let kill_cam = emitted.find("Kill Cam: Off").expect("Kill Cam: Off");
+    assert!(deathmatch < kill_cam, "{emitted}");
+
+    // `elimination` inherits only the reviewed key subset: `enableKillCam`
+    // resolves, a non-inherited `general` leaf does not.
+    let settings = Settings {
+        span: None,
+        children: vec![group(
+            "gamemodes",
+            vec![
+                group("elimination", vec![bool_node("enableKillCam", true)]),
+                group(
+                    "elimination",
+                    vec![SettingsNode::String {
+                        name: "heroLimit".to_string(),
+                        value: "off".to_string(),
+                        span: None,
+                    }],
+                ),
+            ],
+        )],
+    };
+    let errors = check_emission(&settings);
+    assert_eq!(errors.len(), 1);
+    assert!(
+        errors[0]
+            .to_string()
+            .contains("gamemodes.elimination.heroLimit"),
+        "{errors:?}"
+    );
+
+    // An undeclared mode slot keeps every member outside the emission table.
+    let settings = Settings {
+        span: None,
+        children: vec![group(
+            "gamemodes",
+            vec![group("notAMode", vec![bool_node("enableKillCam", false)])],
+        )],
+    };
+    let errors = check_emission(&settings);
+    assert_eq!(errors.len(), 1);
+    assert!(
+        errors[0]
+            .to_string()
+            .contains("gamemodes.notAMode.enableKillCam"),
+        "{errors:?}"
+    );
+}
+
+#[test]
+fn check_emission_mirrors_emitter_acceptance() {
+    use workshop_rs::settings::{Settings, SettingsNode, check_emission};
+
+    let group = |name: &str, children: Vec<SettingsNode>| SettingsNode::Group {
+        name: name.to_string(),
+        children,
+        span: None,
+    };
+    let settings = Settings {
+        span: None,
+        children: vec![
+            group(
+                "gamemodes",
+                vec![group(
+                    "ffa",
+                    vec![
+                        SettingsNode::Bool {
+                            name: "enabled".to_string(),
+                            value: false,
+                            span: None,
+                        },
+                        SettingsNode::Bool {
+                            name: "bogusKey".to_string(),
+                            value: true,
+                            span: None,
+                        },
+                    ],
+                )],
+            ),
+            group(
+                "extensions",
+                vec![SettingsNode::Number {
+                    name: "beamEffects".to_string(),
+                    value: 3.0,
+                    span: None,
+                }],
+            ),
+        ],
+    };
+    let errors = check_emission(&settings);
+    let mut program = workshop_rs::Program::new();
+    program.settings = Some(settings);
+    let emit_error = emitter::emit(&program, &catalog(), &Locale::new("en-US"))
+        .expect_err("the first offending member fails emission");
+    assert_eq!(errors.len(), 2, "{errors:?}");
+    assert_eq!(errors[0].to_string(), emit_error.to_string());
+    assert!(
+        errors[1]
+            .to_string()
+            .contains("does not match its table kind")
+    );
+}

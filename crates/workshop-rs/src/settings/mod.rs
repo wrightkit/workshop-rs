@@ -8,6 +8,7 @@
 //! Extracted from the Wright-authored `wright-ir` crate; see
 //! [`docs/provenance.md`](https://github.com/wrightkit/workshop-rs/blob/main/docs/provenance.md).
 
+pub(crate) mod check;
 pub(crate) mod emitter;
 pub(crate) mod parser;
 
@@ -40,6 +41,7 @@ impl<'b> PartialEq<PathPart<'b>> for PathPart<'_> {
 
 impl Eq for PathPart<'_> {}
 
+pub use check::check_emission;
 pub use schema::{
     Applicability, EffectiveNumber, NumericBounds, NumericBoundsError, SettingDefinition,
     SettingEnumMember, SettingId, SettingIdentity, SettingOccurrence, SettingOperationError,
