@@ -16,6 +16,8 @@ mod language_conformance;
 mod locale;
 #[path = "../tests/parser.rs"]
 mod parser;
+#[path = "../tests/perf_large_project.rs"]
+mod perf_large_project;
 #[path = "../tests/roundtrip.rs"]
 mod roundtrip;
 #[path = "../tests/rule_events.rs"]
