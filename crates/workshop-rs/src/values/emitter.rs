@@ -437,45 +437,51 @@ impl<'a> EmitContext<'a> {
                 span: None,
             });
         };
-        if let Some(spelling) = entry.spelling(&self.locale) {
+        self.localized(kind.as_str(), id, id.to_string(), |locale| {
+            entry.spelling(locale)
+        })
+    }
+
+    /// Resolve a per-locale spelling: target locale first, then the opt-in
+    /// fallback (recorded in `fallback_ids`), else `MissingMapping`.
+    fn localized(
+        &mut self,
+        kind: &'static str,
+        id: &str,
+        fallback_id: String,
+        resolve: impl Fn(&Locale) -> Option<&'a str>,
+    ) -> Result<&'a str> {
+        if let Some(spelling) = resolve(&self.locale) {
             return Ok(spelling);
         }
         if let Some(fallback) = &self.fallback {
-            if let Some(spelling) = entry.spelling(fallback) {
-                self.fallback_ids.push(id.to_string());
+            if let Some(spelling) = resolve(fallback) {
+                self.fallback_ids.push(fallback_id);
                 return Ok(spelling);
             }
         }
         Err(WorkshopError::MissingMapping {
-            kind: kind.as_str(),
+            kind,
             id: id.to_string(),
             locale: self.locale.clone(),
         })
     }
 
     pub(crate) fn localized_string_spelling(&mut self, id: &str) -> Result<&'a str> {
-        if let Some(spelling) = self.catalog.localized_string_spelling(&self.locale, id) {
-            return Ok(spelling);
-        }
-        if let Some(fallback) = &self.fallback {
-            if let Some(spelling) = self.catalog.localized_string_spelling(fallback, id) {
-                self.fallback_ids.push(format!("localizedString.{id}"));
-                return Ok(spelling);
-            }
-        }
-        if self.catalog.localized_strings().any(|entry| entry.id == id) {
-            return Err(WorkshopError::MissingMapping {
+        if !self.catalog.localized_strings().any(|entry| entry.id == id) {
+            return Err(WorkshopError::Unknown {
                 kind: "localized string",
-                id: id.to_string(),
+                spelling: id.to_string(),
                 locale: self.locale.clone(),
+                span: None,
             });
         }
-        Err(WorkshopError::Unknown {
-            kind: "localized string",
-            spelling: id.to_string(),
-            locale: self.locale.clone(),
-            span: None,
-        })
+        self.localized(
+            "localized string",
+            id,
+            format!("localizedString.{id}"),
+            |locale| self.catalog.localized_string_spelling(locale, id),
+        )
     }
 
     pub(crate) fn spelling_prefer(
@@ -492,27 +498,13 @@ impl<'a> EmitContext<'a> {
                 span: None,
             });
         };
-        let spelling = |locale: &Locale| {
+        self.localized(kind.as_str(), id, id.to_string(), |locale| {
             entry
                 .spellings(locale)
                 .iter()
                 .find(|spelling| spelling.as_str() == preferred)
                 .map(String::as_str)
                 .or_else(|| entry.spelling(locale))
-        };
-        if let Some(spelling) = spelling(&self.locale) {
-            return Ok(spelling);
-        }
-        if let Some(fallback) = &self.fallback {
-            if let Some(spelling) = spelling(fallback) {
-                self.fallback_ids.push(id.to_string());
-                return Ok(spelling);
-            }
-        }
-        Err(WorkshopError::MissingMapping {
-            kind: kind.as_str(),
-            id: id.to_string(),
-            locale: self.locale.clone(),
         })
     }
 
@@ -539,20 +531,12 @@ impl<'a> EmitContext<'a> {
                 span: None,
             });
         };
-        if let Some(spelling) = member_entry.spelling(&self.locale) {
-            return Ok(spelling);
-        }
-        if let Some(fallback) = &self.fallback {
-            if let Some(spelling) = member_entry.spelling(fallback) {
-                self.fallback_ids.push(format!("{domain}.{member}"));
-                return Ok(spelling);
-            }
-        }
-        Err(WorkshopError::MissingMapping {
-            kind: "enum member",
-            id: format!("{domain}.{member}"),
-            locale: self.locale.clone(),
-        })
+        self.localized(
+            "enum member",
+            &format!("{domain}.{member}"),
+            format!("{domain}.{member}"),
+            |locale| member_entry.spelling(locale),
+        )
     }
 
     fn ambiguous_enum_spelling_from_args(&self, args: &[wir::ValueId]) -> Result<String> {
@@ -682,5 +666,12 @@ impl<'a> EmitContext<'a> {
         let segments = split_string(value);
         emit_string_chain(spelling, &segments, out);
         Ok(())
+    }
+    /// Render one value to a fresh `String` — the common
+    /// `let mut text = String::new(); self.value(id, &mut text)?` idiom.
+    pub(crate) fn value_text(&mut self, id: wir::ValueId) -> Result<String> {
+        let mut text = String::new();
+        self.value(id, &mut text)?;
+        Ok(text)
     }
 }

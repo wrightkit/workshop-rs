@@ -575,44 +575,18 @@ fn find_node_mut<'a>(
     }
 }
 
-fn value_kind(value: &SettingValue) -> &'static str {
-    match value {
-        SettingValue::Boolean(_) => "boolean",
-        SettingValue::Number(_) => "number",
-        SettingValue::Percent(_) => "percent",
-        SettingValue::String(_) => "string",
-        SettingValue::Enum(_) => "enum",
-        SettingValue::HeroList(_) => "hero-list",
-        SettingValue::MapList(_) => "map-list",
-        SettingValue::PresenceOnly => "presence-only",
-    }
-}
-
-fn domain_kind(domain: &SettingValueDomain) -> &'static str {
-    match domain {
-        SettingValueDomain::Boolean => "boolean",
-        SettingValueDomain::Number(_) => "number",
-        SettingValueDomain::Percent(_) => "percent",
-        SettingValueDomain::String => "string",
-        SettingValueDomain::Enum { .. } => "enum",
-        SettingValueDomain::HeroList => "hero-list",
-        SettingValueDomain::MapList => "map-list",
-        SettingValueDomain::PresenceOnly => "presence-only",
-    }
-}
-
 fn validate_value(
     domain: &SettingValueDomain,
     id: &SettingId,
     value: &SettingValue,
     span: Option<crate::core::source::Span>,
 ) -> Result<(), SettingOperationError> {
-    let expected = domain_kind(domain);
-    if value_kind(value) != expected {
+    let expected = domain.kind();
+    if value.kind() != expected {
         return Err(SettingOperationError::WrongValueKind {
             setting: id.clone(),
             expected,
-            actual: value_kind(value),
+            actual: value.kind(),
             span,
         });
     }
@@ -732,7 +706,7 @@ fn apply_value(
             return Err(SettingOperationError::WrongValueKind {
                 setting: id.clone(),
                 expected: "existing typed value",
-                actual: value_kind(&value),
+                actual: value.kind(),
                 span: node.span(),
             });
         }

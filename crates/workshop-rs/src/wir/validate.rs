@@ -75,13 +75,8 @@ fn check_action(program: &Program, id: super::ActionId) -> Result<(), IrError> {
     match action {
         Action::SetGlobalVariable {
             variable, value, ..
-        } => {
-            if !program.global_variables.contains(*variable) {
-                return Err(dangling("global variable", variable.index()));
-            }
-            check_value(program, *value)
         }
-        Action::ModifyGlobalVariable {
+        | Action::ModifyGlobalVariable {
             variable, value, ..
         } => {
             if !program.global_variables.contains(*variable) {
@@ -94,14 +89,8 @@ fn check_action(program: &Program, id: super::ActionId) -> Result<(), IrError> {
             variable,
             value,
             ..
-        } => {
-            check_value(program, *player)?;
-            if !program.player_variables.contains(*variable) {
-                return Err(dangling("player variable", variable.index()));
-            }
-            check_value(program, *value)
         }
-        Action::ModifyPlayerVariable {
+        | Action::ModifyPlayerVariable {
             player,
             variable,
             value,

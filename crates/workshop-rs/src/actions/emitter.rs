@@ -21,8 +21,7 @@ impl EmitContext<'_> {
                 variable, value, ..
             } => {
                 let name = self.global_name(*variable)?;
-                let mut value_text = String::new();
-                self.value(*value, &mut value_text)?;
+                let value_text = self.value_text(*value)?;
                 let keyword = self.spelling(Kind::Structural, "setGlobalVariable")?;
                 self.line(level, &format!("{keyword}({name}, {value_text});"))?;
             }
@@ -34,8 +33,7 @@ impl EmitContext<'_> {
             } => {
                 let name = self.global_name(*variable)?;
                 let op = self.modify_op_spelling(*op)?;
-                let mut value_text = String::new();
-                self.value(*value, &mut value_text)?;
+                let value_text = self.value_text(*value)?;
                 let keyword = self.spelling(Kind::Structural, "modifyGlobalVariable")?;
                 self.line(level, &format!("{keyword}({name}, {op}, {value_text});"))?;
             }
@@ -45,11 +43,9 @@ impl EmitContext<'_> {
                 value,
                 ..
             } => {
-                let mut player_text = String::new();
-                self.value(*player, &mut player_text)?;
+                let player_text = self.value_text(*player)?;
                 let name = self.player_name(*variable)?;
-                let mut value_text = String::new();
-                self.value(*value, &mut value_text)?;
+                let value_text = self.value_text(*value)?;
                 let keyword = self.spelling(Kind::Structural, "setPlayerVariable")?;
                 self.line(
                     level,
@@ -63,12 +59,10 @@ impl EmitContext<'_> {
                 value,
                 ..
             } => {
-                let mut player_text = String::new();
-                self.value(*player, &mut player_text)?;
+                let player_text = self.value_text(*player)?;
                 let name = self.player_name(*variable)?;
                 let op = self.modify_op_spelling(*op)?;
-                let mut value_text = String::new();
-                self.value(*value, &mut value_text)?;
+                let value_text = self.value_text(*value)?;
                 let keyword = self.spelling(Kind::Structural, "modifyPlayerVariable")?;
                 self.line(
                     level,
@@ -96,8 +90,7 @@ impl EmitContext<'_> {
                 ..
             } => {
                 for (index, branch) in branches.iter().enumerate() {
-                    let mut condition = String::new();
-                    self.value(branch.condition, &mut condition)?;
+                    let condition = self.value_text(branch.condition)?;
                     let keyword =
                         self.spelling(Kind::Structural, if index == 0 { "if" } else { "elseIf" })?;
                     self.line(level, &format!("{keyword}({condition});"))?;
@@ -122,8 +115,7 @@ impl EmitContext<'_> {
             wir::Action::While {
                 condition, body, ..
             } => {
-                let mut text = String::new();
-                self.value(*condition, &mut text)?;
+                let text = self.value_text(*condition)?;
                 let keyword = self.spelling(Kind::Structural, "while")?;
                 self.line(level, &format!("{keyword}({text});"))?;
                 for action in body {
@@ -258,12 +250,10 @@ impl EmitContext<'_> {
                         // `Chase Player Variable At Rate(player, name, …)`:
                         // the receiver splits into `player, name` leading
                         // arguments (the pinned oracle's spelling).
-                        let mut text = String::new();
-                        self.value(player, &mut text)?;
+                        let text = self.value_text(player)?;
                         let mut parts = vec![text, self.player_name(variable)?.to_string()];
                         for arg in args.iter().skip(1) {
-                            let mut part = String::new();
-                            self.value(*arg, &mut part)?;
+                            let part = self.value_text(*arg)?;
                             parts.push(part);
                         }
                         return self.line(level, &format!("{spelling}({});", parts.join(", ")));
@@ -293,8 +283,7 @@ impl EmitContext<'_> {
                         });
                     };
                     let spelling = self.spelling(Kind::Action, name)?;
-                    let mut player_text = String::new();
-                    self.value(player, &mut player_text)?;
+                    let player_text = self.value_text(player)?;
                     return self.line(
                         level,
                         &format!(

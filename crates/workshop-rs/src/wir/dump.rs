@@ -12,33 +12,9 @@ pub(crate) fn dump(program: &Program) -> String {
     for (index, file) in program.files.iter().enumerate() {
         out.push_str(&format!("  {index} {}\n", file.path));
     }
-    out.push_str("global variables:\n");
-    for variable in program.global_variables.iter() {
-        out.push_str(&format!(
-            "  {} (index {}){}\n",
-            variable.name,
-            variable.index,
-            span_suffix(variable.span),
-        ));
-    }
-    out.push_str("player variables:\n");
-    for variable in program.player_variables.iter() {
-        out.push_str(&format!(
-            "  {} (index {}){}\n",
-            variable.name,
-            variable.index,
-            span_suffix(variable.span),
-        ));
-    }
-    out.push_str("subroutines:\n");
-    for subroutine in program.subroutines.iter() {
-        out.push_str(&format!(
-            "  {} (index {}){}\n",
-            subroutine.name,
-            subroutine.index,
-            span_suffix(subroutine.span),
-        ));
-    }
+    declarations(&mut out, "global variables", &program.global_variables);
+    declarations(&mut out, "player variables", &program.player_variables);
+    declarations(&mut out, "subroutines", &program.subroutines);
     out.push_str("rules:\n");
     for (index, rule) in program.rules.iter().enumerate() {
         out.push_str(&format!(
@@ -61,6 +37,51 @@ pub(crate) fn dump(program: &Program) -> String {
         }
     }
     out
+}
+
+/// `name`/`index`/`span` access shared by the variable and subroutine
+/// declaration tables for the header dump.
+trait Declared {
+    fn name(&self) -> &str;
+    fn index(&self) -> u32;
+    fn span(&self) -> Option<Span>;
+}
+
+impl Declared for super::WorkshopVariable {
+    fn name(&self) -> &str {
+        &self.name
+    }
+    fn index(&self) -> u32 {
+        self.index
+    }
+    fn span(&self) -> Option<Span> {
+        self.span
+    }
+}
+
+impl Declared for super::WorkshopSubroutine {
+    fn name(&self) -> &str {
+        &self.name
+    }
+    fn index(&self) -> u32 {
+        self.index
+    }
+    fn span(&self) -> Option<Span> {
+        self.span
+    }
+}
+
+fn declarations<T: Declared>(out: &mut String, header: &str, table: &super::Arena<T>) {
+    out.push_str(header);
+    out.push_str(":\n");
+    for entry in table.iter() {
+        out.push_str(&format!(
+            "  {} (index {}){}\n",
+            entry.name(),
+            entry.index(),
+            span_suffix(entry.span()),
+        ));
+    }
 }
 
 fn render_event(program: &Program, event: &Event, out: &mut String, level: usize) {
@@ -127,6 +148,15 @@ fn player_event_name(kind: PlayerEventKind) -> &'static str {
     }
 }
 
+/// The infix separator for assignment dumps: ` = ` for sets, the canonical
+/// modify operator spelling for `Modify*`/`AssignMember`.
+fn op_separator(action: &Action) -> String {
+    action
+        .modify_op()
+        .map(|op| format!(" {} ", op.as_str()))
+        .unwrap_or_else(|| " = ".to_string())
+}
+
 fn render_action(program: &Program, id: super::ActionId, out: &mut String, level: usize) {
     let Some(action) = program.actions.get(id) else {
         out.push_str(&format!("{}<dangling action {id}/>\n", indent(level)));
@@ -138,23 +168,21 @@ fn render_action(program: &Program, id: super::ActionId, out: &mut String, level
             value,
             span,
             ..
-        } => {
-            out.push_str(&format!("{}setGlobalVariable ", indent(level)));
-            render_variable_ref(program, *variable, "global", out);
-            out.push_str(" = ");
-            render_value(program, *value, out);
-            out.push_str(&format!("{}\n", span_suffix(*span)));
         }
-        Action::ModifyGlobalVariable {
+        | Action::ModifyGlobalVariable {
             variable,
-            op,
             value,
             span,
             ..
         } => {
-            out.push_str(&format!("{}modifyGlobalVariable ", indent(level)));
+            let head = if action.modify_op().is_some() {
+                "modifyGlobalVariable"
+            } else {
+                "setGlobalVariable"
+            };
+            out.push_str(&format!("{}{} ", indent(level), head));
             render_variable_ref(program, *variable, "global", out);
-            out.push_str(&format!(" {} ", op.as_str()));
+            out.push_str(&op_separator(action));
             render_value(program, *value, out);
             out.push_str(&format!("{}\n", span_suffix(*span)));
         }
@@ -164,34 +192,27 @@ fn render_action(program: &Program, id: super::ActionId, out: &mut String, level
             value,
             span,
             ..
-        } => {
-            out.push_str(&format!("{}setPlayerVariable ", indent(level)));
-            render_value(program, *player, out);
-            out.push('.');
-            out.push_str(&variable_name(
-                program.player_variables.get(*variable),
-                variable.index(),
-            ));
-            out.push_str(" = ");
-            render_value(program, *value, out);
-            out.push_str(&format!("{}\n", span_suffix(*span)));
         }
-        Action::ModifyPlayerVariable {
+        | Action::ModifyPlayerVariable {
             player,
             variable,
-            op,
             value,
             span,
             ..
         } => {
-            out.push_str(&format!("{}modifyPlayerVariable ", indent(level)));
+            let head = if action.modify_op().is_some() {
+                "modifyPlayerVariable"
+            } else {
+                "setPlayerVariable"
+            };
+            out.push_str(&format!("{}{} ", indent(level), head));
             render_value(program, *player, out);
             out.push('.');
             out.push_str(&variable_name(
                 program.player_variables.get(*variable),
                 variable.index(),
             ));
-            out.push_str(&format!(" {} ", op.as_str()));
+            out.push_str(&op_separator(action));
             render_value(program, *value, out);
             out.push_str(&format!("{}\n", span_suffix(*span)));
         }

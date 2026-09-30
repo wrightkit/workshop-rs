@@ -884,12 +884,9 @@ impl ParseContext<'_> {
                                 }
                                 _ => {}
                             }
-                            let saved = self.expected_domain;
-                            self.expected_domain =
+                            let domain =
                                 self.context.expected_domain(action.id.as_str(), arg_index);
-                            let arg = self.value()?;
-                            self.expected_domain = saved;
-                            args.push(arg);
+                            args.push(self.value_in_domain(domain)?);
                             arg_index += 1;
                         }
                         self.expect(TokenKind::RParen, "expected ')'")?;
@@ -913,10 +910,8 @@ impl ParseContext<'_> {
                             Some(Span::new(self.file(), name_start, name_end)),
                         )?;
                         self.expect(TokenKind::Comma, "expected ',' after subroutine")?;
-                        let saved = self.expected_domain;
-                        self.expected_domain = self.context.expected_domain(action.id.as_str(), 1);
-                        let behavior = self.value()?;
-                        self.expected_domain = saved;
+                        let domain = self.context.expected_domain(action.id.as_str(), 1);
+                        let behavior = self.value_in_domain(domain)?;
                         self.expect(TokenKind::RParen, "expected ')'")?;
                         self.expect(TokenKind::Semi, "expected ';' after action")?;
                         let name_span = Some(Span::new(self.file(), name_start, name_end));

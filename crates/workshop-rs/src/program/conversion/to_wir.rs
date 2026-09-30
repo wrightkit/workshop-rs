@@ -533,7 +533,7 @@ fn wir_action(
             variable: *globals
                 .get(variable)
                 .ok_or_else(|| unknown_name("global variable", variable))?,
-            op: wir_modify(*op),
+            op: *op,
             value: wir_value(value, storage, globals, players, subroutines)?,
             span: None,
             target_span: None,
@@ -561,14 +561,14 @@ fn wir_action(
             variable: *players
                 .get(variable)
                 .ok_or_else(|| unknown_name("player variable", variable))?,
-            op: wir_modify(*op),
+            op: *op,
             value: wir_value(value, storage, globals, players, subroutines)?,
             span: None,
             target_span: None,
         },
         Action::AssignMember { target, op, value } => wir::Action::AssignMember {
             target: wir_value(target, storage, globals, players, subroutines)?,
-            op: op.map(wir_modify),
+            op: *op,
             value: wir_value(value, storage, globals, players, subroutines)?,
             span: None,
         },
@@ -670,13 +670,13 @@ fn wir_event(
         Event::Global => wir::Event::Global,
         Event::EachPlayer => wir::Event::EachPlayer,
         Event::EachPlayerWithFilters { team, target } => wir::Event::EachPlayerWithFilters {
-            team: wir_team(*team),
-            target: wir_target(target),
+            team: *team,
+            target: target.clone(),
         },
         Event::Player { kind, team, target } => wir::Event::Player {
-            kind: wir_player_event(*kind),
-            team: wir_team(*team),
-            target: wir_target(target),
+            kind: *kind,
+            team: *team,
+            target: target.clone(),
         },
         Event::Subroutine(name) => wir::Event::Subroutine {
             subroutine: *subroutines
@@ -685,54 +685,6 @@ fn wir_event(
             name_span: None,
         },
     })
-}
-
-fn wir_team(team: EventTeam) -> wir::EventTeam {
-    match team {
-        EventTeam::All => wir::EventTeam::All,
-        EventTeam::Team1 => wir::EventTeam::Team1,
-        EventTeam::Team2 => wir::EventTeam::Team2,
-    }
-}
-
-fn wir_target(target: &EventTarget) -> wir::EventTarget {
-    match target {
-        EventTarget::All => wir::EventTarget::All,
-        EventTarget::Slot(slot) => wir::EventTarget::Slot(*slot),
-        EventTarget::Hero(hero) => wir::EventTarget::Hero(hero.clone()),
-    }
-}
-
-fn wir_player_event(kind: PlayerEventKind) -> wir::PlayerEventKind {
-    match kind {
-        PlayerEventKind::DealtDamage => wir::PlayerEventKind::DealtDamage,
-        PlayerEventKind::DealtFinalBlow => wir::PlayerEventKind::DealtFinalBlow,
-        PlayerEventKind::DealtHealing => wir::PlayerEventKind::DealtHealing,
-        PlayerEventKind::DealtKnockback => wir::PlayerEventKind::DealtKnockback,
-        PlayerEventKind::Died => wir::PlayerEventKind::Died,
-        PlayerEventKind::EarnedElimination => wir::PlayerEventKind::EarnedElimination,
-        PlayerEventKind::Joined => wir::PlayerEventKind::Joined,
-        PlayerEventKind::Left => wir::PlayerEventKind::Left,
-        PlayerEventKind::ReceivedHealing => wir::PlayerEventKind::ReceivedHealing,
-        PlayerEventKind::ReceivedKnockback => wir::PlayerEventKind::ReceivedKnockback,
-        PlayerEventKind::TookDamage => wir::PlayerEventKind::TookDamage,
-    }
-}
-
-fn wir_modify(op: ModifyOp) -> wir::ModifyOp {
-    match op {
-        ModifyOp::Add => wir::ModifyOp::Add,
-        ModifyOp::Subtract => wir::ModifyOp::Subtract,
-        ModifyOp::Multiply => wir::ModifyOp::Multiply,
-        ModifyOp::Divide => wir::ModifyOp::Divide,
-        ModifyOp::Modulo => wir::ModifyOp::Modulo,
-        ModifyOp::Min => wir::ModifyOp::Min,
-        ModifyOp::Max => wir::ModifyOp::Max,
-        ModifyOp::RaiseToPower => wir::ModifyOp::RaiseToPower,
-        ModifyOp::AppendToArray => wir::ModifyOp::AppendToArray,
-        ModifyOp::RemoveFromArrayByValue => wir::ModifyOp::RemoveFromArrayByValue,
-        ModifyOp::RemoveFromArrayByIndex => wir::ModifyOp::RemoveFromArrayByIndex,
-    }
 }
 
 fn unknown_name(kind: &str, name: &str) -> WorkshopError {

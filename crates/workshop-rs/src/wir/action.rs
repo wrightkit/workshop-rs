@@ -116,6 +116,18 @@ impl Action {
             | Action::Call { span, .. } => *span,
         }
     }
+
+    /// The modify operation for `Modify*`/`AssignMember` actions; `None` for
+    /// plain sets and non-assignment actions.
+    pub(crate) fn modify_op(&self) -> Option<ModifyOp> {
+        match self {
+            Action::ModifyGlobalVariable { op, .. } | Action::ModifyPlayerVariable { op, .. } => {
+                Some(*op)
+            }
+            Action::AssignMember { op, .. } => *op,
+            _ => None,
+        }
+    }
 }
 
 /// One condition/body pair of an `If` action.

@@ -130,6 +130,26 @@ pub(crate) struct ParseContext<'a> {
 }
 
 impl<'a> ParseContext<'a> {
+    /// Run `f` with the signature-pinned expected domain temporarily replaced,
+    /// restoring the enclosing domain afterwards (#111).
+    pub(crate) fn with_domain<T>(
+        &mut self,
+        domain: Option<&'a str>,
+        f: impl FnOnce(&mut Self) -> Result<T>,
+    ) -> Result<T> {
+        let saved = self.expected_domain;
+        self.expected_domain = domain;
+        let result = f(self);
+        self.expected_domain = saved;
+        result
+    }
+
+    /// Parse a value while `domain` is in effect (or `None` for value
+    /// positions a signature must not pin).
+    pub(crate) fn value_in_domain(&mut self, domain: Option<&'a str>) -> Result<wir::ValueId> {
+        self.with_domain(domain, |p| p.value())
+    }
+
     pub(crate) fn resolve_entry(
         &self,
         kind: Kind,

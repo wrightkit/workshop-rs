@@ -107,13 +107,13 @@ fn public_event(storage: &wir::Program, event: &wir::Event) -> Result<Event> {
         wir::Event::Global => Event::Global,
         wir::Event::EachPlayer => Event::EachPlayer,
         wir::Event::EachPlayerWithFilters { team, target } => Event::EachPlayerWithFilters {
-            team: public_team(*team),
-            target: public_target(target),
+            team: *team,
+            target: target.clone(),
         },
         wir::Event::Player { kind, team, target } => Event::Player {
-            kind: public_player_event(*kind),
-            team: public_team(*team),
-            target: public_target(target),
+            kind: *kind,
+            team: *team,
+            target: target.clone(),
         },
         wir::Event::Subroutine { subroutine, .. } => Event::Subroutine(
             storage
@@ -124,38 +124,6 @@ fn public_event(storage: &wir::Program, event: &wir::Event) -> Result<Event> {
                 .clone(),
         ),
     })
-}
-
-fn public_team(team: wir::EventTeam) -> EventTeam {
-    match team {
-        wir::EventTeam::All => EventTeam::All,
-        wir::EventTeam::Team1 => EventTeam::Team1,
-        wir::EventTeam::Team2 => EventTeam::Team2,
-    }
-}
-
-fn public_target(target: &wir::EventTarget) -> EventTarget {
-    match target {
-        wir::EventTarget::All => EventTarget::All,
-        wir::EventTarget::Slot(slot) => EventTarget::Slot(*slot),
-        wir::EventTarget::Hero(hero) => EventTarget::Hero(hero.clone()),
-    }
-}
-
-fn public_player_event(kind: wir::PlayerEventKind) -> PlayerEventKind {
-    match kind {
-        wir::PlayerEventKind::DealtDamage => PlayerEventKind::DealtDamage,
-        wir::PlayerEventKind::DealtFinalBlow => PlayerEventKind::DealtFinalBlow,
-        wir::PlayerEventKind::DealtHealing => PlayerEventKind::DealtHealing,
-        wir::PlayerEventKind::DealtKnockback => PlayerEventKind::DealtKnockback,
-        wir::PlayerEventKind::Died => PlayerEventKind::Died,
-        wir::PlayerEventKind::EarnedElimination => PlayerEventKind::EarnedElimination,
-        wir::PlayerEventKind::Joined => PlayerEventKind::Joined,
-        wir::PlayerEventKind::Left => PlayerEventKind::Left,
-        wir::PlayerEventKind::ReceivedHealing => PlayerEventKind::ReceivedHealing,
-        wir::PlayerEventKind::ReceivedKnockback => PlayerEventKind::ReceivedKnockback,
-        wir::PlayerEventKind::TookDamage => PlayerEventKind::TookDamage,
-    }
 }
 
 fn public_value(storage: &wir::Program, id: wir::ValueId) -> Result<Value> {
@@ -253,7 +221,7 @@ fn public_actions(
                 .ok_or_else(|| malformed_id("global variable", variable.index()))?
                 .name
                 .clone(),
-            op: public_modify(*op),
+            op: *op,
             value: public_value(storage, *value)?,
         }),
         wir::Action::SetPlayerVariable {
@@ -285,14 +253,14 @@ fn public_actions(
                 .ok_or_else(|| malformed_id("player variable", variable.index()))?
                 .name
                 .clone(),
-            op: public_modify(*op),
+            op: *op,
             value: public_value(storage, *value)?,
         }),
         wir::Action::AssignMember {
             target, op, value, ..
         } => output.push(Action::AssignMember {
             target: public_value(storage, *target)?,
-            op: op.map(public_modify),
+            op: *op,
             value: public_value(storage, *value)?,
         }),
         wir::Action::CallSubroutine { subroutine, .. } => output.push(Action::CallSubroutine {
@@ -545,23 +513,5 @@ fn value_provenance(storage: &wir::Program, id: wir::ValueId) -> ValueProvenance
             .into_iter()
             .map(|child| value_provenance(storage, child))
             .collect(),
-    }
-}
-
-/// The child value ids of a WIR value, in the order the public [`Value`]
-/// exposes them.
-fn public_modify(op: wir::ModifyOp) -> ModifyOp {
-    match op {
-        wir::ModifyOp::Add => ModifyOp::Add,
-        wir::ModifyOp::Subtract => ModifyOp::Subtract,
-        wir::ModifyOp::Multiply => ModifyOp::Multiply,
-        wir::ModifyOp::Divide => ModifyOp::Divide,
-        wir::ModifyOp::Modulo => ModifyOp::Modulo,
-        wir::ModifyOp::Min => ModifyOp::Min,
-        wir::ModifyOp::Max => ModifyOp::Max,
-        wir::ModifyOp::RaiseToPower => ModifyOp::RaiseToPower,
-        wir::ModifyOp::AppendToArray => ModifyOp::AppendToArray,
-        wir::ModifyOp::RemoveFromArrayByValue => ModifyOp::RemoveFromArrayByValue,
-        wir::ModifyOp::RemoveFromArrayByIndex => ModifyOp::RemoveFromArrayByIndex,
     }
 }

@@ -266,16 +266,7 @@ impl Program {
         span: Option<Span>,
         name_span: Option<Span>,
     ) -> std::result::Result<(), SourceMappingError> {
-        self.validate_span(span)?;
-        self.validate_span(name_span)?;
-        if variable >= self.global_variables.len() {
-            return Err(SourceMappingError::InvalidGlobalVariable(variable));
-        }
-        let variable_count = self.global_variables.len();
-        let provenance = self.provenance_mut();
-        fit(&mut provenance.global_variables, variable_count);
-        provenance.global_variables[variable] = DeclarationProvenance { span, name_span };
-        Ok(())
+        self.set_declaration_spans(DeclarationTable::GlobalVariables, variable, span, name_span)
     }
 
     /// Attach the authored and identifier spans of a player variable.
@@ -285,16 +276,7 @@ impl Program {
         span: Option<Span>,
         name_span: Option<Span>,
     ) -> std::result::Result<(), SourceMappingError> {
-        self.validate_span(span)?;
-        self.validate_span(name_span)?;
-        if variable >= self.player_variables.len() {
-            return Err(SourceMappingError::InvalidPlayerVariable(variable));
-        }
-        let variable_count = self.player_variables.len();
-        let provenance = self.provenance_mut();
-        fit(&mut provenance.player_variables, variable_count);
-        provenance.player_variables[variable] = DeclarationProvenance { span, name_span };
-        Ok(())
+        self.set_declaration_spans(DeclarationTable::PlayerVariables, variable, span, name_span)
     }
 
     /// Attach the authored and identifier spans of a subroutine.
@@ -304,15 +286,25 @@ impl Program {
         span: Option<Span>,
         name_span: Option<Span>,
     ) -> std::result::Result<(), SourceMappingError> {
+        self.set_declaration_spans(DeclarationTable::Subroutines, subroutine, span, name_span)
+    }
+
+    fn set_declaration_spans(
+        &mut self,
+        table: DeclarationTable,
+        index: usize,
+        span: Option<Span>,
+        name_span: Option<Span>,
+    ) -> std::result::Result<(), SourceMappingError> {
         self.validate_span(span)?;
         self.validate_span(name_span)?;
-        if subroutine >= self.subroutines.len() {
-            return Err(SourceMappingError::InvalidSubroutine(subroutine));
+        let count = table.count(self);
+        if index >= count {
+            return Err(table.invalid(index));
         }
-        let subroutine_count = self.subroutines.len();
-        let provenance = self.provenance_mut();
-        fit(&mut provenance.subroutines, subroutine_count);
-        provenance.subroutines[subroutine] = DeclarationProvenance { span, name_span };
+        let slots = table.slots(self.provenance_mut());
+        fit(slots, count);
+        slots[index] = DeclarationProvenance { span, name_span };
         Ok(())
     }
 
@@ -607,6 +599,44 @@ impl Program {
 fn fit<T: Default>(items: &mut Vec<T>, len: usize) {
     items.truncate(len);
     items.resize_with(len, T::default);
+}
+
+/// Selects one declaration-provenance table so the three span setters share
+/// their validate-bounds-fit-assign skeleton.
+#[derive(Copy, Clone)]
+enum DeclarationTable {
+    GlobalVariables,
+    PlayerVariables,
+    Subroutines,
+}
+
+impl DeclarationTable {
+    fn count(self, program: &Program) -> usize {
+        match self {
+            Self::GlobalVariables => program.global_variables.len(),
+            Self::PlayerVariables => program.player_variables.len(),
+            Self::Subroutines => program.subroutines.len(),
+        }
+    }
+
+    fn invalid(self, index: usize) -> SourceMappingError {
+        match self {
+            Self::GlobalVariables => SourceMappingError::InvalidGlobalVariable(index),
+            Self::PlayerVariables => SourceMappingError::InvalidPlayerVariable(index),
+            Self::Subroutines => SourceMappingError::InvalidSubroutine(index),
+        }
+    }
+
+    fn slots<'a>(
+        self,
+        provenance: &'a mut ProgramProvenance,
+    ) -> &'a mut Vec<DeclarationProvenance> {
+        match self {
+            Self::GlobalVariables => &mut provenance.global_variables,
+            Self::PlayerVariables => &mut provenance.player_variables,
+            Self::Subroutines => &mut provenance.subroutines,
+        }
+    }
 }
 
 /// A Workshop global or player variable declaration.

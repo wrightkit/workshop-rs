@@ -219,6 +219,22 @@ pub enum SettingValueDomain {
     PresenceOnly,
 }
 
+impl SettingValueDomain {
+    /// The machine-readable kind name of this domain.
+    pub fn kind(&self) -> &'static str {
+        match self {
+            Self::Boolean => "boolean",
+            Self::Number(_) => "number",
+            Self::Percent(_) => "percent",
+            Self::String => "string",
+            Self::Enum { .. } => "enum",
+            Self::HeroList => "hero-list",
+            Self::MapList => "map-list",
+            Self::PresenceOnly => "presence-only",
+        }
+    }
+}
+
 /// One accepted spelling of a setting enum member.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SettingEnumMember {
@@ -252,6 +268,23 @@ pub enum SettingValue {
     HeroList(Vec<String>),
     MapList(Vec<String>),
     PresenceOnly,
+}
+
+impl SettingValue {
+    /// The machine-readable kind name of this value, mirroring
+    /// [`SettingValueDomain::kind`].
+    pub fn kind(&self) -> &'static str {
+        match self {
+            Self::Boolean(_) => "boolean",
+            Self::Number(_) => "number",
+            Self::Percent(_) => "percent",
+            Self::String(_) => "string",
+            Self::Enum(_) => "enum",
+            Self::HeroList(_) => "hero-list",
+            Self::MapList(_) => "map-list",
+            Self::PresenceOnly => "presence-only",
+        }
+    }
 }
 
 /// A typed occurrence together with a source-backed effective numeric value.

@@ -30,6 +30,9 @@ struct GameplayFile {
 
 /// Load and validate a gameplay dataset from its JSON representation.
 pub fn load(json: &str) -> Result<GameplayCatalog, GameplayDataError> {
+    // The schema probe runs first so a version bump is reported as
+    // `UnsupportedSchema` even when the body no longer fits the current
+    // schema (e.g. legacy `evidence` fields).
     let schema: GameplaySchema = serde_json::from_str(json)
         .map_err(|error| GameplayDataError::Malformed(error.to_string()))?;
     if schema.schema_version != SCHEMA_VERSION {
