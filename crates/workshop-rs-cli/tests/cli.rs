@@ -47,7 +47,7 @@ fn synthetic_capture(id: &str) -> String {
         schema_version: CONFORMANCE_SCHEMA_VERSION,
         case_id: "wir/variables-global".to_string(),
         features: vec![
-            FeatureId::owned(FeatureNamespace::Wir, FeatureKind::Variable, "global").unwrap(),
+            FeatureId::new(FeatureNamespace::Wir, FeatureKind::Variable, "global").unwrap(),
         ],
         status: ConformanceStatus::Inconclusive,
         comparison: Comparison {

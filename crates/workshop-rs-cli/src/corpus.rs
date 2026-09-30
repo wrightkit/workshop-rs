@@ -165,6 +165,60 @@ pub(crate) fn run(manifest_path: &Path) -> Result<CorpusReport, String> {
     })
 }
 
+/// Per-case execution context shared by the result constructors.
+struct CaseContext<'a> {
+    case: &'a CorpusCase,
+    catalog: &'a Catalog,
+    locale: &'a Locale,
+    source: TestArtifact,
+    expected: TestArtifact,
+}
+
+impl CaseContext<'_> {
+    fn result(
+        &self,
+        status: ConformanceStatus,
+        comparison: Comparison,
+        reason: ConformanceReason,
+    ) -> ConformanceResult {
+        ConformanceResult {
+            schema_version: CONFORMANCE_SCHEMA_VERSION,
+            case_id: self.case.id.clone(),
+            features: self.case.features.clone(),
+            status,
+            comparison,
+            source: self.source.clone(),
+            catalog: self.catalog.identity(),
+            locale: Some(self.locale.clone()),
+            reason: Some(reason),
+        }
+    }
+
+    /// A regression/gap result whose expected artifact pins the manifest reference.
+    fn non_match(&self, status: ConformanceStatus, reason: ConformanceReason) -> ConformanceResult {
+        self.result(
+            status,
+            Comparison {
+                mode: Equivalence::Semantic,
+                expected: Some(self.expected.clone()),
+                observed: None,
+                normalizer: Some("parse-validate-canonical-wir-v1".to_string()),
+            },
+            reason,
+        )
+    }
+
+    fn regression(&self, detail: String) -> ConformanceResult {
+        self.non_match(
+            ConformanceStatus::UnexpectedRegression,
+            ConformanceReason {
+                code: ReasonCode::UnexpectedRegression,
+                detail,
+            },
+        )
+    }
+}
+
 fn execute_case(
     case: &CorpusCase,
     input: &str,
@@ -173,126 +227,60 @@ fn execute_case(
     source: TestArtifact,
     expected: TestArtifact,
 ) -> Result<ConformanceResult, String> {
+    let ctx = CaseContext {
+        case,
+        catalog,
+        locale,
+        source,
+        expected,
+    };
     let parsed = parser::parse_with_context(input, catalog, locale, catalog);
     match (case.expected_status, parsed) {
         (ExpectedStatus::Success, Ok(program)) => {
             if let Err(error) = program.validate() {
-                return Ok(non_match(
-                    case,
-                    source,
-                    catalog,
-                    locale,
-                    ConformanceStatus::UnexpectedRegression,
-                    expected,
-                    ConformanceReason {
-                        code: ReasonCode::UnexpectedRegression,
-                        detail: format!("WIR validation failed: {error}"),
-                    },
-                ));
+                return Ok(ctx.regression(format!("WIR validation failed: {error}")));
             }
             if let Err(error) = validate::validate_canonical_ids(&program, catalog) {
-                return Ok(non_match(
-                    case,
-                    source,
-                    catalog,
-                    locale,
-                    ConformanceStatus::UnexpectedRegression,
-                    expected,
-                    ConformanceReason {
-                        code: ReasonCode::UnexpectedRegression,
-                        detail: format!("canonical identity validation failed: {error}"),
-                    },
-                ));
+                return Ok(ctx.regression(format!("canonical identity validation failed: {error}")));
             }
-            let observed = TestArtifact {
-                name: "workshop-rs canonical WIR dump".to_string(),
-                revision: None,
-                path: Some(case.fixture.clone()),
-                sha256: Some(sha256(&program.dump())),
-                license: Some("MIT".to_string()),
-            };
-            Ok(ConformanceResult {
-                schema_version: CONFORMANCE_SCHEMA_VERSION,
-                case_id: case.id.clone(),
-                features: case.features.clone(),
-                status: ConformanceStatus::Inconclusive,
-                comparison: Comparison {
+            Ok(ctx.result(
+                ConformanceStatus::Inconclusive,
+                Comparison {
                     mode: Equivalence::NotComparable,
-                    expected: Some(expected),
-                    observed: Some(observed),
+                    expected: Some(ctx.expected.clone()),
+                    observed: Some(TestArtifact {
+                        name: "workshop-rs canonical WIR dump".to_string(),
+                        revision: None,
+                        path: Some(case.fixture.clone()),
+                        sha256: Some(sha256(&program.dump())),
+                        license: Some("MIT".to_string()),
+                    }),
                     normalizer: None,
                 },
-                source,
-                catalog: catalog.identity(),
-                locale: Some(locale.clone()),
-                reason: Some(ConformanceReason {
+                ConformanceReason {
                     code: ReasonCode::Inconclusive,
                     detail: "parse, WIR, and catalog tests passed, but the pinned reference artifact is not materialized for offline comparison".to_string(),
-                }),
-            })
+                },
+            ))
         }
         (ExpectedStatus::Success, Err(error)) => {
             let detail = format!("offline parser result: {error}");
-            let declared_gap = case.known_gap.as_ref().filter(|_| {
+            if let Some(gap) = case.known_gap.as_ref().filter(|_| {
                 case.failure_contains
                     .as_ref()
                     .is_some_and(|needle| error.to_string().contains(needle))
-            });
-            if let Some(gap) = declared_gap {
-                Ok(non_match(
-                    case,
-                    source,
-                    catalog,
-                    locale,
+            }) {
+                Ok(ctx.non_match(
                     ConformanceStatus::KnownGap,
-                    expected,
                     ConformanceReason {
                         code: ReasonCode::KnownGap,
                         detail: gap.detail.clone(),
                     },
                 ))
             } else {
-                Ok(non_match(
-                    case,
-                    source,
-                    catalog,
-                    locale,
-                    ConformanceStatus::UnexpectedRegression,
-                    expected,
-                    ConformanceReason {
-                        code: ReasonCode::UnexpectedRegression,
-                        detail,
-                    },
-                ))
+                Ok(ctx.regression(detail))
             }
         }
-    }
-}
-
-fn non_match(
-    case: &CorpusCase,
-    source: TestArtifact,
-    catalog: &Catalog,
-    locale: &Locale,
-    status: ConformanceStatus,
-    expected: TestArtifact,
-    reason: ConformanceReason,
-) -> ConformanceResult {
-    ConformanceResult {
-        schema_version: CONFORMANCE_SCHEMA_VERSION,
-        case_id: case.id.clone(),
-        features: case.features.clone(),
-        status,
-        comparison: Comparison {
-            mode: Equivalence::Semantic,
-            expected: Some(expected),
-            observed: None,
-            normalizer: Some("parse-validate-canonical-wir-v1".to_string()),
-        },
-        source,
-        catalog: catalog.identity(),
-        locale: Some(locale.clone()),
-        reason: Some(reason),
     }
 }
 
@@ -371,7 +359,7 @@ mod tests {
             fixture: "basic-rule.ws".to_string(),
             source: artifact("source", 'a'),
             features: vec![
-                FeatureId::owned(FeatureNamespace::Wir, FeatureKind::Structural, "rule")
+                FeatureId::new(FeatureNamespace::Wir, FeatureKind::Structural, "rule")
                     .expect("valid feature"),
             ],
             expected_status: ExpectedStatus::Success,

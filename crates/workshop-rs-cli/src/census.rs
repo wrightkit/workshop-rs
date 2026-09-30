@@ -153,6 +153,37 @@ impl CensusShard {
 }
 
 impl CensusCase {
+    /// A generated en-US probe case without an independent expectation.
+    fn probe(case_id: impl Into<String>, features: Vec<FeatureId>, source: String) -> Self {
+        Self {
+            case_id: case_id.into(),
+            features,
+            source_locale: EN_US.to_string(),
+            source,
+            reference_source: None,
+            support: generated_probe_support(),
+        }
+    }
+
+    /// Mark the case exercised by its generated source.
+    fn exercise(mut self) -> Self {
+        self.support = CensusSupport::Exercise;
+        self
+    }
+
+    /// Record a non-default source locale.
+    fn locale(mut self, locale: &str) -> Self {
+        self.source_locale = locale.to_string();
+        self
+    }
+
+    /// Override the support classification.
+    #[cfg(test)]
+    fn with_support(mut self, support: CensusSupport) -> Self {
+        self.support = support;
+        self
+    }
+
     fn validate(&self) -> Result<(), CensusError> {
         validate_name("case_id", &self.case_id)?;
         if self.features.is_empty() {
@@ -418,7 +449,7 @@ fn default_source_locale() -> String {
 }
 
 fn feature(namespace: FeatureNamespace, kind: FeatureKind, name: impl Into<String>) -> FeatureId {
-    FeatureId::owned(namespace, kind, name).expect("canonical census feature ID")
+    FeatureId::new(namespace, kind, name).expect("canonical census feature ID")
 }
 
 fn catalog_feature(kind: Kind, id: &str) -> FeatureId {
@@ -442,80 +473,69 @@ fn catalog_shard(
                 Kind::Setting => unreachable!("settings use the settings table"),
                 Kind::Enum => unreachable!("enum domains use the enum shard"),
             };
-            CensusCase {
-                case_id: format!("{shard_id}/{}", entry.id),
-                features: vec![catalog_feature(kind, &entry.id)],
-                source_locale: EN_US.to_string(),
+            CensusCase::probe(
+                format!("{shard_id}/{}", entry.id),
+                vec![catalog_feature(kind, &entry.id)],
                 source,
-                reference_source: None,
-                support: generated_probe_support(),
-            }
+            )
         })
         .collect();
     CensusShard::new(shard_id, cases)
 }
 
 fn enum_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
-    let mut cases = Vec::new();
-    for domain in catalog.enum_domains() {
-        for member in &domain.members {
-            let features = vec![
-                catalog_feature(Kind::Enum, &domain.domain),
-                FeatureId::from_enum_member(&domain.domain, &member.member)
-                    .expect("canonical enum member ID"),
-            ];
-            cases.push(CensusCase {
-                case_id: format!("catalog-enums/{}/{}", domain.domain, member.member),
-                features,
-                source_locale: EN_US.to_string(),
-                source: enum_probe(catalog, domain, &member.member),
-                reference_source: None,
-                support: generated_probe_support(),
-            });
-        }
-    }
-    CensusShard::new("catalog-enums", cases)
+    enum_member_cases(catalog, "catalog-enums", false, true)
 }
 
 fn content_id_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
+    enum_member_cases(catalog, "content-ids", true, false)
+}
+
+/// Emit one probe case per enum member. `content_only` restricts to the
+/// Hero/Map content-id domains; `domain_feature` also records the domain
+/// itself as a covered feature.
+fn enum_member_cases(
+    catalog: &Catalog,
+    shard_id: &str,
+    content_only: bool,
+    domain_feature: bool,
+) -> Result<CensusShard, CensusError> {
     let mut cases = Vec::new();
     for domain in catalog.enum_domains() {
-        if !matches!(domain.domain.as_str(), "Hero" | "Map") {
+        if content_only && !matches!(domain.domain.as_str(), "Hero" | "Map") {
             continue;
         }
         for member in &domain.members {
-            cases.push(CensusCase {
-                case_id: format!("content-ids/{}/{}", domain.domain, member.member),
-                features: vec![
-                    FeatureId::from_enum_member(&domain.domain, &member.member)
-                        .expect("canonical content enum-member ID"),
-                ],
-                source_locale: EN_US.to_string(),
-                source: enum_probe(catalog, domain, &member.member),
-                reference_source: None,
-                support: generated_probe_support(),
-            });
+            let mut features = Vec::with_capacity(2);
+            if domain_feature {
+                features.push(catalog_feature(Kind::Enum, &domain.domain));
+            }
+            features.push(
+                FeatureId::from_enum_member(&domain.domain, &member.member)
+                    .expect("canonical enum member ID"),
+            );
+            cases.push(CensusCase::probe(
+                format!("{shard_id}/{}/{}", domain.domain, member.member),
+                features,
+                enum_probe(catalog, domain, &member.member),
+            ));
         }
     }
-    CensusShard::new("content-ids", cases)
+    CensusShard::new(shard_id, cases)
 }
-
 fn settings_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
     let cases = settings_schema::definitions()
         .map(|definition| {
             let path = definition.path().to_string();
-            CensusCase {
-                case_id: format!("settings/{path}"),
-                features: vec![feature(
+            CensusCase::probe(
+                format!("settings/{path}"),
+                vec![feature(
                     FeatureNamespace::Settings,
                     FeatureKind::Setting,
                     path,
                 )],
-                source_locale: EN_US.to_string(),
-                source: settings_probe(&definition, catalog),
-                reference_source: None,
-                support: generated_probe_support(),
-            }
+                settings_probe(&definition, catalog),
+            )
         })
         .collect();
     CensusShard::new("settings", cases)
@@ -531,18 +551,15 @@ fn wir_shard() -> Result<CensusShard, CensusError> {
                 capability.name,
                 variables_source(),
             ),
-            CensusCapabilityKind::PlayerVariable => CensusCase {
-                case_id: "wir/variables-player".to_string(),
-                features: vec![feature(
+            CensusCapabilityKind::PlayerVariable => CensusCase::probe(
+                "wir/variables-player".to_string(),
+                vec![feature(
                     FeatureNamespace::Wir,
                     FeatureKind::Variable,
                     capability.name,
                 )],
-                source_locale: EN_US.to_string(),
-                source: player_variable_source(),
-                reference_source: None,
-                support: generated_probe_support(),
-            },
+                player_variable_source(),
+            ),
             CensusCapabilityKind::Subroutine => wir_case(
                 "subroutine",
                 FeatureKind::Subroutine,
@@ -562,21 +579,19 @@ fn wir_shard() -> Result<CensusShard, CensusError> {
                 };
                 control_flow_case(capability.name, actions)
             }
-            CensusCapabilityKind::String => CensusCase {
-                case_id: "wir/string/custom-string".to_string(),
-                features: vec![feature(
+            CensusCapabilityKind::String => CensusCase::probe(
+                "wir/string/custom-string".to_string(),
+                vec![feature(
                     FeatureNamespace::Wir,
                     FeatureKind::String,
                     capability.name,
                 )],
-                source_locale: EN_US.to_string(),
-                source: rule_source(
+                rule_source(
                     "String",
                     "Set Global Variable(probe, Custom String(\"census\"));",
                 ),
-                reference_source: None,
-                support: CensusSupport::Exercise,
-            },
+            )
+            .exercise(),
         })
         .collect();
     CensusShard::new("wir", cases)
@@ -586,58 +601,48 @@ fn localization_shard() -> Result<CensusShard, CensusError> {
     CensusShard::new(
         "localization",
         vec![
-            CensusCase {
-                case_id: "localization/en-us-to-zh-cn".to_string(),
-                features: vec![feature(
+            CensusCase::probe(
+                "localization/en-us-to-zh-cn".to_string(),
+                vec![feature(
                     FeatureNamespace::Localization,
                     FeatureKind::Localization,
                     "en-us-to-zh-cn",
                 )],
-                source_locale: EN_US.to_string(),
-                source: LOCALIZATION_EN_US_SOURCE.to_string(),
-                reference_source: None,
-                support: generated_probe_support(),
-            },
-            CensusCase {
-                case_id: "localization/zh-cn-to-en-us".to_string(),
-                features: vec![feature(
+                LOCALIZATION_EN_US_SOURCE.to_string(),
+            ),
+            CensusCase::probe(
+                "localization/zh-cn-to-en-us".to_string(),
+                vec![feature(
                     FeatureNamespace::Localization,
                     FeatureKind::Localization,
                     "zh-cn-to-en-us",
                 )],
-                source_locale: ZH_CN.to_string(),
-                source: LOCALIZATION_ZH_CN_SOURCE.to_string(),
-                reference_source: None,
-                support: generated_probe_support(),
-            },
+                LOCALIZATION_ZH_CN_SOURCE.to_string(),
+            )
+            .locale(ZH_CN),
         ],
     )
 }
 
 fn wir_case(case_id: &str, kind: FeatureKind, name: &str, source: String) -> CensusCase {
-    CensusCase {
-        case_id: format!("wir/{case_id}"),
-        features: vec![feature(FeatureNamespace::Wir, kind, name)],
-        source_locale: EN_US.to_string(),
+    CensusCase::probe(
+        format!("wir/{case_id}"),
+        vec![feature(FeatureNamespace::Wir, kind, name)],
         source,
-        reference_source: None,
-        support: CensusSupport::Exercise,
-    }
+    )
+    .exercise()
 }
 
 fn control_flow_case(name: &str, actions: &str) -> CensusCase {
-    CensusCase {
-        case_id: format!("wir/control-flow/{name}"),
-        features: vec![feature(
+    CensusCase::probe(
+        format!("wir/control-flow/{name}"),
+        vec![feature(
             FeatureNamespace::Wir,
             FeatureKind::ControlFlow,
             name,
         )],
-        source_locale: EN_US.to_string(),
-        source: rule_source(name, actions),
-        reference_source: None,
-        support: generated_probe_support(),
-    }
+        rule_source(name, actions),
+    )
 }
 
 fn generated_probe_support() -> CensusSupport {
@@ -876,6 +881,36 @@ fn run_case(case: &CensusCase, shard_id: &str, catalog: &Catalog) -> Conformance
     }
 }
 
+/// A pipeline failure carrying the stage's reason code and locale.
+struct Fail {
+    code: ReasonCode,
+    detail: String,
+    locale: Locale,
+}
+
+impl Fail {
+    fn workshop(error: &WorkshopError, locale: &Locale) -> Self {
+        let code = match error {
+            WorkshopError::Unsupported { .. } => ReasonCode::Unsupported,
+            WorkshopError::MissingMapping { .. } => ReasonCode::KnownGap,
+            _ => ReasonCode::UnexpectedRegression,
+        };
+        Self {
+            code,
+            detail: error.to_string(),
+            locale: locale.clone(),
+        }
+    }
+
+    fn regression(detail: impl Into<String>, locale: &Locale) -> Self {
+        Self {
+            code: ReasonCode::UnexpectedRegression,
+            detail: detail.into(),
+            locale: locale.clone(),
+        }
+    }
+}
+
 fn execute_case(
     case: &CensusCase,
     base: impl Fn(
@@ -887,139 +922,103 @@ fn execute_case(
     catalog: &Catalog,
     inconclusive_detail: Option<&str>,
 ) -> ConformanceResult {
+    match run_pipeline(case, catalog, inconclusive_detail) {
+        Ok((comparison, locale)) => {
+            base(ConformanceStatus::Matched, comparison, None, Some(locale))
+        }
+        Err(fail) => failed_text(base, fail.code, fail.detail, Some(fail.locale)),
+    }
+}
+
+/// Run the census probe pipeline: en-US parse/validate/emit/reparse checks,
+/// the target-locale round trip, and the independent-reference comparison.
+/// Returns the matched comparison record and source locale on success.
+fn run_pipeline(
+    case: &CensusCase,
+    catalog: &Catalog,
+    inconclusive_detail: Option<&str>,
+) -> Result<(Comparison, Locale), Fail> {
     let source_locale = Locale::new(&case.source_locale);
-    let target_locale = if source_locale.as_str() == Locale::new(ZH_CN).as_str() {
+    let target_locale = if source_locale.as_str() == ZH_CN {
         Locale::new(EN_US)
     } else {
         Locale::new(ZH_CN)
     };
-    let program = match parser::parse_with_context(&case.source, catalog, &source_locale, catalog) {
-        Ok(program) => program,
-        Err(error) => return failed(base, &error, &source_locale),
+
+    let parse = |source: &str, locale: &Locale| {
+        parser::parse_with_context(source, catalog, locale, catalog)
+            .map_err(|error| Fail::workshop(&error, locale))
     };
-    if let Err(error) = program.validate() {
-        return failed_text(
-            base,
-            ReasonCode::UnexpectedRegression,
-            error.to_string(),
-            Some(source_locale.clone()),
-        );
-    }
-    let emitted_source = match emitter::emit(&program, catalog, &source_locale) {
-        Ok(output) => output,
-        Err(error) => return failed(base, &error, &source_locale),
+    let validate = |program: &workshop_rs::Program, locale: &Locale| {
+        program
+            .validate()
+            .map_err(|error| Fail::regression(error.to_string(), locale))
     };
-    let reparsed_source =
-        match parser::parse_with_context(&emitted_source, catalog, &source_locale, catalog) {
-            Ok(program) => program,
-            Err(error) => return failed(base, &error, &source_locale),
+    let emit = |program: &workshop_rs::Program, locale: &Locale| {
+        emitter::emit(program, catalog, locale).map_err(|error| Fail::workshop(&error, locale))
+    };
+    let convert_or =
+        |source: &str, from: &Locale, to: &Locale| -> Result<convert::Conversion, Fail> {
+            convert::convert(source, catalog, from, to, &Default::default())
+                .map_err(|error| Fail::workshop(&error, to))
         };
-    if let Err(error) = reparsed_source.validate() {
-        return failed_text(
-            base,
-            ReasonCode::UnexpectedRegression,
-            error.to_string(),
-            Some(source_locale.clone()),
-        );
-    }
-    let emitted_source_again = match emitter::emit(&reparsed_source, catalog, &source_locale) {
-        Ok(output) => output,
-        Err(error) => return failed(base, &error, &source_locale),
-    };
-    if !roundtrip::equivalent(&program, &reparsed_source)
-        || normalize_workshop(&emitted_source) != normalize_workshop(&emitted_source_again)
+
+    let program = parse(&case.source, &source_locale)?;
+    validate(&program, &source_locale)?;
+    let emitted = emit(&program, &source_locale)?;
+    let reparsed = parse(&emitted, &source_locale)?;
+    validate(&reparsed, &source_locale)?;
+    let reemitted = emit(&reparsed, &source_locale)?;
+    if !roundtrip::equivalent(&program, &reparsed)
+        || normalize_workshop(&emitted) != normalize_workshop(&reemitted)
     {
-        return failed_text(
-            base,
-            ReasonCode::UnexpectedRegression,
-            "en-US semantic or normalized gate diverged".to_string(),
-            Some(source_locale.clone()),
-        );
+        return Err(Fail::regression(
+            "en-US semantic or normalized gate diverged",
+            &source_locale,
+        ));
     }
-    let converted = match convert::convert(
-        &case.source,
-        catalog,
-        &source_locale,
-        &target_locale,
-        &Default::default(),
-    ) {
-        Ok(output) => output,
-        Err(error) => return failed(base, &error, &target_locale),
-    };
-    let program_target =
-        match parser::parse_with_context(&converted.text, catalog, &target_locale, catalog) {
-            Ok(program) => program,
-            Err(error) => return failed(base, &error, &target_locale),
-        };
-    if let Err(error) = program_target.validate() {
-        return failed_text(
-            base,
-            ReasonCode::UnexpectedRegression,
-            error.to_string(),
-            Some(target_locale.clone()),
-        );
+
+    let converted = convert_or(&case.source, &source_locale, &target_locale)?;
+    let target_program = parse(&converted.text, &target_locale)?;
+    validate(&target_program, &target_locale)?;
+    if !roundtrip::equivalent(&program, &target_program) {
+        return Err(Fail::regression(
+            "zh-CN conversion changed canonical WIR semantics",
+            &target_locale,
+        ));
     }
-    if !roundtrip::equivalent(&program, &program_target) {
-        return failed_text(
-            base,
-            ReasonCode::UnexpectedRegression,
-            "zh-CN conversion changed canonical WIR semantics".to_string(),
-            Some(target_locale.clone()),
-        );
-    }
-    let back_to_source = match convert::convert(
-        &converted.text,
-        catalog,
-        &target_locale,
-        &source_locale,
-        &Default::default(),
-    ) {
-        Ok(output) => output,
-        Err(error) => return failed(base, &error, &source_locale),
-    };
-    let reparsed_back =
-        match parser::parse_with_context(&back_to_source.text, catalog, &source_locale, catalog) {
-            Ok(program) => program,
-            Err(error) => return failed(base, &error, &source_locale),
-        };
-    if !roundtrip::equivalent(&program, &reparsed_back)
-        || normalize_workshop(&back_to_source.text) != normalize_workshop(&case.source)
+    let back = convert_or(&converted.text, &target_locale, &source_locale)?;
+    let back_program = parse(&back.text, &source_locale)?;
+    if !roundtrip::equivalent(&program, &back_program)
+        || normalize_workshop(&back.text) != normalize_workshop(&case.source)
     {
-        return failed_text(
-            base,
-            ReasonCode::UnexpectedRegression,
-            "cross-locale semantic or normalized gate diverged".to_string(),
-            Some(source_locale.clone()),
-        );
+        return Err(Fail::regression(
+            "cross-locale semantic or normalized gate diverged",
+            &source_locale,
+        ));
     }
+
     let Some(reference_source) = case.reference_source.as_ref() else {
-        return failed_text(
-            base,
-            ReasonCode::Inconclusive,
-            inconclusive_detail.unwrap_or(
-                "offline semantic and locale gates passed, but no independent expectation artifact is recorded",
-            )
-            .to_string(),
-            Some(source_locale),
-        );
+        return Err(Fail {
+            code: ReasonCode::Inconclusive,
+            detail: inconclusive_detail
+                .unwrap_or(
+                    "offline semantic and locale gates passed, but no independent expectation artifact is recorded",
+                )
+                .to_string(),
+            locale: source_locale,
+        });
     };
-    let expected_program =
-        match parser::parse_with_context(reference_source, catalog, &target_locale, catalog) {
-            Ok(program) => program,
-            Err(error) => return failed(base, &error, &target_locale),
-        };
+    let expected_program = parse(reference_source, &target_locale)?;
     if !roundtrip::equivalent(&program, &expected_program)
         || normalize_workshop(&converted.text) != normalize_workshop(reference_source)
     {
-        return failed_text(
-            base,
-            ReasonCode::UnexpectedRegression,
-            "conversion differed from the independent reference source".to_string(),
-            Some(target_locale),
-        );
+        return Err(Fail::regression(
+            "conversion differed from the independent reference source",
+            &target_locale,
+        ));
     }
-    base(
-        ConformanceStatus::Matched,
+    Ok((
         Comparison {
             mode: Equivalence::Semantic,
             expected: Some(reference_artifact(case, reference_source)),
@@ -1029,27 +1028,8 @@ fn execute_case(
             )),
             normalizer: Some("canonical-wir;normalized-workshop-text".to_string()),
         },
-        None,
-        Some(source_locale),
-    )
-}
-
-fn failed(
-    base: impl Fn(
-        ConformanceStatus,
-        Comparison,
-        Option<ConformanceReason>,
-        Option<Locale>,
-    ) -> ConformanceResult,
-    error: &WorkshopError,
-    locale: &Locale,
-) -> ConformanceResult {
-    let code = match error {
-        WorkshopError::Unsupported { .. } => ReasonCode::Unsupported,
-        WorkshopError::MissingMapping { .. } => ReasonCode::KnownGap,
-        _ => ReasonCode::UnexpectedRegression,
-    };
-    failed_text(base, code, error.to_string(), Some(locale.clone()))
+        source_locale,
+    ))
 }
 
 fn failed_text(
@@ -1182,13 +1162,13 @@ mod tests {
 
     #[test]
     fn explicit_non_matching_states_remain_machine_readable() {
-        let feature_case = |id: &str, support| CensusCase {
-            case_id: format!("state-tests/{id}"),
-            features: vec![feature(FeatureNamespace::Wir, FeatureKind::Structural, id)],
-            source_locale: EN_US.to_string(),
-            source: format!("rule (\"{id}\") {{}}"),
-            reference_source: None,
-            support,
+        let feature_case = |id: &str, support| {
+            CensusCase::probe(
+                format!("state-tests/{id}"),
+                vec![feature(FeatureNamespace::Wir, FeatureKind::Structural, id)],
+                format!("rule (\"{id}\") {{}}"),
+            )
+            .with_support(support)
         };
         let shard = CensusShard::new(
             "state-tests",
