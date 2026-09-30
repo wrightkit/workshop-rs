@@ -6,7 +6,7 @@ use std::path::Path;
 
 use super::conformance::{
     CONFORMANCE_SCHEMA_VERSION, Comparison, ConformanceReason, ConformanceResult,
-    ConformanceStatus, Equivalence, FeatureId, ReasonCode, TestArtifact,
+    ConformanceStatus, Equivalence, FeatureId, ReasonCode, TestArtifact, is_sha256_digest,
 };
 use workshop_rs::catalog::{Catalog, CatalogIdentity, Locale};
 use workshop_rs::{parser, validate};
@@ -334,11 +334,7 @@ fn validate_expected_artifact(case_id: &str, artifact: &TestArtifact) -> Result<
             "case {case_id} test artifact must pin a SHA-256 digest"
         ));
     };
-    if digest.len() != 64
-        || !digest
-            .chars()
-            .all(|character| character.is_ascii_hexdigit())
-    {
+    if !is_sha256_digest(digest) {
         return Err(format!(
             "case {case_id} test artifact has an invalid SHA-256 digest"
         ));

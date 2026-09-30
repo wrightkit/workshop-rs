@@ -139,7 +139,7 @@ impl<'a> EmitContext<'a> {
                     }
                     return Ok(());
                 }
-                if is_comparison_operator(name) {
+                if wir::is_comparison_operator(name) {
                     // Canonical form: Compare(a, op, b).
                     if args.len() != 2 {
                         return Err(WorkshopError::Malformed {

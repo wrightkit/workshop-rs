@@ -64,7 +64,7 @@ impl<'a> EmitContext<'a> {
                     .get(condition_value)
                     .map(|node| &node.value)
                 {
-                    if is_comparison_operator(name) && args.len() == 2 {
+                    if wir::is_comparison_operator(name) && args.len() == 2 {
                         self.value(args[0], &mut text)?;
                         let operator = self.spelling(Kind::Operator, name)?;
                         write!(text, " {operator} ").unwrap();

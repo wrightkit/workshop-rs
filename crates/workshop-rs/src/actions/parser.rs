@@ -640,23 +640,15 @@ impl ParseContext<'_> {
         let step = self.value()?;
         self.expect(TokenKind::RParen, "expected ')' after For bounds")?;
         self.expect(TokenKind::Semi, "expected ';' after For Global Variable")?;
-        let (body, loop_stop) = self.actions_until_end()?;
-        if loop_stop != Stop::End {
-            return Err(self.malformed(
-                "'For Global Variable' requires a matching 'End'",
-                self.previous(),
-            ));
-        }
-        self.consume_phrase("End")?;
-        self.expect(TokenKind::Semi, "expected ';' after 'End'")?;
-        let end_span = self.previous_span();
+        let (body, end) =
+            self.actions_until_matching_end("'For Global Variable' requires a matching 'End'")?;
         let action = Action::ForGlobalVariable {
             variable,
             start: start_value,
             stop,
             step,
             body,
-            span: Some(Span::new(self.file(), start, end_span.1)),
+            span: Some(Span::new(self.file(), start, end)),
             target_span: Some(Span::new(self.file(), name_start, name_end)),
         };
         Ok(self.target.actions.push(action))
@@ -667,17 +659,11 @@ impl ParseContext<'_> {
         let condition = self.value()?;
         self.expect(TokenKind::RParen, "expected ')' after While condition")?;
         self.expect(TokenKind::Semi, "expected ';' after While condition")?;
-        let (body, stop) = self.actions_until_end()?;
-        if stop != Stop::End {
-            return Err(self.malformed("'While' requires a matching 'End'", self.previous()));
-        }
-        self.consume_phrase("End")?;
-        self.expect(TokenKind::Semi, "expected ';' after 'End'")?;
-        let end_span = self.previous_span();
+        let (body, end) = self.actions_until_matching_end("'While' requires a matching 'End'")?;
         let action = Action::While {
             condition,
             body,
-            span: Some(Span::new(self.file(), start, end_span.1)),
+            span: Some(Span::new(self.file(), start, end)),
         };
         Ok(self.target.actions.push(action))
     }
@@ -703,16 +689,8 @@ impl ParseContext<'_> {
         let step = self.value()?;
         self.expect(TokenKind::RParen, "expected ')' after For bounds")?;
         self.expect(TokenKind::Semi, "expected ';' after For Player Variable")?;
-        let (body, loop_stop) = self.actions_until_end()?;
-        if loop_stop != Stop::End {
-            return Err(self.malformed(
-                "'For Player Variable' requires a matching 'End'",
-                self.previous(),
-            ));
-        }
-        self.consume_phrase("End")?;
-        self.expect(TokenKind::Semi, "expected ';' after 'End'")?;
-        let end_span = self.previous_span();
+        let (body, end) =
+            self.actions_until_matching_end("'For Player Variable' requires a matching 'End'")?;
         let action = Action::ForPlayerVariable {
             player,
             variable,
@@ -720,10 +698,23 @@ impl ParseContext<'_> {
             stop,
             step,
             body,
-            span: Some(Span::new(self.file(), start, end_span.1)),
+            span: Some(Span::new(self.file(), start, end)),
             target_span: Some(Span::new(self.file(), name_start, name_end)),
         };
         Ok(self.target.actions.push(action))
+    }
+
+    fn actions_until_matching_end(
+        &mut self,
+        missing_end_message: &str,
+    ) -> Result<(Vec<wir::ActionId>, Position)> {
+        let (body, stop) = self.actions_until_end()?;
+        if stop != Stop::End {
+            return Err(self.malformed(missing_end_message, self.previous()));
+        }
+        self.consume_phrase("End")?;
+        self.expect(TokenKind::Semi, "expected ';' after 'End'")?;
+        Ok((body, self.previous_span().1))
     }
 
     pub(crate) fn action_call_from_phrase(

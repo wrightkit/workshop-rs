@@ -1,6 +1,7 @@
 //! Canonical Workshop action forms.
 
 use crate::core::source::Span;
+use crate::program::shared::ModifyOp;
 
 use super::{ActionId, GlobalVarId, PlayerVarId, SubroutineId, ValueId};
 
@@ -122,56 +123,4 @@ impl Action {
 pub(crate) struct IfBranch {
     pub(crate) condition: ValueId,
     pub(crate) body: Vec<ActionId>,
-}
-
-/// The modify operators of the v0.1 surface.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum ModifyOp {
-    Add,
-    Subtract,
-    Multiply,
-    Divide,
-    Modulo,
-    Min,
-    Max,
-    RaiseToPower,
-    AppendToArray,
-    RemoveFromArrayByValue,
-    RemoveFromArrayByIndex,
-}
-
-impl ModifyOp {
-    /// A short canonical name for dumps and diagnostics.
-    pub(crate) fn as_str(self) -> &'static str {
-        match self {
-            ModifyOp::Add => "Add",
-            ModifyOp::Subtract => "Subtract",
-            ModifyOp::Multiply => "Multiply",
-            ModifyOp::Divide => "Divide",
-            ModifyOp::Modulo => "Modulo",
-            ModifyOp::Min => "Min",
-            ModifyOp::Max => "Max",
-            ModifyOp::RaiseToPower => "RaiseToPower",
-            ModifyOp::AppendToArray => "AppendToArray",
-            ModifyOp::RemoveFromArrayByValue => "RemoveFromArrayByValue",
-            ModifyOp::RemoveFromArrayByIndex => "RemoveFromArrayByIndex",
-        }
-    }
-
-    /// The canonical catalog identity for this modification operation.
-    pub(crate) fn catalog_id(self) -> &'static str {
-        match self {
-            ModifyOp::Add => "add",
-            ModifyOp::Subtract => "subtract",
-            ModifyOp::Multiply => "multiply",
-            ModifyOp::Divide => "divide",
-            ModifyOp::Modulo => "modulo",
-            ModifyOp::Min => "min",
-            ModifyOp::Max => "max",
-            ModifyOp::RaiseToPower => "raiseToPower",
-            ModifyOp::AppendToArray => "appendToArray",
-            ModifyOp::RemoveFromArrayByValue => "removeFromArrayByValue",
-            ModifyOp::RemoveFromArrayByIndex => "removeFromArrayByIndex",
-        }
-    }
 }

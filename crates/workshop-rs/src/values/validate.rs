@@ -18,28 +18,7 @@ pub(crate) fn validate_value(
             // Comparison operators are represented as call names (`==`, `<`,
             // …) following the `Compare(a, op, b)` convention, so both value
             // and operator identities are valid call names.
-            let canonical_helper = matches!(
-                name.as_str(),
-                "memberAccess"
-                    | "+"
-                    | "-"
-                    | "*"
-                    | "/"
-                    | "%"
-                    | "add"
-                    | "subtract"
-                    | "multiply"
-                    | "divide"
-                    | "modulo"
-                    | "min"
-                    | "max"
-                    | "raiseToPower"
-                    | "appendToArray"
-                    | "removeFromArray"
-                    | "removeFromArrayByValue"
-                    | "removeFromArrayByIndex"
-            ) && (args.is_empty()
-                || matches!(name.as_str(), "memberAccess" | "+" | "-" | "*" | "/" | "%"));
+            let canonical_helper = wir::is_canonical_helper_call(name, args.len());
             let known = canonical_helper
                 || catalog.entry(Kind::Value, name).is_some()
                 || catalog.entry(Kind::Operator, name).is_some();
@@ -428,23 +407,7 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
                 || enum_type_matches_domain(catalog, value_type, value, domain)
         }
         (wir::Value::Call { name, .. }, expected) => {
-            if expected == "Operation"
-                && matches!(
-                    name.as_str(),
-                    "add"
-                        | "subtract"
-                        | "multiply"
-                        | "divide"
-                        | "modulo"
-                        | "min"
-                        | "max"
-                        | "raiseToPower"
-                        | "appendToArray"
-                        | "removeFromArray"
-                        | "removeFromArrayByValue"
-                        | "removeFromArrayByIndex"
-                )
-            {
+            if expected == "Operation" && wir::is_operation_helper(name) {
                 return true;
             }
             catalog

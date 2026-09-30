@@ -388,49 +388,29 @@ mod corpus {
         index
     }
 
-    /// Build an index from a `data.*` section with direct locale fields
-    /// (maps, heroes), keyed `data.<id>` for provenance.
+    /// Build an index from `data.<section>` with direct locale fields.
     fn data_index(export: &Value, section: &str) -> Index {
-        let mut index = Index::default();
-        let Some(entries) = export
-            .get("data")
-            .and_then(|data| data.get(section))
-            .and_then(Value::as_object)
-        else {
-            return index;
-        };
-        for (id, entry) in entries {
-            let en = entry.get("en-US").and_then(Value::as_str);
-            if let Some(en) = en {
-                index.add_translations(
-                    &format!("data.{section}.{id}"),
-                    en,
-                    entry.clone().as_object().cloned().unwrap_or_default(),
-                );
-            }
-        }
-        index
+        data_index_at(export, &[section])
     }
 
-    /// Build an index from a nested `data.<parent>.<section>` table with
-    /// direct locale fields.
-    fn nested_data_index(export: &Value, parent: &str, section: &str) -> Index {
+    /// Build an index from a nested `data.*` section, keyed by its full path
+    /// for provenance.
+    fn data_index_at(export: &Value, sections: &[&str]) -> Index {
         let mut index = Index::default();
-        let Some(entries) = export
-            .get("data")
-            .and_then(|data| data.get(parent))
-            .and_then(|parent| parent.get(section))
-            .and_then(Value::as_object)
-        else {
+        let data = sections.iter().fold(export.get("data"), |value, section| {
+            value.and_then(|value| value.get(*section))
+        });
+        let Some(entries) = data.and_then(Value::as_object) else {
             return index;
         };
+        let path = sections.join(".");
         for (id, entry) in entries {
             let en = entry.get("en-US").and_then(Value::as_str);
             if let Some(en) = en {
                 index.add_translations(
-                    &format!("data.{parent}.{section}.{id}"),
+                    &format!("data.{path}.{id}"),
                     en,
-                    entry.clone().as_object().cloned().unwrap_or_default(),
+                    entry.as_object().cloned().unwrap_or_default(),
                 );
             }
         }
@@ -780,22 +760,16 @@ mod corpus {
         let events = localized_index(&export, &["other.events."]);
         let event_teams = {
             let mut index = localized_index(&export, &["other.eventTeams."]);
-            merge_index(
-                &mut index,
-                nested_data_index(&export, "other", "eventTeams"),
-            );
+            merge_index(&mut index, data_index_at(&export, &["other", "eventTeams"]));
             index
         };
         let event_players = {
             let mut index = localized_index(&export, &["other.eventPlayers.", "other.eventSlots."]);
             merge_index(
                 &mut index,
-                nested_data_index(&export, "other", "eventPlayers"),
+                data_index_at(&export, &["other", "eventPlayers"]),
             );
-            merge_index(
-                &mut index,
-                nested_data_index(&export, "other", "eventSlots"),
-            );
+            merge_index(&mut index, data_index_at(&export, &["other", "eventSlots"]));
             index
         };
         let operators = localized_index(&export, &["values.", "constants.__Operation__."]);

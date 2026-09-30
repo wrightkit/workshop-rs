@@ -13,7 +13,7 @@ use sha2::{Digest, Sha256};
 use crate::conformance::{
     CONFORMANCE_SCHEMA_VERSION, Comparison, ConformanceReason, ConformanceResult,
     ConformanceStatus, Equivalence, FeatureId, FeatureKind, FeatureNamespace, ReasonCode,
-    TestArtifact,
+    TestArtifact, is_sha256_digest,
 };
 use workshop_rs::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
 use workshop_rs::settings::{self as settings_schema, SettingDefinition, SettingValueDomain};
@@ -338,13 +338,7 @@ impl CensusReport {
                 "unsupported census identity schema version",
             ));
         }
-        if self.census.digest.len() != 64
-            || !self
-                .census
-                .digest
-                .chars()
-                .all(|character| character.is_ascii_hexdigit())
-        {
+        if !is_sha256_digest(&self.census.digest) {
             return Err(CensusError::new(
                 "census identity digest must be a SHA-256 hex digest",
             ));

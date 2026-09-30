@@ -84,43 +84,7 @@ pub fn content_digest(json: &str) -> Result<String, GameplayDataError> {
         .remove("digest")
         .ok_or_else(|| GameplayDataError::Malformed("missing identity.digest".to_string()))?;
 
-    let mut canonical = String::new();
-    write_canonical_json(&value, &mut canonical).map_err(GameplayDataError::Malformed)?;
+    let canonical = serde_json::to_string(&value)
+        .map_err(|error| GameplayDataError::Malformed(error.to_string()))?;
     Ok(format!("sha256:{:x}", Sha256::digest(canonical.as_bytes())))
-}
-
-fn write_canonical_json(value: &serde_json::Value, output: &mut String) -> Result<(), String> {
-    match value {
-        serde_json::Value::Null => output.push_str("null"),
-        serde_json::Value::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
-        serde_json::Value::Number(value) => output.push_str(&value.to_string()),
-        serde_json::Value::String(value) => {
-            output.push_str(&serde_json::to_string(value).map_err(|error| error.to_string())?)
-        }
-        serde_json::Value::Array(values) => {
-            output.push('[');
-            for (index, value) in values.iter().enumerate() {
-                if index > 0 {
-                    output.push(',');
-                }
-                write_canonical_json(value, output)?;
-            }
-            output.push(']');
-        }
-        serde_json::Value::Object(values) => {
-            output.push('{');
-            let mut keys: Vec<_> = values.keys().collect();
-            keys.sort_unstable();
-            for (index, key) in keys.into_iter().enumerate() {
-                if index > 0 {
-                    output.push(',');
-                }
-                output.push_str(&serde_json::to_string(key).map_err(|error| error.to_string())?);
-                output.push(':');
-                write_canonical_json(&values[key], output)?;
-            }
-            output.push('}');
-        }
-    }
-    Ok(())
 }

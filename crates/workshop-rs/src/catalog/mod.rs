@@ -137,8 +137,8 @@ pub struct CatalogEntry {
     pub kind: Kind,
     /// Parameter names, when the catalog documents them.
     params: Vec<String>,
-    /// Reviewed semantic parameter names, parallel to `params`.
-    param_names: Vec<String>,
+    /// Reviewed semantic names when they differ from the catalog parameters.
+    param_names: Option<Vec<String>>,
     /// Reviewed localized spellings for each parameter, parallel to `params`.
     param_aliases: Vec<HashMap<Locale, Vec<String>>>,
     /// The canonical enum domain expected at each parameter position, when
@@ -175,37 +175,39 @@ pub struct LocalizedStringEntry {
     aliases: HashMap<Locale, Vec<String>>,
 }
 
+fn spelling<'a>(aliases: &'a HashMap<Locale, Vec<String>>, locale: &Locale) -> Option<&'a str> {
+    aliases
+        .get(locale)
+        .and_then(|spellings| spellings.first())
+        .map(String::as_str)
+}
+
+fn spellings_for<'a>(aliases: &'a HashMap<Locale, Vec<String>>, locale: &Locale) -> &'a [String] {
+    aliases.get(locale).map(Vec::as_slice).unwrap_or_default()
+}
+
 impl LocalizedStringEntry {
     /// The deterministic emitted spelling in `locale`, when mapped.
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
-        self.aliases
-            .get(locale)
-            .and_then(|spellings| spellings.first())
-            .map(String::as_str)
+        spelling(&self.aliases, locale)
     }
 
     /// All reviewed spellings accepted for this locale.
     pub fn spellings(&self, locale: &Locale) -> &[String] {
-        self.aliases
-            .get(locale)
-            .map(Vec::as_slice)
-            .unwrap_or_default()
+        spellings_for(&self.aliases, locale)
     }
 }
 
 impl CatalogEntry {
     /// The localized spelling of this builtin in `locale`, when declared.
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
-        self.aliases
-            .get(locale)
-            .and_then(|spellings| spellings.first())
-            .map(String::as_str)
+        spelling(&self.aliases, locale)
     }
 
     /// Every reviewed localized spelling of this builtin, with the first
     /// spelling reserved for deterministic emission.
     pub fn spellings(&self, locale: &Locale) -> &[String] {
-        self.aliases.get(locale).map(Vec::as_slice).unwrap_or(&[])
+        spellings_for(&self.aliases, locale)
     }
 
     /// Resolve a canonical or reviewed localized parameter spelling to its
@@ -240,10 +242,8 @@ impl CatalogEntry {
 
     /// The reviewed semantic name for an argument position, when declared.
     pub fn param_name(&self, index: usize) -> Option<&str> {
-        self.param_names
-            .get(index)
-            .or_else(|| self.variadic.then(|| self.param_names.last()).flatten())
-            .map(String::as_str)
+        let names = self.param_names.as_deref().unwrap_or(&self.params);
+        param_at(names, index, self.variadic).map(String::as_str)
     }
 
     /// The number of arguments that must be present when trailing defaults
@@ -268,35 +268,23 @@ impl CatalogEntry {
 
     /// The default value for an argument position, when declared.
     pub fn param_default(&self, index: usize) -> Option<&str> {
-        self.param_defaults
-            .get(index)
-            .or_else(|| self.variadic.then(|| self.param_defaults.last()).flatten())
-            .and_then(Option::as_deref)
+        param_at(&self.param_defaults, index, self.variadic).and_then(Option::as_deref)
     }
 
     /// The declared enum domain for an argument position, when one exists.
     pub fn param_domain(&self, index: usize) -> Option<&str> {
-        self.param_domains
-            .get(index)
-            .or_else(|| self.variadic.then(|| self.param_domains.last()).flatten())
-            .and_then(Option::as_deref)
+        param_at(&self.param_domains, index, self.variadic).and_then(Option::as_deref)
     }
 
     /// The source-backed semantic type for an argument position, when
     /// available. Enum domains remain exposed separately by `param_domain`.
     pub fn param_type(&self, index: usize) -> Option<&str> {
-        self.param_types
-            .get(index)
-            .or_else(|| self.variadic.then(|| self.param_types.last()).flatten())
-            .and_then(Option::as_deref)
+        param_at(&self.param_types, index, self.variadic).and_then(Option::as_deref)
     }
 
     /// The contextual literal substitutions for an argument position.
     pub fn param_coercions(&self, index: usize) -> Option<&ParamCoercions> {
-        self.param_coercions
-            .get(index)
-            .or_else(|| self.variadic.then(|| self.param_coercions.last()).flatten())
-            .and_then(Option::as_ref)
+        param_at(&self.param_coercions, index, self.variadic).and_then(Option::as_ref)
     }
 
     /// The source-backed return type of a Value, when available.
@@ -310,6 +298,12 @@ impl CatalogEntry {
     }
 }
 
+fn param_at<T>(values: &[T], index: usize, variadic: bool) -> Option<&T> {
+    values
+        .get(index)
+        .or_else(|| variadic.then(|| values.last()).flatten())
+}
+
 /// One enum member within a domain.
 #[derive(Debug, Clone)]
 pub struct EnumMember {
@@ -320,16 +314,13 @@ pub struct EnumMember {
 impl EnumMember {
     /// The localized spelling of this member in `locale`, when declared.
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
-        self.aliases
-            .get(locale)
-            .and_then(|spellings| spellings.first())
-            .map(String::as_str)
+        spelling(&self.aliases, locale)
     }
 
     /// Every reviewed localized spelling of this enum member, with the first
     /// spelling reserved for deterministic emission.
     pub fn spellings(&self, locale: &Locale) -> &[String] {
-        self.aliases.get(locale).map(Vec::as_slice).unwrap_or(&[])
+        spellings_for(&self.aliases, locale)
     }
 }
 
@@ -343,10 +334,7 @@ pub struct EnumDomain {
 
 impl EnumDomain {
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
-        self.aliases
-            .get(locale)
-            .and_then(|spellings| spellings.first())
-            .map(String::as_str)
+        spelling(&self.aliases, locale)
     }
 }
 
@@ -940,20 +928,20 @@ impl Catalog {
                 primary
             )));
         }
-        let param_names = if item.param_names.is_empty() {
-            item.params.clone()
-        } else {
-            item.param_names.clone()
+        let param_names = match item.param_names {
+            names if names.is_empty() => None,
+            names if names.len() != item.params.len() => {
+                return Err(CatalogError::validation(format!(
+                    "{} '{}' declares {} param names for {} params",
+                    kind.as_str(),
+                    item.id,
+                    names.len(),
+                    item.params.len()
+                )));
+            }
+            names if names == item.params => None,
+            names => Some(names),
         };
-        if param_names.len() != item.params.len() {
-            return Err(CatalogError::validation(format!(
-                "{} '{}' declares {} param names for {} params",
-                kind.as_str(),
-                item.id,
-                param_names.len(),
-                item.params.len()
-            )));
-        }
         self.by_id[kind.as_index()].insert(item.id.clone(), index);
         let item_id = item.id.clone();
         self.entries.push(CatalogEntry {
@@ -1036,47 +1024,20 @@ impl Catalog {
     /// Every declared `paramDomains` domain must name a declared enum domain.
     fn validate_param_domains(&self) -> Result<()> {
         for entry in &self.entries {
-            if entry.param_names.len() != entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares param names that do not match params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            if entry.param_aliases.len() > entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares more parameter alias sets than params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            if entry.param_domains.len() > entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares more param domains than params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            if entry.param_defaults.len() > entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares more param defaults than params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            if entry.param_types.len() > entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares more param types than params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            if entry.param_coercions.len() > entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares more param coercions than params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
+            for (name, count) in [
+                ("parameter alias sets", entry.param_aliases.len()),
+                ("param domains", entry.param_domains.len()),
+                ("param defaults", entry.param_defaults.len()),
+                ("param types", entry.param_types.len()),
+                ("param coercions", entry.param_coercions.len()),
+            ] {
+                if count > entry.params.len() {
+                    return Err(CatalogError::validation(format!(
+                        "{} '{}' declares more {name} than params",
+                        entry.kind.as_str(),
+                        entry.id
+                    )));
+                }
             }
             if entry.kind != Kind::Value && entry.return_type.is_some() {
                 return Err(CatalogError::validation(format!(

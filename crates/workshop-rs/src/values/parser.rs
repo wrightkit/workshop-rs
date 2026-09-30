@@ -123,7 +123,7 @@ impl ParseContext<'_> {
                     Some(TokenKind::Op(equal)) if equal == "="
                 );
                 if !compound_assignment
-                    && (is_comparison(&op)
+                    && (wir::is_comparison_operator(&op)
                         || matches!(op.as_str(), "and" | "or" | "+" | "-" | "*" | "/" | "%"))
                 {
                     self.pos += 1;
@@ -1026,29 +1026,8 @@ impl ParseContext<'_> {
                     kind: TokenKind::Colon,
                     ..
                 }) => {
-                    self.pos += 1;
-                    if !matches!(
-                        self.peek(),
-                        Some(Token {
-                            kind: TokenKind::RParen,
-                            ..
-                        })
-                    ) {
-                        let _ = self.phrase()?;
-                    }
-                    match self.peek() {
-                        Some(Token {
-                            kind: TokenKind::Comma,
-                            ..
-                        }) => self.pos += 1,
-                        Some(Token {
-                            kind: TokenKind::RParen,
-                            ..
-                        }) => break,
-                        Some(token) => return Err(self.malformed("expected ',' or ')'", &token)),
-                        None => {
-                            return Err(self.malformed("unexpected end of value call", self.eof()));
-                        }
+                    if self.named_argument_separator()? {
+                        break;
                     }
                 }
                 _ => break,
@@ -1107,6 +1086,34 @@ impl ParseContext<'_> {
         )))
     }
 
+    fn named_argument_separator(&mut self) -> Result<bool> {
+        self.pos += 1;
+        if !matches!(
+            self.peek(),
+            Some(Token {
+                kind: TokenKind::RParen,
+                ..
+            })
+        ) {
+            let _ = self.phrase()?;
+        }
+        match self.peek() {
+            Some(Token {
+                kind: TokenKind::Comma,
+                ..
+            }) => {
+                self.pos += 1;
+                Ok(false)
+            }
+            Some(Token {
+                kind: TokenKind::RParen,
+                ..
+            }) => Ok(true),
+            Some(token) => Err(self.malformed(r"expected ',' or ')'", &token)),
+            None => Err(self.malformed("unexpected end of value call", self.eof())),
+        }
+    }
+
     pub(crate) fn opaque_value_args(&mut self) -> Result<Vec<wir::ValueId>> {
         let mut args = Vec::new();
         if matches!(self.peek().map(|token| token.kind), Some(TokenKind::RParen)) {
@@ -1119,29 +1126,8 @@ impl ParseContext<'_> {
                     kind: TokenKind::Colon,
                     ..
                 }) => {
-                    self.pos += 1;
-                    if !matches!(
-                        self.peek(),
-                        Some(Token {
-                            kind: TokenKind::RParen,
-                            ..
-                        })
-                    ) {
-                        let _ = self.phrase()?;
-                    }
-                    match self.peek() {
-                        Some(Token {
-                            kind: TokenKind::Comma,
-                            ..
-                        }) => self.pos += 1,
-                        Some(Token {
-                            kind: TokenKind::RParen,
-                            ..
-                        }) => break,
-                        Some(token) => return Err(self.malformed("expected ',' or ')'", &token)),
-                        None => {
-                            return Err(self.malformed("unexpected end of value call", self.eof()));
-                        }
+                    if self.named_argument_separator()? {
+                        break;
                     }
                 }
                 Some(Token {

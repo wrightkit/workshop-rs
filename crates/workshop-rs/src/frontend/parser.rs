@@ -508,10 +508,6 @@ impl<'a> ParseContext<'a> {
     }
 }
 
-pub(crate) fn is_comparison(op: &str) -> bool {
-    matches!(op, "==" | "!=" | "<" | "<=" | ">" | ">=")
-}
-
 pub(crate) fn canonical_keyword(keyword: &str) -> &str {
     static KEYWORDS: OnceLock<HashMap<String, String>> = OnceLock::new();
     KEYWORDS

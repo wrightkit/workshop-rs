@@ -126,18 +126,7 @@ impl SourceDocument {
         range: Range<usize>,
         replacement: impl Into<String>,
     ) -> Result<SourceEdit, SourceEditError> {
-        if range.start > range.end
-            || !self.text.is_char_boundary(range.start)
-            || !self.text.is_char_boundary(range.end)
-            || range.end > self.text.len()
-        {
-            return Err(SourceEditError::InvalidRange);
-        }
-        Ok(SourceEdit {
-            expected: self.text[range.clone()].to_string(),
-            range,
-            replacement: replacement.into(),
-        })
+        SourceEdit::from_source(&self.text, range, replacement)
     }
 
     /// Create a checked replacement for a semantic span.
@@ -207,6 +196,26 @@ pub struct SourceEdit {
 }
 
 impl SourceEdit {
+    /// Create a checked edit from an existing source buffer.
+    pub(crate) fn from_source(
+        source: &str,
+        range: Range<usize>,
+        replacement: impl Into<String>,
+    ) -> Result<Self, SourceEditError> {
+        if range.start > range.end
+            || !source.is_char_boundary(range.start)
+            || !source.is_char_boundary(range.end)
+            || range.end > source.len()
+        {
+            return Err(SourceEditError::InvalidRange);
+        }
+        Ok(Self {
+            expected: source[range.clone()].to_string(),
+            range,
+            replacement: replacement.into(),
+        })
+    }
+
     pub fn range(&self) -> Range<usize> {
         self.range.clone()
     }
@@ -291,6 +300,29 @@ fn find_line_comments(source: &str) -> Vec<SourceComment> {
         }
     }
     comments
+}
+
+/// Resolve a 1-based line/column [`Position`] to a UTF-8 byte offset in
+/// `source` by scanning from the start. [`SourceDocument`] callers should
+/// prefer its line-indexed `byte_offset` instead.
+pub(crate) fn byte_offset(source: &str, position: Position) -> Option<usize> {
+    if !position.is_valid() {
+        return None;
+    }
+    let mut line = 1;
+    let mut col = 1;
+    for (index, character) in source.char_indices() {
+        if line == position.line && col == position.col {
+            return Some(index);
+        }
+        if character == '\n' {
+            line += 1;
+            col = 1;
+        } else {
+            col += 1;
+        }
+    }
+    (line == position.line && col == position.col).then_some(source.len())
 }
 
 fn line_starts(source: &str) -> Vec<usize> {

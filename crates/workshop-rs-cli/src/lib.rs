@@ -8,6 +8,7 @@
 
 use std::path::{Path, PathBuf};
 
+use workshop_rs::Program;
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::convert::{self, ConvertOptions};
 use workshop_rs::detect;
@@ -138,6 +139,20 @@ fn resolve_parse_locale(
     detect::resolve_locale(input, catalog, explicit.as_ref()).map_err(|error| error.to_string())
 }
 
+fn parse_file(
+    file: &Path,
+    explicit_locale: Option<Locale>,
+) -> Result<(Catalog, Locale, Program), String> {
+    let (catalog, input) = match (catalog(), read_file(file)) {
+        (Ok(catalog), Ok(input)) => (catalog, input),
+        (Err(error), _) | (_, Err(error)) => return Err(error),
+    };
+    let locale = resolve_parse_locale(&input, &catalog, explicit_locale)?;
+    let program = parser::parse_with_context(&input, &catalog, &locale, &catalog)
+        .map_err(|error| error.to_string())?;
+    Ok((catalog, locale, program))
+}
+
 fn parse_command(args: Vec<String>) -> i32 {
     let mut parser = ArgParser::new(args);
     let mut file: Option<PathBuf> = None;
@@ -156,22 +171,8 @@ fn parse_command(args: Vec<String>) -> i32 {
     let Some(file) = file else {
         return usage_error("parse requires a file argument");
     };
-    let (catalog, input) = match (catalog(), read_file(&file)) {
-        (Ok(catalog), Ok(input)) => (catalog, input),
-        (Err(error), _) | (_, Err(error)) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
-    };
-    let locale = match resolve_parse_locale(&input, &catalog, locale) {
-        Ok(locale) => locale,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
-    };
-    let program = match parser::parse_with_context(&input, &catalog, &locale, &catalog) {
-        Ok(program) => program,
+    let (_, _, program) = match parse_file(&file, locale) {
+        Ok(parsed) => parsed,
         Err(error) => {
             eprintln!("workshop-rs-cli: {error}");
             return 1;
@@ -208,22 +209,8 @@ fn emit_command(args: Vec<String>) -> i32 {
     let Some(file) = file else {
         return usage_error("emit requires a file argument");
     };
-    let (catalog, input) = match (catalog(), read_file(&file)) {
-        (Ok(catalog), Ok(input)) => (catalog, input),
-        (Err(error), _) | (_, Err(error)) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
-    };
-    let locale = match resolve_parse_locale(&input, &catalog, locale) {
-        Ok(locale) => locale,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
-    };
-    let program = match parser::parse_with_context(&input, &catalog, &locale, &catalog) {
-        Ok(program) => program,
+    let (catalog, locale, program) = match parse_file(&file, locale) {
+        Ok(parsed) => parsed,
         Err(error) => {
             eprintln!("workshop-rs-cli: {error}");
             return 1;
