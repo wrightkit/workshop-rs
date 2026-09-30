@@ -87,6 +87,14 @@ write changes only the typed leaf value, preserving its span and all unrelated
 settings structure; inserting or resizing a source list is rejected so an
 edit cannot silently become whole-tree regeneration.
 
+`check_emission(&settings)` validates a programmatically built `Settings`
+tree against the emission table without emitting, reporting every member the
+emitter would reject. `gamemodes.<mode>` members additionally resolve through
+the reviewed `gamemodes.general` leaf set (the pinned oracle's schema merge;
+`elimination` inherits only its copied subset), and an inherited path shares
+the general setting's `SettingId` and definition — typed reads and writes go
+through the `gamemodes.general.<key>` identity.
+
 For an edit that must retain the original Workshop text, use
 `SettingDefinition::source_edit(source, settings, locale, target, value)`.
 It produces a `SettingSourceEdit` for the existing scalar value and verifies

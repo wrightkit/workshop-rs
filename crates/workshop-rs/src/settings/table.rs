@@ -984,10 +984,73 @@ pub(crate) static ENUM_MEMBERS: &[EnumMember] = &[
 ];
 
 /// Look up a settings leaf entry by its exact path.
+///
+/// `gamemodes.<mode>` groups inherit the `gamemodes.general` leaf set: the
+/// pinned oracle's settings schema merges `general.values` into every declared
+/// mode, with `elimination` inheriting only [`ELIMINATION_GENERAL_KEYS`]
+/// (source: `computeCustomGameSettingsSchema` in the pinned 9.7.10 oracle).
+/// The fallback resolves to the same `general` table entry, so an inherited
+/// per-mode path shares that entry's canonical identity.
 pub(crate) fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
+    exact_entry(path).or_else(|| mode_inherited_entry(path))
+}
+
+fn exact_entry(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
     entries().find(|entry| {
         entry.path.len() == path.len() && entry.path.iter().zip(path.iter()).all(|(a, b)| a == b)
     })
+}
+
+/// The `gamemodes.general` leaf keys `elimination` inherits (the pinned
+/// oracle's restricted copy list; every other declared mode inherits the full
+/// general set).
+static ELIMINATION_GENERAL_KEYS: &[&str] = &[
+    "disabledMaps",
+    "enableEnemyHealthBars",
+    "enableKillCam",
+    "enableKillFeed",
+    "enableSkins",
+    "enabledMaps",
+    "gamemodeStartTrigger",
+    "healthPackRespawnTime%",
+    "perkEliminationCatchupLevelAmount%",
+    "perkGeneration%",
+    "spawnHealthPacks",
+    "teamOverlay",
+];
+
+fn mode_inherited_entry(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
+    let [
+        PathPart::Part("gamemodes"),
+        PathPart::Part(mode),
+        PathPart::Part(key),
+    ] = path
+    else {
+        return None;
+    };
+    if *mode == "general" {
+        return None;
+    }
+    let inherits = if *mode == "elimination" {
+        ELIMINATION_GENERAL_KEYS.contains(key)
+    } else {
+        // A mode with declared entries is a reviewed mode slot and inherits
+        // the general leaf set.
+        entries().any(|entry| {
+            matches!(
+                entry.path,
+                [PathPart::Part("gamemodes"), PathPart::Part(declared), ..] if *declared == *mode
+            )
+        })
+    };
+    if !inherits {
+        return None;
+    }
+    exact_entry(&[
+        PathPart::Part("gamemodes"),
+        PathPart::Part("general"),
+        PathPart::Part(key),
+    ])
 }
 
 /// Iterate the reviewed settings inventory with the hand-written projection
