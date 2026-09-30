@@ -81,8 +81,7 @@ fn event_player_member_assignment_emits_action_reparsable_syntax() {
         emitted.contains("(Event Player).ready = False;"),
         "{emitted}"
     );
-    let reparsed = internal::parse(&emitted);
-    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
+    internal::assert_reparse_equivalent(&program, &emitted);
 }
 
 #[test]
@@ -227,8 +226,7 @@ fn remove_array_operations_preserve_distinct_identities() {
         emitted.matches("Remove From Array By Value").count() >= 4,
         "{emitted}"
     );
-    let reparsed = internal::parse(&emitted);
-    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
+    internal::assert_reparse_equivalent(&program, &emitted);
 
     let invalid_modify = r#"
         variables { global: 0: g }
@@ -292,8 +290,7 @@ fn ambiguous_enum_emission_preserves_a_shared_source_locale_alias() {
     let program = internal::parse_in(source, &locale);
     let emitted = internal::emit_in(&program, &locale);
     assert!(emitted.contains("左"), "{emitted}");
-    let reparsed = internal::parse_in(&emitted, &locale);
-    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
+    internal::assert_reparse_equivalent_in(&program, &emitted, &locale);
 }
 
 #[test]
@@ -376,8 +373,7 @@ fn native_hud_actions_use_the_generic_catalog_path() {
         .expect("native HUD action validates");
 
     let emitted = internal::emit(&program);
-    let reparsed = internal::parse(&emitted);
-    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
+    internal::assert_reparse_equivalent(&program, &emitted);
 }
 
 #[test]
@@ -625,8 +621,7 @@ fn settings_emission_reparses_into_equivalent_wir() {
     let program = program_with_settings(pixelart_settings());
     let emitted = internal::emit(&program);
     assert!(emitted.starts_with("settings {"));
-    let reparsed = internal::parse(&emitted);
-    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
+    internal::assert_reparse_equivalent(&program, &emitted);
 }
 
 #[test]

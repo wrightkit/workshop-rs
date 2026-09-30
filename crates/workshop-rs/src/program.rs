@@ -56,6 +56,24 @@ struct ActionProvenance {
     arguments: Vec<ValueProvenance>,
 }
 
+/// A provenance node carrying an authored span; shared by the child-slot
+/// writer used by the condition/action span setters.
+trait SpanSlot {
+    fn span_slot(&mut self) -> &mut Option<Span>;
+}
+
+impl SpanSlot for ValueProvenance {
+    fn span_slot(&mut self) -> &mut Option<Span> {
+        &mut self.span
+    }
+}
+
+impl SpanSlot for ActionProvenance {
+    fn span_slot(&mut self) -> &mut Option<Span> {
+        &mut self.span
+    }
+}
+
 /// The recorded span of one value node and its children, mirroring the
 /// structure of the public [`Value`] tree.
 #[derive(Debug, Clone, Default)]
@@ -188,20 +206,17 @@ impl Program {
         condition: usize,
         span: Option<Span>,
     ) -> std::result::Result<(), SourceMappingError> {
-        self.validate_span(span)?;
-        let condition_count = self
-            .rules
-            .get(rule)
-            .ok_or(SourceMappingError::InvalidRule(rule))?
-            .conditions
-            .len();
-        if condition >= condition_count {
-            return Err(SourceMappingError::InvalidCondition { rule, condition });
-        }
-        let rule_data = self.rule_provenance_mut(rule)?;
-        fit(&mut rule_data.conditions, condition_count);
-        rule_data.conditions[condition].span = span;
-        Ok(())
+        self.set_child_span(
+            rule,
+            condition,
+            span,
+            |rule| rule.conditions.len(),
+            |rule, index| SourceMappingError::InvalidCondition {
+                rule,
+                condition: index,
+            },
+            |rule_data| &mut rule_data.conditions,
+        )
     }
 
     /// Attach the authored span of a public action in its linear rule order.
@@ -211,19 +226,43 @@ impl Program {
         action: usize,
         span: Option<Span>,
     ) -> std::result::Result<(), SourceMappingError> {
+        self.set_child_span(
+            rule,
+            action,
+            span,
+            |rule| rule.actions.len(),
+            |rule, index| SourceMappingError::InvalidAction {
+                rule,
+                action: index,
+            },
+            |rule_data| &mut rule_data.actions,
+        )
+    }
+
+    /// Shared span setter for condition/action provenance slots: validates the
+    /// span, bounds-checks the child index against the public rule shape, then
+    /// resizes and writes the provenance slot.
+    fn set_child_span<T: SpanSlot + Default>(
+        &mut self,
+        rule: usize,
+        index: usize,
+        span: Option<Span>,
+        count: impl Fn(&crate::Rule) -> usize,
+        invalid: impl Fn(usize, usize) -> SourceMappingError,
+        slots: impl Fn(&mut RuleProvenance) -> &mut Vec<T>,
+    ) -> std::result::Result<(), SourceMappingError> {
         self.validate_span(span)?;
-        let action_count = self
+        let child_count = self
             .rules
             .get(rule)
-            .ok_or(SourceMappingError::InvalidRule(rule))?
-            .actions
-            .len();
-        if action >= action_count {
-            return Err(SourceMappingError::InvalidAction { rule, action });
+            .ok_or(SourceMappingError::InvalidRule(rule))
+            .map(count)?;
+        if index >= child_count {
+            return Err(invalid(rule, index));
         }
         let rule_data = self.rule_provenance_mut(rule)?;
-        fit(&mut rule_data.actions, action_count);
-        rule_data.actions[action].span = span;
+        fit(slots(rule_data), child_count);
+        *slots(rule_data)[index].span_slot() = span;
         Ok(())
     }
 
@@ -627,10 +666,7 @@ impl DeclarationTable {
         }
     }
 
-    fn slots<'a>(
-        self,
-        provenance: &'a mut ProgramProvenance,
-    ) -> &'a mut Vec<DeclarationProvenance> {
+    fn slots(self, provenance: &mut ProgramProvenance) -> &mut Vec<DeclarationProvenance> {
         match self {
             Self::GlobalVariables => &mut provenance.global_variables,
             Self::PlayerVariables => &mut provenance.player_variables,

@@ -65,3 +65,17 @@ pub(crate) fn assert_emit_round_trip(program: &wir::Program) -> String {
     assert_eq!(emitted, emit(&reparsed), "emission must be a fixed point");
     emitted
 }
+
+/// Reparse `emitted` and assert structural equivalence with `program`.
+pub(crate) fn assert_reparse_equivalent(program: &wir::Program, emitted: &str) {
+    assert_reparse_equivalent_in(program, emitted, &common::en())
+}
+
+/// Locale-parameterized [`assert_reparse_equivalent`].
+pub(crate) fn assert_reparse_equivalent_in(program: &wir::Program, emitted: &str, locale: &Locale) {
+    let reparsed = parse_in(emitted, locale);
+    assert!(
+        roundtrip::equivalent_wir(program, &reparsed),
+        "emitted text must reparse to an equivalent WIR program"
+    );
+}

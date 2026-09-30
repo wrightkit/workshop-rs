@@ -54,6 +54,29 @@ impl ParseContext<'_> {
         Ok(conditions)
     }
 
+    /// `player, name` — the leading arguments of the player-variable
+    /// assignment/chase forms: a player value and a variable name phrase.
+    /// Returns the player value, variable id, and the name span.
+    fn player_variable_arg(&mut self) -> Result<(wir::ValueId, wir::PlayerVarId, Span)> {
+        let player = self.value()?;
+        self.expect(TokenKind::Comma, "expected ',' after player")?;
+        let (name, name_start, name_end) = self.phrase()?;
+        let variable = self.player_by_name(&name)?;
+        Ok((
+            player,
+            variable,
+            Span::new(self.file(), name_start, name_end),
+        ))
+    }
+
+    /// `name` — the single argument of the global-variable forms.
+    /// Returns the variable id and the name span.
+    fn global_variable_arg(&mut self) -> Result<(wir::GlobalVarId, Span)> {
+        let (name, name_start, name_end) = self.phrase()?;
+        let variable = self.global_by_name(&name)?;
+        Ok((variable, Span::new(self.file(), name_start, name_end)))
+    }
+
     pub(crate) fn actions_section(&mut self) -> Result<Vec<wir::ActionId>> {
         self.expect_keyword("actions")?;
         self.expect(TokenKind::LBrace, "expected '{' after 'actions'")?;
@@ -630,8 +653,7 @@ impl ParseContext<'_> {
             TokenKind::LParen,
             "expected '(' after 'For Global Variable'",
         )?;
-        let (name, name_start, name_end) = self.phrase()?;
-        let variable = self.global_by_name(&name)?;
+        let (variable, target_span) = self.global_variable_arg()?;
         self.expect(TokenKind::Comma, "expected ',' after loop variable")?;
         let start_value = self.value()?;
         self.expect(TokenKind::Comma, "expected ',' after start")?;
@@ -649,7 +671,7 @@ impl ParseContext<'_> {
             step,
             body,
             span: Some(Span::new(self.file(), start, end)),
-            target_span: Some(Span::new(self.file(), name_start, name_end)),
+            target_span: Some(target_span),
         };
         Ok(self.target.actions.push(action))
     }
@@ -677,10 +699,7 @@ impl ParseContext<'_> {
             TokenKind::LParen,
             "expected '(' after 'For Player Variable'",
         )?;
-        let player = self.value()?;
-        self.expect(TokenKind::Comma, "expected ',' after loop player")?;
-        let (name, name_start, name_end) = self.phrase()?;
-        let variable = self.player_by_name(&name)?;
+        let (player, variable, name_span) = self.player_variable_arg()?;
         self.expect(TokenKind::Comma, "expected ',' after loop variable")?;
         let start_value = self.value()?;
         self.expect(TokenKind::Comma, "expected ',' after start")?;
@@ -699,7 +718,7 @@ impl ParseContext<'_> {
             step,
             body,
             span: Some(Span::new(self.file(), start, end)),
-            target_span: Some(Span::new(self.file(), name_start, name_end)),
+            target_span: Some(name_span),
         };
         Ok(self.target.actions.push(action))
     }
@@ -728,79 +747,75 @@ impl ParseContext<'_> {
             .resolve(Kind::Structural, &self.locale, &phrase)
         {
             Some(entry) => match entry.id.as_str() {
-                "setGlobalVariable" => {
+                "setGlobalVariable" | "modifyGlobalVariable" => {
+                    let modify = entry.id == "modifyGlobalVariable";
                     self.expect(
                         TokenKind::LParen,
-                        "expected '(' after 'Set Global Variable'",
+                        "expected '(' after 'Set/Modify Global Variable'",
                     )?;
-                    let (name, name_start, name_end) = self.phrase()?;
-                    let variable = self.global_by_name(&name)?;
+                    let (variable, target_span) = self.global_variable_arg()?;
                     self.expect(TokenKind::Comma, "expected ',' after variable")?;
+                    let op = if modify {
+                        let op = self.modify_op()?;
+                        self.expect(TokenKind::Comma, "expected ',' after modify operator")?;
+                        Some(op)
+                    } else {
+                        None
+                    };
                     let value = self.value()?;
                     self.expect(TokenKind::RParen, "expected ')'")?;
                     self.expect(TokenKind::Semi, "expected ';'")?;
-                    Ok(self.target.actions.push(Action::SetGlobalVariable {
-                        variable,
-                        value,
-                        span: Some(Span::new(self.file(), start, end)),
-                        target_span: Some(Span::new(self.file(), name_start, name_end)),
+                    let span = Some(Span::new(self.file(), start, end));
+                    let target_span = Some(target_span);
+                    Ok(self.target.actions.push(match op {
+                        Some(op) => Action::ModifyGlobalVariable {
+                            variable,
+                            op,
+                            value,
+                            span,
+                            target_span,
+                        },
+                        None => Action::SetGlobalVariable {
+                            variable,
+                            value,
+                            span,
+                            target_span,
+                        },
                     }))
                 }
-                "modifyGlobalVariable" => {
+                "setPlayerVariable" | "modifyPlayerVariable" => {
+                    let modify = entry.id == "modifyPlayerVariable";
                     self.expect(TokenKind::LParen, "expected '('")?;
-                    let (name, name_start, name_end) = self.phrase()?;
-                    let variable = self.global_by_name(&name)?;
+                    let (player, variable, target_span) = self.player_variable_arg()?;
                     self.expect(TokenKind::Comma, "expected ',' after variable")?;
-                    let op = self.modify_op()?;
-                    self.expect(TokenKind::Comma, "expected ',' after modify operator")?;
+                    let op = if modify {
+                        let op = self.modify_op()?;
+                        self.expect(TokenKind::Comma, "expected ',' after modify operator")?;
+                        Some(op)
+                    } else {
+                        None
+                    };
                     let value = self.value()?;
                     self.expect(TokenKind::RParen, "expected ')'")?;
                     self.expect(TokenKind::Semi, "expected ';'")?;
-                    Ok(self.target.actions.push(Action::ModifyGlobalVariable {
-                        variable,
-                        op,
-                        value,
-                        span: Some(Span::new(self.file(), start, end)),
-                        target_span: Some(Span::new(self.file(), name_start, name_end)),
-                    }))
-                }
-                "setPlayerVariable" => {
-                    self.expect(TokenKind::LParen, "expected '('")?;
-                    let player = self.value()?;
-                    self.expect(TokenKind::Comma, "expected ',' after player")?;
-                    let (name, name_start, name_end) = self.phrase()?;
-                    let variable = self.player_by_name(&name)?;
-                    self.expect(TokenKind::Comma, "expected ',' after variable")?;
-                    let value = self.value()?;
-                    self.expect(TokenKind::RParen, "expected ')'")?;
-                    self.expect(TokenKind::Semi, "expected ';'")?;
-                    Ok(self.target.actions.push(Action::SetPlayerVariable {
-                        player,
-                        variable,
-                        value,
-                        span: Some(Span::new(self.file(), start, end)),
-                        target_span: Some(Span::new(self.file(), name_start, name_end)),
-                    }))
-                }
-                "modifyPlayerVariable" => {
-                    self.expect(TokenKind::LParen, "expected '('")?;
-                    let player = self.value()?;
-                    self.expect(TokenKind::Comma, "expected ',' after player")?;
-                    let (name, name_start, name_end) = self.phrase()?;
-                    let variable = self.player_by_name(&name)?;
-                    self.expect(TokenKind::Comma, "expected ',' after variable")?;
-                    let op = self.modify_op()?;
-                    self.expect(TokenKind::Comma, "expected ',' after modify operator")?;
-                    let value = self.value()?;
-                    self.expect(TokenKind::RParen, "expected ')'")?;
-                    self.expect(TokenKind::Semi, "expected ';'")?;
-                    Ok(self.target.actions.push(Action::ModifyPlayerVariable {
-                        player,
-                        variable,
-                        op,
-                        value,
-                        span: Some(Span::new(self.file(), start, end)),
-                        target_span: Some(Span::new(self.file(), name_start, name_end)),
+                    let span = Some(Span::new(self.file(), start, end));
+                    let target_span = Some(target_span);
+                    Ok(self.target.actions.push(match (op, modify) {
+                        (Some(op), true) => Action::ModifyPlayerVariable {
+                            player,
+                            variable,
+                            op,
+                            value,
+                            span,
+                            target_span,
+                        },
+                        _ => Action::SetPlayerVariable {
+                            player,
+                            variable,
+                            value,
+                            span,
+                            target_span,
+                        },
                     }))
                 }
                 "forGlobalVariable" => self.for_group(start),
@@ -850,11 +865,8 @@ impl ParseContext<'_> {
                 match action.id.as_str() {
                     "chasePlayerVariableAtRate" | "chasePlayerVariableOverTime" => {
                         self.expect(TokenKind::LParen, "expected '('")?;
-                        let player = self.value()?;
-                        self.expect(TokenKind::Comma, "expected ',' after player")?;
-                        let (name, name_start, name_end) = self.phrase()?;
-                        let variable = self.player_by_name(&name)?;
-                        let name_span = Some(Span::new(self.file(), name_start, name_end));
+                        let (player, variable, name_span) = self.player_variable_arg()?;
+                        let name_span = Some(name_span);
                         let mut args = Vec::with_capacity(4);
                         args.push(
                             self.target.values.push(
@@ -927,19 +939,12 @@ impl ParseContext<'_> {
                     }
                     "stopChasingPlayerVariable" => {
                         self.expect(TokenKind::LParen, "expected '('")?;
-                        let player = self.value()?;
-                        self.expect(TokenKind::Comma, "expected ',' after player")?;
-                        let (name, name_start, name_end) = self.phrase()?;
-                        let variable = self.player_by_name(&name)?;
+                        let (player, variable, name_span) = self.player_variable_arg()?;
                         self.expect(TokenKind::RParen, "expected ')'")?;
                         self.expect(TokenKind::Semi, "expected ';' after action")?;
                         let player_variable = self.target.values.push(
                             ValueNode::new(Value::PlayerVariable { player, variable }, None)
-                                .with_identifier(Some(Span::new(
-                                    self.file(),
-                                    name_start,
-                                    name_end,
-                                ))),
+                                .with_identifier(Some(name_span)),
                         );
                         return Ok(self.target.actions.push(Action::Call {
                             name: action.id.clone(),
@@ -982,25 +987,9 @@ impl ParseContext<'_> {
                 locale: self.locale.clone(),
                 span: Some(Span::new(self.file(), start, end)),
             })?;
-        let op = match entry.id.as_str() {
-            "add" => ModifyOp::Add,
-            "subtract" => ModifyOp::Subtract,
-            "multiply" => ModifyOp::Multiply,
-            "divide" => ModifyOp::Divide,
-            "modulo" => ModifyOp::Modulo,
-            "min" => ModifyOp::Min,
-            "max" => ModifyOp::Max,
-            "raiseToPower" => ModifyOp::RaiseToPower,
-            "appendToArray" => ModifyOp::AppendToArray,
-            "removeFromArrayByValue" => ModifyOp::RemoveFromArrayByValue,
-            "removeFromArrayByIndex" => ModifyOp::RemoveFromArrayByIndex,
-            other => {
-                return Err(WorkshopError::Unsupported {
-                    message: format!("unsupported modify operator '{other}'"),
-                    span: Some(Span::new(self.file(), start, end)),
-                });
-            }
-        };
-        Ok(op)
+        ModifyOp::from_catalog_id(&entry.id).ok_or_else(|| WorkshopError::Unsupported {
+            message: format!("unsupported modify operator '{}'", entry.id),
+            span: Some(Span::new(self.file(), start, end)),
+        })
     }
 }

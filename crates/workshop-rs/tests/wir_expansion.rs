@@ -141,7 +141,7 @@ fn indexed_members_and_native_break_controls_have_one_canonical_contract() {
 
     let emitted = internal::emit_in(&program, &locale);
     let reparsed = internal::parse_in(&emitted, &locale);
-    assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
+    internal::assert_reparse_equivalent_in(&program, &emitted, &locale);
     assert_eq!(emitted, internal::emit_in(&reparsed, &locale));
 }
 

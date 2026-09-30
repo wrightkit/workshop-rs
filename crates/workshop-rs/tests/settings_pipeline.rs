@@ -31,8 +31,7 @@ fn real_settings_fixture_parses_to_wir_and_reemits() {
 
     let emitted = internal::emit(&program);
     assert_eq!(collapse(&emitted), collapse(&source));
-    let reparsed = internal::parse(&emitted);
-    assert!(roundtrip::equivalent_wir(&program, &reparsed));
+    internal::assert_reparse_equivalent(&program, &emitted);
 }
 
 #[test]
@@ -97,8 +96,7 @@ fn capture_the_flag_settings_emit_and_reparse_in_zh_cn() {
     let emitted = internal::emit_in(&program, &zh);
     assert!(emitted.contains("勇夺锦旗"), "{emitted}");
 
-    let reparsed = internal::parse_in(&emitted, &zh);
-    assert!(roundtrip::equivalent_wir(&program, &reparsed));
+    internal::assert_reparse_equivalent_in(&program, &emitted, &zh);
 }
 
 #[test]
@@ -191,8 +189,7 @@ fn team_deathmatch_enabled_maps_is_canonical() {
     let program = internal::parse(text);
     let emitted = internal::emit(&program);
     assert!(emitted.contains("Team Deathmatch"));
-    let reparsed = internal::parse(&emitted);
-    assert!(roundtrip::equivalent_wir(&program, &reparsed));
+    internal::assert_reparse_equivalent(&program, &emitted);
 }
 
 #[test]
@@ -234,7 +231,7 @@ fn hero_ability_names_resolve_through_gameplay_catalog_in_both_locales() {
     assert!(emitted.contains("急冻: 关"));
     assert!(emitted.contains("冰墙: 开"));
     let reparsed = internal::parse_in(&emitted, &zh);
-    assert!(roundtrip::equivalent_wir(&program, &reparsed));
+    internal::assert_reparse_equivalent_in(&program, &emitted, &zh);
     let back = internal::emit_in(&reparsed, &en);
     assert!(back.contains("Cryo-Freeze: Off"));
     assert!(back.contains("Ice Wall: On"));
@@ -290,8 +287,7 @@ fn workshop_namespace_preserves_custom_settings_without_residuals() {
         program.settings
     );
     let emitted = internal::emit_in(&program, &locale);
-    let reparsed = internal::parse_in(&emitted, &locale);
-    assert!(roundtrip::equivalent_wir(&program, &reparsed));
+    internal::assert_reparse_equivalent_in(&program, &emitted, &locale);
     assert!(emitted.contains("Custom Label: \"Keep this\""));
     assert!(emitted.contains("Custom Number: 42"));
 }

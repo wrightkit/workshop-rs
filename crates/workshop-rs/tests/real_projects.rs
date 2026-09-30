@@ -1,12 +1,10 @@
 //! Pinned real-project corpus contract and provenance checks.
 
-use common::real_projects::{
+use crate::common::real_projects::{
     REAL_PROJECT_CORPUS_ID, REAL_PROJECT_EXPECTATION, REAL_PROJECT_EXPECTATION_SCHEMA_VERSION,
     RealProjectGapKind, RealProjectStage,
 };
 use workshop_rs::{WorkshopError, rules::ResidualClassification};
-
-mod common;
 
 #[test]
 fn expectation_has_unique_pinned_case_identities() {

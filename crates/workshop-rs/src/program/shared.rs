@@ -33,6 +33,24 @@ pub enum PlayerEventKind {
 }
 
 impl PlayerEventKind {
+    /// The inverse of [`catalog_id`](Self::catalog_id).
+    pub(crate) fn from_catalog_id(id: &str) -> Option<Self> {
+        Some(match id {
+            "playerDealtDamage" => Self::DealtDamage,
+            "playerDealtFinalBlow" => Self::DealtFinalBlow,
+            "playerDealtHealing" => Self::DealtHealing,
+            "playerDealtKnockback" => Self::DealtKnockback,
+            "playerDied" => Self::Died,
+            "playerEarnedElimination" => Self::EarnedElimination,
+            "playerJoined" => Self::Joined,
+            "playerLeft" => Self::Left,
+            "playerReceivedHealing" => Self::ReceivedHealing,
+            "playerReceivedKnockback" => Self::ReceivedKnockback,
+            "playerTookDamage" => Self::TookDamage,
+            _ => return None,
+        })
+    }
+
     pub(crate) fn catalog_id(self) -> &'static str {
         match self {
             Self::DealtDamage => "playerDealtDamage",
@@ -71,6 +89,24 @@ pub enum ModifyOp {
 }
 
 impl ModifyOp {
+    /// The inverse of [`catalog_id`](Self::catalog_id).
+    pub(crate) fn from_catalog_id(id: &str) -> Option<Self> {
+        Some(match id {
+            "add" => Self::Add,
+            "subtract" => Self::Subtract,
+            "multiply" => Self::Multiply,
+            "divide" => Self::Divide,
+            "modulo" => Self::Modulo,
+            "min" => Self::Min,
+            "max" => Self::Max,
+            "raiseToPower" => Self::RaiseToPower,
+            "appendToArray" => Self::AppendToArray,
+            "removeFromArrayByValue" => Self::RemoveFromArrayByValue,
+            "removeFromArrayByIndex" => Self::RemoveFromArrayByIndex,
+            _ => return None,
+        })
+    }
+
     pub(crate) fn as_str(self) -> &'static str {
         match self {
             Self::Add => "Add",

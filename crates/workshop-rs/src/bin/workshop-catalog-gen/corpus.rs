@@ -142,81 +142,81 @@ fn data_index_at(export: &Value, sections: &[&str]) -> Index {
 /// from the canonical English spelling. The export entry is accepted only
 /// when its category, identity, GUID, and both locale values match the
 /// confirmed mapping.
+/// User-confirmed export identities keyed by `(kind, id)`: export key,
+/// category, export id, GUID, and en-US spelling.
+const CONFIRMED_IDENTITIES: &[(&str, &str, &str, &str, &str, &str, &str)] = &[
+    (
+        "action",
+        "setAllowedHeroes",
+        "actions..setAllowedHeroes",
+        "actions",
+        ".setAllowedHeroes",
+        "00000000BA5B",
+        "Set Player Allowed Heroes",
+    ),
+    (
+        "enum member",
+        "Map.LIJIANG_TOWER_LUNAR",
+        "maps.lijiangTowerLny",
+        "maps",
+        "lijiangTowerLny",
+        "000000005A33",
+        "Lijiang Tower Lunar New Year",
+    ),
+    (
+        "enum member",
+        "ProgressBarWorldReeval.VISIBLE_TO_AND_VALUES",
+        "constants.ProgressHudReeval.VISIBILITY_AND_VALUES",
+        "constants",
+        "ProgressHudReeval.VISIBILITY_AND_VALUES",
+        "0000000122EF",
+        "Visible To and Values",
+    ),
+    (
+        "enum member",
+        "Rounding.NEAREST",
+        "constants.__Rounding__.__roundToNearest__",
+        "constants",
+        "__Rounding__.__roundToNearest__",
+        "00000000C34D",
+        "To Nearest",
+    ),
+];
+
+/// Confirmed operator identities all share the `localizedStrings.{0} op {1}`
+/// export shape; only the operator glyph and GUID differ.
+const CONFIRMED_OPERATORS: &[(&str, &str)] = &[
+    ("==", "00000000BFA3"),
+    ("!=", "00000000BFA2"),
+    ("<=", "00000000BFA1"),
+    (">=", "00000000BF9F"),
+    ("<", "00000000BFA6"),
+    (">", "00000000BFA0"),
+];
+
 fn confirmed_identity_match(export: &Value, kind: &str, id: &str) -> Option<Vec<Candidate>> {
-    let (key, category, export_id, guid, en_us) = match (kind, id) {
-        ("action", "setAllowedHeroes") => (
-            "actions..setAllowedHeroes",
-            "actions",
-            ".setAllowedHeroes",
-            "00000000BA5B",
-            "Set Player Allowed Heroes",
-        ),
-        ("operator", "==") => (
-            "localizedStrings.{0} == {1}",
+    let (key, category, export_id, guid, en_us) = if kind == "operator" {
+        let (_, guid) = CONFIRMED_OPERATORS.iter().find(|(op, _)| *op == id)?;
+        (
+            format!("localizedStrings.{{0}} {id} {{1}}"),
             "localizedStrings",
-            "{0} == {1}",
-            "00000000BFA3",
-            "{0} == {1}",
-        ),
-        ("operator", "!=") => (
-            "localizedStrings.{0} != {1}",
-            "localizedStrings",
-            "{0} != {1}",
-            "00000000BFA2",
-            "{0} != {1}",
-        ),
-        ("operator", "<=") => (
-            "localizedStrings.{0} <= {1}",
-            "localizedStrings",
-            "{0} <= {1}",
-            "00000000BFA1",
-            "{0} <= {1}",
-        ),
-        ("operator", ">=") => (
-            "localizedStrings.{0} >= {1}",
-            "localizedStrings",
-            "{0} >= {1}",
-            "00000000BF9F",
-            "{0} >= {1}",
-        ),
-        ("operator", "<") => (
-            "localizedStrings.{0} < {1}",
-            "localizedStrings",
-            "{0} < {1}",
-            "00000000BFA6",
-            "{0} < {1}",
-        ),
-        ("operator", ">") => (
-            "localizedStrings.{0} > {1}",
-            "localizedStrings",
-            "{0} > {1}",
-            "00000000BFA0",
-            "{0} > {1}",
-        ),
-        ("enum member", "Map.LIJIANG_TOWER_LUNAR") => (
-            "maps.lijiangTowerLny",
-            "maps",
-            "lijiangTowerLny",
-            "000000005A33",
-            "Lijiang Tower Lunar New Year",
-        ),
-        ("enum member", "ProgressBarWorldReeval.VISIBLE_TO_AND_VALUES") => (
-            "constants.ProgressHudReeval.VISIBILITY_AND_VALUES",
-            "constants",
-            "ProgressHudReeval.VISIBILITY_AND_VALUES",
-            "0000000122EF",
-            "Visible To and Values",
-        ),
-        ("enum member", "Rounding.NEAREST") => (
-            "constants.__Rounding__.__roundToNearest__",
-            "constants",
-            "__Rounding__.__roundToNearest__",
-            "00000000C34D",
-            "To Nearest",
-        ),
-        _ => return None,
+            format!("{{0}} {id} {{1}}"),
+            *guid,
+            format!("{{0}} {id} {{1}}"),
+        )
+    } else {
+        let (_, _, key, category, export_id, guid, en_us) = CONFIRMED_IDENTITIES
+            .iter()
+            .find(|(k, i, ..)| *k == kind && *i == id)?;
+        (
+            (*key).to_string(),
+            *category,
+            (*export_id).to_string(),
+            *guid,
+            (*en_us).to_string(),
+        )
     };
-    let entry = export.get("localized")?.get(key)?;
+    let entry = export.get("localized")?.get(&key)?;
     if entry.get("category")?.as_str()? != category
         || entry.get("id")?.as_str()? != export_id
         || entry.get("guid")?.as_str()? != guid
@@ -237,7 +237,7 @@ fn confirmed_identity_match(export: &Value, kind: &str, id: &str) -> Option<Vec<
         }
     }
     Some(vec![Candidate {
-        key: key.to_string(),
+        key,
         locales: locales
             .into_iter()
             .filter_map(|(locale, value)| value.as_str().map(|value| (locale, value.to_string())))
@@ -559,32 +559,17 @@ pub(crate) fn generate(
                 .and_then(Value::as_str)
                 .ok_or_else(|| "catalog entry without id".to_string())?;
             let aliases = en_aliases(entry)?;
-            let (en, candidates) = match match_en_aliases(index, &aliases) {
-                Ok((candidates, en)) => (en, Ok(candidates)),
-                Err(reason) => (
-                    aliases[0],
-                    confirmed_identity_match(&export, kind, id).ok_or(reason),
-                ),
-            };
-            match candidates {
-                Ok(candidates) => {
-                    matched += 1;
-                    let (locale_aliases, locale_exclusions) = locale_aliases(&candidates, &locales);
-                    matches.push(Match {
-                        kind: kind.to_string(),
-                        id: id.to_string(),
-                        en: en.to_string(),
-                        locales: locale_aliases,
-                        locale_exclusions,
-                        sources: candidates.iter().map(|c| c.key.clone()).collect(),
-                    });
-                }
-                Err(reason) => excluded.push(Exclusion {
-                    kind: kind.to_string(),
-                    id: id.to_string(),
-                    en: en.to_string(),
-                    reason,
-                }),
+            if record_entry_match(
+                &export,
+                index,
+                kind,
+                id,
+                &aliases,
+                &locales,
+                &mut matches,
+                &mut excluded,
+            ) {
+                matched += 1;
             }
         }
         coverage.push((category.to_string(), matched, total));
@@ -628,34 +613,19 @@ pub(crate) fn generate(
                 .and_then(Value::as_str)
                 .ok_or_else(|| "enum member without id".to_string())?;
             let aliases = en_aliases(member)?;
-            let (en, candidates) = match match_en_aliases(index, &aliases) {
-                Ok((candidates, en)) => (en, candidates),
-                Err(reason) => {
-                    let full_id = format!("{domain_name}.{id}");
-                    match confirmed_identity_match(&export, "enum member", &full_id) {
-                        Some(candidates) => (aliases[0], candidates),
-                        None => {
-                            excluded.push(Exclusion {
-                                kind: "enum member".to_string(),
-                                id: full_id,
-                                en: aliases[0].to_string(),
-                                reason,
-                            });
-                            continue;
-                        }
-                    }
-                }
-            };
-            members_matched += 1;
-            let (locale_aliases, locale_exclusions) = locale_aliases(&candidates, &locales);
-            matches.push(Match {
-                kind: "enum member".to_string(),
-                id: format!("{domain_name}.{id}"),
-                en: en.to_string(),
-                locales: locale_aliases,
-                locale_exclusions,
-                sources: candidates.iter().map(|c| c.key.clone()).collect(),
-            });
+            let full_id = format!("{domain_name}.{id}");
+            if record_entry_match(
+                &export,
+                index,
+                "enum member",
+                &full_id,
+                &aliases,
+                &locales,
+                &mut matches,
+                &mut excluded,
+            ) {
+                members_matched += 1;
+            }
         }
     }
     coverage.push(("enums".to_string(), members_matched, members_total));
@@ -706,6 +676,52 @@ pub(crate) fn generate(
         manifest_path: &manifest_path,
         settings_out,
     }))
+}
+
+/// Match one catalog identity's en-US aliases against `index`, falling back
+/// to the user-confirmed identity table, and record the outcome. Returns
+/// whether the identity matched.
+#[allow(clippy::too_many_arguments)]
+fn record_entry_match(
+    export: &Value,
+    index: &Index,
+    kind: &str,
+    id: &str,
+    aliases: &[&str],
+    locales: &[String],
+    matches: &mut Vec<Match>,
+    excluded: &mut Vec<Exclusion>,
+) -> bool {
+    let (en, candidates) = match match_en_aliases(index, aliases) {
+        Ok((candidates, en)) => (en, Ok(candidates)),
+        Err(reason) => (
+            aliases[0],
+            confirmed_identity_match(export, kind, id).ok_or(reason),
+        ),
+    };
+    match candidates {
+        Ok(candidates) => {
+            let (locale_map, locale_exclusions) = locale_aliases(&candidates, locales);
+            matches.push(Match {
+                kind: kind.to_string(),
+                id: id.to_string(),
+                en: en.to_string(),
+                locales: locale_map,
+                locale_exclusions,
+                sources: candidates.iter().map(|c| c.key.clone()).collect(),
+            });
+            true
+        }
+        Err(reason) => {
+            excluded.push(Exclusion {
+                kind: kind.to_string(),
+                id: id.to_string(),
+                en: en.to_string(),
+                reason,
+            });
+            false
+        }
+    }
 }
 
 /// The export index for one catalog enum domain.
