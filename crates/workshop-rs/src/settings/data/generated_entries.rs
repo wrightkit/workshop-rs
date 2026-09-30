@@ -1,1710 +1,346 @@
 // Generated from the reviewed workshop-data export; do not edit by hand.
 pub(crate) static GENERATED_ENTRIES: &[TableEntry] = &[
-    entry!(
-        [PathPart::Part("extensions"), PathPart::Part("beamEffects")],
-        "Beam Effects",
-        KeyKind::Flag
-    ),
-    entry!(
-        [PathPart::Part("extensions"), PathPart::Part("beamSounds")],
-        "Beam Sounds",
-        KeyKind::Flag
-    ),
-    entry!(
-        [PathPart::Part("extensions"), PathPart::Part("buffAndDebuffSounds")],
-        "Buff and Debuff Sounds",
-        KeyKind::Flag
-    ),
-    entry!(
-        [PathPart::Part("extensions"), PathPart::Part("buffStatusEffects")],
-        "Buff Status Effects",
-        KeyKind::Flag
-    ),
-    entry!(
-        [PathPart::Part("extensions"), PathPart::Part("debuffStatusEffects")],
-        "Debuff Status Effects",
-        KeyKind::Flag
-    ),
-    entry!(
-        [PathPart::Part("extensions"), PathPart::Part("energyExplosionEffects")],
-        "Energy Explosion Effects",
-        KeyKind::Flag
-    ),
-    entry!(
-        [PathPart::Part("extensions"), PathPart::Part("explosionSounds")],
-        "Explosion Sounds",
-        KeyKind::Flag
-    ),
-    entry!(
-        [PathPart::Part("extensions"), PathPart::Part("kineticExplosionEffects")],
-        "Kinetic Explosion Effects",
-        KeyKind::Flag
-    ),
-    entry!(
-        [PathPart::Part("extensions"), PathPart::Part("playMoreEffects")],
-        "Play More Effects",
-        KeyKind::Flag
-    ),
-    entry!(
-        [PathPart::Part("extensions"), PathPart::Part("projectiles")],
-        "Projectiles",
-        KeyKind::Flag
-    ),
-    entry!(
-        [PathPart::Part("extensions"), PathPart::Part("spawnMoreDummyBots")],
-        "Spawn More Dummy Bots",
-        KeyKind::Flag
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("assault"), PathPart::Part("captureSpeed%")],
-        "Capture Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("assault"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("assault"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("assault"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("assault"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("bountyHunter"), PathPart::Part("baseScoreForKillingBountyTarget")],
-        "Base Score for Killing a Bounty Target",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("bountyHunter"), PathPart::Part("bountyIncreasePerKillAsBountyTarget")],
-        "Bounty Increase per Kill as Bounty Target",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("bountyHunter"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("bountyHunter"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("bountyHunter"), PathPart::Part("enableSelfInitiatedRespawn")],
-        "Self Initiated Respawn",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("bountyHunter"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("bountyHunter"), PathPart::Part("gameLengthInMn")],
-        "Game Length In Minutes",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("bountyHunter"), PathPart::Part("nbBountyTargets")],
-        "Bounty Target Count",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("bountyHunter"), PathPart::Part("scorePerKill")],
-        "Score per Kill",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("bountyHunter"), PathPart::Part("scorePerKillAsBountyTarget")],
-        "Score per Kill as Bounty Target",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("bountyHunter"), PathPart::Part("scoreToWin")],
-        "Score To Win",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("clash"), PathPart::Part("captureSpeed%")],
-        "Capture Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("clash"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("clash"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("clash"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("clash"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("control"), PathPart::Part("captureSpeed%")],
-        "Capture Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("control"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("control"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("control"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("control"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("control"), PathPart::Part("scoreToWin")],
-        "Score To Win",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("control"), PathPart::Part("scoringSpeed%")],
-        "Scoring Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("control"), PathPart::Part("setValidControlPoints")],
-        "Limit Valid Control Points",
-        KeyKind::Enum("setting_gamemodes_control_setValidControlPoints")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("controlAprilFools"), PathPart::Part("captureSpeed%")],
-        "Capture Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("controlAprilFools"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("controlAprilFools"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("controlAprilFools"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("controlAprilFools"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("controlAprilFools"), PathPart::Part("scoreToWin")],
-        "Score To Win",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("controlAprilFools"), PathPart::Part("scoringSpeed%")],
-        "Scoring Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("controlAprilFools"), PathPart::Part("setValidControlPoints")],
-        "Limit Valid Control Points",
-        KeyKind::Enum("setting_gamemodes_controlAprilFools_setValidControlPoints")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("enableBlitzFlagLocations")],
-        "Blitz Flag Locations",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("enableDropFlagOnDmg")],
-        "Damage Interrupts Flag Interaction",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("flagCarrierAbilities")],
-        "Flag Carrier Abilities",
-        KeyKind::Enum("setting_gamemodes_ctf_flagCarrierAbilities")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("flagDroppedLockTime")],
-        "Flag Dropped Lock Time",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("flagPickupTime")],
-        "Flag Pickup Time",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("flagReturnTime")],
-        "Flag Return Time",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("flagScoreRespawnTime")],
-        "Flag Score Respawn Time",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("gameLengthInMn")],
-        "Game Length Minutes",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("respawnSpeedBuffDuration")],
-        "Respawn Speed Buff Duration",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("scoreToWin")],
-        "Score To Win",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ctf"), PathPart::Part("teamNeedsFlagAtBaseToScore")],
-        "Team Needs Flag At Base To Score",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("drawTime")],
-        "Draw After Match Time Elapsed With No Tiebreaker",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("enableTiebreaker")],
-        "Capture Objective Tiebreaker",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("enableWallhack")],
-        "Reveal Heroes",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("heroPoolSize")],
-        "Limited Choice Pool",
-        KeyKind::Enum("setting_gamemodes_elimination_heroPoolSize")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("heroSelectionTime")],
-        "Hero Selection Time",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("heroesAvailable")],
-        "Hero Selection",
-        KeyKind::Enum("setting_gamemodes_elimination_heroesAvailable")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("restrictPreviouslyPlayedHeroes")],
-        "Restrict Previously Used Heroes",
-        KeyKind::Enum("setting_gamemodes_elimination_restrictPreviouslyPlayedHeroes")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("scoreToWin")],
-        "Score To Win",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("tiebreakerCaptureTime")],
-        "Time To Capture",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("tiebreakerTime")],
-        "Tiebreaker After Match Time Elapsed",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("elimination"), PathPart::Part("wallhackEnabledTime")],
-        "Reveal Heroes After Match Time Elapsed",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("escort"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("escort"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("escort"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("escort"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("escort"), PathPart::Part("payloadSpeed%")],
-        "Payload Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("escortAprilFools"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("escortAprilFools"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("escortAprilFools"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("escortAprilFools"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("escortAprilFools"), PathPart::Part("payloadSpeed%")],
-        "Payload Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ffa"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ffa"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ffa"), PathPart::Part("enableSelfInitiatedRespawn")],
-        "Self Initiated Respawn",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ffa"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ffa"), PathPart::Part("gameLengthInMn")],
-        "Game Length In Minutes",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("ffa"), PathPart::Part("scoreToWin")],
-        "Score To Win",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("captureSpeed%")],
-        "Capture Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("controlPointA")],
-        "Control Point A",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("controlPointB")],
-        "Control Point B",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("controlPointC")],
-        "Control Point C",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("controlPointD")],
-        "Control Point D",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("controlPointE")],
-        "Control Point E",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("firstActiveControlPoint")],
-        "First Active Control Point",
-        KeyKind::Enum("setting_gamemodes_flashpoint_firstActiveControlPoint")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("scoreToWin")],
-        "Score To Win",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpoint"), PathPart::Part("scoringSpeed%")],
-        "Scoring Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("captureSpeed%")],
-        "Capture Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("controlPointA")],
-        "Control Point A",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("controlPointB")],
-        "Control Point B",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("controlPointC")],
-        "Control Point C",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("controlPointD")],
-        "Control Point D",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("controlPointE")],
-        "Control Point E",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("firstActiveControlPoint")],
-        "First Active Control Point",
-        KeyKind::Enum("setting_gamemodes_flashpointAprilFools_firstActiveControlPoint")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("scoreToWin")],
-        "Score To Win",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("flashpointAprilFools"), PathPart::Part("scoringSpeed%")],
-        "Scoring Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("enableEnemyHealthBars")],
-        "Enemy Health Bars",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("enableHeroSwitching")],
-        "Allow Hero Switching",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("enableKillCam")],
-        "Kill Cam",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("enableKillFeed")],
-        "Kill Feed",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("enableRandomHeroes")],
-        "Respawn As Random Hero",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("enableSkins")],
-        "Skins",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("gamemodeStartTrigger")],
-        "Game Mode Start",
-        KeyKind::Enum("setting_gamemodes_general_gamemodeStartTrigger")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("healthPackRespawnTime%")],
-        "Health Pack Respawn Time Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("heroLimit")],
-        "Hero Limit",
-        KeyKind::Enum("setting_gamemodes_general_heroLimit")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("perkEliminationCatchupLevelAmount%")],
-        "Perk Elimination Catchup Level Amount",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("perkGeneration%")],
-        "Perk Generation",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("randomHeroRoleLimitPerTeam")],
-        "Random Hero Role Limit Per Team",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("respawnTime%")],
-        "Respawn Time Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("roleLimit")],
-        "Limit Roles",
-        KeyKind::Enum("setting_gamemodes_general_roleLimit")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("spawnHealthPacks")],
-        "Spawn Health Packs",
-        KeyKind::Enum("setting_gamemodes_general_spawnHealthPacks")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("tankPassiveHealthBonus")],
-        "Tank Role Passive Health Bonus",
-        KeyKind::Enum("setting_gamemodes_general_tankPassiveHealthBonus")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), PathPart::Part("teamOverlay")],
-        "Team Overlay",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybrid"), PathPart::Part("captureSpeed%")],
-        "Capture Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybrid"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybrid"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybrid"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybrid"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybrid"), PathPart::Part("payloadSpeed%")],
-        "Payload Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybridAprilFools"), PathPart::Part("captureSpeed%")],
-        "Capture Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybridAprilFools"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybridAprilFools"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybridAprilFools"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybridAprilFools"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("hybridAprilFools"), PathPart::Part("payloadSpeed%")],
-        "Payload Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("junkenstein"), PathPart::Part("difficulty")],
-        "Difficulty",
-        KeyKind::Enum("setting_gamemodes_junkenstein_difficulty")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("junkenstein"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("junkenstein"), PathPart::Part("doorHealth%")],
-        "Door Health Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("junkenstein"), PathPart::Part("enableEndless")],
-        "Endless Mode",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("junkenstein"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("practiceRange"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("practiceRange"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("practiceRange"), PathPart::Part("enableTrainingPartner")],
-        "Training Partner",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("practiceRange"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("practiceRange"), PathPart::Part("spawnTrainingBots")],
-        "Spawn Training Bots",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("practiceRange"), PathPart::Part("trainingBotsRespawnTime%")],
-        "Training Bot Respawn Time Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("push"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("push"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("push"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("push"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("push"), PathPart::Part("ts1PushSpeedModifier%")],
-        "TS-1 Push Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("push"), PathPart::Part("ts1WalkSpeedModifier%")],
-        "TS-1 Walk Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("pushAprilFools"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("pushAprilFools"), PathPart::Part("enableCompetitiveRules")],
-        "Competitive Rules",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("pushAprilFools"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("pushAprilFools"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("pushAprilFools"), PathPart::Part("ts1PushSpeedModifier%")],
-        "TS-1 Push Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("pushAprilFools"), PathPart::Part("ts1WalkSpeedModifier%")],
-        "TS-1 Walk Speed Modifier",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("skirmish"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("skirmish"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("skirmish"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("skirmish"), PathPart::Part("setValidControlPoints")],
-        "Limit Valid Control Points",
-        KeyKind::Enum("setting_gamemodes_skirmish_setValidControlPoints")
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("stadiumPracticeRange"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("stadiumPracticeRange"), PathPart::Part("enableTrainingPartner")],
-        "Training Partner",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("stadiumPracticeRange"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("stadiumPracticeRange"), PathPart::Part("spawnTrainingBots")],
-        "Spawn Training Bots",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("stadiumPracticeRange"), PathPart::Part("trainingBotsRespawnTime%")],
-        "Training Bot Respawn Time Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("tdm"), PathPart::Part("disabledMaps")],
-        "disabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("tdm"), PathPart::Part("enableMercyRezKillCancel")],
-        "Mercy Resurrect Counteracts Kills",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("tdm"), PathPart::Part("enablePerks")],
-        "Enable Perks",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("tdm"), PathPart::Part("enableSelfInitiatedRespawn")],
-        "Self Initiated Respawn",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("tdm"), PathPart::Part("enabledMaps")],
-        "enabled maps",
-        KeyKind::ListMap
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("tdm"), PathPart::Part("gameLengthInMn")],
-        "Game Length In Minutes",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("tdm"), PathPart::Part("needsImbalancedTeamScoreToWin")],
-        "Imbalanced Team Score To Win",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("tdm"), PathPart::Part("scoreToWin")],
-        "Score To Win",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("tdm"), PathPart::Part("team1ScoreToWin")],
-        "Team 1 Score To Win",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("gamemodes"), PathPart::Part("tdm"), PathPart::Part("team2ScoreToWin")],
-        "Team 2 Score To Win",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("abilityCooldown%")],
-        "Ability Cooldown Time",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("ammoClipSize%")],
-        "Ammunition Clip Size Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("combatUltGen%")],
-        "Ultimate Generation - Combat",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("damageDealt%")],
-        "Damage Dealt",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("damageReceived%")],
-        "Damage Received",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("disabledHeroes")],
-        "disabled heroes",
-        KeyKind::ListHero
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("enableHeadshotsOnly")],
-        "Receive Headshots Only",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("enableInfiniteAmmo")],
-        "No Ammunition Requirement",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("enableInfiniteUlt")],
-        "Infinite Ultimate Duration",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("enableMelee")],
-        "Quick Melee",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("enablePrimaryFire")],
-        "Primary Fire",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("enableRolePassive")],
-        "Role Passives",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("enableSpawningWithUlt")],
-        "Spawn With Ultimate Ready",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("enableUlt")],
-        "Ultimate Ability",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("enabledHeroes")],
-        "enabled heroes",
-        KeyKind::ListHero
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("healingDealt%")],
-        "Healing Dealt",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("healingReceived%")],
-        "Healing Received",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("health%")],
-        "Health",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("jumpVerticalSpeed%")],
-        "Jump Vertical Speed",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("movementGravity%")],
-        "Movement Gravity",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("movementSpeed%")],
-        "Movement Speed",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("passiveHealthRegen")],
-        "Passive Health Regeneration",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("passiveUltGen%")],
-        "Ultimate Generation - Passive",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("projectileGravity%")],
-        "Projectile Gravity",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("projectileSpeed%")],
-        "Projectile Speed",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("ultDuration%")],
-        "Ultimate Duration",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Part("ultGen%")],
-        "Ultimate Generation",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1Acceleration%")],
-        "Jump Jet Acceleration Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1ChargeRate%")],
-        "Power Block Charge Rate",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1Cooldown%")],
-        "%1$s Cooldown Time",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1Distance%")],
-        "Quick Dash Distance",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1Duration%")],
-        "Siphon Blaster Duration Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1EnemyKb%")],
-        "Coach Gun Knockback Scalar Enemy",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1Health%")],
-        "Rejuvenating Dash Healing",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1Heat%")],
-        "Siphon Blaster Heat Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1Kb%")],
-        "Whip Shot Knockback Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1MaxTime%")],
-        "Propulsors Maximum Time",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1RechargeRate%")],
-        "Propulsors Recharge Rate",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1RefuelScalar")],
-        "Jump Jet Refuel Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability1SelfKb%")],
-        "Coach Gun Knockback Scalar Self",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2Cooldown%")],
-        "%1$s Cooldown Time",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2Distance%")],
-        "Soaring Slice Distance",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2Duration%")],
-        "Joyride Duration Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2FuseTime%")],
-        "Dynamite Fuse Time Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2Healing%")],
-        "Cardiac Overdrive Healing",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2Health%")],
-        "Jagged Wall Health",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2Height%")],
-        "Updraft Height",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2Kb%")],
-        "Cyber Frag Knockback Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2MaxDamage%")],
-        "Biotic Orb Max Damage Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2MaxHealing%")],
-        "Biotic Orb Max Healing Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2Quantity%")],
-        "Storm Arrows Quantity",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability2Speed%")],
-        "Joyride Speed Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability3Cooldown%")],
-        "%1$s Cooldown Time",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability3Distance%")],
-        "Lunge Distance Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ability3Kb%")],
-        "[PH] Skewer Knockback Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ammoClipSize%")],
-        "Ammunition Clip Size Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ammoRegenerationTime%")],
-        "Ammunition Regeneration Time Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("assembleMechKb%")],
-        "[PH] Assemble Mech Knockback Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("callMechKb%")],
-        "Call Mech Knockback Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("combatUltGen%")],
-        "Ultimate Generation - Combat %1$s",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("damageDealt%")],
-        "Damage Dealt",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("damageReceived%")],
-        "Damage Received",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableAbility1")],
-        "%1$s",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableAbility2")],
-        "%1$s",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableAbility3")],
-        "%1$s",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableAutomaticFire")],
-        "No Automatic Fire",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableGenericSecondaryFire")],
-        "Secondary Fire",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableHeadshotsOnly")],
-        "Receive Headshots Only",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableInfiniteAmmo")],
-        "No Ammunition Requirement",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableInfiniteUlt")],
-        "Infinite Ultimate Duration",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableMelee")],
-        "Quick Melee",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enablePassive")],
-        "%1$s",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enablePassiveUnlimitedFuel")],
-        "Frenetic Flight Unlimited Fuel",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enablePrimaryFire")],
-        "Primary Fire",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enablePrimaryFireFreezeStack")],
-        "Freeze Stacking",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableRolePassive")],
-        "Role Passives",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableRollOnly")],
-        "Roll Always Active",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableScoping")],
-        "No Scope",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableSecondaryFire")],
-        "%1$s",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableSpawningWithUlt")],
-        "Spawn With Ultimate Ready",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("enableUlt")],
-        "Ultimate Ability %1$s",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("healingDealt%")],
-        "Healing Dealt",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("healingReceived%")],
-        "Healing Received",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("health%")],
-        "Health",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("jumpVerticalSpeed%")],
-        "Jump Vertical Speed",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("movementGravity%")],
-        "Movement Gravity",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("movementSpeed%")],
-        "Movement Speed",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("passiveExtraFuel%")],
-        "Hover Jets Extra Fuel Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("passiveHeal%")],
-        "Reconstruction Heal Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("passiveHealthRegen")],
-        "Passive Health Regeneration",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("passiveMaxTime%")],
-        "Hover Jets Maximum Time",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("passiveMaximumTime%")],
-        "Jump Jet Acceleration Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("passiveRechargeRate%")],
-        "Hover Jets Recharge Rate",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("passiveUltGen%")],
-        "Ultimate Generation - Passive %1$s",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("passiveVerticalSpeed%")],
-        "Hover Jets Vertical Speed Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("primaryFireFreezeDuration%")],
-        "Weapon Freeze Duration Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("primaryFireFreezeMinimum%")],
-        "Weapon Freeze Minimum",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("primaryFireFreezeRate%")],
-        "Weapon Freeze Rate Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("primaryFireIgniteDamage")],
-        "Incendiary Chaingun Ignite Damage",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("primaryFireIgniteDuration")],
-        "Incendiary Chaingun Ignite Duration",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("primaryFireIgniteRate")],
-        "Incendiary Chaingun Ignite Rate",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("primaryFireKb%")],
-        "Frag Launcher Knockback Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("primaryFireMaximumTime%")],
-        "Biotic Energy Maximum",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("primaryFireOrbTurnRate%")],
-        "Water Staff Orb Turn Rate",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("primaryFireRange%")],
-        "Biotic Pawjectile Range",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("primaryFireRechargeRate%")],
-        "Biotic Energy Recharge Rate",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("projectileGravity%")],
-        "Projectile Gravity",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("projectileSpeed%")],
-        "Projectile Speed",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireAlternateForm")],
-        "Block Nemesis Form",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireCooldown%")],
-        "%1$s Cooldown Time",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireCost%")],
-        "Spike Guard Resource Cost",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireDuration%")],
-        "Take Aim Duration",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireEnergyChargeRate%")],
-        "%1$s Energy Charge Rate",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireHealth%")],
-        "Petal Platform Health",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireKb%")],
-        "A-36 Tactical Grenade Knockback Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireMaximumTime%")],
-        "%1$s Maximum Time",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireMovementSpeedPenalty%")],
-        "Spike Guard Movement Speed Penalty",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireRecallDelay%")],
-        "Jagged Blade Delay Before Automatic Recall",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireRechargeRate%")],
-        "%1$s Recharge Rate",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("secondaryFireRegen%")],
-        "Spike Guard Resource Regeneration",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("selfDestructKb%")],
-        "Self Destruct Knockback Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("shieldBashCooldown%")],
-        "Shield Bash Cooldown Time",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("shieldBashKb%")],
-        "Shield Bash Knockback Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("solarEnergyMax%")],
-        "Solar Energy Maximum",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("solarEnergyRecharge%")],
-        "Solar Energy Recharge Rate",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("spawnWithoutMech")],
-        "Spawn Without Mech",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ultBarrierHealth%")],
-        "Ultimate Barrier Health Scalar Panopticon",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ultDuration%")],
-        "Ultimate Duration",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ultFreezeMinimum%")],
-        "Blizzard Freeze Minimum",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ultFreezeRate%")],
-        "Blizzard Freeze Rate Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ultGen%")],
-        "Ultimate Generation %1$s",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ultHealth%")],
-        "Tree of Life Health",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("ultKb%")],
-        "Meteor Strike Knockback Scalar",
-        KeyKind::Percent
-    ),
-    entry!(
-        [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero, PathPart::Part("weaponsEnabled")],
-        "Weapons Enabled",
-        KeyKind::Enum("setting_heroes_TEAM_HERO_weaponsEnabled")
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("allowPlayersInQueue")],
-        "Allow Players Who Are In Queue",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("dataCenterPreference")],
-        "Data Center Preference",
-        KeyKind::Enum("setting_lobby_dataCenterPreference")
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("enableMatchVoiceChat")],
-        "Match Voice Chat",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("ffaSlots")],
-        "Max FFA Players",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("mapRotation")],
-        "Map Rotation",
-        KeyKind::Enum("setting_lobby_mapRotation")
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("minimumLatencyInNs")],
-        "Minimum Latency milliseconds",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("pauseGameOnDisconnect")],
-        "Pause Game On Player Disconnect",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("returnToLobby")],
-        "Return To Lobby",
-        KeyKind::Enum("setting_lobby_returnToLobby")
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("spectatorSlots")],
-        "Max Spectators",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("swapTeamsAfterMatch")],
-        "Swap Teams After Match",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("team1Slots")],
-        "Max %1$s Players",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("team2Slots")],
-        "Max %1$s Players",
-        KeyKind::Number
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("teamBalancing")],
-        "Team Balancing",
-        KeyKind::Enum("setting_lobby_teamBalancing")
-    ),
-    entry!(
-        [PathPart::Part("lobby"), PathPart::Part("useExperimentalUpdate")],
-        "Use Experimental Update If Available",
-        KeyKind::Bool
-    ),
-    entry!(
-        [PathPart::Part("main"), PathPart::Part("description")],
-        "Description",
-        KeyKind::String
-    ),
-    entry!(
-        [PathPart::Part("main"), PathPart::Part("modeName")],
-        "Mode Name",
-        KeyKind::String
-    ),
+    entry!([Part("extensions"), Part("beamEffects")], "Beam Effects", KeyKind::Flag),
+    entry!([Part("extensions"), Part("beamSounds")], "Beam Sounds", KeyKind::Flag),
+    entry!([Part("extensions"), Part("buffAndDebuffSounds")], "Buff and Debuff Sounds", KeyKind::Flag),
+    entry!([Part("extensions"), Part("buffStatusEffects")], "Buff Status Effects", KeyKind::Flag),
+    entry!([Part("extensions"), Part("debuffStatusEffects")], "Debuff Status Effects", KeyKind::Flag),
+    entry!([Part("extensions"), Part("energyExplosionEffects")], "Energy Explosion Effects", KeyKind::Flag),
+    entry!([Part("extensions"), Part("explosionSounds")], "Explosion Sounds", KeyKind::Flag),
+    entry!([Part("extensions"), Part("kineticExplosionEffects")], "Kinetic Explosion Effects", KeyKind::Flag),
+    entry!([Part("extensions"), Part("playMoreEffects")], "Play More Effects", KeyKind::Flag),
+    entry!([Part("extensions"), Part("projectiles")], "Projectiles", KeyKind::Flag),
+    entry!([Part("extensions"), Part("spawnMoreDummyBots")], "Spawn More Dummy Bots", KeyKind::Flag),
+    entry!([Part("gamemodes"), Part("assault"), Part("captureSpeed%")], "Capture Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("assault"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("assault"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("assault"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("assault"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("bountyHunter"), Part("baseScoreForKillingBountyTarget")], "Base Score for Killing a Bounty Target", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("bountyHunter"), Part("bountyIncreasePerKillAsBountyTarget")], "Bounty Increase per Kill as Bounty Target", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("bountyHunter"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("bountyHunter"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("bountyHunter"), Part("enableSelfInitiatedRespawn")], "Self Initiated Respawn", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("bountyHunter"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("bountyHunter"), Part("gameLengthInMn")], "Game Length In Minutes", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("bountyHunter"), Part("nbBountyTargets")], "Bounty Target Count", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("bountyHunter"), Part("scorePerKill")], "Score per Kill", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("bountyHunter"), Part("scorePerKillAsBountyTarget")], "Score per Kill as Bounty Target", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("bountyHunter"), Part("scoreToWin")], "Score To Win", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("clash"), Part("captureSpeed%")], "Capture Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("clash"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("clash"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("clash"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("clash"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("control"), Part("captureSpeed%")], "Capture Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("control"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("control"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("control"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("control"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("control"), Part("scoreToWin")], "Score To Win", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("control"), Part("scoringSpeed%")], "Scoring Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("control"), Part("setValidControlPoints")], "Limit Valid Control Points", KeyKind::Enum("setting_gamemodes_control_setValidControlPoints")),
+    entry!([Part("gamemodes"), Part("controlAprilFools"), Part("captureSpeed%")], "Capture Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("controlAprilFools"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("controlAprilFools"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("controlAprilFools"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("controlAprilFools"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("controlAprilFools"), Part("scoreToWin")], "Score To Win", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("controlAprilFools"), Part("scoringSpeed%")], "Scoring Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("controlAprilFools"), Part("setValidControlPoints")], "Limit Valid Control Points", KeyKind::Enum("setting_gamemodes_controlAprilFools_setValidControlPoints")),
+    entry!([Part("gamemodes"), Part("ctf"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("ctf"), Part("enableBlitzFlagLocations")], "Blitz Flag Locations", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("ctf"), Part("enableDropFlagOnDmg")], "Damage Interrupts Flag Interaction", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("ctf"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("ctf"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("ctf"), Part("flagCarrierAbilities")], "Flag Carrier Abilities", KeyKind::Enum("setting_gamemodes_ctf_flagCarrierAbilities")),
+    entry!([Part("gamemodes"), Part("ctf"), Part("flagDroppedLockTime")], "Flag Dropped Lock Time", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("ctf"), Part("flagPickupTime")], "Flag Pickup Time", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("ctf"), Part("flagReturnTime")], "Flag Return Time", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("ctf"), Part("flagScoreRespawnTime")], "Flag Score Respawn Time", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("ctf"), Part("gameLengthInMn")], "Game Length Minutes", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("ctf"), Part("respawnSpeedBuffDuration")], "Respawn Speed Buff Duration", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("ctf"), Part("scoreToWin")], "Score To Win", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("ctf"), Part("teamNeedsFlagAtBaseToScore")], "Team Needs Flag At Base To Score", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("elimination"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("elimination"), Part("drawTime")], "Draw After Match Time Elapsed With No Tiebreaker", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("elimination"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("elimination"), Part("enableTiebreaker")], "Capture Objective Tiebreaker", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("elimination"), Part("enableWallhack")], "Reveal Heroes", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("elimination"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("elimination"), Part("heroPoolSize")], "Limited Choice Pool", KeyKind::Enum("setting_gamemodes_elimination_heroPoolSize")),
+    entry!([Part("gamemodes"), Part("elimination"), Part("heroSelectionTime")], "Hero Selection Time", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("elimination"), Part("heroesAvailable")], "Hero Selection", KeyKind::Enum("setting_gamemodes_elimination_heroesAvailable")),
+    entry!([Part("gamemodes"), Part("elimination"), Part("restrictPreviouslyPlayedHeroes")], "Restrict Previously Used Heroes", KeyKind::Enum("setting_gamemodes_elimination_restrictPreviouslyPlayedHeroes")),
+    entry!([Part("gamemodes"), Part("elimination"), Part("scoreToWin")], "Score To Win", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("elimination"), Part("tiebreakerCaptureTime")], "Time To Capture", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("elimination"), Part("tiebreakerTime")], "Tiebreaker After Match Time Elapsed", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("elimination"), Part("wallhackEnabledTime")], "Reveal Heroes After Match Time Elapsed", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("escort"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("escort"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("escort"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("escort"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("escort"), Part("payloadSpeed%")], "Payload Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("escortAprilFools"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("escortAprilFools"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("escortAprilFools"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("escortAprilFools"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("escortAprilFools"), Part("payloadSpeed%")], "Payload Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("ffa"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("ffa"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("ffa"), Part("enableSelfInitiatedRespawn")], "Self Initiated Respawn", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("ffa"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("ffa"), Part("gameLengthInMn")], "Game Length In Minutes", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("ffa"), Part("scoreToWin")], "Score To Win", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("captureSpeed%")], "Capture Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("controlPointA")], "Control Point A", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("controlPointB")], "Control Point B", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("controlPointC")], "Control Point C", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("controlPointD")], "Control Point D", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("controlPointE")], "Control Point E", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("firstActiveControlPoint")], "First Active Control Point", KeyKind::Enum("setting_gamemodes_flashpoint_firstActiveControlPoint")),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("scoreToWin")], "Score To Win", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("flashpoint"), Part("scoringSpeed%")], "Scoring Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("captureSpeed%")], "Capture Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("controlPointA")], "Control Point A", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("controlPointB")], "Control Point B", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("controlPointC")], "Control Point C", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("controlPointD")], "Control Point D", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("controlPointE")], "Control Point E", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("firstActiveControlPoint")], "First Active Control Point", KeyKind::Enum("setting_gamemodes_flashpointAprilFools_firstActiveControlPoint")),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("scoreToWin")], "Score To Win", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("flashpointAprilFools"), Part("scoringSpeed%")], "Scoring Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("general"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("general"), Part("enableEnemyHealthBars")], "Enemy Health Bars", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("general"), Part("enableHeroSwitching")], "Allow Hero Switching", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("general"), Part("enableKillCam")], "Kill Cam", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("general"), Part("enableKillFeed")], "Kill Feed", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("general"), Part("enableRandomHeroes")], "Respawn As Random Hero", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("general"), Part("enableSkins")], "Skins", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("general"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("general"), Part("gamemodeStartTrigger")], "Game Mode Start", KeyKind::Enum("setting_gamemodes_general_gamemodeStartTrigger")),
+    entry!([Part("gamemodes"), Part("general"), Part("healthPackRespawnTime%")], "Health Pack Respawn Time Scalar", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("general"), Part("heroLimit")], "Hero Limit", KeyKind::Enum("setting_gamemodes_general_heroLimit")),
+    entry!([Part("gamemodes"), Part("general"), Part("perkEliminationCatchupLevelAmount%")], "Perk Elimination Catchup Level Amount", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("general"), Part("perkGeneration%")], "Perk Generation", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("general"), Part("randomHeroRoleLimitPerTeam")], "Random Hero Role Limit Per Team", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("general"), Part("respawnTime%")], "Respawn Time Scalar", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("general"), Part("roleLimit")], "Limit Roles", KeyKind::Enum("setting_gamemodes_general_roleLimit")),
+    entry!([Part("gamemodes"), Part("general"), Part("spawnHealthPacks")], "Spawn Health Packs", KeyKind::Enum("setting_gamemodes_general_spawnHealthPacks")),
+    entry!([Part("gamemodes"), Part("general"), Part("tankPassiveHealthBonus")], "Tank Role Passive Health Bonus", KeyKind::Enum("setting_gamemodes_general_tankPassiveHealthBonus")),
+    entry!([Part("gamemodes"), Part("general"), Part("teamOverlay")], "Team Overlay", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("hybrid"), Part("captureSpeed%")], "Capture Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("hybrid"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("hybrid"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("hybrid"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("hybrid"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("hybrid"), Part("payloadSpeed%")], "Payload Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("hybridAprilFools"), Part("captureSpeed%")], "Capture Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("hybridAprilFools"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("hybridAprilFools"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("hybridAprilFools"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("hybridAprilFools"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("hybridAprilFools"), Part("payloadSpeed%")], "Payload Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("junkenstein"), Part("difficulty")], "Difficulty", KeyKind::Enum("setting_gamemodes_junkenstein_difficulty")),
+    entry!([Part("gamemodes"), Part("junkenstein"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("junkenstein"), Part("doorHealth%")], "Door Health Scalar", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("junkenstein"), Part("enableEndless")], "Endless Mode", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("junkenstein"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("practiceRange"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("practiceRange"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("practiceRange"), Part("enableTrainingPartner")], "Training Partner", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("practiceRange"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("practiceRange"), Part("spawnTrainingBots")], "Spawn Training Bots", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("practiceRange"), Part("trainingBotsRespawnTime%")], "Training Bot Respawn Time Scalar", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("push"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("push"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("push"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("push"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("push"), Part("ts1PushSpeedModifier%")], "TS-1 Push Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("push"), Part("ts1WalkSpeedModifier%")], "TS-1 Walk Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("pushAprilFools"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("pushAprilFools"), Part("enableCompetitiveRules")], "Competitive Rules", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("pushAprilFools"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("pushAprilFools"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("pushAprilFools"), Part("ts1PushSpeedModifier%")], "TS-1 Push Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("pushAprilFools"), Part("ts1WalkSpeedModifier%")], "TS-1 Walk Speed Modifier", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("skirmish"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("skirmish"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("skirmish"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("skirmish"), Part("setValidControlPoints")], "Limit Valid Control Points", KeyKind::Enum("setting_gamemodes_skirmish_setValidControlPoints")),
+    entry!([Part("gamemodes"), Part("stadiumPracticeRange"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("stadiumPracticeRange"), Part("enableTrainingPartner")], "Training Partner", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("stadiumPracticeRange"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("stadiumPracticeRange"), Part("spawnTrainingBots")], "Spawn Training Bots", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("stadiumPracticeRange"), Part("trainingBotsRespawnTime%")], "Training Bot Respawn Time Scalar", KeyKind::Percent),
+    entry!([Part("gamemodes"), Part("tdm"), Part("disabledMaps")], "disabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("tdm"), Part("enableMercyRezKillCancel")], "Mercy Resurrect Counteracts Kills", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("tdm"), Part("enablePerks")], "Enable Perks", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("tdm"), Part("enableSelfInitiatedRespawn")], "Self Initiated Respawn", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("tdm"), Part("enabledMaps")], "enabled maps", KeyKind::ListMap),
+    entry!([Part("gamemodes"), Part("tdm"), Part("gameLengthInMn")], "Game Length In Minutes", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("tdm"), Part("needsImbalancedTeamScoreToWin")], "Imbalanced Team Score To Win", KeyKind::Bool),
+    entry!([Part("gamemodes"), Part("tdm"), Part("scoreToWin")], "Score To Win", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("tdm"), Part("team1ScoreToWin")], "Team 1 Score To Win", KeyKind::Number),
+    entry!([Part("gamemodes"), Part("tdm"), Part("team2ScoreToWin")], "Team 2 Score To Win", KeyKind::Number),
+    entry!([Part("heroes"), Team, Part("abilityCooldown%")], "Ability Cooldown Time", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("ammoClipSize%")], "Ammunition Clip Size Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("combatUltGen%")], "Ultimate Generation - Combat", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("damageDealt%")], "Damage Dealt", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("damageReceived%")], "Damage Received", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("disabledHeroes")], "disabled heroes", KeyKind::ListHero),
+    entry!([Part("heroes"), Team, Part("enableHeadshotsOnly")], "Receive Headshots Only", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Part("enableInfiniteAmmo")], "No Ammunition Requirement", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Part("enableInfiniteUlt")], "Infinite Ultimate Duration", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Part("enableMelee")], "Quick Melee", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Part("enablePrimaryFire")], "Primary Fire", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Part("enableRolePassive")], "Role Passives", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Part("enableSpawningWithUlt")], "Spawn With Ultimate Ready", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Part("enableUlt")], "Ultimate Ability", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Part("enabledHeroes")], "enabled heroes", KeyKind::ListHero),
+    entry!([Part("heroes"), Team, Part("healingDealt%")], "Healing Dealt", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("healingReceived%")], "Healing Received", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("health%")], "Health", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("jumpVerticalSpeed%")], "Jump Vertical Speed", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("movementGravity%")], "Movement Gravity", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("movementSpeed%")], "Movement Speed", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("passiveHealthRegen")], "Passive Health Regeneration", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Part("passiveUltGen%")], "Ultimate Generation - Passive", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("projectileGravity%")], "Projectile Gravity", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("projectileSpeed%")], "Projectile Speed", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("ultDuration%")], "Ultimate Duration", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Part("ultGen%")], "Ultimate Generation", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1Acceleration%")], "Jump Jet Acceleration Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1ChargeRate%")], "Power Block Charge Rate", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1Cooldown%")], "%1$s Cooldown Time", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1Distance%")], "Quick Dash Distance", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1Duration%")], "Siphon Blaster Duration Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1EnemyKb%")], "Coach Gun Knockback Scalar Enemy", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1Health%")], "Rejuvenating Dash Healing", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1Heat%")], "Siphon Blaster Heat Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1Kb%")], "Whip Shot Knockback Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1MaxTime%")], "Propulsors Maximum Time", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1RechargeRate%")], "Propulsors Recharge Rate", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1RefuelScalar")], "Jump Jet Refuel Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability1SelfKb%")], "Coach Gun Knockback Scalar Self", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability2Cooldown%")], "%1$s Cooldown Time", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability2Distance%")], "Soaring Slice Distance", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability2Duration%")], "Joyride Duration Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability2FuseTime%")], "Dynamite Fuse Time Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability2Healing%")], "Cardiac Overdrive Healing", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability2Health%")], "Jagged Wall Health", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability2Height%")], "Updraft Height", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability2Kb%")], "Cyber Frag Knockback Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability2MaxDamage%")], "Biotic Orb Max Damage Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability2MaxHealing%")], "Biotic Orb Max Healing Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability2Quantity%")], "Storm Arrows Quantity", KeyKind::Number),
+    entry!([Part("heroes"), Team, Hero, Part("ability2Speed%")], "Joyride Speed Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability3Cooldown%")], "%1$s Cooldown Time", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability3Distance%")], "Lunge Distance Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ability3Kb%")], "[PH] Skewer Knockback Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ammoClipSize%")], "Ammunition Clip Size Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ammoRegenerationTime%")], "Ammunition Regeneration Time Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("assembleMechKb%")], "[PH] Assemble Mech Knockback Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("callMechKb%")], "Call Mech Knockback Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("combatUltGen%")], "Ultimate Generation - Combat %1$s", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("damageDealt%")], "Damage Dealt", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("damageReceived%")], "Damage Received", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("enableAbility1")], "%1$s", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableAbility2")], "%1$s", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableAbility3")], "%1$s", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableAutomaticFire")], "No Automatic Fire", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableGenericSecondaryFire")], "Secondary Fire", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableHeadshotsOnly")], "Receive Headshots Only", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableInfiniteAmmo")], "No Ammunition Requirement", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableInfiniteUlt")], "Infinite Ultimate Duration", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableMelee")], "Quick Melee", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enablePassive")], "%1$s", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enablePassiveUnlimitedFuel")], "Frenetic Flight Unlimited Fuel", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enablePrimaryFire")], "Primary Fire", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enablePrimaryFireFreezeStack")], "Freeze Stacking", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableRolePassive")], "Role Passives", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableRollOnly")], "Roll Always Active", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableScoping")], "No Scope", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableSecondaryFire")], "%1$s", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableSpawningWithUlt")], "Spawn With Ultimate Ready", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("enableUlt")], "Ultimate Ability %1$s", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("healingDealt%")], "Healing Dealt", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("healingReceived%")], "Healing Received", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("health%")], "Health", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("jumpVerticalSpeed%")], "Jump Vertical Speed", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("movementGravity%")], "Movement Gravity", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("movementSpeed%")], "Movement Speed", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("passiveExtraFuel%")], "Hover Jets Extra Fuel Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("passiveHeal%")], "Reconstruction Heal Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("passiveHealthRegen")], "Passive Health Regeneration", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("passiveMaxTime%")], "Hover Jets Maximum Time", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("passiveMaximumTime%")], "Jump Jet Acceleration Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("passiveRechargeRate%")], "Hover Jets Recharge Rate", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("passiveUltGen%")], "Ultimate Generation - Passive %1$s", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("passiveVerticalSpeed%")], "Hover Jets Vertical Speed Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("primaryFireFreezeDuration%")], "Weapon Freeze Duration Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("primaryFireFreezeMinimum%")], "Weapon Freeze Minimum", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("primaryFireFreezeRate%")], "Weapon Freeze Rate Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("primaryFireIgniteDamage")], "Incendiary Chaingun Ignite Damage", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("primaryFireIgniteDuration")], "Incendiary Chaingun Ignite Duration", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("primaryFireIgniteRate")], "Incendiary Chaingun Ignite Rate", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("primaryFireKb%")], "Frag Launcher Knockback Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("primaryFireMaximumTime%")], "Biotic Energy Maximum", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("primaryFireOrbTurnRate%")], "Water Staff Orb Turn Rate", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("primaryFireRange%")], "Biotic Pawjectile Range", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("primaryFireRechargeRate%")], "Biotic Energy Recharge Rate", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("projectileGravity%")], "Projectile Gravity", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("projectileSpeed%")], "Projectile Speed", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireAlternateForm")], "Block Nemesis Form", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireCooldown%")], "%1$s Cooldown Time", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireCost%")], "Spike Guard Resource Cost", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireDuration%")], "Take Aim Duration", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireEnergyChargeRate%")], "%1$s Energy Charge Rate", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireHealth%")], "Petal Platform Health", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireKb%")], "A-36 Tactical Grenade Knockback Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireMaximumTime%")], "%1$s Maximum Time", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireMovementSpeedPenalty%")], "Spike Guard Movement Speed Penalty", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireRecallDelay%")], "Jagged Blade Delay Before Automatic Recall", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireRechargeRate%")], "%1$s Recharge Rate", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("secondaryFireRegen%")], "Spike Guard Resource Regeneration", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("selfDestructKb%")], "Self Destruct Knockback Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("shieldBashCooldown%")], "Shield Bash Cooldown Time", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("shieldBashKb%")], "Shield Bash Knockback Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("solarEnergyMax%")], "Solar Energy Maximum", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("solarEnergyRecharge%")], "Solar Energy Recharge Rate", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("spawnWithoutMech")], "Spawn Without Mech", KeyKind::Bool),
+    entry!([Part("heroes"), Team, Hero, Part("ultBarrierHealth%")], "Ultimate Barrier Health Scalar Panopticon", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ultDuration%")], "Ultimate Duration", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ultFreezeMinimum%")], "Blizzard Freeze Minimum", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ultFreezeRate%")], "Blizzard Freeze Rate Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ultGen%")], "Ultimate Generation %1$s", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ultHealth%")], "Tree of Life Health", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("ultKb%")], "Meteor Strike Knockback Scalar", KeyKind::Percent),
+    entry!([Part("heroes"), Team, Hero, Part("weaponsEnabled")], "Weapons Enabled", KeyKind::Enum("setting_heroes_TEAM_HERO_weaponsEnabled")),
+    entry!([Part("lobby"), Part("allowPlayersInQueue")], "Allow Players Who Are In Queue", KeyKind::Bool),
+    entry!([Part("lobby"), Part("dataCenterPreference")], "Data Center Preference", KeyKind::Enum("setting_lobby_dataCenterPreference")),
+    entry!([Part("lobby"), Part("enableMatchVoiceChat")], "Match Voice Chat", KeyKind::Bool),
+    entry!([Part("lobby"), Part("ffaSlots")], "Max FFA Players", KeyKind::Number),
+    entry!([Part("lobby"), Part("mapRotation")], "Map Rotation", KeyKind::Enum("setting_lobby_mapRotation")),
+    entry!([Part("lobby"), Part("minimumLatencyInNs")], "Minimum Latency milliseconds", KeyKind::Number),
+    entry!([Part("lobby"), Part("pauseGameOnDisconnect")], "Pause Game On Player Disconnect", KeyKind::Bool),
+    entry!([Part("lobby"), Part("returnToLobby")], "Return To Lobby", KeyKind::Enum("setting_lobby_returnToLobby")),
+    entry!([Part("lobby"), Part("spectatorSlots")], "Max Spectators", KeyKind::Number),
+    entry!([Part("lobby"), Part("swapTeamsAfterMatch")], "Swap Teams After Match", KeyKind::Bool),
+    entry!([Part("lobby"), Part("team1Slots")], "Max %1$s Players", KeyKind::Number),
+    entry!([Part("lobby"), Part("team2Slots")], "Max %1$s Players", KeyKind::Number),
+    entry!([Part("lobby"), Part("teamBalancing")], "Team Balancing", KeyKind::Enum("setting_lobby_teamBalancing")),
+    entry!([Part("lobby"), Part("useExperimentalUpdate")], "Use Experimental Update If Available", KeyKind::Bool),
+    entry!([Part("main"), Part("description")], "Description", KeyKind::String),
+    entry!([Part("main"), Part("modeName")], "Mode Name", KeyKind::String),
 ];
 pub(crate) static GENERATED_ENUM_MEMBERS: &[EnumMember] = &[
     EnumMember {

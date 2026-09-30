@@ -12,7 +12,7 @@ use serde::Deserialize;
 use serde_json::Value;
 use std::sync::OnceLock;
 
-use super::PathPart;
+use super::PathPart::{self, Hero, Part, Team};
 
 /// Locale-specific settings names generated from the reviewed Workshop data
 /// export. The projection contains every reviewed locale as data; adding a
@@ -103,67 +103,58 @@ macro_rules! entry {
 pub(crate) static ENTRIES: &[TableEntry] = &[
     // main
     entry!(
-        [PathPart::Part("main"), PathPart::Part("description")],
+        [Part("main"), Part("description")],
         "Description",
         KeyKind::String
     ),
     entry!(
-        [PathPart::Part("main"), PathPart::Part("modeName")],
+        [Part("main"), Part("modeName")],
         "Mode Name",
         KeyKind::String
     ),
     // lobby
     entry!(
-        [PathPart::Part("lobby"), PathPart::Part("ffaSlots")],
+        [Part("lobby"), Part("ffaSlots")],
         "Max FFA Players",
         KeyKind::Number
     ),
     entry!(
-        [PathPart::Part("lobby"), PathPart::Part("mapRotation")],
+        [Part("lobby"), Part("mapRotation")],
         "Map Rotation",
         KeyKind::Enum("mapRotation")
     ),
     entry!(
-        [PathPart::Part("lobby"), PathPart::Part("spectatorSlots")],
+        [Part("lobby"), Part("spectatorSlots")],
         "Max Spectators",
         KeyKind::Number
     ),
     entry!(
-        [
-            PathPart::Part("lobby"),
-            PathPart::Part("enableMatchVoiceChat")
-        ],
+        [Part("lobby"), Part("enableMatchVoiceChat")],
         "Match Voice Chat",
         KeyKind::BoolEnum("matchVoiceChat")
     ),
     entry!(
-        [PathPart::Part("lobby"), PathPart::Part("team1Slots")],
+        [Part("lobby"), Part("team1Slots")],
         "Max Team 1 Players",
         KeyKind::Number
     ),
     entry!(
-        [PathPart::Part("lobby"), PathPart::Part("team2Slots")],
+        [Part("lobby"), Part("team2Slots")],
         "Max Team 2 Players",
         KeyKind::Number
     ),
     entry!(
-        [PathPart::Part("lobby"), PathPart::Part("returnToLobby")],
+        [Part("lobby"), Part("returnToLobby")],
         "Return To Lobby",
         KeyKind::Enum("returnToLobby")
     ),
     entry!(
-        [
-            PathPart::Part("lobby"),
-            PathPart::Part("allowPlayersInQueue")
-        ],
+        [Part("lobby"), Part("allowPlayersInQueue")],
         "Allow Players Who Are In Queue",
         KeyKind::YesNo
     ),
     entry!(
-        [
-            PathPart::Part("lobby"),
-            PathPart::Part("swapTeamsAfterMatch")
-        ],
+        [Part("lobby"), Part("swapTeamsAfterMatch")],
         "Swap Teams After Match",
         KeyKind::YesNo
     ),
@@ -174,199 +165,127 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
     // enableRandomHeroes under general only (general is a literal group name,
     // not a mode slot).
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("assault"),
-            PathPart::Part("enabled")
-        ],
+        [Part("gamemodes"), Part("assault"), Part("enabled")],
         "enabled",
         KeyKind::Bool
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("control"),
-            PathPart::Part("enabled")
-        ],
+        [Part("gamemodes"), Part("control"), Part("enabled")],
         "enabled",
         KeyKind::Bool
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("escort"),
-            PathPart::Part("enabled")
-        ],
+        [Part("gamemodes"), Part("escort"), Part("enabled")],
         "enabled",
         KeyKind::Bool
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("hybrid"),
-            PathPart::Part("enabled")
-        ],
+        [Part("gamemodes"), Part("hybrid"), Part("enabled")],
         "enabled",
         KeyKind::Bool
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("assault"),
-            PathPart::Part("enabledMaps")
-        ],
+        [Part("gamemodes"), Part("assault"), Part("enabledMaps")],
         "enabled maps",
         KeyKind::ListMap
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("control"),
-            PathPart::Part("enabledMaps")
-        ],
+        [Part("gamemodes"), Part("control"), Part("enabledMaps")],
         "enabled maps",
         KeyKind::ListMap
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("escort"),
-            PathPart::Part("enabledMaps")
-        ],
+        [Part("gamemodes"), Part("escort"), Part("enabledMaps")],
         "enabled maps",
         KeyKind::ListMap
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("hybrid"),
-            PathPart::Part("enabledMaps")
-        ],
+        [Part("gamemodes"), Part("hybrid"), Part("enabledMaps")],
         "enabled maps",
         KeyKind::ListMap
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("skirmish"),
-            PathPart::Part("enabledMaps")
-        ],
+        [Part("gamemodes"), Part("skirmish"), Part("enabledMaps")],
         "enabled maps",
         KeyKind::ListMap
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("assault"),
-            PathPart::Part("disabledMaps")
-        ],
+        [Part("gamemodes"), Part("assault"), Part("disabledMaps")],
         "disabled maps",
         KeyKind::ListMap
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("skirmish"),
-            PathPart::Part("disabledMaps")
-        ],
+        [Part("gamemodes"), Part("skirmish"), Part("disabledMaps")],
         "disabled maps",
         KeyKind::ListMap
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("ffa"),
-            PathPart::Part("enabledMaps")
-        ],
+        [Part("gamemodes"), Part("ffa"), Part("enabledMaps")],
         "enabled maps",
         KeyKind::ListMap
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("tdm"),
-            PathPart::Part("enabledMaps")
-        ],
+        [Part("gamemodes"), Part("tdm"), Part("enabledMaps")],
         "enabled maps",
         KeyKind::ListMap
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("assault"),
-            PathPart::Part("roleLimit")
-        ],
+        [Part("gamemodes"), Part("assault"), Part("roleLimit")],
+        "Limit Roles",
+        KeyKind::Enum("roleLimit")
+    ),
+    entry!(
+        [Part("gamemodes"), Part("control"), Part("roleLimit")],
+        "Limit Roles",
+        KeyKind::Enum("roleLimit")
+    ),
+    entry!(
+        [Part("gamemodes"), Part("escort"), Part("roleLimit")],
+        "Limit Roles",
+        KeyKind::Enum("roleLimit")
+    ),
+    entry!(
+        [Part("gamemodes"), Part("hybrid"), Part("roleLimit")],
+        "Limit Roles",
+        KeyKind::Enum("roleLimit")
+    ),
+    entry!(
+        [Part("gamemodes"), Part("general"), Part("roleLimit")],
         "Limit Roles",
         KeyKind::Enum("roleLimit")
     ),
     entry!(
         [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("control"),
-            PathPart::Part("roleLimit")
-        ],
-        "Limit Roles",
-        KeyKind::Enum("roleLimit")
-    ),
-    entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("escort"),
-            PathPart::Part("roleLimit")
-        ],
-        "Limit Roles",
-        KeyKind::Enum("roleLimit")
-    ),
-    entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("hybrid"),
-            PathPart::Part("roleLimit")
-        ],
-        "Limit Roles",
-        KeyKind::Enum("roleLimit")
-    ),
-    entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("general"),
-            PathPart::Part("roleLimit")
-        ],
-        "Limit Roles",
-        KeyKind::Enum("roleLimit")
-    ),
-    entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("assault"),
-            PathPart::Part("enableCompetitiveRules")
+            Part("gamemodes"),
+            Part("assault"),
+            Part("enableCompetitiveRules")
         ],
         "Competitive Rules",
         KeyKind::Bool
     ),
     entry!(
         [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("control"),
-            PathPart::Part("enableCompetitiveRules")
+            Part("gamemodes"),
+            Part("control"),
+            Part("enableCompetitiveRules")
         ],
         "Competitive Rules",
         KeyKind::Bool
     ),
     entry!(
         [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("escort"),
-            PathPart::Part("enableCompetitiveRules")
+            Part("gamemodes"),
+            Part("escort"),
+            Part("enableCompetitiveRules")
         ],
         "Competitive Rules",
         KeyKind::Bool
     ),
     entry!(
         [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("hybrid"),
-            PathPart::Part("enableCompetitiveRules")
+            Part("gamemodes"),
+            Part("hybrid"),
+            Part("enableCompetitiveRules")
         ],
         "Competitive Rules",
         KeyKind::Bool
@@ -374,190 +293,127 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
     // gamemodes.general
     entry!(
         [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("general"),
-            PathPart::Part("enableCompetitiveRules")
+            Part("gamemodes"),
+            Part("general"),
+            Part("enableCompetitiveRules")
         ],
         "Competitive Rules",
         KeyKind::Bool
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("general"),
-            PathPart::Part("enablePerks")
-        ],
+        [Part("gamemodes"), Part("general"), Part("enablePerks")],
         "Enable Perks",
         KeyKind::Bool
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("general"),
-            PathPart::Part("heroLimit")
-        ],
+        [Part("gamemodes"), Part("general"), Part("heroLimit")],
         "Hero Limit",
         KeyKind::Enum("heroLimit")
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("general"),
-            PathPart::Part("respawnTime%")
-        ],
+        [Part("gamemodes"), Part("general"), Part("respawnTime%")],
         "Respawn Time Scalar",
         KeyKind::Percent
     ),
     entry!(
         [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("general"),
-            PathPart::Part("enableHeroSwitching")
+            Part("gamemodes"),
+            Part("general"),
+            Part("enableHeroSwitching")
         ],
         "Allow Hero Switching",
         KeyKind::Bool
     ),
     entry!(
         [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("general"),
-            PathPart::Part("enableRandomHeroes")
+            Part("gamemodes"),
+            Part("general"),
+            Part("enableRandomHeroes")
         ],
         "Respawn As Random Hero",
         KeyKind::Bool
     ),
     entry!(
         [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("general"),
-            PathPart::Part("gameModeStartTrigger")
+            Part("gamemodes"),
+            Part("general"),
+            Part("gameModeStartTrigger")
         ],
         "Game Mode Start",
         KeyKind::Enum("gameModeStartTrigger")
     ),
     entry!(
         [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("assault"),
-            PathPart::Part("gameModeStartTrigger")
+            Part("gamemodes"),
+            Part("assault"),
+            Part("gameModeStartTrigger")
         ],
         "Game Mode Start",
         KeyKind::Enum("gameModeStartTrigger")
     ),
     entry!(
         [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("assault"),
-            PathPart::Part("tankPassiveHealthBonus")
+            Part("gamemodes"),
+            Part("assault"),
+            Part("tankPassiveHealthBonus")
         ],
         "Tank Role Passive Health Bonus",
         KeyKind::Enum("tankPassiveHealthBonus")
     ),
     entry!(
-        [
-            PathPart::Part("gamemodes"),
-            PathPart::Part("general"),
-            PathPart::Part("spawnHealthPacks")
-        ],
+        [Part("gamemodes"), Part("general"), Part("spawnHealthPacks")],
         "Spawn Health Packs",
         KeyKind::Enum("spawnHealthPacks")
     ),
     // heroes.<team>
     entry!(
-        [
-            PathPart::Part("heroes"),
-            PathPart::Team,
-            PathPart::Part("enabledHeroes")
-        ],
+        [Part("heroes"), Team, Part("enabledHeroes")],
         "enabled heroes",
         KeyKind::ListHero
     ),
     entry!(
-        [
-            PathPart::Part("heroes"),
-            PathPart::Team,
-            PathPart::Part("disabledHeroes")
-        ],
+        [Part("heroes"), Team, Part("disabledHeroes")],
         "disabled heroes",
         KeyKind::ListHero
     ),
     entry!(
-        [
-            PathPart::Part("heroes"),
-            PathPart::Part("general"),
-            PathPart::Part("disabledHeroes")
-        ],
+        [Part("heroes"), Part("general"), Part("disabledHeroes")],
         "disabled heroes",
         KeyKind::ListHero
     ),
     // heroes.<team>.<hero> config groups
     entry!(
-        [
-            PathPart::Part("heroes"),
-            PathPart::Team,
-            PathPart::Hero,
-            PathPart::Part("enablePrimaryFire")
-        ],
+        [Part("heroes"), Team, Hero, Part("enablePrimaryFire")],
         "Primary Fire",
         KeyKind::Bool
     ),
     entry!(
-        [
-            PathPart::Part("heroes"),
-            PathPart::Team,
-            PathPart::Hero,
-            PathPart::Part("enableSecondaryFire")
-        ],
+        [Part("heroes"), Team, Hero, Part("enableSecondaryFire")],
         "Secondary Fire",
         KeyKind::Bool
     ),
     entry!(
-        [
-            PathPart::Part("heroes"),
-            PathPart::Team,
-            PathPart::Hero,
-            PathPart::Part("enableAbility1")
-        ],
+        [Part("heroes"), Team, Hero, Part("enableAbility1")],
         "Ability 1",
         KeyKind::Bool
     ),
     entry!(
-        [
-            PathPart::Part("heroes"),
-            PathPart::Team,
-            PathPart::Hero,
-            PathPart::Part("enableAbility2")
-        ],
+        [Part("heroes"), Team, Hero, Part("enableAbility2")],
         "Ability 2",
         KeyKind::Bool
     ),
     entry!(
-        [
-            PathPart::Part("heroes"),
-            PathPart::Team,
-            PathPart::Hero,
-            PathPart::Part("health%")
-        ],
+        [Part("heroes"), Team, Hero, Part("health%")],
         "Health",
         KeyKind::Percent
     ),
     entry!(
-        [
-            PathPart::Part("heroes"),
-            PathPart::Team,
-            PathPart::Hero,
-            PathPart::Part("passiveUltGen%")
-        ],
+        [Part("heroes"), Team, Hero, Part("passiveUltGen%")],
         "Ultimate Generation - Passive Blizzard",
         KeyKind::Percent
     ),
     entry!(
-        [
-            PathPart::Part("heroes"),
-            PathPart::Team,
-            PathPart::Hero,
-            PathPart::Part("combatUltGen%")
-        ],
+        [Part("heroes"), Team, Hero, Part("combatUltGen%")],
         "Ultimate Generation - Combat Blizzard",
         KeyKind::Percent
     ),
@@ -570,269 +426,84 @@ pub(crate) struct NameMap {
     pub(crate) name: &'static str,
 }
 
+const fn named(key: &'static str, name: &'static str) -> NameMap {
+    NameMap { key, name }
+}
+
 /// Game-mode names (source-backed: assault, control, escort, hybrid, skirmish,
 /// ffa, tdm, general).
 pub(crate) static MODE_NAMES: &[NameMap] = &[
-    NameMap {
-        key: "assault",
-        name: "Assault",
-    },
-    NameMap {
-        key: "control",
-        name: "Control",
-    },
-    NameMap {
-        key: "escort",
-        name: "Escort",
-    },
-    NameMap {
-        key: "hybrid",
-        name: "Hybrid",
-    },
-    NameMap {
-        key: "skirmish",
-        name: "Skirmish",
-    },
-    NameMap {
-        key: "ffa",
-        name: "Deathmatch",
-    },
-    NameMap {
-        key: "tdm",
-        name: "Team Deathmatch",
-    },
-    NameMap {
-        key: "general",
-        name: "General",
-    },
+    named("assault", "Assault"),
+    named("control", "Control"),
+    named("escort", "Escort"),
+    named("hybrid", "Hybrid"),
+    named("skirmish", "Skirmish"),
+    named("ffa", "Deathmatch"),
+    named("tdm", "Team Deathmatch"),
+    named("general", "General"),
 ];
 
 /// Map names inside `enabledMaps` lists.
 pub(crate) static MAP_NAMES: &[NameMap] = &[
-    NameMap {
-        key: "workshopIsland",
-        name: "Workshop Island",
-    },
-    NameMap {
-        key: "kingsRowWinter",
-        name: "King's Row Winter",
-    },
+    named("workshopIsland", "Workshop Island"),
+    named("kingsRowWinter", "King's Row Winter"),
 ];
 
 /// Hero names inside hero lists and hero-config groups.
 pub(crate) static HERO_NAMES: &[NameMap] = &[
-    NameMap {
-        key: "anran",
-        name: "Anran",
-    },
-    NameMap {
-        key: "ana",
-        name: "Ana",
-    },
-    NameMap {
-        key: "ashe",
-        name: "Ashe",
-    },
-    NameMap {
-        key: "bastion",
-        name: "Bastion",
-    },
-    NameMap {
-        key: "baptiste",
-        name: "Baptiste",
-    },
-    NameMap {
-        key: "brigitte",
-        name: "Brigitte",
-    },
-    NameMap {
-        key: "cassidy",
-        name: "Cassidy",
-    },
-    NameMap {
-        key: "dmon",
-        name: "D.Mon",
-    },
-    NameMap {
-        key: "domina",
-        name: "Domina",
-    },
-    NameMap {
-        key: "dva",
-        name: "D.Va",
-    },
-    NameMap {
-        key: "doomfist",
-        name: "Doomfist",
-    },
-    NameMap {
-        key: "echo",
-        name: "Echo",
-    },
-    NameMap {
-        key: "emre",
-        name: "Emre",
-    },
-    NameMap {
-        key: "freja",
-        name: "Freja",
-    },
-    NameMap {
-        key: "genji",
-        name: "Genji",
-    },
-    NameMap {
-        key: "hanzo",
-        name: "Hanzo",
-    },
-    NameMap {
-        key: "moira",
-        name: "Moira",
-    },
-    NameMap {
-        key: "reinhardt",
-        name: "Reinhardt",
-    },
-    NameMap {
-        key: "hammond",
-        name: "Wrecking Ball",
-    },
-    NameMap {
-        key: "hazard",
-        name: "Hazard",
-    },
-    NameMap {
-        key: "illari",
-        name: "Illari",
-    },
-    NameMap {
-        key: "juno",
-        name: "Juno",
-    },
-    NameMap {
-        key: "jetpackCat",
-        name: "Jetpack Cat",
-    },
-    NameMap {
-        key: "junkerQueen",
-        name: "Junker Queen",
-    },
-    NameMap {
-        key: "junkrat",
-        name: "Junkrat",
-    },
-    NameMap {
-        key: "kiriko",
-        name: "Kiriko",
-    },
-    NameMap {
-        key: "lucio",
-        name: "Lúcio",
-    },
-    NameMap {
-        key: "mauga",
-        name: "Mauga",
-    },
-    NameMap {
-        key: "mercy",
-        name: "Mercy",
-    },
-    NameMap {
-        key: "mizuki",
-        name: "Mizuki",
-    },
-    NameMap {
-        key: "orisa",
-        name: "Orisa",
-    },
-    NameMap {
-        key: "pharah",
-        name: "Pharah",
-    },
-    NameMap {
-        key: "reaper",
-        name: "Reaper",
-    },
-    NameMap {
-        key: "roadhog",
-        name: "Roadhog",
-    },
-    NameMap {
-        key: "shion",
-        name: "Shion",
-    },
-    NameMap {
-        key: "sierra",
-        name: "Sierra",
-    },
-    NameMap {
-        key: "sigma",
-        name: "Sigma",
-    },
-    NameMap {
-        key: "ramattra",
-        name: "Ramattra",
-    },
-    NameMap {
-        key: "lifeweaver",
-        name: "Lifeweaver",
-    },
-    NameMap {
-        key: "sojourn",
-        name: "Sojourn",
-    },
-    NameMap {
-        key: "soldier",
-        name: "Soldier: 76",
-    },
-    NameMap {
-        key: "sombra",
-        name: "Sombra",
-    },
-    NameMap {
-        key: "symmetra",
-        name: "Symmetra",
-    },
-    NameMap {
-        key: "torbjorn",
-        name: "Torbjörn",
-    },
-    NameMap {
-        key: "tracer",
-        name: "Tracer",
-    },
-    NameMap {
-        key: "venture",
-        name: "Venture",
-    },
-    NameMap {
-        key: "widowmaker",
-        name: "Widowmaker",
-    },
-    NameMap {
-        key: "winston",
-        name: "Winston",
-    },
-    NameMap {
-        key: "wuyang",
-        name: "Wuyang",
-    },
-    NameMap {
-        key: "wreckingBall",
-        name: "Wrecking Ball",
-    },
-    NameMap {
-        key: "zarya",
-        name: "Zarya",
-    },
-    NameMap {
-        key: "zenyatta",
-        name: "Zenyatta",
-    },
-    NameMap {
-        key: "mei",
-        name: "Mei",
-    },
+    named("anran", "Anran"),
+    named("ana", "Ana"),
+    named("ashe", "Ashe"),
+    named("bastion", "Bastion"),
+    named("baptiste", "Baptiste"),
+    named("brigitte", "Brigitte"),
+    named("cassidy", "Cassidy"),
+    named("dmon", "D.Mon"),
+    named("domina", "Domina"),
+    named("dva", "D.Va"),
+    named("doomfist", "Doomfist"),
+    named("echo", "Echo"),
+    named("emre", "Emre"),
+    named("freja", "Freja"),
+    named("genji", "Genji"),
+    named("hanzo", "Hanzo"),
+    named("moira", "Moira"),
+    named("reinhardt", "Reinhardt"),
+    named("hammond", "Wrecking Ball"),
+    named("hazard", "Hazard"),
+    named("illari", "Illari"),
+    named("juno", "Juno"),
+    named("jetpackCat", "Jetpack Cat"),
+    named("junkerQueen", "Junker Queen"),
+    named("junkrat", "Junkrat"),
+    named("kiriko", "Kiriko"),
+    named("lucio", "Lúcio"),
+    named("mauga", "Mauga"),
+    named("mercy", "Mercy"),
+    named("mizuki", "Mizuki"),
+    named("orisa", "Orisa"),
+    named("pharah", "Pharah"),
+    named("reaper", "Reaper"),
+    named("roadhog", "Roadhog"),
+    named("shion", "Shion"),
+    named("sierra", "Sierra"),
+    named("sigma", "Sigma"),
+    named("ramattra", "Ramattra"),
+    named("lifeweaver", "Lifeweaver"),
+    named("sojourn", "Sojourn"),
+    named("soldier", "Soldier: 76"),
+    named("sombra", "Sombra"),
+    named("symmetra", "Symmetra"),
+    named("torbjorn", "Torbjörn"),
+    named("tracer", "Tracer"),
+    named("venture", "Venture"),
+    named("widowmaker", "Widowmaker"),
+    named("winston", "Winston"),
+    named("wuyang", "Wuyang"),
+    named("wreckingBall", "Wrecking Ball"),
+    named("zarya", "Zarya"),
+    named("zenyatta", "Zenyatta"),
+    named("mei", "Mei"),
 ];
 
 include!("data/generated_map_entries.rs");
@@ -841,18 +512,9 @@ include!("data/generated_mode_entries.rs");
 
 /// Team names inside `heroes` (source-backed: allTeams).
 pub(crate) static TEAM_NAMES: &[NameMap] = &[
-    NameMap {
-        key: "allTeams",
-        name: "General",
-    },
-    NameMap {
-        key: "team1",
-        name: "Team 1",
-    },
-    NameMap {
-        key: "team2",
-        name: "Team 2",
-    },
+    named("allTeams", "General"),
+    named("team1", "Team 1"),
+    named("team2", "Team 2"),
 ];
 
 /// An enum domain member (domain -> localized workshop name).
@@ -863,6 +525,14 @@ pub(crate) struct EnumMember {
     pub(crate) name: &'static str,
 }
 
+const fn enum_member(domain: &'static str, member: &'static str, name: &'static str) -> EnumMember {
+    EnumMember {
+        domain,
+        member,
+        name,
+    }
+}
+
 include!("data/generated_entries.rs");
 include!("data/generated_hero_settings.rs");
 
@@ -871,116 +541,32 @@ include!("data/generated_hero_settings.rs");
 /// `projection_reconciliation.json`, which maps their source identities into
 /// these canonical domains without replacing fixture-backed display names.
 pub(crate) static ENUM_MEMBERS: &[EnumMember] = &[
-    EnumMember {
-        domain: "mapRotation",
-        member: "afterAGame",
-        name: "After A Game",
-    },
-    EnumMember {
-        domain: "mapRotation",
-        member: "afterMirrorMatch",
-        name: "After A Mirror Match",
-    },
-    EnumMember {
-        domain: "mapRotation",
-        member: "paused",
-        name: "Paused",
-    },
-    EnumMember {
-        domain: "matchVoiceChat",
-        member: "enabled",
-        name: "Enabled",
-    },
-    EnumMember {
-        domain: "returnToLobby",
-        member: "never",
-        name: "Never",
-    },
-    EnumMember {
-        domain: "returnToLobby",
-        member: "afterAGame",
-        name: "After A Game",
-    },
-    EnumMember {
-        domain: "returnToLobby",
-        member: "afterMirrorMatch",
-        name: "After A Mirror Match",
-    },
-    EnumMember {
-        domain: "gameModeStartTrigger",
-        member: "immediately",
-        name: "Immediately",
-    },
-    EnumMember {
-        domain: "gameModeStartTrigger",
-        member: "manual",
-        name: "Manual",
-    },
-    EnumMember {
-        domain: "spawnHealthPacks",
-        member: "disabled",
-        name: "Disabled",
-    },
-    EnumMember {
-        domain: "spawnHealthPacks",
-        member: "modeDependent",
-        name: "Determined By Mode",
-    },
-    EnumMember {
-        domain: "spawnHealthPacks",
-        member: "enabled",
-        name: "Enabled",
-    },
-    EnumMember {
-        domain: "roleLimit",
-        member: "2OfEachRolePerTeam",
-        name: "2 Of Each Role Per Team",
-    },
-    EnumMember {
-        domain: "roleLimit",
-        member: "1Tank2Offense2Support",
-        name: "1 Tank 2 Offense 2 Support",
-    },
-    EnumMember {
-        domain: "roleLimit",
-        member: "off",
-        name: "Off",
-    },
-    EnumMember {
-        domain: "tankPassiveHealthBonus",
-        member: "alwaysEnabled",
-        name: "Always Enabled",
-    },
-    EnumMember {
-        domain: "tankPassiveHealthBonus",
-        member: "disabled",
-        name: "Disabled",
-    },
-    EnumMember {
-        domain: "heroLimit",
-        member: "off",
-        name: "Off",
-    },
-    EnumMember {
-        domain: "heroLimit",
-        member: "1PerTeam",
-        name: "1 Per Team",
-    },
-    EnumMember {
-        domain: "heroLimit",
-        member: "2PerTeam",
-        name: "2 Per Team",
-    },
-    EnumMember {
-        domain: "heroLimit",
-        member: "1PerGame",
-        name: "1 Per Game",
-    },
-    EnumMember {
-        domain: "heroLimit",
-        member: "2PerGame",
-        name: "2 Per Game",
-    },
+    enum_member("mapRotation", "afterAGame", "After A Game"),
+    enum_member("mapRotation", "afterMirrorMatch", "After A Mirror Match"),
+    enum_member("mapRotation", "paused", "Paused"),
+    enum_member("matchVoiceChat", "enabled", "Enabled"),
+    enum_member("returnToLobby", "never", "Never"),
+    enum_member("returnToLobby", "afterAGame", "After A Game"),
+    enum_member("returnToLobby", "afterMirrorMatch", "After A Mirror Match"),
+    enum_member("gameModeStartTrigger", "immediately", "Immediately"),
+    enum_member("gameModeStartTrigger", "manual", "Manual"),
+    enum_member("spawnHealthPacks", "disabled", "Disabled"),
+    enum_member("spawnHealthPacks", "modeDependent", "Determined By Mode"),
+    enum_member("spawnHealthPacks", "enabled", "Enabled"),
+    enum_member("roleLimit", "2OfEachRolePerTeam", "2 Of Each Role Per Team"),
+    enum_member(
+        "roleLimit",
+        "1Tank2Offense2Support",
+        "1 Tank 2 Offense 2 Support",
+    ),
+    enum_member("roleLimit", "off", "Off"),
+    enum_member("tankPassiveHealthBonus", "alwaysEnabled", "Always Enabled"),
+    enum_member("tankPassiveHealthBonus", "disabled", "Disabled"),
+    enum_member("heroLimit", "off", "Off"),
+    enum_member("heroLimit", "1PerTeam", "1 Per Team"),
+    enum_member("heroLimit", "2PerTeam", "2 Per Team"),
+    enum_member("heroLimit", "1PerGame", "1 Per Game"),
+    enum_member("heroLimit", "2PerGame", "2 Per Game"),
 ];
 
 /// Look up a settings leaf entry by its exact path.
