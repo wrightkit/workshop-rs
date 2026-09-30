@@ -1,15 +1,12 @@
 //! Executable witnesses for contextual Workshop literal semantics.
 
-use workshop_rs::catalog::{Catalog, Locale};
+use super::common::{catalog, en, zh};
+use super::internal;
 use workshop_rs::emitter;
 use workshop_rs::parser;
 use workshop_rs::roundtrip;
 use workshop_rs::validate;
 use workshop_rs::wir::{self, Action, Value};
-
-fn catalog() -> Catalog {
-    Catalog::builtin().expect("built-in catalog")
-}
 
 fn program_with(conditions: &str, actions: &str) -> wir::Program {
     let source = format!(
@@ -29,7 +26,7 @@ rule ("contextual semantics")
     }}
 }}"#
     );
-    parser::parse_wir(&source, &catalog(), &Locale::new("en-US")).expect("contextual source parses")
+    internal::parse(&source)
 }
 
 fn program(actions: &str) -> wir::Program {
@@ -169,12 +166,7 @@ fn first_of_wrapper_accepts_any_value_and_round_trips() {
         let source = format!(
             "variables\n{{\n    global:\n        0: probe\n}}\nrule (\"wrapper\")\n{{\n    event {{ Ongoing - Global; }}\n    actions {{ Wait Until(First Of({value}), 2); }}\n}}"
         );
-        let reparsed = roundtrip::round_trip_with_context(
-            &source,
-            &catalog(),
-            &Locale::new("en-US"),
-            &catalog(),
-        );
+        let reparsed = roundtrip::round_trip_with_context(&source, &catalog(), &en(), &catalog());
         assert!(reparsed.equivalent, "First Of({value}) must round-trip");
         validate_program(&program(&format!("Wait Until(First Of({value}), 2);")));
     }
@@ -249,12 +241,7 @@ rule ("empty string")
     event { Ongoing - Global; }
     actions { Set Global Variable(probe, String Replace(Empty Array, Empty Array, Empty Array)); }
 }"#;
-    let reparsed = roundtrip::round_trip_with_context(
-        string_source,
-        &catalog(),
-        &Locale::new("en-US"),
-        &catalog(),
-    );
+    let reparsed = roundtrip::round_trip_with_context(string_source, &catalog(), &en(), &catalog());
     assert!(
         reparsed.equivalent,
         "empty string contextual alias must round-trip"
@@ -391,8 +378,7 @@ rule ("indexed contextual semantics")
     event { Ongoing - Global; }
     actions { Set Player Variable At Index(Event Player, indexed, True, Null); }
 }"#;
-    let parsed = parser::parse_wir(source, &catalog(), &Locale::new("en-US"))
-        .expect("indexed source parses");
+    let parsed = internal::parse(source);
     validate::validate_canonical_ids_wir(&parsed, &catalog()).expect("canonical validation");
     let action = parsed
         .actions
@@ -454,12 +440,7 @@ fn audited_catalog_parameters_cover_boolean_numeric_aliases() {
         let source = format!(
             "rule (\"dummy bot slot\")\n{{\n    event {{ Ongoing - Global; }}\n    actions {{ Create Dummy Bot(Hero(D.Va), All Teams, {boolean}, Up, Up); }}\n}}"
         );
-        let reparsed = roundtrip::round_trip_with_context(
-            &source,
-            &catalog(),
-            &Locale::new("en-US"),
-            &catalog(),
-        );
+        let reparsed = roundtrip::round_trip_with_context(&source, &catalog(), &en(), &catalog());
         assert!(
             reparsed.equivalent,
             "Create Dummy Bot slot {boolean} must round-trip"
@@ -506,8 +487,7 @@ rule ("modify contextual semantics")
         Global.g[False] += 1;
     }
 }"#;
-    let parsed =
-        parser::parse_wir(source, &catalog(), &Locale::new("en-US")).expect("modify source parses");
+    let parsed = internal::parse(source);
     validate_program(&parsed);
 
     let direct_values: Vec<_> = parsed
@@ -574,8 +554,8 @@ rule ("modify contextual semantics")
 #[test]
 fn contextual_aliases_survive_parse_and_emit_in_each_locale() {
     let catalog = catalog();
-    let en = Locale::new("en-US");
-    let zh = Locale::new("zh-CN");
+    let en = en();
+    let zh = zh();
     let actions = [
         "Set Move Speed(Event Player, False);",
         "Set Gravity(Event Player, True);",

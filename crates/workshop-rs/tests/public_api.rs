@@ -1,4 +1,5 @@
-use workshop_rs::catalog::{Catalog, Locale};
+use crate::common::en;
+use workshop_rs::catalog::Catalog;
 use workshop_rs::settings::{self, PathPart};
 use workshop_rs::{
     Action, Event, MappedText, Program, Rule, SourceMap, Value, emitter, parser, roundtrip,
@@ -8,7 +9,7 @@ use workshop_rs::{
 #[test]
 fn canonical_program_operations_cover_parse_validate_inspect_emit_and_roundtrip() {
     let catalog = Catalog::builtin().expect("built-in catalog");
-    let locale = Locale::new("en-US");
+    let locale = en();
     let source = r#"rule ("public api") {
         event { Ongoing - Global; }
         actions { Wait(1, Ignore Condition); }
@@ -48,7 +49,7 @@ fn settings_schema_exposes_enum_values_without_the_internal_table() {
 #[test]
 fn catalog_actions_and_values_are_built_by_canonical_id() {
     let catalog = Catalog::builtin().expect("built-in catalog");
-    let locale = Locale::new("en-US");
+    let locale = en();
     let numbers = |values: &[i32]| values.iter().copied().map(Value::from).collect::<Vec<_>>();
 
     let mut program = Program::new();
@@ -129,7 +130,7 @@ fn is_number(value: &Value, expected: f64) -> bool {
 #[test]
 fn mapped_text_is_constructible_outside_the_crate() {
     let catalog = Catalog::builtin().expect("built-in catalog");
-    let locale = Locale::new("en-US");
+    let locale = en();
     let program = parser::parse(
         r#"rule ("mapped") {
         event { Ongoing - Global; }

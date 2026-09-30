@@ -1,9 +1,9 @@
 //! End-to-end raw Workshop settings coverage using the reviewed en-US and
 //! zh-CN settings mappings.
 
-use std::path::{Path, PathBuf};
-
-use workshop_rs::catalog::{Catalog, Locale};
+use super::common::{self, catalog, en, zh};
+use super::internal;
+use workshop_rs::catalog::Catalog;
 use workshop_rs::gameplay::{AbilityVariant, HeroId, LogicalSlot, hero_ids, slots};
 use workshop_rs::settings::{
     Applicability, NumericBounds, SettingId, SettingIdentity, SettingOperationError, SettingScope,
@@ -12,14 +12,8 @@ use workshop_rs::settings::{
 };
 use workshop_rs::{analysis::semantic, convert, emitter, parser, roundtrip};
 
-fn fixture_path(name: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/settings")
-        .join(name)
-}
-
 fn fixture(name: &str) -> String {
-    std::fs::read_to_string(fixture_path(name)).expect("settings fixture")
+    common::fixture_text("settings", name)
 }
 
 fn collapse(text: &str) -> String {
@@ -28,28 +22,24 @@ fn collapse(text: &str) -> String {
         .collect()
 }
 
-fn catalog() -> Catalog {
-    Catalog::builtin().expect("builtin catalog")
-}
-
 #[test]
 fn real_settings_fixture_parses_to_wir_and_reemits() {
-    let catalog = catalog();
+    let _catalog = catalog();
     let source = fixture("pixelart.settings.ws");
-    let program = parser::parse_wir(&source, &catalog, &Locale::new("en-US")).expect("parses");
+    let program = internal::parse(&source);
     assert!(program.settings.is_some(), "settings are carried in WIR");
 
-    let emitted = emitter::emit_wir(&program, &catalog, &Locale::new("en-US")).expect("emits");
+    let emitted = internal::emit(&program);
     assert_eq!(collapse(&emitted), collapse(&source));
-    let reparsed = parser::parse_wir(&emitted, &catalog, &Locale::new("en-US")).expect("reparses");
+    let reparsed = internal::parse(&emitted);
     assert!(roundtrip::equivalent_wir(&program, &reparsed));
 }
 
 #[test]
 fn reviewed_settings_conversion_round_trips_en_us_and_zh_cn() {
     let catalog = catalog();
-    let en = Locale::new("en-US");
-    let zh = Locale::new("zh-CN");
+    let en = en();
+    let zh = zh();
     let source = fixture("pixelart.settings.ws");
     let expected_zh = fixture("pixelart.zh-CN.settings.ws");
 
@@ -58,8 +48,8 @@ fn reviewed_settings_conversion_round_trips_en_us_and_zh_cn() {
     assert!(to_zh.fallback_ids.is_empty());
     assert_eq!(collapse(&to_zh.text), collapse(&expected_zh));
 
-    let zh_program = parser::parse_wir(&to_zh.text, &catalog, &zh).expect("zh-CN settings parse");
-    let en_program = parser::parse_wir(&source, &catalog, &en).expect("en-US settings parse");
+    let zh_program = internal::parse_in(&to_zh.text, &zh);
+    let en_program = internal::parse_in(&source, &en);
     assert!(roundtrip::equivalent_wir(&en_program, &zh_program));
 
     let back_to_en = convert::convert(&expected_zh, &catalog, &zh, &en, &Default::default())
@@ -69,46 +59,45 @@ fn reviewed_settings_conversion_round_trips_en_us_and_zh_cn() {
 
 #[test]
 fn match_voice_chat_uses_reviewed_enabled_tokens_in_both_locales() {
-    let catalog = catalog();
-    let en = Locale::new("en-US");
-    let zh = Locale::new("zh-CN");
+    let _catalog = catalog();
+    let en = en();
+    let zh = zh();
     let source = "settings { lobby { Match Voice Chat: Enabled } }";
-    let program = parser::parse_wir(source, &catalog, &en).expect("Match Voice Chat parses");
+    let program = internal::parse_in(source, &en);
 
-    let emitted_en = emitter::emit_wir(&program, &catalog, &en).expect("en-US emits");
+    let emitted_en = internal::emit_in(&program, &en);
     assert!(emitted_en.contains("Match Voice Chat: Enabled"));
     assert!(!emitted_en.contains("Match Voice Chat: On"));
-    let reparsed_en = parser::parse_wir(&emitted_en, &catalog, &en).expect("en-US reparses");
+    let reparsed_en = internal::parse_in(&emitted_en, &en);
     assert!(roundtrip::equivalent_wir(&program, &reparsed_en));
 
-    let emitted_zh = emitter::emit_wir(&program, &catalog, &zh).expect("zh-CN emits");
+    let emitted_zh = internal::emit_in(&program, &zh);
     assert!(emitted_zh.contains("比赛语音聊天: 启用"));
-    let reparsed_zh = parser::parse_wir(&emitted_zh, &catalog, &zh).expect("zh-CN reparses");
+    let reparsed_zh = internal::parse_in(&emitted_zh, &zh);
     assert!(roundtrip::equivalent_wir(&program, &reparsed_zh));
 }
 
 #[test]
 fn match_voice_chat_rejects_unreviewed_disabled_token() {
-    let catalog = catalog();
-    let en = Locale::new("en-US");
+    let _catalog = catalog();
+    let en = en();
     let source = "settings { lobby { Match Voice Chat: Disabled } }";
-    let error =
-        parser::parse_wir(source, &catalog, &en).expect_err("disabled state is source-unbacked");
+    let error = internal::try_parse_in(source, &en).expect_err("disabled state is source-unbacked");
     assert!(format!("{error:?}").contains("settings enum"));
 }
 
 #[test]
 fn capture_the_flag_settings_emit_and_reparse_in_zh_cn() {
-    let catalog = catalog();
+    let _catalog = catalog();
     let source = "settings { modes { Capture The Flag {} } }";
-    let en = Locale::new("en-US");
-    let zh = Locale::new("zh-CN");
-    let program = parser::parse_wir(source, &catalog, &en).expect("CTF settings parse");
+    let en = en();
+    let zh = zh();
+    let program = internal::parse_in(source, &en);
 
-    let emitted = emitter::emit_wir(&program, &catalog, &zh).expect("CTF settings emit");
+    let emitted = internal::emit_in(&program, &zh);
     assert!(emitted.contains("勇夺锦旗"), "{emitted}");
 
-    let reparsed = parser::parse_wir(&emitted, &catalog, &zh).expect("CTF settings reparse");
+    let reparsed = internal::parse_in(&emitted, &zh);
     assert!(roundtrip::equivalent_wir(&program, &reparsed));
 }
 
@@ -125,8 +114,8 @@ fn composed_blizzard_settings_labels_convert_in_both_directions() {
     }
 }";
     let catalog = catalog();
-    let en = Locale::new("en-US");
-    let zh = Locale::new("zh-CN");
+    let en = en();
+    let zh = zh();
     let to_zh = convert::convert(source, &catalog, &en, &zh, &Default::default())
         .expect("composed settings labels convert to zh-CN");
     assert!(to_zh.fallback_ids.is_empty());
@@ -141,10 +130,10 @@ fn composed_blizzard_settings_labels_convert_in_both_directions() {
 
 #[test]
 fn supported_apostrophe_map_name_parses() {
-    let catalog = catalog();
+    let _catalog = catalog();
     let source = "settings { modes { Deathmatch { enabled maps { King's Row Winter } } } }";
-    let program = parser::parse_wir(source, &catalog, &Locale::new("en-US")).expect("parses");
-    let emitted = emitter::emit_wir(&program, &catalog, &Locale::new("en-US")).expect("emits");
+    let program = internal::parse(source);
+    let emitted = internal::emit(&program);
     assert!(emitted.contains("King's Row Winter"));
 }
 
@@ -152,7 +141,7 @@ fn supported_apostrophe_map_name_parses() {
 fn generated_capture_the_flag_settings_surface_is_canonical() {
     let catalog = catalog();
     let source = "settings { modes { Capture The Flag { enabled maps { Ayutthaya } Flag Score Respawn Time: 15 Flag Return Time: 4 Flag Dropped Lock Time: 5 } } }";
-    let program = parser::parse_wir(source, &catalog, &Locale::new("en-US")).expect("parses");
+    let program = internal::parse(source);
     assert!(
         program
             .semantic_issues(&catalog)
@@ -165,7 +154,7 @@ fn generated_capture_the_flag_settings_surface_is_canonical() {
 fn pinned_ai_hero_setting_aliases_are_canonical() {
     let catalog = catalog();
     let source = "设置 { 英雄 { 综合 { 索杰恩 { 充能速度 充能射击: 200% } 路霸 { 呼吸器充能速度: 150% } 骇灾 { 尖刺护体资源恢复: 150% 尖刺护体资源消耗: 50% } } } }";
-    let program = parser::parse_wir(source, &catalog, &Locale::new("zh-CN")).expect("parses");
+    let program = internal::parse_in(source, &zh());
     assert!(
         program
             .semantic_issues(&catalog)
@@ -178,8 +167,7 @@ fn pinned_ai_hero_setting_aliases_are_canonical() {
 fn mixed_locale_primary_hero_setting_name_is_canonical() {
     let catalog = catalog();
     let source = "设置 { 英雄 { 队伍1 { D.Mon { 伤害量: 140% } } } }";
-    let program = parser::parse_wir(source, &catalog, &Locale::new("zh-CN"))
-        .expect("primary-locale D.Mon spelling parses in mixed zh-CN output");
+    let program = internal::parse_in(source, &zh());
     assert!(
         program
             .semantic_issues(&catalog)
@@ -199,15 +187,11 @@ fn team_deathmatch_enabled_maps_is_canonical() {
             }
         }
     "#;
-    let catalog = Catalog::builtin().unwrap();
-    let program = parser::parse_wir_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
-        .expect("Team Deathmatch enabled maps must parse");
-    let emitted = emitter::emit_wir(&program, &catalog, &Locale::new("en-US"))
-        .expect("Team Deathmatch enabled maps must emit");
+    let _catalog = Catalog::builtin().unwrap();
+    let program = internal::parse(text);
+    let emitted = internal::emit(&program);
     assert!(emitted.contains("Team Deathmatch"));
-    let reparsed =
-        parser::parse_wir_with_context(&emitted, &catalog, &Locale::new("en-US"), &catalog)
-            .expect("emitted Team Deathmatch settings must reparse");
+    let reparsed = internal::parse(&emitted);
     assert!(roundtrip::equivalent_wir(&program, &reparsed));
 }
 
@@ -225,34 +209,33 @@ fn canonical_percent_setting_keys_parse_from_mixed_locale_exports() {
             }
         }
     "#;
-    let catalog = Catalog::builtin().unwrap();
-    parser::parse_wir_with_context(text, &catalog, &Locale::new("zh-CN"), &catalog)
-        .expect("canonical percent setting keys must parse");
+    let _catalog = Catalog::builtin().unwrap();
+    internal::parse_in(text, &zh());
 }
 
 #[test]
 fn supported_dva_name_parses() {
-    let catalog = catalog();
+    let _catalog = catalog();
     let source =
         "settings {\n heroes {\n  General {\n   D.Va {\n    Primary Fire: Off\n   }\n  }\n }\n}";
-    let program = parser::parse_wir(source, &catalog, &Locale::new("en-US")).expect("parses");
-    let emitted = emitter::emit_wir(&program, &catalog, &Locale::new("en-US")).expect("emits");
+    let program = internal::parse(source);
+    let emitted = internal::emit(&program);
     assert!(emitted.contains("D.Va"));
 }
 
 #[test]
 fn hero_ability_names_resolve_through_gameplay_catalog_in_both_locales() {
-    let catalog = catalog();
-    let en = Locale::new("en-US");
-    let zh = Locale::new("zh-CN");
+    let _catalog = catalog();
+    let en = en();
+    let zh = zh();
     let source = "settings { heroes { General { Mei { Cryo-Freeze: Off Ice Wall: On } } } }";
-    let program = parser::parse_wir(source, &catalog, &en).expect("English ability names parse");
-    let emitted = emitter::emit_wir(&program, &catalog, &zh).expect("Chinese ability names emit");
+    let program = internal::parse_in(source, &en);
+    let emitted = internal::emit_in(&program, &zh);
     assert!(emitted.contains("急冻: 关"));
     assert!(emitted.contains("冰墙: 开"));
-    let reparsed = parser::parse_wir(&emitted, &catalog, &zh).expect("Chinese ability names parse");
+    let reparsed = internal::parse_in(&emitted, &zh);
     assert!(roundtrip::equivalent_wir(&program, &reparsed));
-    let back = emitter::emit_wir(&reparsed, &catalog, &en).expect("English ability names re-emit");
+    let back = internal::emit_in(&reparsed, &en);
     assert!(back.contains("Cryo-Freeze: Off"));
     assert!(back.contains("Ice Wall: On"));
 }
@@ -261,7 +244,7 @@ fn hero_ability_names_resolve_through_gameplay_catalog_in_both_locales() {
 fn disabled_maps_is_a_known_symmetric_settings_list() {
     let catalog = catalog();
     let source = "settings { modes { disabled Skirmish { disabled maps {\nKing's Row Winter\nWorkshop Island\n} } } }";
-    let program = parser::parse_wir(source, &catalog, &Locale::new("en-US")).expect("parses");
+    let program = internal::parse(source);
     let issues = program.semantic_issues(&catalog);
     assert!(
         issues
@@ -269,7 +252,7 @@ fn disabled_maps_is_a_known_symmetric_settings_list() {
             .all(|issue| issue.kind != workshop_rs::rules::IncompletenessKind::RawSetting),
         "known disabled-map settings must not remain raw: {issues:?}"
     );
-    let emitted = emitter::emit_wir(&program, &catalog, &Locale::new("en-US")).expect("emits");
+    let emitted = internal::emit(&program);
     assert!(emitted.contains("disabled Skirmish"));
     assert!(emitted.contains("disabled maps"));
     assert!(emitted.contains("King's Row Winter"));
@@ -280,7 +263,7 @@ fn disabled_maps_is_a_known_symmetric_settings_list() {
 fn unknown_settings_list_members_remain_semantically_incomplete() {
     let catalog = catalog();
     let source = "settings { modes { Skirmish { enabled maps { Future Map } } } }";
-    let program = parser::parse_wir(source, &catalog, &Locale::new("en-US")).expect("preserves");
+    let program = internal::parse(source);
     assert!(program.semantic_issues(&catalog).iter().any(|issue| {
         issue.kind == workshop_rs::rules::IncompletenessKind::RawSetting
             && issue.name == "enabledMaps"
@@ -298,16 +281,16 @@ fn workshop_namespace_preserves_custom_settings_without_residuals() {
  }
 }"#;
     let catalog = Catalog::builtin().expect("catalog");
-    let locale = Locale::new("en-US");
-    let program = parser::parse_wir(source, &catalog, &locale).expect("custom settings parse");
+    let locale = en();
+    let program = internal::parse_in(source, &locale);
     assert!(
         semantic::inspect_wir(&program, &catalog).is_empty(),
         "issues: {:?}, settings: {:?}",
         semantic::inspect_wir(&program, &catalog),
         program.settings
     );
-    let emitted = emitter::emit_wir(&program, &catalog, &locale).expect("custom settings emit");
-    let reparsed = parser::parse_wir(&emitted, &catalog, &locale).expect("custom settings reparse");
+    let emitted = internal::emit_in(&program, &locale);
+    let reparsed = internal::parse_in(&emitted, &locale);
     assert!(roundtrip::equivalent_wir(&program, &reparsed));
     assert!(emitted.contains("Custom Label: \"Keep this\""));
     assert!(emitted.contains("Custom Number: 42"));
@@ -317,7 +300,7 @@ fn workshop_namespace_preserves_custom_settings_without_residuals() {
 fn localized_workshop_namespace_is_known() {
     let source = "settings { 地图工坊 { 自定义: 1 } }";
     let catalog = Catalog::builtin().expect("catalog");
-    let program = parser::parse_wir(source, &catalog, &Locale::new("zh-CN")).expect("parse");
+    let program = internal::parse_in(source, &zh());
     assert!(
         semantic::inspect_wir(&program, &catalog).is_empty(),
         "issues: {:?}, settings: {:?}",
@@ -330,7 +313,7 @@ fn localized_workshop_namespace_is_known() {
 fn localized_wrecking_ball_settings_aliases_are_known() {
     let source = "settings { heroes { 综合 { 破坏球 {\n工程抓钩冷却时间: 80%\n感应护盾冷却时间: 80%\n重力坠击冷却时间: 75%\n} } } }";
     let catalog = Catalog::builtin().expect("catalog");
-    let program = parser::parse_wir(source, &catalog, &Locale::new("zh-CN")).expect("parse");
+    let program = internal::parse_in(source, &zh());
     assert!(
         semantic::inspect_wir(&program, &catalog).is_empty(),
         "issues: {:?}, settings: {:?}",
@@ -730,7 +713,7 @@ fn settings_schema_catalog_is_complete_and_conflict_checked() {
 
 #[test]
 fn reconciled_export_enum_members_remain_writable() {
-    let catalog = catalog();
+    let _catalog = catalog();
     for (source, id, path, member, expected) in [
         (
             "settings { modes { General { Hero Limit: Off } } }",
@@ -747,8 +730,7 @@ fn reconciled_export_enum_members_remain_writable() {
             "Map Rotation: After A Mirror Match",
         ),
     ] {
-        let mut program = parser::parse_wir(source, &catalog, &Locale::new("en-US"))
-            .expect("parse fixture-owned enum setting");
+        let mut program = internal::parse(source);
         let definition = definitions_by_id(&SettingId::from(id))
             .find(|definition| definition.path() == path)
             .expect("reconciled enum definition");
@@ -760,14 +742,14 @@ fn reconciled_export_enum_members_remain_writable() {
             )
             .expect("export-backed enum member remains writable");
 
-        let emitted = emitter::emit_wir(&program, &catalog, &Locale::new("en-US")).expect("emit");
+        let emitted = internal::emit(&program);
         assert!(emitted.contains(expected), "{emitted}");
     }
 }
 
 #[test]
 fn typed_settings_read_and_write_preserve_unrelated_structure() {
-    let catalog = Catalog::builtin().expect("catalog");
+    let _catalog = Catalog::builtin().expect("catalog");
     let source = r#"settings {
         main {
             Description: "keep this"
@@ -783,7 +765,7 @@ fn typed_settings_read_and_write_preserve_unrelated_structure() {
             }
         }
     }"#;
-    let mut program = parser::parse_wir(source, &catalog, &Locale::new("en-US")).expect("parse");
+    let mut program = internal::parse(source);
     let lobby = definitions_by_id(&SettingId::from("setting.lobby.spectatorSlots"))
         .next()
         .expect("lobby definition");
@@ -802,7 +784,7 @@ fn typed_settings_read_and_write_preserve_unrelated_structure() {
             SettingValue::Number(4.0),
         )
         .expect("typed write");
-    let emitted = emitter::emit_wir(&program, &catalog, &Locale::new("en-US")).expect("emit");
+    let emitted = internal::emit(&program);
     assert!(emitted.contains("Description: \"keep this\""));
     assert!(emitted.contains("Max Spectators: 4"));
 
@@ -848,9 +830,9 @@ fn typed_settings_read_and_write_preserve_unrelated_structure() {
 
 #[test]
 fn typed_settings_source_edit_replaces_only_the_existing_value_bytes() {
-    let catalog = Catalog::builtin().expect("catalog");
+    let _catalog = Catalog::builtin().expect("catalog");
     let source = "// 保留这条注释\nsettings {\n    lobby {\n        Max Spectators: 2 // and this one\n    }\n}";
-    let program = parser::parse_wir(source, &catalog, &Locale::new("en-US")).expect("parse");
+    let program = internal::parse(source);
     let settings = program.settings.as_ref().expect("settings");
     let definition = definitions_by_id(&SettingId::from("setting.lobby.spectatorSlots"))
         .next()
@@ -872,7 +854,7 @@ fn typed_settings_source_edit_replaces_only_the_existing_value_bytes() {
         edited,
         "// 保留这条注释\nsettings {\n    lobby {\n        Max Spectators: 4 // and this one\n    }\n}"
     );
-    let reparsed = parser::parse_wir(&edited, &catalog, &Locale::new("en-US")).expect("reparse");
+    let reparsed = internal::parse(&edited);
     assert_eq!(
         definition
             .read(
@@ -926,7 +908,7 @@ fn typed_settings_source_edit_rejects_missing_source_location() {
 fn typed_settings_source_edit_uses_settings_string_escaping() {
     let catalog = Catalog::builtin().expect("catalog");
     let source = "settings { main { Description: \"old\" } }";
-    let program = parser::parse_wir(source, &catalog, &Locale::new("en-US")).expect("parse");
+    let program = internal::parse(source);
     let definition = definitions_by_id(&SettingId::from("setting.main.description"))
         .next()
         .expect("description definition");
@@ -948,7 +930,7 @@ fn typed_settings_source_edit_uses_settings_string_escaping() {
     let reparsed = parser::parse_wir(
         &edit.apply(source).expect("apply source edit"),
         &catalog,
-        &Locale::new("en-US"),
+        &en(),
     )
     .expect("reparse escaped string");
     assert_eq!(
@@ -965,9 +947,9 @@ fn typed_settings_source_edit_uses_settings_string_escaping() {
 
 #[test]
 fn typed_settings_source_edit_rejects_false_boolean_enum_values() {
-    let catalog = Catalog::builtin().expect("catalog");
+    let _catalog = Catalog::builtin().expect("catalog");
     let source = "settings { lobby { Match Voice Chat: Enabled } }";
-    let program = parser::parse_wir(source, &catalog, &Locale::new("en-US")).expect("parse");
+    let program = internal::parse(source);
     let definition = definitions_by_id(&SettingId::from("setting.lobby.enableMatchVoiceChat"))
         .next()
         .expect("match voice chat definition");
@@ -1000,7 +982,7 @@ fn typed_settings_errors_reject_invalid_members_and_non_applicable_targets() {
     let mut program = parser::parse_wir(
         "settings { modes { Assault { Limit Roles: 2 Of Each Role Per Team } } }",
         &catalog,
-        &Locale::new("en-US"),
+        &en(),
     )
     .expect("parse");
     let role_limit = definitions_by_id(&SettingId::from("setting.gameMode.roleLimit"))
@@ -1151,8 +1133,7 @@ fn declared_modes_inherit_general_settings_entries() {
     );
     let mut program = workshop_rs::Program::new();
     program.settings = Some(settings);
-    let emitted =
-        emitter::emit(&program, &catalog(), &Locale::new("en-US")).expect("emits settings");
+    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits settings");
     let deathmatch = emitted.find("Deathmatch").expect("Deathmatch mode block");
     let kill_cam = emitted.find("Kill Cam: Off").expect("Kill Cam: Off");
     assert!(deathmatch < kill_cam, "{emitted}");
@@ -1246,7 +1227,7 @@ fn check_emission_mirrors_emitter_acceptance() {
     let errors = check_emission(&settings);
     let mut program = workshop_rs::Program::new();
     program.settings = Some(settings);
-    let emit_error = emitter::emit(&program, &catalog(), &Locale::new("en-US"))
+    let emit_error = emitter::emit(&program, &catalog(), &en())
         .expect_err("the first offending member fails emission");
     assert_eq!(errors.len(), 2, "{errors:?}");
     assert_eq!(errors[0].to_string(), emit_error.to_string());

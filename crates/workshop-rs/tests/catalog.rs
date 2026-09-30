@@ -3,19 +3,12 @@
 //! malformed or colliding data. The primary locale (en-US) is complete;
 //! additional declared locales may be partially covered.
 
+use crate::common::{catalog, en, zh};
 use workshop_rs::catalog::{Catalog, Kind, Locale};
-
-fn builtin() -> Catalog {
-    Catalog::builtin().expect("built-in catalog validates")
-}
-
-fn en() -> Locale {
-    Locale::new("en-US")
-}
 
 #[test]
 fn builtin_catalog_loads_and_declares_the_pinned_workshop_locales() {
-    let catalog = builtin();
+    let catalog = catalog();
     assert!(catalog.supports(&en()));
     assert_eq!(
         catalog
@@ -43,7 +36,7 @@ fn builtin_catalog_loads_and_declares_the_pinned_workshop_locales() {
 
 #[test]
 fn localized_spelling_resolves_to_canonical_id_and_back() {
-    let catalog = builtin();
+    let catalog = catalog();
 
     // Action: "Disable Inspector Recording" -> disableInspector -> spelling.
     let entry = catalog
@@ -72,17 +65,17 @@ fn localized_spelling_resolves_to_canonical_id_and_back() {
     assert_eq!(entry.id, "forGlobalVariable");
     assert!(catalog.entry(Kind::Value, "global").is_none());
     assert_eq!(
-        catalog.spelling(Kind::Structural, &Locale::new("zh-CN"), "global"),
+        catalog.spelling(Kind::Structural, &zh(), "global"),
         Some("全局")
     );
 }
 
 #[test]
 fn canonical_and_localized_parameter_spellings_resolve_by_position() {
-    let catalog = builtin();
+    let catalog = catalog();
     let entry = catalog.entry(Kind::Action, "wait").expect("wait action");
     let en = en();
-    let zh = Locale::new("zh-CN");
+    let zh = zh();
 
     assert_eq!(entry.resolve_param(&en, "Duration"), Some(0));
     assert_eq!(entry.resolve_param(&zh, "Duration"), Some(0));
@@ -93,8 +86,8 @@ fn canonical_and_localized_parameter_spellings_resolve_by_position() {
 
 #[test]
 fn localized_string_presets_resolve_and_translate_by_identity() {
-    let catalog = builtin();
-    let zh = Locale::new("zh-CN");
+    let catalog = catalog();
+    let zh = zh();
     let preset = catalog
         .resolve_localized_string(&en(), "Hello")
         .expect("reviewed Hello preset resolves");
@@ -112,8 +105,8 @@ fn localized_string_presets_resolve_and_translate_by_identity() {
 
 #[test]
 fn zh_cn_break_and_abort_spellings_stay_distinct() {
-    let catalog = builtin();
-    let zh = Locale::new("zh-CN");
+    let catalog = catalog();
+    let zh = zh();
     for (spelling, id) in [("中断", "break"), ("跳出循环", "break"), ("中止", "abort")] {
         let entry = catalog
             .resolve(Kind::Action, &zh, spelling)
@@ -126,8 +119,8 @@ fn zh_cn_break_and_abort_spellings_stay_distinct() {
 
 #[test]
 fn zh_cn_is_firing_secondary_uses_the_pinned_overpy_spelling() {
-    let catalog = builtin();
-    let zh = Locale::new("zh-CN");
+    let catalog = catalog();
+    let zh = zh();
     for spelling in ["正在使用辅助武器", "正在发射辅助攻击"] {
         let entry = catalog
             .resolve(Kind::Value, &zh, spelling)
@@ -142,7 +135,7 @@ fn zh_cn_is_firing_secondary_uses_the_pinned_overpy_spelling() {
 
 #[test]
 fn enums_resolve_members_to_canonical_identity() {
-    let catalog = builtin();
+    let catalog = catalog();
     assert_eq!(
         catalog.resolve_enum_member("Beam", &en(), "Grapple Beam"),
         Some(("Beam".to_string(), "GRAPPLE".to_string()))
@@ -163,9 +156,9 @@ fn enums_resolve_members_to_canonical_identity() {
 
 #[test]
 fn canonical_color_white_spellings_resolve_through_the_catalog_boundary() {
-    let catalog = builtin();
+    let catalog = catalog();
     assert_eq!(
-        catalog.localized_enum_spelling("Color", &Locale::new("en-US"), "WHITE"),
+        catalog.localized_enum_spelling("Color", &en(), "WHITE"),
         Some("White")
     );
     assert_eq!(
@@ -180,8 +173,8 @@ fn canonical_color_white_spellings_resolve_through_the_catalog_boundary() {
 
 #[test]
 fn localized_enum_domains_and_real_project_values_resolve_canonically() {
-    let catalog = builtin();
-    let zh = Locale::new("zh-CN");
+    let catalog = catalog();
+    let zh = zh();
     assert_eq!(catalog.resolve_enum_domain(&zh, "按钮"), Some("Button"));
     assert_eq!(
         catalog.resolve_enum_member("Button", &zh, "技能1"),
@@ -203,7 +196,7 @@ fn localized_enum_domains_and_real_project_values_resolve_canonically() {
 
 #[test]
 fn unknown_spellings_and_ids_do_not_resolve() {
-    let catalog = builtin();
+    let catalog = catalog();
     assert!(
         catalog
             .resolve(Kind::Action, &en(), "Totally Unknown Thing")
@@ -219,7 +212,7 @@ fn unknown_spellings_and_ids_do_not_resolve() {
 
 #[test]
 fn locale_normalization_is_case_insensitive() {
-    let catalog = builtin();
+    let catalog = catalog();
     let en_upper = Locale::new("EN-US");
     assert_eq!(en_upper, en());
     assert!(catalog.supports(&en_upper));
@@ -280,7 +273,7 @@ fn partial_non_primary_locale_coverage_is_allowed() {
         ]
     }"#;
     let catalog = Catalog::load(partial).expect("partial coverage loads");
-    let zh = Locale::new("zh-CN");
+    let zh = zh();
     assert_eq!(catalog.locale_coverage(&zh).mapped, 1);
     assert_eq!(catalog.locale_coverage(&zh).total, 2);
     assert_eq!(
@@ -314,7 +307,7 @@ fn undeclared_locale_fails_validation() {
 fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
     // The canonical param order (named-arg binding, probes P6/P6b) and
     // en-US spellings are catalog-owned.
-    let catalog = builtin();
+    let catalog = catalog();
 
     // Action with a full canonical param list.
     let effect = catalog
@@ -378,7 +371,7 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
 
 #[test]
 fn evidence_backed_signature_types_are_exposed() {
-    let catalog = builtin();
+    let catalog = catalog();
     let max_health = catalog
         .entry(Kind::Value, "getMaxHealth")
         .expect("getMaxHealth");
@@ -395,7 +388,7 @@ fn evidence_backed_signature_types_are_exposed() {
 
 #[test]
 fn documented_action_and_value_signatures_are_inventory_entries() {
-    let catalog = builtin();
+    let catalog = catalog();
     let indexed = catalog
         .entry(Kind::Action, "setPlayerVariableAtIndex")
         .expect("indexed player-variable action");
@@ -441,7 +434,7 @@ fn builtin_entries_with_parameters_declare_reviewed_parameter_names() {
 
 #[test]
 fn catalog_defaults_remain_available_through_position_queries() {
-    let catalog = builtin();
+    let catalog = catalog();
     let wait = catalog.entry(Kind::Action, "wait").expect("wait");
 
     assert!(wait.has_param_defaults());
@@ -451,11 +444,11 @@ fn catalog_defaults_remain_available_through_position_queries() {
 
 #[test]
 fn min_max_are_canonical_operator_identities() {
-    let catalog = builtin();
+    let catalog = catalog();
     for (id, en_spelling, zh_spelling) in [("min", "Min", "较小"), ("max", "Max", "较大")] {
         let entry = catalog.entry(Kind::Operator, id).expect(id);
         assert_eq!(entry.spelling(&en()), Some(en_spelling));
-        assert_eq!(entry.spelling(&Locale::new("zh-CN")), Some(zh_spelling));
+        assert_eq!(entry.spelling(&zh()), Some(zh_spelling));
         assert_eq!(
             catalog
                 .resolve(Kind::Operator, &en(), en_spelling)
@@ -467,7 +460,7 @@ fn min_max_are_canonical_operator_identities() {
 
 #[test]
 fn array_removal_value_and_modification_identities_are_distinct() {
-    let catalog = builtin();
+    let catalog = catalog();
 
     assert_eq!(
         catalog
@@ -497,7 +490,7 @@ fn array_removal_value_and_modification_identities_are_distinct() {
 
 #[test]
 fn exercised_enum_domains_resolve_members_to_canonical_identity() {
-    let catalog = builtin();
+    let catalog = catalog();
 
     // Hero members resolve with their canonical ids and en-US spellings.
     assert_eq!(

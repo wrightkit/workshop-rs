@@ -1,8 +1,9 @@
+use super::common::{en, zh};
+use super::internal;
 use std::hint::black_box;
 use std::process::Command;
 use std::time::{Duration, Instant};
-use workshop_rs::catalog::{Catalog, Kind, Locale};
-use workshop_rs::emitter;
+use workshop_rs::catalog::{Catalog, Kind};
 use workshop_rs::parser;
 use workshop_rs::validate;
 
@@ -91,8 +92,8 @@ fn report_resident(label: &str, baseline: Option<u64>) {
 fn benchmark_audit_optimizations() {
     let bastion_text = include_str!("fixtures/real-projects/bastion.ow");
     let catalog = Catalog::builtin().expect("built-in catalog");
-    let en = Locale::new("en-US");
-    let zh = Locale::new("zh-CN");
+    let en = en();
+    let zh = zh();
 
     println!("\n=== AUDIT OPTIMIZATION & ABLATION MEASUREMENTS ===");
 
@@ -263,20 +264,19 @@ fn benchmark_audit_optimizations() {
     // ==========================================
     // 6. Emitter Allocations & Ablation (Issue #215)
     // ==========================================
-    let parsed_bastion =
-        parser::parse_wir_with_context(bastion_text, &catalog, &en, &catalog).unwrap();
+    let parsed_bastion = internal::parse_in(bastion_text, &en);
     let emit_iters = 500;
     // Optimized: Borrowed &'a str spelling returns
     let start = Instant::now();
     for _ in 0..emit_iters {
-        let _ = emitter::emit_wir(&parsed_bastion, &catalog, &en).unwrap();
+        let _ = internal::emit_in(&parsed_bastion, &en);
     }
     let emit_opt_dur = start.elapsed();
 
     // Ablated Baseline: simulate owned String allocations for each emitted keyword/name
     let start = Instant::now();
     for _ in 0..emit_iters {
-        let out = emitter::emit_wir(&parsed_bastion, &catalog, &en).unwrap();
+        let out = internal::emit_in(&parsed_bastion, &en);
         // Simulate the previous per-identifier String clone overhead (~1,500 identifier strings per bastion.ow emission)
         let _cloned_identifiers: Vec<String> = out
             .split_whitespace()
@@ -317,7 +317,7 @@ fn benchmark_audit_optimizations() {
             Wait(0, 0, 0, 0);
         }
     }"#;
-    let parsed_err = parser::parse_wir_with_context(multi_error, &catalog, &en, &catalog).unwrap();
+    let parsed_err = internal::parse_in(multi_error, &en);
     let val_iters = 20_000;
     // Optimized: Early short-circuit on first error
     let start = Instant::now();
@@ -340,15 +340,13 @@ fn benchmark_audit_optimizations() {
 fn benchmark_program_conversion_and_static_data() {
     let source = include_str!("fixtures/corpus/control-flow.ws");
     let catalog = Catalog::builtin().expect("built-in catalog");
-    let locale = Locale::new("en-US");
+    let locale = en();
     let program = parser::parse_with_context(source, &catalog, &locale, &catalog)
         .expect("representative program parses");
-    let wir = parser::parse_wir_with_context(source, &catalog, &locale, &catalog)
-        .expect("representative WIR parses");
+    let wir = internal::parse_in(source, &locale);
     let emitted_program = workshop_rs::emitter::emit(&program, &catalog, &locale)
         .expect("representative program emits");
-    let emitted_wir =
-        workshop_rs::emitter::emit_wir(&wir, &catalog, &locale).expect("representative WIR emits");
+    let emitted_wir = internal::emit_in(&wir, &locale);
     assert_eq!(emitted_program, emitted_wir);
     let program_count = program
         .element_count(&catalog)
@@ -373,9 +371,7 @@ fn benchmark_program_conversion_and_static_data() {
     let parsed_program = benchmark_duration(iterations, || {
         parser::parse_with_context(source, &catalog, &locale, &catalog).expect("program parse")
     });
-    let parsed_wir = benchmark_duration(iterations, || {
-        parser::parse_wir_with_context(source, &catalog, &locale, &catalog).expect("WIR parse")
-    });
+    let parsed_wir = benchmark_duration(iterations, || internal::parse_in(source, &locale));
     report_conversion_share("parse", parsed_program, parsed_wir, iterations);
 
     let validated_program =
@@ -386,9 +382,7 @@ fn benchmark_program_conversion_and_static_data() {
     let emitted_program_duration = benchmark_duration(iterations, || {
         workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emit")
     });
-    let emitted_wir_duration = benchmark_duration(iterations, || {
-        workshop_rs::emitter::emit_wir(&wir, &catalog, &locale).expect("emit WIR")
-    });
+    let emitted_wir_duration = benchmark_duration(iterations, || internal::emit_in(&wir, &locale));
     report_conversion_share(
         "emit",
         emitted_program_duration,

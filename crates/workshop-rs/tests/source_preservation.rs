@@ -1,15 +1,11 @@
-use workshop_rs::catalog::{Catalog, Locale};
+use super::common::{catalog, en};
 use workshop_rs::source::{FileId, Position, SourceFile, Span};
 use workshop_rs::{parser, roundtrip};
-
-fn catalog() -> Catalog {
-    Catalog::builtin().expect("builtin catalog")
-}
 
 #[test]
 fn raw_parse_retains_comments_and_attaches_inner_comments_by_span() {
     let source = "// file header\nrule (\"comments\") { // rule header\n    event { Ongoing - Global; } // event note\n    actions { Wait(1, Ignore Condition); } // action note\n}\n// file footer\n";
-    let program = parser::parse(source, &catalog(), &Locale::new("en-US")).expect("parses");
+    let program = parser::parse(source, &catalog(), &en()).expect("parses");
     let document = program
         .source(workshop_rs::source::FileId::from_index(0))
         .expect("raw parsing retains source");
@@ -31,7 +27,7 @@ fn raw_parse_retains_comments_and_attaches_inner_comments_by_span() {
 fn source_span_operations_fail_closed_for_another_file() {
     let source =
         "rule (\"one\") { event { Ongoing - Global; } actions { Wait(1, Ignore Condition); } }";
-    let program = parser::parse(source, &catalog(), &Locale::new("en-US")).expect("parses");
+    let program = parser::parse(source, &catalog(), &en()).expect("parses");
     let document = program.source(FileId::from_index(0)).unwrap();
     let rule_span = program.rule_span(0).expect("public rule span");
     let foreign_span = Span::new(FileId::from_index(1), rule_span.start, rule_span.end);
@@ -63,7 +59,7 @@ fn late_source_attachment_preserves_bound_file_identity() {
 #[test]
 fn disabled_rule_span_includes_modifier_and_intervening_comment() {
     let source = "disabled // modifier note\nrule (\"disabled\") { event { Ongoing - Global; } actions { Wait(1, Ignore Condition); } }";
-    let program = parser::parse(source, &catalog(), &Locale::new("en-US")).expect("parses");
+    let program = parser::parse(source, &catalog(), &en()).expect("parses");
     assert!(program.rules[0].disabled);
     let document = program.source(FileId::from_index(0)).unwrap();
     let span = program.rule_span(0).expect("public rule span");
@@ -75,7 +71,7 @@ fn disabled_rule_span_includes_modifier_and_intervening_comment() {
 fn source_edit_preserves_unrelated_trivia_and_reparses_semantics() {
     let source = "// retain this\nrule (\"edit\") {\n  event { Ongoing - Global; }\n  actions { Wait(1, Ignore Condition); } // retain this too\n}\n";
     let catalog = catalog();
-    let program = parser::parse(source, &catalog, &Locale::new("en-US")).expect("parses");
+    let program = parser::parse(source, &catalog, &en()).expect("parses");
     let span = program
         .action_argument_span(0, 0, 0)
         .expect("public action argument span");
@@ -88,8 +84,7 @@ fn source_edit_preserves_unrelated_trivia_and_reparses_semantics() {
     assert!(updated.text().contains("// retain this too"));
     assert!(updated.text().contains("Wait(2, Ignore Condition)"));
 
-    let reparsed = parser::parse(updated.text(), &catalog, &Locale::new("en-US"))
-        .expect("edited source reparses");
+    let reparsed = parser::parse(updated.text(), &catalog, &en()).expect("edited source reparses");
     assert!(!roundtrip::equivalent(&program, &reparsed));
     assert!(reparsed.action_argument_span(0, 0, 0).is_some());
 }
@@ -97,7 +92,7 @@ fn source_edit_preserves_unrelated_trivia_and_reparses_semantics() {
 #[test]
 fn synthesized_control_flow_markers_have_no_enclosing_block_span() {
     let source = "rule (\"control\") {\n    event { Ongoing - Global; }\n    actions {\n        If(True);\n            Wait(1, Ignore Condition);\n        Else;\n            Wait(2, Ignore Condition);\n        End;\n    }\n}\n";
-    let program = parser::parse(source, &catalog(), &Locale::new("en-US")).expect("parses");
+    let program = parser::parse(source, &catalog(), &en()).expect("parses");
 
     assert!(program.action_span(0, 0).is_some());
     assert!(program.action_span(0, 1).is_some());
@@ -110,7 +105,7 @@ fn synthesized_control_flow_markers_have_no_enclosing_block_span() {
 #[test]
 fn unsupported_mixed_source_is_rejected_without_fabricated_workshop_semantics() {
     let mixed = "rule (\"raw\") { event { Ongoing - Global; } actions { Wait(1, Ignore Condition); } }\n@if deltin_only_construct\n";
-    let error = parser::parse(mixed, &catalog(), &Locale::new("en-US"))
+    let error = parser::parse(mixed, &catalog(), &en())
         .expect_err("mixed source is outside raw Workshop parsing");
     assert!(matches!(
         error,

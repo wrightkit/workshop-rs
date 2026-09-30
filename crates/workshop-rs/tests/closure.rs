@@ -9,24 +9,12 @@
 //! emitter. Oracle-canonical spellings pinned by repros are
 //! asserted in the emitter tests (AC-15/16).
 
-use workshop_rs::catalog::{Catalog, Locale};
-use workshop_rs::emitter;
-use workshop_rs::parser;
-
-fn catalog() -> Catalog {
-    Catalog::builtin().unwrap()
-}
-
-fn en() -> Locale {
-    Locale::new("en-US")
-}
+use super::internal;
 
 /// Parse an emitted artifact, re-emit, and assert byte-identity.
 fn assert_closure(label: &str, artifact: &str) {
-    let program = parser::parse_wir(artifact, &catalog(), &en())
-        .unwrap_or_else(|error| panic!("{label} must reparse: {error}"));
-    let reemitted = emitter::emit_wir(&program, &catalog(), &en())
-        .unwrap_or_else(|error| panic!("{label} must re-emit: {error}"));
+    let program = internal::parse(artifact);
+    let reemitted = internal::emit(&program);
     assert_eq!(
         artifact, reemitted,
         "{label} emitted spelling must be a byte-identical fixed point"

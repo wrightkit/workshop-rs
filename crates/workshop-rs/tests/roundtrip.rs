@@ -2,28 +2,9 @@
 //! round-trips with regression fixtures; equivalence ignores presentation-only
 //! differences, and negative fixtures fail at the right stage.
 
-use std::path::{Path, PathBuf};
-
-use workshop_rs::catalog::{Catalog, Locale};
+use super::common::{self, catalog, en};
+use super::internal;
 use workshop_rs::roundtrip::{self, RoundTripRecord};
-
-fn corpus_path(fixture_id: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/corpus")
-        .join(format!("{fixture_id}.ws"))
-}
-
-fn corpus_text(fixture_id: &str) -> String {
-    std::fs::read_to_string(corpus_path(fixture_id)).unwrap()
-}
-
-fn catalog() -> Catalog {
-    Catalog::builtin().unwrap()
-}
-
-fn en() -> Locale {
-    Locale::new("en-US")
-}
 
 #[test]
 fn every_corpus_fixture_round_trips_with_full_evidence() {
@@ -40,8 +21,12 @@ fn every_corpus_fixture_round_trips_with_full_evidence() {
         "overpy-cake",
     ] {
         let catalog = catalog();
-        let record =
-            roundtrip::round_trip_with_context(&corpus_text(fixture_id), &catalog, &en(), &catalog);
+        let record = roundtrip::round_trip_with_context(
+            &common::corpus_text(fixture_id),
+            &catalog,
+            &en(),
+            &catalog,
+        );
         assert!(
             record.error.is_none(),
             "{fixture_id} must round-trip cleanly"
@@ -72,7 +57,12 @@ fn same_locale_round_trip_is_a_release_gate() {
     .iter()
     .map(|fixture_id| {
         let catalog = catalog();
-        roundtrip::round_trip_with_context(&corpus_text(fixture_id), &catalog, &en(), &catalog)
+        roundtrip::round_trip_with_context(
+            &common::corpus_text(fixture_id),
+            &catalog,
+            &en(),
+            &catalog,
+        )
     })
     .filter(|record: &RoundTripRecord| !record.equivalent || record.error.is_some())
     .map(|record| record.locale.to_string())
@@ -202,8 +192,7 @@ fn unknown_builtin_fails_at_emit_stage() {
         actions: vec![call],
     });
     // Equivalent to the round-trip emit stage: emission of unknown ids fails.
-    let error =
-        workshop_rs::emitter::emit_wir(&program, &catalog(), &en()).expect_err("unknown id");
+    let error = internal::try_emit(&program).expect_err("unknown id");
     assert!(error.to_string().contains("notACatalogId"));
 }
 
@@ -282,16 +271,14 @@ fn context_chase_none_emission_is_a_fixed_point() {
     // Parse the emitted form with context, emit, reparse with context, and
     // emit again: the text is a fixed point.
     let text = "variables { global: 0: g }\nrule (\"chase\") { event { Ongoing - Global; } actions { Chase Global Variable Over Time(Global.g, 0, 30, None); } }";
-    let catalog = catalog();
-    let first = workshop_rs::parser::parse_wir_with_context(text, &catalog, &en(), &catalog)
-        .expect("pinned Chase None parses");
-    let emitted = workshop_rs::emitter::emit_wir(&first, &catalog, &en()).expect("emits");
+    let _catalog = catalog();
+    let first = internal::parse(text);
+    let emitted = internal::emit(&first);
     assert!(
         emitted.contains("Chase Global Variable Over Time(Global.g, 0, 30, None)"),
         "emission preserves the bare None spelling:\n{emitted}"
     );
-    let reparsed = workshop_rs::parser::parse_wir_with_context(&emitted, &catalog, &en(), &catalog)
-        .expect("emitted text reparses with context");
-    let reemitted = workshop_rs::emitter::emit_wir(&reparsed, &catalog, &en()).expect("re-emits");
+    let reparsed = internal::parse(&emitted);
+    let reemitted = internal::emit(&reparsed);
     assert_eq!(emitted, reemitted, "emission must be a fixed point");
 }

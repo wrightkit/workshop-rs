@@ -2,9 +2,6 @@
 //! into validated, locale-independent WIR, and diagnostics distinguish
 //! malformed, unknown, and unsupported input.
 
-use std::path::{Path, PathBuf};
-
-use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::convert;
 use workshop_rs::emitter;
 use workshop_rs::parser;
@@ -12,30 +9,15 @@ use workshop_rs::roundtrip;
 use workshop_rs::validate;
 use workshop_rs::wir;
 
-use super::common;
-
-fn fixture_path(fixture_id: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("tests/fixtures/corpus")
-        .join(format!("{fixture_id}.ws"))
-}
-
-fn corpus_workshop_text(fixture_id: &str) -> String {
-    std::fs::read_to_string(fixture_path(fixture_id))
-        .unwrap_or_else(|error| panic!("cannot read corpus fixture {fixture_id}: {error}"))
-}
-
-fn catalog() -> Catalog {
-    Catalog::builtin().expect("built-in catalog")
-}
+use super::common::{self, catalog, en, zh};
+use super::internal;
 
 #[test]
 fn pinned_real_projects_parse_with_expected_semantic_residuals() {
     let catalog = catalog();
     for case in common::cases() {
         let (source, locale) = common::source(case);
-        let program = parser::parse_wir_with_context(&source, &catalog, &locale, &catalog)
-            .unwrap_or_else(|error| panic!("{} parse failed: {error:?}", case.id));
+        let program = internal::parse_in(&source, &locale);
         common::assert_residual_policy(case, "source-parse", &program.semantic_issues(&catalog));
         if let Err(error) = validate::validate_canonical_ids_wir(&program, &catalog) {
             common::assert_gap(case, common::RealProjectStage::CanonicalValidation, &error);
@@ -63,9 +45,7 @@ rule("colonated enum")
     }
 }
 "#;
-    let program =
-        parser::parse_wir_with_context(source, &catalog(), &Locale::new("en-US"), &catalog())
-            .expect("Arrow: Up resolves through Icon");
+    let program = internal::parse(source);
     assert!(program
         .values
         .iter()
@@ -74,10 +54,10 @@ rule("colonated enum")
 
 #[test]
 fn evidenced_uppercase_hex_literal_matches_decimal_program() {
-    let hex_source = corpus_workshop_text("minimized/opy-syntax-surface-hex");
+    let hex_source = common::corpus_text("minimized/opy-syntax-surface-hex");
     let decimal_source = hex_source.replace("0X20", "32");
     let catalog = catalog();
-    let locale = Locale::new("en-US");
+    let locale = en();
     let hex_program = parser::parse(&hex_source, &catalog, &locale)
         .expect("pinned OverPy Workshop output with 0X20 must parse");
     let decimal_program =
@@ -95,10 +75,7 @@ fn evidenced_uppercase_hex_literal_matches_decimal_program() {
 
 #[test]
 fn localized_hero_call_resolves_dotted_member() {
-    assert_eq!(
-        catalog().resolve_enum_domain(&Locale::new("zh-CN"), "英雄"),
-        Some("Hero")
-    );
+    assert_eq!(catalog().resolve_enum_domain(&zh(), "英雄"), Some("Hero"));
     let source = r#"规则("hero")
 {
     event
@@ -111,9 +88,7 @@ fn localized_hero_call_resolves_dotted_member() {
     }
 }
 "#;
-    let program =
-        parser::parse_wir_with_context(source, &catalog(), &Locale::new("zh-CN"), &catalog())
-            .expect("localized Hero(D.Va) resolves");
+    let program = internal::parse_in(source, &zh());
     assert!(program.values.iter().any(|value| matches!(value.value, wir::Value::Enum { ref value_type, ref value } if value_type == "Hero" && value == "DVA")));
 }
 
@@ -132,8 +107,7 @@ fn dotted_localized_catalog_effect_resolves_as_one_member() {
 }
 "#;
     let catalog = catalog();
-    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("zh-CN"), &catalog)
-        .expect("dotted localized effect alias resolves");
+    let program = internal::parse_in(source, &zh());
     assert!(program.values.iter().any(|value| matches!(
         value.value,
         wir::Value::Enum { ref value_type, ref value }
@@ -151,8 +125,7 @@ fn dotted_english_catalog_effect_resolves_as_one_member() {
 }
 "#;
     let catalog = catalog();
-    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
-        .expect("English effect alias resolves");
+    let program = internal::parse(source);
     assert!(program.values.iter().any(|value| matches!(
         value.value,
         wir::Value::Enum { ref value_type, ref value }
@@ -170,8 +143,7 @@ fn unresolved_dotted_value_remains_a_source_located_issue() {
 }
 "#;
     let catalog = catalog();
-    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("zh-CN"), &catalog)
-        .expect("unresolved dotted value remains parseable");
+    let program = internal::parse_in(source, &zh());
     let issues = program.semantic_issues(&catalog);
     let issue = issues
         .iter()
@@ -198,8 +170,7 @@ rule ("indexed") {
 }
 "##;
     let catalog = catalog();
-    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
-        .expect("indexed global variable action parses");
+    let program = internal::parse(source);
     let action = program.actions.iter().next().expect("indexed action");
     let wir::Action::Call { args, .. } = action else {
         panic!("expected generic indexed-variable action");
@@ -231,11 +202,9 @@ fn every_corpus_workshop_text_parses_to_valid_wir() {
     // `Visible To and String`). Unpinned members retain all catalog-backed
     // candidates instead of fabricating a domain.
     for fixture_id in CORPUS_FIXTURES {
-        let text = corpus_workshop_text(fixture_id);
+        let text = common::corpus_text(fixture_id);
         let catalog = catalog();
-        let program =
-            parser::parse_wir_with_context(&text, &catalog, &Locale::new("en-US"), &catalog)
-                .unwrap_or_else(|error| panic!("{fixture_id} must parse:\n{error}"));
+        let program = internal::parse(&text);
         program
             .validate()
             .unwrap_or_else(|error| panic!("{fixture_id} WIR must validate: {error}"));
@@ -256,9 +225,8 @@ fn member_assignment_lowers_to_canonical_wir() {
         Global.botOrisaChild.botDoesUniqueBehaviour = False;
         Event Player.beamID.uppercutMomentum += 1;
     } }"#;
-    let catalog = catalog();
-    let program = parser::parse_wir_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
-        .expect("member assignments parse");
+    let _catalog = catalog();
+    let program = internal::parse(text);
     assert!(
         program
             .actions
@@ -279,12 +247,10 @@ fn member_assignment_lowers_to_canonical_wir() {
 
 #[test]
 fn parsing_is_deterministic() {
-    let text = corpus_workshop_text("control-flow");
-    let catalog = catalog();
-    let first =
-        parser::parse_wir_with_context(&text, &catalog, &Locale::new("en-US"), &catalog).unwrap();
-    let second =
-        parser::parse_wir_with_context(&text, &catalog, &Locale::new("en-US"), &catalog).unwrap();
+    let text = common::corpus_text("control-flow");
+    let _catalog = catalog();
+    let first = internal::parse(&text);
+    let second = internal::parse(&text);
     assert_eq!(first.dump(), second.dump());
 }
 
@@ -292,9 +258,9 @@ fn parsing_is_deterministic() {
 fn parsed_variables_and_subroutines_carry_indexes() {
     let catalog = catalog();
     let program = parser::parse_wir_with_context(
-        &corpus_workshop_text("declarations-rules"),
+        &common::corpus_text("declarations-rules"),
         &catalog,
-        &Locale::new("en-US"),
+        &en(),
         &catalog,
     )
     .unwrap();
@@ -322,9 +288,9 @@ fn parsed_variables_and_subroutines_carry_indexes() {
 fn parsed_events_are_canonical() {
     let catalog = catalog();
     let program = parser::parse_wir_with_context(
-        &corpus_workshop_text("declarations-rules"),
+        &common::corpus_text("declarations-rules"),
         &catalog,
-        &Locale::new("en-US"),
+        &en(),
         &catalog,
     )
     .unwrap();
@@ -355,9 +321,9 @@ fn parsed_events_are_canonical() {
 fn parsed_conditions_resolve_infix_operators() {
     let catalog = catalog();
     let program = parser::parse_wir_with_context(
-        &corpus_workshop_text("declarations-rules"),
+        &common::corpus_text("declarations-rules"),
         &catalog,
-        &Locale::new("en-US"),
+        &en(),
         &catalog,
     )
     .unwrap();
@@ -380,8 +346,8 @@ fn parsed_conditions_resolve_infix_operators() {
 
 #[test]
 fn spans_are_preserved() {
-    let text = corpus_workshop_text("basic-rule");
-    let program = parser::parse_wir(&text, &catalog(), &Locale::new("en-US")).unwrap();
+    let text = common::corpus_text("basic-rule");
+    let program = internal::parse(&text);
     let rule = program.rules.iter().next().unwrap();
     let rule_span = rule.span.expect("rule span");
     assert_eq!(rule.name, "setup");
@@ -396,7 +362,7 @@ fn malformed_input_is_reported_as_malformed() {
     // A rule-final If without `End;` is the oracle's valid spelling; an If
     // whose body never closes at all stays malformed.
     let text = "rule (\"broken\") { actions { If(True);";
-    let error = parser::parse_wir(text, &catalog(), &Locale::new("en-US")).unwrap_err();
+    let error = internal::try_parse(text).unwrap_err();
     assert!(
         matches!(error, workshop_rs::WorkshopError::Malformed { .. }),
         "an unclosed If body is malformed: {error}"
@@ -407,15 +373,14 @@ fn malformed_input_is_reported_as_malformed() {
 #[test]
 fn rule_final_if_without_end_is_the_oracle_spelling() {
     let text = "rule (\"ok\") { actions { If(True); } }";
-    let program = parser::parse_wir(text, &catalog(), &Locale::new("en-US"))
-        .expect("a rule-final If without End; is valid (oracle spelling)");
+    let program = internal::parse(text);
     assert_eq!(program.rules.len(), 1);
 }
 
 #[test]
 fn unknown_spelling_is_reported_as_unknown() {
     let text = "rule (\"x\") { event { Ongoing - Global; } actions { Totally Unknown Thing(1); } }";
-    let error = parser::parse_wir(text, &catalog(), &Locale::new("en-US")).unwrap_err();
+    let error = internal::try_parse(text).unwrap_err();
     assert!(
         matches!(error, workshop_rs::WorkshopError::Unknown { .. }),
         "unknown action must be Unknown: {error}"
@@ -427,8 +392,7 @@ fn unknown_spelling_is_reported_as_unknown() {
 fn canonical_validation_enforces_declared_arity_and_enum_domain() {
     let catalog = catalog();
     let arity = r#"rule ("arity") { event { Ongoing - Global; } actions { Wait(); } }"#;
-    let program = parser::parse_wir_with_context(arity, &catalog, &Locale::new("en-US"), &catalog)
-        .expect("parser preserves the call for canonical validation");
+    let program = internal::parse(arity);
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("missing required signature argument must be rejected");
     assert!(
@@ -438,9 +402,7 @@ fn canonical_validation_enforces_declared_arity_and_enum_domain() {
     );
 
     let wrong_domain = r#"rule ("domain") { event { Ongoing - Global; } actions { Set Invisible(All Players(All Teams), Color(White)); } }"#;
-    let program =
-        parser::parse_wir_with_context(wrong_domain, &catalog, &Locale::new("en-US"), &catalog)
-            .expect("parser preserves the call for canonical validation");
+    let program = internal::parse(wrong_domain);
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("wrong enum domain must be rejected");
     assert!(
@@ -461,21 +423,19 @@ fn remaining_value_contracts_are_canonical_and_type_checked() {
         Set Global Variable(probe, Randomized Array(Array(1, 2)));
         Set Global Variable(probe, Raise To Power(2, 3));
     } }"#;
-    let locale = Locale::new("en-US");
-    let program = parser::parse_wir_with_context(source, &catalog, &locale, &catalog)
-        .expect("the three declared Value contracts parse");
+    let locale = en();
+    let program = internal::parse_in(source, &locale);
     validate::validate_canonical_ids_wir(&program, &catalog)
         .expect("the three Values resolve to canonical ids");
     program
         .validate()
         .expect("the three Value signatures validate");
-    let emitted = workshop_rs::emitter::emit_wir(&program, &catalog, &locale)
-        .expect("localized String emits through its dedicated path");
+    let emitted = internal::emit_in(&program, &locale);
     assert!(emitted.contains("String()"));
     assert!(emitted.contains("String(\"Hello\")"));
     assert!(emitted.contains("String(\"Hello\", Null)"));
     assert!(emitted.contains("String(\"Hello\", Null, Null, Null)"));
-    let zh = Locale::new("zh-CN");
+    let zh = zh();
     let converted = convert::convert(source, &catalog, &locale, &zh, &Default::default())
         .expect("String converts to zh-CN");
     assert!(converted.text.contains("字符串(\"问候\")"));
@@ -498,8 +458,7 @@ fn remaining_value_contracts_are_canonical_and_type_checked() {
         r#"rule ("wrong-array") { event { Ongoing - Global; } actions { Set Global Variable(probe, Randomized Array(1)); } }"#,
         r#"rule ("wrong-power") { event { Ongoing - Global; } actions { Set Global Variable(probe, Raise To Power(1, Custom String("wrong"))); } }"#,
     ] {
-        let Ok(program) = parser::parse_wir_with_context(source, &catalog, &locale, &catalog)
-        else {
+        let Ok(program) = internal::try_parse_in(source, &locale) else {
             continue;
         };
         assert!(
@@ -513,9 +472,7 @@ fn remaining_value_contracts_are_canonical_and_type_checked() {
 fn canonical_validation_enforces_literal_types_and_value_return_types() {
     let catalog = catalog();
     let wrong_literal = r#"rule ("type") { event { Ongoing - Global; } actions { Teleport(Event Player, Color(White)); } }"#;
-    let program =
-        parser::parse_wir_with_context(wrong_literal, &catalog, &Locale::new("en-US"), &catalog)
-            .expect("parser preserves a typed call for canonical validation");
+    let program = internal::parse(wrong_literal);
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("a Color is not a Vector action parameter");
     assert!(
@@ -525,9 +482,7 @@ fn canonical_validation_enforces_literal_types_and_value_return_types() {
     );
 
     let wrong_return = r#"rule ("return") { event { Ongoing - Global; } actions { Teleport(Event Player, Max Health(Event Player)); } }"#;
-    let program =
-        parser::parse_wir_with_context(wrong_return, &catalog, &Locale::new("en-US"), &catalog)
-            .expect("parser preserves a value-returning call for canonical validation");
+    let program = internal::parse(wrong_return);
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("a Number Value return is not a Vector action parameter");
     assert!(
@@ -547,8 +502,7 @@ fn canonical_validation_rejects_incompatible_variable_reference_types() {
 rule ("type") { event { Ongoing - Global; } actions {
     Set Player Variable At Index(1, 0, 1);
 } }"#;
-    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
-        .expect("parser preserves the incompatible indexed-variable call");
+    let program = internal::parse(source);
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("a number is not a player-variable reference");
     assert!(
@@ -568,9 +522,7 @@ fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
             Teleport(Color(White), Color(White));
         }
     }"#;
-    let program =
-        parser::parse_wir_with_context(multi_arg_source, &catalog, &Locale::new("en-US"), &catalog)
-            .expect("parser preserves multi-arg error input for validation");
+    let program = internal::parse(multi_arg_source);
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("multi-arg error must fail with first argument error");
     assert!(
@@ -586,13 +538,8 @@ fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
             Teleport(Event Player, Max Health(Event Player));
         }
     }"#;
-    let program = parser::parse_wir_with_context(
-        multi_action_source,
-        &catalog,
-        &Locale::new("en-US"),
-        &catalog,
-    )
-    .expect("parser preserves multi-action error input for validation");
+    let program = parser::parse_wir_with_context(multi_action_source, &catalog, &en(), &catalog)
+        .expect("parser preserves multi-action error input for validation");
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
         .expect_err("multi-action error must fail validation with first action error");
     assert!(
@@ -605,8 +552,7 @@ fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
 fn current_loop_action_resolves_to_canonical_generic_wir() {
     let catalog = catalog();
     let source = r#"rule ("loop") { event { Ongoing - Global; } actions { Loop; } }"#;
-    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
-        .expect("declared Loop action parses");
+    let program = internal::parse(source);
     let rule = program.rules.get(wir::RuleId::from_index(0)).expect("rule");
     let action = program.actions.get(rule.actions[0]).expect("action");
     assert!(matches!(
@@ -626,7 +572,7 @@ fn current_loop_action_resolves_to_canonical_generic_wir() {
 fn unsupported_construct_is_distinct_from_malformed() {
     // A non-default eachPlayer sub-parameter is recognized but unsupported.
     let text = "rule (\"x\") { event { Ongoing - Each Player; Team 1; } actions { } }";
-    let error = parser::parse_wir(text, &catalog(), &Locale::new("en-US")).unwrap_err();
+    let error = internal::try_parse(text).unwrap_err();
     assert!(
         matches!(error, workshop_rs::WorkshopError::Unsupported { .. }),
         "non-default event parameter must be Unsupported: {error}"
@@ -639,8 +585,7 @@ fn bare_chase_reevaluation_none_is_ambiguous_across_domains() {
     // Without a signature pin the catalog-backed parser retains all matching
     // canonical candidates instead of choosing a domain.
     let text = "variables { global: 0: g }\nrule (\"x\") { event { Ongoing - Global; } actions { Set Global Variable(g, None); } }";
-    let program = parser::parse_wir(text, &catalog(), &Locale::new("en-US"))
-        .expect("the shared None member spelling must be preserved");
+    let program = internal::parse(text);
     let value_id = match program.actions.iter().next().expect("action") {
         wir::Action::SetGlobalVariable { value, .. } => *value,
         action => panic!("expected a global assignment, got {action:?}"),
@@ -702,7 +647,7 @@ rule ("chase reevaluation enums") {
 }
 "#;
     let catalog = catalog();
-    let locale = Locale::new("en-US");
+    let locale = en();
     let program = parser::parse(text, &catalog, &locale).expect("pinned artifact parses");
     program.validate().expect("preserved candidates validate");
     let emitted = emitter::emit(&program, &catalog, &locale).expect("pinned artifact emits");
@@ -714,8 +659,8 @@ rule ("chase reevaluation enums") {
 #[test]
 fn explicit_locale_is_honored() {
     // en-US parsing is deterministic; the parser never guesses a locale.
-    let text = corpus_workshop_text("basic-rule");
-    let program = parser::parse_wir(&text, &catalog(), &Locale::new("en-US")).unwrap();
+    let text = common::corpus_text("basic-rule");
+    let program = internal::parse(&text);
     let dump = program.dump();
     assert!(!dump.is_empty());
 }
@@ -739,9 +684,7 @@ fn context_pinned_ambiguous_none_resolves_via_canonical_signature() {
     // pins argument 3 to the ChaseTimeReeval domain (catalog data, migrated
     // from the Wright-authored manifest probes).
     let text = "variables { global: 0: g }\nrule (\"x\") { event { Ongoing - Global; } actions { Chase Global Variable Over Time(Global.g, 0, 30, None); } }";
-    let program =
-        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-            .expect("the pinned Chase None must resolve");
+    let program = internal::parse(text);
     let value = enum_value_of_first_action(&program, 0);
     assert!(
         matches!(value, wir::Value::Enum { value_type, value }
@@ -756,9 +699,7 @@ fn context_pinned_ambiguous_none_resolves_for_set_invisible() {
     // canonical setInvisibility signature pins argument 1 to the Invis
     // domain (member-action receiver offset).
     let text = "rule (\"x\") { event { Ongoing - Each Player; } actions { Set Invisible(Event Player, None); } }";
-    let program =
-        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-            .expect("the pinned Invis None must resolve");
+    let program = internal::parse(text);
     let value = enum_value_of_first_action(&program, 0);
     assert!(
         matches!(value, wir::Value::Enum { value_type, value }
@@ -769,11 +710,10 @@ fn context_pinned_ambiguous_none_resolves_for_set_invisible() {
 
 #[test]
 fn released_parse_contract_resolves_pinned_oracle_members() {
-    let catalog = catalog();
-    let locale = Locale::new("en-US");
+    let _catalog = catalog();
+    let locale = en();
 
-    let cake = parser::parse_wir(&corpus_workshop_text("overpy-cake"), &catalog, &locale)
-        .expect("the pinned cake Workshop output must parse through the released contract");
+    let cake = internal::parse_in(&common::corpus_text("overpy-cake"), &locale);
     assert!(cake.values.iter().any(|node| matches!(
         node.value,
         wir::Value::Enum { ref value_type, ref value }
@@ -798,8 +738,7 @@ rule ("chase and condition") {
     }
 }
 "#;
-    let chase = parser::parse_wir(chase, &catalog, &locale)
-        .expect("the pinned chase Workshop output must parse through the released contract");
+    let chase = internal::parse_in(chase, &locale);
     assert!(chase.values.iter().any(|node| matches!(
         node.value,
         wir::Value::Enum { ref value_type, ref value }
@@ -820,8 +759,7 @@ rule ("chase and condition") {
     }
 }
 "#;
-    let chase_zh = parser::parse_wir(chase_zh, &catalog, &Locale::new("zh-CN"))
-        .expect("the pinned chase Workshop output must parse in zh-CN");
+    let chase_zh = internal::parse_in(chase_zh, &zh());
     assert!(chase_zh.values.iter().any(|node| matches!(
         node.value,
         wir::Value::Enum { ref value_type, ref value }
@@ -836,9 +774,7 @@ fn wrong_domain_context_keeps_the_ambiguity_preserved() {
     // no `None` member), so the bare `None` stays ambiguous — no guessing,
     // no arbitrary precedence.
     let text = "rule (\"x\") { event { Ongoing - Global; } actions { Wait(0.016, None); } }";
-    let program =
-        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-            .expect("a non-matching expected domain must preserve the ambiguity");
+    let program = internal::parse(text);
     assert!(matches!(
         enum_value_of_first_action(&program, 0),
         wir::Value::Call { name, .. } if name == "__ambiguous_enum"
@@ -907,13 +843,8 @@ fn contextual_position_direction_resolution_handles_all_directions() {
         let text = format!(
             "rule (\"dir\") {{ event {{ Ongoing - Global; }} actions {{ Create Icon(All Players(All Teams), {spelling}, Arrow: Up, Visible To, Color(White), True); }} }}"
         );
-        let program = parser::parse_wir_with_context(
-            &text,
-            &catalog,
-            &Locale::new("en-US"),
-            &PositionProvider,
-        )
-        .expect("contextual position must resolve");
+        let program = parser::parse_wir_with_context(&text, &catalog, &en(), &PositionProvider)
+            .expect("contextual position must resolve");
         let wir::Action::Call { args, .. } =
             program.actions.get(wir::ActionId::from_index(0)).unwrap()
         else {
@@ -940,13 +871,8 @@ fn contextual_position_direction_resolution_handles_all_directions() {
         let text = format!(
             "rule (\"dir\") {{ event {{ 持续 - 全局; }} actions {{ 创建图标(所有玩家(所有队伍), {spelling}, 箭头: 向上, 可见: 位置和字符串, 颜色(白色), 是); }} }}"
         );
-        let program = parser::parse_wir_with_context(
-            &text,
-            &catalog,
-            &Locale::new("zh-CN"),
-            &PositionProvider,
-        )
-        .expect("contextual position in zh-CN must resolve");
+        let program = parser::parse_wir_with_context(&text, &catalog, &zh(), &PositionProvider)
+            .expect("contextual position in zh-CN must resolve");
         let wir::Action::Call { args, .. } =
             program.actions.get(wir::ActionId::from_index(0)).unwrap()
         else {
@@ -980,9 +906,7 @@ fn raw_workshop_member_access_and_disabled_groups_parse() {
             }
         }
     "#;
-    let program =
-        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-            .expect("raw member access and disabled groups must parse");
+    let program = internal::parse(text);
     program
         .validate()
         .expect("the lowered raw program must validate");
@@ -999,9 +923,7 @@ fn disabled_condition_is_preserved_as_disabled() {
             actions { Wait(0.016, Ignore Condition); }
         }
     "#;
-    let program =
-        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-            .expect("disabled conditions must parse");
+    let program = internal::parse(text);
     let rule = program.rules.iter().next().expect("rule");
     assert_eq!(rule.conditions.len(), 1);
     assert!(rule.conditions[0].disabled);
@@ -1020,9 +942,7 @@ fn disabled_action_is_preserved_as_disabled() {
             }
         }
     "#;
-    let program =
-        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-            .expect("disabled actions must parse");
+    let program = internal::parse(text);
     let rule = program.rules.iter().next().expect("rule");
     let kinds: Vec<_> = rule
         .actions
@@ -1046,9 +966,7 @@ fn raw_indexed_assignment_lowers_to_explicit_wir_call() {
             actions { Global.values[0] = 1; }
         }
     "#;
-    let program =
-        parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-            .expect("indexed raw assignment must parse");
+    let program = internal::parse(text);
     assert!(program.dump().contains("setGlobalVariableAtIndex"));
     program
         .validate()
@@ -1079,8 +997,7 @@ fn min_max_modifications_lower_for_global_player_and_indexed_forms() {
         }
     "#;
     let catalog = catalog();
-    let program = parser::parse_wir_with_context(text, &catalog, &Locale::new("en-US"), &catalog)
-        .expect("min/max forms parse");
+    let program = internal::parse(text);
     validate::validate_canonical_ids_wir(&program, &catalog).expect("min/max ids validate");
 
     let direct: Vec<_> = program
@@ -1135,8 +1052,7 @@ fn unsupported_named_assignment_operator_is_rejected() {
             actions { Global.g median= 1; }
         }
     "#;
-    let error = parser::parse_wir_with_context(text, &catalog(), &Locale::new("en-US"), &catalog())
-        .expect_err("unsupported named assignment must fail");
+    let error = internal::try_parse(text).expect_err("unsupported named assignment must fail");
     assert!(matches!(
         error,
         workshop_rs::WorkshopError::Unsupported { .. }
@@ -1154,7 +1070,7 @@ fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
     for domain in catalog().enum_domains() {
         for member in &domain.members {
             let spelling = member
-                .spelling(&Locale::new("en-US"))
+                .spelling(&en())
                 .expect("en-US member spelling")
                 .to_string();
             spelling_to_domains
@@ -1272,9 +1188,8 @@ fn implicit_variables_allocate_monotonically_above_explicit_sparse_indices() {
             Global.implicit_eleven = 10;
         }
     }"#;
-    let catalog = catalog();
-    let program = parser::parse_wir_with_context(source, &catalog, &Locale::new("en-US"), &catalog)
-        .expect("sparse and implicit variables parse");
+    let _catalog = catalog();
+    let program = internal::parse(source);
     let globals: Vec<(&str, u32)> = program
         .global_variables
         .iter()

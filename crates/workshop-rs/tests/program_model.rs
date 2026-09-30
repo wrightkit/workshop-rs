@@ -1,9 +1,6 @@
+use crate::common::catalog;
 use workshop_rs::source::{Position, SourceFile, Span};
 use workshop_rs::{Action, Condition, Event, Program, Rule, Subroutine, Value, Variable};
-
-fn catalog() -> workshop_rs::catalog::Catalog {
-    workshop_rs::catalog::Catalog::builtin().expect("builtin catalog")
-}
 
 #[test]
 fn program_is_constructible_without_storage_ids() {

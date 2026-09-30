@@ -1,15 +1,11 @@
 use std::collections::HashSet;
 
+use crate::common::{catalog, en, zh};
 use workshop_rs::actions::{ElementCountError, ElementNodeKind};
-use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::convert::{self, ConvertOptions};
 use workshop_rs::parser;
 use workshop_rs::settings::{Settings, SettingsNode};
 use workshop_rs::{Action, Event, Program, Rule, Value, Variable};
-
-fn catalog() -> Catalog {
-    Catalog::builtin().unwrap()
-}
 
 fn program_with_value(value: Value) -> Program {
     let mut program = Program::default();
@@ -27,7 +23,7 @@ fn ordinary_rule_and_action_have_structured_per_rule_counts() {
     let program = parser::parse(
         include_str!("fixtures/corpus/basic-rule.ws"),
         &catalog(),
-        &Locale::new("en-US"),
+        &en(),
     )
     .unwrap();
     let report = program.element_count(&catalog()).unwrap();
@@ -44,7 +40,7 @@ fn conditions_and_top_level_arguments_follow_the_documented_adjustments() {
     let program = parser::parse(
         "rule (\"condition\") { event { Ongoing - Global; } conditions { Is Game In Progress; } actions { Disable Inspector Recording; } }",
         &catalog(),
-        &Locale::new("en-US"),
+        &en(),
     )
     .unwrap();
     let report = program.element_count(&catalog()).unwrap();
@@ -99,7 +95,7 @@ fn custom_settings_and_disabled_rules_do_not_change_cost() {
     let mut program = parser::parse(
         "disabled rule (\"disabled\") { event { Ongoing - Global; } actions { Disable Inspector Recording; } }",
         &catalog(),
-        &Locale::new("en-US"),
+        &en(),
     )
     .unwrap();
     program.settings = Some(Settings {
@@ -117,16 +113,10 @@ fn custom_settings_and_disabled_rules_do_not_change_cost() {
 fn locale_conversion_preserves_the_canonical_count() {
     let catalog = catalog();
     let source = include_str!("fixtures/corpus/basic-rule.ws");
-    let english = parser::parse(source, &catalog, &Locale::new("en-US")).unwrap();
-    let converted = convert::convert(
-        source,
-        &catalog,
-        &Locale::new("en-US"),
-        &Locale::new("zh-CN"),
-        &ConvertOptions::default(),
-    )
-    .unwrap();
-    let chinese = parser::parse(&converted.text, &catalog, &Locale::new("zh-CN")).unwrap();
+    let english = parser::parse(source, &catalog, &en()).unwrap();
+    let converted =
+        convert::convert(source, &catalog, &en(), &zh(), &ConvertOptions::default()).unwrap();
+    let chinese = parser::parse(&converted.text, &catalog, &zh()).unwrap();
 
     assert_eq!(
         english.element_count(&catalog).unwrap().total,
@@ -140,7 +130,7 @@ fn representative_corpus_program_produces_a_report() {
     let program = parser::parse(
         include_str!("fixtures/corpus/expressions-values.ws"),
         &catalog,
-        &Locale::new("en-US"),
+        &en(),
     )
     .unwrap();
     let report = program.element_count(&catalog).unwrap();
@@ -153,7 +143,7 @@ fn representative_corpus_program_produces_a_report() {
 fn public_report_preserves_rule_condition_and_action_order_with_spans() {
     let catalog = catalog();
     let source = "rule (\"ordered\") {\n    event { Ongoing - Global; }\n    conditions {\n        Is Game In Progress;\n        Is Game In Progress;\n    }\n    actions {\n        Disable Inspector Recording;\n        Disable Inspector Recording;\n    }\n}\n";
-    let program = parser::parse(source, &catalog, &Locale::new("en-US")).unwrap();
+    let program = parser::parse(source, &catalog, &en()).unwrap();
     let report = program.element_count(&catalog).unwrap();
     let rule = &report.rules[0];
 
@@ -227,7 +217,7 @@ fn public_api_rejects_unsupported_and_invalid_programs_explicitly() {
 #[test]
 fn disabled_conditions_and_actions_cost_what_enabled_ones_do() {
     let catalog = catalog();
-    let locale = Locale::new("en-US");
+    let locale = en();
     let enabled = parser::parse(
         r#"rule ("r") { event { Ongoing - Global; } conditions { Is Game In Progress; } actions { Wait(1, Ignore Condition); } }"#,
         &catalog,
@@ -260,7 +250,7 @@ fn player_variable_targets_count_nontrivial_player_expressions() {
             Set Player Variable At Index(First Of(All Players(All Teams)), state, false, 5);
         } }"#,
         &catalog,
-        &Locale::new("en-US"),
+        &en(),
     )
     .unwrap();
 
@@ -470,7 +460,7 @@ rule ("r") {
 #[test]
 fn a_written_and_an_omitted_trailing_end_are_one_program_with_one_cost() {
     let catalog = catalog();
-    let locale = Locale::new("en-US");
+    let locale = en();
     let rule = |end: &str| {
         format!(
             r#"rule ("r") {{ event {{ Ongoing - Global; }} actions {{ If(True); Wait(1, Ignore Condition); {end} }} }}"#
@@ -487,7 +477,7 @@ fn a_written_and_an_omitted_trailing_end_are_one_program_with_one_cost() {
 #[test]
 fn only_the_last_action_of_a_rule_is_closed_without_end() {
     let catalog = catalog();
-    let locale = Locale::new("en-US");
+    let locale = en();
     let text = |body: &str| {
         format!(r#"rule ("r") {{ event {{ Ongoing - Global; }} actions {{ {body} }} }}"#)
     };
@@ -508,7 +498,7 @@ fn only_the_last_action_of_a_rule_is_closed_without_end() {
 #[test]
 fn the_count_is_that_of_the_canonical_emitted_form() {
     let catalog = catalog();
-    let locale = Locale::new("en-US");
+    let locale = en();
     for (name, _, text) in OVERPY_COUNTS {
         let program = parser::parse(text, &catalog, &locale).unwrap();
         let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).unwrap();
@@ -525,7 +515,7 @@ fn the_count_is_that_of_the_canonical_emitted_form() {
 fn counts_match_the_pinned_overpy_element_counter() {
     let catalog = catalog();
     for (name, expected, text) in OVERPY_COUNTS {
-        let program = parser::parse(text, &catalog, &Locale::new("en-US")).unwrap();
+        let program = parser::parse(text, &catalog, &en()).unwrap();
         let report = program.element_count(&catalog).unwrap();
         assert_eq!(report.total, *expected, "{name}");
     }

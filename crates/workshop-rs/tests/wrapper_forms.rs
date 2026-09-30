@@ -4,17 +4,15 @@ use std::collections::BTreeSet;
 
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::emitter;
-use workshop_rs::parser;
 
-use super::common;
+use super::common::{self};
+use super::internal;
 
 fn round_trip(text: &str, locale: &str) -> String {
-    let catalog = Catalog::builtin().unwrap();
+    let _catalog = Catalog::builtin().unwrap();
     let locale = Locale::new(locale);
-    let program = parser::parse_wir_with_context(text, &catalog, &locale, &catalog)
-        .unwrap_or_else(|error| panic!("parse failed: {error:?}\n{text}"));
-    emitter::emit_wir(&program, &catalog, &locale)
-        .unwrap_or_else(|error| panic!("emit failed: {error:?}"))
+    let program = internal::parse_in(text, &locale);
+    internal::emit_in(&program, &locale)
 }
 
 fn assert_lines_preserved(actions: &[&str], locale: &str, event: &str, section: &str) {
@@ -83,8 +81,7 @@ fn overpy_constant_forms_round_trip_in_zh_cn() {
 fn a_team_wrapper_in_the_input_is_written_bare_in_every_locale() {
     let text = "rule (\"t\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Set Global Variable(A, All Players(Team(Team 1)));\n    }\n}\n";
     let catalog = Catalog::builtin().unwrap();
-    let program =
-        parser::parse_wir_with_context(text, &catalog, &Locale::new("en-US"), &catalog).unwrap();
+    let program = internal::parse(text);
     for (locale, expected) in [
         ("en-US", "All Players(Team 1)"),
         ("zh-CN", "所有玩家(队伍1)"),

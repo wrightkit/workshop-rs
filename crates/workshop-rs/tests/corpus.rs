@@ -1,19 +1,7 @@
 //! Corpus-backed locale conversion contract tests.
 
-use workshop_rs::catalog::{Catalog, Locale};
+use crate::common::{catalog, en, zh};
 use workshop_rs::convert::{self, ConvertOptions};
-
-fn catalog() -> Catalog {
-    Catalog::builtin().expect("catalog validates")
-}
-
-fn en() -> Locale {
-    Locale::new("en-US")
-}
-
-fn zh() -> Locale {
-    Locale::new("zh-CN")
-}
 
 const REPRESENTATIVE: &str = "variables {
     global:

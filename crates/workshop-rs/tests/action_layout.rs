@@ -1,4 +1,5 @@
-use workshop_rs::catalog::{Catalog, Locale};
+use crate::common::en;
+use workshop_rs::catalog::Catalog;
 use workshop_rs::emitter::{self, ActionLayoutError};
 use workshop_rs::{Action, Event, Program, Rule, Value, Variable};
 
@@ -62,7 +63,7 @@ fn program_with_structured_actions() -> (Program, Vec<Action>) {
 fn structured_action_widths_count_native_expansion() {
     let (program, actions) = program_with_structured_actions();
     let catalog = Catalog::builtin().unwrap();
-    let locale = Locale::new("en-US");
+    let locale = en();
 
     for (range, width) in [((0..5), 5), ((5..8), 3), ((8..11), 3), ((11..18), 7)] {
         assert_eq!(
@@ -78,7 +79,7 @@ fn structured_action_widths_count_native_expansion() {
 fn layout_matches_canonical_emission_for_a_nested_sequence() {
     let (program, actions) = program_with_structured_actions();
     let catalog = Catalog::builtin().unwrap();
-    let locale = Locale::new("en-US");
+    let locale = en();
     let emitted = emitter::emit(&program, &catalog, &locale).unwrap();
     let action_text = emitted
         .split_once("actions {\n")
@@ -104,12 +105,7 @@ fn invalid_layout_requests_fail_as_invalid_programs() {
     let actions = rule.actions.clone();
     program.rules.push(rule);
 
-    let error = emitter::action_width(
-        &program,
-        &Catalog::builtin().unwrap(),
-        &Locale::new("en-US"),
-        &actions,
-    )
-    .unwrap_err();
+    let error =
+        emitter::action_width(&program, &Catalog::builtin().unwrap(), &en(), &actions).unwrap_err();
     assert!(matches!(error, ActionLayoutError::InvalidProgram { .. }));
 }

@@ -3,6 +3,7 @@
 //! locale coverage, target source — and the deliberate-change pinning of
 //! the committed dataset digest.
 
+use crate::common::zh;
 use workshop_rs::catalog::{Catalog, Locale};
 
 /// The pinned digest of the committed catalog dataset (version 0.1.8).
@@ -68,14 +69,14 @@ fn identity_serializes_with_the_adr_kebab_case_names() {
 #[test]
 fn locale_coverage_is_exact_and_primary_is_complete() {
     let catalog = Catalog::builtin().expect("built-in catalog");
-    let en = catalog.locale_coverage(&Locale::new("en-US"));
+    let en = catalog.locale_coverage(&crate::common::en());
     assert_eq!(en.mapped, en.total, "the primary locale is complete");
-    let zh = catalog.locale_coverage(&Locale::new("zh-CN"));
+    let zh = catalog.locale_coverage(&zh());
     assert!(zh.mapped > 0 && zh.mapped < zh.total);
     assert_eq!(zh.total, en.total);
     let all = catalog.locale_coverage_all();
     assert_eq!(all.len(), 15);
-    assert_eq!(all[0].locale, Locale::new("en-US"));
+    assert_eq!(all[0].locale, crate::common::en());
     assert_eq!(all[14].locale, Locale::new("zh-TW"));
     assert!(all.iter().skip(1).all(|coverage| coverage.mapped > 0));
 }

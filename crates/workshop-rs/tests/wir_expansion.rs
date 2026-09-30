@@ -2,14 +2,11 @@
 //! representable in Workshop IR, and catalog-backed validation rejects
 //! unknown or locale-tainted builtin references deterministically.
 
-use workshop_rs::catalog::{Catalog, Locale};
+use super::common::{catalog, en};
+use super::internal;
 use workshop_rs::source::{Position, SourceFile, Span};
 use workshop_rs::validate;
 use workshop_rs::wir::{self, Action, Event, Value, ValueNode};
-
-fn catalog() -> Catalog {
-    Catalog::builtin().expect("built-in catalog")
-}
 
 #[test]
 fn member_access_has_a_canonical_shape_contract() {
@@ -56,7 +53,7 @@ fn member_access_has_a_canonical_shape_contract() {
 #[test]
 fn indexed_members_and_native_break_controls_have_one_canonical_contract() {
     let catalog = catalog();
-    let locale = Locale::new("en-US");
+    let locale = en();
     let source = r#"
         variables { global: 0: values }
         rule ("interop primitives") {
@@ -77,8 +74,7 @@ fn indexed_members_and_native_break_controls_have_one_canonical_contract() {
             }
         }
     "#;
-    let program = workshop_rs::parser::parse_wir_with_context(source, &catalog, &locale, &catalog)
-        .expect("native indexed/member and control-flow forms parse");
+    let program = internal::parse_in(source, &locale);
     program
         .validate()
         .expect("canonical WIR is structurally valid");
@@ -143,15 +139,10 @@ fn indexed_members_and_native_break_controls_have_one_canonical_contract() {
         Some(Action::Call { name, args, .. }) if name == "skip" && args.len() == 1
     ));
 
-    let emitted = workshop_rs::emitter::emit_wir(&program, &catalog, &locale).expect("emits");
-    let reparsed =
-        workshop_rs::parser::parse_wir_with_context(&emitted, &catalog, &locale, &catalog)
-            .expect("emitted native controls reparse");
+    let emitted = internal::emit_in(&program, &locale);
+    let reparsed = internal::parse_in(&emitted, &locale);
     assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
-    assert_eq!(
-        emitted,
-        workshop_rs::emitter::emit_wir(&reparsed, &catalog, &locale).expect("re-emits")
-    );
+    assert_eq!(emitted, internal::emit_in(&reparsed, &locale));
 }
 
 #[test]
@@ -480,7 +471,7 @@ fn unknown_value_id_is_rejected() {
 fn canonical_validation_is_locale_independent() {
     // Resolution uses canonical ids; locale spelling never appears in WIR.
     let program = build_surface_program();
-    let _ = Locale::new("en-US");
+    let _ = en();
     validate::validate_canonical_ids_wir(&program, &catalog()).expect("valid");
     // No WIR dump contains a localized spelling.
     let dump = program.dump();
