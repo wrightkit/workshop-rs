@@ -10,7 +10,10 @@ canonical source/WIR order. A node exposes its `kind`, canonical or analysis
 `name`, opaque report-local `id`, optional authored `span`, node-local
 `base_count` and signed `adjustment`, and recursive `count`. The `id` is unique
 only within one report and is not a WIR or storage arena index. The recursive
-count is the node's base count plus its adjustment and child counts. Values and
+count is the node's base count plus its adjustment and child counts. Two
+accessors describe plain subtree shape independent of the weighted cost:
+`height()` is the longest downward path in nodes and `node_count()` is the
+subtree's node cardinality. Values and
 nested actions remain nodes in the tree instead of being reduced to an
 aggregate total. Consumers should map nodes by their ordered tree position and
 source span when one is available; report-local IDs have no meaning across
@@ -56,9 +59,8 @@ The calculator is locale-independent: it reads canonical identities and
 never emitted spellings. It validates the public program and catalog identities before
 producing a report. Unknown, unsupported, invalid, or cyclic constructs return
 `ElementCountError` instead of yielding a misleading exact total; no partial
-report is returned. In
-Native display actions such as `Create HUD Text` are counted through their
-canonical catalog-backed action calls.
+report is returned. Native display actions such as `Create HUD Text` are
+counted through their canonical catalog-backed action calls.
 
 Element count is a static structural Workshop complexity measure. It is not an
 estimate of runtime CPU cost or execution performance.
@@ -90,6 +92,8 @@ OverPy's `#!optimizeForSize` substitutions exploit
 authored literal, so the analysis sees the difference.
 
 The analysis does not claim live-client/editor validation beyond the evidence
-above. The current real-project `rework.ow` fixture still stops in the parser
+above. Client import constraints beyond this global budget — structural
+properties that can reject a below-budget program — are tracked separately in
+[`import-limits.md`](import-limits.md); no such boundary is established today. The current real-project `rework.ow` fixture still stops in the parser
 on an ambiguous bare `None` enum spelling, so it is not counted as a passing
 real-program result until that independent parser gap is resolved.
