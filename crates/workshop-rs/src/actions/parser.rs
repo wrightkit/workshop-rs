@@ -42,8 +42,9 @@ impl ParseContext<'_> {
                             disabled = true;
                         }
                     }
+                    self.condition_pending = true;
                     let value = self.value()?;
-                    self.expect(TokenKind::Semi, "expected ';' after condition")?;
+                    self.expect_semi("expected ';' after condition")?;
                     conditions.push(wir::Condition { value, disabled });
                 }
                 None => {
@@ -310,7 +311,7 @@ impl ParseContext<'_> {
                     ))),
                 );
                 let value = self.value()?;
-                self.expect(TokenKind::Semi, "expected ';' after indexed assignment")?;
+                self.expect_semi("expected ';' after indexed assignment")?;
                 return Ok(Some(self.indexed_assignment_action(
                     true, target, index, operator, value, start,
                 )));
@@ -320,7 +321,7 @@ impl ParseContext<'_> {
             };
             let variable = self.global_by_name(&name)?;
             let value = self.value()?;
-            self.expect(TokenKind::Semi, "expected ';' after assignment")?;
+            self.expect_semi("expected ';' after assignment")?;
             let span = Some(Span::new(self.file(), start, self.previous_span().1));
             let target_span = Some(Span::new(self.file(), name_start, target_end));
             return Ok(Some(self.target.actions.push(match operator {
@@ -390,7 +391,7 @@ impl ParseContext<'_> {
                 )
             })?;
             let value = self.value()?;
-            self.expect(TokenKind::Semi, "expected ';' after indexed assignment")?;
+            self.expect_semi("expected ';' after indexed assignment")?;
             let variable_value = self.target.values.push(
                 ValueNode::new(
                     Value::PlayerVariable {
@@ -418,7 +419,7 @@ impl ParseContext<'_> {
             return self.member_assignment_action(saved, start);
         };
         let value = self.value()?;
-        self.expect(TokenKind::Semi, "expected ';' after assignment")?;
+        self.expect_semi("expected ';' after assignment")?;
         let span = Some(Span::new(self.file(), start, self.previous_span().1));
         let target_span = Some(Span::new(self.file(), target_start, target_end));
         Ok(Some(self.target.actions.push(match operator {
@@ -455,7 +456,7 @@ impl ParseContext<'_> {
             return Ok(None);
         };
         let value = self.value()?;
-        self.expect(TokenKind::Semi, "expected ';' after member assignment")?;
+        self.expect_semi("expected ';' after member assignment")?;
         let op = match operator {
             AssignmentOperator::Set => None,
             AssignmentOperator::Modify(op) => Some(op),
@@ -593,9 +594,10 @@ impl ParseContext<'_> {
 
     pub(crate) fn if_group(&mut self, start: Position) -> Result<wir::ActionId> {
         self.expect(TokenKind::LParen, "expected '(' after 'If'")?;
+        self.condition_pending = true;
         let condition = self.value()?;
         self.expect(TokenKind::RParen, "expected ')' after If condition")?;
-        self.expect(TokenKind::Semi, "expected ';' after If condition")?;
+        self.expect_semi("expected ';' after If condition")?;
 
         let mut branches = Vec::new();
         let mut stop = {
@@ -609,22 +611,23 @@ impl ParseContext<'_> {
             match stop {
                 Stop::End => {
                     self.consume_phrase("End")?;
-                    self.expect(TokenKind::Semi, "expected ';' after 'End'")?;
+                    self.expect_semi("expected ';' after 'End'")?;
                     break;
                 }
                 Stop::ElseIf => {
                     self.consume_phrase("Else If")?;
                     self.expect(TokenKind::LParen, "expected '(' after 'Else If'")?;
+                    self.condition_pending = true;
                     let condition = self.value()?;
                     self.expect(TokenKind::RParen, "expected ')' after Else If condition")?;
-                    self.expect(TokenKind::Semi, "expected ';' after Else If condition")?;
+                    self.expect_semi("expected ';' after Else If condition")?;
                     let (body, next) = self.actions_until_end()?;
                     branches.push(wir::IfBranch { condition, body });
                     stop = next;
                 }
                 Stop::Else => {
                     self.consume_phrase("Else")?;
-                    self.expect(TokenKind::Semi, "expected ';' after 'Else'")?;
+                    self.expect_semi("expected ';' after 'Else'")?;
                     let (body, next) = self.actions_until_end()?;
                     else_body = Some(body);
                     stop = next;
@@ -661,7 +664,7 @@ impl ParseContext<'_> {
         self.expect(TokenKind::Comma, "expected ',' after stop")?;
         let step = self.value()?;
         self.expect(TokenKind::RParen, "expected ')' after For bounds")?;
-        self.expect(TokenKind::Semi, "expected ';' after For Global Variable")?;
+        self.expect_semi("expected ';' after For Global Variable")?;
         let (body, end) =
             self.actions_until_matching_end("'For Global Variable' requires a matching 'End'")?;
         let action = Action::ForGlobalVariable {
@@ -678,9 +681,10 @@ impl ParseContext<'_> {
 
     pub(crate) fn while_group(&mut self, start: Position) -> Result<wir::ActionId> {
         self.expect(TokenKind::LParen, "expected '(' after 'While'")?;
+        self.condition_pending = true;
         let condition = self.value()?;
         self.expect(TokenKind::RParen, "expected ')' after While condition")?;
-        self.expect(TokenKind::Semi, "expected ';' after While condition")?;
+        self.expect_semi("expected ';' after While condition")?;
         let (body, end) = self.actions_until_matching_end("'While' requires a matching 'End'")?;
         let action = Action::While {
             condition,
@@ -707,7 +711,7 @@ impl ParseContext<'_> {
         self.expect(TokenKind::Comma, "expected ',' after stop")?;
         let step = self.value()?;
         self.expect(TokenKind::RParen, "expected ')' after For bounds")?;
-        self.expect(TokenKind::Semi, "expected ';' after For Player Variable")?;
+        self.expect_semi("expected ';' after For Player Variable")?;
         let (body, end) =
             self.actions_until_matching_end("'For Player Variable' requires a matching 'End'")?;
         let action = Action::ForPlayerVariable {
@@ -732,7 +736,7 @@ impl ParseContext<'_> {
             return Err(self.malformed(missing_end_message, self.previous()));
         }
         self.consume_phrase("End")?;
-        self.expect(TokenKind::Semi, "expected ';' after 'End'")?;
+        self.expect_semi("expected ';' after 'End'")?;
         Ok((body, self.previous_span().1))
     }
 
@@ -764,7 +768,7 @@ impl ParseContext<'_> {
                     };
                     let value = self.value()?;
                     self.expect(TokenKind::RParen, "expected ')'")?;
-                    self.expect(TokenKind::Semi, "expected ';'")?;
+                    self.expect_semi("expected ';'")?;
                     let span = Some(Span::new(self.file(), start, end));
                     let target_span = Some(target_span);
                     Ok(self.target.actions.push(match op {
@@ -797,7 +801,7 @@ impl ParseContext<'_> {
                     };
                     let value = self.value()?;
                     self.expect(TokenKind::RParen, "expected ')'")?;
-                    self.expect(TokenKind::Semi, "expected ';'")?;
+                    self.expect_semi("expected ';'")?;
                     let span = Some(Span::new(self.file(), start, end));
                     let target_span = Some(target_span);
                     Ok(self.target.actions.push(match (op, modify) {
@@ -828,7 +832,7 @@ impl ParseContext<'_> {
                         Some(Span::new(self.file(), name_start, name_end)),
                     )?;
                     self.expect(TokenKind::RParen, "expected ')'")?;
-                    self.expect(TokenKind::Semi, "expected ';'")?;
+                    self.expect_semi("expected ';'")?;
                     Ok(self.target.actions.push(Action::CallSubroutine {
                         subroutine,
                         span: Some(Span::new(self.file(), start, end)),
@@ -902,7 +906,7 @@ impl ParseContext<'_> {
                             arg_index += 1;
                         }
                         self.expect(TokenKind::RParen, "expected ')'")?;
-                        self.expect(TokenKind::Semi, "expected ';' after action")?;
+                        self.expect_semi("expected ';' after action")?;
                         let canonical = if action.id == "chasePlayerVariableAtRate" {
                             "chaseAtRate"
                         } else {
@@ -925,7 +929,7 @@ impl ParseContext<'_> {
                         let domain = self.context.expected_domain(action.id.as_str(), 1);
                         let behavior = self.value_in_domain(domain)?;
                         self.expect(TokenKind::RParen, "expected ')'")?;
-                        self.expect(TokenKind::Semi, "expected ';' after action")?;
+                        self.expect_semi("expected ';' after action")?;
                         let name_span = Some(Span::new(self.file(), name_start, name_end));
                         let subroutine_value = self.target.values.push(
                             ValueNode::new(Value::Subroutine(subroutine), name_span)
@@ -941,7 +945,7 @@ impl ParseContext<'_> {
                         self.expect(TokenKind::LParen, "expected '('")?;
                         let (player, variable, name_span) = self.player_variable_arg()?;
                         self.expect(TokenKind::RParen, "expected ')'")?;
-                        self.expect(TokenKind::Semi, "expected ';' after action")?;
+                        self.expect_semi("expected ';' after action")?;
                         let player_variable = self.target.values.push(
                             ValueNode::new(Value::PlayerVariable { player, variable }, None)
                                 .with_identifier(Some(name_span)),
@@ -966,7 +970,7 @@ impl ParseContext<'_> {
                 } else {
                     Vec::new()
                 };
-                self.expect(TokenKind::Semi, "expected ';' after action")?;
+                self.expect_semi("expected ';' after action")?;
                 Ok(self.target.actions.push(Action::Call {
                     name: action.id.clone(),
                     args,

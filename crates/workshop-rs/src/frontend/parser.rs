@@ -92,6 +92,8 @@ pub(crate) fn parse_wir_with_context(
         locale: locale.clone(),
         context,
         expected_domain: None,
+        condition_pending: false,
+        in_condition: false,
         call_stack: Vec::new(),
         target: wir::Program::default(),
         globals: HashMap::new(),
@@ -120,6 +122,13 @@ pub(crate) struct ParseContext<'a> {
     /// The expected enum domain for the value currently being parsed, set by
     /// [`ParseContext::value_args`] from the enclosing call's signature.
     pub(crate) expected_domain: Option<&'a str>,
+    /// Marks the next [`ParseContext::value`] call as a rule-level condition
+    /// (`conditions` entries, `If`/`Else If`/`While` conditions) so an action
+    /// call there is diagnosed as an action used as a condition (#340).
+    pub(crate) condition_pending: bool,
+    /// Whether the value currently being parsed is that top-level condition
+    /// expression; nested arguments always parse as ordinary values.
+    pub(crate) in_condition: bool,
     pub(crate) call_stack: Vec<String>,
     pub(crate) target: wir::Program,
     pub(crate) globals: HashMap<String, wir::GlobalVarId>,
@@ -479,6 +488,31 @@ impl<'a> ParseContext<'a> {
     pub(crate) fn expect(&mut self, kind: TokenKind, message: &str) -> Result<()> {
         match self.next() {
             Some(token) if token.kind == kind => Ok(()),
+            Some(token) => Err(self.malformed(message, &token)),
+            None => Err(self.malformed(message, self.eof())),
+        }
+    }
+
+    /// Expect the `;` terminating a statement. When the token found instead
+    /// sits on a later line, the missing `;` is reported at the end of the
+    /// statement it should have closed rather than at that unrelated token
+    /// (#340); a same-line offender keeps pointing at the token itself.
+    pub(crate) fn expect_semi(&mut self, message: &str) -> Result<()> {
+        match self.peek() {
+            Some(Token {
+                kind: TokenKind::Semi,
+                ..
+            }) => {
+                self.pos += 1;
+                Ok(())
+            }
+            Some(token) if token.start.line > self.previous().end.line => {
+                let end = self.previous().end;
+                Err(WorkshopError::Malformed {
+                    message: message.to_string(),
+                    span: Some(Span::new(self.file(), end, end)),
+                })
+            }
             Some(token) => Err(self.malformed(message, &token)),
             None => Err(self.malformed(message, self.eof())),
         }

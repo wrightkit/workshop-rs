@@ -43,6 +43,13 @@ impl ParseContext<'_> {
     }
 
     pub(crate) fn value(&mut self) -> Result<wir::ValueId> {
+        // The outermost `value` call claims the pending condition role; nested
+        // argument recursion re-enters here with it already consumed, so
+        // `in_condition` only marks the whole condition expression (#340).
+        let saved = std::mem::replace(
+            &mut self.in_condition,
+            std::mem::take(&mut self.condition_pending),
+        );
         let mut value = self.primary()?;
         loop {
             if let Some(Token {
@@ -105,7 +112,12 @@ impl ParseContext<'_> {
                         || matches!(op.as_str(), "and" | "or" | "+" | "-" | "*" | "/" | "%"))
                 {
                     self.pos += 1;
-                    let right = self.primary()?;
+                    // An operator operand is a value position nested inside the
+                    // condition, not the condition itself (#340).
+                    let saved_condition = std::mem::replace(&mut self.in_condition, false);
+                    let right = self.primary();
+                    self.in_condition = saved_condition;
+                    let right = right?;
                     let name = match op.as_str() {
                         "+" => "add",
                         "-" => "subtract",
@@ -126,6 +138,7 @@ impl ParseContext<'_> {
             }
             break;
         }
+        self.in_condition = saved;
         Ok(value)
     }
 
@@ -137,7 +150,10 @@ impl ParseContext<'_> {
                 ..
             }) if op == "not" => {
                 self.pos += 1;
-                let value = self.primary()?;
+                let saved_condition = std::mem::replace(&mut self.in_condition, false);
+                let value = self.primary();
+                self.in_condition = saved_condition;
+                let value = value?;
                 Ok(self.target.values.push(ValueNode::new(
                     Value::Call {
                         name: "not".to_string(),
@@ -548,6 +564,11 @@ impl ParseContext<'_> {
                 )));
             }
         }
+        // An action spelling can collide with an enum domain (`Wait` is
+        // both). The enum reading only stands when the call actually parses
+        // as a single-member enum literal; otherwise the user wrote an action
+        // where a value or condition belongs (#340).
+        let action_error = self.action_in_value_error(phrase, start, end);
         if let Some(domain_name) = self
             .resolve_enum_domain_mixed(phrase)
             .or_else(|| self.resolve_enum_domain_mixed(canonical_keyword(phrase)))
@@ -556,20 +577,14 @@ impl ParseContext<'_> {
                 .catalog
                 .enum_domain(domain_name)
                 .expect("resolved enum domain must exist");
-            // Enum call: `Color(Yellow)`.
-            self.expect(TokenKind::LParen, "expected '('")?;
-            let (member_phrase, _, _) = self.enum_member_phrase()?;
-            let member = self
-                .resolve_enum_member_mixed(&domain.domain, &member_phrase)
-                .unwrap_or_else(|| (domain.domain.clone(), member_phrase.clone()));
-            self.expect(TokenKind::RParen, "expected ')' after enum member")?;
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::Enum {
-                    value_type: member.0,
-                    value: member.1,
-                },
-                Some(Span::new(self.file(), start, end)),
-            )));
+            return match (self.enum_call(domain, start, end), action_error) {
+                (Ok(value), _) => Ok(value),
+                (Err(_), Some(error)) => Err(error),
+                (Err(error), None) => Err(error),
+            };
+        }
+        if let Some(error) = action_error {
+            return Err(error);
         }
         if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LParen)) {
             self.pos += 1;
@@ -592,6 +607,98 @@ impl ParseContext<'_> {
             },
             Some(Span::new(self.file(), start, end)),
         )))
+    }
+
+    /// Enum call: `Color(Yellow)`. An unresolved member spelling is preserved
+    /// for canonical validation rather than rejected here.
+    fn enum_call(
+        &mut self,
+        domain: &crate::catalog::EnumDomain,
+        start: Position,
+        end: Position,
+    ) -> Result<wir::ValueId> {
+        self.expect(TokenKind::LParen, "expected '('")?;
+        let (member_phrase, _, _) = self.enum_member_phrase()?;
+        let member = self
+            .resolve_enum_member_mixed(&domain.domain, &member_phrase)
+            .unwrap_or_else(|| (domain.domain.clone(), member_phrase.clone()));
+        self.expect(TokenKind::RParen, "expected ')' after enum member")?;
+        Ok(self.target.values.push(ValueNode::new(
+            Value::Enum {
+                value_type: member.0,
+                value: member.1,
+            },
+            Some(Span::new(self.file(), start, end)),
+        )))
+    }
+
+    /// The diagnostic for a Workshop action used where a value or condition
+    /// is expected, when `phrase` names an action-position construct (#340).
+    fn action_in_value_error(
+        &self,
+        phrase: &str,
+        start: Position,
+        end: Position,
+    ) -> Option<WorkshopError> {
+        let is_action = self.resolve_entry(Kind::Action, phrase).is_some()
+            || self
+                .resolve_entry(Kind::Action, &format!("{phrase} "))
+                .is_some()
+            || self
+                .resolve_entry(Kind::Structural, phrase)
+                .is_some_and(|entry| {
+                    matches!(
+                        entry.id.as_str(),
+                        "setGlobalVariable"
+                            | "modifyGlobalVariable"
+                            | "setPlayerVariable"
+                            | "modifyPlayerVariable"
+                            | "callSubroutine"
+                            | "forGlobalVariable"
+                            | "forPlayerVariable"
+                            | "if"
+                            | "while"
+                    )
+                });
+        is_action.then(|| WorkshopError::Malformed {
+            message: format!(
+                "action '{phrase}' cannot be used as a {}",
+                if self.in_condition {
+                    "condition"
+                } else {
+                    "value"
+                }
+            ),
+            span: Some(Span::new(self.file(), start, self.call_site_end(end))),
+        })
+    }
+
+    /// The end position of the call whose `(` is next, or `end` when the
+    /// call is absent or unclosed.
+    fn call_site_end(&self, end: Position) -> Position {
+        if !matches!(
+            self.peek(),
+            Some(Token {
+                kind: TokenKind::LParen,
+                ..
+            })
+        ) {
+            return end;
+        }
+        let mut depth = 0usize;
+        for token in &self.tokens[self.pos..] {
+            match token.kind {
+                TokenKind::LParen => depth += 1,
+                TokenKind::RParen => {
+                    depth -= 1;
+                    if depth == 0 {
+                        return token.end;
+                    }
+                }
+                _ => {}
+            }
+        }
+        end
     }
 
     pub(crate) fn bare_member(
@@ -779,6 +886,9 @@ impl ParseContext<'_> {
                 },
                 Some(Span::new(self.file(), start, end)),
             )));
+        }
+        if let Some(error) = self.action_in_value_error(phrase, start, end) {
+            return Err(error);
         }
         Ok(self.target.values.push(ValueNode::new(
             Value::Call {
