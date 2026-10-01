@@ -11,7 +11,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Ability Icon String` | ✅ Supported | Returns: `String`; Parameters: (Hero: Hero, Button: Button). |
 | `Ability Resource` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player, Button: Button). |
 | `Absolute Value` | ✅ Supported | Returns: `Number`; Parameters: (Value: Number). |
-| `Add` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector, b: Number|Boolean|Vector). |
+| `Add` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector|Player, b: Number|Boolean|Vector). |
 | `All Damage Heroes` | ✅ Supported | Returns: `Array`. |
 | `All Dead Players` | ✅ Supported | Returns: `Array`; Parameters: (Team: Team). |
 | `All Heroes` | ✅ Supported | Returns: `Array`. |
@@ -97,7 +97,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Hero Icon String` | ✅ Supported | Returns: `String`; Parameters: (Hero: Hero). |
 | `Hero Of` | ✅ Supported | Returns: `Hero`; Parameters: (player: Player). |
 | `Horizontal Angle From Direction` | ✅ Supported | Returns: `Number`; Parameters: (Direction: Vector). |
-| `Horizontal Angle Towards` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player, Position: Vector). |
+| `Horizontal Angle Towards` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player, Position: Vector|Player). |
 | `Horizontal Facing Angle Of` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player). |
 | `Horizontal Speed Of` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player). |
 | `Host Player` | ✅ Supported | Returns: `Player`. |
@@ -174,7 +174,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Max Health Of Type` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player, Health: Health). |
 | `Min` | ✅ Supported | Returns: `Number`; Parameters: (Value: Number|Boolean, Value: Number|Boolean). |
 | `Modulo` | ✅ Supported | Returns: `Number`; Parameters: (Value: Number, Value: Number). |
-| `Multiply` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector, b: Number|Boolean|Vector). |
+| `Multiply` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector|Player, b: Number|Boolean|Vector). |
 | `Nearest Walkable Position` | ✅ Supported | Returns: `Vector`; Parameters: (Position: Vector). |
 | `Normalize` | ✅ Supported | Returns: `Vector`; Parameters: (Vector: Vector). |
 | `Normalized Health` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player). |
@@ -202,7 +202,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Players In Slot` | ✅ Supported | Returns: `Player|Array`; Parameters: (Number: Number, Team: Team). |
 | `Players in View Angle` | ✅ Supported | Returns: `Array`; Parameters: (Player: Player, Team: Team, ViewAngle: Number). |
 | `Players On Hero` | ✅ Supported | Returns: `Array`; Parameters: (Hero: Hero, Team: Team). |
-| `Players Within Radius` | ✅ Supported | Returns: `Array`; Parameters: (center: Vector, radius: Number, team: Team, losCheck: LosCheck). |
+| `Players Within Radius` | ✅ Supported | Returns: `Array`; Parameters: (center: Vector|Player, radius: Number, team: Team, losCheck: LosCheck). |
 | `Point Capture Percentage` | ✅ Supported | Returns: `Number`. |
 | `Position Of` | ✅ Supported | Returns: `Vector`; Parameters: (player: Player|Array). |
 | `Raise To Power` (Value) | ✅ Supported | Returns: `Number`; Parameters: (Value: Number, Value: Number). This is separate from the supported operator and variable-modification operation above. |
@@ -211,8 +211,8 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Random Value In Array` | ✅ Supported | Returns: `Any`; Parameters: (Array: Array). |
 | `Randomized Array` | ✅ Supported | Returns: `Array`; Parameters: (Array: Array). |
 | `Ray Cast Hit Normal` | ✅ Supported | Returns: `Vector`; Parameters: (Position: Vector, Position: Vector, Player: Array, Player: Array, Boolean: Boolean). |
-| `Ray Cast Hit Player` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector, Position: Vector, Player: Array, Player: Array, Boolean: Boolean). |
-| `Ray Cast Hit Position` | ✅ Supported | Returns: `Vector`; Parameters: (Start Position: Vector, End Position: Vector, Players To Include: Array, Players To Exclude: Array, Include Player Owned Objects: Boolean). |
+| `Ray Cast Hit Player` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector, Position: Vector, Player: Array, Player: Player|Array, Boolean: Boolean). |
+| `Ray Cast Hit Position` | ✅ Supported | Returns: `Vector`; Parameters: (Start Position: Vector, End Position: Vector, Players To Include: Array, Players To Exclude: Player|Array, Include Player Owned Objects: Boolean). |
 | `Remove From Array` | ✅ Supported | Returns: `Array`; Parameters: (Array: Array, Value: Object|Array). |
 | `Right` | ✅ Supported | Returns: `Array`. |
 | `Round To Integer` | ✅ Supported | Returns: `Number`; Parameters: (Value: Number, Rounding: Rounding). |

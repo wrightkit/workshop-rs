@@ -513,6 +513,68 @@ rule ("type") { event { Ongoing - Global; } actions {
 }
 
 #[test]
+fn player_typed_values_validate_uniformly_across_wir_kinds() {
+    // workshop-rs#336: `Event Player` and calls whose catalog return type is
+    // `Player` share one static type, so every parameter position must give
+    // them the same verdict. Client-accepted real projects evidence Player
+    // arguments in the positions exercised here (`bastion`, `defend`,
+    // `ai-pve`); positions without such evidence reject every Player value.
+    let catalog = catalog();
+    let players = [
+        "Event Player",
+        "Victim",
+        "Attacker",
+        "Host Player",
+        "Local Player",
+        "Healer",
+        "Healee",
+    ];
+    for player in players {
+        for call in [
+            format!("Add({player}, 1)"),
+            format!("Multiply({player}, 2)"),
+            format!("Horizontal Angle Towards(Victim, {player})"),
+            format!("Players Within Radius({player}, 5, All Teams, Surfaces)"),
+            format!(
+                "Ray Cast Hit Position(Vector(0, 0, 0), Vector(0, 0, 1), All Players(All Teams), {player}, True)"
+            ),
+            format!(
+                "Ray Cast Hit Player(Vector(0, 0, 0), Vector(0, 0, 1), All Players(All Teams), {player}, True)"
+            ),
+        ] {
+            let source = format!(
+                r#"rule ("uniform") {{ event {{ Ongoing - Global; }} actions {{ Set Global Variable(probe, {call}); }} }}"#
+            );
+            let program = internal::parse(&source);
+            validate::validate_canonical_ids_wir(&program, &catalog).unwrap_or_else(|error| {
+                panic!("{call} must validate in an evidenced Player position: {error}")
+            });
+        }
+        let source = format!(
+            r#"rule ("play-effect") {{ event {{ Ongoing - Global; }} actions {{ Play Effect(All Players(All Teams), Good Explosion, Color(White), {player}, 1); }} }}"#
+        );
+        let program = internal::parse(&source);
+        validate::validate_canonical_ids_wir(&program, &catalog)
+            .unwrap_or_else(|error| panic!("Play Effect position must accept {player}: {error}"));
+        // `X Component Of` still declares `Vector` only: both node kinds get
+        // the same rejection.
+        let source = format!(
+            r#"rule ("component") {{ event {{ Ongoing - Global; }} actions {{ Set Global Variable(probe, X Component Of({player})); }} }}"#
+        );
+        let program = internal::parse(&source);
+        let Err(error) = validate::validate_canonical_ids_wir(&program, &catalog) else {
+            panic!("X Component Of({player}) must be rejected")
+        };
+        assert!(
+            error
+                .to_string()
+                .contains("must have semantic type 'Vector'"),
+            "X Component Of({player}): {error}"
+        );
+    }
+}
+
+#[test]
 fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
     let catalog = catalog();
     // Test 1: Action with multiple invalid arguments must report the first argument error

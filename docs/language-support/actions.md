@@ -111,7 +111,7 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Modify Team Score` | ✅ Supported | Parameters: (Team: Team, Number: Number). |
 | `Move Player to Team` | ✅ Supported | Parameters: (Object: Player|Array, Team: Team, Number: Number). |
 | `Pause Match Time` | ✅ Supported | No parameters. |
-| `Play Effect` | ✅ Supported | Parameters: (VisibleTo: Player|Array, Type: DynamicEffect, Color: Color, Position: Vector, Radius: Number). |
+| `Play Effect` | ✅ Supported | Parameters: (VisibleTo: Player|Array, Type: DynamicEffect, Color: Color, Position: Vector|Player, Radius: Number). |
 | `Preload Hero` | ✅ Supported | Parameters: (Object: Player|Array, Object: Hero|Array). |
 | `Press Button` | ✅ Supported | Parameters: (Object: Player|Array, Button: Button). |
 | `Remove All Health Pools From Player` | ✅ Supported | Parameters: (Player: Player|Array). |
