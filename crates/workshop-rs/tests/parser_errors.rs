@@ -1,4 +1,4 @@
-use crate::common::en;
+use crate::common::{en, zh};
 use workshop_rs::WorkshopError;
 use workshop_rs::catalog::Catalog;
 use workshop_rs::parser;
@@ -72,6 +72,94 @@ fn action_statements_used_as_conditions_name_the_construct() {
         panic!("an action operand inside a condition is malformed");
     };
     assert_eq!(message, "action 'Wait' cannot be used as a value");
+}
+
+#[test]
+fn action_misuse_is_reported_from_control_flow_condition_positions() {
+    // `If`/`Else If`/`While` headers are the same condition position as a
+    // `conditions {}` entry.
+    for statements in [
+        "If(Wait(1, Ignore Condition));\n        End;",
+        "While(Wait(1, Ignore Condition));\n        End;",
+        "If(x == 1);\n        Else If(Wait(1, Ignore Condition));\n        End;",
+    ] {
+        let source = format!(
+            "rule (\"x\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{\n        {statements}\n    }}\n}}\n"
+        );
+        let error = parse_error(&source);
+        let WorkshopError::Malformed { message, .. } = error else {
+            panic!("an action in a control-flow condition is malformed");
+        };
+        assert_eq!(message, "action 'Wait' cannot be used as a condition");
+    }
+}
+
+#[test]
+fn bare_and_non_enum_actions_as_conditions_still_name_the_action() {
+    // A bare action spelling reaches the diagnostic through the member path.
+    let error = parse_error(&program_with_condition("Wait;"));
+    let WorkshopError::Malformed { message, .. } = error else {
+        panic!("a bare action used as a condition is a malformed diagnostic");
+    };
+    assert_eq!(message, "action 'Wait' cannot be used as a condition");
+
+    // An action that is not also an enum domain is rejected before its
+    // argument list is examined.
+    let error = parse_error(&program_with_condition("Kill(1, 2);"));
+    let WorkshopError::Malformed { message, .. } = error else {
+        panic!("a non-enum action used as a condition is a malformed diagnostic");
+    };
+    assert_eq!(message, "action 'Kill' cannot be used as a condition");
+}
+
+#[test]
+fn localized_action_spellings_report_the_action_as_well() {
+    // Some zh-CN action aliases exist only with a trailing space
+    // (`开始限制阈值 `); the value-position diagnostic resolves them the same
+    // way action-statement lookup does.
+    let source = concat!(
+        "rule (\"x\") {\n",
+        "    event {\n",
+        "        持续 - 全局;\n",
+        "    }\n",
+        "    conditions {\n",
+        "        开始限制阈值(x, 1, 1);\n",
+        "    }\n",
+        "}\n",
+    );
+    let catalog = Catalog::builtin().expect("catalog");
+    let error = parser::parse(source, &catalog, &zh())
+        .expect_err("a localized action used as a condition is malformed");
+    let WorkshopError::Malformed { message, .. } = error else {
+        panic!("a localized action used as a condition is malformed");
+    };
+    assert_eq!(
+        message,
+        "action '开始限制阈值' cannot be used as a condition"
+    );
+}
+
+#[test]
+fn a_variable_named_like_an_action_is_still_a_value() {
+    // Declared names resolve before the action diagnostic, so a global
+    // variable called `Wait` remains usable in a condition.
+    let source = concat!(
+        "variables {\n",
+        "    global:\n",
+        "        0: Wait\n",
+        "}\n",
+        "rule (\"x\") {\n",
+        "    event {\n",
+        "        Ongoing - Global;\n",
+        "    }\n",
+        "    conditions {\n",
+        "        Wait == 1;\n",
+        "    }\n",
+        "}\n",
+    );
+    let catalog = Catalog::builtin().expect("catalog");
+    parser::parse(source, &catalog, &en())
+        .expect("a variable named like an action is a value, not an action call");
 }
 
 #[test]
