@@ -233,6 +233,26 @@ fn height_and_node_count_measure_plain_subtree_shape() {
     assert_eq!(rule.node_count(), 7);
 }
 
+/// `arg-line-bytes.ws` isolates serialized statement bytes from node count:
+/// its longest line must exceed the verbatim rejected statement's while its
+/// subtree stays small. Pinned to the rejected artifact rather than a byte
+/// constant so the discriminating property, not incidental output, is
+/// asserted.
+#[test]
+fn line_bytes_probe_exceeds_the_rejected_statement_size() {
+    let longest_line = |name: &str| {
+        fixture_text("import-limits", name)
+            .lines()
+            .map(str::len)
+            .max()
+            .unwrap_or_default()
+    };
+    assert!(
+        longest_line("arg-line-bytes.ws") > longest_line("prophet-action-single.ws"),
+        "the byte-axis probe must serialize a longer statement than the rejected verbatim one"
+    );
+}
+
 /// `statement_value_nodes` counts a statement's own value arguments and
 /// stops at nested actions: a block's descendant actions are separate
 /// statements with their own value trees. A rule's measure covers its
