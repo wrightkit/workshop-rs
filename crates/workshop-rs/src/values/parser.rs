@@ -73,29 +73,7 @@ impl ParseContext<'_> {
             ) {
                 self.pos += 1;
                 let (name, _, _) = self.phrase()?;
-                let member = self
-                    .target
-                    .values
-                    .push(ValueNode::new(Value::String(name), None));
-                let mut args = vec![value, member];
-                if matches!(
-                    self.peek(),
-                    Some(Token {
-                        kind: TokenKind::LBracket,
-                        ..
-                    })
-                ) {
-                    self.pos += 1;
-                    args.push(self.value()?);
-                    self.expect(TokenKind::RBracket, "expected ']' after member index")?;
-                }
-                value = self.target.values.push(ValueNode::new(
-                    Value::Call {
-                        name: "memberAccess".to_string(),
-                        args,
-                    },
-                    None,
-                ));
+                value = self.member_access(value, name)?;
                 continue;
             }
             if let Some(Token {
@@ -123,7 +101,7 @@ impl ParseContext<'_> {
                     Some(TokenKind::Op(equal)) if equal == "="
                 );
                 if !compound_assignment
-                    && (is_comparison(&op)
+                    && (wir::is_comparison_operator(&op)
                         || matches!(op.as_str(), "and" | "or" | "+" | "-" | "*" | "/" | "%"))
                 {
                     self.pos += 1;
@@ -274,30 +252,26 @@ impl ParseContext<'_> {
                 // evidence).
                 let (start, end) = self.span_here();
                 self.pos += 1;
-                let saved = self.expected_domain;
-                self.expected_domain = None;
-                let result = (|| {
-                    self.consume_phrase("Variable")?;
-                    self.expect(TokenKind::LParen, "expected '(' after 'Player Variable'")?;
-                    let player = self.value()?;
-                    self.expect(TokenKind::Comma, "expected ',' after player")?;
-                    let (name, name_start, name_end) = self.phrase()?;
-                    let variable = self.player_by_name(&name)?;
-                    self.expect(TokenKind::RParen, "expected ')' after Player Variable")?;
-                    Ok(self.target.values.push(
+                self.with_domain(None, |p| {
+                    p.consume_phrase("Variable")?;
+                    p.expect(TokenKind::LParen, "expected '(' after 'Player Variable'")?;
+                    let player = p.value()?;
+                    p.expect(TokenKind::Comma, "expected ',' after player")?;
+                    let (name, name_start, name_end) = p.phrase()?;
+                    let variable = p.player_by_name(&name)?;
+                    p.expect(TokenKind::RParen, "expected ')' after Player Variable")?;
+                    Ok(p.target.values.push(
                         ValueNode::new(
                             Value::PlayerVariable { player, variable },
-                            Some(Span::new(self.file(), start, end)),
+                            Some(Span::new(p.file(), start, end)),
                         )
                         .with_identifier(Some(Span::new(
-                            self.file(),
+                            p.file(),
                             name_start,
                             name_end,
                         ))),
                     ))
-                })();
-                self.expected_domain = saved;
-                result
+                })
             }
             Some(Token {
                 kind: TokenKind::Word(word),
@@ -385,58 +359,11 @@ impl ParseContext<'_> {
                 ..
             }) => {
                 // The oracle's playervar-read spelling parenthesizes the
-                // receiver: `(Event Player).p` (#87).
+                // receiver: `(Event Player).p` (#87). The postfix loop in
+                // `value()` has already consumed any `.member` inside the
+                // parens, so only the post-`)` member access remains.
                 self.pos += 1;
                 let inner = self.value()?;
-                if matches!(
-                    self.peek(),
-                    Some(Token {
-                        kind: TokenKind::Dot,
-                        ..
-                    })
-                ) {
-                    self.pos += 1;
-                    let (name, _, _) = self.phrase()?;
-                    let member = self
-                        .target
-                        .values
-                        .push(ValueNode::new(Value::String(name), None));
-                    let mut args = vec![inner, member];
-                    if matches!(
-                        self.peek(),
-                        Some(Token {
-                            kind: TokenKind::LBracket,
-                            ..
-                        })
-                    ) {
-                        self.pos += 1;
-                        args.push(self.value()?);
-                        self.expect(TokenKind::RBracket, "expected ']' after member index")?;
-                    }
-                    let mut accessed = self.target.values.push(ValueNode::new(
-                        Value::Call {
-                            name: "memberAccess".to_string(),
-                            args,
-                        },
-                        None,
-                    ));
-                    if matches!(self.peek(), Some(Token { kind: TokenKind::Op(op), .. }) if op == "?")
-                    {
-                        self.pos += 1;
-                        let when_true = self.value()?;
-                        self.expect(TokenKind::Colon, "expected ':' in conditional value")?;
-                        let when_false = self.value()?;
-                        accessed = self.target.values.push(ValueNode::new(
-                            Value::Call {
-                                name: "ifThenElse".to_string(),
-                                args: vec![accessed, when_true, when_false],
-                            },
-                            None,
-                        ));
-                    }
-                    self.expect(TokenKind::RParen, "expected ')' after member access")?;
-                    return Ok(accessed);
-                }
                 self.expect(TokenKind::RParen, "expected ')' after parenthesized value")?;
                 if let Some(Token {
                     kind: TokenKind::Dot,
@@ -469,29 +396,7 @@ impl ParseContext<'_> {
                             ))),
                         ))
                     } else {
-                        let member = self
-                            .target
-                            .values
-                            .push(ValueNode::new(Value::String(name), None));
-                        let mut args = vec![inner, member];
-                        if matches!(
-                            self.peek(),
-                            Some(Token {
-                                kind: TokenKind::LBracket,
-                                ..
-                            })
-                        ) {
-                            self.pos += 1;
-                            args.push(self.value()?);
-                            self.expect(TokenKind::RBracket, "expected ']' after member index")?;
-                        }
-                        Ok(self.target.values.push(ValueNode::new(
-                            Value::Call {
-                                name: "memberAccess".to_string(),
-                                args,
-                            },
-                            None,
-                        )))
+                        self.member_access(inner, name)
                     }
                 } else {
                     Ok(inner)
@@ -600,11 +505,7 @@ impl ParseContext<'_> {
                     // Compare(a, op, b) -> Call(op, [a, b]). The operands are
                     // value positions, not signature-pinned arguments, so the
                     // enclosing expected domain must not leak in (#111).
-                    let saved = self.expected_domain;
-                    self.expected_domain = None;
-                    let left = self.value();
-                    self.expected_domain = saved;
-                    let left = left?;
+                    let left = self.value_in_domain(None)?;
                     self.expect(TokenKind::Comma, "expected ',' after Compare operand")?;
                     let (op, op_start, op_end) = match self.next() {
                         Some(Token {
@@ -625,11 +526,7 @@ impl ParseContext<'_> {
                         }
                     };
                     self.expect(TokenKind::Comma, "expected ',' after Compare operator")?;
-                    let saved = self.expected_domain;
-                    self.expected_domain = None;
-                    let right = self.value();
-                    self.expected_domain = saved;
-                    let right = right?;
+                    let right = self.value_in_domain(None)?;
                     self.expect(TokenKind::RParen, "expected ')'")?;
                     let span = Some(Span::new(self.file(), op_start, op_end));
                     return Ok(self.target.values.push(ValueNode::new(
@@ -962,12 +859,8 @@ impl ParseContext<'_> {
                     );
                 } else {
                     self.pos = saved;
-                    let saved_domain = self.expected_domain;
-                    self.expected_domain =
-                        self.context.expected_domain(call_id, canonical_arg_index);
-                    let arg = self.value();
-                    self.expected_domain = saved_domain;
-                    args.push(arg?);
+                    let domain = self.context.expected_domain(call_id, canonical_arg_index);
+                    args.push(self.value_in_domain(domain)?);
                 }
             } else if matches!(
                 call_id,
@@ -1001,18 +894,14 @@ impl ParseContext<'_> {
                 // Each argument is parsed with the domain its position expects
                 // per the enclosing call's canonical signature (#111); nested
                 // calls override the expectation for their own arguments.
-                let saved = self.expected_domain;
-                self.expected_domain = self
+                let domain = self
                     .context
                     .expected_domain(call_id, canonical_arg_index)
                     .or_else(|| {
-                        (matches!(call_id, "array" | "randomValueInArray"))
-                            .then_some(saved)
-                            .flatten()
+                        self.expected_domain
+                            .filter(|_| matches!(call_id, "array" | "randomValueInArray"))
                     });
-                let arg = self.value();
-                self.expected_domain = saved;
-                args.push(arg?);
+                args.push(self.value_in_domain(domain)?);
             }
             arg_index += 1;
             match self.peek() {
@@ -1026,29 +915,8 @@ impl ParseContext<'_> {
                     kind: TokenKind::Colon,
                     ..
                 }) => {
-                    self.pos += 1;
-                    if !matches!(
-                        self.peek(),
-                        Some(Token {
-                            kind: TokenKind::RParen,
-                            ..
-                        })
-                    ) {
-                        let _ = self.phrase()?;
-                    }
-                    match self.peek() {
-                        Some(Token {
-                            kind: TokenKind::Comma,
-                            ..
-                        }) => self.pos += 1,
-                        Some(Token {
-                            kind: TokenKind::RParen,
-                            ..
-                        }) => break,
-                        Some(token) => return Err(self.malformed("expected ',' or ')'", &token)),
-                        None => {
-                            return Err(self.malformed("unexpected end of value call", self.eof()));
-                        }
+                    if self.named_argument_separator()? {
+                        break;
                     }
                 }
                 _ => break,
@@ -1107,6 +975,34 @@ impl ParseContext<'_> {
         )))
     }
 
+    fn named_argument_separator(&mut self) -> Result<bool> {
+        self.pos += 1;
+        if !matches!(
+            self.peek(),
+            Some(Token {
+                kind: TokenKind::RParen,
+                ..
+            })
+        ) {
+            let _ = self.phrase()?;
+        }
+        match self.peek() {
+            Some(Token {
+                kind: TokenKind::Comma,
+                ..
+            }) => {
+                self.pos += 1;
+                Ok(false)
+            }
+            Some(Token {
+                kind: TokenKind::RParen,
+                ..
+            }) => Ok(true),
+            Some(token) => Err(self.malformed(r"expected ',' or ')'", &token)),
+            None => Err(self.malformed("unexpected end of value call", self.eof())),
+        }
+    }
+
     pub(crate) fn opaque_value_args(&mut self) -> Result<Vec<wir::ValueId>> {
         let mut args = Vec::new();
         if matches!(self.peek().map(|token| token.kind), Some(TokenKind::RParen)) {
@@ -1119,29 +1015,8 @@ impl ParseContext<'_> {
                     kind: TokenKind::Colon,
                     ..
                 }) => {
-                    self.pos += 1;
-                    if !matches!(
-                        self.peek(),
-                        Some(Token {
-                            kind: TokenKind::RParen,
-                            ..
-                        })
-                    ) {
-                        let _ = self.phrase()?;
-                    }
-                    match self.peek() {
-                        Some(Token {
-                            kind: TokenKind::Comma,
-                            ..
-                        }) => self.pos += 1,
-                        Some(Token {
-                            kind: TokenKind::RParen,
-                            ..
-                        }) => break,
-                        Some(token) => return Err(self.malformed("expected ',' or ')'", &token)),
-                        None => {
-                            return Err(self.malformed("unexpected end of value call", self.eof()));
-                        }
+                    if self.named_argument_separator()? {
+                        break;
                     }
                 }
                 Some(Token {
@@ -1169,5 +1044,33 @@ impl ParseContext<'_> {
             Value::Bool(value),
             Some(Span::new(self.file(), start, end)),
         ))
+    }
+    /// `receiver.member` / `receiver.member[index]` — the canonical
+    /// `memberAccess` call shape shared by the postfix loop and the
+    /// post-paren receiver path.
+    fn member_access(&mut self, receiver: wir::ValueId, name: String) -> Result<wir::ValueId> {
+        let member = self
+            .target
+            .values
+            .push(ValueNode::new(Value::String(name), None));
+        let mut args = vec![receiver, member];
+        if matches!(
+            self.peek(),
+            Some(Token {
+                kind: TokenKind::LBracket,
+                ..
+            })
+        ) {
+            self.pos += 1;
+            args.push(self.value()?);
+            self.expect(TokenKind::RBracket, "expected ']' after member index")?;
+        }
+        Ok(self.target.values.push(ValueNode::new(
+            Value::Call {
+                name: "memberAccess".to_string(),
+                args,
+            },
+            None,
+        )))
     }
 }

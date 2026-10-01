@@ -10,6 +10,8 @@ mod contextual_semantics;
 mod detect;
 #[path = "../tests/emitter.rs"]
 mod emitter;
+#[path = "../tests/internal.rs"]
+pub(crate) mod internal;
 #[path = "../tests/language_conformance.rs"]
 mod language_conformance;
 #[path = "../tests/locale.rs"]

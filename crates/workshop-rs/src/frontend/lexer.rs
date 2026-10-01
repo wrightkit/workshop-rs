@@ -100,92 +100,24 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
             ' ' | '\t' | '\r' | '\n' => {
                 cursor.advance();
             }
-            '(' => {
+            '(' | ')' | ',' | ';' | '{' | '}' | ':' | '.' | '[' | ']' | '?' | '-' => {
                 let start = cursor.pos();
                 cursor.advance();
+                let kind = match ch {
+                    '(' => TokenKind::LParen,
+                    ')' => TokenKind::RParen,
+                    ',' => TokenKind::Comma,
+                    ';' => TokenKind::Semi,
+                    '{' => TokenKind::LBrace,
+                    '}' => TokenKind::RBrace,
+                    ':' => TokenKind::Colon,
+                    '.' => TokenKind::Dot,
+                    '[' => TokenKind::LBracket,
+                    ']' => TokenKind::RBracket,
+                    other => TokenKind::Op(other.to_string()),
+                };
                 tokens.push(Token {
-                    kind: TokenKind::LParen,
-                    start,
-                    end: cursor.pos(),
-                });
-            }
-            ')' => {
-                let start = cursor.pos();
-                cursor.advance();
-                tokens.push(Token {
-                    kind: TokenKind::RParen,
-                    start,
-                    end: cursor.pos(),
-                });
-            }
-            ',' => {
-                let start = cursor.pos();
-                cursor.advance();
-                tokens.push(Token {
-                    kind: TokenKind::Comma,
-                    start,
-                    end: cursor.pos(),
-                });
-            }
-            ';' => {
-                let start = cursor.pos();
-                cursor.advance();
-                tokens.push(Token {
-                    kind: TokenKind::Semi,
-                    start,
-                    end: cursor.pos(),
-                });
-            }
-            '{' => {
-                let start = cursor.pos();
-                cursor.advance();
-                tokens.push(Token {
-                    kind: TokenKind::LBrace,
-                    start,
-                    end: cursor.pos(),
-                });
-            }
-            '}' => {
-                let start = cursor.pos();
-                cursor.advance();
-                tokens.push(Token {
-                    kind: TokenKind::RBrace,
-                    start,
-                    end: cursor.pos(),
-                });
-            }
-            ':' => {
-                let start = cursor.pos();
-                cursor.advance();
-                tokens.push(Token {
-                    kind: TokenKind::Colon,
-                    start,
-                    end: cursor.pos(),
-                });
-            }
-            '.' => {
-                let start = cursor.pos();
-                cursor.advance();
-                tokens.push(Token {
-                    kind: TokenKind::Dot,
-                    start,
-                    end: cursor.pos(),
-                });
-            }
-            '[' => {
-                let start = cursor.pos();
-                cursor.advance();
-                tokens.push(Token {
-                    kind: TokenKind::LBracket,
-                    start,
-                    end: cursor.pos(),
-                });
-            }
-            ']' => {
-                let start = cursor.pos();
-                cursor.advance();
-                tokens.push(Token {
-                    kind: TokenKind::RBracket,
+                    kind,
                     start,
                     end: cursor.pos(),
                 });
@@ -319,15 +251,6 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                     });
                 }
             }
-            '?' => {
-                let start = cursor.pos();
-                cursor.advance();
-                tokens.push(Token {
-                    kind: TokenKind::Op("?".to_string()),
-                    start,
-                    end: cursor.pos(),
-                });
-            }
             '&' | '|' => {
                 let start = cursor.pos();
                 let operator = cursor.advance().unwrap();
@@ -386,15 +309,6 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                 let op = cursor.advance().unwrap();
                 tokens.push(Token {
                     kind: TokenKind::Op(op.to_string()),
-                    start,
-                    end: cursor.pos(),
-                });
-            }
-            '-' => {
-                let start = cursor.pos();
-                cursor.advance();
-                tokens.push(Token {
-                    kind: TokenKind::Op("-".to_string()),
                     start,
                     end: cursor.pos(),
                 });

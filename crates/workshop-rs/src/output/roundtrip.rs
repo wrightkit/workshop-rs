@@ -385,36 +385,35 @@ fn action_equivalent(
                 variable: va,
                 value: x,
                 ..
+            }
+            | wir::Action::ModifyGlobalVariable {
+                variable: va,
+                value: x,
+                ..
             },
             wir::Action::SetGlobalVariable {
                 variable: vb,
                 value: y,
                 ..
-            },
-        ) => {
-            name_eq(a.global_variables.get(*va), b.global_variables.get(*vb))
-                && value_equivalent(a, b, *x, *y)
-        }
-        (
-            wir::Action::ModifyGlobalVariable {
-                variable: va,
-                op: oa,
-                value: x,
-                ..
-            },
-            wir::Action::ModifyGlobalVariable {
+            }
+            | wir::Action::ModifyGlobalVariable {
                 variable: vb,
-                op: ob,
                 value: y,
                 ..
             },
         ) => {
             name_eq(a.global_variables.get(*va), b.global_variables.get(*vb))
-                && oa == ob
+                && la.modify_op() == rb.modify_op()
                 && value_equivalent(a, b, *x, *y)
         }
         (
             wir::Action::SetPlayerVariable {
+                player: pa,
+                variable: va,
+                value: x,
+                ..
+            }
+            | wir::Action::ModifyPlayerVariable {
                 player: pa,
                 variable: va,
                 value: x,
@@ -425,31 +424,17 @@ fn action_equivalent(
                 variable: vb,
                 value: y,
                 ..
-            },
-        ) => {
-            value_equivalent(a, b, *pa, *pb)
-                && name_eq(a.player_variables.get(*va), b.player_variables.get(*vb))
-                && value_equivalent(a, b, *x, *y)
-        }
-        (
-            wir::Action::ModifyPlayerVariable {
-                player: pa,
-                variable: va,
-                op: oa,
-                value: x,
-                ..
-            },
-            wir::Action::ModifyPlayerVariable {
+            }
+            | wir::Action::ModifyPlayerVariable {
                 player: pb,
                 variable: vb,
-                op: ob,
                 value: y,
                 ..
             },
         ) => {
             value_equivalent(a, b, *pa, *pb)
                 && name_eq(a.player_variables.get(*va), b.player_variables.get(*vb))
-                && oa == ob
+                && la.modify_op() == rb.modify_op()
                 && value_equivalent(a, b, *x, *y)
         }
         (

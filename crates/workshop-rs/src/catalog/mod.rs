@@ -27,8 +27,6 @@ use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::core::signatures::ExpectedDomain;
 
-use crate::core::error::{CatalogError, Result};
-
 /// The embedded catalog data.
 pub const CATALOG_DATA: &str = include_str!("data/catalog.json");
 
@@ -136,11 +134,11 @@ pub struct CatalogEntry {
     pub id: String,
     pub kind: Kind,
     /// Parameter names, when the catalog documents them.
-    params: Vec<String>,
-    /// Reviewed semantic parameter names, parallel to `params`.
-    param_names: Vec<String>,
+    pub(crate) params: Vec<String>,
+    /// Reviewed semantic names when they differ from the catalog parameters.
+    pub(crate) param_names: Option<Vec<String>>,
     /// Reviewed localized spellings for each parameter, parallel to `params`.
-    param_aliases: Vec<HashMap<Locale, Vec<String>>>,
+    pub(crate) param_aliases: Vec<HashMap<Locale, Vec<String>>>,
     /// The canonical enum domain expected at each parameter position, when
     /// the parameter takes an enumerated value (parallel to `params`).
     /// `None` for non-enum parameters and for parameters whose accepted
@@ -148,22 +146,22 @@ pub struct CatalogEntry {
     /// rule event's `Player` parameter accepts `EventPlayer` members or
     /// canonical `Hero` members; the WIR [`crate::wir::EventTarget`] carries
     /// that union explicitly.
-    param_domains: Vec<Option<String>>,
+    pub(crate) param_domains: Vec<Option<String>>,
     /// Default value per parameter position (parallel to `params`),
     /// resolved when a call omits the argument. See the catalog data
     /// provenance for the value syntax and source.
-    param_defaults: Vec<Option<String>>,
+    pub(crate) param_defaults: Vec<Option<String>>,
     /// Source-backed semantic type per parameter position. `None` means
     /// the available sources do not establish a narrower type.
-    param_types: Vec<Option<String>>,
+    pub(crate) param_types: Vec<Option<String>>,
     /// Contextual literal substitutions per parameter position.
-    param_coercions: Vec<Option<ParamCoercions>>,
+    pub(crate) param_coercions: Vec<Option<ParamCoercions>>,
     /// Source-backed return type for Value entries. Actions must leave this
     /// unset; an absent value remains unresolved.
-    return_type: Option<String>,
+    pub(crate) return_type: Option<String>,
     /// Whether the final declared parameter repeats for additional arguments.
-    variadic: bool,
-    aliases: HashMap<Locale, Vec<String>>,
+    pub(crate) variadic: bool,
+    pub(crate) aliases: HashMap<Locale, Vec<String>>,
 }
 
 /// A locale-independent identity for a preset used by the Workshop `String`
@@ -172,40 +170,42 @@ pub struct CatalogEntry {
 #[derive(Debug, Clone)]
 pub struct LocalizedStringEntry {
     pub id: String,
-    aliases: HashMap<Locale, Vec<String>>,
+    pub(crate) aliases: HashMap<Locale, Vec<String>>,
+}
+
+fn spelling<'a>(aliases: &'a HashMap<Locale, Vec<String>>, locale: &Locale) -> Option<&'a str> {
+    aliases
+        .get(locale)
+        .and_then(|spellings| spellings.first())
+        .map(String::as_str)
+}
+
+fn spellings_for<'a>(aliases: &'a HashMap<Locale, Vec<String>>, locale: &Locale) -> &'a [String] {
+    aliases.get(locale).map(Vec::as_slice).unwrap_or_default()
 }
 
 impl LocalizedStringEntry {
     /// The deterministic emitted spelling in `locale`, when mapped.
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
-        self.aliases
-            .get(locale)
-            .and_then(|spellings| spellings.first())
-            .map(String::as_str)
+        spelling(&self.aliases, locale)
     }
 
     /// All reviewed spellings accepted for this locale.
     pub fn spellings(&self, locale: &Locale) -> &[String] {
-        self.aliases
-            .get(locale)
-            .map(Vec::as_slice)
-            .unwrap_or_default()
+        spellings_for(&self.aliases, locale)
     }
 }
 
 impl CatalogEntry {
     /// The localized spelling of this builtin in `locale`, when declared.
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
-        self.aliases
-            .get(locale)
-            .and_then(|spellings| spellings.first())
-            .map(String::as_str)
+        spelling(&self.aliases, locale)
     }
 
     /// Every reviewed localized spelling of this builtin, with the first
     /// spelling reserved for deterministic emission.
     pub fn spellings(&self, locale: &Locale) -> &[String] {
-        self.aliases.get(locale).map(Vec::as_slice).unwrap_or(&[])
+        spellings_for(&self.aliases, locale)
     }
 
     /// Resolve a canonical or reviewed localized parameter spelling to its
@@ -240,10 +240,8 @@ impl CatalogEntry {
 
     /// The reviewed semantic name for an argument position, when declared.
     pub fn param_name(&self, index: usize) -> Option<&str> {
-        self.param_names
-            .get(index)
-            .or_else(|| self.variadic.then(|| self.param_names.last()).flatten())
-            .map(String::as_str)
+        let names = self.param_names.as_deref().unwrap_or(&self.params);
+        param_at(names, index, self.variadic).map(String::as_str)
     }
 
     /// The number of arguments that must be present when trailing defaults
@@ -268,35 +266,23 @@ impl CatalogEntry {
 
     /// The default value for an argument position, when declared.
     pub fn param_default(&self, index: usize) -> Option<&str> {
-        self.param_defaults
-            .get(index)
-            .or_else(|| self.variadic.then(|| self.param_defaults.last()).flatten())
-            .and_then(Option::as_deref)
+        param_at(&self.param_defaults, index, self.variadic).and_then(Option::as_deref)
     }
 
     /// The declared enum domain for an argument position, when one exists.
     pub fn param_domain(&self, index: usize) -> Option<&str> {
-        self.param_domains
-            .get(index)
-            .or_else(|| self.variadic.then(|| self.param_domains.last()).flatten())
-            .and_then(Option::as_deref)
+        param_at(&self.param_domains, index, self.variadic).and_then(Option::as_deref)
     }
 
     /// The source-backed semantic type for an argument position, when
     /// available. Enum domains remain exposed separately by `param_domain`.
     pub fn param_type(&self, index: usize) -> Option<&str> {
-        self.param_types
-            .get(index)
-            .or_else(|| self.variadic.then(|| self.param_types.last()).flatten())
-            .and_then(Option::as_deref)
+        param_at(&self.param_types, index, self.variadic).and_then(Option::as_deref)
     }
 
     /// The contextual literal substitutions for an argument position.
     pub fn param_coercions(&self, index: usize) -> Option<&ParamCoercions> {
-        self.param_coercions
-            .get(index)
-            .or_else(|| self.variadic.then(|| self.param_coercions.last()).flatten())
-            .and_then(Option::as_ref)
+        param_at(&self.param_coercions, index, self.variadic).and_then(Option::as_ref)
     }
 
     /// The source-backed return type of a Value, when available.
@@ -310,26 +296,29 @@ impl CatalogEntry {
     }
 }
 
+fn param_at<T>(values: &[T], index: usize, variadic: bool) -> Option<&T> {
+    values
+        .get(index)
+        .or_else(|| variadic.then(|| values.last()).flatten())
+}
+
 /// One enum member within a domain.
 #[derive(Debug, Clone)]
 pub struct EnumMember {
     pub member: String,
-    aliases: HashMap<Locale, Vec<String>>,
+    pub(crate) aliases: HashMap<Locale, Vec<String>>,
 }
 
 impl EnumMember {
     /// The localized spelling of this member in `locale`, when declared.
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
-        self.aliases
-            .get(locale)
-            .and_then(|spellings| spellings.first())
-            .map(String::as_str)
+        spelling(&self.aliases, locale)
     }
 
     /// Every reviewed localized spelling of this enum member, with the first
     /// spelling reserved for deterministic emission.
     pub fn spellings(&self, locale: &Locale) -> &[String] {
-        self.aliases.get(locale).map(Vec::as_slice).unwrap_or(&[])
+        spellings_for(&self.aliases, locale)
     }
 }
 
@@ -337,16 +326,13 @@ impl EnumMember {
 #[derive(Debug, Clone)]
 pub struct EnumDomain {
     pub domain: String,
-    aliases: HashMap<Locale, Vec<String>>,
+    pub(crate) aliases: HashMap<Locale, Vec<String>>,
     pub members: Vec<EnumMember>,
 }
 
 impl EnumDomain {
     pub fn spelling(&self, locale: &Locale) -> Option<&str> {
-        self.aliases
-            .get(locale)
-            .and_then(|spellings| spellings.first())
-            .map(String::as_str)
+        spelling(&self.aliases, locale)
     }
 }
 
@@ -412,244 +398,41 @@ pub struct CatalogIdentity {
     pub provenance: Provenance,
 }
 
-type MemberIndexMap = HashMap<String, HashMap<String, (usize, usize)>>;
+pub(crate) type MemberIndexMap = HashMap<String, HashMap<String, (usize, usize)>>;
 
 /// The validated canonical Workshop catalog.
 #[derive(Debug, Clone)]
 pub struct Catalog {
-    schema_version: u32,
+    pub(crate) schema_version: u32,
     /// The declared locales, normalized; the first one is the primary
     /// locale and must be fully covered.
-    locales: Vec<Locale>,
-    target: TargetMeta,
-    provenance: Provenance,
+    pub(crate) locales: Vec<Locale>,
+    pub(crate) target: TargetMeta,
+    pub(crate) provenance: Provenance,
     /// The catalog dataset version (ADR-0001 `catalog-version`).
-    catalog_version: String,
+    pub(crate) catalog_version: String,
     /// The declared content digest (sha256 hex), verified at load when
     /// present (ADR-0001 `catalog-version`).
-    catalog_digest: Option<String>,
-    entries: Vec<CatalogEntry>,
-    localized_strings: Vec<LocalizedStringEntry>,
-    enums: Vec<EnumDomain>,
-    by_id: [HashMap<String, usize>; Kind::NUM_KINDS],
-    alias_to_entry: HashMap<Locale, [HashMap<String, usize>; Kind::NUM_KINDS]>,
-    localized_string_by_id: HashMap<String, usize>,
-    localized_string_alias: HashMap<Locale, HashMap<String, usize>>,
-    enum_by_domain: HashMap<String, usize>,
-    enum_alias_to_domain: HashMap<Locale, HashMap<String, String>>,
-    enum_alias_to_member: HashMap<Locale, MemberIndexMap>,
-    bare_member_index: HashMap<Locale, HashMap<String, Vec<(String, String)>>>,
+    pub(crate) catalog_digest: Option<String>,
+    pub(crate) entries: Vec<CatalogEntry>,
+    pub(crate) localized_strings: Vec<LocalizedStringEntry>,
+    pub(crate) enums: Vec<EnumDomain>,
+    pub(crate) by_id: [HashMap<String, usize>; Kind::NUM_KINDS],
+    pub(crate) alias_to_entry: HashMap<Locale, [HashMap<String, usize>; Kind::NUM_KINDS]>,
+    pub(crate) localized_string_by_id: HashMap<String, usize>,
+    pub(crate) localized_string_alias: HashMap<Locale, HashMap<String, usize>>,
+    pub(crate) enum_by_domain: HashMap<String, usize>,
+    pub(crate) enum_alias_to_domain: HashMap<Locale, HashMap<String, String>>,
+    pub(crate) enum_alias_to_member: HashMap<Locale, MemberIndexMap>,
+    pub(crate) bare_member_index: HashMap<Locale, HashMap<String, Vec<(String, String)>>>,
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct CatalogFile {
-    schema_version: u32,
-    locales: Vec<String>,
-    target: TargetMeta,
-    provenance: Provenance,
-    /// The catalog dataset version; absent in ad-hoc test data.
-    #[serde(default)]
-    version: Option<String>,
-    /// The declared content digest; absent in ad-hoc test data.
-    #[serde(default)]
-    digest: Option<String>,
-    #[serde(default)]
-    structural: Vec<EntryFile>,
-    #[serde(default)]
-    actions: Vec<EntryFile>,
-    #[serde(default)]
-    values: Vec<EntryFile>,
-    #[serde(default)]
-    events: Vec<EntryFile>,
-    #[serde(default)]
-    operators: Vec<EntryFile>,
-    #[serde(default)]
-    settings: Vec<EntryFile>,
-    #[serde(default)]
-    localized_strings: Vec<LocalizedStringFile>,
-    #[serde(default)]
-    enums: Vec<EnumFile>,
-}
+/// Catalog loading and digest machinery lives in `load.rs`.
+mod load;
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct EntryFile {
-    id: String,
-    aliases: HashMap<String, AliasFile>,
-    #[serde(default)]
-    params: Vec<String>,
-    /// Reviewed semantic parameter names, parallel to `params`.
-    #[serde(default)]
-    param_names: Vec<String>,
-    #[serde(default)]
-    param_aliases: Vec<HashMap<String, AliasFile>>,
-    /// Canonical enum domain per parameter position (parallel to `params`);
-    /// empty when no parameter domains are documented.
-    #[serde(default)]
-    param_domains: Vec<Option<String>>,
-    /// Default value per parameter position (parallel to `params`),
-    /// resolved when a call omits the argument. `None` means no default is
-    /// declared. Default value syntax: `null`, a numeric literal, localized
-    /// string text, `Domain.MEMBER` (builtin enum member), or a catalog value
-    /// id resolved as a zero-argument call. Every default is pinned-reference
-    /// probe evidence, never copied from upstream game data.
-    #[serde(default)]
-    param_defaults: Vec<Option<String>>,
-    #[serde(default)]
-    param_types: Vec<Option<String>>,
-    #[serde(default)]
-    param_coercions: Vec<Option<ParamCoercions>>,
-    #[serde(default)]
-    return_type: Option<String>,
-    #[serde(default)]
-    variadic: bool,
-}
-
-#[derive(Deserialize)]
-struct LocalizedStringFile {
-    id: String,
-    aliases: HashMap<String, AliasFile>,
-}
-
-#[derive(Deserialize)]
-struct EnumFile {
-    domain: String,
-    #[serde(default)]
-    aliases: HashMap<String, AliasFile>,
-    members: Vec<MemberFile>,
-}
-
-#[derive(Deserialize)]
-struct MemberFile {
-    id: String,
-    aliases: HashMap<String, AliasFile>,
-}
-
-/// A locale may have one canonical emitter spelling or several reviewed
-/// spellings observed across current Workshop producers. The string form is
-/// retained for the common case; the array form makes conflicts explicit in
-/// the data instead of forcing parser branches or silently choosing one.
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-enum AliasFile {
-    One(String),
-    Many(Vec<String>),
-}
-
-impl AliasFile {
-    fn into_spellings(self, id: &str, locale: &str) -> Result<Vec<String>> {
-        let spellings = match self {
-            AliasFile::One(spelling) => vec![spelling],
-            AliasFile::Many(spellings) => spellings,
-        };
-        if spellings.is_empty() || spellings.iter().any(String::is_empty) {
-            return Err(CatalogError::validation(format!(
-                "catalog entry '{}' declares an empty alias for locale '{}'",
-                id, locale
-            )));
-        }
-        Ok(spellings)
-    }
-}
+pub use load::{build_canonical, canonicalize, content_digest};
 
 impl Catalog {
-    /// Parse and validate catalog data, verifying the declared content
-    /// digest when the data carries one.
-    pub fn load(json: &str) -> Result<Catalog> {
-        let catalog = Self::load_unverified(json)?;
-        if let Some(declared) = &catalog.catalog_digest {
-            let computed = content_digest(json)?;
-            if declared != &computed {
-                return Err(CatalogError::validation(format!(
-                    "catalog digest mismatch: declared '{declared}', content '{computed}' — \
-                     run the catalog pipeline (workshop-catalog-gen build)"
-                )));
-            }
-        }
-        Ok(catalog)
-    }
-
-    /// Parse and validate catalog data without digest verification. Used by
-    /// the catalog pipeline so a stale digest can be repaired by `build`.
-    pub fn load_unverified(json: &str) -> Result<Catalog> {
-        let file: CatalogFile = serde_json::from_str(json)
-            .map_err(|error| CatalogError::malformed(format!("catalog data: {error}")))?;
-        if file.schema_version != 1 {
-            return Err(CatalogError::malformed(format!(
-                "unsupported catalog schemaVersion {}",
-                file.schema_version
-            )));
-        }
-        let locales: Vec<Locale> = file.locales.iter().map(|s| Locale::new(s)).collect();
-        if locales.is_empty() {
-            return Err(CatalogError::malformed(
-                "catalog declares no locales".to_string(),
-            ));
-        }
-
-        let mut catalog = Catalog {
-            schema_version: file.schema_version,
-            locales,
-            target: file.target,
-            provenance: file.provenance,
-            catalog_version: file.version.unwrap_or_else(|| "dev".to_string()),
-            catalog_digest: file.digest,
-            entries: Vec::new(),
-            localized_strings: Vec::new(),
-            enums: Vec::new(),
-            by_id: Default::default(),
-            alias_to_entry: HashMap::new(),
-            localized_string_by_id: HashMap::new(),
-            localized_string_alias: HashMap::new(),
-            enum_by_domain: HashMap::new(),
-            enum_alias_to_domain: HashMap::new(),
-            enum_alias_to_member: HashMap::new(),
-            bare_member_index: HashMap::new(),
-        };
-
-        for (kind, items) in [
-            (Kind::Structural, file.structural),
-            (Kind::Action, file.actions),
-            (Kind::Value, file.values),
-            (Kind::Event, file.events),
-            (Kind::Operator, file.operators),
-            (Kind::Setting, file.settings),
-        ] {
-            for item in items {
-                catalog.insert_entry(kind, item)?;
-            }
-        }
-        for item in file.localized_strings {
-            catalog.insert_localized_string(item)?;
-        }
-        for domain in file.enums {
-            catalog.insert_enum(domain)?;
-        }
-        for domain in &catalog.enums {
-            for member in &domain.members {
-                for (locale, spellings) in &member.aliases {
-                    for spelling in spellings {
-                        catalog
-                            .bare_member_index
-                            .entry(locale.clone())
-                            .or_default()
-                            .entry(spelling.clone())
-                            .or_default()
-                            .push((domain.domain.clone(), member.member.clone()));
-                    }
-                }
-            }
-        }
-        catalog.validate_param_domains()?;
-        Ok(catalog)
-    }
-
-    /// The built-in catalog data.
-    pub fn builtin() -> Result<Catalog> {
-        Self::load(CATALOG_DATA)
-    }
-
     pub(crate) fn schema_version(&self) -> u32 {
         self.schema_version
     }
@@ -894,306 +677,6 @@ impl Catalog {
             .cloned()
             .unwrap_or_default()
     }
-
-    fn insert_entry(&mut self, kind: Kind, item: EntryFile) -> Result<()> {
-        let index = self.entries.len();
-        let mut aliases = HashMap::new();
-        for (locale_str, alias_file) in item.aliases {
-            let locale = Locale::new(&locale_str);
-            if !self.locales.contains(&locale) {
-                return Err(CatalogError::validation(format!(
-                    "entry '{}' declares alias for undeclared locale '{}'",
-                    item.id, locale
-                )));
-            }
-            let spellings = alias_file.into_spellings(&item.id, locale.as_str())?;
-            let locale_map = self.alias_to_entry.entry(locale.clone()).or_default();
-            for spelling in &spellings {
-                if locale_map[kind.as_index()].contains_key(spelling) {
-                    return Err(CatalogError::validation(format!(
-                        "duplicate {} alias '{spelling}' for locale '{}'",
-                        kind.as_str(),
-                        locale
-                    )));
-                }
-                locale_map[kind.as_index()].insert(spelling.clone(), index);
-            }
-            aliases.insert(locale, spellings);
-        }
-        if self.by_id[kind.as_index()].contains_key(&item.id) {
-            return Err(CatalogError::validation(format!(
-                "duplicate {} id '{}'",
-                kind.as_str(),
-                item.id
-            )));
-        }
-        // The primary locale's surface is complete: every builtin carries a
-        // primary-locale alias. Additional declared locales may be partially
-        // covered; missing target-locale mappings fail explicitly at
-        // conversion/emission time (ADR-0001 Decision 7).
-        let primary = self.locales[0].clone();
-        if !aliases.contains_key(&primary) {
-            return Err(CatalogError::validation(format!(
-                "{} '{}' is missing a '{}' alias",
-                kind.as_str(),
-                item.id,
-                primary
-            )));
-        }
-        let param_names = if item.param_names.is_empty() {
-            item.params.clone()
-        } else {
-            item.param_names.clone()
-        };
-        if param_names.len() != item.params.len() {
-            return Err(CatalogError::validation(format!(
-                "{} '{}' declares {} param names for {} params",
-                kind.as_str(),
-                item.id,
-                param_names.len(),
-                item.params.len()
-            )));
-        }
-        self.by_id[kind.as_index()].insert(item.id.clone(), index);
-        let item_id = item.id.clone();
-        self.entries.push(CatalogEntry {
-            id: item.id,
-            kind,
-            params: item.params,
-            param_names,
-            param_aliases: item
-                .param_aliases
-                .into_iter()
-                .map(|aliases| {
-                    aliases
-                        .into_iter()
-                        .map(|(locale, alias)| {
-                            let locale_key = Locale::new(&locale);
-                            let spellings = alias.into_spellings(&item_id, locale_key.as_str())?;
-                            Ok((locale_key, spellings))
-                        })
-                        .collect::<Result<HashMap<_, _>>>()
-                })
-                .collect::<Result<Vec<_>>>()?,
-            param_domains: item.param_domains,
-            param_defaults: item.param_defaults,
-            param_types: item.param_types,
-            param_coercions: item.param_coercions,
-            return_type: item.return_type,
-            variadic: item.variadic,
-            aliases,
-        });
-        Ok(())
-    }
-
-    fn insert_localized_string(&mut self, item: LocalizedStringFile) -> Result<()> {
-        if self.localized_string_by_id.contains_key(&item.id) {
-            return Err(CatalogError::validation(format!(
-                "duplicate localized string id '{}'",
-                item.id
-            )));
-        }
-        let index = self.localized_strings.len();
-        let mut aliases = HashMap::new();
-        for (locale_str, alias_file) in item.aliases {
-            let locale = Locale::new(&locale_str);
-            if !self.locales.contains(&locale) {
-                return Err(CatalogError::validation(format!(
-                    "localized string '{}' declares alias for undeclared locale '{}'",
-                    item.id, locale
-                )));
-            }
-            let spellings = alias_file.into_spellings(&item.id, locale.as_str())?;
-            let locale_map = self
-                .localized_string_alias
-                .entry(locale.clone())
-                .or_default();
-            for spelling in &spellings {
-                if locale_map.contains_key(spelling) {
-                    return Err(CatalogError::validation(format!(
-                        "duplicate localized string alias '{spelling}' for locale '{locale}'"
-                    )));
-                }
-                locale_map.insert(spelling.clone(), index);
-            }
-            aliases.insert(locale, spellings);
-        }
-        let primary = self.locales[0].clone();
-        if !aliases.contains_key(&primary) {
-            return Err(CatalogError::validation(format!(
-                "localized string '{}' is missing a '{}' alias",
-                item.id, primary
-            )));
-        }
-        self.localized_string_by_id.insert(item.id.clone(), index);
-        self.localized_strings.push(LocalizedStringEntry {
-            id: item.id,
-            aliases,
-        });
-        Ok(())
-    }
-
-    /// Every declared `paramDomains` domain must name a declared enum domain.
-    fn validate_param_domains(&self) -> Result<()> {
-        for entry in &self.entries {
-            if entry.param_names.len() != entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares param names that do not match params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            if entry.param_aliases.len() > entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares more parameter alias sets than params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            if entry.param_domains.len() > entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares more param domains than params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            if entry.param_defaults.len() > entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares more param defaults than params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            if entry.param_types.len() > entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares more param types than params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            if entry.param_coercions.len() > entry.params.len() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares more param coercions than params",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            if entry.kind != Kind::Value && entry.return_type.is_some() {
-                return Err(CatalogError::validation(format!(
-                    "{} '{}' declares a return type but is not a value",
-                    entry.kind.as_str(),
-                    entry.id
-                )));
-            }
-            for domain in entry.param_domains.iter().flatten() {
-                if !self.enum_by_domain.contains_key(domain) {
-                    return Err(CatalogError::validation(format!(
-                        "{} '{}' declares undeclared enum domain '{domain}'",
-                        entry.kind.as_str(),
-                        entry.id
-                    )));
-                }
-            }
-            for aliases in &entry.param_aliases {
-                for locale in aliases.keys() {
-                    if !self.locales.contains(locale) {
-                        return Err(CatalogError::validation(format!(
-                            "{} '{}' declares parameter alias for undeclared locale '{}'",
-                            entry.kind.as_str(),
-                            entry.id,
-                            locale
-                        )));
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
-
-    fn insert_enum(&mut self, domain: EnumFile) -> Result<()> {
-        let domain_index = self.enums.len();
-        if self.enum_by_domain.contains_key(&domain.domain) {
-            return Err(CatalogError::validation(format!(
-                "duplicate enum domain '{}'",
-                domain.domain
-            )));
-        }
-        let primary = self.locales[0].clone();
-        let mut domain_aliases = HashMap::new();
-        for (locale_str, alias_file) in domain.aliases {
-            let locale = Locale::new(&locale_str);
-            if !self.locales.contains(&locale) {
-                return Err(CatalogError::validation(format!(
-                    "enum domain '{}' declares alias for undeclared locale '{}'",
-                    domain.domain, locale
-                )));
-            }
-            let spellings = alias_file.into_spellings(&domain.domain, locale.as_str())?;
-            let locale_map = self.enum_alias_to_domain.entry(locale.clone()).or_default();
-            for spelling in &spellings {
-                if let Some(existing) = locale_map.get(spelling) {
-                    return Err(CatalogError::validation(format!(
-                        "duplicate enum domain alias '{spelling}' for '{}' and '{}' in locale '{}'",
-                        existing, domain.domain, locale
-                    )));
-                }
-                locale_map.insert(spelling.clone(), domain.domain.clone());
-            }
-            domain_aliases.insert(locale, spellings);
-        }
-        domain_aliases
-            .entry(primary.clone())
-            .or_insert_with(|| vec![domain.domain.clone()]);
-        self.enum_alias_to_domain
-            .entry(primary.clone())
-            .or_default()
-            .entry(domain.domain.clone())
-            .or_insert_with(|| domain.domain.clone());
-        let mut members = Vec::new();
-        for (member_index, member) in domain.members.into_iter().enumerate() {
-            let mut aliases = HashMap::new();
-            for (locale_str, alias_file) in member.aliases {
-                let locale = Locale::new(&locale_str);
-                if !self.locales.contains(&locale) {
-                    return Err(CatalogError::validation(format!(
-                        "enum {}::{} declares alias for undeclared locale '{}'",
-                        domain.domain, member.id, locale
-                    )));
-                }
-                let spellings = alias_file.into_spellings(&member.id, locale.as_str())?;
-                let locale_map = self.enum_alias_to_member.entry(locale.clone()).or_default();
-                let domain_map = locale_map.entry(domain.domain.clone()).or_default();
-                for spelling in &spellings {
-                    if domain_map.contains_key(spelling) {
-                        return Err(CatalogError::validation(format!(
-                            "duplicate enum alias '{spelling}' in '{}' for locale '{}'",
-                            domain.domain, locale
-                        )));
-                    }
-                    domain_map.insert(spelling.clone(), (domain_index, member_index));
-                }
-                aliases.insert(locale, spellings);
-            }
-            if !aliases.contains_key(&primary) {
-                return Err(CatalogError::validation(format!(
-                    "enum {}::{} is missing a '{}' alias",
-                    domain.domain, member.id, primary
-                )));
-            }
-            members.push(EnumMember {
-                member: member.id,
-                aliases,
-            });
-        }
-        self.enum_by_domain
-            .insert(domain.domain.clone(), domain_index);
-        self.enums.push(EnumDomain {
-            domain: domain.domain,
-            aliases: domain_aliases,
-            members,
-        });
-        Ok(())
-    }
 }
 
 /// The catalog is the canonical source of expected enum domains for the
@@ -1213,62 +696,4 @@ impl ExpectedDomain for Catalog {
         }
         None
     }
-}
-
-/// Canonicalize catalog data: parse, validate, and re-serialize
-/// deterministically (object keys sorted, stable formatting). Re-running on
-/// the same input produces byte-identical output, so the data pipeline is
-/// reproducible. Validation intentionally skips digest verification so a
-/// stale digest can be repaired by [`build_canonical`].
-pub fn canonicalize(json: &str) -> Result<String> {
-    // Validate the semantic content first.
-    Catalog::load_unverified(json)?;
-    let value: serde_json::Value = serde_json::from_str(json)
-        .map_err(|error| CatalogError::malformed(format!("catalog data: {error}")))?;
-    serde_json::to_string_pretty(&value)
-        .map(|mut out| {
-            out.push('\n');
-            out
-        })
-        .map_err(|error| CatalogError::malformed(format!("cannot serialize catalog: {error}")))
-}
-
-/// Rebuild the canonical catalog form with a fresh content digest: validate,
-/// canonicalize, and (re)write the `digest` field. Byte-idempotent, so the
-/// committed dataset and its digest are reproducible from the data file.
-pub fn build_canonical(json: &str) -> Result<String> {
-    let mut value: serde_json::Value = serde_json::from_str(json)
-        .map_err(|error| CatalogError::malformed(format!("catalog data: {error}")))?;
-    let digest = content_digest(json)?;
-    if let Some(object) = value.as_object_mut() {
-        object.insert("digest".to_string(), serde_json::Value::String(digest));
-    }
-    let output = serde_json::to_string_pretty(&value)
-        .map(|mut out| {
-            out.push('\n');
-            out
-        })
-        .map_err(|error| CatalogError::malformed(format!("cannot serialize catalog: {error}")))?;
-    // Validate the semantic content (including the fresh digest) before
-    // returning the rebuilt file.
-    Catalog::load(&output)?;
-    Ok(output)
-}
-
-/// The deterministic content digest of catalog data: sha256 of the canonical
-/// (sorted-key, pretty) serialization of the parsed content with the
-/// self-referential `digest` field removed. Independent of file formatting;
-/// changes whenever any semantic content changes.
-pub fn content_digest(json: &str) -> Result<String> {
-    let mut value: serde_json::Value = serde_json::from_str(json)
-        .map_err(|error| CatalogError::malformed(format!("catalog data: {error}")))?;
-    if let Some(object) = value.as_object_mut() {
-        object.remove("digest");
-    }
-    let canonical = serde_json::to_string_pretty(&value)
-        .map_err(|error| CatalogError::malformed(format!("cannot serialize catalog: {error}")))?;
-    use sha2::{Digest, Sha256};
-    let mut hasher = Sha256::new();
-    hasher.update(canonical.as_bytes());
-    Ok(format!("{:x}", hasher.finalize()))
 }

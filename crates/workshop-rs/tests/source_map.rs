@@ -1,19 +1,10 @@
-use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::source::{FileId, Position, SourceFile, Span};
 use workshop_rs::{
     Action, Condition, Event, MappedText, Program, Rule, SourceMap, SourceMapError, Value,
     Variable, emitter, parser,
 };
 
-use super::common;
-
-fn catalog() -> Catalog {
-    Catalog::builtin().expect("builtin catalog")
-}
-
-fn en() -> Locale {
-    Locale::new("en-US")
-}
+use super::common::{self, catalog, en};
 
 fn span(file: FileId, line: u32, start: u32, end: u32) -> Span {
     Span::new(file, Position::new(line, start), Position::new(line, end))

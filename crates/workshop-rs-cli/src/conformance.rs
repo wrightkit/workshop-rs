@@ -417,7 +417,7 @@ fn validate_artifact(
         ));
     }
     if let Some(digest) = &artifact.sha256 {
-        if digest.len() != 64 || !digest.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+        if !is_sha256_digest(digest) {
             return Err(ConformanceError::invalid(
                 format!("{field}.sha256"),
                 "must be a 64-character hexadecimal SHA-256 digest",
@@ -507,6 +507,10 @@ fn validate_non_empty(field: &str, value: &str) -> Result<(), ConformanceError> 
     } else {
         Ok(())
     }
+}
+
+pub(crate) fn is_sha256_digest(value: &str) -> bool {
+    value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

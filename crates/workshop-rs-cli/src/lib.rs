@@ -6,8 +6,10 @@
 //! Exit codes: `0` success, `1` parse/emit/conversion/catalog failure,
 //! `2` usage error.
 
+use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+use workshop_rs::Program;
 use workshop_rs::catalog::{Catalog, Locale};
 use workshop_rs::convert::{self, ConvertOptions};
 use workshop_rs::detect;
@@ -85,38 +87,63 @@ pub fn run(args: Vec<String>) -> i32 {
     }
 }
 
-/// `--locale LOCALE`, `--fallback-locale LOCALE`, `--from`/`--to LOCALE`,
-/// `--json`, `--file PATH`, and the positional file argument.
-struct ArgParser {
-    args: Vec<String>,
-    position: usize,
+/// Parsed command arguments: positionals plus declared `--flag value` options
+/// and standalone `--switch` toggles.
+#[derive(Default)]
+struct CliOptions {
+    positional: Vec<String>,
+    values: HashMap<String, String>,
+    switches: HashSet<String>,
 }
 
-impl ArgParser {
-    fn new(args: Vec<String>) -> Self {
-        ArgParser { args, position: 0 }
+impl CliOptions {
+    fn locale(&self, flag: &str) -> Option<Locale> {
+        self.values.get(flag).map(|value| Locale::new(value))
     }
 
-    fn next(&mut self) -> Option<&str> {
-        let value = self.args.get(self.position).map(String::as_str);
-        if value.is_some() {
-            self.position += 1;
+    fn has(&self, switch: &str) -> bool {
+        self.switches.contains(switch)
+    }
+
+    /// Exactly `count` positional arguments mapped to paths.
+    fn paths(&self, count: usize, missing: &str) -> Result<Vec<PathBuf>, String> {
+        if self.positional.len() < count {
+            return Err(missing.to_string());
         }
-        value
-    }
-
-    fn value_after(&mut self, flag: &str) -> Result<String, String> {
-        self.next()
-            .map(str::to_string)
-            .ok_or_else(|| format!("missing value for {flag}"))
-    }
-
-    fn expect_end(&mut self) -> Result<(), String> {
-        if let Some(extra) = self.next() {
+        if let Some(extra) = self.positional.get(count) {
             return Err(format!("unexpected argument '{extra}'"));
         }
-        Ok(())
+        Ok(self.positional.iter().map(PathBuf::from).collect())
     }
+
+    fn file(&self, missing: &str) -> Result<PathBuf, String> {
+        Ok(self.paths(1, missing)?.remove(0))
+    }
+}
+
+/// Consume `args`, collecting declared `--flag value` pairs, declared
+/// `--switch` toggles, and positional arguments.
+fn parse_cli(args: Vec<String>, flags: &[&str], switches: &[&str]) -> Result<CliOptions, String> {
+    let mut options = CliOptions::default();
+    let mut args = args.into_iter();
+    while let Some(argument) = args.next() {
+        if switches.contains(&argument.as_str()) {
+            options.switches.insert(argument);
+        } else if flags.contains(&argument.as_str()) {
+            let value = args
+                .next()
+                .ok_or_else(|| format!("missing value for {argument}"))?;
+            options.values.insert(argument, value);
+        } else {
+            options.positional.push(argument);
+        }
+    }
+    Ok(options)
+}
+
+/// Unwrap a parsed-CLI result or a command result into a usage/failure exit.
+fn cli_options(args: Vec<String>, flags: &[&str], switches: &[&str]) -> Result<CliOptions, i32> {
+    parse_cli(args, flags, switches).map_err(|error| usage_error(&error))
 }
 
 fn catalog() -> Result<Catalog, String> {
@@ -138,162 +165,90 @@ fn resolve_parse_locale(
     detect::resolve_locale(input, catalog, explicit.as_ref()).map_err(|error| error.to_string())
 }
 
-fn parse_command(args: Vec<String>) -> i32 {
-    let mut parser = ArgParser::new(args);
-    let mut file: Option<PathBuf> = None;
-    let mut locale: Option<Locale> = None;
-    loop {
-        match parser.next() {
-            None => break,
-            Some("--locale") => match parser.value_after("--locale") {
-                Ok(value) => locale = Some(Locale::new(&value)),
-                Err(error) => return usage_error(&error),
-            },
-            Some(value) if file.is_none() => file = Some(PathBuf::from(value)),
-            Some(value) => return usage_error(&format!("unexpected argument '{value}'")),
-        }
-    }
-    let Some(file) = file else {
-        return usage_error("parse requires a file argument");
-    };
-    let (catalog, input) = match (catalog(), read_file(&file)) {
+fn parse_file(
+    file: &Path,
+    explicit_locale: Option<Locale>,
+) -> Result<(Catalog, Locale, Program), String> {
+    let (catalog, input) = match (catalog(), read_file(file)) {
         (Ok(catalog), Ok(input)) => (catalog, input),
-        (Err(error), _) | (_, Err(error)) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
+        (Err(error), _) | (_, Err(error)) => return Err(error),
     };
-    let locale = match resolve_parse_locale(&input, &catalog, locale) {
-        Ok(locale) => locale,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
+    let locale = resolve_parse_locale(&input, &catalog, explicit_locale)?;
+    let program = parser::parse_with_context(&input, &catalog, &locale, &catalog)
+        .map_err(|error| error.to_string())?;
+    Ok((catalog, locale, program))
+}
+
+fn parse_command(args: Vec<String>) -> i32 {
+    let options = match cli_options(args, &["--locale"], &[]) {
+        Ok(options) => options,
+        Err(code) => return code,
     };
-    let program = match parser::parse_with_context(&input, &catalog, &locale, &catalog) {
-        Ok(program) => program,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
+    let file = match options.file("parse requires a file argument") {
+        Ok(file) => file,
+        Err(error) => return usage_error(&error),
+    };
+    let (_, _, program) = match parse_file(&file, options.locale("--locale")) {
+        Ok(parsed) => parsed,
+        Err(error) => return fail(error),
     };
     if let Err(error) = program.validate() {
-        eprintln!("workshop-rs-cli: WIR validation failed: {error}");
-        return 1;
+        return fail(format!("WIR validation failed: {error}"));
     }
     print!("{}", program.dump());
     0
 }
 
 fn emit_command(args: Vec<String>) -> i32 {
-    let mut parser = ArgParser::new(args);
-    let mut file: Option<PathBuf> = None;
-    let mut locale: Option<Locale> = None;
-    let mut fallback: Option<Locale> = None;
-    loop {
-        match parser.next() {
-            None => break,
-            Some("--locale") => match parser.value_after("--locale") {
-                Ok(value) => locale = Some(Locale::new(&value)),
-                Err(error) => return usage_error(&error),
-            },
-            Some("--fallback-locale") => match parser.value_after("--fallback-locale") {
-                Ok(value) => fallback = Some(Locale::new(&value)),
-                Err(error) => return usage_error(&error),
-            },
-            Some(value) if file.is_none() => file = Some(PathBuf::from(value)),
-            Some(value) => return usage_error(&format!("unexpected argument '{value}'")),
-        }
-    }
-    let Some(file) = file else {
-        return usage_error("emit requires a file argument");
+    let options = match cli_options(args, &["--locale", "--fallback-locale"], &[]) {
+        Ok(options) => options,
+        Err(code) => return code,
     };
-    let (catalog, input) = match (catalog(), read_file(&file)) {
-        (Ok(catalog), Ok(input)) => (catalog, input),
-        (Err(error), _) | (_, Err(error)) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
+    let file = match options.file("emit requires a file argument") {
+        Ok(file) => file,
+        Err(error) => return usage_error(&error),
     };
-    let locale = match resolve_parse_locale(&input, &catalog, locale) {
-        Ok(locale) => locale,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
+    let (catalog, locale, program) = match parse_file(&file, options.locale("--locale")) {
+        Ok(parsed) => parsed,
+        Err(error) => return fail(error),
     };
-    let program = match parser::parse_with_context(&input, &catalog, &locale, &catalog) {
-        Ok(program) => program,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
-    };
-    let mut options = EmitOptions::default();
-    options.fallback_locale = fallback;
-    match emitter::emit_with_options(&program, &catalog, &locale, &options) {
+    let mut emit_options = EmitOptions::default();
+    emit_options.fallback_locale = options.locale("--fallback-locale");
+    match emitter::emit_with_options(&program, &catalog, &locale, &emit_options) {
         Ok(output) => {
             report_fallbacks(&output.fallback_ids);
             print!("{}", output.text);
             0
         }
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            1
-        }
+        Err(error) => fail(error),
     }
 }
 
 fn convert_command(args: Vec<String>) -> i32 {
-    let mut parser = ArgParser::new(args);
-    let mut file: Option<PathBuf> = None;
-    let mut from: Option<Locale> = None;
-    let mut to: Option<Locale> = None;
-    let mut fallback: Option<Locale> = None;
-    loop {
-        match parser.next() {
-            None => break,
-            Some("--from") => match parser.value_after("--from") {
-                Ok(value) => from = Some(Locale::new(&value)),
-                Err(error) => return usage_error(&error),
-            },
-            Some("--to") => match parser.value_after("--to") {
-                Ok(value) => to = Some(Locale::new(&value)),
-                Err(error) => return usage_error(&error),
-            },
-            Some("--fallback-locale") => match parser.value_after("--fallback-locale") {
-                Ok(value) => fallback = Some(Locale::new(&value)),
-                Err(error) => return usage_error(&error),
-            },
-            Some(value) if file.is_none() => file = Some(PathBuf::from(value)),
-            Some(value) => return usage_error(&format!("unexpected argument '{value}'")),
-        }
-    }
-    let Some(file) = file else {
-        return usage_error("convert requires a file argument");
+    let options = match cli_options(args, &["--from", "--to", "--fallback-locale"], &[]) {
+        Ok(options) => options,
+        Err(code) => return code,
     };
-    let (Some(from), Some(to)) = (from, to) else {
+    let file = match options.file("convert requires a file argument") {
+        Ok(file) => file,
+        Err(error) => return usage_error(&error),
+    };
+    let (Some(from), Some(to)) = (options.locale("--from"), options.locale("--to")) else {
         return usage_error("convert requires --from and --to locales");
     };
     let (catalog, input) = match (catalog(), read_file(&file)) {
         (Ok(catalog), Ok(input)) => (catalog, input),
-        (Err(error), _) | (_, Err(error)) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
+        (Err(error), _) | (_, Err(error)) => return fail(error),
     };
-    let mut options = ConvertOptions::default();
-    options.fallback_locale = fallback;
-    match convert::convert(&input, &catalog, &from, &to, &options) {
+    let mut convert_options = ConvertOptions::default();
+    convert_options.fallback_locale = options.locale("--fallback-locale");
+    match convert::convert(&input, &catalog, &from, &to, &convert_options) {
         Ok(output) => {
             report_fallbacks(&output.fallback_ids);
             print!("{}", output.text);
             0
         }
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            1
-        }
+        Err(error) => fail(error),
     }
 }
 
@@ -311,16 +266,16 @@ fn report_fallbacks(fallback_ids: &[String]) {
 }
 
 fn locales_command(args: Vec<String>) -> i32 {
-    let mut parser = ArgParser::new(args);
-    if let Err(error) = parser.expect_end() {
+    let options = match cli_options(args, &[], &[]) {
+        Ok(options) => options,
+        Err(code) => return code,
+    };
+    if let Err(error) = options.paths(0, "") {
         return usage_error(&error);
     }
     let catalog = match catalog() {
         Ok(catalog) => catalog,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
+        Err(error) => return fail(error),
     };
     for coverage in catalog.locale_coverage_all() {
         println!("{} {}/{}", coverage.locale, coverage.mapped, coverage.total);
@@ -329,30 +284,22 @@ fn locales_command(args: Vec<String>) -> i32 {
 }
 
 fn version_command(args: Vec<String>) -> i32 {
-    let mut parser = ArgParser::new(args);
-    let mut json = false;
-    loop {
-        match parser.next() {
-            None => break,
-            Some("--json") => json = true,
-            Some(value) => return usage_error(&format!("unexpected argument '{value}'")),
-        }
+    let options = match cli_options(args, &[], &["--json"]) {
+        Ok(options) => options,
+        Err(code) => return code,
+    };
+    if let Err(error) = options.paths(0, "") {
+        return usage_error(&error);
     }
+    let json = options.has("--json");
     let catalog = match catalog() {
         Ok(catalog) => catalog,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
+        Err(error) => return fail(error),
     };
     let identity = catalog.identity();
     if json {
-        match serde_json::to_string_pretty(&identity) {
-            Ok(text) => println!("{text}"),
-            Err(error) => {
-                eprintln!("workshop-rs-cli: cannot serialize identity: {error}");
-                return 1;
-            }
+        if let Err(error) = print_json(&identity, "identity") {
+            return fail(error);
         }
     } else {
         println!(
@@ -422,108 +369,75 @@ fn census_command(args: Vec<String>) -> i32 {
 }
 
 fn corpus_command(args: Vec<String>) -> i32 {
-    let mut parser = ArgParser::new(args);
-    let mut manifest: Option<PathBuf> = None;
-    let mut json = false;
-    loop {
-        match parser.next() {
-            None => break,
-            Some("--json") => json = true,
-            Some(value) if manifest.is_none() => manifest = Some(PathBuf::from(value)),
-            Some(value) => return usage_error(&format!("unexpected argument '{value}'")),
-        }
-    }
-    let Some(manifest) = manifest else {
-        return usage_error("corpus requires a manifest file");
+    let options = match cli_options(args, &[], &["--json"]) {
+        Ok(options) => options,
+        Err(code) => return code,
+    };
+    let manifest = match options.file("corpus requires a manifest file") {
+        Ok(manifest) => manifest,
+        Err(error) => return usage_error(&error),
     };
     match corpus::run(&manifest) {
         Ok(report) => {
-            if json {
-                match serde_json::to_string_pretty(&report) {
-                    Ok(text) => println!("{text}"),
-                    Err(error) => {
-                        eprintln!("workshop-rs-cli: cannot serialize corpus report: {error}");
-                        return 1;
-                    }
+            if options.has("--json") {
+                if let Err(error) = print_json(&report, "corpus report") {
+                    return fail(error);
                 }
             } else {
                 print!("{}", report.human_summary());
             }
-            if report.has_unexpected_regression() {
-                1
-            } else {
-                0
-            }
+            i32::from(report.has_unexpected_regression())
         }
-        Err(error) => {
-            eprintln!("workshop-rs-cli: corpus: {error}");
-            1
-        }
+        Err(error) => fail(format!("corpus: {error}")),
     }
 }
 
 fn seasonal_diff_command(args: Vec<String>) -> i32 {
-    let mut paths = Vec::new();
-    let mut json = false;
-    for argument in args {
-        if argument == "--json" {
-            json = true;
-        } else if paths.len() < 2 {
-            paths.push(PathBuf::from(argument));
-        } else {
-            return usage_error("seasonal-diff accepts two capture files and --json");
-        }
-    }
-    if paths.len() != 2 {
-        return usage_error("seasonal-diff requires previous and current capture files");
-    }
-    let previous = match read_file(&paths[0]) {
-        Ok(text) => text,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
+    let options = match cli_options(args, &[], &["--json"]) {
+        Ok(options) => options,
+        Err(code) => return code,
     };
-    let current = match read_file(&paths[1]) {
-        Ok(text) => text,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: {error}");
-            return 1;
-        }
+    let paths = match options.paths(
+        2,
+        "seasonal-diff requires previous and current capture files",
+    ) {
+        Ok(paths) => paths,
+        Err(error) => return usage_error(&error),
     };
-    let previous = match live_capture::LiveCapture::from_json(&previous) {
-        Ok(capture) => capture,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: seasonal-diff: {error}");
-            return 1;
-        }
+    let capture = |path: &Path| -> Result<live_capture::LiveCapture, String> {
+        let text = read_file(path)?;
+        live_capture::LiveCapture::from_json(&text)
+            .map_err(|error| format!("seasonal-diff: {error}"))
     };
-    let current = match live_capture::LiveCapture::from_json(&current) {
-        Ok(capture) => capture,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: seasonal-diff: {error}");
-            return 1;
-        }
+    let (previous, current) = match (capture(&paths[0]), capture(&paths[1])) {
+        (Ok(previous), Ok(current)) => (previous, current),
+        (Err(error), _) | (_, Err(error)) => return fail(error),
     };
     let diff = match previous.diff(&current) {
         Ok(diff) => diff,
-        Err(error) => {
-            eprintln!("workshop-rs-cli: seasonal-diff: {error}");
-            return 1;
-        }
+        Err(error) => return fail(format!("seasonal-diff: {error}")),
     };
-    if json {
+    if options.has("--json") {
         match diff.to_json() {
             Ok(text) => println!("{text}"),
-            Err(error) => {
-                eprintln!("workshop-rs-cli: cannot serialize seasonal diff: {error}");
-                return 1;
-            }
+            Err(error) => return fail(format!("cannot serialize seasonal diff: {error}")),
         }
     } else {
         print!("{}", diff.human_summary());
     }
     0
+}
+
+/// Print a command failure and return exit code 1.
+fn fail(message: impl std::fmt::Display) -> i32 {
+    eprintln!("workshop-rs-cli: {message}");
+    1
+}
+
+fn print_json(value: &impl serde::Serialize, what: &str) -> Result<(), String> {
+    serde_json::to_string_pretty(value)
+        .map(|text| println!("{text}"))
+        .map_err(|error| format!("cannot serialize {what}: {error}"))
 }
 
 fn usage_error(message: &str) -> i32 {

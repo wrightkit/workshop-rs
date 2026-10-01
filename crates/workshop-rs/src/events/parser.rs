@@ -55,21 +55,6 @@ impl ParseContext<'_> {
                 let (team, target) = self.event_filters(&lines, "eachPlayer", true)?;
                 Ok(Event::EachPlayerWithFilters { team, target })
             }
-            "playerDealtDamage" => self.player_event(&lines, PlayerEventKind::DealtDamage),
-            "playerDealtFinalBlow" => self.player_event(&lines, PlayerEventKind::DealtFinalBlow),
-            "playerDealtHealing" => self.player_event(&lines, PlayerEventKind::DealtHealing),
-            "playerDealtKnockback" => self.player_event(&lines, PlayerEventKind::DealtKnockback),
-            "playerDied" => self.player_event(&lines, PlayerEventKind::Died),
-            "playerEarnedElimination" => {
-                self.player_event(&lines, PlayerEventKind::EarnedElimination)
-            }
-            "playerJoined" => self.player_event(&lines, PlayerEventKind::Joined),
-            "playerLeft" => self.player_event(&lines, PlayerEventKind::Left),
-            "playerReceivedHealing" => self.player_event(&lines, PlayerEventKind::ReceivedHealing),
-            "playerReceivedKnockback" => {
-                self.player_event(&lines, PlayerEventKind::ReceivedKnockback)
-            }
-            "playerTookDamage" => self.player_event(&lines, PlayerEventKind::TookDamage),
             "subroutine" => {
                 if lines
                     .get(2..)
@@ -91,10 +76,13 @@ impl ParseContext<'_> {
                     name_span: *sub_span,
                 })
             }
-            other => Err(WorkshopError::Unsupported {
-                message: format!("unsupported event '{other}'"),
-                span: None,
-            }),
+            other => match PlayerEventKind::from_catalog_id(other) {
+                Some(kind) => self.player_event(&lines, kind),
+                None => Err(WorkshopError::Unsupported {
+                    message: format!("unsupported event '{other}'"),
+                    span: None,
+                }),
+            },
         }
     }
 

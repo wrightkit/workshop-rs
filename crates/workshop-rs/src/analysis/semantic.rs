@@ -219,32 +219,8 @@ fn inspect_value(
         // These names are canonical WIR helpers rather than Workshop
         // builtins: memberAccess preserves dynamic receiver properties, and
         // infix operators are lowered to their source spelling for emission.
-        let canonical_helper = matches!(
-            name.as_str(),
-            crate::wir::AMBIGUOUS_ENUM_CALL
-                | "memberAccess"
-                | "+"
-                | "-"
-                | "*"
-                | "/"
-                | "%"
-                | "add"
-                | "subtract"
-                | "multiply"
-                | "divide"
-                | "modulo"
-                | "min"
-                | "max"
-                | "raiseToPower"
-                | "appendToArray"
-                | "removeFromArray"
-                | "removeFromArrayByValue"
-                | "removeFromArrayByIndex"
-        ) && (args.is_empty()
-            || matches!(
-                name.as_str(),
-                crate::wir::AMBIGUOUS_ENUM_CALL | "memberAccess" | "+" | "-" | "*" | "/" | "%"
-            ));
+        let canonical_helper = name == crate::wir::AMBIGUOUS_ENUM_CALL
+            || crate::wir::is_canonical_helper_call(name, args.len());
         if canonical_helper {
             return;
         }

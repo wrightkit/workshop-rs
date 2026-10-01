@@ -1,3 +1,5 @@
+mod common;
+
 #[path = "action_layout.rs"]
 mod action_layout;
 #[path = "catalog.rs"]

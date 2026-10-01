@@ -282,34 +282,30 @@ impl EmitContext<'_> {
                     self.setting_name("enums", english, &format!("enum.{domain}.enabled"))?;
                 self.line(level, &format!("{display_name}: {rendered}"))?;
             }
-            (SettingsNode::List { elements, .. }, KeyKind::ListMap) => {
+            (SettingsNode::List { elements, .. }, KeyKind::ListMap | KeyKind::ListHero) => {
+                // Both list kinds emit `Name {` + one member per line: maps
+                // resolve `map.<id>.name`, heroes `hero.<id>.name`.
+                let (english_name, section, label) = if entry.kind == KeyKind::ListMap {
+                    (table::map_name as fn(&str) -> Option<&str>, "maps", "map")
+                } else {
+                    (
+                        table::hero_name as fn(&str) -> Option<&str>,
+                        "heroes",
+                        "hero",
+                    )
+                };
                 self.line(level, &format!("{display_name} {{"))?;
                 for element in elements {
-                    let english = table::map_name(&element.value).ok_or_else(|| {
+                    let english = english_name(&element.value).ok_or_else(|| {
                         self.malformed(format!(
-                            "unknown map '{}' in settings list '{name}'",
-                            element.value
-                        ))
-                    })?;
-                    let display =
-                        self.setting_name("maps", english, &format!("map.{}.name", element.value))?;
-                    self.line(level + 1, &display)?;
-                }
-                self.line(level, "}")?;
-            }
-            (SettingsNode::List { elements, .. }, KeyKind::ListHero) => {
-                self.line(level, &format!("{display_name} {{"))?;
-                for element in elements {
-                    let english = table::hero_name(&element.value).ok_or_else(|| {
-                        self.malformed(format!(
-                            "unknown hero '{}' in settings list '{name}'",
+                            "unknown {label} '{}' in settings list '{name}'",
                             element.value
                         ))
                     })?;
                     let display = self.setting_name(
-                        "heroes",
+                        section,
                         english,
-                        &format!("hero.{}.name", element.value),
+                        &format!("{label}.{}.name", element.value),
                     )?;
                     self.line(level + 1, &display)?;
                 }

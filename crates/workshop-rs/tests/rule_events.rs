@@ -1,6 +1,8 @@
-use workshop_rs::catalog::{Catalog, Kind, Locale};
+use super::common::{catalog, zh};
+use super::internal;
+use workshop_rs::catalog::{Catalog, Kind};
 use workshop_rs::wir::{self, EventTarget, EventTeam, PlayerEventKind};
-use workshop_rs::{emitter, parser, roundtrip, validate};
+use workshop_rs::{roundtrip, validate};
 
 const RULE_EVENTS: &str = r#"
 rule ("each player filtered") {
@@ -138,23 +140,10 @@ rule ("legacy each player") {
 }
 "#;
 
-fn catalog() -> Catalog {
-    Catalog::builtin().expect("built-in catalog")
-}
-
-fn en() -> Locale {
-    Locale::new("en-US")
-}
-
-fn zh() -> Locale {
-    Locale::new("zh-CN")
-}
-
 #[test]
 fn all_player_events_parse_validate_emit_and_round_trip() {
     let catalog = catalog();
-    let program = parser::parse_wir_with_context(RULE_EVENTS, &catalog, &en(), &catalog)
-        .expect("all canonical player events parse");
+    let program = internal::parse(RULE_EVENTS);
     program.validate().expect("event filters validate");
     validate::validate_canonical_ids_wir(&program, &catalog).expect("event catalog ids validate");
 
@@ -188,26 +177,23 @@ fn all_player_events_parse_validate_emit_and_round_trip() {
         }
     ));
 
-    let en_text = emitter::emit_wir(&program, &catalog, &en()).expect("en-US event emission");
-    let reparsed_en = parser::parse_wir_with_context(&en_text, &catalog, &en(), &catalog)
-        .expect("en-US event reparse");
+    let en_text = internal::emit(&program);
+    let reparsed_en = internal::parse(&en_text);
     assert!(roundtrip::equivalent_wir(&program, &reparsed_en));
 
-    let zh_text = emitter::emit_wir(&program, &catalog, &zh()).expect("zh-CN event emission");
+    let zh_text = internal::emit_in(&program, &zh());
     assert!(zh_text.contains("持续 - 每名玩家"));
     assert!(zh_text.contains("玩家造成伤害"));
     assert!(zh_text.contains("队伍1;"));
     assert!(zh_text.contains("栏位 3;"));
-    let reparsed_zh = parser::parse_wir_with_context(&zh_text, &catalog, &zh(), &catalog)
-        .expect("zh-CN event reparse");
+    let reparsed_zh = internal::parse_in(&zh_text, &zh());
     assert!(roundtrip::equivalent_wir(&program, &reparsed_zh));
 }
 
 #[test]
 fn legacy_each_player_emits_all_filters_and_round_trips_in_supported_locales() {
     let catalog = catalog();
-    let legacy = parser::parse_wir_with_context(LEGACY_EACH_PLAYER, &catalog, &en(), &catalog)
-        .expect("legacy parameterless eachPlayer parses");
+    let legacy = internal::parse(LEGACY_EACH_PLAYER);
     assert!(matches!(
         legacy
             .rules
@@ -219,8 +205,7 @@ fn legacy_each_player_emits_all_filters_and_round_trips_in_supported_locales() {
     validate::validate_canonical_ids_wir(&legacy, &catalog)
         .expect("legacy event catalog id validates");
 
-    let explicit = parser::parse_wir_with_context(EXPLICIT_EACH_PLAYER, &catalog, &en(), &catalog)
-        .expect("explicit All/All eachPlayer parses");
+    let explicit = internal::parse(EXPLICIT_EACH_PLAYER);
     assert!(matches!(
         explicit
             .rules
@@ -233,16 +218,14 @@ fn legacy_each_player_emits_all_filters_and_round_trips_in_supported_locales() {
     ));
     assert!(roundtrip::equivalent_wir(&legacy, &explicit));
 
-    let en_text = emitter::emit_wir(&legacy, &catalog, &en()).expect("legacy event emits in en-US");
+    let en_text = internal::emit(&legacy);
     assert!(en_text.contains("Ongoing - Each Player;\n        All;\n        All;"));
-    let reparsed_en = parser::parse_wir_with_context(&en_text, &catalog, &en(), &catalog)
-        .expect("legacy en-US emission reparses");
+    let reparsed_en = internal::parse(&en_text);
     assert!(roundtrip::equivalent_wir(&legacy, &reparsed_en));
 
-    let zh_text = emitter::emit_wir(&legacy, &catalog, &zh()).expect("legacy event emits in zh-CN");
+    let zh_text = internal::emit_in(&legacy, &zh());
     assert!(zh_text.contains("持续 - 每名玩家;\n        双方;\n        全部;"));
-    let reparsed_zh = parser::parse_wir_with_context(&zh_text, &catalog, &zh(), &catalog)
-        .expect("legacy zh-CN emission reparses");
+    let reparsed_zh = internal::parse_in(&zh_text, &zh());
     assert!(roundtrip::equivalent_wir(&legacy, &reparsed_zh));
 }
 
@@ -282,10 +265,10 @@ fn event_catalog_declares_parameter_and_filter_provenance_surface() {
 
 #[test]
 fn invalid_event_filter_is_rejected_and_invalid_slot_fails_wir_validation() {
-    let catalog = catalog();
+    let _catalog = catalog();
     let invalid_text = RULE_EVENTS.replace("Slot 3;", "Unknown Player;");
-    let error = parser::parse_wir_with_context(&invalid_text, &catalog, &en(), &catalog)
-        .expect_err("unknown event player filter must fail");
+    let error =
+        internal::try_parse(&invalid_text).expect_err("unknown event player filter must fail");
     assert!(error.to_string().contains("unknown event player"));
 
     let mut program = wir::Program::default();
@@ -313,7 +296,7 @@ fn invalid_event_filter_is_rejected_and_invalid_slot_fails_wir_validation() {
 
 #[test]
 fn player_event_without_catalog_filters_is_rejected() {
-    let catalog = catalog();
+    let _catalog = catalog();
     let text = r#"
 rule ("missing filters") {
     event {
@@ -321,8 +304,8 @@ rule ("missing filters") {
     }
 }
 "#;
-    let error = parser::parse_wir_with_context(text, &catalog, &en(), &catalog)
-        .expect_err("player events require both canonical filters");
+    let error =
+        internal::try_parse(text).expect_err("player events require both canonical filters");
     assert!(
         error
             .to_string()
@@ -337,7 +320,7 @@ rule ("empty filter") {
     }
 }
 "#;
-    parser::parse_wir_with_context(empty_parameter, &catalog, &en(), &catalog)
+    internal::try_parse(empty_parameter)
         .expect_err("an empty player filter must not be silently discarded");
 }
 

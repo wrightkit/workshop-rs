@@ -3,9 +3,11 @@
 //! Run with:
 //! `cargo test -p workshop-rs --release --lib perf_large_project -- --ignored --nocapture`
 
+use super::common::en;
+use super::internal;
 use std::hint::black_box;
 use std::time::{Duration, Instant};
-use workshop_rs::catalog::{Catalog, Locale};
+use workshop_rs::catalog::Catalog;
 use workshop_rs::program::{Action, Program, Value};
 
 const BASTION: &str = include_str!("fixtures/real-projects/bastion.ow");
@@ -106,7 +108,7 @@ fn span_traversal(program: &Program) -> usize {
 #[ignore = "performance measurement"]
 fn large_project_stages() {
     let catalog = Catalog::builtin().expect("builtin catalog");
-    let locale = Locale::new("en-US");
+    let locale = en();
     let iterations = 3;
 
     println!(
@@ -119,12 +121,10 @@ fn large_project_stages() {
     });
 
     time("parse_wir (lex+parse)", iterations, || {
-        crate::frontend::parser::parse_wir_with_context(BASTION, &catalog, &locale, &catalog)
-            .expect("parse wir")
+        internal::parse_in(BASTION, &locale)
     });
 
-    let wir = crate::frontend::parser::parse_wir_with_context(BASTION, &catalog, &locale, &catalog)
-        .expect("parse wir");
+    let wir = internal::parse_in(BASTION, &locale);
     println!(
         "wir values={} actions={} rules={}",
         wir.values.len(),
@@ -154,9 +154,7 @@ fn large_project_stages() {
         workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emit")
     });
 
-    time("emit_wir", iterations, || {
-        crate::output::emitter::emit_wir(&wir, &catalog, &locale).expect("emit_wir")
-    });
+    time("emit_wir", iterations, || internal::emit_in(&wir, &locale));
 
     time("semantic_issues", iterations, || {
         program.semantic_issues(&catalog)

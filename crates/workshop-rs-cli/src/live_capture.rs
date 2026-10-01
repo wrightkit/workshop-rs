@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 pub use super::census::{CENSUS_IDENTITY_SCHEMA_VERSION, CensusIdentity};
 use super::conformance::{
-    ConformanceResult, ConformanceStatus, Equivalence, FeatureId, TestArtifact,
+    ConformanceResult, ConformanceStatus, Equivalence, FeatureId, TestArtifact, is_sha256_digest,
 };
 use workshop_rs::catalog::{Catalog, CatalogIdentity, Locale};
 
@@ -436,7 +436,7 @@ fn validate_artifact(
 }
 
 fn validate_sha256(field: &str, digest: &str) -> Result<(), LiveCaptureError> {
-    if digest.len() != 64 || !digest.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+    if !is_sha256_digest(digest) {
         return Err(invalid(format!(
             "{field} must be a 64-character hexadecimal SHA-256 digest"
         )));

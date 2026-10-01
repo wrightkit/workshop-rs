@@ -13,60 +13,6 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use serde::{Deserialize, Deserializer, Serialize};
 
-/// A canonical hero identity. The value is stable within the gameplay data
-/// contract and is not a closed Rust enum.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-pub struct HeroId(String);
-
-impl HeroId {
-    pub fn new(value: impl Into<String>) -> Self {
-        Self(value.into())
-    }
-    pub const fn from_static(value: &'static str) -> HeroIdRef {
-        HeroIdRef(value)
-    }
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-impl From<HeroIdRef> for HeroId {
-    fn from(value: HeroIdRef) -> Self {
-        Self::new(value.0)
-    }
-}
-
-impl From<&str> for HeroId {
-    fn from(value: &str) -> Self {
-        Self::new(value)
-    }
-}
-
-impl std::fmt::Display for HeroId {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-/// A typed constant reference for a canonical hero identity.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct HeroIdRef(&'static str);
-
-impl HeroIdRef {
-    pub const fn new(value: &'static str) -> Self {
-        Self(value)
-    }
-    pub const fn as_str(self) -> &'static str {
-        self.0
-    }
-}
-
-impl AsRef<str> for HeroIdRef {
-    fn as_ref(&self) -> &str {
-        self.0
-    }
-}
-
 /// Canonical hero identity constants for the current roster. The identity
 /// remains open; these symbols are ergonomic accessors, not a closed enum.
 pub mod hero_ids {
@@ -174,6 +120,7 @@ macro_rules! open_string_id {
     };
 }
 
+open_string_id!(HeroId, HeroIdRef);
 open_string_id!(LogicalSlot, LogicalSlotRef);
 open_string_id!(AbilityVariant, AbilityVariantRef);
 open_string_id!(KeywordId, KeywordIdRef);
@@ -766,18 +713,6 @@ fn validate_hero(hero: &Hero) -> Result<(), GameplayDataError> {
     if hero.id.as_str().is_empty() {
         return Err(GameplayDataError::EmptyId("hero"));
     }
-    if hero.sources.is_empty() {
-        return Err(GameplayDataError::MissingSource(format!(
-            "hero {}",
-            hero.id
-        )));
-    }
-    if hero.name.sources.is_empty() {
-        return Err(GameplayDataError::MissingSource(format!(
-            "hero {} name",
-            hero.id
-        )));
-    }
     validate_sources(&format!("hero {}", hero.id), &hero.sources)?;
     validate_sources(&format!("hero {} name", hero.id), &hero.name.sources)?;
     if let Some(role) = &hero.role {
@@ -806,22 +741,10 @@ fn validate_hero(hero: &Hero) -> Result<(), GameplayDataError> {
         {
             return Err(GameplayDataError::EmptyId("ability variant"));
         }
-        if ability.sources.is_empty() {
-            return Err(GameplayDataError::MissingSource(format!(
-                "hero {} ability {}",
-                hero.id, ability.slot
-            )));
-        }
         validate_sources(
             &format!("hero {} ability {}", hero.id, ability.slot),
             &ability.sources,
         )?;
-        if ability.name.sources.is_empty() {
-            return Err(GameplayDataError::MissingSource(format!(
-                "hero {} ability {} name",
-                hero.id, ability.slot
-            )));
-        }
         validate_sources(
             &format!("hero {} ability {} name", hero.id, ability.slot),
             &ability.name.sources,
@@ -881,13 +804,13 @@ fn validate_stat_value(_path: &str, value: &StatValue) -> Result<(), GameplayDat
 }
 
 fn validate_fact<T>(path: &str, fact: &Fact<T>) -> Result<(), GameplayDataError> {
-    if fact.sources.is_empty() {
-        return Err(GameplayDataError::MissingSource(path.to_string()));
-    }
     validate_sources(path, &fact.sources)
 }
 
 fn validate_sources(path: &str, sources: &[SourceReference]) -> Result<(), GameplayDataError> {
+    if sources.is_empty() {
+        return Err(GameplayDataError::MissingSource(path.to_string()));
+    }
     for item in sources {
         if item.source.is_empty() || item.locator.is_empty() {
             return Err(GameplayDataError::MissingSource(path.to_string()));

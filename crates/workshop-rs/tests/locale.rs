@@ -14,28 +14,16 @@ use workshop_rs::emitter::{self, EmitOptions};
 use workshop_rs::parser;
 use workshop_rs::settings::SettingsNode;
 
-use super::common;
-
-fn builtin() -> Catalog {
-    Catalog::builtin().expect("built-in catalog")
-}
-
-fn en() -> Locale {
-    Locale::new("en-US")
-}
-
-fn zh() -> Locale {
-    Locale::new("zh-CN")
-}
+use super::common::{self, catalog, en, zh};
+use super::internal;
 
 #[test]
 fn pinned_real_projects_convert_between_supported_locales() {
-    let catalog = builtin();
+    let catalog = catalog();
     for case in common::cases() {
         let (source, source_locale) = common::source(case);
         let target_locale = common::target_locale(&source_locale);
-        let program = parser::parse_wir_with_context(&source, &catalog, &source_locale, &catalog)
-            .unwrap_or_else(|error| panic!("{} parse failed: {error:?}", case.id));
+        let program = internal::parse_in(&source, &source_locale);
         common::assert_residual_policy(case, "source-parse", &program.semantic_issues(&catalog));
         let converted = match convert::convert(
             &source,
@@ -51,11 +39,8 @@ fn pinned_real_projects_convert_between_supported_locales() {
                 continue;
             }
         };
-        let converted_program =
-            parser::parse_wir_with_context(&converted.text, &catalog, &target_locale, &catalog)
-                .unwrap_or_else(|error| {
-                    panic!("{} target-locale reparse failed: {error:?}", case.id)
-                });
+        let converted_program = internal::try_parse_in(&converted.text, &target_locale)
+            .unwrap_or_else(|error| panic!("{} target-locale reparse failed: {error:?}", case.id));
         common::assert_residual_policy(
             case,
             "target-locale-reparse",
@@ -76,16 +61,12 @@ fn pinned_real_projects_convert_between_supported_locales() {
             "{} target-locale conversion changed WIR",
             case.id
         );
-        let converted_back =
-            workshop_rs::emitter::emit_wir(&converted_program, &catalog, &source_locale)
-                .unwrap_or_else(|error| {
-                    panic!("{} reverse locale emission failed: {error:?}", case.id)
-                });
-        let converted_back_program =
-            parser::parse_wir_with_context(&converted_back, &catalog, &source_locale, &catalog)
-                .unwrap_or_else(|error| {
-                    panic!("{} reverse locale reparse failed: {error:?}", case.id)
-                });
+        let converted_back = internal::try_emit_in(&converted_program, &source_locale)
+            .unwrap_or_else(|error| {
+                panic!("{} reverse locale emission failed: {error:?}", case.id)
+            });
+        let converted_back_program = internal::try_parse_in(&converted_back, &source_locale)
+            .unwrap_or_else(|error| panic!("{} reverse locale reparse failed: {error:?}", case.id));
         assert!(
             workshop_rs::roundtrip::equivalent_wir(&program, &converted_back_program),
             "{} reverse locale conversion changed WIR",
@@ -130,9 +111,9 @@ const BASIC_RULE: &str = "rule (\"setup\") {
 
 #[test]
 fn emission_into_zh_cn_uses_evidence_backed_mappings() {
-    let catalog = builtin();
-    let program = parser::parse_wir(BASIC_RULE, &catalog, &en()).expect("parses");
-    let output = emitter::emit_wir(&program, &catalog, &zh()).expect("corpus mappings emit");
+    let _catalog = catalog();
+    let program = internal::parse(BASIC_RULE);
+    let output = internal::emit_in(&program, &zh());
     assert!(output.contains("持续 - 全局"), "{output}");
     assert!(output.contains("禁用查看器录制"), "{output}");
 }
@@ -161,14 +142,14 @@ rule ("locale surface") {
 
 #[test]
 fn primitive_and_global_spellings_emit_and_reparse_in_zh_cn() {
-    let catalog = builtin();
-    let program = parser::parse_wir(BASTION_ZH_CN_EMISSION_SLICE, &catalog, &en()).expect("parses");
-    let output = emitter::emit_wir(&program, &catalog, &zh()).expect("zh-CN emits");
+    let _catalog = catalog();
+    let program = internal::parse(BASTION_ZH_CN_EMISSION_SLICE);
+    let output = internal::emit_in(&program, &zh());
     assert!(output.contains("全局.probe"), "{output}");
     assert!(output.contains("假"), "{output}");
     assert!(output.contains("空"), "{output}");
     assert!(output.contains(" == 真"), "{output}");
-    let reparsed = parser::parse_wir(&output, &catalog, &zh()).expect("zh-CN reparses");
+    let reparsed = internal::parse_in(&output, &zh());
     assert!(
         workshop_rs::roundtrip::equivalent_wir(&program, &reparsed),
         "original={} reparsed={}",
@@ -179,7 +160,7 @@ fn primitive_and_global_spellings_emit_and_reparse_in_zh_cn() {
 
 #[test]
 fn conversion_en_to_zh_cn_uses_evidence_backed_mappings() {
-    let catalog = builtin();
+    let catalog = catalog();
     let output = convert::convert(
         BASIC_RULE,
         &catalog,
@@ -194,7 +175,7 @@ fn conversion_en_to_zh_cn_uses_evidence_backed_mappings() {
 
 #[test]
 fn representative_catalog_strings_and_settings_convert_in_every_declared_locale() {
-    let catalog = builtin();
+    let catalog = catalog();
     let source = r#"settings {
     main {
         Description: "locale surface"
@@ -215,7 +196,7 @@ rule ("locale surface") {
     }
 }
 "#;
-    let english = parser::parse_wir(source, &catalog, &en()).expect("representative source parses");
+    let english = internal::parse(source);
 
     for locale in catalog.locales() {
         let converted =
@@ -237,7 +218,7 @@ rule ("locale surface") {
 
 #[test]
 fn french_emitted_curly_apostrophe_aliases_parse_and_round_trip() {
-    let catalog = builtin();
+    let catalog = catalog();
     let source = r#"rule ("setup") {
     event {
         Ongoing - Global;
@@ -247,7 +228,7 @@ fn french_emitted_curly_apostrophe_aliases_parse_and_round_trip() {
     }
 }
 "#;
-    let english = parser::parse_wir(source, &catalog, &en()).expect("source parses");
+    let english = internal::parse(source);
     let converted = convert::convert(
         source,
         &catalog,
@@ -283,8 +264,8 @@ const FALLBACK_RULE: &str = "rule (\"setup\") {
 fn opt_in_fallback_emits_with_recorded_fallback_ids() {
     // Fallback is opt-in: with a fallback locale the emission succeeds and
     // the fell-back identities are recorded (visible in tooling output).
-    let catalog = builtin();
-    let program = parser::parse_wir(FALLBACK_RULE, &catalog, &en()).expect("parses");
+    let catalog = catalog();
+    let program = internal::parse(FALLBACK_RULE);
     let options = EmitOptions {
         fallback_locale: Some(en()),
     };
@@ -322,7 +303,7 @@ fn opt_in_fallback_emits_with_recorded_fallback_ids() {
 #[test]
 fn opt_in_fallback_conversion_round_trips_through_zh_cn() {
     // Convert en-US to an unsupported locale with fallback to en-US.
-    let catalog = builtin();
+    let catalog = catalog();
     let options = ConvertOptions {
         fallback_locale: Some(en()),
     };
@@ -354,9 +335,9 @@ fn opt_in_fallback_conversion_round_trips_through_zh_cn() {
 
 #[test]
 fn parsing_zh_cn_input_uses_corpus_aliases() {
-    let catalog = builtin();
+    let _catalog = catalog();
     let localized = "rule (\"x\") { event { 持续 - 全局; } actions { 禁用查看器录制; } }";
-    parser::parse_wir(localized, &catalog, &zh()).expect("corpus aliases parse");
+    internal::parse_in(localized, &zh());
 }
 
 #[test]
@@ -364,7 +345,7 @@ fn explicit_zh_cn_override_passes_locale_support() {
     // The locale machinery accepts an explicit override to a declared
     // locale, independently of the corpus coverage.
     use workshop_rs::detect;
-    let catalog = builtin();
+    let catalog = catalog();
     let locale = detect::resolve_locale("garbage", &catalog, Some(&zh())).expect("override wins");
     assert_eq!(locale, zh());
 }
@@ -372,7 +353,7 @@ fn explicit_zh_cn_override_passes_locale_support() {
 #[test]
 fn detection_ranks_zh_cn_after_en_us_for_en_us_input() {
     use workshop_rs::detect;
-    let catalog = builtin();
+    let catalog = catalog();
     let detection = detect::detect(BASIC_RULE, &catalog);
     assert_eq!(detection.locale, en());
     let en_position = detection
@@ -394,7 +375,7 @@ fn detection_ranks_zh_cn_after_en_us_for_en_us_input() {
 #[test]
 fn settings_emission_into_zh_cn_uses_the_generated_locale_corpus() {
     use workshop_rs::settings::{Settings, SettingsNode};
-    let catalog = builtin();
+    let _catalog = catalog();
     let program = workshop_rs::wir::Program {
         settings: Some(Settings {
             span: None,
@@ -410,14 +391,14 @@ fn settings_emission_into_zh_cn_uses_the_generated_locale_corpus() {
         }),
         ..workshop_rs::wir::Program::default()
     };
-    let output = emitter::emit_wir(&program, &catalog, &zh()).expect("settings corpus emits");
+    let output = internal::emit_in(&program, &zh());
     assert!(output.contains("自由混战人数上限: 6"), "{}", output);
 }
 
 #[test]
 fn settings_namespace_spellings_emit_and_reparse_in_zh_cn() {
     use workshop_rs::settings::Settings;
-    let catalog = builtin();
+    let _catalog = catalog();
     let group = |name: &str| SettingsNode::Group {
         name: name.to_string(),
         children: Vec::new(),
@@ -440,11 +421,11 @@ fn settings_namespace_spellings_emit_and_reparse_in_zh_cn() {
         }),
         ..workshop_rs::wir::Program::default()
     };
-    let output = emitter::emit_wir(&program, &catalog, &zh()).expect("zh-CN settings emit");
+    let output = internal::emit_in(&program, &zh());
     for header in ["主程序", "大厅", "模式", "英雄", "扩展", "地图工坊"] {
         assert!(output.contains(&format!("{header} {{")), "{output}");
     }
-    let reparsed = parser::parse_wir(&output, &catalog, &zh()).expect("zh-CN settings reparse");
+    let reparsed = internal::parse_in(&output, &zh());
     assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
 }
 
@@ -572,8 +553,7 @@ fn canonical_ids_are_locale_independent_in_wir() {
     // Parsing the same program in en-US and xx-YY yields the same canonical
     // WIR (ids, not spellings).
     let catalog = synthetic_catalog();
-    let en_program = parser::parse_wir_with_context(SYNTHETIC_SOURCE, &catalog, &en(), &catalog)
-        .expect("parses");
+    let en_program = internal::parse(SYNTHETIC_SOURCE);
     let xx_program =
         parser::parse_wir_with_context(SYNTHETIC_TARGET, &catalog, &Locale::new("xx-YY"), &catalog)
             .expect("parses");
@@ -585,7 +565,7 @@ fn canonical_ids_are_locale_independent_in_wir() {
 
 #[test]
 fn catalog_spelling_lookup_distinguishes_mapped_and_unmapped_locales() {
-    let catalog = builtin();
+    let catalog = catalog();
     assert_eq!(
         catalog.spelling(Kind::Action, &zh(), "disableInspector"),
         Some("禁用查看器录制")
@@ -622,9 +602,8 @@ fn current_settings_inventory_resolves_extensions_and_hero_keys() {
 	}
 }
 "#;
-    let catalog = builtin();
-    let program =
-        parser::parse_wir_with_context(source, &catalog, &zh(), &catalog).expect("parses");
+    let _catalog = catalog();
+    let program = internal::parse_in(source, &zh());
     fn assert_no_raw(nodes: &[SettingsNode]) {
         for node in nodes {
             assert!(

@@ -188,10 +188,6 @@ impl EmitContext<'_> {
 /// decimal point, and non-integers print the shortest round-trip
 /// representation truncated to 16 significant digits (OverPy behavior;
 /// evidence: the pinned oracle snapshots).
-pub(crate) fn is_comparison_operator(name: &str) -> bool {
-    matches!(name, "==" | "!=" | "<" | "<=" | ">" | ">=")
-}
-
 pub(crate) fn escape_string(value: &str) -> String {
     value.replace('"', "\\\"")
 }

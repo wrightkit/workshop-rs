@@ -22,7 +22,8 @@ mod value;
 
 pub(crate) mod error;
 
-pub(crate) use action::{Action, IfBranch, ModifyOp};
+pub(crate) use crate::program::shared::ModifyOp;
+pub(crate) use action::{Action, IfBranch};
 pub(crate) use event::{Event, EventTarget, EventTeam, PlayerEventKind};
 pub(crate) use rule::{Condition, Rule, WorkshopSubroutine, WorkshopVariable};
 pub(crate) use value::{Value, ValueNode};
@@ -45,6 +46,37 @@ pub(crate) type ActionId = Id<Action>;
 pub(crate) type ValueId = Id<ValueNode>;
 
 pub(crate) const AMBIGUOUS_ENUM_CALL: &str = "__ambiguous_enum";
+
+pub(crate) fn is_canonical_helper(name: &str) -> bool {
+    matches!(name, "memberAccess" | "+" | "-" | "*" | "/" | "%") || is_operation_helper(name)
+}
+
+pub(crate) fn is_canonical_helper_call(name: &str, argument_count: usize) -> bool {
+    is_canonical_helper(name)
+        && (argument_count == 0 || matches!(name, "memberAccess" | "+" | "-" | "*" | "/" | "%"))
+}
+
+pub(crate) fn is_operation_helper(name: &str) -> bool {
+    matches!(
+        name,
+        "add"
+            | "subtract"
+            | "multiply"
+            | "divide"
+            | "modulo"
+            | "min"
+            | "max"
+            | "raiseToPower"
+            | "appendToArray"
+            | "removeFromArray"
+            | "removeFromArrayByValue"
+            | "removeFromArrayByIndex"
+    )
+}
+
+pub(crate) fn is_comparison_operator(name: &str) -> bool {
+    matches!(name, "==" | "!=" | "<" | "<=" | ">" | ">=")
+}
 
 /// The Workshop IR program: tables and arenas produced by lowering.
 #[derive(Debug, Clone)]

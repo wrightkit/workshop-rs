@@ -244,7 +244,7 @@ impl Counter<'_> {
             });
         };
         let (children, heroes) = match &value.value {
-            Value::Call { name, args } if is_comparison(name) => {
+            Value::Call { name, args } if wir::is_comparison_operator(name) => {
                 let mut children = Vec::with_capacity(args.len());
                 let mut heroes = 0;
                 for argument in args {
@@ -509,7 +509,7 @@ impl Counter<'_> {
                     if name != "memberAccess"
                         && self.catalog.entry(Kind::Value, name).is_none()
                         && self.catalog.entry(Kind::Operator, name).is_none()
-                        && !is_canonical_helper(name)
+                        && !crate::wir::is_canonical_helper(name)
                     {
                         return Err(ElementCountError::Unsupported {
                             kind: ElementNodeKind::Value,
@@ -527,7 +527,7 @@ impl Counter<'_> {
                     } else {
                         args.clone()
                     };
-                    let base = if is_comparison(name) {
+                    let base = if wir::is_comparison_operator(name) {
                         // The operator is a literal of its own.
                         2
                     } else if name == "array" || name == "evaluateOnce" {
@@ -606,34 +606,6 @@ impl Counter<'_> {
 
 fn pair_surcharge(heroes: usize) -> isize {
     (heroes / 2) as isize
-}
-
-fn is_comparison(name: &str) -> bool {
-    matches!(name, "==" | "!=" | "<" | "<=" | ">" | ">=")
-}
-
-fn is_canonical_helper(name: &str) -> bool {
-    matches!(
-        name,
-        "memberAccess"
-            | "+"
-            | "-"
-            | "*"
-            | "/"
-            | "%"
-            | "add"
-            | "subtract"
-            | "multiply"
-            | "divide"
-            | "modulo"
-            | "min"
-            | "max"
-            | "raiseToPower"
-            | "appendToArray"
-            | "removeFromArray"
-            | "removeFromArrayByValue"
-            | "removeFromArrayByIndex"
-    )
 }
 
 /// The cost of the defaults filled in for arguments a call leaves out.

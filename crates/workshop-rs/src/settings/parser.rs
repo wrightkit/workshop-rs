@@ -302,7 +302,7 @@ impl ParseContext<'_> {
                 })
             }
             KeyKind::Number => {
-                let value = self.settings_number(false)?;
+                let value = self.settings_number()?;
                 Ok(SettingsNode::Number {
                     name: name.to_string(),
                     value,
@@ -442,26 +442,19 @@ impl ParseContext<'_> {
         Ok(parts.join(" "))
     }
 
-    pub(crate) fn settings_number(&mut self, percent: bool) -> Result<f64> {
-        let value = match self.next() {
+    pub(crate) fn settings_number(&mut self) -> Result<f64> {
+        match self.next() {
             Some(Token {
                 kind: TokenKind::Number { value, .. },
                 ..
-            }) => value,
-            Some(token) => return Err(self.malformed("expected a settings number", &token)),
-            None => return Err(self.malformed("expected a settings number", self.eof())),
-        };
-        if percent {
-            self.expect(
-                TokenKind::Op("%".to_string()),
-                "expected '%' after settings percentage",
-            )?;
+            }) => Ok(value),
+            Some(token) => Err(self.malformed("expected a settings number", &token)),
+            None => Err(self.malformed("expected a settings number", self.eof())),
         }
-        Ok(value)
     }
 
     pub(crate) fn settings_number_percent(&mut self) -> Result<f64> {
-        let value = self.settings_number(false)?;
+        let value = self.settings_number()?;
         if matches!(
             self.peek(),
             Some(Token {

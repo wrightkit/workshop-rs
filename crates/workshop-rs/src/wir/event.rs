@@ -3,57 +3,7 @@
 use crate::core::source::Span;
 
 use super::SubroutineId;
-
-/// The team filter attached to a player-scoped Workshop event.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum EventTeam {
-    All,
-    Team1,
-    Team2,
-}
-
-/// The player filter attached to a player-scoped Workshop event.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum EventTarget {
-    All,
-    Slot(u8),
-    Hero(String),
-}
-
-/// A non-ongoing player event identity.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum PlayerEventKind {
-    DealtDamage,
-    DealtFinalBlow,
-    DealtHealing,
-    DealtKnockback,
-    Died,
-    EarnedElimination,
-    Joined,
-    Left,
-    ReceivedHealing,
-    ReceivedKnockback,
-    TookDamage,
-}
-
-impl PlayerEventKind {
-    /// The locale-independent catalog identity for this event.
-    pub(crate) fn catalog_id(self) -> &'static str {
-        match self {
-            PlayerEventKind::DealtDamage => "playerDealtDamage",
-            PlayerEventKind::DealtFinalBlow => "playerDealtFinalBlow",
-            PlayerEventKind::DealtHealing => "playerDealtHealing",
-            PlayerEventKind::DealtKnockback => "playerDealtKnockback",
-            PlayerEventKind::Died => "playerDied",
-            PlayerEventKind::EarnedElimination => "playerEarnedElimination",
-            PlayerEventKind::Joined => "playerJoined",
-            PlayerEventKind::Left => "playerLeft",
-            PlayerEventKind::ReceivedHealing => "playerReceivedHealing",
-            PlayerEventKind::ReceivedKnockback => "playerReceivedKnockback",
-            PlayerEventKind::TookDamage => "playerTookDamage",
-        }
-    }
-}
+pub(crate) use crate::program::shared::{EventTarget, EventTeam, PlayerEventKind};
 
 /// A workshop event.
 #[derive(Debug, Clone)]

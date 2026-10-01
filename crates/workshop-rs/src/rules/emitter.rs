@@ -55,30 +55,33 @@ impl<'a> EmitContext<'a> {
             self.line(1, &format!("{conditions} {{"))?;
             for condition in &rule.conditions {
                 let condition_value = condition.value;
-                let mut text = String::new();
                 // Reference normalization: comparison conditions render
                 // infix; other conditions render as `value == True`.
-                if let Some(wir::Value::Call { name, args }) = self
+                let comparison = match self
                     .program
                     .values
                     .get(condition_value)
                     .map(|node| &node.value)
                 {
-                    if is_comparison_operator(name) && args.len() == 2 {
-                        self.value(args[0], &mut text)?;
-                        let operator = self.spelling(Kind::Operator, name)?;
-                        write!(text, " {operator} ").unwrap();
-                        self.value(args[1], &mut text)?;
-                    } else {
-                        self.value(condition_value, &mut text)?;
-                        let true_spelling = self.spelling(Kind::Value, "true")?;
-                        write!(text, " == {true_spelling}").unwrap();
+                    Some(wir::Value::Call { name, args })
+                        if wir::is_comparison_operator(name) && args.len() == 2 =>
+                    {
+                        Some((name, args))
                     }
+                    _ => None,
+                };
+                let text = if let Some((name, args)) = comparison {
+                    let mut text = self.value_text(args[0])?;
+                    let operator = self.spelling(Kind::Operator, name)?;
+                    write!(text, " {operator} ").unwrap();
+                    text.push_str(&self.value_text(args[1])?);
+                    text
                 } else {
-                    self.value(condition_value, &mut text)?;
+                    let mut text = self.value_text(condition_value)?;
                     let true_spelling = self.spelling(Kind::Value, "true")?;
                     write!(text, " == {true_spelling}").unwrap();
-                }
+                    text
+                };
                 let prefix = if condition.disabled {
                     format!("{} ", self.structural("disabled")?)
                 } else {
@@ -102,24 +105,24 @@ impl<'a> EmitContext<'a> {
     }
 
     pub(crate) fn global_name(&self, id: wir::GlobalVarId) -> Result<&'a str> {
-        self.program
-            .global_variables
-            .get(id)
-            .map(|variable| variable.name.as_str())
-            .ok_or_else(|| WorkshopError::Unknown {
-                kind: "global variable",
-                spelling: format!("<{id}>"),
-                locale: self.locale.clone(),
-                span: None,
-            })
+        self.variable_name(&self.program.global_variables, id, "global variable")
     }
+
     pub(crate) fn player_name(&self, id: wir::PlayerVarId) -> Result<&'a str> {
-        self.program
-            .player_variables
+        self.variable_name(&self.program.player_variables, id, "player variable")
+    }
+
+    fn variable_name(
+        &self,
+        table: &'a crate::core::arena::Arena<wir::WorkshopVariable>,
+        id: crate::core::ids::Id<wir::WorkshopVariable>,
+        kind: &'static str,
+    ) -> Result<&'a str> {
+        table
             .get(id)
             .map(|variable| variable.name.as_str())
             .ok_or_else(|| WorkshopError::Unknown {
-                kind: "player variable",
+                kind,
                 spelling: format!("<{id}>"),
                 locale: self.locale.clone(),
                 span: None,

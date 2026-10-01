@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+use std::path::{Path, PathBuf};
+
 use sha2::{Digest, Sha256};
 use workshop_rs::{
     WorkshopError,
@@ -9,6 +11,47 @@ use workshop_rs::{
 
 pub(crate) mod real_projects;
 pub(crate) use real_projects::{RealProjectCaseExpectation, RealProjectStage};
+
+/// The built-in catalog, loaded and validated.
+pub(crate) fn catalog() -> Catalog {
+    Catalog::builtin().expect("built-in catalog validates")
+}
+
+pub(crate) fn locale(tag: &str) -> Locale {
+    Locale::new(tag)
+}
+
+pub(crate) fn en() -> Locale {
+    locale("en-US")
+}
+
+pub(crate) fn zh() -> Locale {
+    locale("zh-CN")
+}
+
+/// `tests/fixtures/<group>/<name>` path resolution relative to the crate.
+pub(crate) fn fixture(group: &str, name: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(group)
+        .join(name)
+}
+
+pub(crate) fn fixture_text(group: &str, name: &str) -> String {
+    let path = fixture(group, name);
+    std::fs::read_to_string(&path)
+        .unwrap_or_else(|error| panic!("cannot read fixture {path:?}: {error}"))
+}
+
+/// `tests/fixtures/corpus/<id>.ws`.
+pub(crate) fn corpus_text(fixture_id: &str) -> String {
+    fixture_text("corpus", &format!("{fixture_id}.ws"))
+}
+
+/// `tests/fixtures/settings/<id>.settings.ws`.
+pub(crate) fn settings_text(fixture_id: &str) -> String {
+    fixture_text("settings", &format!("{fixture_id}.settings.ws"))
+}
 
 #[derive(Debug)]
 struct SpanReport {
