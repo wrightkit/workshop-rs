@@ -90,6 +90,8 @@ OverPy's `#!optimizeForSize` substitutions exploit
 authored literal, so the analysis sees the difference.
 
 The analysis does not claim live-client/editor validation beyond the evidence
-above. The current real-project `rework.ow` fixture still stops in the parser
+above. Client import constraints beyond this global budget — structural
+properties that can reject a below-budget program — are tracked separately in
+[`import-limits.md`](import-limits.md); no such boundary is established today. The current real-project `rework.ow` fixture still stops in the parser
 on an ambiguous bare `None` enum spelling, so it is not counted as a passing
 real-program result until that independent parser gap is resolved.

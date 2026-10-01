@@ -72,6 +72,9 @@ Support prose is not a substitute for current executable tests.
   constants are written with a wrapper and which boolean word settings use.
 - [Canonical action layout](action-layout.md): validated WIR action-width and
   structured action expansion behavior.
+- [Workshop client import limits](import-limits.md): what is established
+  beyond the global element budget, the probe corpus, and the client-test
+  protocol.
 - [Test fixture source attribution](../crates/workshop-rs/tests/fixtures/README.md):
   source origin and verification for raw Workshop/settings fixtures.
 

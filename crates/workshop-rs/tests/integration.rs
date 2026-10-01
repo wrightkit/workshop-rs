@@ -16,6 +16,8 @@ mod gameplay_data;
 mod gameplay_query;
 #[path = "identity.rs"]
 mod identity;
+#[path = "import_limits.rs"]
+mod import_limits;
 #[path = "parser_errors.rs"]
 mod parser_errors;
 #[path = "pipeline.rs"]

@@ -56,6 +56,31 @@ pub struct ElementCountReport {
     pub rules: Vec<ElementCountNode>,
 }
 
+impl ElementCountNode {
+    /// The number of nodes on the longest downward path starting at this
+    /// node: `1` for a leaf, otherwise `1 + max(child heights)`.
+    ///
+    /// This is a structural measure of the report tree, not a client
+    /// limit; it answers "how deeply nested is this subtree" without
+    /// claiming anything about importability.
+    pub fn height(&self) -> usize {
+        1 + self
+            .children
+            .iter()
+            .map(Self::height)
+            .max()
+            .unwrap_or_default()
+    }
+
+    /// The number of nodes in this subtree, including this node.
+    ///
+    /// Unlike `count`, which is the weighted client element cost, this is
+    /// the plain cardinality of the report subtree.
+    pub fn node_count(&self) -> usize {
+        1 + self.children.iter().map(Self::node_count).sum::<usize>()
+    }
+}
+
 impl ElementCountReport {
     /// Return the per-rule total in source/WIR order.
     pub fn rule_counts(&self) -> impl Iterator<Item = (&str, usize)> {
