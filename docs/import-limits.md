@@ -13,13 +13,14 @@ a client observation into an established boundary.
 
 ## Structural measures
 
-`ElementCountReport` nodes expose three orthogonal structural measures:
+`ElementCountReport` nodes expose four orthogonal structural measures:
 
 | Measure | Accessor | Meaning |
 | --- | --- | --- |
 | Element count | `node.count` | weighted client element cost of the subtree |
 | Subtree cardinality | `node.node_count()` | plain number of report nodes in the subtree |
 | Subtree depth | `node.height()` | longest downward path, in nodes |
+| Statement value-tree size | `node.statement_value_nodes()` | value nodes in the node's own arguments, excluding nested action subtrees |
 
 `emitter::action_width` remains the measure for how many action slots a
 native display action occupies. None of these is a limit; they are the
@@ -61,11 +62,12 @@ exceeds:
 | Serialized line/statement bytes | ~3.7 kB | ≤ ~3.2 kB | **open** |
 
 "Per-statement value-tree nodes" counts the value nodes inside one
-statement's argument subtrees — an `If`/`While` block's descendant *actions*
-are separate statements, so block nesting does not inflate it. Accepted
-builds do carry larger `If` blocks (606 elements / 500 nodes) than any
-statement in the rejected build, which is why only the value-tree measure
-of a single statement remains open.
+statement's argument subtrees — `ElementCountNode::statement_value_nodes()`.
+An `If`/`While` block's descendant *actions* are separate statements, so
+block nesting does not inflate it. Accepted builds do carry larger `If`
+blocks (606 elements / 500 nodes) than any statement in the rejected build,
+which is why only the value-tree measure of a single statement remains
+open.
 
 ## Real-world mitigations observed
 
@@ -89,14 +91,44 @@ The shared mitigation pattern is hoisting repeated nested subexpressions
 into a periodically refreshed variable; it removes the hotspot regardless
 of which limit, if any, the client enforces.
 
+## Corroborating community evidence
+
+Independent of the Bastion case, the client enforces a per-rule complexity
+limit distinct from the global element budget. The public record is
+anecdotal and predates the current element system, so it establishes that
+structural limits exist — not where their boundaries are:
+
+- The client rejects oversized rules with a dedicated error,
+  `Error: Action list is too complex`, reported as most often triggered by
+  many `Skip If` actions (`Abort If` being cheaper). A community
+  measurement table built by packing one action kind per rule found a
+  `Skip If` carrying a small compare/index value tree capped at **14 per
+  rule** while the same action reached 949 across a whole script — i.e. the
+  per-rule budget scales with argument complexity, not statement count
+  alone. Source: `us.forums.blizzard.com/en/overwatch/t/excessive-workshop-scriptload/368113`,
+  post by Delwion-2667, 2019-08-03.
+- The same table records a whole-script serialized size limit (e.g. 1817
+  repetitions of a `Small Message` action before exceeding it) that was
+  later relaxed; the current global budget is the element system described
+  in `docs/element-count.md`. The per-rule capacities above are from that
+  older regime and must not be read as current thresholds.
+- A 2023 follow-up in the same thread independently attributes server-side
+  failures to "expression/statement complexity in a single rule" —
+  consistent direction, still anecdotal.
+
+These observations keep the per-rule/per-statement candidates plausible
+while the protocol below is required to establish any boundary.
+
 ## Probe corpus
 
 `crates/workshop-rs/tests/fixtures/import-limits/` holds the offline probe
 programs: a verbatim extraction of the reported-rejected rule, a single
 verbatim statement, a shape-matched flat control, and parametric probes that
-isolate per-rule totals, per-action argument-tree size, argument width, and
-argument depth. Each probe stays below the global budget; the fixture README
-carries the measured values and the provenance of the extracted artifacts.
+isolate per-rule totals, per-action argument-tree size, argument width,
+argument depth, serialized statement bytes, and per-rule aggregate
+value-tree load. Each probe stays
+below the global budget; the fixture README carries the measured values and
+the provenance of the extracted artifacts.
 
 The probes pin the discriminating experiment:
 
@@ -105,10 +137,21 @@ The probes pin the discriminating experiment:
   is per-rule scale, not statement size or depth.
 - If `prophet-action-single.ws` alone is rejected, the trigger is inside one
   statement; `arg-nodes-large.ws` (511 nodes, depth 11),
-  `arg-array-wide.ws` (1002 elements, depth 4), and `arg-depth-deep.ws`
-  (depth 52) then separate value-tree size, element count, and depth.
+  `arg-array-wide.ws` (1002 elements, depth 4), `arg-depth-deep.ws`
+  (depth 52), and `arg-line-bytes.ws` (a 4.2 kB serialized line at only ~65
+  value nodes) then separate value-tree size, element count, depth, and
+  serialized statement bytes.
 - If `rule-elements-large.ws` is rejected while `rule-elements-split.ws`
   imports, a per-rule budget exists somewhere in (882, 3522].
+- `rule-value-trees.ws` reproduces the rejected rule's composite shape with
+  generic content: one rule carrying eight statements of 311 value nodes
+  each — the same per-statement size as the verbatim statements — for 2499
+  rule nodes against the reproducer's 2507. If it is rejected alongside the
+  reproducer, per-rule structural scale is implicated regardless of the
+  specific actions or values involved; if it imports while the reproducer
+  is rejected, the trigger is content-specific — the `createInWorldText`
+  action kind, its player-set filter values, or its localized string
+  arguments — rather than aggregate shape.
 
 ## Client test protocol
 

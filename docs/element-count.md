@@ -10,10 +10,12 @@ canonical source/WIR order. A node exposes its `kind`, canonical or analysis
 `name`, opaque report-local `id`, optional authored `span`, node-local
 `base_count` and signed `adjustment`, and recursive `count`. The `id` is unique
 only within one report and is not a WIR or storage arena index. The recursive
-count is the node's base count plus its adjustment and child counts. Two
+count is the node's base count plus its adjustment and child counts. Three
 accessors describe plain subtree shape independent of the weighted cost:
-`height()` is the longest downward path in nodes and `node_count()` is the
-subtree's node cardinality. Values and
+`height()` is the longest downward path in nodes, `node_count()` is the
+subtree's node cardinality, and `statement_value_nodes()` counts the value
+nodes in the node's own statement arguments without entering nested action
+subtrees — the per-statement value-tree size. Values and
 nested actions remain nodes in the tree instead of being reduced to an
 aggregate total. Consumers should map nodes by their ordered tree position and
 source span when one is available; report-local IDs have no meaning across
