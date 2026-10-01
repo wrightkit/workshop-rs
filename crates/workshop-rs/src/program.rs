@@ -282,7 +282,7 @@ impl Program {
             .actions
             .get(action)
             .ok_or(SourceMappingError::InvalidAction { rule, action })?;
-        let argument_count = action_argument_count(action_value);
+        let argument_count = action_argument_values(action_value).len();
         if argument >= argument_count {
             return Err(SourceMappingError::InvalidActionArgument {
                 rule,
@@ -823,23 +823,6 @@ fn value_children(value: &Value) -> Vec<&Value> {
         Value::PlayerVariable { player, .. } => vec![player.as_ref()],
         Value::Call { args, .. } => args.iter().collect(),
         _ => Vec::new(),
-    }
-}
-
-fn action_argument_count(action: &Action) -> usize {
-    match action {
-        Action::SetGlobalVariable { .. }
-        | Action::ModifyGlobalVariable { .. }
-        | Action::If { .. }
-        | Action::ElseIf { .. }
-        | Action::While { .. } => 1,
-        Action::SetPlayerVariable { .. } | Action::ModifyPlayerVariable { .. } => 2,
-        Action::AssignMember { .. } => 2,
-        Action::ForGlobalVariable { .. } => 3,
-        Action::ForPlayerVariable { .. } => 4,
-        Action::Call { args, .. } => args.len(),
-        Action::CallSubroutine { .. } | Action::Else | Action::End => 0,
-        Action::Disabled { action } => action_argument_count(action),
     }
 }
 
