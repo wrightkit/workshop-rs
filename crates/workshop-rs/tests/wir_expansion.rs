@@ -631,9 +631,19 @@ fn canonical_validation_returns_first_error_and_short_circuits() {
         },
         None,
     ));
+    // `modifyGlobalVariable` requires three arguments; a valid third argument
+    // keeps this Call inside the declared signature so argument errors are
+    // reached in order.
+    let good_arg3 = program_args.values.push(ValueNode::new(
+        Value::Number {
+            value: 1.0,
+            text: "1".into(),
+        },
+        None,
+    ));
     let call_args = program_args.actions.push(Action::Call {
         name: "modifyGlobalVariable".into(),
-        args: vec![bad_arg1, bad_arg2],
+        args: vec![bad_arg1, bad_arg2, good_arg3],
         span: None,
     });
     program_args.rules.push(wir::Rule {
