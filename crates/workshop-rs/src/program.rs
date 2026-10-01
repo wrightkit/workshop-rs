@@ -787,6 +787,7 @@ impl From<Value> for Condition {
 }
 
 /// The direct value arguments of a public action, in their mapped order.
+/// Provenance rows pair these positionally with `wir::Action::value_args`.
 fn action_argument_values(action: &Action) -> Vec<&Value> {
     match action {
         Action::SetGlobalVariable { value, .. } | Action::ModifyGlobalVariable { value, .. } => {

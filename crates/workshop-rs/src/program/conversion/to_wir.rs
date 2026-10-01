@@ -373,14 +373,8 @@ fn apply_action_provenance(
                 }
                 *position += 1;
             }
-            wir::Action::While { body, .. } => {
-                let source = provenance.get(*position).cloned().unwrap_or_default();
-                *position += 1;
-                apply_action_source(storage, *id, &source);
-                apply_action_provenance(storage, &body, provenance, position)?;
-                *position += 1;
-            }
-            wir::Action::ForGlobalVariable { body, .. }
+            wir::Action::While { body, .. }
+            | wir::Action::ForGlobalVariable { body, .. }
             | wir::Action::ForPlayerVariable { body, .. } => {
                 let source = provenance.get(*position).cloned().unwrap_or_default();
                 *position += 1;
@@ -396,6 +390,8 @@ fn apply_action_provenance(
                     *span = source.span;
                 }
             }
+            // Leaf actions consume one row; new block-shaped variants also
+            // need an explicit arm in `public_action_provenance`.
             _ => {
                 let source = provenance.get(*position).cloned().unwrap_or_default();
                 *position += 1;

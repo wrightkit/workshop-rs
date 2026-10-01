@@ -168,7 +168,9 @@ impl Action {
     }
 
     /// The direct value arguments of this action, in canonical order. Block
-    /// bodies are separate actions and are not included.
+    /// bodies are separate actions and are not included. Provenance rows pair
+    /// these positionally with `program::action_argument_values`, so the two
+    /// tables must stay consistent.
     pub(crate) fn value_args(&self) -> Vec<ValueId> {
         match self {
             Action::SetGlobalVariable { value, .. }

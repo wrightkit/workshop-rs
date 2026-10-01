@@ -386,24 +386,23 @@ fn public_action_provenance(
         .get(id)
         .ok_or_else(|| malformed_id("action", id.index()))?;
     let identifier = action.identifier_span();
+    let map_args = |arguments: &[wir::ValueId]| {
+        arguments
+            .iter()
+            .map(|value| value_provenance(storage, *value))
+            .collect()
+    };
     let push = |output: &mut Vec<ActionProvenance>, arguments: &[wir::ValueId]| {
         output.push(ActionProvenance {
             span: action.span(),
             identifier,
-            arguments: arguments
-                .iter()
-                .map(|value| value_provenance(storage, *value))
-                .collect(),
+            arguments: map_args(arguments),
         });
     };
     let push_without_span = |output: &mut Vec<ActionProvenance>, arguments: &[wir::ValueId]| {
         output.push(ActionProvenance {
-            span: None,
-            identifier: None,
-            arguments: arguments
-                .iter()
-                .map(|value| value_provenance(storage, *value))
-                .collect(),
+            arguments: map_args(arguments),
+            ..ActionProvenance::default()
         });
     };
     match action {
@@ -445,6 +444,8 @@ fn public_action_provenance(
         wir::Action::Disabled { action, .. } => {
             public_action_provenance(storage, *action, output)?;
         }
+        // Leaf actions emit one row; new block-shaped variants also need an
+        // explicit arm in `apply_action_provenance` to keep rows aligned.
         _ => push(output, &action.value_args()),
     }
     Ok(())
