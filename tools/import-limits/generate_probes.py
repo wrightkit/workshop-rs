@@ -4,7 +4,8 @@
 
 Each probe is a complete raw en-US Workshop program that isolates one
 structural dimension at a time (per-rule element total, per-action
-argument-tree size, argument depth, argument width) while staying below the
+argument-tree size, argument depth, argument width, serialized statement
+bytes, per-rule aggregate of statement value trees) while staying below the
 global 32768-element budget. The non-generated fixtures in that directory
 (`reproducer-bastion-prophet.ws`, `prophet-action-single.ws`) are verbatim
 extractions from a real project build; see the fixture README.
@@ -95,10 +96,20 @@ def main() -> None:
                         help="nesting depth of the deep-argument probe")
     parser.add_argument("--leaves", type=int, default=256,
                         help="leaves of the balanced And-tree probe")
+    parser.add_argument("--value-actions", type=int, default=8,
+                        help="statements carrying a value tree in one rule")
+    parser.add_argument("--value-leaves", type=int, default=156,
+                        help="leaves per statement value tree")
+    parser.add_argument("--string-count", type=int, default=32,
+                        help="long string literals in the byte-size probe")
+    parser.add_argument("--string-len", type=int, default=110,
+                        help="characters per string literal (editor cap: 128)")
     args = parser.parse_args()
 
     acc = "    global:\n        0: probe\n"
     actions = [set_global(array_of(10))] * args.actions
+    value_actions = [set_global(and_tree(args.value_leaves))
+                     for _ in range(args.value_actions)]
 
     probes = {
         "control-minimal.ws": program(
@@ -125,6 +136,19 @@ def main() -> None:
         ),
         "arg-nodes-large.ws": program(
             acc, [rule("probe: wide value tree", [set_global(and_tree(args.leaves))])]
+        ),
+        "arg-line-bytes.ws": program(
+            acc,
+            [rule("probe: wide serialized line", [set_global(
+                "Array(" + ", ".join(
+                    f'Custom String("{"x" * args.string_len}")'
+                    for _ in range(args.string_count)
+                ) + ")",
+            )])],
+        ),
+        "rule-value-trees.ws": program(
+            acc,
+            [rule("probe: rule of large value trees", value_actions)],
         ),
         "prophet-rule-flat.ws": program(
             "    global:\n        0: prophetSlotTextsCreated\n        1: eventName\n"

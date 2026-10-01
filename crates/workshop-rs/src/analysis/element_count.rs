@@ -79,6 +79,30 @@ impl ElementCountNode {
     pub fn node_count(&self) -> usize {
         1 + self.children.iter().map(Self::node_count).sum::<usize>()
     }
+
+    /// The number of value nodes in this node's own statement value trees:
+    /// `Value` nodes reachable from this node without entering a descendant
+    /// `Action` subtree.
+    ///
+    /// On an `Action` this counts its own argument trees; actions nested in
+    /// block bodies are separate statements and are excluded. On a
+    /// `Condition` it is the condition's value tree, and on a `Rule` it is
+    /// the conditions' value trees only — each action carries its own
+    /// statement. On a `Value` node this equals `node_count()`.
+    pub fn statement_value_nodes(&self) -> usize {
+        if self.kind == ElementNodeKind::Value {
+            return self.node_count();
+        }
+        self.children
+            .iter()
+            .map(|child| match child.kind {
+                ElementNodeKind::Value | ElementNodeKind::Condition => {
+                    child.statement_value_nodes()
+                }
+                ElementNodeKind::Rule | ElementNodeKind::Action => 0,
+            })
+            .sum()
+    }
 }
 
 impl ElementCountReport {
