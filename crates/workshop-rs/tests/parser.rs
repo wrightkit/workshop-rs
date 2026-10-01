@@ -563,6 +563,10 @@ fn player_typed_values_validate_uniformly_across_wir_kinds() {
     // them the same verdict. Client-accepted real projects evidence Player
     // arguments in the positions exercised here (`bastion`, `defend`,
     // `ai-pve`); positions without such evidence reject every Player value.
+    // Note: the `defend` corpus gaps here are masked in the real-project
+    // suite by an earlier admitted `rawWorkshopAction` gap, so these cases
+    // are the direct guard for `Closest Player To`/`Filtered Array`/`Multiply`
+    // parameter 1.
     let catalog = catalog();
     let players = [
         "Event Player",
@@ -577,7 +581,10 @@ fn player_typed_values_validate_uniformly_across_wir_kinds() {
         for call in [
             format!("Add({player}, 1)"),
             format!("Multiply({player}, 2)"),
+            format!("Multiply(2, {player})"),
             format!("Horizontal Angle Towards(Victim, {player})"),
+            format!("Closest Player To({player}, All Teams)"),
+            format!("Filtered Array({player}, True)"),
             format!("Players Within Radius({player}, 5, All Teams, Surfaces)"),
             format!(
                 "Ray Cast Hit Position(Vector(0, 0, 0), Vector(0, 0, 1), All Players(All Teams), {player}, True)"
