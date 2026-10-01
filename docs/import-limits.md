@@ -33,13 +33,14 @@ totals **31228** elements — below the global budget — and is the artifact
 reported rejected by the client; `OWBastion/Bastion#198` records that the
 project treats client import as the deciding test. The successor
 `61efca001adf33cff6619bb4006398d615b17a36` rewrote the rule to per-player
-texts. Offline comparison of the two builds:
+texts. Offline comparison of the two builds (all sizes are the canonical
+report measures — `count` / `node_count` / `height`):
 
-| Build | Status | Total | Largest rule | Largest action | Depth |
+| Build | Status | Total | Largest rule | Largest action subtree | Report height |
 | --- | --- | ---: | ---: | ---: | ---: |
-| `8a4b594` (rejected per project report) | reported rejected | 31228 | 3360 el / 2507 nodes | 422 el / 312 nodes, ~3.7 kB line | 14 |
-| `61efca0`+ (shipped) | accepted | 27944 | 2042 el / 1661 nodes | 421 el / ~200 nodes | 14 |
-| `c010e1a` (vendored `bastion.ow`) | accepted | 29440 | 1444 el | 606 el (`If` block) | 14 |
+| `8a4b594` (rejected per project report) | reported rejected | 31228 | 3360 el / 2507 nodes | 422 el / 312 nodes, ~3.7 kB line | 16 |
+| `61efca0`+ (shipped) | accepted | 27953 | 2008 el / 2209 nodes | ≤ 421 el / ≤ 315 nodes | 16 |
+| `c010e1a` (vendored `bastion.ow`) | accepted | 29440 | 1444 el / 1453 nodes | 606 el / 500 nodes (`If` block) | 16 |
 
 ## Falsified and surviving candidates
 
@@ -49,14 +50,22 @@ exceeds:
 | Candidate property | Rejected build | Accepted builds | Verdict |
 | --- | ---: | ---: | --- |
 | Total element count | 31228 | ≤ 29440 | falsified for < 32768 totals |
-| Value-expression depth | 14 | 14 | falsified (identical) |
+| Subtree depth (report `height`) | 16 | 16 | falsified (identical) |
 | Per-rule serialized size | 29 kB | 44 kB | falsified (accepted is larger) |
 | Actions per rule | ≤ 505 | 505 | falsified (identical) |
-| Per-action element count | 422 | 606 | falsified (accepted is larger) |
+| Per-action-subtree element count | 422 | 606 | falsified (accepted is larger) |
+| Per-argument size | ≤ 155 el | 420 el (flat array arg) | falsified (accepted is larger) |
 | Per-condition size | small | comparable | not implicated |
-| Per-rule element/node total | 3360 / 2507 | ≤ 2042 / 1661 | **open** |
-| Per-action value-tree nodes | 312 | ≤ ~200 | **open** |
+| Per-rule element/node total | 3360 / 2507 | ≤ 2042 / 2209 | **open** |
+| Per-statement value-tree nodes | 312 | ≤ ~200 | **open** |
 | Serialized line/statement bytes | ~3.7 kB | ≤ ~3.2 kB | **open** |
+
+"Per-statement value-tree nodes" counts the value nodes inside one
+statement's argument subtrees — an `If`/`While` block's descendant *actions*
+are separate statements, so block nesting does not inflate it. Accepted
+builds do carry larger `If` blocks (606 elements / 500 nodes) than any
+statement in the rejected build, which is why only the value-tree measure
+of a single statement remains open.
 
 ## Real-world mitigations observed
 

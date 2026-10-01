@@ -11,7 +11,9 @@ use workshop_rs::actions::{ElementCountNode, ElementCountReport, ElementNodeKind
 use workshop_rs::parser;
 use workshop_rs::{Action, Event, Program, Rule, Value, Variable};
 
-use crate::common::{catalog, en, fixture_text};
+use sha2::{Digest, Sha256};
+
+use crate::common::{catalog, en, fixture, fixture_text};
 
 const GLOBAL_ELEMENT_BUDGET: usize = 32768;
 
@@ -26,6 +28,50 @@ const PROBES: &[&str] = &[
     "rule-elements-large.ws",
     "rule-elements-split.ws",
 ];
+
+/// The two verbatim extractions pin their digests so the "extracted from
+/// the rejected build" claim cannot silently rot under an incidental edit;
+/// values are recorded in `fixtures/import-limits/README.md`.
+#[test]
+fn verbatim_probes_match_their_recorded_digests() {
+    let expected: &[(&str, &str)] = &[
+        (
+            "reproducer-bastion-prophet.ws",
+            "3a1cb89148242ca2ebe40d611ff033ea315b01d8246bde32b5f57c94b584c922",
+        ),
+        (
+            "prophet-action-single.ws",
+            "b14749af54e35a84a828dd22d887d968194b0f7af82eed47cf1575f2b6cdb04f",
+        ),
+    ];
+    for &(name, sha256) in expected {
+        let bytes = std::fs::read(fixture("import-limits", name)).unwrap();
+        assert_eq!(format!("{:x}", Sha256::digest(&bytes)), sha256, "{name}");
+    }
+}
+
+/// The vendored `real-projects/bastion.ow` build is the client-accepted
+/// anchor: it carries larger per-action element counts than the rejected
+/// rule, which is why per-action element totals are ruled out as the
+/// below-budget trigger.
+#[test]
+fn the_vendored_bastion_build_anchors_the_accepted_side() {
+    let text = fixture_text("real-projects", "bastion.ow");
+    let program = parser::parse(&text, &catalog(), &en()).unwrap();
+    let report = program.element_count(&catalog()).unwrap();
+
+    assert_eq!(report.total, 29440);
+    let rule_max = report.rules.iter().map(|rule| rule.count).max().unwrap();
+    assert_eq!(rule_max, 1444);
+    assert_eq!(max_action_count(&report), 606);
+    let height = report
+        .rules
+        .iter()
+        .map(ElementCountNode::height)
+        .max()
+        .unwrap();
+    assert_eq!(height, 16);
+}
 
 fn report_for(name: &str) -> ElementCountReport {
     let text = fixture_text("import-limits", name);

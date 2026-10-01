@@ -16,7 +16,7 @@ manual evidence step and is **not** asserted anywhere in this repository.
 | --- | --- | --- | --- | --- | --- |
 | `control-minimal.ws` | paste mechanics sanity | 4 | 4 | 2 | 3 nodes |
 | `arg-array-wide.ws` | one wide flat argument (500-item `Array`) | 1004 | 1004 | 1002 | 4 nodes |
-| `arg-depth-deep.ws` | one deep argument (50-deep `If-Then-Else` chain) | 436 | 436 | 434 | 52 nodes |
+| `arg-depth-deep.ws` | one deep argument (48-deep `If-Then-Else` chain) | 436 | 436 | 434 | 52 nodes |
 | `arg-nodes-large.ws` | one action whose argument is a 511-node balanced `And` tree | 513 | 513 | 511 | 11 nodes |
 | `prophet-action-single.ws` | one verbatim large `createInWorldText` statement | 406 | 406 | 398 | 14 nodes |
 | `prophet-rule-flat.ws` | reproducer rule skeleton with flat arguments (control) | 48 | 48 | 5 | 5 nodes |
@@ -42,6 +42,8 @@ manual evidence step and is **not** asserted anywhere in this repository.
   `3a1cb89148242ca2ebe40d611ff033ea315b01d8246bde32b5f57c94b584c922`.
 - `prophet-action-single.ws` — the same wrapper and first
   `createInWorldText` statement (slot 0) from the same build artifact.
+  Fixture SHA-256:
+  `b14749af54e35a84a828dd22d887d968194b0f7af82eed47cf1575f2b6cdb04f`.
 - All other files are generated deterministically by
   [`tools/import-limits/generate_probes.py`](../../../../../tools/import-limits/generate_probes.py).
   The tool accepts `--actions`, `--rules`, `--array-len`, `--depth`, and
