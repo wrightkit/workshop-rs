@@ -58,6 +58,28 @@ exceeds:
 | Per-action value-tree nodes | 312 | ≤ ~200 | **open** |
 | Serialized line/statement bytes | ~3.7 kB | ≤ ~3.2 kB | **open** |
 
+## Real-world mitigations observed
+
+Bastion's history contains two independent "flatten the giant nested
+expression" corrections, neither of which isolated the client trigger:
+
+- `OWBastion/Bastion#199` (`5051379`, fixing `#198`) split a monolithic
+  nested `buildCandidatePool` eligibility expression — `Filtered Array`
+  plus chained `And`/`Or` and indexing — into sequential small filter
+  statements.
+- `OWBastion/Bastion#289` (`61efca0`) reworked the prophet slot matrix into
+  per-player texts: the largest rule shrank 3360 → 74 elements and the
+  largest statement ~422 → ~60 elements (~3.7 kB → 0.6 kB line), with all
+  inline `getPlayers().filter()` expansions replaced by a cached
+  `prophetViewers` variable refreshed at 1 Hz.
+
+Both fixes shrink every surviving candidate dimension at once (per-rule
+totals, per-statement tree size, depth, serialized size), so they are
+consistent with — but cannot discriminate between — the open candidates.
+The shared mitigation pattern is hoisting repeated nested subexpressions
+into a periodically refreshed variable; it removes the hotspot regardless
+of which limit, if any, the client enforces.
+
 ## Probe corpus
 
 `crates/workshop-rs/tests/fixtures/import-limits/` holds the offline probe
