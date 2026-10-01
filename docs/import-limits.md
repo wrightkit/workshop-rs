@@ -13,14 +13,14 @@ a client observation into an established boundary.
 
 ## Structural measures
 
-`ElementCountReport` nodes expose four orthogonal structural measures:
+`ElementCountReport` nodes expose four structural measures:
 
 | Measure | Accessor | Meaning |
 | --- | --- | --- |
 | Element count | `node.count` | weighted client element cost of the subtree |
 | Subtree cardinality | `node.node_count()` | plain number of report nodes in the subtree |
 | Subtree depth | `node.height()` | longest downward path, in nodes |
-| Statement value-tree size | `node.statement_value_nodes()` | value nodes in the node's own arguments, excluding nested action subtrees |
+| Statement value-tree size | `node.statement_value_nodes()` | value nodes in the statement's own argument/condition trees, excluding nested action subtrees |
 
 `emitter::action_width` remains the measure for how many action slots a
 native display action occupies. None of these is a limit; they are the
@@ -58,7 +58,7 @@ exceeds:
 | Per-argument size | ≤ 155 el | 420 el (flat array arg) | falsified (accepted is larger) |
 | Per-condition size | small | comparable | not implicated |
 | Per-rule element/node total | 3360 / 2507 | ≤ 2042 / 2209 | **open** |
-| Per-statement value-tree nodes | 312 | ≤ ~200 | **open** |
+| Per-statement value-tree nodes | 311 | ≤ ~200 | **open** |
 | Serialized line/statement bytes | ~3.7 kB | ≤ ~3.2 kB | **open** |
 
 "Per-statement value-tree nodes" counts the value nodes inside one
@@ -93,9 +93,9 @@ of which limit, if any, the client enforces.
 
 ## Corroborating community evidence
 
-Independent of the Bastion case, the client enforces a per-rule complexity
-limit distinct from the global element budget. The public record is
-anecdotal and predates the current element system, so it establishes that
+Independent of the Bastion case, the client has long had a per-rule
+complexity limit distinct from the global element budget. The public record
+is anecdotal and predates the current element system, so it establishes that
 structural limits exist — not where their boundaries are:
 
 - The client rejects oversized rules with a dedicated error,
@@ -164,8 +164,9 @@ Client results are a manual evidence step (see
 2. Record client version/season, locale, the fixture SHA-256, and the
    verbatim result for every probe, attached to the tracking issue.
 3. On a boundary result, bisect with the generator flags
-   (`--actions`, `--rules`, `--array-len`, `--depth`, `--leaves`) rather than
-   editing probes by hand, and attach the ladder results.
+   (`--actions`, `--rules`, `--array-len`, `--depth`, `--leaves`,
+   `--value-actions`, `--value-leaves`, `--string-count`, `--string-len`)
+   rather than editing probes by hand, and attach the ladder results.
 4. A candidate becomes an established limit only when an accept and a reject
    bracket it on the same client version. Only then may `workshop-rs` expose
    it as a validation contract.

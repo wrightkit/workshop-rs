@@ -89,6 +89,11 @@ impl ElementCountNode {
     /// `Condition` it is the condition's value tree, and on a `Rule` it is
     /// the conditions' value trees only — each action carries its own
     /// statement. On a `Value` node this equals `node_count()`.
+    ///
+    /// A comparison keeps its operator as a `Value` node inside an `If` or
+    /// `While` argument, while a rule condition absorbs it into the
+    /// `Condition` node — so one source expression measures one node fewer
+    /// as a rule condition than as a block condition.
     pub fn statement_value_nodes(&self) -> usize {
         if self.kind == ElementNodeKind::Value {
             return self.node_count();
