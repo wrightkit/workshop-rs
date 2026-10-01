@@ -126,6 +126,44 @@ fn composed_blizzard_settings_labels_convert_in_both_directions() {
     assert_eq!(collapse(&back_to_en.text), collapse(source));
 }
 
+// Minimized from OWBastion/Bastion 7debbcb, src/composition/bootstrap.opy.
+#[test]
+fn map_lists_preserve_adjacent_number_and_localized_text() {
+    let catalog = catalog();
+    let en = en();
+    let zh = zh();
+    for list in ["enabled maps", "disabled maps"] {
+        let source = format!("settings {{ modes {{ Skirmish {{ {list} {{\nRoute 66\n}} }} }} }}");
+        let program = parser::parse_wir(&source, &catalog, &en).expect("English map list");
+        let localized = emitter::emit_wir(&program, &catalog, &zh).expect("Chinese map list");
+        let reparsed =
+            parser::parse_wir(&localized, &catalog, &zh).expect("numeric Chinese map name");
+        assert!(roundtrip::equivalent_wir(&program, &reparsed));
+    }
+}
+
+#[test]
+fn map_lists_preserve_colons_in_map_names() {
+    let catalog = catalog();
+    let en = en();
+    let zh = zh();
+    for list in ["enabled maps", "disabled maps"] {
+        let source = format!(
+            "settings {{ modes {{ Skirmish {{ {list} {{\nWatchpoint: Gibraltar\nEcopoint: Antarctica\n}} }} }} }}"
+        );
+        let program =
+            parser::parse_wir(&source, &catalog, &en).expect("colon-containing map names");
+        let emitted = emitter::emit_wir(&program, &catalog, &en).expect("English map list");
+        let reparsed =
+            parser::parse_wir(&emitted, &catalog, &en).expect("English map list reparses");
+        assert!(roundtrip::equivalent_wir(&program, &reparsed));
+        let localized = emitter::emit_wir(&program, &catalog, &zh).expect("Chinese map list");
+        let reparsed =
+            parser::parse_wir(&localized, &catalog, &zh).expect("Chinese map list reparses");
+        assert!(roundtrip::equivalent_wir(&program, &reparsed));
+    }
+}
+
 #[test]
 fn supported_apostrophe_map_name_parses() {
     let _catalog = catalog();

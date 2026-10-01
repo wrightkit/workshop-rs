@@ -233,7 +233,7 @@ impl ParseContext<'_> {
             self.expect(TokenKind::LBrace, "expected '{' after settings list")?;
             let mut elements = Vec::new();
             while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
-                let (value, value_start, value_end) = self.phrase_on_line()?;
+                let (value, value_start, value_end) = self.settings_list_name()?;
                 let canonical = match entry.kind {
                     KeyKind::ListMap => self
                         .resolve_settings_name_extended(

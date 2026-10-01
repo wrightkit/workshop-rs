@@ -256,6 +256,14 @@ impl<'a> ParseContext<'a> {
     /// Read a single-line phrase (stops at a line boundary). Used for names
     /// that are structurally one per line, such as variable declarations.
     pub(crate) fn phrase_on_line(&mut self) -> Result<(String, Position, Position)> {
+        self.phrase_on_line_impl(false)
+    }
+
+    pub(crate) fn settings_list_name(&mut self) -> Result<(String, Position, Position)> {
+        self.phrase_on_line_impl(true)
+    }
+
+    fn phrase_on_line_impl(&mut self, list_name: bool) -> Result<(String, Position, Position)> {
         let mut words = Vec::new();
         let (start, mut end, line) = match self.peek() {
             Some(Token {
@@ -300,12 +308,24 @@ impl<'a> ParseContext<'a> {
                     start,
                     end,
                 } if matches!(op.as_str(), "-" | "%") => (op.clone(), start, end),
+                Token {
+                    kind: TokenKind::Colon,
+                    start,
+                    end,
+                } if list_name => (":".to_string(), start, end),
                 _ => break,
             };
             if word_start.line != line {
                 break;
             }
-            words.push(word);
+            if list_name && word_start == end {
+                words
+                    .last_mut()
+                    .expect("phrase has a first token")
+                    .push_str(&word);
+            } else {
+                words.push(word);
+            }
             end = word_end;
             self.pos += 1;
         }
