@@ -165,6 +165,24 @@ fn map_lists_preserve_colons_in_map_names() {
 }
 
 #[test]
+fn map_lists_preserve_spaced_colons_in_map_names() {
+    let catalog = catalog();
+    let en = en();
+    let fr = common::locale("fr-FR");
+    for list in ["enabled maps", "disabled maps"] {
+        let source = format!(
+            "settings {{ modes {{ Skirmish {{ {list} {{\nWatchpoint: Gibraltar\nEcopoint: Antarctica\n}} }} }} }}"
+        );
+        let program =
+            parser::parse_wir(&source, &catalog, &en).expect("colon-containing map names");
+        let localized = emitter::emit_wir(&program, &catalog, &fr).expect("French map list");
+        let reparsed =
+            parser::parse_wir(&localized, &catalog, &fr).expect("French map list reparses");
+        assert!(roundtrip::equivalent_wir(&program, &reparsed));
+    }
+}
+
+#[test]
 fn supported_apostrophe_map_name_parses() {
     let _catalog = catalog();
     let source = "settings { modes { Deathmatch { enabled maps { King's Row Winter } } } }";
