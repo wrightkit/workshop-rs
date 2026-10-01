@@ -425,7 +425,10 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
         (wir::Value::GlobalVariable(_), "Global Variable") => true,
         (wir::Value::PlayerVariable { .. }, "Player Variable") => true,
         (wir::Value::Subroutine(_), "Subroutine") => true,
-        (wir::Value::EventPlayer, "Player") => true,
+        // Event Player is statically Player-typed, so it validates like any
+        // other Player-returning expression rather than as an opaque runtime
+        // expression (workshop-rs#336).
+        (wir::Value::EventPlayer, expected) => semantic_types_compatible("Player", expected),
         // Variables and other runtime expressions are intentionally accepted
         // for value contracts whose runtime contents are not statically
         // knowable, but their statically known reference category must not be
@@ -433,8 +436,7 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
         (
             wir::Value::GlobalVariable(_)
             | wir::Value::PlayerVariable { .. }
-            | wir::Value::Subroutine(_)
-            | wir::Value::EventPlayer,
+            | wir::Value::Subroutine(_),
             expected,
         ) => !matches!(
             expected,

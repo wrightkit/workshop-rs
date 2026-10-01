@@ -4372,7 +4372,7 @@
         "Player|Array",
         "DynamicEffect",
         "Color",
-        "Vector",
+        "Vector|Player",
         "Number"
       ],
       "params": [
@@ -7888,7 +7888,7 @@
       ]
     }
   ],
-  "digest": "d9cca56119ddb28dbb9363ca1a2a22db2efb70c9bcd7ac738a7fd985099b7e9a",
+  "digest": "279d8d56f4ed0358d44ddee03bb6f8a790639b35bd53737509a175d09256757e",
   "enums": [
     {
       "domain": "Impulse",
@@ -22428,7 +22428,7 @@
         "Vector",
         "Vector",
         "Array",
-        "Array",
+        "Player|Array",
         "Boolean"
       ],
       "params": [
@@ -22902,7 +22902,7 @@
         "value"
       ],
       "paramTypes": [
-        "Number|Boolean|Vector",
+        "Number|Boolean|Vector|Player",
         "Number|Boolean|Vector"
       ],
       "params": [
@@ -23133,7 +23133,7 @@
         "value"
       ],
       "paramTypes": [
-        "Number|Boolean|Vector",
+        "Number|Boolean|Vector|Player",
         "Number|Boolean|Vector"
       ],
       "params": [
@@ -24462,7 +24462,7 @@
         "losCheck"
       ],
       "paramTypes": [
-        "Vector",
+        "Vector|Player",
         "Number",
         "Team",
         "LosCheck"
@@ -27769,7 +27769,7 @@
         "Vector",
         "Vector",
         "Array",
-        "Array",
+        "Player|Array",
         "Boolean"
       ],
       "params": [
@@ -29182,7 +29182,7 @@
       ],
       "paramTypes": [
         "Player",
-        "Vector"
+        "Vector|Player"
       ],
       "params": [
         "Player",
@@ -29942,5 +29942,5 @@
       "returnType": "Number"
     }
   ],
-  "version": "0.1.8"
+  "version": "0.1.9"
 }
