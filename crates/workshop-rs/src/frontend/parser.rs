@@ -259,6 +259,9 @@ impl<'a> ParseContext<'a> {
         self.phrase_on_line_impl(false)
     }
 
+    /// Read a settings list element name: adjacent tokens stay joined and
+    /// `:` is part of the name, preserving localized spellings such as
+    /// `66号公路` and `Watchpoint: Gibraltar`.
     pub(crate) fn settings_list_name(&mut self) -> Result<(String, Position, Position)> {
         self.phrase_on_line_impl(true)
     }
@@ -329,16 +332,19 @@ impl<'a> ParseContext<'a> {
             end = word_end;
             self.pos += 1;
         }
-        Ok((
-            words
-                .join(" ")
-                .replace(" .", ".")
-                .replace(". ", ".")
-                .replace(" : ", ":")
-                .replace(" %", "%"),
-            start,
-            end,
-        ))
+        let joined = words
+            .join(" ")
+            .replace(" .", ".")
+            .replace(". ", ".")
+            .replace(" %", "%");
+        // Canonical spellings keep the spacing around ':' (e.g. fr-FR
+        // "Observatoire : Gibraltar"); list names must not collapse it.
+        let joined = if list_name {
+            joined
+        } else {
+            joined.replace(" : ", ":")
+        };
+        Ok((joined, start, end))
     }
 
     pub(crate) fn phrase_on_line_with_colon(&mut self) -> Result<(String, Position, Position)> {
