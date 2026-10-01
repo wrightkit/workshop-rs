@@ -16,6 +16,17 @@ pub enum FeatureNamespace {
     Localization,
 }
 
+impl FeatureNamespace {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Catalog => "catalog",
+            Self::Wir => "wir",
+            Self::Settings => "settings",
+            Self::Localization => "localization",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum FeatureKind {
@@ -33,6 +44,27 @@ pub enum FeatureKind {
     Localization,
     ContentId,
     Structural,
+}
+
+impl FeatureKind {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Event => "event",
+            Self::Action => "action",
+            Self::Value => "value",
+            Self::Operator => "operator",
+            Self::Enum => "enum",
+            Self::EnumMember => "enum-member",
+            Self::Setting => "setting",
+            Self::Variable => "variable",
+            Self::Subroutine => "subroutine",
+            Self::ControlFlow => "control-flow",
+            Self::String => "string",
+            Self::Localization => "localization",
+            Self::ContentId => "content-id",
+            Self::Structural => "structural",
+        }
+    }
 }
 
 impl From<Kind> for FeatureKind {
@@ -106,6 +138,14 @@ impl FeatureId {
             FeatureKind::EnumMember,
             format!("{domain}/{member}"),
         )
+    }
+
+    pub fn owned(
+        namespace: FeatureNamespace,
+        kind: FeatureKind,
+        name: impl Into<String>,
+    ) -> Result<Self, ConformanceError> {
+        Self::new(namespace, kind, name)
     }
 }
 

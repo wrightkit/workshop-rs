@@ -8,7 +8,7 @@ pub use super::census::{CENSUS_IDENTITY_SCHEMA_VERSION, CensusIdentity};
 use super::conformance::{
     ConformanceResult, ConformanceStatus, Equivalence, FeatureId, TestArtifact, is_sha256_digest,
 };
-use workshop_rs::catalog::{CatalogIdentity, Locale};
+use workshop_rs::catalog::{Catalog, CatalogIdentity, Locale};
 
 /// The current machine-readable live-capture schema version.
 pub const LIVE_CAPTURE_SCHEMA_VERSION: u32 = 1;
@@ -42,6 +42,15 @@ impl LiveCapture {
     /// captures may refer to an older catalog identity, so this does not
     /// silently substitute the current bundled catalog.
     pub fn validate(&self) -> Result<(), LiveCaptureError> {
+        self.validate_structural(None)
+    }
+
+    /// Validate a current capture against the loaded canonical catalog.
+    pub fn validate_against(&self, catalog: &Catalog) -> Result<(), LiveCaptureError> {
+        self.validate_structural(Some(catalog))
+    }
+
+    fn validate_structural(&self, catalog: Option<&Catalog>) -> Result<(), LiveCaptureError> {
         if self.schema_version != LIVE_CAPTURE_SCHEMA_VERSION {
             return Err(invalid(format!(
                 "unsupported live capture schema version {}; expected {}",
@@ -59,6 +68,13 @@ impl LiveCapture {
         if normalize_game(&self.catalog.target.game) != normalize_game(&self.game) {
             return Err(invalid("capture game does not match catalog target game"));
         }
+        if let Some(catalog) = catalog {
+            if self.catalog != catalog.identity() {
+                return Err(invalid(
+                    "capture catalog identity does not match the loaded catalog",
+                ));
+            }
+        }
         validate_census(&self.census)?;
         validate_artifact("rawArtifact", &self.raw_artifact, true)?;
         if self.results.is_empty() {
@@ -69,9 +85,11 @@ impl LiveCapture {
 
         let mut case_ids = HashSet::with_capacity(self.results.len());
         for (index, result) in self.results.iter().enumerate() {
-            result
-                .validate()
-                .map_err(|error| invalid(format!("results[{index}]: {error}")))?;
+            let validation = match catalog {
+                Some(catalog) => result.validate_against(catalog),
+                None => result.validate(),
+            };
+            validation.map_err(|error| invalid(format!("results[{index}]: {error}")))?;
             if !case_ids.insert(&result.case_id) {
                 return Err(invalid(format!(
                     "results[{index}].caseId duplicates another capture result"
@@ -475,7 +493,7 @@ mod tests {
     }
 
     fn feature(name: &str) -> FeatureId {
-        FeatureId::new(FeatureNamespace::Wir, FeatureKind::Structural, name)
+        FeatureId::owned(FeatureNamespace::Wir, FeatureKind::Structural, name)
             .expect("constructed feature identity")
     }
 
