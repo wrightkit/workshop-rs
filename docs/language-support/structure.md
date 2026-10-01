@@ -37,3 +37,13 @@
 | `Call Subroutine` | ✅ Supported | Synchronous subroutine call: `Call Subroutine(SubName)`. |
 | `Start Rule` | ✅ Supported | Asynchronous subroutine rule invocation: `Start Rule(SubName, RestartBehavior)`. |
 | `Subroutine` event rule | ✅ Supported | Rule event block `event { Subroutine; SubName; }` triggered by subroutine calls. |
+
+Variable names are bound to slots at parse time. A name without a matching
+`variables` declaration allocates an implicit variable at the next free index
+rather than failing, so programs exported without a `variables` block remain
+valid (workshop-rs#341). Subroutine names are stricter: an undeclared
+subroutine name is an unknown-spelling error.
+
+Canonical validation rejects calls that supply fewer arguments than the
+signature's required parameters; trailing parameters with catalog defaults
+(such as `Wait`'s `waitBehavior`) are optional.

@@ -401,6 +401,25 @@ fn canonical_validation_enforces_declared_arity_and_enum_domain() {
             .contains("action 'wait' expects 1..2 argument(s), got 0")
     );
 
+    // A partially supplied signature is rejected with a source-located
+    // diagnostic, not only an empty argument list (workshop-rs#341).
+    let partial = r#"rule ("partial") { event { Ongoing - Global; } actions { Big Message(All Players(All Teams)); } }"#;
+    let program = internal::parse(partial);
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
+        .expect_err("a call missing a required trailing argument must be rejected");
+    assert!(
+        error
+            .to_string()
+            .contains("action 'bigMessage' expects 2..2 argument(s), got 1")
+    );
+    assert!(
+        matches!(
+            error,
+            workshop_rs::WorkshopError::Unsupported { span: Some(_), .. }
+        ),
+        "the arity diagnostic must carry a source span"
+    );
+
     let wrong_domain = r#"rule ("domain") { event { Ongoing - Global; } actions { Set Invisible(All Players(All Teams), Color(White)); } }"#;
     let program = internal::parse(wrong_domain);
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
@@ -410,6 +429,31 @@ fn canonical_validation_enforces_declared_arity_and_enum_domain() {
             .to_string()
             .contains("action 'setInvisibility' argument 2")
     );
+}
+
+#[test]
+fn canonical_validation_records_issue_341_owner_decisions() {
+    let catalog = catalog();
+    // workshop-rs#341: `Wait(1)` is accepted — the catalog declares a default
+    // (`Wait.IGNORE_CONDITION`) for `wait`'s trailing `waitBehavior`
+    // parameter, so one argument is the canonical form.
+    let program =
+        internal::parse(r#"rule ("r") { event { Ongoing - Global; } actions { Wait(1); } }"#);
+    validate::validate_canonical_ids_wir(&program, &catalog)
+        .expect("Wait(1) is canonical: waitBehavior carries a declared default");
+    program.validate().expect("Wait(1) is structurally valid");
+
+    // workshop-rs#341: `Set Global Variable(nope, 1)` is accepted — raw
+    // Workshop binds variable names to slots, so an undeclared name allocates
+    // an implicit variable on first use rather than failing validation.
+    let program = internal::parse(
+        r#"variables { global: 0: x } rule ("r") { event { Ongoing - Global; } actions { Set Global Variable(nope, 1); } }"#,
+    );
+    validate::validate_canonical_ids_wir(&program, &catalog)
+        .expect("an undeclared variable name allocates an implicit slot");
+    program
+        .validate()
+        .expect("implicit variable allocation is structurally valid");
 }
 
 #[test]

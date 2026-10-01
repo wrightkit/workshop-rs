@@ -174,10 +174,23 @@ pub(crate) fn validate_call_signature(
     if entry.param_count() == 0 && entry.required_param_count() == 0 {
         return Ok(());
     }
-    // Trailing defaults may make a signature partial, but every supplied
-    // argument is still checked against its declared position.
-    if (args.is_empty() && entry.required_param_count() > 0)
-        || (!entry.is_variadic() && args.len() > entry.param_count())
+    // `Stop Chasing Player Variable` packs its source `(player, variable)`
+    // arguments into one `PlayerVariable` value whose shape the parser
+    // already enforces, so that single WIR argument covers both declared
+    // positions.
+    let supplied = args.len()
+        + usize::from(matches!(
+            (entry.id.as_str(), args),
+            ("stopChasingPlayerVariable", [arg]) if matches!(
+                program.values.get(*arg).map(|node| &node.value),
+                Some(wir::Value::PlayerVariable { .. })
+            )
+        ));
+    // Trailing defaults may make a signature partial, but every declared
+    // required position must be supplied, and every supplied argument is
+    // still checked against its declared position.
+    if supplied < entry.required_param_count()
+        || (!entry.is_variadic() && supplied > entry.param_count())
     {
         return Err(WorkshopError::Unsupported {
             message: format!(
@@ -187,7 +200,7 @@ pub(crate) fn validate_call_signature(
                 entry.required_param_count(),
                 entry.param_count(),
                 if entry.is_variadic() { "+" } else { "" },
-                args.len()
+                supplied
             ),
             span,
         });

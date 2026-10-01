@@ -8,6 +8,12 @@ use crate::wir;
 /// Validate every builtin reference in a Workshop-origin WIR program against
 /// the canonical catalog: action/value call names must be known canonical ids,
 /// and event/enum references must resolve to canonical identities.
+///
+/// Calls must supply every declared parameter that carries no catalog default;
+/// a trailing parameter with a declared default (for example `Wait`'s
+/// `waitBehavior`) is optional and may be omitted. Variable names are bound at
+/// parse time: an undeclared name allocates an implicit variable slot rather
+/// than failing validation.
 pub fn validate_canonical_ids(program: &crate::Program, catalog: &Catalog) -> Result<()> {
     let storage = program.to_wir()?;
     validate_wir(&storage, catalog)
