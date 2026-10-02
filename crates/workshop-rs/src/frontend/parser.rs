@@ -80,9 +80,8 @@ pub(crate) fn parse_wir_with_context(
     locale: &Locale,
     context: &dyn ExpectedDomain,
 ) -> Result<wir::Program> {
-    let tokens = tokenize(input).map_err(|error| WorkshopError::Malformed {
-        message: error.message,
-        span: Some(synthetic_span(error.position)),
+    let tokens = tokenize(input).map_err(|error| {
+        WorkshopError::malformed(error.message, Some(synthetic_span(error.position)))
     })?;
     ParseContext {
         tokens,
@@ -508,10 +507,10 @@ impl<'a> ParseContext<'a> {
             }
             Some(token) if token.start.line > self.previous().end.line => {
                 let end = self.previous().end;
-                Err(WorkshopError::Malformed {
-                    message: message.to_string(),
-                    span: Some(Span::new(self.file(), end, end)),
-                })
+                Err(WorkshopError::malformed(
+                    message.to_string(),
+                    Some(Span::new(self.file(), end, end)),
+                ))
             }
             Some(token) => Err(self.malformed(message, &token)),
             None => Err(self.malformed(message, self.eof())),
@@ -530,19 +529,14 @@ impl<'a> ParseContext<'a> {
     }
 
     pub(crate) fn malformed(&self, message: &str, token: &Token) -> WorkshopError {
-        WorkshopError::Malformed {
-            message: message.to_string(),
-            span: Some(Span::new(self.file(), token.start, token.end)),
-        }
+        WorkshopError::malformed(
+            message.to_string(),
+            Some(Span::new(self.file(), token.start, token.end)),
+        )
     }
 
     pub(crate) fn unknown(&self, kind: &'static str, spelling: &str) -> WorkshopError {
-        WorkshopError::Unknown {
-            kind,
-            spelling: spelling.to_string(),
-            locale: self.locale.clone(),
-            span: None,
-        }
+        WorkshopError::unknown(kind, spelling.to_string(), self.locale.clone(), None)
     }
 
     pub(crate) fn peek(&self) -> Option<Token> {

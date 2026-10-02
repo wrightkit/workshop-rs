@@ -660,16 +660,18 @@ impl ParseContext<'_> {
                             | "while"
                     )
                 });
-        is_action.then(|| WorkshopError::Malformed {
-            message: format!(
-                "action '{phrase}' cannot be used as a {}",
-                if self.in_condition {
-                    "condition"
-                } else {
-                    "value"
-                }
-            ),
-            span: Some(Span::new(self.file(), start, self.call_site_end(end))),
+        is_action.then(|| {
+            WorkshopError::malformed(
+                format!(
+                    "action '{phrase}' cannot be used as a {}",
+                    if self.in_condition {
+                        "condition"
+                    } else {
+                        "value"
+                    }
+                ),
+                Some(Span::new(self.file(), start, self.call_site_end(end))),
+            )
         })
     }
 
@@ -1072,12 +1074,12 @@ impl ParseContext<'_> {
         span: Option<Span>,
     ) -> Result<wir::ValueId> {
         let Some(entry) = self.catalog.resolve_localized_string(&self.locale, &text) else {
-            return Err(WorkshopError::Unknown {
-                kind: "localized string",
-                spelling: text,
-                locale: self.locale.clone(),
+            return Err(WorkshopError::unknown(
+                "localized string",
+                text,
+                self.locale.clone(),
                 span,
-            });
+            ));
         };
         Ok(self.target.values.push(ValueNode::new(
             Value::LocalizedString(entry.id.clone()),

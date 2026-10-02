@@ -35,11 +35,8 @@ impl ParseContext<'_> {
         let entry = self
             .catalog
             .resolve(Kind::Event, &self.locale, name_line)
-            .ok_or_else(|| WorkshopError::Unknown {
-                kind: "event",
-                spelling: name_line.to_string(),
-                locale: self.locale.clone(),
-                span: None,
+            .ok_or_else(|| {
+                WorkshopError::unknown("event", name_line.to_string(), self.locale.clone(), None)
             })?;
         match entry.id.as_str() {
             "global" => {
@@ -78,10 +75,10 @@ impl ParseContext<'_> {
             }
             other => match PlayerEventKind::from_catalog_id(other) {
                 Some(kind) => self.player_event(&lines, kind),
-                None => Err(WorkshopError::Unsupported {
-                    message: format!("unsupported event '{other}'"),
-                    span: None,
-                }),
+                None => Err(WorkshopError::unsupported(
+                    format!("unsupported event '{other}'"),
+                    None,
+                )),
             },
         }
     }
@@ -110,22 +107,22 @@ impl ParseContext<'_> {
             if allow_empty {
                 return Ok((EventTeam::All, EventTarget::All));
             }
-            return Err(WorkshopError::Malformed {
-                message: format!("event '{event_id}' requires team and player parameters"),
-                span: None,
-            });
+            return Err(WorkshopError::malformed(
+                format!("event '{event_id}' requires team and player parameters"),
+                None,
+            ));
         }
         if parameters.len() != 2 {
             if event_id == "eachPlayer" {
-                return Err(WorkshopError::Unsupported {
-                    message: format!("event '{event_id}' requires both team and player parameters"),
-                    span: None,
-                });
+                return Err(WorkshopError::unsupported(
+                    format!("event '{event_id}' requires both team and player parameters"),
+                    None,
+                ));
             }
-            return Err(WorkshopError::Malformed {
-                message: format!("event '{event_id}' requires team and player parameters"),
-                span: None,
-            });
+            return Err(WorkshopError::malformed(
+                format!("event '{event_id}' requires team and player parameters"),
+                None,
+            ));
         }
         let team_member = self
             .resolve_enum_member_mixed("EventTeam", parameters[0])
@@ -167,9 +164,9 @@ impl ParseContext<'_> {
     }
 
     pub(crate) fn unsupported_event_parameters(&self, event_id: &str) -> WorkshopError {
-        WorkshopError::Unsupported {
-            message: format!("event '{event_id}' does not accept parameters"),
-            span: None,
-        }
+        WorkshopError::unsupported(
+            format!("event '{event_id}' does not accept parameters"),
+            None,
+        )
     }
 }

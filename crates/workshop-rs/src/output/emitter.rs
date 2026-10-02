@@ -162,13 +162,6 @@ impl EmitContext<'_> {
         Ok(())
     }
 
-    pub(crate) fn malformed(&self, message: impl Into<String>) -> WorkshopError {
-        WorkshopError::Malformed {
-            message: message.into(),
-            span: None,
-        }
-    }
-
     pub(crate) fn indent(&mut self, level: usize) {
         for _ in 0..level {
             self.out.push_str("    ");

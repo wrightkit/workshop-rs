@@ -78,10 +78,10 @@ pub fn action_width(
             message: error.to_string(),
         })?;
     let rule = storage.rules.iter().next().ok_or_else(|| {
-        ActionLayoutError::Emission(crate::WorkshopError::Malformed {
-            message: "action layout program has no rule".to_string(),
-            span: None,
-        })
+        ActionLayoutError::Emission(crate::WorkshopError::malformed(
+            "action layout program has no rule".to_string(),
+            None,
+        ))
     })?;
     action_width_wir(&storage, catalog, locale, &rule.actions).map_err(|error| match error {
         WIRActionLayoutError::InvalidWIR(error) => ActionLayoutError::InvalidProgram {

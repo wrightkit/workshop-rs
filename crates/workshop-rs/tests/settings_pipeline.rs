@@ -319,7 +319,7 @@ fn unknown_settings_list_members_remain_semantically_incomplete() {
     let program = internal::parse(source);
     assert!(program.semantic_issues(&catalog).iter().any(|issue| {
         issue.kind == workshop_rs::rules::IncompletenessKind::RawSetting
-            && issue.name == "enabledMaps"
+            && issue.name == "Future Map"
     }));
 }
 
@@ -1288,4 +1288,215 @@ fn check_emission_mirrors_emitter_acceptance() {
             .to_string()
             .contains("does not match its table kind")
     );
+}
+
+/// workshop-rs#360 reproducer: the raw Workshop settings block where only the
+/// marked key and map spelling differ between the three reported cases.
+fn issue_360_source(key: &str, map: &str) -> String {
+    format!(
+        r#"settings
+{{
+    main
+    {{
+        Description: "map spelling"
+    }}
+
+    modes
+    {{
+        Deathmatch
+        {{
+            {key}
+            {{
+                {map}
+            }}
+        }}
+    }}
+}}
+
+rule("r")
+{{
+    event
+    {{
+        Ongoing - Global;
+    }}
+
+    actions
+    {{
+        Wait(1, Ignore Condition);
+    }}
+}}
+"#
+    )
+}
+
+/// `check` (parse + `Program::validate`) and `compile` (`emitter::emit`) must
+/// agree on settings blocks: same failure, same message, same span.
+fn assert_check_compile_parity(source: &str) {
+    let program = parser::parse(source, &catalog(), &en()).expect("source parses");
+    let check = program.validate();
+    let compile = emitter::emit(&program, &catalog(), &en());
+    match (check, compile) {
+        (Ok(()), Ok(_)) => {}
+        (Err(check_error), Err(compile_error)) => {
+            assert_eq!(check_error.to_string(), compile_error.to_string());
+            assert_eq!(check_error.span(), compile_error.span());
+        }
+        (check, compile) => panic!("check/compile disagree: check={check:?} compile={compile:?}"),
+    }
+}
+
+#[test]
+fn issue_360_exact_spellings_pass_check_and_compile() {
+    assert_check_compile_parity(&issue_360_source("enabled maps", "Château Guillard"));
+}
+
+#[test]
+fn issue_360_settings_names_match_case_insensitively() {
+    // The client accepts case variants (Deltinteger/OverPy decompilers match
+    // case-insensitively): `Enabled Maps` must not be rejected or warned.
+    for (key, map) in [
+        ("Enabled Maps", "Château Guillard"),
+        ("ENABLED MAPS", "CHÂTEAU GUILLARD"),
+        ("enabled maps", "château guillard"),
+    ] {
+        assert_check_compile_parity(&issue_360_source(key, map));
+    }
+}
+
+#[test]
+fn issue_360_accent_stripped_map_is_rejected_with_suggestion() {
+    let source = issue_360_source("enabled maps", "Chateau Guillard");
+    let program = parser::parse(&source, &catalog(), &en()).expect("source parses");
+    let error = program.validate().expect_err("check rejects the map");
+    assert!(
+        error
+            .to_string()
+            .contains("unknown map 'Chateau Guillard' in settings list 'enabledMaps'"),
+        "{error}"
+    );
+    assert!(
+        error
+            .to_string()
+            .contains("did you mean 'Château Guillard'?"),
+        "{error}"
+    );
+    assert!(error.span().is_some());
+    // The structured diagnostic carries the suggestion so a caller can
+    // apply it without parsing the message.
+    let diagnostics = program.settings_diagnostics();
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(
+        diagnostics[0].suggestion.as_deref(),
+        Some("Château Guillard")
+    );
+    assert_check_compile_parity(&source);
+}
+
+#[test]
+fn issue_360_distant_and_ambiguous_spellings_suggest_nothing() {
+    // Distant spelling: no candidate is close.
+    let source = issue_360_source("enabled maps", "Zzyzx Wonderland");
+    let program = parser::parse(&source, &catalog(), &en()).expect("source parses");
+    let error = program.validate().expect_err("check rejects the map");
+    assert!(!error.to_string().contains("did you mean"), "{error}");
+    assert!(
+        program
+            .settings_diagnostics()
+            .iter()
+            .all(|diagnostic| diagnostic.suggestion.is_none())
+    );
+
+    // Ambiguous spelling: `Team 1` and `Team 2` tie on `Team X` in the
+    // heroes namespace, so no suggestion is emitted.
+    let ambiguous = r#"settings
+{
+    heroes
+    {
+        Team X
+        {
+            Ana
+            {
+            }
+        }
+    }
+}
+rule("r")
+{
+    event
+    {
+        Ongoing - Global;
+    }
+    actions
+    {
+        Wait(1, Ignore Condition);
+    }
+}
+"#;
+    match parser::parse(ambiguous, &catalog(), &en()) {
+        Err(error) => {
+            assert!(!error.to_string().contains("did you mean"), "{error}");
+        }
+        Ok(program) => {
+            let diagnostics = program.settings_diagnostics();
+            assert!(!diagnostics.is_empty(), "an unknown team is rejected");
+            assert!(
+                diagnostics
+                    .iter()
+                    .all(|diagnostic| diagnostic.suggestion.is_none()),
+                "{diagnostics:?}"
+            );
+        }
+    }
+}
+
+#[test]
+fn issue_360_unknown_braced_key_suggests_canonical_spelling() {
+    // `Enabled Mpas` does not resolve, so the braced member is an opaque
+    // group that emission rejects; the diagnostic names `enabled maps`.
+    let source = issue_360_source("Enabled Mpas", "Château Guillard");
+    let program = parser::parse(&source, &catalog(), &en()).expect("source parses");
+    let error = program.validate().expect_err("check rejects the key");
+    assert!(
+        error.to_string().contains("outside the emission table"),
+        "{error}"
+    );
+    assert!(
+        error.to_string().contains("did you mean 'enabled maps'?"),
+        "{error}"
+    );
+    let diagnostics = program.settings_diagnostics();
+    assert_eq!(diagnostics.len(), 1);
+    assert_eq!(diagnostics[0].suggestion.as_deref(), Some("enabled maps"));
+    assert_check_compile_parity(&source);
+}
+
+#[test]
+fn issue_360_opaque_settings_remain_verbatim() {
+    // Unrecognized leaf members and `settings.workshop` payloads stay
+    // project-defined: both check and compile accept them unchanged.
+    let source = r#"settings
+{
+    main
+    {
+        Project Custom Field: 3
+    }
+
+    workshop
+    {
+        Custom Payload: anything goes
+    }
+}
+rule("r")
+{
+    event
+    {
+        Ongoing - Global;
+    }
+    actions
+    {
+        Wait(1, Ignore Condition);
+    }
+}
+"#;
+    assert_check_compile_parity(source);
 }

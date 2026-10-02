@@ -531,14 +531,14 @@ impl ParseContext<'_> {
                 _ => {
                     if matches!(self.peek_at(1).map(|token| token.kind), Some(TokenKind::Op(equal)) if equal == "=")
                     {
-                        return Err(WorkshopError::Unsupported {
-                            message: format!("unsupported assignment operator '{word}='"),
-                            span: Some(Span::new(
+                        return Err(WorkshopError::unsupported(
+                            format!("unsupported assignment operator '{word}='"),
+                            Some(Span::new(
                                 self.file(),
                                 token.start,
                                 self.peek_at(1).unwrap().end,
                             )),
-                        });
+                        ));
                     }
                     return Ok(None);
                 }
@@ -839,12 +839,10 @@ impl ParseContext<'_> {
                         callee_span: Some(Span::new(self.file(), name_start, name_end)),
                     }))
                 }
-                other => Err(WorkshopError::Unsupported {
-                    message: format!(
-                        "structural action '{other}' is not supported in action position"
-                    ),
-                    span: Some(Span::new(self.file(), start, end)),
-                }),
+                other => Err(WorkshopError::unsupported(
+                    format!("structural action '{other}' is not supported in action position"),
+                    Some(Span::new(self.file(), start, end)),
+                )),
             },
             None => {
                 // Generic action call; the argument list is optional.
@@ -852,12 +850,12 @@ impl ParseContext<'_> {
                     .resolve_entry(Kind::Action, &phrase)
                     .or_else(|| self.resolve_entry(Kind::Action, &format!("{phrase} ")))
                 else {
-                    return Err(WorkshopError::Unknown {
-                        kind: "action",
-                        spelling: phrase,
-                        locale: self.locale.clone(),
-                        span: Some(Span::new(self.file(), start, end)),
-                    });
+                    return Err(WorkshopError::unknown(
+                        "action",
+                        phrase,
+                        self.locale.clone(),
+                        Some(Span::new(self.file(), start, end)),
+                    ));
                 };
                 // The player-variable chase forms lay the variable out as
                 // `player, name` leading arguments (the pinned oracle's
@@ -985,15 +983,19 @@ impl ParseContext<'_> {
         let entry = self
             .catalog
             .resolve(Kind::Operator, &self.locale, &phrase)
-            .ok_or_else(|| WorkshopError::Unknown {
-                kind: "modify operator",
-                spelling: phrase.clone(),
-                locale: self.locale.clone(),
-                span: Some(Span::new(self.file(), start, end)),
+            .ok_or_else(|| {
+                WorkshopError::unknown(
+                    "modify operator",
+                    phrase.clone(),
+                    self.locale.clone(),
+                    Some(Span::new(self.file(), start, end)),
+                )
             })?;
-        ModifyOp::from_catalog_id(&entry.id).ok_or_else(|| WorkshopError::Unsupported {
-            message: format!("unsupported modify operator '{}'", entry.id),
-            span: Some(Span::new(self.file(), start, end)),
+        ModifyOp::from_catalog_id(&entry.id).ok_or_else(|| {
+            WorkshopError::unsupported(
+                format!("unsupported modify operator '{}'", entry.id),
+                Some(Span::new(self.file(), start, end)),
+            )
         })
     }
 }

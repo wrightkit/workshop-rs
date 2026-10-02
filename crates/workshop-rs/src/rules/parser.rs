@@ -291,14 +291,8 @@ impl ParseContext<'_> {
         name: &str,
         span: Option<Span>,
     ) -> Result<wir::SubroutineId> {
-        self.subroutines
-            .get(name)
-            .copied()
-            .ok_or_else(|| WorkshopError::Unknown {
-                kind: "subroutine",
-                spelling: name.to_string(),
-                locale: self.locale.clone(),
-                span,
-            })
+        self.subroutines.get(name).copied().ok_or_else(|| {
+            WorkshopError::unknown("subroutine", name.to_string(), self.locale.clone(), span)
+        })
     }
 }

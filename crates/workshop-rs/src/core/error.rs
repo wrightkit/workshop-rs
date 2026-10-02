@@ -32,6 +32,49 @@ pub enum WorkshopError {
     Unsupported { message: String, span: Option<Span> },
 }
 
+impl WorkshopError {
+    /// A `Malformed` error.
+    pub fn malformed(message: impl Into<String>, span: Option<Span>) -> Self {
+        WorkshopError::Malformed {
+            message: message.into(),
+            span,
+        }
+    }
+
+    /// An `Unknown` spelling error.
+    pub fn unknown(
+        kind: &'static str,
+        spelling: impl Into<String>,
+        locale: Locale,
+        span: Option<Span>,
+    ) -> Self {
+        WorkshopError::Unknown {
+            kind,
+            spelling: spelling.into(),
+            locale,
+            span,
+        }
+    }
+
+    /// An `Unsupported` construct error.
+    pub fn unsupported(message: impl Into<String>, span: Option<Span>) -> Self {
+        WorkshopError::Unsupported {
+            message: message.into(),
+            span,
+        }
+    }
+
+    /// The source span attached to this error, when recorded.
+    pub fn span(&self) -> Option<Span> {
+        match self {
+            WorkshopError::Unknown { span, .. }
+            | WorkshopError::Malformed { span, .. }
+            | WorkshopError::Unsupported { span, .. } => *span,
+            WorkshopError::Catalog(_) | WorkshopError::MissingMapping { .. } => None,
+        }
+    }
+}
+
 /// Catalog-specific error.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]

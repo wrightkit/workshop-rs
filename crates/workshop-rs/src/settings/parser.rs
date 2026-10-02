@@ -25,7 +25,7 @@ impl ParseContext<'_> {
                                 "namespaces",
                                 "workshop",
                             )
-                            .is_some_and(|name| name == display) =>
+                            .is_some_and(|name| table::names_eq(name, &display)) =>
                     {
                         "workshop"
                     }
@@ -552,12 +552,14 @@ impl ParseContext<'_> {
         hero: Option<&str>,
     ) -> bool {
         if let Some(PathPart::Part(key)) = candidate.path.last() {
-            if display == *key {
+            if table::names_eq(display, key) {
                 return true;
             }
         }
         if let (Some(hero), Some(PathPart::Part(key))) = (hero, candidate.path.last()) {
-            if table::hero_setting_name(hero, key, self.locale.as_str()) == Some(display) {
+            if table::hero_setting_name(hero, key, self.locale.as_str())
+                .is_some_and(|name| table::names_eq(name, display))
+            {
                 return true;
             }
             if table::hero_setting_alias(hero, key, self.locale.as_str(), display) {
@@ -578,7 +580,7 @@ impl ParseContext<'_> {
                             .query()
                             .ability_name(hero, slot, None, self.locale.as_str())
                             .ok()
-                            .map(|name| name == display)
+                            .map(|name| table::names_eq(name, display))
                     })
                     .unwrap_or(false);
             }
@@ -594,18 +596,18 @@ impl ParseContext<'_> {
     ) -> bool {
         let localized = table::localized_name(self.locale.as_str(), section, english);
         localized
-            .is_some_and(|localized| localized == display)
+            .is_some_and(|localized| table::names_eq(localized, display))
             // Real Workshop exports can mix the selected locale with
             // primary-locale labels when a reviewed mapping is absent.
             // Accept that source spelling for parsing, while emission
             // still fails explicitly if the target mapping is missing.
-            || display == english
+            || table::names_eq(display, english)
     }
 
     fn settings_namespace_matches(&self, name: &str, display: &str) -> bool {
         table::localized_name(self.locale.as_str(), "namespaces", name)
-            .is_some_and(|localized| localized == display)
-            || display == name
+            .is_some_and(|localized| table::names_eq(localized, display))
+            || table::names_eq(display, name)
     }
 
     pub(crate) fn settings_span(&self, start: Position) -> Span {

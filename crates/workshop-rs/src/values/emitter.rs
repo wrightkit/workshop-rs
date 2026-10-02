@@ -3,10 +3,10 @@ use crate::output::emitter::*;
 impl<'a> EmitContext<'a> {
     pub(crate) fn value(&mut self, id: wir::ValueId, out: &mut String) -> Result<()> {
         let Some(node) = self.program.values.get(id) else {
-            return Err(WorkshopError::Malformed {
-                message: format!("dangling value {id}"),
-                span: None,
-            });
+            return Err(WorkshopError::malformed(
+                format!("dangling value {id}"),
+                None,
+            ));
         };
         match &node.value {
             wir::Value::Number { text, .. } => {
@@ -91,9 +91,11 @@ impl<'a> EmitContext<'a> {
                     .subroutines
                     .get(*subroutine)
                     .map(|value| value.name.clone())
-                    .ok_or_else(|| WorkshopError::Malformed {
-                        message: format!("dangling subroutine value {subroutine}"),
-                        span: None,
+                    .ok_or_else(|| {
+                        WorkshopError::malformed(
+                            format!("dangling subroutine value {subroutine}"),
+                            None,
+                        )
                     })?;
                 out.push_str(&name);
             }
@@ -104,20 +106,20 @@ impl<'a> EmitContext<'a> {
             wir::Value::Call { name, args } => {
                 if name == "memberAccess" {
                     if args.len() < 2 || args.len() > 3 {
-                        return Err(WorkshopError::Malformed {
-                            message: "memberAccess expects two or three arguments".to_string(),
-                            span: node.span,
-                        });
+                        return Err(WorkshopError::malformed(
+                            "memberAccess expects two or three arguments".to_string(),
+                            node.span,
+                        ));
                     }
                     let Some(wir::ValueNode {
                         value: wir::Value::String(member),
                         ..
                     }) = self.program.values.get(args[1])
                     else {
-                        return Err(WorkshopError::Malformed {
-                            message: "memberAccess member must be a string".to_string(),
-                            span: node.span,
-                        });
+                        return Err(WorkshopError::malformed(
+                            "memberAccess member must be a string".to_string(),
+                            node.span,
+                        ));
                     };
                     let bare_event_player = self
                         .program
@@ -142,10 +144,10 @@ impl<'a> EmitContext<'a> {
                 if wir::is_comparison_operator(name) {
                     // Canonical form: Compare(a, op, b).
                     if args.len() != 2 {
-                        return Err(WorkshopError::Malformed {
-                            message: format!("comparison call '{name}' must have 2 args"),
-                            span: None,
-                        });
+                        return Err(WorkshopError::malformed(
+                            format!("comparison call '{name}' must have 2 args"),
+                            None,
+                        ));
                     }
                     out.push_str(self.spelling(Kind::Value, "compare")?);
                     out.push('(');
@@ -266,16 +268,16 @@ impl<'a> EmitContext<'a> {
         out: &mut String,
     ) -> Result<()> {
         let Some(node) = self.program.values.get(id) else {
-            return Err(WorkshopError::Malformed {
-                message: format!("dangling value {id}"),
-                span: None,
-            });
+            return Err(WorkshopError::malformed(
+                format!("dangling value {id}"),
+                None,
+            ));
         };
         let wir::Value::LocalizedString(id) = &node.value else {
-            return Err(WorkshopError::Unsupported {
-                message: "value 'string' argument 1 must be localized string text".to_string(),
-                span: node.span,
-            });
+            return Err(WorkshopError::unsupported(
+                "value 'string' argument 1 must be localized string text",
+                node.span,
+            ));
         };
         let spelling = self.localized_string_spelling(id)?;
         write!(out, "\"{}\"", escape_value_string(spelling)).unwrap();
@@ -430,12 +432,12 @@ impl<'a> EmitContext<'a> {
     /// one (recorded in [`EmitContext::fallback_ids`]).
     pub(crate) fn spelling(&mut self, kind: Kind, id: &str) -> Result<&'a str> {
         let Some(entry) = self.catalog.entry(kind, id) else {
-            return Err(WorkshopError::Unknown {
-                kind: kind.as_str(),
-                spelling: id.to_string(),
-                locale: self.locale.clone(),
-                span: None,
-            });
+            return Err(WorkshopError::unknown(
+                kind.as_str(),
+                id.to_string(),
+                self.locale.clone(),
+                None,
+            ));
         };
         self.localized(kind.as_str(), id, id.to_string(), |locale| {
             entry.spelling(locale)
@@ -469,12 +471,12 @@ impl<'a> EmitContext<'a> {
 
     pub(crate) fn localized_string_spelling(&mut self, id: &str) -> Result<&'a str> {
         if !self.catalog.localized_strings().any(|entry| entry.id == id) {
-            return Err(WorkshopError::Unknown {
-                kind: "localized string",
-                spelling: id.to_string(),
-                locale: self.locale.clone(),
-                span: None,
-            });
+            return Err(WorkshopError::unknown(
+                "localized string",
+                id.to_string(),
+                self.locale.clone(),
+                None,
+            ));
         }
         self.localized(
             "localized string",
@@ -491,12 +493,12 @@ impl<'a> EmitContext<'a> {
         preferred: &str,
     ) -> Result<&'a str> {
         let Some(entry) = self.catalog.entry(kind, id) else {
-            return Err(WorkshopError::Unknown {
-                kind: kind.as_str(),
-                spelling: id.to_string(),
-                locale: self.locale.clone(),
-                span: None,
-            });
+            return Err(WorkshopError::unknown(
+                kind.as_str(),
+                id.to_string(),
+                self.locale.clone(),
+                None,
+            ));
         };
         self.localized(kind.as_str(), id, id.to_string(), |locale| {
             entry
@@ -516,20 +518,20 @@ impl<'a> EmitContext<'a> {
     /// the catalog (fallback-aware; see [`EmitContext::spelling`]).
     pub(crate) fn enum_spelling(&mut self, domain: &str, member: &str) -> Result<&'a str> {
         let Some(domain_entry) = self.catalog.enum_domain(domain) else {
-            return Err(WorkshopError::Unknown {
-                kind: "enum domain",
-                spelling: domain.to_string(),
-                locale: self.locale.clone(),
-                span: None,
-            });
+            return Err(WorkshopError::unknown(
+                "enum domain",
+                domain.to_string(),
+                self.locale.clone(),
+                None,
+            ));
         };
         let Some(member_entry) = domain_entry.members.iter().find(|m| m.member == member) else {
-            return Err(WorkshopError::Unknown {
-                kind: "enum member",
-                spelling: format!("{domain}.{member}"),
-                locale: self.locale.clone(),
-                span: None,
-            });
+            return Err(WorkshopError::unknown(
+                "enum member",
+                format!("{domain}.{member}"),
+                self.locale.clone(),
+                None,
+            ));
         };
         self.localized(
             "enum member",
@@ -541,30 +543,30 @@ impl<'a> EmitContext<'a> {
 
     fn ambiguous_enum_spelling_from_args(&self, args: &[wir::ValueId]) -> Result<String> {
         if args.len() != 2 {
-            return Err(WorkshopError::Malformed {
-                message: "ambiguous enum value expects spelling and candidates".to_string(),
-                span: None,
-            });
+            return Err(WorkshopError::malformed(
+                "ambiguous enum value expects spelling and candidates".to_string(),
+                None,
+            ));
         }
         let Some(wir::ValueNode {
             value: wir::Value::String(spelling),
             ..
         }) = self.program.values.get(args[0])
         else {
-            return Err(WorkshopError::Malformed {
-                message: "ambiguous enum spelling must be a string".to_string(),
-                span: None,
-            });
+            return Err(WorkshopError::malformed(
+                "ambiguous enum spelling must be a string".to_string(),
+                None,
+            ));
         };
         let Some(wir::ValueNode {
             value: wir::Value::Array(candidate_ids),
             ..
         }) = self.program.values.get(args[1])
         else {
-            return Err(WorkshopError::Malformed {
-                message: "ambiguous enum candidates must be an array".to_string(),
-                span: None,
-            });
+            return Err(WorkshopError::malformed(
+                "ambiguous enum candidates must be an array".to_string(),
+                None,
+            ));
         };
         let candidates = candidate_ids
             .iter()
@@ -574,10 +576,10 @@ impl<'a> EmitContext<'a> {
                     ..
                 }) = self.program.values.get(*candidate_id)
                 else {
-                    return Err(WorkshopError::Malformed {
-                        message: "ambiguous enum candidate must be an enum value".to_string(),
-                        span: None,
-                    });
+                    return Err(WorkshopError::malformed(
+                        "ambiguous enum candidate must be an enum value".to_string(),
+                        None,
+                    ));
                 };
                 Ok((value_type.clone(), value.clone()))
             })
@@ -647,10 +649,10 @@ impl<'a> EmitContext<'a> {
     /// argument). Any non-string value falls back to the normal renderer.
     pub(crate) fn bare_string_value(&mut self, id: wir::ValueId, out: &mut String) -> Result<()> {
         let Some(node) = self.program.values.get(id) else {
-            return Err(WorkshopError::Malformed {
-                message: format!("dangling value {id}"),
-                span: None,
-            });
+            return Err(WorkshopError::malformed(
+                format!("dangling value {id}"),
+                None,
+            ));
         };
         if let wir::Value::String(value) = &node.value {
             write!(out, "\"{}\"", escape_value_string(value)).unwrap();

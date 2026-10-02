@@ -108,27 +108,30 @@ fn inspect_setting(node: &SettingsNode, issues: &mut Vec<SemanticIssue>) {
             span: *span,
             classification: ResidualClassification::ProjectDefinedConstruct,
         }),
-        SettingsNode::List {
-            name,
-            elements,
-            span,
-        } => {
-            let known = match name.as_str() {
-                "enabledMaps" | "disabledMaps" => elements
-                    .iter()
-                    .all(|element| table::map_name(&element.value).is_some()),
-                "enabledHeroes" | "disabledHeroes" => elements
-                    .iter()
-                    .all(|element| table::hero_name(&element.value).is_some()),
-                _ => true,
-            };
-            if !known {
-                issues.push(SemanticIssue {
-                    kind: IncompletenessKind::RawSetting,
-                    name: name.clone(),
-                    span: *span,
-                    classification: ResidualClassification::ProjectDefinedConstruct,
-                });
+        SettingsNode::List { name, elements, .. } => {
+            let element_known: fn(&crate::settings::SettingsListElement) -> bool =
+                match name.as_str() {
+                    "enabledMaps" | "disabledMaps" => {
+                        |element: &crate::settings::SettingsListElement| {
+                            table::map_name(&element.value).is_some()
+                        }
+                    }
+                    "enabledHeroes" | "disabledHeroes" => {
+                        |element: &crate::settings::SettingsListElement| {
+                            table::hero_name(&element.value).is_some()
+                        }
+                    }
+                    _ => |_| true,
+                };
+            for element in elements {
+                if !element_known(element) {
+                    issues.push(SemanticIssue {
+                        kind: IncompletenessKind::RawSetting,
+                        name: element.value.clone(),
+                        span: element.span,
+                        classification: ResidualClassification::ProjectDefinedConstruct,
+                    });
+                }
             }
         }
         SettingsNode::Number { .. }
