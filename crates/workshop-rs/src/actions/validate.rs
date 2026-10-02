@@ -13,12 +13,12 @@ pub(crate) fn validate_action(
     match action {
         wir::Action::Call { name, args, span } => {
             let Some(entry) = catalog.entry(Kind::Action, name) else {
-                return Err(WorkshopError::Unknown {
-                    kind: "action",
-                    spelling: name.clone(),
-                    locale: crate::catalog::Locale::new("en-US"),
-                    span: *span,
-                });
+                return Err(WorkshopError::unknown(
+                    "action",
+                    name.clone(),
+                    crate::catalog::Locale::new("en-US"),
+                    *span,
+                ));
             };
             crate::values::validate::validate_call_signature(entry, args, *span, program, catalog)?;
             for arg in args {
@@ -41,10 +41,10 @@ pub(crate) fn validate_action(
             ..
         } => {
             if !is_member_assignment_target(program, *target) {
-                return Err(WorkshopError::Malformed {
-                    message: "AssignMember target must be a memberAccess value".to_string(),
-                    span: *span,
-                });
+                return Err(WorkshopError::malformed(
+                    "AssignMember target must be a memberAccess value".to_string(),
+                    *span,
+                ));
             }
             crate::values::validate::validate_value(program, catalog, *target)?;
             crate::values::validate::validate_value(program, catalog, *value)?;

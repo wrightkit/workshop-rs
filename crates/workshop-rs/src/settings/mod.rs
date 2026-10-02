@@ -14,6 +14,7 @@ pub(crate) mod parser;
 
 pub(crate) mod reconciliation;
 pub(crate) mod schema;
+pub(crate) mod suggest;
 pub(crate) mod table;
 
 /// A segment of a path accepted by settings schema lookups.
@@ -41,7 +42,7 @@ impl<'b> PartialEq<PathPart<'b>> for PathPart<'_> {
 
 impl Eq for PathPart<'_> {}
 
-pub use check::check_emission;
+pub use check::{SettingsDiagnostic, check_emission, check_emission_diagnostics};
 pub use schema::{
     Applicability, EffectiveNumber, NumericBounds, NumericBoundsError, SettingDefinition,
     SettingEnumMember, SettingId, SettingIdentity, SettingOccurrence, SettingOperationError,

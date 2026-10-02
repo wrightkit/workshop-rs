@@ -1,4 +1,6 @@
 use crate::output::emitter::*;
+use crate::settings::suggest;
+use crate::source::Span;
 
 impl EmitContext<'_> {
     /// Emit the `settings { ... }` section from the settings carrier,
@@ -14,7 +16,10 @@ impl EmitContext<'_> {
                 continue;
             }
             let SettingsNode::Group { name, children, .. } = child else {
-                return Err(self.malformed("settings block children must be groups"));
+                return Err(WorkshopError::malformed(
+                    "settings block children must be groups",
+                    child.span(),
+                ));
             };
             match name.as_str() {
                 "main" | "lobby" => {
@@ -76,7 +81,10 @@ impl EmitContext<'_> {
                     self.line(level, &format!("{name}: {value}"))
                 }
             }
-            _ => Err(self.malformed("settings.workshop contains a typed builtin setting")),
+            _ => Err(WorkshopError::malformed(
+                "settings.workshop contains a typed builtin setting",
+                node.span(),
+            )),
         }
     }
 
@@ -86,7 +94,10 @@ impl EmitContext<'_> {
         self.line(1, &format!("{modes_keyword} {{"))?;
         for mode in modes {
             let SettingsNode::Group { name, children, .. } = mode else {
-                return Err(self.malformed("mode entries must be groups"));
+                return Err(WorkshopError::malformed(
+                    "mode entries must be groups",
+                    mode.span(),
+                ));
             };
             let display = match table::mode_name(name) {
                 Some(english) => self.setting_name("modes", english, &format!("mode.{name}"))?,
@@ -130,17 +141,30 @@ impl EmitContext<'_> {
         self.line(1, &format!("{heroes_keyword} {{"))?;
         for team in teams {
             let SettingsNode::Group { name, children, .. } = team else {
-                return Err(self.malformed("team entries must be groups"));
+                return Err(WorkshopError::malformed(
+                    "team entries must be groups",
+                    team.span(),
+                ));
             };
-            let english = table::team_name(name)
-                .ok_or_else(|| self.malformed(format!("unknown team '{name}'")))?;
+            let english = table::team_name(name).ok_or_else(|| {
+                suggested(
+                    format!("unknown team '{name}'"),
+                    suggest::suggest(name, table::team_spellings()),
+                    team.span(),
+                )
+            })?;
             let display = self.setting_name("teams", english, &format!("team.{name}"))?;
             self.line(2, &format!("{display} {{"))?;
             for member in children {
                 match member {
                     SettingsNode::Group { name, children, .. } => {
-                        let english = table::hero_name(name)
-                            .ok_or_else(|| self.malformed(format!("unknown hero '{name}'")))?;
+                        let english = table::hero_name(name).ok_or_else(|| {
+                            suggested(
+                                format!("unknown hero '{name}'"),
+                                suggest::suggest(name, table::hero_spellings()),
+                                member.span(),
+                            )
+                        })?;
                         let hero = self.setting_name("heroes", english, &format!("hero.{name}"))?;
                         self.line(3, &format!("{hero} {{"))?;
                         for inner in children {
@@ -187,10 +211,14 @@ impl EmitContext<'_> {
         let mut full = path.to_vec();
         full.push(PathPart::Part(name));
         let entry = table::lookup(&full).ok_or_else(|| {
-            self.malformed(format!(
-                "settings key '{}' is outside the emission table",
-                table::path_string(&full)
-            ))
+            suggested(
+                format!(
+                    "settings key '{}' is outside the emission table",
+                    table::path_string(&full)
+                ),
+                suggest::suggest(name, table::key_spellings(path).into_iter()),
+                node.span(),
+            )
         })?;
         let display_name = if let (Some(hero), Some(key)) = (
             hero,
@@ -230,7 +258,11 @@ impl EmitContext<'_> {
             }
             (SettingsNode::String { value, .. }, KeyKind::Enum(domain)) => {
                 let english = table::enum_name(domain, value).ok_or_else(|| {
-                    self.malformed(format!("unknown value '{value}' for settings key '{name}'"))
+                    suggested(
+                        format!("unknown value '{value}' for settings key '{name}'"),
+                        suggest::suggest(value, table::enum_spellings(domain)),
+                        node.span(),
+                    )
                 })?;
                 let display =
                     self.setting_name("enums", english, &format!("enum.{domain}.{value}"))?;
@@ -272,11 +304,16 @@ impl EmitContext<'_> {
             }
             (SettingsNode::Bool { value, .. }, KeyKind::BoolEnum(domain)) => {
                 if !*value {
-                    return Err(self
-                        .malformed(format!("unsupported false value for settings key '{name}'")));
+                    return Err(WorkshopError::malformed(
+                        format!("unsupported false value for settings key '{name}'"),
+                        node.span(),
+                    ));
                 }
                 let english = table::enum_name(domain, "enabled").ok_or_else(|| {
-                    self.malformed(format!("unknown value 'enabled' for settings key '{name}'"))
+                    WorkshopError::malformed(
+                        format!("unknown value 'enabled' for settings key '{name}'"),
+                        node.span(),
+                    )
                 })?;
                 let rendered =
                     self.setting_name("enums", english, &format!("enum.{domain}.enabled"))?;
@@ -294,13 +331,22 @@ impl EmitContext<'_> {
                         "hero",
                     )
                 };
+                let spellings: Vec<&'static str> = if entry.kind == KeyKind::ListMap {
+                    table::map_spellings().collect()
+                } else {
+                    table::hero_spellings().collect()
+                };
                 self.line(level, &format!("{display_name} {{"))?;
                 for element in elements {
                     let english = english_name(&element.value).ok_or_else(|| {
-                        self.malformed(format!(
-                            "unknown {label} '{}' in settings list '{name}'",
-                            element.value
-                        ))
+                        suggested(
+                            format!(
+                                "unknown {label} '{}' in settings list '{name}'",
+                                element.value
+                            ),
+                            suggest::suggest(&element.value, spellings.iter().copied()),
+                            element.span,
+                        )
                     })?;
                     let display = self.setting_name(
                         section,
@@ -312,9 +358,10 @@ impl EmitContext<'_> {
                 self.line(level, "}")?;
             }
             _ => {
-                return Err(self.malformed(format!(
-                    "settings key '{name}' does not match its table kind"
-                )));
+                return Err(WorkshopError::malformed(
+                    format!("settings key '{name}' does not match its table kind"),
+                    node.span(),
+                ));
             }
         }
         Ok(())
@@ -403,4 +450,13 @@ impl EmitContext<'_> {
             locale: self.locale.clone(),
         })
     }
+}
+
+/// A `Malformed` rejection whose message names the canonical suggestion when
+/// one was identified — the same rendering `check_emission` produces.
+fn suggested(message: String, suggestion: Option<String>, span: Option<Span>) -> WorkshopError {
+    WorkshopError::malformed(
+        suggest::with_suggestion_text(message, suggestion.as_deref()),
+        span,
+    )
 }

@@ -52,41 +52,41 @@ pub fn resolve_locale(
 ) -> Result<Locale> {
     if let Some(locale) = override_locale {
         if !catalog.supports(locale) {
-            return Err(WorkshopError::Unknown {
-                kind: "locale",
-                spelling: locale.to_string(),
-                locale: locale.clone(),
-                span: None,
-            });
+            return Err(WorkshopError::unknown(
+                "locale",
+                locale.to_string(),
+                locale.clone(),
+                None,
+            ));
         }
         return Ok(locale.clone());
     }
     let detection = detect(input, catalog);
     if detection.matches == 0 {
-        return Err(WorkshopError::Unknown {
-            kind: "language",
-            spelling: "<none>".to_string(),
-            locale: detection.locale,
-            span: None,
-        });
+        return Err(WorkshopError::unknown(
+            "language",
+            "<none>".to_string(),
+            detection.locale,
+            None,
+        ));
     }
     if detection.matches < MIN_MATCHES {
-        return Err(WorkshopError::Unsupported {
-            message: format!(
+        return Err(WorkshopError::unsupported(
+            format!(
                 "insufficient evidence to detect the Workshop client language ({} distinct match(es))",
                 detection.matches
             ),
-            span: None,
-        });
+            None,
+        ));
     }
     if detection.candidates.len() > 1
         && detection.candidates[0].1 == detection.candidates[1].1
         && detection.candidates[0].1 > 0
     {
-        return Err(WorkshopError::Unsupported {
-            message: "ambiguous Workshop client language: multiple locales tie".to_string(),
-            span: None,
-        });
+        return Err(WorkshopError::unsupported(
+            "ambiguous Workshop client language: multiple locales tie",
+            None,
+        ));
     }
     Ok(detection.locale)
 }

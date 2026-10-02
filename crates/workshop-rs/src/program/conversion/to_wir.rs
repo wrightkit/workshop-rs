@@ -118,10 +118,10 @@ impl Program {
                 )?;
             }
             if position != rule.actions.len() {
-                return Err(WorkshopError::Malformed {
-                    message: "unexpected control-flow terminator in rule actions".to_string(),
-                    span: None,
-                });
+                return Err(WorkshopError::malformed(
+                    "unexpected control-flow terminator in rule actions".to_string(),
+                    None,
+                ));
             }
             storage.rules.push(wir::Rule {
                 name: rule.name.clone(),
@@ -159,10 +159,10 @@ fn lower_actions(
                 Action::ElseIf { .. } | Action::Else | Action::End | Action::Disabled { .. }
             )
         {
-            return Err(WorkshopError::Unsupported {
-                message: "the disabled modifier applies to a single executable action".to_string(),
-                span: None,
-            });
+            return Err(WorkshopError::unsupported(
+                "the disabled modifier applies to a single executable action",
+                None,
+            ));
         }
         match current {
             Action::ElseIf { .. } | Action::Else | Action::End => return Ok(()),
@@ -215,10 +215,10 @@ fn lower_actions(
                     None
                 };
                 if !matches!(actions.get(*position), Some(Action::End)) {
-                    return Err(WorkshopError::Malformed {
-                        message: "control-flow action is missing End".to_string(),
-                        span: None,
-                    });
+                    return Err(WorkshopError::malformed(
+                        "control-flow action is missing End".to_string(),
+                        None,
+                    ));
                 }
                 *position += 1;
                 output.push(storage.actions.push(wir::Action::If {
@@ -440,10 +440,10 @@ fn apply_value_provenance(
 
 fn require_end(actions: &[Action], position: &mut usize) -> Result<()> {
     if !matches!(actions.get(*position), Some(Action::End)) {
-        return Err(WorkshopError::Malformed {
-            message: "control-flow action is missing End".to_string(),
-            span: None,
-        });
+        return Err(WorkshopError::malformed(
+            "control-flow action is missing End".to_string(),
+            None,
+        ));
     }
     *position += 1;
     Ok(())
@@ -628,8 +628,5 @@ fn wir_event(
 }
 
 fn unknown_name(kind: &str, name: &str) -> WorkshopError {
-    WorkshopError::Malformed {
-        message: format!("unknown {kind} '{name}'"),
-        span: None,
-    }
+    WorkshopError::malformed(format!("unknown {kind} '{name}'"), None)
 }

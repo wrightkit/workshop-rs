@@ -782,12 +782,108 @@ pub(crate) fn hero_setting_alias(hero: &str, key: &str, locale: &str, display: &
         alias.hero == hero
             && alias.key == key
             && alias.locale.eq_ignore_ascii_case(locale)
-            && alias.display == display
+            && names_eq(&alias.display, display)
     })
 }
 
 fn name_in(maps: &[NameMap], key: &str) -> Option<&'static str> {
     maps.iter().find(|m| m.key == key).map(|m| m.name)
+}
+
+/// Settings-name comparison: the Workshop client matches setting keys and
+/// value spellings without regard to case (Deltinteger's `TextToElement`
+/// settings matcher is `caseSensitive: false`; the pinned oracle's
+/// decompiler lowercases both sides). Accents remain significant: `Chateau
+/// Guillard` does not match `Château Guillard`.
+pub(crate) fn names_eq(left: &str, right: &str) -> bool {
+    left == right || left.to_lowercase() == right.to_lowercase()
+}
+
+/// Canonical map spellings for suggestion candidates (English names).
+pub(crate) fn map_spellings() -> impl Iterator<Item = &'static str> {
+    MAP_NAMES
+        .iter()
+        .chain(GENERATED_MAP_NAMES.iter())
+        .map(|m| m.name)
+}
+
+/// Canonical hero spellings for suggestion candidates (English names).
+pub(crate) fn hero_spellings() -> impl Iterator<Item = &'static str> {
+    HERO_NAMES
+        .iter()
+        .chain(GENERATED_HERO_NAMES.iter())
+        .map(|m| m.name)
+}
+
+/// Canonical team spellings for suggestion candidates (English names).
+pub(crate) fn team_spellings() -> impl Iterator<Item = &'static str> {
+    TEAM_NAMES.iter().map(|m| m.name)
+}
+
+/// Canonical member spellings of an enum domain for suggestion candidates.
+pub(crate) fn enum_spellings(domain: &str) -> impl Iterator<Item = &'static str> {
+    enum_members(domain).map(|member| member.name)
+}
+
+/// Canonical `workshop_name` spellings of the leaf entries valid directly
+/// under `parent`, including the `gamemodes.general` leaves a mode inherits.
+/// Mirrors `lookup`/`mode_inherited_entry`: `elimination` inherits only
+/// [`ELIMINATION_GENERAL_KEYS`], other modes inherit the full set only when
+/// they have declared entries, and `general` itself has no fallback.
+pub(crate) fn key_spellings(parent: &[PathPart<'_>]) -> Vec<&'static str> {
+    let mut spellings: Vec<&'static str> = entries()
+        .filter(|entry| {
+            entry.path.len() == parent.len() + 1
+                && entry.path[..parent.len()]
+                    .iter()
+                    .zip(parent.iter())
+                    .all(|(a, b)| a == b)
+                // `%1$s` placeholder names are emission templates, not
+                // spellings a source could carry.
+                && !entry.workshop_name.contains("%1$s")
+        })
+        .map(|entry| entry.workshop_name)
+        .collect();
+    let [PathPart::Part("gamemodes"), PathPart::Part(mode)] = parent else {
+        return spellings;
+    };
+    if *mode == "general" {
+        return spellings;
+    }
+    if *mode == "elimination" {
+        spellings.extend(entries().filter_map(|entry| {
+            let [
+                PathPart::Part("gamemodes"),
+                PathPart::Part("general"),
+                PathPart::Part(key),
+            ] = entry.path
+            else {
+                return None;
+            };
+            ELIMINATION_GENERAL_KEYS
+                .contains(key)
+                .then_some(entry.workshop_name)
+        }));
+    } else if entries().any(|entry| {
+        matches!(
+            entry.path,
+            [PathPart::Part("gamemodes"), PathPart::Part(declared), ..]
+                if *declared == *mode
+        )
+    }) {
+        spellings.extend(entries().filter_map(|entry| {
+            let [
+                PathPart::Part("gamemodes"),
+                PathPart::Part("general"),
+                PathPart::Part(_),
+            ] = entry.path
+            else {
+                return None;
+            };
+            (!entry.workshop_name.contains("%1$s")).then_some(entry.workshop_name)
+        }));
+    }
+    spellings
 }
 
 /// The localized name of a game mode.

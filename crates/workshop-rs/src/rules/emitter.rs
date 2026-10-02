@@ -121,11 +121,8 @@ impl<'a> EmitContext<'a> {
         table
             .get(id)
             .map(|variable| variable.name.as_str())
-            .ok_or_else(|| WorkshopError::Unknown {
-                kind,
-                spelling: format!("<{id}>"),
-                locale: self.locale.clone(),
-                span: None,
+            .ok_or_else(|| {
+                WorkshopError::unknown(kind, format!("<{id}>"), self.locale.clone(), None)
             })
     }
 }

@@ -507,14 +507,33 @@ impl Program {
     }
 
     /// Validate the structural invariants of the canonical program.
+    ///
+    /// Settings are emission-checked too, so a program that would fail to
+    /// emit fails validation the same way.
     pub fn validate(&self) -> std::result::Result<(), WorkshopError> {
         let storage = self.to_wir()?;
         storage
             .validate()
-            .map_err(|error| WorkshopError::Malformed {
-                message: error.to_string(),
-                span: error.span(),
-            })
+            .map_err(|error| WorkshopError::malformed(error.to_string(), error.span()))?;
+        if let Some(settings) = &self.settings {
+            if let Some(error) = crate::settings::check_emission(settings).into_iter().next() {
+                return Err(error);
+            }
+        }
+        Ok(())
+    }
+
+    /// Report every settings member the emission table rejects, each with
+    /// its source span and, when exactly one canonical spelling is close
+    /// enough, the structured suggestion a caller can apply. [`validate`]
+    /// already fails on the first of these; this exposes all of them.
+    ///
+    /// [`validate`]: Program::validate
+    pub fn settings_diagnostics(&self) -> Vec<crate::settings::SettingsDiagnostic> {
+        self.settings
+            .as_ref()
+            .map(crate::settings::check_emission_diagnostics)
+            .unwrap_or_default()
     }
 
     /// Report constructs that are structurally preserved but not fully

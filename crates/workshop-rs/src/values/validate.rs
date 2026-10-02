@@ -23,18 +23,18 @@ pub(crate) fn validate_value(
                 || catalog.entry(Kind::Value, name).is_some()
                 || catalog.entry(Kind::Operator, name).is_some();
             if !known {
-                return Err(WorkshopError::Unknown {
-                    kind: "value",
-                    spelling: name.clone(),
-                    locale: crate::catalog::Locale::new("en-US"),
-                    span: node.span,
-                });
+                return Err(WorkshopError::unknown(
+                    "value",
+                    name.clone(),
+                    crate::catalog::Locale::new("en-US"),
+                    node.span,
+                ));
             } else if name == "memberAccess" {
                 if !(2..=3).contains(&args.len()) {
-                    return Err(WorkshopError::Malformed {
-                        message: "memberAccess expects two or three arguments".to_string(),
-                        span: node.span,
-                    });
+                    return Err(WorkshopError::malformed(
+                        "memberAccess expects two or three arguments".to_string(),
+                        node.span,
+                    ));
                 } else if !matches!(
                     program.values.get(args[1]),
                     Some(wir::ValueNode {
@@ -42,10 +42,10 @@ pub(crate) fn validate_value(
                         ..
                     })
                 ) {
-                    return Err(WorkshopError::Malformed {
-                        message: "memberAccess member must be a string".to_string(),
-                        span: node.span,
-                    });
+                    return Err(WorkshopError::malformed(
+                        "memberAccess member must be a string".to_string(),
+                        node.span,
+                    ));
                 }
             } else if !canonical_helper {
                 if let Some(entry) = catalog.entry(Kind::Value, name) {
@@ -60,22 +60,22 @@ pub(crate) fn validate_value(
             value_type, value, ..
         } => {
             if catalog.enum_domain(value_type).is_none() {
-                return Err(WorkshopError::Unknown {
-                    kind: "enum domain",
-                    spelling: value_type.clone(),
-                    locale: crate::catalog::Locale::new("en-US"),
-                    span: node.span,
-                });
+                return Err(WorkshopError::unknown(
+                    "enum domain",
+                    value_type.clone(),
+                    crate::catalog::Locale::new("en-US"),
+                    node.span,
+                ));
             } else if catalog
                 .enum_spelling(value_type, &crate::catalog::Locale::new("en-US"), value)
                 .is_none()
             {
-                return Err(WorkshopError::Unknown {
-                    kind: "enum member",
-                    spelling: value.clone(),
-                    locale: crate::catalog::Locale::new("en-US"),
-                    span: node.span,
-                });
+                return Err(WorkshopError::unknown(
+                    "enum member",
+                    value.clone(),
+                    crate::catalog::Locale::new("en-US"),
+                    node.span,
+                ));
             }
         }
         wir::Value::Array(elements) => {
@@ -93,10 +93,10 @@ pub(crate) fn validate_value(
         }
         wir::Value::Subroutine(subroutine) => {
             if !program.subroutines.contains(*subroutine) {
-                return Err(WorkshopError::Malformed {
-                    message: format!("dangling subroutine value {}", subroutine.index()),
-                    span: node.span,
-                });
+                return Err(WorkshopError::malformed(
+                    format!("dangling subroutine value {}", subroutine.index()),
+                    node.span,
+                ));
             }
         }
         wir::Value::Number { .. }
@@ -117,16 +117,16 @@ fn validate_ambiguous_enum(
     span: Option<crate::source::Span>,
 ) -> Result<()> {
     let Some((_spelling, candidate_ids)) = wir::ambiguous_enum_parts(program, value_id) else {
-        return Err(WorkshopError::Malformed {
-            message: "ambiguous enum value has an invalid shape".to_string(),
+        return Err(WorkshopError::malformed(
+            "ambiguous enum value has an invalid shape",
             span,
-        });
+        ));
     };
     if candidate_ids.is_empty() {
-        return Err(WorkshopError::Malformed {
-            message: "ambiguous enum value has no candidates".to_string(),
+        return Err(WorkshopError::malformed(
+            "ambiguous enum value has no candidates",
             span,
-        });
+        ));
     }
     for candidate_id in candidate_ids {
         let Some(wir::ValueNode {
@@ -134,28 +134,28 @@ fn validate_ambiguous_enum(
             ..
         }) = program.values.get(*candidate_id)
         else {
-            return Err(WorkshopError::Malformed {
-                message: "ambiguous enum candidate is not an enum value".to_string(),
+            return Err(WorkshopError::malformed(
+                "ambiguous enum candidate is not an enum value",
                 span,
-            });
+            ));
         };
         if catalog.enum_domain(value_type).is_none() {
-            return Err(WorkshopError::Unknown {
-                kind: "enum domain",
-                spelling: value_type.clone(),
-                locale: crate::catalog::Locale::new("en-US"),
+            return Err(WorkshopError::unknown(
+                "enum domain",
+                value_type.clone(),
+                crate::catalog::Locale::new("en-US"),
                 span,
-            });
+            ));
         } else if catalog
             .enum_spelling(value_type, &crate::catalog::Locale::new("en-US"), value)
             .is_none()
         {
-            return Err(WorkshopError::Unknown {
-                kind: "enum member",
-                spelling: format!("{value_type}.{value}"),
-                locale: crate::catalog::Locale::new("en-US"),
+            return Err(WorkshopError::unknown(
+                "enum member",
+                format!("{value_type}.{value}"),
+                crate::catalog::Locale::new("en-US"),
                 span,
-            });
+            ));
         }
     }
     Ok(())
@@ -192,8 +192,8 @@ pub(crate) fn validate_call_signature(
     if supplied < entry.required_param_count()
         || (!entry.is_variadic() && supplied > entry.param_count())
     {
-        return Err(WorkshopError::Unsupported {
-            message: format!(
+        return Err(WorkshopError::unsupported(
+            format!(
                 "{} '{}' expects {}..{}{} argument(s), got {}",
                 entry.kind.as_str(),
                 entry.id,
@@ -203,7 +203,7 @@ pub(crate) fn validate_call_signature(
                 supplied
             ),
             span,
-        });
+        ));
     }
 
     for (index, arg_id) in args.iter().enumerate() {
@@ -214,18 +214,18 @@ pub(crate) fn validate_call_signature(
                 Some(wir::Value::LocalizedString(_))
             )
         {
-            return Err(WorkshopError::Unsupported {
-                message: "value 'string' argument 1 must be localized string text".to_string(),
-                span: program.values.get(*arg_id).and_then(|node| node.span),
-            });
+            return Err(WorkshopError::unsupported(
+                "value 'string' argument 1 must be localized string text",
+                program.values.get(*arg_id).and_then(|node| node.span),
+            ));
         }
         if let Some(expected) = entry.param_type(index) {
             if !value_matches_type(program, catalog, *arg_id, expected)
                 && !contextual_value_matches(entry, index, program, *arg_id, expected)
             {
                 let actual = value_type_name(program, catalog, *arg_id);
-                return Err(WorkshopError::Unsupported {
-                    message: format!(
+                return Err(WorkshopError::unsupported(
+                    format!(
                         "{} '{}' argument {} must have semantic type '{}', got {}",
                         entry.kind.as_str(),
                         entry.id,
@@ -233,8 +233,8 @@ pub(crate) fn validate_call_signature(
                         expected,
                         actual
                     ),
-                    span: program.values.get(*arg_id).and_then(|node| node.span),
-                });
+                    program.values.get(*arg_id).and_then(|node| node.span),
+                ));
             }
         }
         let Some(domain) = entry.param_domain(index) else {
@@ -279,8 +279,8 @@ pub(crate) fn validate_call_signature(
                 }
                 _ => "non-enum expression".to_string(),
             };
-            return Err(WorkshopError::Unsupported {
-                message: format!(
+            return Err(WorkshopError::unsupported(
+                format!(
                     "{} '{}' argument {} must be a member of enum domain '{}', got {}",
                     entry.kind.as_str(),
                     entry.id,
@@ -288,8 +288,8 @@ pub(crate) fn validate_call_signature(
                     domain,
                     actual
                 ),
-                span: node.span,
-            });
+                node.span,
+            ));
         }
     }
     Ok(())

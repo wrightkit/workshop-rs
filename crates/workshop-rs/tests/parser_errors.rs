@@ -10,7 +10,7 @@ fn malformed_number_literals_are_reported_by_the_public_parser() {
 
     for source in ["0X", "1.2.3"] {
         let error = parser::parse(source, &catalog, &locale).expect_err("invalid number");
-        let WorkshopError::Malformed { message, span } = error else {
+        let WorkshopError::Malformed { message, span, .. } = error else {
             panic!("invalid number should be a malformed Workshop diagnostic");
         };
         assert_eq!(message, format!("invalid number '{source}'"));
@@ -32,7 +32,7 @@ fn program_with_condition(condition: &str) -> String {
 #[test]
 fn an_action_call_used_as_a_condition_reports_the_action_at_its_call() {
     let error = parse_error(&program_with_condition("Wait(1, Ignore Condition);"));
-    let WorkshopError::Malformed { message, span } = error else {
+    let WorkshopError::Malformed { message, span, .. } = error else {
         panic!("an action used as a condition is a malformed diagnostic");
     };
     assert_eq!(message, "action 'Wait' cannot be used as a condition");
@@ -188,7 +188,7 @@ fn a_missing_statement_semicolon_reports_the_end_of_the_statement() {
         "}\n",
     );
     let error = parse_error(source);
-    let WorkshopError::Malformed { message, span } = error else {
+    let WorkshopError::Malformed { message, span, .. } = error else {
         panic!("a missing semicolon is a malformed diagnostic");
     };
     assert_eq!(message, "expected ';'");
@@ -203,7 +203,7 @@ fn a_missing_statement_semicolon_reports_the_end_of_the_statement() {
 fn a_missing_semicolon_before_a_same_line_token_still_names_that_token() {
     let source = "rule (\"x\") { event { Ongoing - Global; } actions { Set Global Variable(x, 1) Set Global Variable(x, 2); } }\n";
     let error = parse_error(source);
-    let WorkshopError::Malformed { message, span } = error else {
+    let WorkshopError::Malformed { message, span, .. } = error else {
         panic!("a missing semicolon is a malformed diagnostic");
     };
     assert_eq!(message, "expected ';'");
@@ -215,7 +215,7 @@ fn a_missing_semicolon_before_a_same_line_token_still_names_that_token() {
 #[test]
 fn a_missing_rule_paren_keeps_its_existing_diagnostic() {
     let error = parse_error("rule \"no parens\" {\n}\n");
-    let WorkshopError::Malformed { message, span } = error else {
+    let WorkshopError::Malformed { message, span, .. } = error else {
         panic!("a missing rule paren is a malformed diagnostic");
     };
     assert_eq!(message, "expected '(' after 'rule'");

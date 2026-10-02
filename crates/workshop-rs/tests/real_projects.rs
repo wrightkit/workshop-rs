@@ -52,20 +52,20 @@ fn expectation_keeps_the_admitted_gap_identity_and_classification() {
             && gap.classification == ResidualClassification::LegacyOpaque
     }));
 
-    let error = WorkshopError::Unknown {
-        kind: "action",
-        spelling: "rawWorkshopAction".to_string(),
-        locale: workshop_rs::catalog::Locale::new("en-US"),
-        span: None,
-    };
+    let error = WorkshopError::unknown(
+        "action",
+        "rawWorkshopAction",
+        workshop_rs::catalog::Locale::new("en-US"),
+        None,
+    );
     assert!(defend.admits_gap(RealProjectStage::Emission, &error));
     assert!(!defend.admits_gap(
         RealProjectStage::CanonicalValidation,
-        &WorkshopError::Unknown {
-            kind: "value",
-            spelling: "rawWorkshopAction".to_string(),
-            locale: workshop_rs::catalog::Locale::new("en-US"),
-            span: None,
-        }
+        &WorkshopError::unknown(
+            "value",
+            "rawWorkshopAction",
+            workshop_rs::catalog::Locale::new("en-US"),
+            None,
+        )
     ));
 }

@@ -102,3 +102,30 @@ the expected bytes again when `apply(source)` is called. Only that range is
 replaced; comments, whitespace, and all bytes outside it are retained. This
 does not define comment/trivia attachment semantics beyond the edited setting
 occurrence.
+
+## Source name matching
+
+Settings keys and value spellings parse **case-insensitively**: `enabled maps`
+and `Enabled Maps` identify the same table entry, and the same holds for mode,
+team, hero, map, enum, token (`on`/`off`, `yes`/`no`), and namespace
+spellings, in English and in the authored locale. Case is canonicalized at
+parse time; emission writes the canonical spelling.
+
+Accents remain significant: `Chateau Guillard` does not resolve to
+`Château Guillard`. A rejected name that is close to exactly one canonical
+spelling (a case or accent difference, or a small unambiguous edit distance)
+names that spelling in the diagnostic message (`did you mean '...'?`); the
+same suggestion is also exposed as structured data on
+`SettingsDiagnostic::suggestion`, so callers can apply it without parsing
+message text. Distant or ambiguous spellings carry none. The input stays
+rejected either way — the suggestion never rewrites it.
+
+`Program::validate` runs the same emission acceptance check the emitter
+applies (`check_emission`), so checking and compilation agree on a settings
+block instead of diverging at emit time; `Program::settings_diagnostics`
+exposes every rejection as a `SettingsDiagnostic`.
+
+Sources: Deltinteger's `TextToElement` matches settings, mode, map, hero, and
+enum names with `caseSensitive: false`; the pinned oracle's decompiler
+lower-cases both sides of settings names. Accent-stripped spellings are
+rejected by the same oracle and stay rejected here.

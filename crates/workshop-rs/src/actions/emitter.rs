@@ -11,10 +11,10 @@ impl EmitContext<'_> {
         rule_final: bool,
     ) -> Result<()> {
         let Some(action) = self.program.actions.get(id) else {
-            return Err(WorkshopError::Malformed {
-                message: format!("dangling action {id}"),
-                span: None,
-            });
+            return Err(WorkshopError::malformed(
+                format!("dangling action {id}"),
+                None,
+            ));
         };
         match action {
             wir::Action::SetGlobalVariable {
@@ -75,11 +75,13 @@ impl EmitContext<'_> {
                     .subroutines
                     .get(*subroutine)
                     .map(|s| s.name.as_str())
-                    .ok_or_else(|| WorkshopError::Unknown {
-                        kind: "subroutine",
-                        spelling: format!("<{subroutine}>"),
-                        locale: self.locale.clone(),
-                        span: None,
+                    .ok_or_else(|| {
+                        WorkshopError::unknown(
+                            "subroutine",
+                            format!("<{subroutine}>"),
+                            self.locale.clone(),
+                            None,
+                        )
                     })?;
                 let keyword = self.spelling(Kind::Structural, "callSubroutine")?;
                 self.line(level, &format!("{keyword}({name});"))?;
@@ -201,12 +203,10 @@ impl EmitContext<'_> {
                             wir::ModifyOp::Min => "min",
                             wir::ModifyOp::Max => "max",
                             _ => {
-                                return Err(WorkshopError::Unsupported {
-                                    message: format!(
-                                        "unsupported member assignment operator {op:?}"
-                                    ),
-                                    span: None,
-                                });
+                                return Err(WorkshopError::unsupported(
+                                    format!("unsupported member assignment operator {op:?}"),
+                                    None,
+                                ));
                             }
                         };
                         format!("{token}=")
@@ -276,11 +276,10 @@ impl EmitContext<'_> {
                                 _ => None,
                             })
                     }) else {
-                        return Err(WorkshopError::Malformed {
-                            message: "Stop Chasing Player Variable requires a player variable"
-                                .into(),
-                            span: None,
-                        });
+                        return Err(WorkshopError::malformed(
+                            "Stop Chasing Player Variable requires a player variable",
+                            None,
+                        ));
                     };
                     let spelling = self.spelling(Kind::Action, name)?;
                     let player_text = self.value_text(player)?;

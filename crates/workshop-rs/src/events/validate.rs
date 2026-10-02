@@ -15,12 +15,12 @@ pub(crate) fn validate_event(
         wir::Event::Subroutine { .. } => ("subroutine", None),
     };
     if catalog.entry(Kind::Event, id).is_none() {
-        return Err(WorkshopError::Unknown {
-            kind: "event",
-            spelling: id.to_string(),
-            locale: crate::catalog::Locale::new("en-US"),
+        return Err(WorkshopError::unknown(
+            "event",
+            id.to_string(),
+            crate::catalog::Locale::new("en-US"),
             span,
-        });
+        ));
     }
     let Some((team, target)) = filters else {
         return Ok(());
@@ -35,24 +35,24 @@ pub(crate) fn validate_event(
         .enum_spelling("EventTeam", &en, team_member)
         .is_none()
     {
-        return Err(WorkshopError::Unknown {
-            kind: "event team",
-            spelling: team_member.to_string(),
-            locale: en.clone(),
+        return Err(WorkshopError::unknown(
+            "event team",
+            team_member.to_string(),
+            en.clone(),
             span,
-        });
+        ));
     }
     let target_member = match target {
         wir::EventTarget::All => Some("ALL".to_string()),
         wir::EventTarget::Slot(slot) => Some(format!("SLOT_{slot}")),
         wir::EventTarget::Hero(hero) => {
             if catalog.enum_spelling("Hero", &en, hero).is_none() {
-                return Err(WorkshopError::Unknown {
-                    kind: "event player",
-                    spelling: hero.clone(),
-                    locale: en.clone(),
+                return Err(WorkshopError::unknown(
+                    "event player",
+                    hero.clone(),
+                    en.clone(),
                     span,
-                });
+                ));
             }
             None
         }
@@ -62,12 +62,12 @@ pub(crate) fn validate_event(
             .enum_spelling("EventPlayer", &en, &target_member)
             .is_none()
         {
-            return Err(WorkshopError::Unknown {
-                kind: "event player",
-                spelling: target_member,
-                locale: en,
+            return Err(WorkshopError::unknown(
+                "event player",
+                target_member,
+                en,
                 span,
-            });
+            ));
         }
     }
     Ok(())
