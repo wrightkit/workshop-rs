@@ -7888,7 +7888,7 @@
       ]
     }
   ],
-  "digest": "103a757b77483eccfa2407e7132f0520f97aaca1b5acda69fcb5f80a46a59a13",
+  "digest": "6a63080f4bb99eb25e12d13a76358bc69d5cd754d0f6c727415d917817e67773",
   "enums": [
     {
       "domain": "Impulse",
@@ -23134,7 +23134,7 @@
       ],
       "paramTypes": [
         "Number|Boolean|Vector|Player",
-        "Number|Boolean|Vector|Player"
+        "Number|Boolean|Vector"
       ],
       "params": [
         "a",

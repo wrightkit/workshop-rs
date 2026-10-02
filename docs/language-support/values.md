@@ -174,7 +174,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Max Health Of Type` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player, Health: Health). |
 | `Min` | ✅ Supported | Returns: `Number`; Parameters: (Value: Number|Boolean, Value: Number|Boolean). |
 | `Modulo` | ✅ Supported | Returns: `Number`; Parameters: (Value: Number, Value: Number). |
-| `Multiply` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector|Player, b: Number|Boolean|Vector|Player). |
+| `Multiply` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector|Player, b: Number|Boolean|Vector). |
 | `Nearest Walkable Position` | ✅ Supported | Returns: `Vector`; Parameters: (Position: Vector). |
 | `Normalize` | ✅ Supported | Returns: `Vector`; Parameters: (Vector: Vector). |
 | `Normalized Health` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player). |
