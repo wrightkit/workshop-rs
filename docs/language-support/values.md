@@ -41,7 +41,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Attacker` | ✅ Supported | Returns: `Player`. |
 | `Backward` | ✅ Supported | Returns: `Array`. |
 | `Char In String` | ✅ Supported | Returns: `String`; Parameters: (String: Any, Index: Any). |
-| `Closest Player To` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector, Team: Team). |
+| `Closest Player To` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector|Player, Team: Team). |
 | `Compare` | ✅ Supported | Returns: `Boolean`; Parameters: (a: Any, operator: __Operator__, b: Any). |
 | `Control Mode Scoring Percentage` | ✅ Supported | Returns: `Number`; Parameters: (Team: Team). |
 | `Control Mode Scoring Team` | ✅ Supported | Returns: `Team`. |
@@ -79,7 +79,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Facing Direction Of` | ✅ Supported | Returns: `Vector`; Parameters: (Player: Player). |
 | `Farthest Player From` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector, Team: Team). |
 | `False` | ✅ Supported | Returns: `BoolLiteral`. |
-| `Filtered Array` | ✅ Supported | Returns: `Array`; Parameters: (Array: Array, Condition: Boolean). |
+| `Filtered Array` | ✅ Supported | Returns: `Array`; Parameters: (Array: Player|Array, Condition: Boolean). |
 | `First Of` | ✅ Supported | Returns: `Object|Array`; Parameters: (Array: Any). |
 | `Flag Position` | ✅ Supported | Returns: `Vector`; Parameters: (Team: Team). |
 | `Forward` | ✅ Supported | Returns: `Array`. |

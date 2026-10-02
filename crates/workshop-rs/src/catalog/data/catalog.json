@@ -7888,7 +7888,7 @@
       ]
     }
   ],
-  "digest": "279d8d56f4ed0358d44ddee03bb6f8a790639b35bd53737509a175d09256757e",
+  "digest": "6a63080f4bb99eb25e12d13a76358bc69d5cd754d0f6c727415d917817e67773",
   "enums": [
     {
       "domain": "Impulse",
@@ -25042,7 +25042,7 @@
         "condition"
       ],
       "paramTypes": [
-        "Array",
+        "Player|Array",
         "Boolean"
       ],
       "params": [
@@ -28288,7 +28288,7 @@
         "team"
       ],
       "paramTypes": [
-        "Vector",
+        "Vector|Player",
         "Team"
       ],
       "params": [
@@ -29942,5 +29942,5 @@
       "returnType": "Number"
     }
   ],
-  "version": "0.1.9"
+  "version": "0.1.10"
 }

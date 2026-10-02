@@ -563,6 +563,9 @@ fn player_typed_values_validate_uniformly_across_wir_kinds() {
     // them the same verdict. Client-accepted real projects evidence Player
     // arguments in the positions exercised here (`bastion`, `defend`,
     // `ai-pve`); positions without such evidence reject every Player value.
+    // Note: the `defend` corpus gaps here are masked in the real-project
+    // suite by an earlier admitted `rawWorkshopAction` gap, so these cases
+    // are the direct guard for `Closest Player To`/`Filtered Array`.
     let catalog = catalog();
     let players = [
         "Event Player",
@@ -578,6 +581,8 @@ fn player_typed_values_validate_uniformly_across_wir_kinds() {
             format!("Add({player}, 1)"),
             format!("Multiply({player}, 2)"),
             format!("Horizontal Angle Towards(Victim, {player})"),
+            format!("Closest Player To({player}, All Teams)"),
+            format!("Filtered Array({player}, True)"),
             format!("Players Within Radius({player}, 5, All Teams, Surfaces)"),
             format!(
                 "Ray Cast Hit Position(Vector(0, 0, 0), Vector(0, 0, 1), All Players(All Teams), {player}, True)"
@@ -600,6 +605,19 @@ fn player_typed_values_validate_uniformly_across_wir_kinds() {
         let program = internal::parse(&source);
         validate::validate_canonical_ids_wir(&program, &catalog)
             .unwrap_or_else(|error| panic!("Play Effect position must accept {player}: {error}"));
+        let call = format!("Multiply(2, {player})");
+        let source = format!(
+            r#"rule ("multiply") {{ event {{ Ongoing - Global; }} actions {{ Set Global Variable(probe, {call}); }} }}"#
+        );
+        let program = internal::parse(&source);
+        let error = validate::validate_canonical_ids_wir(&program, &catalog)
+            .expect_err("multiply parameter 1 has no bare-Player acceptance evidence");
+        assert!(
+            error
+                .to_string()
+                .contains("must have semantic type 'Number|Boolean|Vector'"),
+            "{call}: {error}"
+        );
         // `X Component Of` still declares `Vector` only: both node kinds get
         // the same rejection.
         let source = format!(
