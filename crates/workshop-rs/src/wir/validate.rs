@@ -71,7 +71,7 @@ fn check_action(program: &Program, id: super::ActionId) -> Result<(), IrError> {
         .get(id)
         .ok_or_else(|| dangling("action", id.index()))?;
     check_span(action.span(), program)?;
-    check_span(action_identifier_span(action), program)?;
+    check_span(action.identifier_span(), program)?;
     match action {
         Action::SetGlobalVariable {
             variable, value, ..
@@ -238,21 +238,6 @@ fn check_value(program: &Program, id: super::ValueId) -> Result<(), IrError> {
         | Value::EventPlayer => {}
     }
     Ok(())
-}
-
-/// The recorded identifier span a WIR action carries, when its variant has
-/// one.
-fn action_identifier_span(action: &Action) -> Option<Span> {
-    match action {
-        Action::SetGlobalVariable { target_span, .. }
-        | Action::ModifyGlobalVariable { target_span, .. }
-        | Action::SetPlayerVariable { target_span, .. }
-        | Action::ModifyPlayerVariable { target_span, .. }
-        | Action::ForGlobalVariable { target_span, .. }
-        | Action::ForPlayerVariable { target_span, .. } => *target_span,
-        Action::CallSubroutine { callee_span, .. } => *callee_span,
-        _ => None,
-    }
 }
 
 fn check_span(span: Option<Span>, program: &Program) -> Result<(), IrError> {

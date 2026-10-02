@@ -117,6 +117,86 @@ impl Action {
         }
     }
 
+    /// The source span of the variable or subroutine this action names: the
+    /// target of set/modify and for-variable actions, or the callee of a
+    /// `Call Subroutine` action. `None` for variants without an identifier
+    /// field.
+    pub(crate) fn identifier_span(&self) -> Option<Span> {
+        match self {
+            Action::SetGlobalVariable { target_span, .. }
+            | Action::ModifyGlobalVariable { target_span, .. }
+            | Action::SetPlayerVariable { target_span, .. }
+            | Action::ModifyPlayerVariable { target_span, .. }
+            | Action::ForGlobalVariable { target_span, .. }
+            | Action::ForPlayerVariable { target_span, .. } => *target_span,
+            Action::CallSubroutine { callee_span, .. } => *callee_span,
+            _ => None,
+        }
+    }
+
+    /// Mutable access to this action's source span field.
+    pub(crate) fn span_mut(&mut self) -> &mut Option<Span> {
+        match self {
+            Action::SetGlobalVariable { span, .. }
+            | Action::ModifyGlobalVariable { span, .. }
+            | Action::SetPlayerVariable { span, .. }
+            | Action::ModifyPlayerVariable { span, .. }
+            | Action::AssignMember { span, .. }
+            | Action::CallSubroutine { span, .. }
+            | Action::If { span, .. }
+            | Action::While { span, .. }
+            | Action::ForGlobalVariable { span, .. }
+            | Action::ForPlayerVariable { span, .. }
+            | Action::Disabled { span, .. }
+            | Action::Call { span, .. } => span,
+        }
+    }
+
+    /// Mutable access to this action's identifier span field, when the
+    /// variant carries one (see [`identifier_span`](Self::identifier_span)).
+    pub(crate) fn identifier_span_mut(&mut self) -> Option<&mut Option<Span>> {
+        match self {
+            Action::SetGlobalVariable { target_span, .. }
+            | Action::ModifyGlobalVariable { target_span, .. }
+            | Action::SetPlayerVariable { target_span, .. }
+            | Action::ModifyPlayerVariable { target_span, .. }
+            | Action::ForGlobalVariable { target_span, .. }
+            | Action::ForPlayerVariable { target_span, .. } => Some(target_span),
+            Action::CallSubroutine { callee_span, .. } => Some(callee_span),
+            _ => None,
+        }
+    }
+
+    /// The direct value arguments of this action, in canonical order. Block
+    /// bodies are separate actions and are not included. Provenance rows pair
+    /// these positionally with `program::action_argument_values`, so the two
+    /// tables must stay consistent.
+    pub(crate) fn value_args(&self) -> Vec<ValueId> {
+        match self {
+            Action::SetGlobalVariable { value, .. }
+            | Action::ModifyGlobalVariable { value, .. } => {
+                vec![*value]
+            }
+            Action::SetPlayerVariable { player, value, .. }
+            | Action::ModifyPlayerVariable { player, value, .. } => vec![*player, *value],
+            Action::AssignMember { target, value, .. } => vec![*target, *value],
+            Action::If { branches, .. } => branches.iter().map(|branch| branch.condition).collect(),
+            Action::While { condition, .. } => vec![*condition],
+            Action::ForGlobalVariable {
+                start, stop, step, ..
+            } => vec![*start, *stop, *step],
+            Action::ForPlayerVariable {
+                player,
+                start,
+                stop,
+                step,
+                ..
+            } => vec![*player, *start, *stop, *step],
+            Action::Call { args, .. } => args.clone(),
+            Action::CallSubroutine { .. } | Action::Disabled { .. } => Vec::new(),
+        }
+    }
+
     /// The modify operation for `Modify*`/`AssignMember` actions; `None` for
     /// plain sets and non-assignment actions.
     pub(crate) fn modify_op(&self) -> Option<ModifyOp> {

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     DeclarationProvenance, Program, ProgramProvenance, Value, ValueProvenance,
-    action_argument_count, action_argument_values, fit, value_children,
+    action_argument_values, fit, value_children,
 };
 use crate::source::{FileId, Position, SourceFile, Span};
 
@@ -243,7 +243,7 @@ impl SourceMap {
                         identifier_span: provenance.identifier.map(WireSpan::from),
                     });
                 }
-                for argument in 0..action_argument_count(public_action) {
+                for argument in 0..action_argument_values(public_action).len() {
                     let Some(argument_provenance) = provenance.arguments.get(argument) else {
                         continue;
                     };

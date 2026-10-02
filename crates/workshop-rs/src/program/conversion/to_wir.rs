@@ -373,14 +373,8 @@ fn apply_action_provenance(
                 }
                 *position += 1;
             }
-            wir::Action::While { body, .. } => {
-                let source = provenance.get(*position).cloned().unwrap_or_default();
-                *position += 1;
-                apply_action_source(storage, *id, &source);
-                apply_action_provenance(storage, &body, provenance, position)?;
-                *position += 1;
-            }
-            wir::Action::ForGlobalVariable { body, .. }
+            wir::Action::While { body, .. }
+            | wir::Action::ForGlobalVariable { body, .. }
             | wir::Action::ForPlayerVariable { body, .. } => {
                 let source = provenance.get(*position).cloned().unwrap_or_default();
                 *position += 1;
@@ -396,6 +390,8 @@ fn apply_action_provenance(
                     *span = source.span;
                 }
             }
+            // Leaf actions consume one row; new block-shaped variants also
+            // need an explicit arm in `public_action_provenance`.
             _ => {
                 let source = provenance.get(*position).cloned().unwrap_or_default();
                 *position += 1;
@@ -408,74 +404,18 @@ fn apply_action_provenance(
 
 fn apply_action_source(storage: &mut wir::Program, id: wir::ActionId, source: &ActionProvenance) {
     if let Some(action) = storage.actions.get_mut(id) {
-        match action {
-            wir::Action::SetGlobalVariable {
-                span, target_span, ..
-            }
-            | wir::Action::ModifyGlobalVariable {
-                span, target_span, ..
-            }
-            | wir::Action::SetPlayerVariable {
-                span, target_span, ..
-            }
-            | wir::Action::ModifyPlayerVariable {
-                span, target_span, ..
-            }
-            | wir::Action::ForGlobalVariable {
-                span, target_span, ..
-            }
-            | wir::Action::ForPlayerVariable {
-                span, target_span, ..
-            } => {
-                *span = source.span;
-                *target_span = source.identifier;
-            }
-            wir::Action::CallSubroutine {
-                span, callee_span, ..
-            } => {
-                *span = source.span;
-                *callee_span = source.identifier;
-            }
-            wir::Action::AssignMember { span, .. }
-            | wir::Action::If { span, .. }
-            | wir::Action::While { span, .. }
-            | wir::Action::Disabled { span, .. }
-            | wir::Action::Call { span, .. } => *span = source.span,
+        *action.span_mut() = source.span;
+        if let Some(identifier) = action.identifier_span_mut() {
+            *identifier = source.identifier;
         }
     }
     let value_ids = storage
         .actions
         .get(id)
-        .map(action_value_ids)
+        .map(wir::Action::value_args)
         .unwrap_or_default();
     for (value, provenance) in value_ids.into_iter().zip(&source.arguments) {
         apply_value_provenance(storage, value, provenance);
-    }
-}
-
-fn action_value_ids(action: &wir::Action) -> Vec<wir::ValueId> {
-    match action {
-        wir::Action::SetGlobalVariable { value, .. }
-        | wir::Action::ModifyGlobalVariable { value, .. } => vec![*value],
-        wir::Action::SetPlayerVariable { player, value, .. }
-        | wir::Action::ModifyPlayerVariable { player, value, .. } => vec![*player, *value],
-        wir::Action::AssignMember { target, value, .. } => vec![*target, *value],
-        wir::Action::If { branches, .. } => {
-            branches.iter().map(|branch| branch.condition).collect()
-        }
-        wir::Action::While { condition, .. } => vec![*condition],
-        wir::Action::ForGlobalVariable {
-            start, stop, step, ..
-        } => vec![*start, *stop, *step],
-        wir::Action::ForPlayerVariable {
-            player,
-            start,
-            stop,
-            step,
-            ..
-        } => vec![*player, *start, *stop, *step],
-        wir::Action::Call { args, .. } => args.clone(),
-        wir::Action::CallSubroutine { .. } | wir::Action::Disabled { .. } => Vec::new(),
     }
 }
 

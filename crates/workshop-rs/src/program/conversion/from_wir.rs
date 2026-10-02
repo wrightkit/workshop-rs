@@ -385,36 +385,27 @@ fn public_action_provenance(
         .actions
         .get(id)
         .ok_or_else(|| malformed_id("action", id.index()))?;
-    let identifier = action_identifier(action);
+    let identifier = action.identifier_span();
+    let map_args = |arguments: &[wir::ValueId]| {
+        arguments
+            .iter()
+            .map(|value| value_provenance(storage, *value))
+            .collect()
+    };
     let push = |output: &mut Vec<ActionProvenance>, arguments: &[wir::ValueId]| {
         output.push(ActionProvenance {
             span: action.span(),
             identifier,
-            arguments: arguments
-                .iter()
-                .map(|value| value_provenance(storage, *value))
-                .collect(),
+            arguments: map_args(arguments),
         });
     };
     let push_without_span = |output: &mut Vec<ActionProvenance>, arguments: &[wir::ValueId]| {
         output.push(ActionProvenance {
-            span: None,
-            identifier: None,
-            arguments: arguments
-                .iter()
-                .map(|value| value_provenance(storage, *value))
-                .collect(),
+            arguments: map_args(arguments),
+            ..ActionProvenance::default()
         });
     };
     match action {
-        wir::Action::SetGlobalVariable { value, .. }
-        | wir::Action::ModifyGlobalVariable { value, .. } => push(output, &[*value]),
-        wir::Action::SetPlayerVariable { player, value, .. }
-        | wir::Action::ModifyPlayerVariable { player, value, .. } => {
-            push(output, &[*player, *value])
-        }
-        wir::Action::AssignMember { target, value, .. } => push(output, &[*target, *value]),
-        wir::Action::CallSubroutine { .. } => push(output, &[]),
         wir::Action::If {
             branches,
             else_body,
@@ -441,37 +432,10 @@ fn public_action_provenance(
                 push_without_span(output, &[]);
             }
         }
-        wir::Action::While {
-            condition, body, ..
-        } => {
-            push(output, &[*condition]);
-            for action in body {
-                public_action_provenance(storage, *action, output)?;
-            }
-            push_without_span(output, &[]);
-        }
-        wir::Action::ForGlobalVariable {
-            start,
-            stop,
-            step,
-            body,
-            ..
-        } => {
-            push(output, &[*start, *stop, *step]);
-            for action in body {
-                public_action_provenance(storage, *action, output)?;
-            }
-            push_without_span(output, &[]);
-        }
-        wir::Action::ForPlayerVariable {
-            player,
-            start,
-            stop,
-            step,
-            body,
-            ..
-        } => {
-            push(output, &[*player, *start, *stop, *step]);
+        wir::Action::While { body, .. }
+        | wir::Action::ForGlobalVariable { body, .. }
+        | wir::Action::ForPlayerVariable { body, .. } => {
+            push(output, &action.value_args());
             for action in body {
                 public_action_provenance(storage, *action, output)?;
             }
@@ -480,24 +444,11 @@ fn public_action_provenance(
         wir::Action::Disabled { action, .. } => {
             public_action_provenance(storage, *action, output)?;
         }
-        wir::Action::Call { args, .. } => push(output, args),
+        // Leaf actions emit one row; new block-shaped variants also need an
+        // explicit arm in `apply_action_provenance` to keep rows aligned.
+        _ => push(output, &action.value_args()),
     }
     Ok(())
-}
-
-/// The recorded span of the variable or subroutine a WIR action names, when
-/// the parse produced one.
-fn action_identifier(action: &wir::Action) -> Option<Span> {
-    match action {
-        wir::Action::SetGlobalVariable { target_span, .. }
-        | wir::Action::ModifyGlobalVariable { target_span, .. }
-        | wir::Action::SetPlayerVariable { target_span, .. }
-        | wir::Action::ModifyPlayerVariable { target_span, .. }
-        | wir::Action::ForGlobalVariable { target_span, .. }
-        | wir::Action::ForPlayerVariable { target_span, .. } => *target_span,
-        wir::Action::CallSubroutine { callee_span, .. } => *callee_span,
-        _ => None,
-    }
 }
 
 /// The recorded provenance of a WIR value node and its children, mirroring
