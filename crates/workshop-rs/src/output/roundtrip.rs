@@ -594,7 +594,9 @@ fn value_equivalent(
         return false;
     };
     match (&la.value, &rb.value) {
-        (wir::Value::Number { value: x, .. }, wir::Value::Number { value: y, .. }) => x == y,
+        (wir::Value::Number { value: x, .. }, wir::Value::Number { value: y, .. }) => {
+            x == y || (x.is_nan() && y.is_nan())
+        }
         (wir::Value::String(x), wir::Value::String(y)) => x == y,
         (wir::Value::LocalizedString(x), wir::Value::LocalizedString(y)) => x == y,
         (wir::Value::Bool(x), wir::Value::Bool(y)) => x == y,

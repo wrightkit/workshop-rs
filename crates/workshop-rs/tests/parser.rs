@@ -74,6 +74,62 @@ fn evidenced_uppercase_hex_literal_matches_decimal_program() {
 }
 
 #[test]
+fn evidenced_non_finite_number_spellings_parse_and_round_trip() {
+    let source = common::corpus_text("minimized/opy-nonfinite-number-spellings");
+    let catalog = catalog();
+    let locale = en();
+    let program = parser::parse(&source, &catalog, &locale)
+        .expect("pinned OverPy Workshop output with -Infinity/NaN/Infinity must parse");
+
+    assert!(program.semantic_issues(&catalog).is_empty());
+    program
+        .validate()
+        .expect("non-finite number literals must be valid canonical Workshop");
+    let values: Vec<f64> = internal::parse(&source)
+        .values
+        .iter()
+        .filter_map(|node| match &node.value {
+            wir::Value::Number { value, .. } => Some(*value),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        values.contains(&f64::NEG_INFINITY)
+            && values.iter().any(|value| value.is_nan())
+            && values.contains(&f64::INFINITY),
+        "expected -Infinity, NaN, and Infinity number values: {values:?}"
+    );
+
+    let emitted = emitter::emit(&program, &catalog, &locale).expect("pinned artifact emits");
+    assert!(emitted.contains("Set Global Variable(v, -Infinity);"));
+    assert!(emitted.contains("Set Global Variable(v, NaN);"));
+    assert!(emitted.contains("Set Global Variable(v, Infinity);"));
+    let reparsed = parser::parse(&emitted, &catalog, &locale).expect("emitted artifact reparses");
+    assert!(roundtrip::equivalent(&program, &reparsed));
+}
+
+#[test]
+fn unevidenced_non_finite_spellings_never_become_number_literals() {
+    // Only `Infinity`, `-Infinity`, and `NaN` are evidenced by pinned
+    // reference emission (#358); other spellings keep their existing
+    // diagnostics path instead of parsing as non-finite numbers.
+    for literal in ["inf", "-NaN", "+Infinity", "infinity", "nan"] {
+        let source = format!(
+            "rule (\"x\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{\n        Set Global Variable(v, {literal});\n    }}\n}}\n"
+        );
+        if let Ok(program) = internal::try_parse(&source) {
+            assert!(
+                !program
+                    .values
+                    .iter()
+                    .any(|node| matches!(node.value, wir::Value::Number { value, .. } if !value.is_finite())),
+                "'{literal}' must not parse as a non-finite number"
+            );
+        }
+    }
+}
+
+#[test]
 fn localized_hero_call_resolves_dotted_member() {
     assert_eq!(catalog().resolve_enum_domain(&zh(), "英雄"), Some("Hero"));
     let source = r#"规则("hero")
