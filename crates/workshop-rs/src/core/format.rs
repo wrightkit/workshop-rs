@@ -15,7 +15,9 @@
 /// representation when truncation would make the emitted value integral.
 /// Non-finite values take the reference's `String(n)` spellings `Infinity`,
 /// `-Infinity`, and `NaN` (pinned OverPy 9.7.10 emission for `log(0)` and
-/// `log(-1)` folds; #358).
+/// `log(-1)` folds; #358). These spellings are emission-only: without Workshop
+/// client-acceptance evidence the canonical grammar admits no non-finite
+/// literal, and `wir` validation rejects non-finite number values.
 pub fn format_number(value: f64) -> String {
     if !value.is_finite() {
         return if value.is_nan() {

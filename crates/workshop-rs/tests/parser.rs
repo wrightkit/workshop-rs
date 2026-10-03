@@ -74,59 +74,56 @@ fn evidenced_uppercase_hex_literal_matches_decimal_program() {
 }
 
 #[test]
-fn evidenced_non_finite_number_spellings_parse_and_round_trip() {
-    let source = common::corpus_text("minimized/opy-nonfinite-number-spellings");
-    let catalog = catalog();
-    let locale = en();
-    let program = parser::parse(&source, &catalog, &locale)
-        .expect("pinned OverPy Workshop output with -Infinity/NaN/Infinity must parse");
-
-    assert!(program.semantic_issues(&catalog).is_empty());
-    program
-        .validate()
-        .expect("non-finite number literals must be valid canonical Workshop");
-    let values: Vec<f64> = internal::parse(&source)
-        .values
-        .iter()
-        .filter_map(|node| match &node.value {
-            wir::Value::Number { value, .. } => Some(*value),
-            _ => None,
-        })
-        .collect();
-    assert!(
-        values.contains(&f64::NEG_INFINITY)
-            && values.iter().any(|value| value.is_nan())
-            && values.contains(&f64::INFINITY),
-        "expected -Infinity, NaN, and Infinity number values: {values:?}"
-    );
-
-    let emitted = emitter::emit(&program, &catalog, &locale).expect("pinned artifact emits");
-    assert!(emitted.contains("Set Global Variable(v, -Infinity);"));
-    assert!(emitted.contains("Set Global Variable(v, NaN);"));
-    assert!(emitted.contains("Set Global Variable(v, Infinity);"));
-    let reparsed = parser::parse(&emitted, &catalog, &locale).expect("emitted artifact reparses");
-    assert!(roundtrip::equivalent(&program, &reparsed));
+fn non_finite_spellings_stay_outside_the_canonical_grammar() {
+    // #358: pinned OverPy emission alone does not evidence Workshop client
+    // acceptance, so these spellings stay outside the canonical number
+    // grammar. Bare words parse as calls and fail catalog validation;
+    // operator-prefixed forms are malformed at the value parser.
+    let declared = |literal: &str| {
+        format!(
+            "variables {{\n    global:\n        0: v\n}}\n\nrule (\"x\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{\n        Set Global Variable(v, {literal});\n    }}\n}}\n"
+        )
+    };
+    for literal in ["Infinity", "NaN", "inf", "infinity", "nan"] {
+        let program = internal::parse(&declared(literal));
+        assert!(
+            !program.values.iter().any(
+                |node| matches!(node.value, wir::Value::Number { value, .. } if !value.is_finite())
+            ),
+            "'{literal}' must not parse as a non-finite number"
+        );
+        let error = validate::validate_canonical_ids_wir(&program, &catalog())
+            .expect_err("an unevidenced spelling must not validate as canonical");
+        assert_eq!(
+            error.to_string(),
+            format!("unknown value spelling '{literal}' for locale 'en-us'")
+        );
+    }
+    for literal in ["-Infinity", "-NaN", "+Infinity"] {
+        internal::try_parse(&declared(literal))
+            .expect_err("an operator-prefixed non-finite spelling must be malformed");
+    }
 }
 
 #[test]
-fn unevidenced_non_finite_spellings_never_become_number_literals() {
-    // Only `Infinity`, `-Infinity`, and `NaN` are evidenced by pinned
-    // reference emission (#358); other spellings keep their existing
-    // diagnostics path instead of parsing as non-finite numbers.
-    for literal in ["inf", "-NaN", "+Infinity", "infinity", "nan"] {
-        let source = format!(
-            "rule (\"x\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{\n        Set Global Variable(v, {literal});\n    }}\n}}\n"
-        );
-        if let Ok(program) = internal::try_parse(&source) {
-            assert!(
-                !program
-                    .values
-                    .iter()
-                    .any(|node| matches!(node.value, wir::Value::Number { value, .. } if !value.is_finite())),
-                "'{literal}' must not parse as a non-finite number"
-            );
-        }
-    }
+fn non_finite_number_values_fail_wir_validation() {
+    // A digit literal of 300+ digits overflows f64 to ±inf at parse; with no
+    // client-acceptance evidence the canonical model rejects the value (#358).
+    let literal = "9".repeat(400);
+    let source = format!(
+        "variables {{\n    global:\n        0: v\n}}\n\nrule (\"x\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{\n        Set Global Variable(v, {literal});\n    }}\n}}\n"
+    );
+    let program = internal::parse(&source);
+    assert!(
+        program.values.iter().any(
+            |node| matches!(node.value, wir::Value::Number { value, .. } if !value.is_finite())
+        ),
+        "a 400-digit literal must overflow to a non-finite number"
+    );
+    let error = program
+        .validate()
+        .expect_err("a non-finite number must fail wir validation");
+    assert_eq!(error.code(), "non-finite-number");
 }
 
 #[test]

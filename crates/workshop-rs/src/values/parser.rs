@@ -174,48 +174,26 @@ impl ParseContext<'_> {
                     .values
                     .push(ValueNode::new(Value::Number { value, text }, span)))
             }
-            // `Infinity`, `-Infinity`, and `NaN` are locale-independent number
-            // spellings, not value names: pinned OverPy 9.7.10 emits them for
-            // `log(0)`/`log(-1)` folds and literal pass-through, and no catalog
-            // or locale data maps them (#358 evidence).
-            Some(Token {
-                kind: TokenKind::Word(word),
-                start,
-                end,
-            }) if word == "Infinity" || word == "NaN" => {
-                let span = Some(Span::new(self.file(), start, end));
-                self.pos += 1;
-                let value = if word == "NaN" {
-                    f64::NAN
-                } else {
-                    f64::INFINITY
-                };
-                Ok(self
-                    .target
-                    .values
-                    .push(ValueNode::new(Value::Number { value, text: word }, span)))
-            }
             Some(Token {
                 kind: TokenKind::Op(op),
                 start,
                 ..
             }) if op == "-" => {
-                let operand = self.peek_at(1).and_then(|token| match token.kind {
-                    TokenKind::Number { value, text } => {
-                        Some((-value, format!("-{text}"), token.end))
-                    }
-                    TokenKind::Word(ref word) if word == "Infinity" => {
-                        Some((f64::NEG_INFINITY, "-Infinity".to_string(), token.end))
-                    }
-                    _ => None,
-                });
-                if let Some((value, text, number_end)) = operand {
+                if let Some(Token {
+                    kind: TokenKind::Number { value, text },
+                    end: number_end,
+                    ..
+                }) = self.peek_at(1)
+                {
                     let span = Some(Span::new(self.file(), start, number_end));
                     self.pos += 2;
-                    Ok(self
-                        .target
-                        .values
-                        .push(ValueNode::new(Value::Number { value, text }, span)))
+                    Ok(self.target.values.push(ValueNode::new(
+                        Value::Number {
+                            value: -value,
+                            text: format!("-{text}"),
+                        },
+                        span,
+                    )))
                 } else {
                     Err(self.malformed("expected a number after '-'", &self.peek().unwrap()))
                 }
