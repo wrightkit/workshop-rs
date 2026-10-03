@@ -468,6 +468,9 @@ fn render_value(program: &Program, id: super::ValueId, out: &mut String) {
 }
 
 fn format_number(value: f64) -> String {
+    if !value.is_finite() {
+        return crate::core::format::format_number(value);
+    }
     if value == value.trunc() && value.abs() < 1e15 {
         format!("{value:.0}")
     } else {

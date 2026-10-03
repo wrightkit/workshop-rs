@@ -229,8 +229,21 @@ fn check_value(program: &Program, id: super::ValueId) -> Result<(), IrError> {
                 check_value(program, *arg)?;
             }
         }
-        Value::Number { .. }
-        | Value::String(_)
+        Value::Number { value, .. } => {
+            // No Workshop client-acceptance evidence exists for non-finite
+            // values: the pinned source compilers spell them only as an
+            // upstream artifact (#358). A huge literal such as 300+ digits
+            // overflows to ±inf here, so the invariant is enforced rather
+            // than assumed.
+            if !value.is_finite() {
+                return Err(IrError::Invalid {
+                    code: "non-finite-number",
+                    message: "a non-finite number is not a canonical Workshop value".into(),
+                    span: node.span,
+                });
+            }
+        }
+        Value::String(_)
         | Value::LocalizedString(_)
         | Value::Bool(_)
         | Value::Null

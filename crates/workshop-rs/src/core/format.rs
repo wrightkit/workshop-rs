@@ -13,9 +13,21 @@
 /// representation truncated to 16 significant digits (OverPy behavior;
 /// evidence: the pinned oracle snapshots). A non-integer keeps its shortest
 /// representation when truncation would make the emitted value integral.
+/// Non-finite values take the reference's `String(n)` spellings `Infinity`,
+/// `-Infinity`, and `NaN` (pinned OverPy 9.7.10 emission for `log(0)` and
+/// `log(-1)` folds; #358). These spellings are emission-only: without Workshop
+/// client-acceptance evidence the canonical grammar admits no non-finite
+/// literal, and `wir` validation rejects non-finite number values.
 pub fn format_number(value: f64) -> String {
     if !value.is_finite() {
-        return format!("{value}");
+        return if value.is_nan() {
+            "NaN"
+        } else if value.is_sign_negative() {
+            "-Infinity"
+        } else {
+            "Infinity"
+        }
+        .to_string();
     }
     if value == 0.0 {
         return "0".to_string();
@@ -114,6 +126,15 @@ mod tests {
         assert_eq!(format_number(0.016), "0.016");
         assert_eq!(format_number(0.125), "0.125");
         assert_eq!(format_number(1.5), "1.5");
+    }
+
+    #[test]
+    fn non_finite_values_take_the_reference_spellings() {
+        // Pinned OverPy 9.7.10 emits `-Infinity` and `NaN` for `log(0)` and
+        // `log(-1)` folds; `String(n)` spells positive infinity `Infinity`.
+        assert_eq!(format_number(f64::INFINITY), "Infinity");
+        assert_eq!(format_number(f64::NEG_INFINITY), "-Infinity");
+        assert_eq!(format_number(f64::NAN), "NaN");
     }
 
     #[test]
