@@ -160,6 +160,7 @@ impl Catalog {
         }
 
         let mut catalog = Catalog {
+            detection_index: None,
             schema_version: file.schema_version,
             locales,
             target: file.target,
@@ -213,6 +214,10 @@ impl Catalog {
             }
         }
         catalog.validate_param_domains()?;
+        catalog.detection_index =
+            Some(super::detect::AliasIndex::build(&catalog).map_err(|error| {
+                CatalogError::validation(format!("locale detection index: {error}"))
+            })?);
         Ok(catalog)
     }
 

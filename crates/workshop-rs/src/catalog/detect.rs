@@ -1,4 +1,8 @@
-use crate::catalog::{Catalog, Locale};
+use std::collections::HashMap;
+
+use aho_corasick::AhoCorasick;
+
+use crate::catalog::{Catalog, Kind, Locale};
 use crate::core::error::{Result, WorkshopError};
 
 /// A language-detection result with ranked evidence.
@@ -20,13 +24,16 @@ pub const MIN_MATCHES: usize = 2;
 
 /// Detect the Workshop client language of the input.
 pub fn detect(input: &str, catalog: &Catalog) -> Detection {
+    let counts = catalog
+        .detection_index
+        .as_ref()
+        .expect("validated catalog")
+        .counts(input, catalog.locales().len());
     let mut candidates: Vec<(Locale, usize)> = catalog
         .locales()
         .iter()
-        .map(|locale| {
-            let matches = locale_alias_matches(input, catalog, locale);
-            (locale.clone(), matches)
-        })
+        .enumerate()
+        .map(|(index, locale)| (locale.clone(), counts[index]))
         .collect();
     candidates.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.cmp(&b.0)));
 
@@ -91,66 +98,98 @@ pub fn resolve_locale(
     Ok(detection.locale)
 }
 
-/// Count distinct catalog aliases of `locale` that appear in the input.
-fn locale_alias_matches(input: &str, catalog: &Catalog, locale: &Locale) -> usize {
-    let mut matches = 0usize;
-    for kind in [
-        crate::catalog::Kind::Structural,
-        crate::catalog::Kind::Action,
-        crate::catalog::Kind::Value,
-        crate::catalog::Kind::Event,
-        crate::catalog::Kind::Operator,
-    ] {
-        for entry in catalog.entries_of(kind) {
-            if let Some(spelling) = entry.spelling(locale) {
-                if locale != catalog.primary_locale()
-                    && entry.spelling(catalog.primary_locale()) == Some(spelling)
-                {
-                    continue;
-                }
-                if contains_word(input, spelling) {
-                    matches += 1;
-                }
-            }
-        }
-    }
-    // Enum member spellings (e.g. "Grapple Beam", "Ignore Condition").
-    for domain in catalog.enum_domains() {
-        for member in &domain.members {
-            if let Some(spelling) = member.spelling(locale) {
-                if locale != catalog.primary_locale()
-                    && member.spelling(catalog.primary_locale()) == Some(spelling)
-                {
-                    continue;
-                }
-                if contains_word(input, spelling) {
-                    matches += 1;
-                }
-            }
-        }
-    }
-    matches
+#[derive(Debug, Clone)]
+pub(super) struct AliasIndex {
+    matcher: AhoCorasick,
+    locale_indices: Vec<Vec<usize>>,
 }
 
-/// Whether `needle` appears in `haystack` bounded by non-word characters.
-fn contains_word(haystack: &str, needle: &str) -> bool {
-    if needle.is_empty() {
-        return false;
+impl AliasIndex {
+    pub(super) fn build(catalog: &Catalog) -> std::result::Result<Self, aho_corasick::BuildError> {
+        let mut patterns = Vec::new();
+        let mut by_spelling = HashMap::new();
+        let mut locale_indices: Vec<Vec<usize>> = Vec::new();
+        for (locale_index, locale) in catalog.locales().iter().enumerate() {
+            let spellings = catalog
+                .entries
+                .iter()
+                .filter(|entry| {
+                    matches!(
+                        entry.kind,
+                        Kind::Structural
+                            | Kind::Action
+                            | Kind::Value
+                            | Kind::Event
+                            | Kind::Operator
+                    )
+                })
+                .filter_map(|entry| {
+                    Some((
+                        entry.spelling(locale)?,
+                        entry.spelling(catalog.primary_locale()),
+                    ))
+                })
+                .chain(
+                    catalog
+                        .enum_domains()
+                        .flat_map(|domain| &domain.members)
+                        .filter_map(|member| {
+                            Some((
+                                member.spelling(locale)?,
+                                member.spelling(catalog.primary_locale()),
+                            ))
+                        }),
+                );
+            for (spelling, primary) in spellings {
+                if spelling.is_empty()
+                    || (locale != catalog.primary_locale() && primary == Some(spelling))
+                {
+                    continue;
+                }
+                let pattern = *by_spelling.entry(spelling).or_insert_with(|| {
+                    let index = patterns.len();
+                    patterns.push(spelling);
+                    locale_indices.push(Vec::new());
+                    index
+                });
+                locale_indices[pattern].push(locale_index);
+            }
+        }
+        Ok(Self {
+            matcher: AhoCorasick::new(patterns)?,
+            locale_indices,
+        })
     }
-    for (start, _) in haystack.match_indices(needle) {
-        let end = start + needle.len();
-        let before_ok = start == 0
-            || !haystack[..start]
+
+    fn counts(&self, input: &str, locale_count: usize) -> Vec<usize> {
+        let mut counts = vec![0; locale_count];
+        let mut seen = vec![false; self.locale_indices.len()];
+        let mut next_start = vec![0; self.locale_indices.len()];
+        for found in self.matcher.find_overlapping_iter(input) {
+            let pattern = found.pattern().as_usize();
+            if seen[pattern] || found.start() < next_start[pattern] {
+                continue;
+            }
+            // str::match_indices skips overlapping occurrences of the same spelling,
+            // even when the first occurrence fails the word-boundary check.
+            next_start[pattern] = found.end();
+            let before_ok = !input[..found.start()]
                 .chars()
                 .next_back()
                 .is_some_and(is_word_char);
-        let after_ok =
-            end >= haystack.len() || !haystack[end..].chars().next().is_some_and(is_word_char);
-        if before_ok && after_ok {
-            return true;
+            let after_ok = !input[found.end()..]
+                .chars()
+                .next()
+                .is_some_and(is_word_char);
+            if before_ok && after_ok {
+                seen[pattern] = true;
+                for &locale in &self.locale_indices[pattern] {
+                    counts[locale] += 1;
+                }
+            }
         }
+        counts
     }
-    false
 }
 
 fn is_word_char(ch: char) -> bool {
