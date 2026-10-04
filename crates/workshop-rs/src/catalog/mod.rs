@@ -403,6 +403,7 @@ pub(crate) type MemberIndexMap = HashMap<String, HashMap<String, (usize, usize)>
 /// The validated canonical Workshop catalog.
 #[derive(Debug, Clone)]
 pub struct Catalog {
+    detection_index: Option<detect::AliasIndex>,
     pub(crate) schema_version: u32,
     /// The declared locales, normalized; the first one is the primary
     /// locale and must be fully covered.
