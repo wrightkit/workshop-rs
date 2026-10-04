@@ -237,16 +237,15 @@ impl SourceMap {
                 }
             }
             for (action, public_action) in public.actions.iter().enumerate() {
-                let Some(provenance) = program.action_provenance(rule, action) else {
-                    continue;
-                };
-                if provenance.span.is_some() || provenance.identifier.is_some() {
-                    spans.push(MappedNode::Action {
-                        rule,
-                        action,
-                        span: provenance.span.map(WireSpan::from),
-                        identifier_span: provenance.identifier.map(WireSpan::from),
-                    });
+                if let Some(provenance) = program.action_provenance(rule, action) {
+                    if provenance.span.is_some() || provenance.identifier.is_some() {
+                        spans.push(MappedNode::Action {
+                            rule,
+                            action,
+                            span: provenance.span.map(WireSpan::from),
+                            identifier_span: provenance.identifier.map(WireSpan::from),
+                        });
+                    }
                 }
                 for (argument, value) in action_argument_values(public_action)
                     .iter()
@@ -632,12 +631,14 @@ fn wire_children(children: &[ValueProvenance], values: &[&Value]) -> Vec<WireVal
 }
 
 fn wire_value(provenance: &ValueProvenance, value: &Value) -> WireValue {
-    if provenance.identity != value_identity(value) {
-        return WireValue::default();
-    }
+    let (span, identifier) = if provenance.identity == value_identity(value) {
+        (provenance.span, provenance.identifier)
+    } else {
+        Default::default()
+    };
     WireValue {
-        span: provenance.span.map(WireSpan::from),
-        identifier_span: provenance.identifier.map(WireSpan::from),
+        span: span.map(WireSpan::from),
+        identifier_span: identifier.map(WireSpan::from),
         children: wire_children(&provenance.children, &value_children(value)),
     }
 }

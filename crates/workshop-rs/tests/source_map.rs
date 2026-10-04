@@ -763,6 +763,87 @@ fn invalid_entries_reject_the_whole_mapping_without_changing_the_program() {
 }
 
 #[test]
+fn action_argument_spans_return_none_for_missing_positions() {
+    let empty = Program::new();
+    assert_eq!(empty.action_argument_span(0, 0, 0), None);
+
+    let mut program = parsed(TWO_RULES);
+    for (rule, action, argument) in [(2, 0, 0), (0, 10, 0), (0, 0, 10)] {
+        assert_eq!(program.action_argument_span(rule, action, argument), None);
+    }
+    program.rules[0].actions.clear();
+    assert_eq!(program.action_argument_span(0, 0, 0), None);
+    program.rules.clear();
+    assert_eq!(program.action_argument_span(0, 0, 0), None);
+}
+
+#[test]
+fn mapped_round_trip_preserves_children_of_a_mutated_action() {
+    let mut program = parsed(
+        "rule (\"test\") { event { Ongoing - Global; } actions { Wait(Add(1, 2), Ignore Condition); } }",
+    );
+    let sibling = program.action_argument_value_span(0, 0, 0, &[1]).unwrap();
+    let argument = program.action_argument_span(0, 0, 1).unwrap();
+    let Action::Call { args, .. } = &mut program.rules[0].actions[0] else {
+        panic!("Wait lowers to a call")
+    };
+    let Value::Call { args, .. } = &mut args[0] else {
+        panic!("Add lowers to a call")
+    };
+    args[0] = Value::number(9.0);
+    assert_eq!(program.action_span(0, 0), None);
+    assert_eq!(program.action_argument_span(0, 0, 0), None);
+    assert_eq!(program.action_argument_value_span(0, 0, 0, &[0]), None);
+    assert_eq!(
+        program.action_argument_value_span(0, 0, 0, &[1]),
+        Some(sibling)
+    );
+    assert_eq!(program.action_argument_span(0, 0, 1), Some(argument));
+
+    let artifact = MappedText {
+        text: emitter::emit(&program, &catalog(), &en()).unwrap(),
+        map: SourceMap::extract(&program),
+    };
+    let decoded = MappedText::from_json(&artifact.to_json()).unwrap();
+    let mut target = parsed(&decoded.text);
+    decoded.map.apply(&mut target).unwrap();
+    assert_eq!(
+        mapped_positions(&target, &program),
+        mapped_positions(&program, &program)
+    );
+}
+
+#[test]
+fn mapped_round_trip_preserves_descendants_of_a_mutated_condition() {
+    let mut program =
+        parsed("rule (\"test\") { event { Ongoing - Global; } conditions { Add(1, 2) > 0; } }");
+    let sibling = program.condition_value_span(0, 0, &[0, 1]).unwrap();
+    let Value::Call { args, .. } = &mut program.rules[0].conditions[0].value else {
+        panic!("comparison lowers to a call")
+    };
+    let Value::Call { args, .. } = &mut args[0] else {
+        panic!("Add lowers to a call")
+    };
+    args[0] = Value::number(9.0);
+    assert_eq!(program.condition_span(0, 0), None);
+    assert_eq!(program.condition_value_span(0, 0, &[0]), None);
+    assert_eq!(program.condition_value_span(0, 0, &[0, 0]), None);
+    assert_eq!(program.condition_value_span(0, 0, &[0, 1]), Some(sibling));
+
+    let artifact = MappedText {
+        text: emitter::emit(&program, &catalog(), &en()).unwrap(),
+        map: SourceMap::extract(&program),
+    };
+    let decoded = MappedText::from_json(&artifact.to_json()).unwrap();
+    let mut target = parsed(&decoded.text);
+    decoded.map.apply(&mut target).unwrap();
+    assert_eq!(
+        mapped_positions(&target, &program),
+        mapped_positions(&program, &program)
+    );
+}
+
+#[test]
 fn inserting_or_removing_nodes_hides_displaced_spans() {
     let base = parsed(TWO_RULES);
     assert!(base.rule_span(0).is_some());

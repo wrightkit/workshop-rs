@@ -671,9 +671,9 @@ impl Program {
         action: usize,
         argument: usize,
     ) -> Option<&ValueProvenance> {
+        let record = self.argument_record(rule, action, argument)?;
         let values = action_argument_values(&self.rules[rule].actions[action]);
-        self.argument_record(rule, action, argument)
-            .filter(|record| record.identity == value_identity(values[argument]))
+        (record.identity == value_identity(values[argument])).then_some(record)
     }
 
     fn condition_record(&self, rule: usize, condition: usize) -> Option<&ValueProvenance> {
