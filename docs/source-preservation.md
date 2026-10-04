@@ -88,11 +88,12 @@ explicit control-flow lines, so these positions survive deterministic emission
 and re-parsing. The decision record is
 [ADR-0013](adr/0013-source-mapping-across-provider-boundary.md).
 
-- **Shape guard.** Attached mappings record the program shape they were
-  attached to: the rule count and each rule's condition and action counts. When
-  the current shape differs, span accessors return `None` rather than a
-  displaced span. Consumers that change program shape lose the affected
-  mappings; they do not receive wrong locations.
+- **Shape and content guard.** Attached mappings record the program shape and
+  node content they were attached to. When the current shape differs, or the
+  node at a mapped position no longer has the recorded content, span
+  accessors return `None` rather than a displaced or stale span. Consumers
+  that change the program lose the affected mappings; they do not receive
+  wrong locations.
 - **Artifact formats.** `workshop-rs` defines the canonical Workshop artifact
   formats carried by provider protocols as opaque payloads:
   `workshop-rs/text-v1` is Workshop text; `workshop-rs/mapped-text-v1` is
@@ -107,16 +108,36 @@ and re-parsing. The decision record is
   values. Producers convert into this unit; editor presentation converts to
   UTF-16.
 
-## Shape guard
+## Shape and content guard
 
-Attached mappings record the program shape they were attached to: the number
-of rules, per-rule conditions and actions, and the declaration counts. The span
-accessors return `None` once the public `Vec` fields no longer have that shape,
-for example after inserting or removing a rule, condition, or action, instead
-of returning a displaced span. Attaching a span again records the current shape
-of the affected scope, so a consumer that changes the program shape re-attaches
-the mapping it still wants, and one that builds a program incrementally attaches
-after each addition; attaching `None` records the shape without a span.
+A mapping is valid while both the position it was recorded for still exists
+and the node there still has the content it was attached to. The two checks
+complement each other:
+
+- **Shape.** Tables are positional and record the counts they were attached
+  to: the number of rules, per-rule conditions and actions, each action's
+  direct argument count, each recorded value's child count, and the
+  declaration counts. The span accessors return `None` once a public `Vec`
+  no longer has the recorded count — after inserting or removing a rule,
+  condition, action, argument, or nested value — instead of returning a
+  displaced span. A changed count hides only its own table level: descending
+  into an unaffected child table still requires only that level's count to
+  match.
+- **Content.** Every record carries the identity of the node content it was
+  attached to, so mutations that keep the shape — swapping two positions,
+  replacing one node, or removing and re-inserting a different node — hide
+  the records whose content changed. Removing and re-inserting the same
+  content keeps its mapping. For a condition, action, or value record the
+  identity covers the node's whole expression subtree, because the node's
+  authored span covers that whole text: mutating a nested value hides the
+  enclosing argument, action, and condition spans while sibling and other
+  unaffected subtree mappings survive.
+
+Attaching a span again reseats the record — it clears the record's own
+fields when the node content changed, records the current shape, and writes
+the new span — so a consumer that changes the program re-attaches the
+mapping it still wants, one that builds a program incrementally attaches
+after each addition, and attaching `None` records the shape without a span.
 
 ## Canonical artifact formats
 

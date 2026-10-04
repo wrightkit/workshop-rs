@@ -1,10 +1,15 @@
 //! Canonical Workshop program concepts.
 
+use self::identity::{
+    NodeIdentity, action_identity, condition_identity, declaration_identity, rule_identity,
+    value_identity,
+};
 use crate::core::error::WorkshopError;
 use crate::settings::Settings;
 use crate::source::{FileId, SourceDocument, SourceFile, Span};
 
 mod conversion;
+mod identity;
 pub(crate) mod shared;
 mod source_map;
 pub use shared::{EventTarget, EventTeam, ModifyOp, PlayerEventKind};
@@ -34,6 +39,8 @@ struct ProgramProvenance {
 struct DeclarationProvenance {
     span: Option<Span>,
     name_span: Option<Span>,
+    /// The identity of the declaration this record was attached to.
+    identity: NodeIdentity,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -43,8 +50,24 @@ struct RuleProvenance {
     name: Option<Span>,
     /// The recorded span of the subroutine name a `Subroutine` event binds.
     event_name: Option<Span>,
+    /// The identity of the public rule this record was attached to.
+    identity: NodeIdentity,
     conditions: Vec<ValueProvenance>,
     actions: Vec<ActionProvenance>,
+}
+
+impl RuleProvenance {
+    /// Prepare the record for a setter write: attaching to a position whose
+    /// node diverged from the record discards its own fields, while the
+    /// condition and action tables keep their independently screened records.
+    fn reseat(&mut self, identity: NodeIdentity) {
+        if self.identity != identity {
+            self.span = None;
+            self.name = None;
+            self.event_name = None;
+        }
+        self.identity = identity;
+    }
 }
 
 #[derive(Debug, Clone, Default)]
@@ -53,6 +76,8 @@ struct ActionProvenance {
     /// The recorded span of the variable or subroutine the action names: a
     /// set/modify/for target or a `Call Subroutine` callee.
     identifier: Option<Span>,
+    /// The identity of the public action this record was attached to.
+    identity: NodeIdentity,
     arguments: Vec<ValueProvenance>,
 }
 
@@ -60,17 +85,35 @@ struct ActionProvenance {
 /// writer used by the condition/action span setters.
 trait SpanSlot {
     fn span_slot(&mut self) -> &mut Option<Span>;
+    /// Prepare the record for a setter write: attaching to a position whose
+    /// node diverged from the record discards its own fields, while child
+    /// tables keep their independently screened records.
+    fn reseat(&mut self, identity: NodeIdentity);
 }
 
 impl SpanSlot for ValueProvenance {
     fn span_slot(&mut self) -> &mut Option<Span> {
         &mut self.span
     }
+    fn reseat(&mut self, identity: NodeIdentity) {
+        if self.identity != identity {
+            self.span = None;
+            self.identifier = None;
+        }
+        self.identity = identity;
+    }
 }
 
 impl SpanSlot for ActionProvenance {
     fn span_slot(&mut self) -> &mut Option<Span> {
         &mut self.span
+    }
+    fn reseat(&mut self, identity: NodeIdentity) {
+        if self.identity != identity {
+            self.span = None;
+            self.identifier = None;
+        }
+        self.identity = identity;
     }
 }
 
@@ -82,6 +125,8 @@ struct ValueProvenance {
     /// The recorded span of the variable or subroutine identifier the value
     /// names, when the value is such a reference.
     identifier: Option<Span>,
+    /// The identity of the public node this record was attached to.
+    identity: NodeIdentity,
     children: Vec<ValueProvenance>,
 }
 
@@ -211,6 +256,7 @@ impl Program {
             condition,
             span,
             |rule| rule.conditions.len(),
+            |rule, index| condition_identity(&rule.conditions[index]),
             |rule, index| SourceMappingError::InvalidCondition {
                 rule,
                 condition: index,
@@ -231,6 +277,7 @@ impl Program {
             action,
             span,
             |rule| rule.actions.len(),
+            |rule, index| action_identity(&rule.actions[index]),
             |rule, index| SourceMappingError::InvalidAction {
                 rule,
                 action: index,
@@ -241,28 +288,35 @@ impl Program {
 
     /// Shared span setter for condition/action provenance slots: validates the
     /// span, bounds-checks the child index against the public rule shape, then
-    /// resizes and writes the provenance slot.
+    /// resizes the table and writes the slot with the node's current identity.
+    /// The identity closure runs only after the bounds check because it
+    /// indexes the public child list.
+    #[allow(clippy::too_many_arguments)]
     fn set_child_span<T: SpanSlot + Default>(
         &mut self,
         rule: usize,
         index: usize,
         span: Option<Span>,
         count: impl Fn(&crate::Rule) -> usize,
+        identity: impl Fn(&crate::Rule, usize) -> NodeIdentity,
         invalid: impl Fn(usize, usize) -> SourceMappingError,
         slots: impl Fn(&mut RuleProvenance) -> &mut Vec<T>,
     ) -> std::result::Result<(), SourceMappingError> {
         self.validate_span(span)?;
-        let child_count = self
+        let public = self
             .rules
             .get(rule)
-            .ok_or(SourceMappingError::InvalidRule(rule))
-            .map(count)?;
+            .ok_or(SourceMappingError::InvalidRule(rule))?;
+        let child_count = count(public);
         if index >= child_count {
             return Err(invalid(rule, index));
         }
+        let identity = identity(public, index);
         let rule_data = self.rule_provenance_mut(rule)?;
         fit(slots(rule_data), child_count);
-        *slots(rule_data)[index].span_slot() = span;
+        let record = &mut slots(rule_data)[index];
+        record.reseat(identity);
+        *record.span_slot() = span;
         Ok(())
     }
 
@@ -275,26 +329,29 @@ impl Program {
         span: Option<Span>,
     ) -> std::result::Result<(), SourceMappingError> {
         self.validate_span(span)?;
-        let action_value = self
-            .rules
-            .get(rule)
-            .ok_or(SourceMappingError::InvalidRule(rule))?
-            .actions
-            .get(action)
-            .ok_or(SourceMappingError::InvalidAction { rule, action })?;
-        let argument_count = action_argument_values(action_value).len();
-        if argument >= argument_count {
-            return Err(SourceMappingError::InvalidActionArgument {
-                rule,
-                action,
-                argument,
-            });
-        }
+        let (identity, argument_count) = {
+            let action_value = self
+                .rules
+                .get(rule)
+                .ok_or(SourceMappingError::InvalidRule(rule))?
+                .actions
+                .get(action)
+                .ok_or(SourceMappingError::InvalidAction { rule, action })?;
+            let argument_values = action_argument_values(action_value);
+            let Some(&argument_value) = argument_values.get(argument) else {
+                return Err(SourceMappingError::InvalidActionArgument {
+                    rule,
+                    action,
+                    argument,
+                });
+            };
+            (value_identity(argument_value), argument_values.len())
+        };
         let action_data = self.action_provenance_mut(rule, action)?;
-        action_data
-            .arguments
-            .resize_with(argument + 1, ValueProvenance::default);
-        action_data.arguments[argument].span = span;
+        fit(&mut action_data.arguments, argument_count);
+        let record = &mut action_data.arguments[argument];
+        record.reseat(identity);
+        record.span = span;
         Ok(())
     }
 
@@ -341,17 +398,24 @@ impl Program {
         if index >= count {
             return Err(table.invalid(index));
         }
+        let identity = table.identity(self, index);
         let slots = table.slots(self.provenance_mut());
         fit(slots, count);
-        slots[index] = DeclarationProvenance { span, name_span };
+        slots[index] = DeclarationProvenance {
+            span,
+            name_span,
+            identity,
+        };
         Ok(())
     }
 
     /// Return the authored span of a public rule, when source metadata exists.
     ///
-    /// Attached mappings record the program shape they were attached to. Every
-    /// span accessor returns `None` once the public rules, conditions, or
-    /// actions have been inserted or removed since the mapping was attached.
+    /// Attached mappings record the program shape and node content they were
+    /// attached to. Every span accessor returns `None` once the corresponding
+    /// public list has been inserted into or removed from, or once the node
+    /// at that position no longer has the content the mapping was attached
+    /// to — see "Shape and content guard" in `docs/source-preservation.md`.
     pub fn rule_span(&self, rule: usize) -> Option<crate::source::Span> {
         self.rule_provenance(rule)?.span
     }
@@ -373,9 +437,7 @@ impl Program {
         action: usize,
         argument: usize,
     ) -> Option<crate::source::Span> {
-        self.action_provenance(rule, action)?
-            .arguments
-            .get(argument)?
+        self.action_argument_provenance(rule, action, argument)?
             .span
     }
 
@@ -388,7 +450,7 @@ impl Program {
     pub fn global_variable_name_span(&self, variable: usize) -> Option<Span> {
         self.declaration_name_span(
             |provenance| &provenance.global_variables,
-            self.global_variables.len(),
+            &self.global_variables,
             variable,
         )
     }
@@ -398,7 +460,7 @@ impl Program {
     pub fn player_variable_name_span(&self, variable: usize) -> Option<Span> {
         self.declaration_name_span(
             |provenance| &provenance.player_variables,
-            self.player_variables.len(),
+            &self.player_variables,
             variable,
         )
     }
@@ -408,7 +470,7 @@ impl Program {
     pub fn subroutine_name_span(&self, subroutine: usize) -> Option<Span> {
         self.declaration_name_span(
             |provenance| &provenance.subroutines,
-            self.subroutines.len(),
+            &self.subroutines,
             subroutine,
         )
     }
@@ -461,11 +523,11 @@ impl Program {
         condition: usize,
         path: &[usize],
     ) -> Option<crate::source::Span> {
-        let mut value = self.condition_provenance(rule, condition)?;
-        for &index in path {
-            value = value.children.get(index)?;
-        }
-        value.identifier.or(value.span)
+        let record = self.condition_record(rule, condition)?;
+        let value = &self.rules[rule].conditions[condition].value;
+        let identity = condition_identity(&self.rules[rule].conditions[condition]);
+        let record = value_provenance_at(record, value, path, identity)?;
+        record.identifier.or(record.span)
     }
 
     /// Return the authored span of a value nested inside a direct value
@@ -484,14 +546,10 @@ impl Program {
         argument: usize,
         path: &[usize],
     ) -> Option<crate::source::Span> {
-        let mut value = self
-            .action_provenance(rule, action)?
-            .arguments
-            .get(argument)?;
-        for &index in path {
-            value = value.children.get(index)?;
-        }
-        value.identifier.or(value.span)
+        let record = self.argument_record(rule, action, argument)?;
+        let value = action_argument_values(&self.rules[rule].actions[action])[argument];
+        let record = value_provenance_at(record, value, path, value_identity(value))?;
+        record.identifier.or(record.span)
     }
 
     /// Create a checked source edit through the authored source attached to
@@ -553,7 +611,12 @@ impl Program {
         )
     }
 
-    fn rule_provenance(&self, rule: usize) -> Option<&RuleProvenance> {
+    /// The recorded provenance row for a rule, while the rule table still
+    /// matches the public rule count. Used both for the record's own fields
+    /// — [`rule_provenance`] adds the identity check — and for descending
+    /// into its condition and action tables, which carry records of their
+    /// own.
+    fn rule_record(&self, rule: usize) -> Option<&RuleProvenance> {
         let recorded = &self.provenance.as_deref()?.rules;
         if recorded.len() != self.rules.len() {
             return None;
@@ -561,44 +624,98 @@ impl Program {
         recorded.get(rule)
     }
 
-    fn action_provenance(&self, rule: usize, action: usize) -> Option<&ActionProvenance> {
-        let recorded = self.rule_provenance(rule)?;
+    /// The recorded provenance of a rule's own fields: the record is
+    /// returned only while the rule at that position still has the recorded
+    /// identity.
+    fn rule_provenance(&self, rule: usize) -> Option<&RuleProvenance> {
+        self.rule_record(rule)
+            .filter(|record| record.identity == rule_identity(&self.rules[rule]))
+    }
+
+    fn action_record(&self, rule: usize, action: usize) -> Option<&ActionProvenance> {
+        let recorded = self.rule_record(rule)?;
         if recorded.actions.len() != self.rules[rule].actions.len() {
             return None;
         }
         recorded.actions.get(action)
     }
 
-    fn condition_provenance(&self, rule: usize, condition: usize) -> Option<&ValueProvenance> {
-        let recorded = self.rule_provenance(rule)?;
+    /// The recorded provenance of an action's own fields: the record is
+    /// returned only while the action at that position still has the
+    /// recorded identity.
+    fn action_provenance(&self, rule: usize, action: usize) -> Option<&ActionProvenance> {
+        self.action_record(rule, action)
+            .filter(|record| record.identity == action_identity(&self.rules[rule].actions[action]))
+    }
+
+    fn argument_record(
+        &self,
+        rule: usize,
+        action: usize,
+        argument: usize,
+    ) -> Option<&ValueProvenance> {
+        let recorded = self.action_record(rule, action)?;
+        let values = action_argument_values(&self.rules[rule].actions[action]);
+        if recorded.arguments.len() != values.len() {
+            return None;
+        }
+        recorded.arguments.get(argument)
+    }
+
+    /// The recorded provenance of an action argument's own fields: the
+    /// record is returned only while the argument value at that position
+    /// still has the recorded identity.
+    fn action_argument_provenance(
+        &self,
+        rule: usize,
+        action: usize,
+        argument: usize,
+    ) -> Option<&ValueProvenance> {
+        let record = self.argument_record(rule, action, argument)?;
+        let values = action_argument_values(&self.rules[rule].actions[action]);
+        (record.identity == value_identity(values[argument])).then_some(record)
+    }
+
+    fn condition_record(&self, rule: usize, condition: usize) -> Option<&ValueProvenance> {
+        let recorded = self.rule_record(rule)?;
         if recorded.conditions.len() != self.rules[rule].conditions.len() {
             return None;
         }
         recorded.conditions.get(condition)
     }
 
-    fn declaration_name_span(
+    /// The recorded provenance of a condition's own fields: the record is
+    /// returned only while the condition at that position still has the
+    /// recorded identity.
+    fn condition_provenance(&self, rule: usize, condition: usize) -> Option<&ValueProvenance> {
+        self.condition_record(rule, condition).filter(|record| {
+            record.identity == condition_identity(&self.rules[rule].conditions[condition])
+        })
+    }
+
+    fn declaration_name_span<T: std::fmt::Debug>(
         &self,
         recorded: impl Fn(&ProgramProvenance) -> &[DeclarationProvenance],
-        count: usize,
+        nodes: &[T],
         position: usize,
     ) -> Option<Span> {
-        let declaration = self.declaration_provenance(recorded, count, position);
+        let declaration = self.declaration_provenance(recorded, nodes, position);
         declaration.name_span.or(declaration.span)
     }
 
-    fn declaration_provenance(
+    fn declaration_provenance<T: std::fmt::Debug>(
         &self,
         recorded: impl Fn(&ProgramProvenance) -> &[DeclarationProvenance],
-        count: usize,
+        nodes: &[T],
         position: usize,
     ) -> DeclarationProvenance {
         self.provenance
             .as_deref()
             .map(recorded)
-            .filter(|recorded| recorded.len() == count)
-            .and_then(|recorded| recorded.get(position))
-            .copied()
+            .filter(|recorded| recorded.len() == nodes.len())
+            .and_then(|recorded| recorded.get(position).zip(nodes.get(position)))
+            .filter(|(record, node)| record.identity == declaration_identity(node))
+            .map(|(record, _)| *record)
             .unwrap_or_default()
     }
 
@@ -621,6 +738,9 @@ impl Program {
             .as_mut()
     }
 
+    /// Mutable provenance access for the span setters: the addressed record
+    /// is reseated for the current node so attaching a span never lets a
+    /// record displaced by mutation resurface on a different node.
     fn rule_provenance_mut(
         &mut self,
         rule: usize,
@@ -628,10 +748,13 @@ impl Program {
         if rule >= self.rules.len() {
             return Err(SourceMappingError::InvalidRule(rule));
         }
+        let identity = rule_identity(&self.rules[rule]);
         let rule_count = self.rules.len();
         let provenance = self.provenance_mut();
         fit(&mut provenance.rules, rule_count);
-        Ok(&mut provenance.rules[rule])
+        let record = &mut provenance.rules[rule];
+        record.reseat(identity);
+        Ok(record)
     }
 
     fn action_provenance_mut(
@@ -639,19 +762,59 @@ impl Program {
         rule: usize,
         action: usize,
     ) -> std::result::Result<&mut ActionProvenance, SourceMappingError> {
-        let action_count = self
+        let public = self
             .rules
             .get(rule)
-            .ok_or(SourceMappingError::InvalidRule(rule))?
-            .actions
-            .len();
+            .ok_or(SourceMappingError::InvalidRule(rule))?;
+        let action_count = public.actions.len();
         if action >= action_count {
             return Err(SourceMappingError::InvalidAction { rule, action });
         }
+        let identity = action_identity(&public.actions[action]);
         let rule_data = self.rule_provenance_mut(rule)?;
         fit(&mut rule_data.actions, action_count);
-        Ok(&mut rule_data.actions[action])
+        let record = &mut rule_data.actions[action];
+        record.reseat(identity);
+        Ok(record)
     }
+
+    /// Record the identity of the public node every attached provenance record
+    /// describes, so records are only returned for the content they were
+    /// attached to. Called once after parsing or applying a [`SourceMap`].
+    fn record_identities(&mut self) {
+        let Some(mut provenance) = self.provenance.take() else {
+            return;
+        };
+        identity::record_identities(&mut provenance, self);
+        self.provenance = Some(provenance);
+    }
+}
+
+/// Walk the provenance tree of `value` along `path`. Descending only
+/// requires each level's child table to match the public child count, so a
+/// node that went stale does not hide unaffected siblings; the record at the
+/// path's end is returned only while the node there still has the recorded
+/// identity — `root_identity` for the starting record, its own
+/// [`value_identity`] for every record reached by path.
+fn value_provenance_at<'a>(
+    record: &'a ValueProvenance,
+    value: &'a Value,
+    path: &[usize],
+    root_identity: NodeIdentity,
+) -> Option<&'a ValueProvenance> {
+    let mut record = record;
+    let mut value = value;
+    let mut identity = root_identity;
+    for &index in path {
+        let children = value_children(value);
+        if record.children.len() != children.len() {
+            return None;
+        }
+        record = record.children.get(index)?;
+        value = children[index];
+        identity = value_identity(value);
+    }
+    (record.identity == identity).then_some(record)
 }
 
 fn fit<T: Default>(items: &mut Vec<T>, len: usize) {
@@ -682,6 +845,14 @@ impl DeclarationTable {
             Self::GlobalVariables => SourceMappingError::InvalidGlobalVariable(index),
             Self::PlayerVariables => SourceMappingError::InvalidPlayerVariable(index),
             Self::Subroutines => SourceMappingError::InvalidSubroutine(index),
+        }
+    }
+
+    fn identity(self, program: &Program, index: usize) -> NodeIdentity {
+        match self {
+            Self::GlobalVariables => declaration_identity(&program.global_variables[index]),
+            Self::PlayerVariables => declaration_identity(&program.player_variables[index]),
+            Self::Subroutines => declaration_identity(&program.subroutines[index]),
         }
     }
 

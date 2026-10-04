@@ -763,6 +763,87 @@ fn invalid_entries_reject_the_whole_mapping_without_changing_the_program() {
 }
 
 #[test]
+fn action_argument_spans_return_none_for_missing_positions() {
+    let empty = Program::new();
+    assert_eq!(empty.action_argument_span(0, 0, 0), None);
+
+    let mut program = parsed(TWO_RULES);
+    for (rule, action, argument) in [(2, 0, 0), (0, 10, 0), (0, 0, 10)] {
+        assert_eq!(program.action_argument_span(rule, action, argument), None);
+    }
+    program.rules[0].actions.clear();
+    assert_eq!(program.action_argument_span(0, 0, 0), None);
+    program.rules.clear();
+    assert_eq!(program.action_argument_span(0, 0, 0), None);
+}
+
+#[test]
+fn mapped_round_trip_preserves_children_of_a_mutated_action() {
+    let mut program = parsed(
+        "rule (\"test\") { event { Ongoing - Global; } actions { Wait(Add(1, 2), Ignore Condition); } }",
+    );
+    let sibling = program.action_argument_value_span(0, 0, 0, &[1]).unwrap();
+    let argument = program.action_argument_span(0, 0, 1).unwrap();
+    let Action::Call { args, .. } = &mut program.rules[0].actions[0] else {
+        panic!("Wait lowers to a call")
+    };
+    let Value::Call { args, .. } = &mut args[0] else {
+        panic!("Add lowers to a call")
+    };
+    args[0] = Value::number(9.0);
+    assert_eq!(program.action_span(0, 0), None);
+    assert_eq!(program.action_argument_span(0, 0, 0), None);
+    assert_eq!(program.action_argument_value_span(0, 0, 0, &[0]), None);
+    assert_eq!(
+        program.action_argument_value_span(0, 0, 0, &[1]),
+        Some(sibling)
+    );
+    assert_eq!(program.action_argument_span(0, 0, 1), Some(argument));
+
+    let artifact = MappedText {
+        text: emitter::emit(&program, &catalog(), &en()).unwrap(),
+        map: SourceMap::extract(&program),
+    };
+    let decoded = MappedText::from_json(&artifact.to_json()).unwrap();
+    let mut target = parsed(&decoded.text);
+    decoded.map.apply(&mut target).unwrap();
+    assert_eq!(
+        mapped_positions(&target, &program),
+        mapped_positions(&program, &program)
+    );
+}
+
+#[test]
+fn mapped_round_trip_preserves_descendants_of_a_mutated_condition() {
+    let mut program =
+        parsed("rule (\"test\") { event { Ongoing - Global; } conditions { Add(1, 2) > 0; } }");
+    let sibling = program.condition_value_span(0, 0, &[0, 1]).unwrap();
+    let Value::Call { args, .. } = &mut program.rules[0].conditions[0].value else {
+        panic!("comparison lowers to a call")
+    };
+    let Value::Call { args, .. } = &mut args[0] else {
+        panic!("Add lowers to a call")
+    };
+    args[0] = Value::number(9.0);
+    assert_eq!(program.condition_span(0, 0), None);
+    assert_eq!(program.condition_value_span(0, 0, &[0]), None);
+    assert_eq!(program.condition_value_span(0, 0, &[0, 0]), None);
+    assert_eq!(program.condition_value_span(0, 0, &[0, 1]), Some(sibling));
+
+    let artifact = MappedText {
+        text: emitter::emit(&program, &catalog(), &en()).unwrap(),
+        map: SourceMap::extract(&program),
+    };
+    let decoded = MappedText::from_json(&artifact.to_json()).unwrap();
+    let mut target = parsed(&decoded.text);
+    decoded.map.apply(&mut target).unwrap();
+    assert_eq!(
+        mapped_positions(&target, &program),
+        mapped_positions(&program, &program)
+    );
+}
+
+#[test]
 fn inserting_or_removing_nodes_hides_displaced_spans() {
     let base = parsed(TWO_RULES);
     assert!(base.rule_span(0).is_some());
@@ -822,6 +903,230 @@ fn inserting_or_removing_nodes_hides_displaced_spans() {
     };
     let json: serde_json::Value = serde_json::from_str(&drifted.to_json()).unwrap();
     assert_eq!(json["spans"], serde_json::json!([]));
+}
+
+/// Span setters resize the table they write to; records displaced by earlier
+/// public-Vec mutation must not resurface on a different node at that point.
+#[test]
+fn span_setters_do_not_revive_displaced_mappings() {
+    let attached = span(FileId::from_index(0), 1, 1, 2);
+
+    // Action scope: the reported drift — insert an action, then attach a span.
+    let mut program = parsed(TWO_RULES);
+    let action = program.rules[0].actions[0].clone();
+    program.rules[0].actions.insert(0, action);
+    program
+        .set_action_span(0, 0, Some(attached))
+        .expect("attaches");
+    assert_eq!(program.action_span(0, 0), Some(attached));
+    assert_eq!(program.action_span(0, 1), None);
+    assert_eq!(program.action_span(0, 2), None);
+    assert_eq!(program.action_argument_span(0, 1, 0), None);
+
+    // Condition scope.
+    let mut program = parsed(TWO_RULES);
+    program.rules[0]
+        .conditions
+        .insert(0, Condition::new(Value::Bool(true)));
+    program
+        .set_condition_span(0, 0, Some(attached))
+        .expect("attaches");
+    assert_eq!(program.condition_span(0, 0), Some(attached));
+    assert_eq!(program.condition_span(0, 1), None);
+
+    // Rule scope.
+    let mut program = parsed(TWO_RULES);
+    let rule = program.rules[1].clone();
+    program.rules.insert(0, rule);
+    program.set_rule_span(0, Some(attached)).expect("attaches");
+    assert_eq!(program.rule_span(0), Some(attached));
+    assert_eq!(program.rule_span(1), None);
+    assert_eq!(program.action_span(1, 0), None);
+
+    // Action-argument scope: the direct argument list drifted, which also
+    // makes the action's own record stale — its span covers the changed
+    // expression text.
+    let mut program = parsed(TWO_RULES);
+    let Action::Call { args, .. } = &mut program.rules[0].actions[0] else {
+        panic!("Wait lowers to a call")
+    };
+    args.insert(0, Value::number(9.0));
+    assert_eq!(program.action_argument_span(0, 0, 0), None);
+    assert_eq!(program.action_argument_span(0, 0, 1), None);
+    program
+        .set_action_argument_span(0, 0, 0, Some(attached))
+        .expect("attaches");
+    assert_eq!(program.action_argument_span(0, 0, 0), Some(attached));
+    assert_eq!(program.action_argument_span(0, 0, 1), None);
+    assert_eq!(program.action_argument_span(0, 0, 2), None);
+    assert_eq!(program.action_span(0, 0), None);
+
+    // Declaration scope.
+    let mut program = parsed(PROVENANCE_SOURCE);
+    program
+        .global_variables
+        .insert(0, Variable::new("inserted"));
+    program
+        .set_global_variable_spans(0, Some(attached), Some(attached))
+        .expect("attaches");
+    assert_eq!(program.global_variable_name_span(0), Some(attached));
+    assert_eq!(program.global_variable_name_span(1), None);
+}
+
+/// Mutations that keep the list length hide the positions whose content
+/// changed; positions that still hold the recorded content keep their
+/// mappings.
+#[test]
+fn same_shape_mutations_hide_only_the_positions_that_changed() {
+    // Swapping two nodes hides both positions, the action identifiers they
+    // name, and their argument rows — but not the enclosing rule, the
+    // untouched conditions, or the other rule.
+    let base = parsed(PROVENANCE_SOURCE);
+    let mut program = base.clone();
+    program.rules[0].actions.swap(0, 1);
+    assert_eq!(program.action_span(0, 0), None);
+    assert_eq!(program.action_span(0, 1), None);
+    assert_eq!(program.action_identifier_span(0, 0), None);
+    assert_eq!(program.action_identifier_span(0, 1), None);
+    assert_eq!(program.action_argument_span(0, 0, 0), None);
+    assert_eq!(program.rule_span(0), base.rule_span(0));
+    assert_eq!(program.rule_name_span(0), base.rule_name_span(0));
+    assert_eq!(program.condition_span(0, 0), base.condition_span(0, 0));
+    assert_eq!(program.action_span(1, 0), base.action_span(1, 0));
+
+    // Replacing a node hides its own row and the rows of its children.
+    let mut program = base.clone();
+    program.rules[0].actions[0] = Action::End;
+    assert_eq!(program.action_span(0, 0), None);
+    assert_eq!(program.action_identifier_span(0, 0), None);
+    assert_eq!(program.action_argument_span(0, 0, 0), None);
+    assert_eq!(program.action_span(0, 1), base.action_span(0, 1));
+
+    // Editing a scalar field hides the node's own spans; conditions and
+    // actions are positional children and keep their records.
+    let mut program = base.clone();
+    program.rules[0].name = "renamed".to_string();
+    assert_eq!(program.rule_span(0), None);
+    assert_eq!(program.rule_name_span(0), None);
+    assert_eq!(program.condition_span(0, 0), base.condition_span(0, 0));
+    assert_eq!(program.action_span(0, 0), base.action_span(0, 0));
+
+    // Editing the event binding hides the rule's own and event-name spans.
+    let mut program = base.clone();
+    program.rules[1].event = Event::Global;
+    assert_eq!(program.rule_span(1), None);
+    assert_eq!(program.rule_event_name_span(1), None);
+    assert_eq!(program.action_span(1, 0), base.action_span(1, 0));
+
+    // Editing a declaration hides its name span; other tables are unaffected.
+    let mut program = base.clone();
+    program.global_variables[0].name = "other".to_string();
+    assert_eq!(program.global_variable_name_span(0), None);
+    assert_eq!(
+        program.player_variable_name_span(0),
+        base.player_variable_name_span(0)
+    );
+    assert_eq!(
+        program.subroutine_name_span(0),
+        base.subroutine_name_span(0)
+    );
+
+    // Mutating a nested value makes the whole enclosing expression stale —
+    // the argument, action, and action-identifier spans all cover the
+    // changed text — while an unaffected sibling child keeps its mapping.
+    let mut program = base.clone();
+    let Action::SetGlobalVariable { value, .. } = &mut program.rules[0].actions[0] else {
+        panic!("first action sets a global variable")
+    };
+    let Value::Call { args, .. } = value else {
+        panic!("set value is a call")
+    };
+    args[0] = Value::number(9.0);
+    assert_eq!(program.action_argument_value_span(0, 0, 0, &[0]), None);
+    assert_eq!(program.action_argument_span(0, 0, 0), None);
+    assert_eq!(program.action_span(0, 0), None);
+    assert_eq!(program.action_identifier_span(0, 0), None);
+    assert_eq!(
+        program.action_argument_value_span(0, 0, 0, &[1]),
+        base.action_argument_value_span(0, 0, 0, &[1])
+    );
+    assert_eq!(program.condition_span(0, 0), base.condition_span(0, 0));
+}
+
+/// Positional mappings are anchored to content: reinserting the same node
+/// restores its own record, while different content at a restored shape
+/// stays unmapped.
+#[test]
+fn restored_content_keeps_its_mapping_but_different_content_does_not() {
+    let base = parsed(TWO_RULES);
+
+    let mut program = base.clone();
+    let moved = program.rules[0].actions.remove(0);
+    assert_eq!(program.action_span(0, 0), None);
+    program.rules[0].actions.insert(0, moved);
+    assert_eq!(program.action_span(0, 0), base.action_span(0, 0));
+    assert_eq!(program.action_span(0, 1), base.action_span(0, 1));
+
+    let mut program = base.clone();
+    program.rules[0].actions.remove(0);
+    program.rules[0].actions.push(Action::End);
+    assert_eq!(program.action_span(0, 0), None);
+    assert_eq!(program.action_span(0, 1), None);
+}
+
+/// Extraction reports only mappings that still match the program's current
+/// content: a swapped position contributes no entry, and a mutated child
+/// serializes as unmapped beside its mapped siblings.
+#[test]
+fn extraction_follows_the_content_of_mutated_programs() {
+    let mut swapped = parsed(TWO_RULES);
+    swapped.rules[0].actions.swap(0, 1);
+    let json: serde_json::Value = serde_json::from_str(
+        &MappedText {
+            text: String::new(),
+            map: SourceMap::extract(&swapped),
+        }
+        .to_json(),
+    )
+    .unwrap();
+    let entries = json["spans"].as_array().unwrap();
+    assert!(
+        entries
+            .iter()
+            .all(|entry| entry["node"] != "action" || entry["rule"] != 0),
+        "{entries:?}"
+    );
+    assert!(entries.iter().any(|entry| entry["node"] == "rule"));
+    assert!(entries.iter().any(|entry| entry["node"] == "condition"));
+    assert!(
+        entries
+            .iter()
+            .any(|entry| entry["node"] == "action" && entry["rule"] == 1)
+    );
+
+    let mut program = parsed(PROVENANCE_SOURCE);
+    let Value::Call { args, .. } = &mut program.rules[0].conditions[0].value else {
+        panic!("comparison lowers to a call")
+    };
+    args[0] = Value::number(9.0);
+    let json: serde_json::Value = serde_json::from_str(
+        &MappedText {
+            text: String::new(),
+            map: SourceMap::extract(&program),
+        }
+        .to_json(),
+    )
+    .unwrap();
+    let condition = json["spans"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["node"] == "condition")
+        .expect("condition entry");
+    assert!(condition["span"].is_null(), "{condition}");
+    assert!(condition["identifier_span"].is_null(), "{condition}");
+    assert_eq!(condition["children"][0], serde_json::json!({}));
+    assert!(condition["children"][1].is_object(), "{condition}");
 }
 
 #[test]
