@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use super::super::identity::{NodeIdentity, action_identity, condition_identity, value_identity};
 use super::super::*;
 use super::{malformed_id, wir_value_children};
 use crate::core::error::{Result, WorkshopError};
@@ -20,7 +21,7 @@ impl Program {
         for (position, variable) in self.global_variables.iter().enumerate() {
             let declaration = self.declaration_provenance(
                 |provenance| &provenance.global_variables,
-                self.global_variables.len(),
+                &self.global_variables,
                 position,
             );
             let id = storage.global_variables.push(wir::WorkshopVariable {
@@ -35,7 +36,7 @@ impl Program {
         for (position, variable) in self.player_variables.iter().enumerate() {
             let declaration = self.declaration_provenance(
                 |provenance| &provenance.player_variables,
-                self.player_variables.len(),
+                &self.player_variables,
                 position,
             );
             let id = storage.player_variables.push(wir::WorkshopVariable {
@@ -50,7 +51,7 @@ impl Program {
         for (position, subroutine) in self.subroutines.iter().enumerate() {
             let declaration = self.declaration_provenance(
                 |provenance| &provenance.subroutines,
-                self.subroutines.len(),
+                &self.subroutines,
                 position,
             );
             let id = storage.subroutines.push(wir::WorkshopSubroutine {
@@ -82,10 +83,15 @@ impl Program {
                         &subroutines,
                     )
                     .inspect(|&value| {
-                        if let Some(provenance) =
-                            self.condition_provenance(rule_index, condition_index)
+                        if let Some(provenance) = self.condition_record(rule_index, condition_index)
                         {
-                            apply_value_provenance(&mut storage, value, provenance);
+                            apply_value_provenance(
+                                &mut storage,
+                                value,
+                                &condition.value,
+                                provenance,
+                                condition_identity(condition),
+                            );
                         }
                     })
                     .map(|value| wir::Condition {
@@ -106,7 +112,7 @@ impl Program {
                 &subroutines,
             )?;
             if let Some(provenance) = self
-                .rule_provenance(rule_index)
+                .rule_record(rule_index)
                 .filter(|provenance| provenance.actions.len() == rule.actions.len())
             {
                 let mut public_position = 0;
@@ -114,6 +120,7 @@ impl Program {
                     &mut storage,
                     &actions,
                     &provenance.actions,
+                    &rule.actions,
                     &mut public_position,
                 )?;
             }
@@ -340,6 +347,7 @@ fn apply_action_provenance(
     storage: &mut wir::Program,
     actions: &[wir::ActionId],
     provenance: &[ActionProvenance],
+    public: &[Action],
     position: &mut usize,
 ) -> Result<()> {
     for id in actions {
@@ -354,59 +362,118 @@ fn apply_action_provenance(
                 else_body,
                 ..
             } => {
-                let source = provenance.get(*position).cloned().unwrap_or_default();
+                let record = provenance.get(*position);
+                let public_action = public.get(*position);
                 *position += 1;
-                apply_action_source(storage, *id, &source);
+                if let Some(public_action) = public_action {
+                    apply_action_source(storage, *id, public_action, record);
+                }
                 for (branch_index, branch) in branches.iter().enumerate() {
                     if branch_index > 0 {
-                        let source = provenance.get(*position).cloned().unwrap_or_default();
+                        let record = provenance.get(*position);
+                        let condition = record.and_then(|record| {
+                            public
+                                .get(*position)
+                                .and_then(|action| argument_value(record, action, 0))
+                        });
                         *position += 1;
-                        if let Some(provenance) = source.arguments.first() {
-                            apply_value_provenance(storage, branch.condition, provenance);
+                        if let Some((record, value)) = condition {
+                            apply_value_provenance(
+                                storage,
+                                branch.condition,
+                                value,
+                                record,
+                                value_identity(value),
+                            );
                         }
                     }
-                    apply_action_provenance(storage, &branch.body, provenance, position)?;
+                    apply_action_provenance(storage, &branch.body, provenance, public, position)?;
                 }
                 if let Some(body) = else_body {
                     *position += 1;
-                    apply_action_provenance(storage, &body, provenance, position)?;
+                    apply_action_provenance(storage, &body, provenance, public, position)?;
                 }
                 *position += 1;
             }
             wir::Action::While { body, .. }
             | wir::Action::ForGlobalVariable { body, .. }
             | wir::Action::ForPlayerVariable { body, .. } => {
-                let source = provenance.get(*position).cloned().unwrap_or_default();
+                let record = provenance.get(*position);
+                let public_action = public.get(*position);
                 *position += 1;
-                apply_action_source(storage, *id, &source);
-                apply_action_provenance(storage, &body, provenance, position)?;
+                if let Some(public_action) = public_action {
+                    apply_action_source(storage, *id, public_action, record);
+                }
+                apply_action_provenance(storage, &body, provenance, public, position)?;
                 *position += 1;
             }
             wir::Action::Disabled { action, .. } => {
                 let start = *position;
-                apply_action_provenance(storage, &[action], provenance, position)?;
-                let source = provenance.get(start).cloned().unwrap_or_default();
+                apply_action_provenance(storage, &[action], provenance, public, position)?;
+                let record = provenance.get(start);
                 if let Some(wir::Action::Disabled { span, .. }) = storage.actions.get_mut(*id) {
-                    *span = source.span;
+                    *span = match record {
+                        Some(record) if row_matches(record, public, start) => record.span,
+                        _ => None,
+                    };
                 }
             }
             // Leaf actions consume one row; new block-shaped variants also
             // need an explicit arm in `public_action_provenance`.
             _ => {
-                let source = provenance.get(*position).cloned().unwrap_or_default();
+                let record = provenance.get(*position);
+                let public_action = public.get(*position);
                 *position += 1;
-                apply_action_source(storage, *id, &source);
+                if let Some(public_action) = public_action {
+                    apply_action_source(storage, *id, public_action, record);
+                }
             }
         }
     }
     Ok(())
 }
 
-fn apply_action_source(storage: &mut wir::Program, id: wir::ActionId, source: &ActionProvenance) {
-    if let Some(action) = storage.actions.get_mut(id) {
-        *action.span_mut() = source.span;
-        if let Some(identifier) = action.identifier_span_mut() {
-            *identifier = source.identifier;
+/// Whether a recorded row still describes the public action at `position`.
+fn row_matches(record: &ActionProvenance, public: &[Action], position: usize) -> bool {
+    public
+        .get(position)
+        .is_some_and(|action| record.identity == action_identity(action))
+}
+
+/// The provenance record and public value for the direct argument at
+/// `argument`, while the recorded table still matches the action's argument
+/// count. Whether the record also describes the value's content is decided
+/// by [`apply_value_provenance`].
+fn argument_value<'a>(
+    source: &'a ActionProvenance,
+    public: &'a Action,
+    argument: usize,
+) -> Option<(&'a ValueProvenance, &'a Value)> {
+    let values = action_argument_values(public);
+    if source.arguments.len() != values.len() {
+        return None;
+    }
+    source
+        .arguments
+        .get(argument)
+        .zip(values.get(argument).copied())
+}
+
+fn apply_action_source(
+    storage: &mut wir::Program,
+    id: wir::ActionId,
+    public: &Action,
+    source: Option<&ActionProvenance>,
+) {
+    let Some(source) = source else {
+        return;
+    };
+    if source.identity == action_identity(public) {
+        if let Some(action) = storage.actions.get_mut(id) {
+            *action.span_mut() = source.span;
+            if let Some(identifier) = action.identifier_span_mut() {
+                *identifier = source.identifier;
+            }
         }
     }
     let value_ids = storage
@@ -414,27 +481,59 @@ fn apply_action_source(storage: &mut wir::Program, id: wir::ActionId, source: &A
         .get(id)
         .map(wir::Action::value_args)
         .unwrap_or_default();
-    for (value, provenance) in value_ids.into_iter().zip(&source.arguments) {
-        apply_value_provenance(storage, value, provenance);
+    for (argument, value) in value_ids.into_iter().enumerate() {
+        if let Some((record, public_value)) = argument_value(source, public, argument) {
+            apply_value_provenance(
+                storage,
+                value,
+                public_value,
+                record,
+                value_identity(public_value),
+            );
+        }
     }
 }
 
 /// Write a recorded value-provenance tree back onto a WIR value subtree.
+/// `public` is the public value `value` was lowered from and
+/// `root_identity` the identity `source` was recorded for — a condition
+/// record keeps the condition's identity, every other record keeps its
+/// value's. A node's own fields are written only while it still has the
+/// recorded identity; descending only requires each level's child table to
+/// match, so a stale node does not hide unaffected siblings.
 fn apply_value_provenance(
     storage: &mut wir::Program,
     value: wir::ValueId,
+    public: &Value,
     source: &ValueProvenance,
+    root_identity: NodeIdentity,
 ) {
+    if source.identity == root_identity {
+        if let Some(node) = storage.values.get_mut(value) {
+            node.span = source.span;
+            node.identifier = source.identifier;
+        }
+    }
+    let public_children = value_children(public);
+    if source.children.len() != public_children.len() {
+        return;
+    }
     let Some(node) = storage.values.get(value) else {
         return;
     };
     let children = wir_value_children(&node.value);
-    if let Some(node) = storage.values.get_mut(value) {
-        node.span = source.span;
-        node.identifier = source.identifier;
-    }
-    for (child, source) in children.into_iter().zip(&source.children) {
-        apply_value_provenance(storage, child, source);
+    for ((child, public_child), source) in children
+        .into_iter()
+        .zip(public_children)
+        .zip(&source.children)
+    {
+        apply_value_provenance(
+            storage,
+            child,
+            public_child,
+            source,
+            value_identity(public_child),
+        );
     }
 }
 

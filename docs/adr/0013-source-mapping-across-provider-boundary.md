@@ -1,6 +1,7 @@
 # ADR-0013: Source mapping across the provider boundary
 
-- Status: Accepted
+- Status: Accepted; decision 2 superseded by
+  [ADR-0017](0017-mutation-validated-source-provenance.md)
 - Date: 2026-09-24
 - Related: workshop-rs #271, #252, #187, #178; wrightkit/wright #246; ADR-0008
 

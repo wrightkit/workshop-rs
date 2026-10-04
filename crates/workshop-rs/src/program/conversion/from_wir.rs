@@ -31,6 +31,7 @@ impl Program {
                     .map(|variable| DeclarationProvenance {
                         span: variable.span,
                         name_span: variable.name_span,
+                        ..DeclarationProvenance::default()
                     })
                     .collect(),
                 player_variables: storage
@@ -39,6 +40,7 @@ impl Program {
                     .map(|variable| DeclarationProvenance {
                         span: variable.span,
                         name_span: variable.name_span,
+                        ..DeclarationProvenance::default()
                     })
                     .collect(),
                 subroutines: storage
@@ -47,6 +49,7 @@ impl Program {
                     .map(|subroutine| DeclarationProvenance {
                         span: subroutine.span,
                         name_span: subroutine.name_span,
+                        ..DeclarationProvenance::default()
                     })
                     .collect(),
                 rules: Vec::with_capacity(storage.rules.len()),
@@ -89,6 +92,7 @@ impl Program {
                         .map(|condition| value_provenance(&storage, condition.value))
                         .collect(),
                     actions: action_provenance,
+                    ..RuleProvenance::default()
                 });
             program.rules.push(Rule {
                 name: rule.name.clone(),
@@ -98,6 +102,7 @@ impl Program {
                 actions,
             });
         }
+        program.record_identities();
         Ok(program)
     }
 }
@@ -397,6 +402,7 @@ fn public_action_provenance(
             span: action.span(),
             identifier,
             arguments: map_args(arguments),
+            ..ActionProvenance::default()
         });
     };
     let push_without_span = |output: &mut Vec<ActionProvenance>, arguments: &[wir::ValueId]| {
@@ -464,5 +470,6 @@ fn value_provenance(storage: &wir::Program, id: wir::ValueId) -> ValueProvenance
             .into_iter()
             .map(|child| value_provenance(storage, child))
             .collect(),
+        ..ValueProvenance::default()
     }
 }

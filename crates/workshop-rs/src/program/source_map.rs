@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::identity::{condition_identity, value_identity};
 use super::{
     DeclarationProvenance, Program, ProgramProvenance, Value, ValueProvenance,
     action_argument_values, fit, value_children,
@@ -162,13 +163,13 @@ impl std::error::Error for SourceMapError {}
 impl SourceMap {
     /// Extract the current mapping of a span-bearing program.
     ///
-    /// Only spans that are still valid for the program's current shape are
-    /// extracted; see [`Program::rule_span`].
+    /// Only spans that are still valid for the program's current shape and
+    /// node content are extracted; see [`Program::rule_span`].
     pub fn extract(program: &Program) -> Self {
         let mut spans = Vec::new();
         push_declarations(
             program,
-            program.global_variables.len(),
+            &program.global_variables,
             |provenance| &provenance.global_variables,
             |index, span, name_span| MappedNode::GlobalVariable {
                 index,
@@ -179,7 +180,7 @@ impl SourceMap {
         );
         push_declarations(
             program,
-            program.player_variables.len(),
+            &program.player_variables,
             |provenance| &provenance.player_variables,
             |index, span, name_span| MappedNode::PlayerVariable {
                 index,
@@ -190,7 +191,7 @@ impl SourceMap {
         );
         push_declarations(
             program,
-            program.subroutines.len(),
+            &program.subroutines,
             |provenance| &provenance.subroutines,
             |index, span, name_span| MappedNode::Subroutine {
                 index,
@@ -213,20 +214,24 @@ impl SourceMap {
                     });
                 }
             }
-            for condition in 0..public.conditions.len() {
-                let Some(provenance) = program.condition_provenance(rule, condition) else {
+            for (condition, public_condition) in public.conditions.iter().enumerate() {
+                let Some(record) = program.condition_record(rule, condition) else {
                     continue;
                 };
-                let children = wire_children(&provenance.children);
-                if provenance.span.is_some()
-                    || provenance.identifier.is_some()
-                    || !children.is_empty()
+                let children =
+                    wire_children(&record.children, &value_children(&public_condition.value));
+                let (span, identifier) = if record.identity == condition_identity(public_condition)
                 {
+                    (record.span, record.identifier)
+                } else {
+                    Default::default()
+                };
+                if span.is_some() || identifier.is_some() || !children.is_empty() {
                     spans.push(MappedNode::Condition {
                         rule,
                         condition,
-                        span: provenance.span.map(WireSpan::from),
-                        identifier_span: provenance.identifier.map(WireSpan::from),
+                        span: span.map(WireSpan::from),
+                        identifier_span: identifier.map(WireSpan::from),
                         children,
                     });
                 }
@@ -243,21 +248,27 @@ impl SourceMap {
                         identifier_span: provenance.identifier.map(WireSpan::from),
                     });
                 }
-                for argument in 0..action_argument_values(public_action).len() {
-                    let Some(argument_provenance) = provenance.arguments.get(argument) else {
+                for (argument, value) in action_argument_values(public_action)
+                    .iter()
+                    .copied()
+                    .enumerate()
+                {
+                    let Some(record) = program.argument_record(rule, action, argument) else {
                         continue;
                     };
-                    let children = wire_children(&argument_provenance.children);
-                    if argument_provenance.span.is_some()
-                        || argument_provenance.identifier.is_some()
-                        || !children.is_empty()
-                    {
+                    let children = wire_children(&record.children, &value_children(value));
+                    let (span, identifier) = if record.identity == value_identity(value) {
+                        (record.span, record.identifier)
+                    } else {
+                        Default::default()
+                    };
+                    if span.is_some() || identifier.is_some() || !children.is_empty() {
                         spans.push(MappedNode::ActionArgument {
                             rule,
                             action,
                             argument,
-                            span: argument_provenance.span.map(WireSpan::from),
-                            identifier_span: argument_provenance.identifier.map(WireSpan::from),
+                            span: span.map(WireSpan::from),
+                            identifier_span: identifier.map(WireSpan::from),
                             children,
                         });
                     }
@@ -477,6 +488,7 @@ impl SourceMap {
             program.add_file(SourceFile::new(path.clone()));
         }
         program.provenance = Some(Box::new(provenance));
+        program.record_identities();
         Ok(())
     }
 
@@ -502,6 +514,7 @@ impl SourceMap {
         Ok(DeclarationProvenance {
             span: span.map(|span| self.span(span)).transpose()?,
             name_span: name_span.map(|span| self.span(span)).transpose()?,
+            ..DeclarationProvenance::default()
         })
     }
 
@@ -539,6 +552,7 @@ impl SourceMap {
                 .map(|span| self.span(span))
                 .transpose()?,
             children: self.mapped_children(&wire.children, value)?,
+            ..ValueProvenance::default()
         })
     }
 }
@@ -593,28 +607,39 @@ impl MappedText {
     }
 }
 
-/// The wire form of recorded value-provenance children: children keep their
-/// position up to the last mapped one, and a level with no recorded provenance
-/// at all is omitted.
-fn wire_children(children: &[ValueProvenance]) -> Vec<WireValue> {
-    let Some(last) = children.iter().rposition(|child| !value_unmapped(child)) else {
+/// The wire form of recorded value-provenance children, paired with the
+/// public children they describe: children keep their position up to the
+/// last mapped one, a record whose value no longer has the recorded identity
+/// serializes as unmapped, a level whose recorded count no longer matches is
+/// dropped entirely, and a level with no recorded provenance at all is
+/// omitted.
+fn wire_children(children: &[ValueProvenance], values: &[&Value]) -> Vec<WireValue> {
+    if children.len() != values.len() {
         return Vec::new();
-    };
-    children[..=last].iter().map(wire_value).collect()
+    }
+    let mut wire: Vec<WireValue> = children
+        .iter()
+        .zip(values.iter().copied())
+        .map(|(child, value)| wire_value(child, value))
+        .collect();
+    let last = wire
+        .iter()
+        .rposition(|child| !wire_value_unmapped(child))
+        .map(|index| index + 1)
+        .unwrap_or(0);
+    wire.truncate(last);
+    wire
 }
 
-fn wire_value(provenance: &ValueProvenance) -> WireValue {
+fn wire_value(provenance: &ValueProvenance, value: &Value) -> WireValue {
+    if provenance.identity != value_identity(value) {
+        return WireValue::default();
+    }
     WireValue {
         span: provenance.span.map(WireSpan::from),
         identifier_span: provenance.identifier.map(WireSpan::from),
-        children: wire_children(&provenance.children),
+        children: wire_children(&provenance.children, &value_children(value)),
     }
-}
-
-fn value_unmapped(provenance: &ValueProvenance) -> bool {
-    provenance.span.is_none()
-        && provenance.identifier.is_none()
-        && provenance.children.iter().all(value_unmapped)
 }
 
 /// Whether a serialized value entry contributes any position.
@@ -624,15 +649,15 @@ fn wire_value_unmapped(value: &WireValue) -> bool {
         && value.children.iter().all(wire_value_unmapped)
 }
 
-fn push_declarations(
+fn push_declarations<T: std::fmt::Debug>(
     program: &Program,
-    count: usize,
+    nodes: &[T],
     recorded: impl Fn(&ProgramProvenance) -> &[DeclarationProvenance],
     node: impl Fn(usize, Option<WireSpan>, Option<WireSpan>) -> MappedNode,
     output: &mut Vec<MappedNode>,
 ) {
-    for index in 0..count {
-        let declaration = program.declaration_provenance(&recorded, count, index);
+    for index in 0..nodes.len() {
+        let declaration = program.declaration_provenance(&recorded, nodes, index);
         if declaration.span.is_some() || declaration.name_span.is_some() {
             output.push(node(
                 index,
@@ -800,7 +825,7 @@ enum MappedNode {
 
 /// The mapped provenance of one value node, mirroring the structure of the
 /// public [`Value`] tree: `children` addresses child values by position.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 struct WireValue {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     span: Option<WireSpan>,
