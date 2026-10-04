@@ -1,3 +1,4 @@
+use super::member::{self, Member};
 use crate::output::emitter::*;
 use crate::settings::suggest;
 use crate::source::Span;
@@ -210,16 +211,7 @@ impl EmitContext<'_> {
         let name = node.name();
         let mut full = path.to_vec();
         full.push(PathPart::Part(name));
-        let entry = table::lookup(&full).ok_or_else(|| {
-            suggested(
-                format!(
-                    "settings key '{}' is outside the emission table",
-                    table::path_string(&full)
-                ),
-                suggest::suggest(name, table::key_spellings(path).into_iter()),
-                node.span(),
-            )
-        })?;
+        let entry = member::lookup(node, &full).map_err(|diagnostic| diagnostic.error)?;
         let display_name = if let (Some(hero), Some(key)) = (
             hero,
             full.last().and_then(|part| match part {
@@ -246,122 +238,65 @@ impl EmitContext<'_> {
         } else {
             self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
         };
-        match (node, &entry.kind) {
-            (SettingsNode::Flag { .. }, KeyKind::Flag) => {
-                self.line(level, &display_name)?;
-            }
-            (SettingsNode::String { value, .. }, KeyKind::String) => {
-                self.line(
-                    level,
-                    &format!("{}: \"{}\"", display_name, escape_settings_string(value)),
-                )?;
-            }
-            (SettingsNode::String { value, .. }, KeyKind::Enum(domain)) => {
-                let english = table::enum_name(domain, value).ok_or_else(|| {
-                    suggested(
-                        format!("unknown value '{value}' for settings key '{name}'"),
-                        suggest::suggest(value, table::enum_spellings(domain)),
-                        node.span(),
-                    )
-                })?;
+        match member::accept(node, entry).map_err(|diagnostic| diagnostic.error)? {
+            Member::Flag => self.line(level, &display_name)?,
+            Member::String(value) => self.line(
+                level,
+                &format!("{}: \"{}\"", display_name, escape_settings_string(value)),
+            )?,
+            Member::Enum {
+                domain,
+                value,
+                english,
+            } => {
                 let display =
                     self.setting_name("enums", english, &format!("enum.{domain}.{value}"))?;
                 self.line(level, &format!("{display_name}: {display}"))?;
             }
-            (SettingsNode::Number { value, .. }, KeyKind::Number) => {
-                self.line(
-                    level,
-                    &format!(
-                        "{display_name}: {}",
-                        crate::format::format_setting_number(*value)
-                    ),
-                )?;
-            }
-            (SettingsNode::Number { value, .. }, KeyKind::Percent) => {
-                self.line(
-                    level,
-                    &format!(
-                        "{display_name}: {}%",
-                        crate::format::format_setting_number(*value)
-                    ),
-                )?;
-            }
-            (SettingsNode::Bool { value, .. }, KeyKind::Bool) => {
+            Member::Number(value) => self.line(
+                level,
+                &format!(
+                    "{display_name}: {}",
+                    crate::format::format_setting_number(value)
+                ),
+            )?,
+            Member::Percent(value) => self.line(
+                level,
+                &format!(
+                    "{display_name}: {}%",
+                    crate::format::format_setting_number(value)
+                ),
+            )?,
+            Member::Bool(value) => {
                 let rendered = self.setting_name(
                     "tokens",
-                    if *value { "On" } else { "Off" },
-                    if *value { "token.on" } else { "token.off" },
+                    if value { "On" } else { "Off" },
+                    if value { "token.on" } else { "token.off" },
                 )?;
                 self.line(level, &format!("{display_name}: {rendered}"))?;
             }
-            (SettingsNode::Bool { value, .. }, KeyKind::YesNo) => {
+            Member::YesNo(value) => {
                 let rendered = self.setting_name(
                     "tokens",
-                    if *value { "Yes" } else { "No" },
-                    if *value { "token.yes" } else { "token.no" },
+                    if value { "Yes" } else { "No" },
+                    if value { "token.yes" } else { "token.no" },
                 )?;
                 self.line(level, &format!("{display_name}: {rendered}"))?;
             }
-            (SettingsNode::Bool { value, .. }, KeyKind::BoolEnum(domain)) => {
-                if !*value {
-                    return Err(WorkshopError::malformed(
-                        format!("unsupported false value for settings key '{name}'"),
-                        node.span(),
-                    ));
-                }
-                let english = table::enum_name(domain, "enabled").ok_or_else(|| {
-                    WorkshopError::malformed(
-                        format!("unknown value 'enabled' for settings key '{name}'"),
-                        node.span(),
-                    )
-                })?;
-                let rendered =
-                    self.setting_name("enums", english, &format!("enum.{domain}.enabled"))?;
-                self.line(level, &format!("{display_name}: {rendered}"))?;
-            }
-            (SettingsNode::List { elements, .. }, KeyKind::ListMap | KeyKind::ListHero) => {
-                // Both list kinds emit `Name {` + one member per line: maps
-                // resolve `map.<id>.name`, heroes `hero.<id>.name`.
-                let (english_name, section, label) = if entry.kind == KeyKind::ListMap {
-                    (table::map_name as fn(&str) -> Option<&str>, "maps", "map")
-                } else {
-                    (
-                        table::hero_name as fn(&str) -> Option<&str>,
-                        "heroes",
-                        "hero",
-                    )
-                };
-                let spellings: Vec<&'static str> = if entry.kind == KeyKind::ListMap {
-                    table::map_spellings().collect()
-                } else {
-                    table::hero_spellings().collect()
-                };
+            Member::List { elements, kind } => {
                 self.line(level, &format!("{display_name} {{"))?;
                 for element in elements {
-                    let english = english_name(&element.value).ok_or_else(|| {
-                        suggested(
-                            format!(
-                                "unknown {label} '{}' in settings list '{name}'",
-                                element.value
-                            ),
-                            suggest::suggest(&element.value, spellings.iter().copied()),
-                            element.span,
-                        )
-                    })?;
+                    let english = kind
+                        .resolve(element, name)
+                        .map_err(|diagnostic| diagnostic.error)?;
                     let display = self.setting_name(
-                        section,
+                        kind.section(),
                         english,
-                        &format!("{label}.{}.name", element.value),
+                        &format!("{}.{}.name", kind.label(), element.value),
                     )?;
                     self.line(level + 1, &display)?;
                 }
                 self.line(level, "}")?;
-            }
-            _ => {
-                return Err(WorkshopError::malformed(
-                    format!("settings key '{name}' does not match its table kind"),
-                    node.span(),
-                ));
             }
         }
         Ok(())

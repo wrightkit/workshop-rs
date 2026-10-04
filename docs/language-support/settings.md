@@ -120,10 +120,12 @@ same suggestion is also exposed as structured data on
 message text. Distant or ambiguous spellings carry none. The input stays
 rejected either way — the suggestion never rewrites it.
 
-`Program::validate` runs the same emission acceptance check the emitter
-applies (`check_emission`), so checking and compilation agree on a settings
-block instead of diverging at emit time; `Program::settings_diagnostics`
-exposes every rejection as a `SettingsDiagnostic`.
+`Program::validate` uses `check_emission`, which shares locale-independent
+member acceptance with the emitter. `Program::settings_diagnostics` exposes
+every rejection as a `SettingsDiagnostic`; validation and emission return
+the first relevant error. Locale mapping and hero ability display-name
+resolution remain emission concerns and can fail before value acceptance,
+so first-error parity does not apply universally across output locales.
 
 Sources: Deltinteger's `TextToElement` matches settings, mode, map, hero, and
 enum names with `caseSensitive: false`; the pinned oracle's decompiler

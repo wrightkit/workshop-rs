@@ -1500,3 +1500,300 @@ rule("r")
 "#;
     assert_check_compile_parity(source);
 }
+
+#[test]
+fn typed_member_diagnostics_preserve_messages_spans_suggestions_and_order() {
+    use workshop_rs::WorkshopError;
+    use workshop_rs::settings::{Settings, SettingsListElement, SettingsNode, check_emission};
+    use workshop_rs::source::{Position, SourceFile, Span};
+
+    let mut program = workshop_rs::Program::new();
+    let file = program.add_file(SourceFile::new("settings.ws"));
+    let span = |line| {
+        Some(Span::new(
+            file,
+            Position::new(line, 1),
+            Position::new(line, 10),
+        ))
+    };
+    let group = |name: &str, children| SettingsNode::Group {
+        name: name.into(),
+        children,
+        span: None,
+    };
+    let list = |name: &str, elements: &[(&str, u32)]| SettingsNode::List {
+        name: name.into(),
+        span: span(10),
+        elements: elements
+            .iter()
+            .map(|(value, line)| SettingsListElement {
+                value: (*value).into(),
+                span: span(*line),
+            })
+            .collect(),
+    };
+    let groups = vec![
+        group(
+            "lobby",
+            vec![SettingsNode::String {
+                name: "mapRotation".into(),
+                value: "After A Gmae".into(),
+                span: span(1),
+            }],
+        ),
+        group(
+            "lobby",
+            vec![SettingsNode::Bool {
+                name: "enableMatchVoiceChat".into(),
+                value: false,
+                span: span(2),
+            }],
+        ),
+        group(
+            "gamemodes",
+            vec![group(
+                "ffa",
+                vec![list(
+                    "enabledMaps",
+                    &[("Chateau Guillard", 3), ("Zzyzx Wonderland", 4)],
+                )],
+            )],
+        ),
+        group(
+            "heroes",
+            vec![group(
+                "allTeams",
+                vec![list("enabledHeroes", &[("Mercyy", 5), ("Zzyzx Hero", 6)])],
+            )],
+        ),
+        group(
+            "extensions",
+            vec![SettingsNode::Number {
+                name: "beamEffects".into(),
+                value: 3.0,
+                span: span(7),
+            }],
+        ),
+        group(
+            "main",
+            vec![SettingsNode::Bool {
+                name: "descriptino".into(),
+                value: true,
+                span: span(8),
+            }],
+        ),
+    ];
+    let expected = [
+        (
+            "unknown value 'After A Gmae' for settings key 'mapRotation' (did you mean 'After A Game'?)",
+            Some("After A Game"),
+        ),
+        (
+            "unsupported false value for settings key 'enableMatchVoiceChat'",
+            None,
+        ),
+        (
+            "unknown map 'Chateau Guillard' in settings list 'enabledMaps' (did you mean 'Château Guillard'?)",
+            Some("Château Guillard"),
+        ),
+        (
+            "unknown map 'Zzyzx Wonderland' in settings list 'enabledMaps'",
+            None,
+        ),
+        (
+            "unknown hero 'Mercyy' in settings list 'enabledHeroes' (did you mean 'Mercy'?)",
+            Some("Mercy"),
+        ),
+        (
+            "unknown hero 'Zzyzx Hero' in settings list 'enabledHeroes'",
+            None,
+        ),
+        (
+            "settings key 'beamEffects' does not match its table kind",
+            None,
+        ),
+        (
+            "settings key 'main.descriptino' is outside the emission table (did you mean 'Description'?)",
+            Some("Description"),
+        ),
+    ];
+    program.settings = Some(Settings {
+        children: groups.clone(),
+        span: None,
+    });
+    let diagnostics = program.settings_diagnostics();
+    assert_eq!(diagnostics.len(), expected.len());
+    for (index, (diagnostic, (message, suggestion))) in diagnostics.iter().zip(expected).enumerate()
+    {
+        assert_eq!(
+            diagnostic.error,
+            WorkshopError::malformed(message, span(index as u32 + 1))
+        );
+        assert_eq!(diagnostic.suggestion.as_deref(), suggestion);
+    }
+    assert_eq!(
+        check_emission(program.settings.as_ref().unwrap()),
+        diagnostics
+            .iter()
+            .map(|d| d.error.clone())
+            .collect::<Vec<_>>()
+    );
+    assert_eq!(program.validate().unwrap_err(), diagnostics[0].error);
+    assert_eq!(
+        emitter::emit(&program, &catalog(), &en()).unwrap_err(),
+        diagnostics[0].error
+    );
+
+    for group in groups {
+        program.settings = Some(Settings {
+            children: vec![group],
+            span: None,
+        });
+        let first = program.settings_diagnostics().remove(0).error;
+        assert_eq!(program.validate().unwrap_err(), first);
+        assert_eq!(
+            emitter::emit(&program, &catalog(), &en()).unwrap_err(),
+            first
+        );
+    }
+}
+
+#[test]
+fn typed_member_emission_keeps_raw_extensions_and_mode_headers() {
+    use workshop_rs::settings::{Settings, SettingsNode};
+    let raw = |name: &str, value: &str| SettingsNode::Raw {
+        name: name.into(),
+        value: value.into(),
+        span: None,
+    };
+    let group = |name: &str, children| SettingsNode::Group {
+        name: name.into(),
+        children,
+        span: None,
+    };
+    let mut program = workshop_rs::Program::new();
+    program.settings = Some(Settings {
+        span: None,
+        children: vec![
+            group(
+                "custom",
+                vec![group("nested", vec![raw("Payload", "anything goes")])],
+            ),
+            SettingsNode::Workshop {
+                children: vec![raw("Custom Field", "3")],
+                span: None,
+            },
+            group(
+                "extensions",
+                vec![SettingsNode::Flag {
+                    name: "beamEffects".into(),
+                    span: None,
+                }],
+            ),
+            group(
+                "gamemodes",
+                vec![group(
+                    "ffa",
+                    vec![SettingsNode::Bool {
+                        name: "enabled".into(),
+                        value: false,
+                        span: None,
+                    }],
+                )],
+            ),
+        ],
+    });
+    program.validate().unwrap();
+    assert!(program.settings_diagnostics().is_empty());
+    let text = emitter::emit(&program, &catalog(), &en()).unwrap();
+    for preserved in [
+        "custom {",
+        "nested {",
+        "Payload: anything goes",
+        "Custom Field: 3",
+        "Beam Effects",
+        "disabled Deathmatch {",
+    ] {
+        assert!(text.contains(preserved), "{text}");
+    }
+    assert!(!text.contains("enabled:"), "{text}");
+}
+
+#[test]
+fn typed_member_emission_resolves_hero_display_before_value_acceptance() {
+    use workshop_rs::WorkshopError;
+    use workshop_rs::settings::{Settings, SettingsNode};
+    let group = |name: &str, children| SettingsNode::Group {
+        name: name.into(),
+        children,
+        span: None,
+    };
+    let mut program = workshop_rs::Program::new();
+    program.settings = Some(Settings {
+        span: None,
+        children: vec![group(
+            "heroes",
+            vec![group(
+                "allTeams",
+                vec![group(
+                    "ana",
+                    vec![SettingsNode::String {
+                        name: "ability3Cooldown%".into(),
+                        value: "invalid".into(),
+                        span: None,
+                    }],
+                )],
+            )],
+        )],
+    });
+    let rejection = program.validate().unwrap_err();
+    assert_eq!(
+        rejection,
+        WorkshopError::malformed(
+            "settings key 'ability3Cooldown%' does not match its table kind",
+            None
+        )
+    );
+    assert_eq!(
+        emitter::emit(&program, &catalog(), &en()).unwrap_err(),
+        rejection
+    );
+    assert!(
+        matches!(emitter::emit(&program, &catalog(), &zh()).unwrap_err(), WorkshopError::MissingMapping { kind: "setting", id, locale } if id == "heroes.<team>.<hero>.ability3Cooldown%" && locale == zh())
+    );
+}
+
+#[test]
+fn typed_member_emission_keeps_missing_locale_mapping_and_fallback_reporting() {
+    use workshop_rs::WorkshopError;
+    use workshop_rs::catalog::Locale;
+    use workshop_rs::settings::{Settings, SettingsNode};
+    let mut program = workshop_rs::Program::new();
+    program.settings = Some(Settings {
+        span: None,
+        children: vec![SettingsNode::Group {
+            name: "lobby".into(),
+            span: None,
+            children: vec![SettingsNode::Number {
+                name: "team1Slots".into(),
+                value: 6.0,
+                span: None,
+            }],
+        }],
+    });
+    program.validate().unwrap();
+    let locale = Locale::new("fr-FR");
+    assert!(
+        matches!(emitter::emit(&program, &catalog(), &locale).unwrap_err(), WorkshopError::MissingMapping { kind: "setting", id, locale: missing } if id == "lobby.team1Slots" && missing == locale)
+    );
+    let options = emitter::EmitOptions {
+        fallback_locale: Some(en()),
+    };
+    let output = emitter::emit_with_options(&program, &catalog(), &locale, &options).unwrap();
+    assert!(
+        output.text.contains("Max Team 1 Players: 6"),
+        "{}",
+        output.text
+    );
+    assert_eq!(output.fallback_ids, ["settings"]);
+}

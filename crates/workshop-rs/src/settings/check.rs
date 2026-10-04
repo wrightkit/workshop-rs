@@ -6,15 +6,13 @@
 //! [`SettingsNode::Raw`] payloads; [`check_emission`] reports every other
 //! member the emitter would reject, without producing Workshop text.
 //!
-//! The checks mirror [`super::emitter`]'s member handling and must stay in
-//! sync with it: an empty result means `emit` will not reject a settings
-//! member for emission-table acceptance. Locale and hero display-name
+//! Member acceptance is shared with emission. Locale and hero display-name
 //! resolution can still fail inside emission and are not checked here.
 
 use crate::core::error::WorkshopError;
-use crate::source::Span;
 
-use super::table::{self, KeyKind};
+use super::member::{self, Member, rejected};
+use super::table;
 use super::{PathPart, Settings, SettingsNode, suggest};
 
 /// One rejected settings member: the [`WorkshopError`] a caller would see,
@@ -76,14 +74,6 @@ pub fn check_emission(settings: &Settings) -> Vec<WorkshopError> {
         .into_iter()
         .map(|diagnostic| diagnostic.error)
         .collect()
-}
-
-fn rejected(span: Option<Span>, message: String, suggestion: Option<String>) -> SettingsDiagnostic {
-    let message = suggest::with_suggestion_text(message, suggestion.as_deref());
-    SettingsDiagnostic {
-        error: WorkshopError::malformed(message, span),
-        suggestion,
-    }
 }
 
 fn check_workshop_children(children: &[SettingsNode], errors: &mut Vec<SettingsDiagnostic>) {
@@ -188,72 +178,15 @@ fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<Set
     let name = node.name();
     let mut full = path.to_vec();
     full.push(PathPart::Part(name));
-    let Some(entry) = table::lookup(&full) else {
-        errors.push(rejected(
-            node.span(),
-            format!(
-                "settings key '{}' is outside the emission table",
-                table::path_string(&full)
-            ),
-            suggest::suggest(name, table::key_spellings(path).into_iter()),
-        ));
-        return;
-    };
-    match (node, &entry.kind) {
-        (SettingsNode::Flag { .. }, KeyKind::Flag)
-        | (SettingsNode::String { .. }, KeyKind::String)
-        | (SettingsNode::Number { .. }, KeyKind::Number | KeyKind::Percent)
-        | (SettingsNode::Bool { .. }, KeyKind::Bool | KeyKind::YesNo) => {}
-        (SettingsNode::String { value, .. }, KeyKind::Enum(domain)) => {
-            if table::enum_name(domain, value).is_none() {
-                errors.push(rejected(
-                    node.span(),
-                    format!("unknown value '{value}' for settings key '{name}'"),
-                    suggest::suggest(value, table::enum_spellings(domain)),
-                ));
-            }
-        }
-        (SettingsNode::Bool { value, .. }, KeyKind::BoolEnum(domain)) => {
-            if !*value {
-                errors.push(rejected(
-                    node.span(),
-                    format!("unsupported false value for settings key '{name}'"),
-                    None,
-                ));
-            } else if table::enum_name(domain, "enabled").is_none() {
-                errors.push(rejected(
-                    node.span(),
-                    format!("unknown value 'enabled' for settings key '{name}'"),
-                    None,
-                ));
-            }
-        }
-        (SettingsNode::List { elements, .. }, KeyKind::ListMap) => {
+    match member::lookup(node, &full).and_then(|entry| member::accept(node, entry)) {
+        Ok(Member::List { elements, kind }) => {
             for element in elements {
-                if table::map_name(&element.value).is_none() {
-                    errors.push(rejected(
-                        element.span,
-                        format!("unknown map '{}' in settings list '{name}'", element.value),
-                        suggest::suggest(&element.value, table::map_spellings()),
-                    ));
+                if let Err(diagnostic) = kind.resolve(element, name) {
+                    errors.push(diagnostic);
                 }
             }
         }
-        (SettingsNode::List { elements, .. }, KeyKind::ListHero) => {
-            for element in elements {
-                if table::hero_name(&element.value).is_none() {
-                    errors.push(rejected(
-                        element.span,
-                        format!("unknown hero '{}' in settings list '{name}'", element.value),
-                        suggest::suggest(&element.value, table::hero_spellings()),
-                    ));
-                }
-            }
-        }
-        _ => errors.push(rejected(
-            node.span(),
-            format!("settings key '{name}' does not match its table kind"),
-            None,
-        )),
+        Ok(_) => {}
+        Err(diagnostic) => errors.push(diagnostic),
     }
 }
