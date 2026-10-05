@@ -65,6 +65,9 @@ nearest accepted spellings from the same canonical vocabulary the parse
 surface checks, ranked by the shared comparison fold. A rejecting site
 that computed candidates emits `WorkshopError::UnknownWithCandidates`
 (`candidates()` returns the list on it, empty elsewhere); sites without
-candidate context still emit `WorkshopError::Unknown`. The diagnostic's
-code, message, locale, and span are unchanged, and `candidates` is empty
-when nothing is close.
+candidate context still emit `WorkshopError::Unknown`. The diagnostic
+message names the candidates — `unknown action spelling 'Create HUD Txt'
+for locale 'en-us' (did you mean 'Create HUD Text'?)` — so consumers that
+only see the message text, including closed-schema wire diagnostics, still
+receive them. The diagnostic's code, locale, and span are unchanged, and
+`candidates` is empty when nothing is close.

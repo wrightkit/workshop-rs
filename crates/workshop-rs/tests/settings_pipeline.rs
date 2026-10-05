@@ -1434,7 +1434,13 @@ rule("r")
 "#;
     match parser::parse(ambiguous, &catalog(), &en()) {
         Err(error) => {
-            assert!(!error.to_string().contains("did you mean"), "{error}");
+            // The unknown-spelling diagnostic names the tied candidates
+            // rather than collapsing the ambiguity into one suggestion.
+            let message = error.to_string();
+            assert!(
+                message.contains("'Team 1'") && message.contains("'Team 2'"),
+                "{message}"
+            );
         }
         Ok(program) => {
             let diagnostics = program.settings_diagnostics();

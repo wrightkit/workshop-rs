@@ -22,7 +22,8 @@ pub enum WorkshopError {
     /// This is a separate variant from [`WorkshopError::Unknown`] so the
     /// candidate list does not change that variant's shape; consumers
     /// matching `Unknown` should also match this variant to handle every
-    /// unknown-spelling diagnostic.
+    /// unknown-spelling diagnostic. The rendered message names the
+    /// candidates, so they reach consumers that only see the message text.
     UnknownWithCandidates {
         kind: &'static str,
         spelling: String,
@@ -167,16 +168,24 @@ impl std::fmt::Display for WorkshopError {
                 spelling,
                 locale,
                 ..
-            }
-            | WorkshopError::UnknownWithCandidates {
-                kind,
-                spelling,
-                locale,
-                ..
             } => {
                 write!(
                     f,
                     "unknown {kind} spelling '{spelling}' for locale '{locale}'"
+                )
+            }
+            WorkshopError::UnknownWithCandidates {
+                kind,
+                spelling,
+                locale,
+                candidates,
+                ..
+            } => {
+                let message = format!("unknown {kind} spelling '{spelling}' for locale '{locale}'");
+                write!(
+                    f,
+                    "{}",
+                    crate::core::suggest::with_candidates_text(message, candidates)
                 )
             }
             WorkshopError::MissingMapping { kind, id, locale } => {

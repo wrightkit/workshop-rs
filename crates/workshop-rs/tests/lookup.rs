@@ -308,6 +308,14 @@ fn unknown_action_spelling_carries_nearest_valid_candidates() {
     let error = parse_error(
         "rule (\"x\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Create HUD Txt(Null, Null, Null, Null, Left, 0, White, White, White, Visible To, Default Visibility);\n    }\n}\n",
     );
+    // The message itself names the candidates: consumers that only see the
+    // diagnostic text, such as a closed-schema wire diagnostic, still get
+    // them (wrightkit/workshop-rs#379).
+    assert_eq!(
+        error.to_string(),
+        "unknown action spelling 'Create HUD Txt' for locale 'en-us' \
+         (did you mean 'Create HUD Text'?)"
+    );
     let WorkshopError::UnknownWithCandidates {
         kind, candidates, ..
     } = error
@@ -319,6 +327,73 @@ fn unknown_action_spelling_carries_nearest_valid_candidates() {
         candidates.first().map(String::as_str),
         Some("Create HUD Text")
     );
+}
+
+#[test]
+fn unknown_spelling_candidates_cover_observed_near_spellings() {
+    // Observed misspelling shapes from the wright#482 agent benchmark: a
+    // dropped word, a camelCase guess written where a display name belongs,
+    // and a mistyped enum member.
+    let cases = [
+        (
+            "rule (\"x\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Create HUD Txt(Null, Null, Null, Null, Left, 0, White, White, White, Visible To, Default Visibility);\n    }\n}\n",
+            "Create HUD Text",
+        ),
+        (
+            "rule (\"x\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        createHudText(Null, Null, Null, Null, Left, 0, White, White, White, Visible To, Default Visibility);\n    }\n}\n",
+            "Create HUD Text",
+        ),
+        (
+            "rule (\"x\") {\n    event {\n        Ongoing - Each Player;\n        All;\n        Reinhardtt;\n    }\n}\n",
+            "Reinhardt",
+        ),
+    ];
+    for (source, expected) in cases {
+        let error = parse_error(source);
+        assert!(
+            error.candidates().iter().any(|c| c == expected),
+            "'{expected}' should be a candidate for {source:?}: {error:?}"
+        );
+        assert!(
+            error.to_string().contains(expected),
+            "the message names '{expected}': {error}"
+        );
+    }
+}
+
+#[test]
+fn unknown_spelling_candidates_follow_the_rejecting_locale() {
+    // The candidate space is the rejecting locale's accepted spellings, so a
+    // zh-CN near spelling names zh-CN candidates.
+    let source = "规则 (\"x\") {\n    事件 {\n        持续 - 全局;\n    }\n    动作 {\n        创建HUD文(0);\n    }\n}\n";
+    let error = parser::parse(source, &catalog(), &zh())
+        .expect_err("a near zh-CN action spelling must not parse");
+    assert!(
+        error
+            .candidates()
+            .iter()
+            .any(|candidate| candidate == "创建HUD文本"),
+        "the zh-CN display name reports as a candidate: {error:?}"
+    );
+    assert!(error.to_string().contains("创建HUD文本"), "{error}");
+}
+
+#[test]
+fn unknown_spelling_candidates_are_deterministic_across_runs() {
+    // The candidate ranking is a stable sort over the accepted-spelling
+    // order: `Team 3` ties `Team 1`/`Team 2`, and repeated parses must report
+    // the same list and the same message.
+    let source = "settings\n{\n\theroes\n\t{\n\t\tTeam 3\n\t\t{\n\t\t}\n\t}\n}\n";
+    let baseline = parse_error(source);
+    assert!(
+        baseline.candidates().len() > 1,
+        "the tied candidates exercise ordering: {baseline:?}"
+    );
+    for _ in 0..5 {
+        let error = parse_error(source);
+        assert_eq!(error.candidates(), baseline.candidates());
+        assert_eq!(error.to_string(), baseline.to_string());
+    }
 }
 
 #[test]
