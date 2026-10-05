@@ -14,6 +14,10 @@ pub enum WorkshopError {
         kind: &'static str,
         spelling: String,
         locale: Locale,
+        /// The nearest accepted spellings for `spelling`, when the rejecting
+        /// site computed them. Diagnostics constructed without candidate
+        /// context leave it empty.
+        candidates: Vec<String>,
         span: Option<Span>,
     },
     /// A canonical builtin has no spelling mapped for the target locale.
@@ -52,7 +56,29 @@ impl WorkshopError {
             kind,
             spelling: spelling.into(),
             locale,
+            candidates: Vec::new(),
             span,
+        }
+    }
+
+    /// Attach the nearest accepted spellings to an `Unknown` diagnostic.
+    /// Other variants are returned unchanged.
+    pub fn with_candidates(mut self, candidates: Vec<String>) -> Self {
+        if let WorkshopError::Unknown {
+            candidates: slot, ..
+        } = &mut self
+        {
+            *slot = candidates;
+        }
+        self
+    }
+
+    /// The nearest accepted spellings for an `Unknown` spelling, when the
+    /// rejecting site computed them. Other variants report an empty slice.
+    pub fn candidates(&self) -> &[String] {
+        match self {
+            WorkshopError::Unknown { candidates, .. } => candidates,
+            _ => &[],
         }
     }
 

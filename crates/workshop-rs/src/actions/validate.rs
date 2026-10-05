@@ -34,7 +34,12 @@ pub(crate) fn validate_action(
                     name.clone(),
                     crate::catalog::Locale::new("en-US"),
                     *span,
-                ));
+                )
+                .with_candidates(crate::core::suggest::nearest(
+                    name,
+                    catalog.canonical_spellings(Kind::Action, catalog.primary_locale()),
+                    crate::core::suggest::CANDIDATE_LIMIT,
+                )));
             };
             crate::values::validate::validate_call_signature(entry, args, *span, program, catalog)?;
             for arg in args {

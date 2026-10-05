@@ -1,5 +1,10 @@
 use crate::frontend::parser::*;
 
+/// The structural keywords a top-level keyword may resolve to.
+const TOP_LEVEL_SECTIONS: &[&str] = &["settings", "variables", "subroutines", "rule", "disabled"];
+/// The structural keywords a rule-body keyword may resolve to.
+const RULE_SECTIONS: &[&str] = &["event", "conditions", "actions"];
+
 impl ParseContext<'_> {
     pub(crate) fn program(mut self) -> Result<wir::Program> {
         let file = self
@@ -33,7 +38,9 @@ impl ParseContext<'_> {
                     self.rule(true, rule_start)?;
                 }
                 other => {
-                    return Err(self.unknown("top-level section", other));
+                    return Err(self
+                        .unknown("top-level section", other)
+                        .with_candidates(self.section_candidates(other, TOP_LEVEL_SECTIONS)));
                 }
             }
         }
@@ -230,7 +237,11 @@ impl ParseContext<'_> {
                         seen_sections.push("actions");
                         rule.actions = self.actions_section()?;
                     }
-                    _ => return Err(self.unknown("rule section", &word)),
+                    _ => {
+                        return Err(self
+                            .unknown("rule section", &word)
+                            .with_candidates(self.section_candidates(&word, RULE_SECTIONS)));
+                    }
                 },
                 Some(token) => {
                     return Err(self.malformed("expected a rule section or '}'", &token));
@@ -286,6 +297,35 @@ impl ParseContext<'_> {
         }
     }
 
+    /// The nearest accepted section-keyword spellings for a rejected parse
+    /// word: the localized spellings and canonical ids of the structural
+    /// entries named by `ids`.
+    fn section_candidates(&self, spelling: &str, ids: &[&str]) -> Vec<String> {
+        let catalog = self.catalog;
+        let primary = catalog.primary_locale();
+        let include_primary = self.locale != *primary;
+        crate::core::suggest::nearest(
+            spelling,
+            catalog
+                .entries_of(Kind::Structural)
+                .filter(move |entry| ids.contains(&entry.id.as_str()))
+                .flat_map(move |entry| {
+                    let local: &[String] = entry.spellings(&self.locale);
+                    let fallback: &[String] = if include_primary {
+                        entry.spellings(primary)
+                    } else {
+                        &[]
+                    };
+                    local
+                        .iter()
+                        .chain(fallback)
+                        .map(String::as_str)
+                        .chain(std::iter::once(entry.id.as_str()))
+                }),
+            crate::core::suggest::CANDIDATE_LIMIT,
+        )
+    }
+
     pub(crate) fn subroutine_by_name(
         &self,
         name: &str,
@@ -293,6 +333,11 @@ impl ParseContext<'_> {
     ) -> Result<wir::SubroutineId> {
         self.subroutines.get(name).copied().ok_or_else(|| {
             WorkshopError::unknown("subroutine", name.to_string(), self.locale.clone(), span)
+                .with_candidates(crate::core::suggest::nearest(
+                    name,
+                    self.subroutines.keys().map(String::as_str),
+                    crate::core::suggest::CANDIDATE_LIMIT,
+                ))
         })
     }
 }

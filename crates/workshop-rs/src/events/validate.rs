@@ -20,7 +20,12 @@ pub(crate) fn validate_event(
             id.to_string(),
             crate::catalog::Locale::new("en-US"),
             span,
-        ));
+        )
+        .with_candidates(crate::core::suggest::nearest(
+            id,
+            catalog.canonical_spellings(Kind::Event, catalog.primary_locale()),
+            crate::core::suggest::CANDIDATE_LIMIT,
+        )));
     }
     let Some((team, target)) = filters else {
         return Ok(());
@@ -40,19 +45,33 @@ pub(crate) fn validate_event(
             team_member.to_string(),
             en.clone(),
             span,
-        ));
+        )
+        .with_candidates(crate::core::suggest::nearest(
+            team_member,
+            catalog.canonical_member_spellings("EventTeam", catalog.primary_locale()),
+            crate::core::suggest::CANDIDATE_LIMIT,
+        )));
     }
     let target_member = match target {
         wir::EventTarget::All => Some("ALL".to_string()),
         wir::EventTarget::Slot(slot) => Some(format!("SLOT_{slot}")),
         wir::EventTarget::Hero(hero) => {
             if catalog.enum_spelling("Hero", &en, hero).is_none() {
-                return Err(WorkshopError::unknown(
-                    "event player",
-                    hero.clone(),
-                    en.clone(),
-                    span,
-                ));
+                return Err(
+                    WorkshopError::unknown("event player", hero.clone(), en.clone(), span)
+                        .with_candidates(crate::core::suggest::nearest(
+                            hero,
+                            catalog
+                                .canonical_member_spellings("EventPlayer", catalog.primary_locale())
+                                .chain(
+                                    catalog.canonical_member_spellings(
+                                        "Hero",
+                                        catalog.primary_locale(),
+                                    ),
+                                ),
+                            crate::core::suggest::CANDIDATE_LIMIT,
+                        )),
+                );
             }
             None
         }
@@ -62,12 +81,19 @@ pub(crate) fn validate_event(
             .enum_spelling("EventPlayer", &en, &target_member)
             .is_none()
         {
-            return Err(WorkshopError::unknown(
-                "event player",
-                target_member,
-                en,
-                span,
-            ));
+            return Err(
+                WorkshopError::unknown("event player", target_member.clone(), en, span)
+                    .with_candidates(crate::core::suggest::nearest(
+                        &target_member,
+                        catalog
+                            .canonical_member_spellings("EventPlayer", catalog.primary_locale())
+                            .chain(
+                                catalog
+                                    .canonical_member_spellings("Hero", catalog.primary_locale()),
+                            ),
+                        crate::core::suggest::CANDIDATE_LIMIT,
+                    )),
+            );
         }
     }
     Ok(())

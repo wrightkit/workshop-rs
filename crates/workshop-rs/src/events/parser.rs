@@ -37,6 +37,7 @@ impl ParseContext<'_> {
             .resolve(Kind::Event, &self.locale, name_line)
             .ok_or_else(|| {
                 WorkshopError::unknown("event", name_line.to_string(), self.locale.clone(), None)
+                    .with_candidates(self.spelling_candidates(Kind::Event, name_line, false))
             })?;
         match entry.id.as_str() {
             "global" => {
@@ -131,7 +132,11 @@ impl ParseContext<'_> {
             Some("ALL") => EventTeam::All,
             Some("TEAM_1") => EventTeam::Team1,
             Some("TEAM_2") => EventTeam::Team2,
-            _ => return Err(self.unknown("event team", parameters[0])),
+            _ => {
+                return Err(self
+                    .unknown("event team", parameters[0])
+                    .with_candidates(self.member_candidates("EventTeam", parameters[0], true)));
+            }
         };
         let target = if let Some((_, member)) =
             self.resolve_enum_member_mixed("EventPlayer", parameters[1])
@@ -139,12 +144,15 @@ impl ParseContext<'_> {
             if member == "ALL" {
                 EventTarget::All
             } else if let Some(slot) = member.strip_prefix("SLOT_") {
-                let slot = slot
-                    .parse::<u8>()
-                    .map_err(|_| self.unknown("event player", parameters[1]))?;
+                let slot = slot.parse::<u8>().map_err(|_| {
+                    self.unknown("event player", parameters[1])
+                        .with_candidates(self.event_player_candidates(parameters[1]))
+                })?;
                 EventTarget::Slot(slot)
             } else {
-                return Err(self.unknown("event player", parameters[1]));
+                return Err(self
+                    .unknown("event player", parameters[1])
+                    .with_candidates(self.event_player_candidates(parameters[1])));
             }
         } else if let Some((_, hero)) = self
             .catalog
@@ -158,9 +166,22 @@ impl ParseContext<'_> {
         {
             EventTarget::Hero(hero)
         } else {
-            return Err(self.unknown("event player", parameters[1]));
+            return Err(self
+                .unknown("event player", parameters[1])
+                .with_candidates(self.event_player_candidates(parameters[1])));
         };
         Ok((team, target))
+    }
+
+    /// The nearest accepted event-player spellings for a rejected event
+    /// player parameter: `EventPlayer` members plus hero members.
+    fn event_player_candidates(&self, spelling: &str) -> Vec<String> {
+        crate::core::suggest::nearest(
+            spelling,
+            self.accepted_member_spellings("EventPlayer", true)
+                .chain(self.accepted_member_spellings("Hero", true)),
+            crate::core::suggest::CANDIDATE_LIMIT,
+        )
     }
 
     pub(crate) fn unsupported_event_parameters(&self, event_id: &str) -> WorkshopError {

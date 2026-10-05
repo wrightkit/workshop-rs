@@ -678,6 +678,38 @@ impl Catalog {
             .cloned()
             .unwrap_or_default()
     }
+
+    /// The canonical ids and `locale` spellings of `kind` entries, for
+    /// nearest-candidate diagnostics that reject in the canonical space
+    /// (validation and emission, where the rejected name is an id or an
+    /// authored spelling).
+    pub(crate) fn canonical_spellings<'a>(
+        &'a self,
+        kind: Kind,
+        locale: &'a Locale,
+    ) -> impl Iterator<Item = &'a str> {
+        self.entries_of(kind).flat_map(move |entry| {
+            std::iter::once(entry.id.as_str())
+                .chain(entry.spellings(locale).iter().map(String::as_str))
+        })
+    }
+
+    /// The canonical ids and `locale` spellings of `domain` members, for
+    /// nearest-candidate diagnostics that reject in the canonical space.
+    pub(crate) fn canonical_member_spellings<'a>(
+        &'a self,
+        domain: &'a str,
+        locale: &'a Locale,
+    ) -> impl Iterator<Item = &'a str> {
+        self.enum_domain(domain)
+            .into_iter()
+            .flat_map(move |domain| {
+                domain.members.iter().flat_map(move |member| {
+                    std::iter::once(member.member.as_str())
+                        .chain(member.spellings(locale).iter().map(String::as_str))
+                })
+            })
+    }
 }
 
 /// The catalog is the canonical source of expected enum domains for the

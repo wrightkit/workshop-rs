@@ -82,6 +82,11 @@ impl EmitContext<'_> {
                             self.locale.clone(),
                             None,
                         )
+                        .with_candidates(crate::core::suggest::nearest(
+                            &subroutine.to_string(),
+                            self.program.subroutines.iter().map(|s| s.name.as_str()),
+                            crate::core::suggest::CANDIDATE_LIMIT,
+                        ))
                     })?;
                 let keyword = self.spelling(Kind::Structural, "callSubroutine")?;
                 self.line(level, &format!("{keyword}({name});"))?;

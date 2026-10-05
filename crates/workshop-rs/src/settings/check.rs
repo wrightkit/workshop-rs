@@ -10,10 +10,11 @@
 //! resolution can still fail inside emission and are not checked here.
 
 use crate::core::error::WorkshopError;
+use crate::core::suggest;
 
 use super::member::{self, Member, rejected};
 use super::table;
-use super::{PathPart, Settings, SettingsNode, suggest};
+use super::{PathPart, Settings, SettingsNode};
 
 /// One rejected settings member: the [`WorkshopError`] a caller would see,
 /// plus the canonical spelling it was close to when exactly one candidate

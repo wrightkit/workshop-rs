@@ -123,6 +123,11 @@ impl<'a> EmitContext<'a> {
             .map(|variable| variable.name.as_str())
             .ok_or_else(|| {
                 WorkshopError::unknown(kind, format!("<{id}>"), self.locale.clone(), None)
+                    .with_candidates(crate::core::suggest::nearest(
+                        &id.to_string(),
+                        table.iter().map(|variable| variable.name.as_str()),
+                        crate::core::suggest::CANDIDATE_LIMIT,
+                    ))
             })
     }
 }

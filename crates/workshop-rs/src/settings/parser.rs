@@ -483,7 +483,9 @@ impl ParseContext<'_> {
         {
             Ok(false)
         } else {
-            Err(self.unknown("setting boolean", &value))
+            Err(self.unknown("setting boolean", &value).with_candidates(
+                self.settings_name_candidates(["On", "Off", "Yes", "No"], "tokens", &value),
+            ))
         }
     }
 
@@ -492,7 +494,17 @@ impl ParseContext<'_> {
         if member == "enabled" {
             Ok(true)
         } else {
-            Err(self.unknown("setting boolean", &member))
+            Err(self.unknown("setting boolean", &member).with_candidates(
+                self.settings_name_candidates(
+                    table::ENUM_MEMBERS
+                        .iter()
+                        .chain(table::GENERATED_ENUM_MEMBERS.iter())
+                        .filter(|entry| entry.domain == domain)
+                        .map(|entry| entry.name),
+                    "enums",
+                    &member,
+                ),
+            ))
         }
     }
 
@@ -514,7 +526,19 @@ impl ParseContext<'_> {
                     })
                     .map(|member| member.member.to_string())
             })
-            .ok_or_else(|| self.unknown("settings enum", &display))
+            .ok_or_else(|| {
+                self.unknown("settings enum", &display).with_candidates(
+                    self.settings_name_candidates(
+                        table::ENUM_MEMBERS
+                            .iter()
+                            .chain(table::GENERATED_ENUM_MEMBERS.iter())
+                            .filter(|entry| entry.domain == domain)
+                            .map(|entry| entry.name),
+                        "enums",
+                        &display,
+                    ),
+                )
+            })
     }
 
     pub(crate) fn resolve_settings_name(
@@ -527,7 +551,14 @@ impl ParseContext<'_> {
             .iter()
             .find(|candidate| self.settings_name_matches(section, candidate.name, display))
             .map(|candidate| candidate.key)
-            .ok_or_else(|| self.unknown("setting", display))
+            .ok_or_else(|| {
+                self.unknown("setting", display)
+                    .with_candidates(self.settings_name_candidates(
+                        names.iter().map(|entry| entry.name),
+                        section,
+                        display,
+                    ))
+            })
     }
 
     pub(crate) fn resolve_settings_name_extended(
@@ -542,7 +573,32 @@ impl ParseContext<'_> {
             .chain(generated.iter())
             .find(|candidate| self.settings_name_matches(section, candidate.name, display))
             .map(|candidate| candidate.key)
-            .ok_or_else(|| self.unknown("setting", display))
+            .ok_or_else(|| {
+                self.unknown("setting", display)
+                    .with_candidates(self.settings_name_candidates(
+                        names.iter().chain(generated.iter()).map(|entry| entry.name),
+                        section,
+                        display,
+                    ))
+            })
+    }
+
+    /// The nearest accepted settings-name spellings for a rejected display
+    /// name: the localized (or English, when unmapped) form of every `names`
+    /// entry the parse surface accepts under `section`.
+    fn settings_name_candidates<'b>(
+        &'b self,
+        names: impl IntoIterator<Item = &'b str>,
+        section: &'b str,
+        display: &str,
+    ) -> Vec<String> {
+        crate::core::suggest::nearest(
+            display,
+            names.into_iter().map(|name| {
+                table::localized_name(self.locale.as_str(), section, name).unwrap_or(name)
+            }),
+            crate::core::suggest::CANDIDATE_LIMIT,
+        )
     }
 
     pub(crate) fn settings_name_matches_for_path(

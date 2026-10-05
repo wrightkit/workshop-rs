@@ -1,9 +1,10 @@
 use crate::core::error::WorkshopError;
+use crate::core::suggest;
 use crate::source::Span;
 
 use super::check::SettingsDiagnostic;
 use super::table::{self, KeyKind, TableEntry};
-use super::{PathPart, SettingsListElement, SettingsNode, suggest};
+use super::{PathPart, SettingsListElement, SettingsNode};
 
 pub(super) enum Member<'a> {
     Flag,

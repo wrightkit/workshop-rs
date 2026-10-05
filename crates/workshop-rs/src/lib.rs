@@ -11,6 +11,8 @@
 //!   identities to client spellings; catalog version/digest identity and
 //!   per-locale coverage;
 //! * [`mod@format`] — canonical number formatting for computed Workshop values;
+//! * [`lookup`] — canonical name lookup: display names, near spellings, and
+//!   settings paths resolve to the accepted catalog and settings vocabulary;
 //! * [`actions`], [`events`], [`rules`], [`values`], [`settings`], and
 //!   [`gameplay`] — the discoverable Workshop domains;
 //! * [`program`] — the canonical public Workshop program model;
@@ -34,6 +36,7 @@ pub mod events;
 pub mod format;
 mod frontend;
 pub mod gameplay;
+pub mod lookup;
 mod output;
 pub mod parser;
 pub mod program;
