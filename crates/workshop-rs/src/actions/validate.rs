@@ -6,6 +6,7 @@ pub(crate) fn validate_action(
     program: &wir::Program,
     catalog: &Catalog,
     action_id: wir::ActionId,
+    tolerate_residuals: bool,
 ) -> Result<()> {
     let Some(action) = program.actions.get(action_id) else {
         return Ok(());
@@ -13,6 +14,21 @@ pub(crate) fn validate_action(
     match action {
         wir::Action::Call { name, args, span } => {
             let Some(entry) = catalog.entry(Kind::Action, name) else {
+                // A catalog-unknown call is a completeness residual reported
+                // by `semantic_issues`; its signature is unknowable, but its
+                // argument values are still validated so a nested known
+                // violation is not masked.
+                if tolerate_residuals {
+                    for arg in args {
+                        crate::values::validate::validate_value(
+                            program,
+                            catalog,
+                            *arg,
+                            tolerate_residuals,
+                        )?;
+                    }
+                    return Ok(());
+                }
                 return Err(WorkshopError::unknown(
                     "action",
                     name.clone(),
@@ -22,17 +38,22 @@ pub(crate) fn validate_action(
             };
             crate::values::validate::validate_call_signature(entry, args, *span, program, catalog)?;
             for arg in args {
-                crate::values::validate::validate_value(program, catalog, *arg)?;
+                crate::values::validate::validate_value(
+                    program,
+                    catalog,
+                    *arg,
+                    tolerate_residuals,
+                )?;
             }
         }
         wir::Action::SetGlobalVariable { value, .. }
         | wir::Action::ModifyGlobalVariable { value, .. } => {
-            crate::values::validate::validate_value(program, catalog, *value)?;
+            crate::values::validate::validate_value(program, catalog, *value, tolerate_residuals)?;
         }
         wir::Action::SetPlayerVariable { player, value, .. }
         | wir::Action::ModifyPlayerVariable { player, value, .. } => {
-            crate::values::validate::validate_value(program, catalog, *player)?;
-            crate::values::validate::validate_value(program, catalog, *value)?;
+            crate::values::validate::validate_value(program, catalog, *player, tolerate_residuals)?;
+            crate::values::validate::validate_value(program, catalog, *value, tolerate_residuals)?;
         }
         wir::Action::AssignMember {
             target,
@@ -46,8 +67,8 @@ pub(crate) fn validate_action(
                     *span,
                 ));
             }
-            crate::values::validate::validate_value(program, catalog, *target)?;
-            crate::values::validate::validate_value(program, catalog, *value)?;
+            crate::values::validate::validate_value(program, catalog, *target, tolerate_residuals)?;
+            crate::values::validate::validate_value(program, catalog, *value, tolerate_residuals)?;
         }
         wir::Action::If {
             branches,
@@ -55,23 +76,33 @@ pub(crate) fn validate_action(
             ..
         } => {
             for branch in branches {
-                crate::values::validate::validate_value(program, catalog, branch.condition)?;
+                crate::values::validate::validate_value(
+                    program,
+                    catalog,
+                    branch.condition,
+                    tolerate_residuals,
+                )?;
                 for action in &branch.body {
-                    validate_action(program, catalog, *action)?;
+                    validate_action(program, catalog, *action, tolerate_residuals)?;
                 }
             }
             if let Some(else_body) = else_body {
                 for action in else_body {
-                    validate_action(program, catalog, *action)?;
+                    validate_action(program, catalog, *action, tolerate_residuals)?;
                 }
             }
         }
         wir::Action::While {
             condition, body, ..
         } => {
-            crate::values::validate::validate_value(program, catalog, *condition)?;
+            crate::values::validate::validate_value(
+                program,
+                catalog,
+                *condition,
+                tolerate_residuals,
+            )?;
             for action in body {
-                validate_action(program, catalog, *action)?;
+                validate_action(program, catalog, *action, tolerate_residuals)?;
             }
         }
         wir::Action::ForGlobalVariable {
@@ -81,11 +112,11 @@ pub(crate) fn validate_action(
             body,
             ..
         } => {
-            crate::values::validate::validate_value(program, catalog, *start)?;
-            crate::values::validate::validate_value(program, catalog, *stop)?;
-            crate::values::validate::validate_value(program, catalog, *step)?;
+            crate::values::validate::validate_value(program, catalog, *start, tolerate_residuals)?;
+            crate::values::validate::validate_value(program, catalog, *stop, tolerate_residuals)?;
+            crate::values::validate::validate_value(program, catalog, *step, tolerate_residuals)?;
             for action in body {
-                validate_action(program, catalog, *action)?;
+                validate_action(program, catalog, *action, tolerate_residuals)?;
             }
         }
         wir::Action::ForPlayerVariable {
@@ -96,15 +127,17 @@ pub(crate) fn validate_action(
             body,
             ..
         } => {
-            crate::values::validate::validate_value(program, catalog, *player)?;
-            crate::values::validate::validate_value(program, catalog, *start)?;
-            crate::values::validate::validate_value(program, catalog, *stop)?;
-            crate::values::validate::validate_value(program, catalog, *step)?;
+            crate::values::validate::validate_value(program, catalog, *player, tolerate_residuals)?;
+            crate::values::validate::validate_value(program, catalog, *start, tolerate_residuals)?;
+            crate::values::validate::validate_value(program, catalog, *stop, tolerate_residuals)?;
+            crate::values::validate::validate_value(program, catalog, *step, tolerate_residuals)?;
             for action in body {
-                validate_action(program, catalog, *action)?;
+                validate_action(program, catalog, *action, tolerate_residuals)?;
             }
         }
-        wir::Action::Disabled { action, .. } => validate_action(program, catalog, *action)?,
+        wir::Action::Disabled { action, .. } => {
+            validate_action(program, catalog, *action, tolerate_residuals)?;
+        }
         wir::Action::CallSubroutine { .. } => {}
     }
     Ok(())

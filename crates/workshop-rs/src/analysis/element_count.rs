@@ -177,7 +177,7 @@ impl Program {
             .map_err(|error| ElementCountError::InvalidProgram {
                 message: error.to_string(),
             })?;
-        crate::rules::validate::validate_wir(self, catalog).map_err(|error| {
+        crate::rules::validate::validate_wir(self, catalog, false).map_err(|error| {
             ElementCountError::InvalidProgram {
                 message: error.to_string(),
             }
