@@ -523,11 +523,37 @@ impl Program {
         condition: usize,
         path: &[usize],
     ) -> Option<crate::source::Span> {
+        let record = self.condition_value_record(rule, condition, path)?;
+        record.identifier.or(record.span)
+    }
+
+    /// The provenance record of a value nested inside a public rule
+    /// condition, while the node at `path` still has the recorded identity.
+    /// Unlike [`condition_value_span`](Self::condition_value_span) callers can
+    /// read the node's own span independently of its identifier span.
+    fn condition_value_record(
+        &self,
+        rule: usize,
+        condition: usize,
+        path: &[usize],
+    ) -> Option<&ValueProvenance> {
         let record = self.condition_record(rule, condition)?;
         let value = &self.rules[rule].conditions[condition].value;
         let identity = condition_identity(&self.rules[rule].conditions[condition]);
-        let record = value_provenance_at(record, value, path, identity)?;
-        record.identifier.or(record.span)
+        value_provenance_at(record, value, path, identity)
+    }
+
+    /// The authored node span of a value nested inside a public rule
+    /// condition, without the identifier-span substitution
+    /// [`condition_value_span`](Self::condition_value_span) performs for
+    /// variable and subroutine references.
+    pub(crate) fn condition_value_node_span(
+        &self,
+        rule: usize,
+        condition: usize,
+        path: &[usize],
+    ) -> Option<crate::source::Span> {
+        self.condition_value_record(rule, condition, path)?.span
     }
 
     /// Return the authored span of a value nested inside a direct value
@@ -546,10 +572,38 @@ impl Program {
         argument: usize,
         path: &[usize],
     ) -> Option<crate::source::Span> {
+        let record = self.action_argument_value_record(rule, action, argument, path)?;
+        record.identifier.or(record.span)
+    }
+
+    /// The provenance record of a value nested inside a direct value argument
+    /// of a public action, while the node at `path` still has the recorded
+    /// identity.
+    fn action_argument_value_record(
+        &self,
+        rule: usize,
+        action: usize,
+        argument: usize,
+        path: &[usize],
+    ) -> Option<&ValueProvenance> {
         let record = self.argument_record(rule, action, argument)?;
         let value = action_argument_values(&self.rules[rule].actions[action])[argument];
-        let record = value_provenance_at(record, value, path, value_identity(value))?;
-        record.identifier.or(record.span)
+        value_provenance_at(record, value, path, value_identity(value))
+    }
+
+    /// The authored node span of a value nested inside a direct value
+    /// argument of a public action, without the identifier-span substitution
+    /// [`action_argument_value_span`](Self::action_argument_value_span)
+    /// performs for variable and subroutine references.
+    pub(crate) fn action_argument_value_node_span(
+        &self,
+        rule: usize,
+        action: usize,
+        argument: usize,
+        path: &[usize],
+    ) -> Option<crate::source::Span> {
+        self.action_argument_value_record(rule, action, argument, path)?
+            .span
     }
 
     /// Create a checked source edit through the authored source attached to
@@ -596,6 +650,13 @@ impl Program {
 
     /// Report constructs that are structurally preserved but not fully
     /// understood by the canonical catalog.
+    ///
+    /// Residual inspection is defined over this public canonical model and is
+    /// independent from [`validate`](Self::validate): it may be used on
+    /// programs `validate` rejects, and an internal materialization failure
+    /// does not suppress observable residuals. Callers that also require
+    /// structural validity call `validate` separately; this inventory does
+    /// not report validation errors.
     pub fn semantic_issues(
         &self,
         catalog: &crate::catalog::Catalog,
@@ -978,7 +1039,7 @@ impl From<Value> for Condition {
 
 /// The direct value arguments of a public action, in their mapped order.
 /// Provenance rows pair these positionally with `wir::Action::value_args`.
-fn action_argument_values(action: &Action) -> Vec<&Value> {
+pub(crate) fn action_argument_values(action: &Action) -> Vec<&Value> {
     match action {
         Action::SetGlobalVariable { value, .. } | Action::ModifyGlobalVariable { value, .. } => {
             vec![value]
@@ -1007,7 +1068,7 @@ fn action_argument_values(action: &Action) -> Vec<&Value> {
 
 /// The children a public value exposes to provenance addressing, in the order
 /// [`Program::condition_value_span`] documents.
-fn value_children(value: &Value) -> Vec<&Value> {
+pub(crate) fn value_children(value: &Value) -> Vec<&Value> {
     match value {
         Value::Array(values) => values.iter().collect(),
         Value::Vector { x, y, z } => vec![x.as_ref(), y.as_ref(), z.as_ref()],
