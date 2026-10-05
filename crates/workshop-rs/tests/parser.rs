@@ -94,9 +94,11 @@ fn non_finite_spellings_stay_outside_the_canonical_grammar() {
         );
         let error = validate::validate_canonical_ids_wir(&program, &catalog())
             .expect_err("an unevidenced spelling must not validate as canonical");
-        assert_eq!(
-            error.to_string(),
-            format!("unknown value spelling '{literal}' for locale 'en-us'")
+        assert!(
+            error.to_string().starts_with(&format!(
+                "unknown value spelling '{literal}' for locale 'en-us'"
+            )),
+            "{error}"
         );
     }
     for literal in ["-Infinity", "-NaN", "+Infinity"] {

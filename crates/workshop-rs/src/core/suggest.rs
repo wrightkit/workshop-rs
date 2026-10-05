@@ -147,6 +147,25 @@ pub(crate) fn with_suggestion_text(message: String, suggestion: Option<&str>) ->
     }
 }
 
+/// Append the `did you mean` suffix diagnostics render for a ranked
+/// candidate list ([`nearest`] results). The same convention
+/// `with_suggestion_text` uses for a single suggestion extends to the list:
+/// `'a', 'b' or 'c'` inside one parenthetical.
+pub(crate) fn with_candidates_text(message: String, candidates: &[String]) -> String {
+    match candidates {
+        [] => message,
+        [one] => format!("{message} (did you mean '{one}'?)"),
+        [first, rest @ ..] => {
+            let others = rest
+                .iter()
+                .map(|spelling| format!("'{spelling}'"))
+                .collect::<Vec<_>>()
+                .join(" or ");
+            format!("{message} (did you mean '{first}', {others}?)")
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
