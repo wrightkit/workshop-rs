@@ -70,13 +70,23 @@ Existing metadata-driven behavior is implementation reality to audit against thi
 
 ## Validation acceptance
 
-Canonical validation always rejects structural failures: unknown identities,
-arity, enum domain, and reference category. A mismatch against a declared
-parameter type is a presumption that holds until acceptance evidence exists;
-a rejection stricter than the declared type needs rejection evidence. Accepting
-a program does not claim that the live client imports or runs it. There is one
-validation contract for every consumer. The evidence classes and their scope
-are defined in [`ADR-0014`](../adr/0014-validation-evidence-for-slot-acceptance.md).
+Canonical validation rejects structural failures — unknown identities, arity,
+enum domain, and reference category — under one check set for every consumer.
+A catalog-unknown action or value call is additionally a completeness
+residual reported by `Program::semantic_issues`, so the same check set is
+exposed through two entry points: `validate_canonical_ids` rejects residuals
+for producer artifacts and consumers without residual reporting, while
+`validate_canonical_ids_tolerating_residuals` defers each residual to the
+completeness channel — still validating its argument values and later
+siblings — for consumers that report residuals separately. Neither entry
+point accepts a residual silently. A mismatch against a declared parameter
+type is a presumption that holds until acceptance evidence exists; a
+rejection stricter than the declared type needs rejection evidence. Accepting
+a program does not claim that the live client imports or runs it. The
+evidence classes and their scope are defined in
+[`ADR-0014`](../adr/0014-validation-evidence-for-slot-acceptance.md); the
+entry-point contract is decided in
+[`ADR-0018`](../adr/0018-residual-tolerant-canonical-validation.md).
 
 ## Localization and source-language separation
 

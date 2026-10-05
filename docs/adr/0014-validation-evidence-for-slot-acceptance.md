@@ -1,6 +1,7 @@
 # ADR-0014: Evidence for canonical validation of slot acceptance
 
-- Status: Accepted
+- Status: Accepted; decision 1 amended by
+  [ADR-0018](0018-residual-tolerant-canonical-validation.md)
 - Date: 2026-09-25
 - Related: workshop-rs #283, #21; wrightkit/opy-rs #366, #370; ADR-0001;
   ADR-0011
