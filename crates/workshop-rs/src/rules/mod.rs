@@ -2,7 +2,7 @@
 //!
 //! Rule, variable, and subroutine data is modeled canonically in [`crate::Program`].
 //! Whole-program inspection is available from this domain entry point;
-//! canonical validation is at [`crate::validate::validate_canonical_ids`].
+//! canonical validation is at [`crate::validate`].
 
 pub(crate) mod emitter;
 pub(crate) mod parser;
