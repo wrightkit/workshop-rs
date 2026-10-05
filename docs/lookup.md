@@ -60,8 +60,11 @@ kind, and value domain.
 
 ## Candidate-bearing diagnostics
 
-Raw Workshop `unknown ... spelling` diagnostics (`WorkshopError::Unknown`)
-carry `candidates`: the nearest accepted spellings from the same canonical
-vocabulary the parse surface checks, ranked by the shared comparison fold.
-The diagnostic's code, message, locale, and span are unchanged; `candidates`
-is empty when nothing is close.
+Raw Workshop `unknown ... spelling` diagnostics carry `candidates`: the
+nearest accepted spellings from the same canonical vocabulary the parse
+surface checks, ranked by the shared comparison fold. A rejecting site
+that computed candidates emits `WorkshopError::UnknownWithCandidates`
+(`candidates()` returns the list on it, empty elsewhere); sites without
+candidate context still emit `WorkshopError::Unknown`. The diagnostic's
+code, message, locale, and span are unchanged, and `candidates` is empty
+when nothing is close.

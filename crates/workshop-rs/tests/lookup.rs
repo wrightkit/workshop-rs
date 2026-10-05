@@ -308,7 +308,7 @@ fn unknown_action_spelling_carries_nearest_valid_candidates() {
     let error = parse_error(
         "rule (\"x\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Create HUD Txt(Null, Null, Null, Null, Left, 0, White, White, White, Visible To, Default Visibility);\n    }\n}\n",
     );
-    let WorkshopError::Unknown {
+    let WorkshopError::UnknownWithCandidates {
         kind, candidates, ..
     } = error
     else {
@@ -326,7 +326,7 @@ fn unknown_enum_member_spelling_carries_domain_candidates() {
     let error = parse_error(
         "rule (\"x\") {\n    event {\n        Ongoing - Each Player;\n        All;\n        Reinhardtt;\n    }\n}\n",
     );
-    let WorkshopError::Unknown { candidates, .. } = error else {
+    let WorkshopError::UnknownWithCandidates { candidates, .. } = error else {
         panic!("an unknown hero is an Unknown diagnostic: {error:?}");
     };
     assert!(
@@ -338,7 +338,7 @@ fn unknown_enum_member_spelling_carries_domain_candidates() {
 #[test]
 fn unknown_settings_team_carries_valid_candidates() {
     let error = parse_error("settings\n{\n\theroes\n\t{\n\t\tTeam 3\n\t\t{\n\t\t}\n\t}\n}\n");
-    let WorkshopError::Unknown {
+    let WorkshopError::UnknownWithCandidates {
         kind, candidates, ..
     } = error
     else {
