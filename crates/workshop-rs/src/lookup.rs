@@ -404,17 +404,14 @@ fn signature_text(
 }
 
 /// Render a declared parameter default in `locale`'s call syntax: a
-/// `Domain.Member` literal resolves to the localized domain and member
-/// spellings, a canonical value id resolves to its localized spelling, and
-/// any other literal stays as declared.
+/// `Domain.Member` literal resolves to the localized emitted member form
+/// (constructor-form domains write `Domain(Member)`, other domains write
+/// the member bare), a canonical value id resolves to its localized
+/// spelling, and any other literal stays as declared.
 fn render_default(catalog: &Catalog, locale: &Locale, default: &str) -> String {
     if let Some((domain, member)) = default.split_once('.') {
         if let Some(member_spelling) = catalog.enum_spelling(domain, locale, member) {
-            let domain_display = catalog
-                .enum_domain(domain)
-                .and_then(|domain| domain.spelling(locale))
-                .unwrap_or(domain);
-            return format!("{domain_display}.{member_spelling}");
+            return catalog.enum_member_form(domain, member_spelling, locale);
         }
     }
     catalog

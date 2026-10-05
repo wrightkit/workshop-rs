@@ -57,19 +57,11 @@ impl<'a> EmitContext<'a> {
             }
             wir::Value::Enum { value_type, value } => {
                 let spelling = self.enum_spelling(value_type, value)?;
-                // Constructor-form domains are written `Domain(Member)` in
-                // every position and locale; Team members and every other
-                // domain are written bare (docs/wrapper-forms.md).
-                if matches!(value_type.as_str(), "Hero" | "Button" | "Color" | "Map") {
-                    let domain = self
+                out.push_str(
+                    &self
                         .catalog
-                        .enum_domain(value_type)
-                        .and_then(|entry| entry.spelling(&self.locale))
-                        .unwrap_or(value_type);
-                    write!(out, "{domain}({spelling})").unwrap();
-                } else {
-                    out.push_str(spelling);
-                }
+                        .enum_member_form(value_type, spelling, &self.locale),
+                );
             }
             wir::Value::GlobalVariable(variable) => {
                 let name = self.global_name(*variable)?;
