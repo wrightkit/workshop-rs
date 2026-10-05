@@ -1074,12 +1074,21 @@ impl ParseContext<'_> {
         span: Option<Span>,
     ) -> Result<wir::ValueId> {
         let Some(entry) = self.catalog.resolve_localized_string(&self.locale, &text) else {
+            let candidates = crate::core::suggest::nearest(
+                &text,
+                self.catalog
+                    .localized_strings()
+                    .flat_map(|entry| entry.spellings(&self.locale))
+                    .map(String::as_str),
+                crate::core::suggest::CANDIDATE_LIMIT,
+            );
             return Err(WorkshopError::unknown(
                 "localized string",
                 text,
                 self.locale.clone(),
                 span,
-            ));
+            )
+            .with_candidates(candidates));
         };
         Ok(self.target.values.push(ValueNode::new(
             Value::LocalizedString(entry.id.clone()),

@@ -850,12 +850,14 @@ impl ParseContext<'_> {
                     .resolve_entry(Kind::Action, &phrase)
                     .or_else(|| self.resolve_entry(Kind::Action, &format!("{phrase} ")))
                 else {
+                    let candidates = self.spelling_candidates(Kind::Action, &phrase, true);
                     return Err(WorkshopError::unknown(
                         "action",
                         phrase,
                         self.locale.clone(),
                         Some(Span::new(self.file(), start, end)),
-                    ));
+                    )
+                    .with_candidates(candidates));
                 };
                 // The player-variable chase forms lay the variable out as
                 // `player, name` leading arguments (the pinned oracle's
@@ -990,6 +992,11 @@ impl ParseContext<'_> {
                     self.locale.clone(),
                     Some(Span::new(self.file(), start, end)),
                 )
+                .with_candidates(self.spelling_candidates(
+                    Kind::Operator,
+                    &phrase,
+                    false,
+                ))
             })?;
         ModifyOp::from_catalog_id(&entry.id).ok_or_else(|| {
             WorkshopError::unsupported(

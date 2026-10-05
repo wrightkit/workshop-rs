@@ -59,12 +59,14 @@ pub fn resolve_locale(
 ) -> Result<Locale> {
     if let Some(locale) = override_locale {
         if !catalog.supports(locale) {
-            return Err(WorkshopError::unknown(
-                "locale",
-                locale.to_string(),
-                locale.clone(),
-                None,
-            ));
+            return Err(
+                WorkshopError::unknown("locale", locale.to_string(), locale.clone(), None)
+                    .with_candidates(crate::core::suggest::nearest(
+                        locale.as_str(),
+                        catalog.locales().iter().map(Locale::as_str),
+                        crate::core::suggest::CANDIDATE_LIMIT,
+                    )),
+            );
         }
         return Ok(locale.clone());
     }

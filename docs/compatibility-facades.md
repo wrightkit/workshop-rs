@@ -17,6 +17,7 @@ remains the item-level reference for symbols nested under those modules.
 | Root model re-exports | `Action`, `Condition`, `Event`, `EventTarget`, `EventTeam`, `ModifyOp`, `PlayerEventKind`, `MappedText`, `Program`, `SourceMap`, `SourceMapError`, `SourceMappingError`, `Rule`, `Subroutine`, `Value`, `Variable` |
 | Workshop domains | `actions`, `catalog`, `events`, `gameplay`, `rules`, `settings`, `values` |
 | Source and provenance | `source` |
+| Canonical lookup | `lookup` |
 | Workshop operations | `convert`, `detect`, `emitter`, `format`, `parser`, `roundtrip`, `validate` |
 | Parse-context contract | `signatures` |
 | Public errors | `CatalogError`, `WorkshopError` |
@@ -90,7 +91,8 @@ not need to precede an owner-side breaking release.
 
 Public types expected to grow in 1.x are `#[non_exhaustive]`: error enums and
 error records, options, operation outputs and reports, catalog and gameplay
-identity/metadata records, settings source metadata, and the settings scope and
+identity/metadata records, lookup matches and signature records, settings
+source metadata, and the settings scope and
 value-domain enums. `Rule`, `Condition`, `PlayerEventKind`, and `ModifyOp` are
 also `#[non_exhaustive]`. Consumers match them with a wildcard arm and read
 their fields, but do not build them with struct literals. Options are built

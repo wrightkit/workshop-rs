@@ -39,7 +39,16 @@ pub(crate) fn validate_value(
                     name.clone(),
                     crate::catalog::Locale::new("en-US"),
                     node.span,
-                ));
+                )
+                .with_candidates(crate::core::suggest::nearest(
+                    name,
+                    catalog
+                        .canonical_spellings(Kind::Value, catalog.primary_locale())
+                        .chain(
+                            catalog.canonical_spellings(Kind::Operator, catalog.primary_locale()),
+                        ),
+                    crate::core::suggest::CANDIDATE_LIMIT,
+                )));
             } else if name == "memberAccess" {
                 if !(2..=3).contains(&args.len()) {
                     return Err(WorkshopError::malformed(
@@ -76,7 +85,12 @@ pub(crate) fn validate_value(
                     value_type.clone(),
                     crate::catalog::Locale::new("en-US"),
                     node.span,
-                ));
+                )
+                .with_candidates(crate::core::suggest::nearest(
+                    value_type,
+                    catalog.enum_domains().map(|domain| domain.domain.as_str()),
+                    crate::core::suggest::CANDIDATE_LIMIT,
+                )));
             } else if catalog
                 .enum_spelling(value_type, &crate::catalog::Locale::new("en-US"), value)
                 .is_none()
@@ -86,7 +100,12 @@ pub(crate) fn validate_value(
                     value.clone(),
                     crate::catalog::Locale::new("en-US"),
                     node.span,
-                ));
+                )
+                .with_candidates(crate::core::suggest::nearest(
+                    value,
+                    catalog.canonical_member_spellings(value_type, catalog.primary_locale()),
+                    crate::core::suggest::CANDIDATE_LIMIT,
+                )));
             }
         }
         wir::Value::Array(elements) => {
@@ -156,7 +175,12 @@ fn validate_ambiguous_enum(
                 value_type.clone(),
                 crate::catalog::Locale::new("en-US"),
                 span,
-            ));
+            )
+            .with_candidates(crate::core::suggest::nearest(
+                value_type,
+                catalog.enum_domains().map(|domain| domain.domain.as_str()),
+                crate::core::suggest::CANDIDATE_LIMIT,
+            )));
         } else if catalog
             .enum_spelling(value_type, &crate::catalog::Locale::new("en-US"), value)
             .is_none()
@@ -166,7 +190,12 @@ fn validate_ambiguous_enum(
                 format!("{value_type}.{value}"),
                 crate::catalog::Locale::new("en-US"),
                 span,
-            ));
+            )
+            .with_candidates(crate::core::suggest::nearest(
+                value,
+                catalog.canonical_member_spellings(value_type, catalog.primary_locale()),
+                crate::core::suggest::CANDIDATE_LIMIT,
+            )));
         }
     }
     Ok(())

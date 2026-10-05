@@ -539,6 +539,84 @@ impl<'a> ParseContext<'a> {
         WorkshopError::unknown(kind, spelling.to_string(), self.locale.clone(), None)
     }
 
+    /// Spellings of `kind` the parse surface accepts under `self.locale`:
+    /// the locale's own spellings plus, when `include_primary`, the primary
+    /// locale's (the fallback [`ParseContext::resolve_entry`] accepts).
+    pub(crate) fn accepted_spellings(
+        &self,
+        kind: Kind,
+        include_primary: bool,
+    ) -> impl Iterator<Item = &str> {
+        let catalog = self.catalog;
+        let primary = catalog.primary_locale();
+        let include_primary = include_primary && self.locale != *primary;
+        catalog.entries_of(kind).flat_map(move |entry| {
+            let local: &[String] = entry.spellings(&self.locale);
+            let fallback: &[String] = if include_primary {
+                entry.spellings(primary)
+            } else {
+                &[]
+            };
+            local.iter().chain(fallback).map(String::as_str)
+        })
+    }
+
+    /// Member spellings of `domain` accepted under `self.locale`: the
+    /// locale's own spellings plus, when `include_primary`, the primary
+    /// locale's (the fallback `resolve_enum_member_mixed` accepts).
+    pub(crate) fn accepted_member_spellings<'b>(
+        &'b self,
+        domain: &'b str,
+        include_primary: bool,
+    ) -> impl Iterator<Item = &'b str> {
+        let catalog = self.catalog;
+        let primary = catalog.primary_locale();
+        let include_primary = include_primary && self.locale != *primary;
+        catalog
+            .enum_domain(domain)
+            .into_iter()
+            .flat_map(move |domain| {
+                domain.members.iter().flat_map(move |member| {
+                    let local: &[String] = member.spellings(&self.locale);
+                    let fallback: &[String] = if include_primary {
+                        member.spellings(primary)
+                    } else {
+                        &[]
+                    };
+                    local.iter().chain(fallback).map(String::as_str)
+                })
+            })
+    }
+
+    /// The nearest accepted `kind` spellings for a rejected parse spelling.
+    pub(crate) fn spelling_candidates(
+        &self,
+        kind: Kind,
+        spelling: &str,
+        include_primary: bool,
+    ) -> Vec<String> {
+        crate::core::suggest::nearest(
+            spelling,
+            self.accepted_spellings(kind, include_primary),
+            crate::core::suggest::CANDIDATE_LIMIT,
+        )
+    }
+
+    /// The nearest accepted `domain` member spellings for a rejected parse
+    /// spelling.
+    pub(crate) fn member_candidates(
+        &self,
+        domain: &str,
+        spelling: &str,
+        include_primary: bool,
+    ) -> Vec<String> {
+        crate::core::suggest::nearest(
+            spelling,
+            self.accepted_member_spellings(domain, include_primary),
+            crate::core::suggest::CANDIDATE_LIMIT,
+        )
+    }
+
     pub(crate) fn peek(&self) -> Option<Token> {
         self.tokens.get(self.pos).cloned()
     }

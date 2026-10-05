@@ -437,7 +437,13 @@ impl<'a> EmitContext<'a> {
                 id.to_string(),
                 self.locale.clone(),
                 None,
-            ));
+            )
+            .with_candidates(crate::core::suggest::nearest(
+                id,
+                self.catalog
+                    .canonical_spellings(kind, self.catalog.primary_locale()),
+                crate::core::suggest::CANDIDATE_LIMIT,
+            )));
         };
         self.localized(kind.as_str(), id, id.to_string(), |locale| {
             entry.spelling(locale)
@@ -476,7 +482,14 @@ impl<'a> EmitContext<'a> {
                 id.to_string(),
                 self.locale.clone(),
                 None,
-            ));
+            )
+            .with_candidates(crate::core::suggest::nearest(
+                id,
+                self.catalog
+                    .localized_strings()
+                    .map(|entry| entry.id.as_str()),
+                crate::core::suggest::CANDIDATE_LIMIT,
+            )));
         }
         self.localized(
             "localized string",
@@ -498,7 +511,13 @@ impl<'a> EmitContext<'a> {
                 id.to_string(),
                 self.locale.clone(),
                 None,
-            ));
+            )
+            .with_candidates(crate::core::suggest::nearest(
+                id,
+                self.catalog
+                    .canonical_spellings(kind, self.catalog.primary_locale()),
+                crate::core::suggest::CANDIDATE_LIMIT,
+            )));
         };
         self.localized(kind.as_str(), id, id.to_string(), |locale| {
             entry
@@ -523,7 +542,14 @@ impl<'a> EmitContext<'a> {
                 domain.to_string(),
                 self.locale.clone(),
                 None,
-            ));
+            )
+            .with_candidates(crate::core::suggest::nearest(
+                domain,
+                self.catalog
+                    .enum_domains()
+                    .map(|domain| domain.domain.as_str()),
+                crate::core::suggest::CANDIDATE_LIMIT,
+            )));
         };
         let Some(member_entry) = domain_entry.members.iter().find(|m| m.member == member) else {
             return Err(WorkshopError::unknown(
@@ -531,7 +557,13 @@ impl<'a> EmitContext<'a> {
                 format!("{domain}.{member}"),
                 self.locale.clone(),
                 None,
-            ));
+            )
+            .with_candidates(crate::core::suggest::nearest(
+                member,
+                self.catalog
+                    .canonical_member_spellings(domain, self.catalog.primary_locale()),
+                crate::core::suggest::CANDIDATE_LIMIT,
+            )));
         };
         self.localized(
             "enum member",

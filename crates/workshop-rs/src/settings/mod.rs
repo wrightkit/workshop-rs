@@ -15,7 +15,6 @@ pub(crate) mod parser;
 
 pub(crate) mod reconciliation;
 pub(crate) mod schema;
-pub(crate) mod suggest;
 pub(crate) mod table;
 
 /// A segment of a path accepted by settings schema lookups.

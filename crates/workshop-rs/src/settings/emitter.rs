@@ -1,6 +1,6 @@
 use super::member::{self, Member};
+use crate::core::suggest;
 use crate::output::emitter::*;
-use crate::settings::suggest;
 use crate::source::Span;
 
 impl EmitContext<'_> {

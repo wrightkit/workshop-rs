@@ -20,6 +20,8 @@ mod gameplay_query;
 mod identity;
 #[path = "import_limits.rs"]
 mod import_limits;
+#[path = "lookup.rs"]
+mod lookup;
 #[path = "parser_errors.rs"]
 mod parser_errors;
 #[path = "pipeline.rs"]

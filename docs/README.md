@@ -66,6 +66,9 @@ Support prose is not a substitute for current executable tests.
   boundaries.
 - [Gameplay query API](gameplay-query.md): read-only semantic queries and
   locale-aware ability resolution.
+- [Canonical Workshop lookup](lookup.md): `Catalog::lookup` name, signature,
+  enum-domain, and settings vocabulary queries, and candidate-bearing
+  `unknown ... spelling` diagnostics.
 - [Hero gameplay topology survey](gameplay-roster-survey.md): source material used by
   the gameplay domain.
 - [Constant wrapper and settings-boolean forms](wrapper-forms.md): which
