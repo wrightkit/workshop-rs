@@ -7,15 +7,18 @@
   [PR #373](https://github.com/wrightkit/workshop-rs/pull/373),
   [wright#501](https://github.com/wrightkit/wright/issues/501);
   amends [ADR-0014](0014-validation-evidence-for-slot-acceptance.md)
-  decision 1
+  decision 1; approved in the
+  [PR #373 architecture review](https://github.com/wrightkit/workshop-rs/pull/373#pullrequestreview-5412035811)
 
 ## Context
 
 `Program::semantic_issues` reports completeness residuals: constructs the
-parser or a producer preserved without a canonical catalog identity
-(`UnknownAction`, `OpaqueAction`, `UnknownValue`, `RawSetting`). They are
-structurally valid program nodes that downstream analysis must not treat as
-fully understood.
+parser or a producer preserved without a canonical catalog identity. This
+decision governs only the call-shaped residuals — catalog-unknown action
+calls (`UnknownAction`, and the parser-preserved `rawWorkshopAction` opaque
+form reported as `OpaqueAction`) and catalog-unknown value calls
+(`UnknownValue`). Other residual kinds, such as raw settings, are outside
+canonical call validation and unaffected by this decision.
 
 `validate_canonical_ids` is fail-fast and rejects the first catalog-unknown
 action or value call as `Unknown`. Wright composes structural validation
