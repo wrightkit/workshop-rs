@@ -798,3 +798,159 @@ fn round_trip_equivalence_distinguishes_disabled_from_active() {
         &disabled_condition
     ));
 }
+
+// Residual inspection is defined over the public canonical model and is
+// independent from structural validation (#365): residuals observable in a
+// program `validate` rejects must still be inventoried instead of projecting
+// an internal materialization failure to an empty report.
+
+#[test]
+fn semantic_issues_reports_residuals_when_control_flow_is_unterminated() {
+    let catalog = catalog();
+    let mut program = Program::new();
+    program.rule(
+        Rule::new("missing terminator", Event::Global)
+            .action(Action::call("unrecognizedProducerAction", []))
+            .action(Action::While {
+                condition: Value::Bool(true),
+            }),
+    );
+
+    assert!(matches!(
+        program.validate(),
+        Err(workshop_rs::WorkshopError::Malformed { .. })
+    ));
+    for issues in [
+        program.semantic_issues(&catalog),
+        workshop_rs::rules::inspect(&program, &catalog),
+    ] {
+        let [issue] = issues.as_slice() else {
+            panic!("expected exactly one residual, got {issues:?}");
+        };
+        assert_eq!(
+            issue.kind,
+            workshop_rs::rules::IncompletenessKind::UnknownAction
+        );
+        assert_eq!(issue.name, "unrecognizedProducerAction");
+        assert_eq!(
+            issue.classification,
+            workshop_rs::rules::ResidualClassification::ProducerExtension
+        );
+    }
+}
+
+#[test]
+fn semantic_issues_survives_unresolved_variable_reference() {
+    let catalog = catalog();
+    let mut program = Program::new();
+    program.rule(
+        Rule::new("unresolved variable", Event::Global)
+            .condition(Condition::new(Value::call(
+                "isAlive",
+                [Value::global_variable("undeclared")],
+            )))
+            .action(Action::call("unrecognizedProducerAction", [])),
+    );
+
+    assert!(program.validate().is_err());
+    let issues = program.semantic_issues(&catalog);
+    assert!(
+        issues.iter().any(|issue| issue.kind
+            == workshop_rs::rules::IncompletenessKind::UnknownAction
+            && issue.name == "unrecognizedProducerAction"),
+        "unresolved variable must not suppress observable residuals: {issues:?}"
+    );
+}
+
+#[test]
+fn semantic_issues_survives_unresolved_subroutine_reference() {
+    let catalog = catalog();
+    let mut program = Program::new();
+    program.rule(
+        Rule::new("unresolved subroutine", Event::Global)
+            .action(Action::CallSubroutine {
+                subroutine: "missing".to_string(),
+            })
+            .action(Action::call("unrecognizedProducerAction", [])),
+    );
+
+    assert!(program.validate().is_err());
+    let issues = program.semantic_issues(&catalog);
+    assert!(
+        issues.iter().any(|issue| issue.kind
+            == workshop_rs::rules::IncompletenessKind::UnknownAction
+            && issue.name == "unrecognizedProducerAction"),
+        "unresolved subroutine must not suppress observable residuals: {issues:?}"
+    );
+}
+
+#[test]
+fn fully_understood_program_reports_an_empty_residual_inventory() {
+    let catalog = catalog();
+    let mut program = Program::new();
+    program.global_variable(Variable::new("Score")).rule(
+        Rule::new("understood", Event::Global).action(Action::SetGlobalVariable {
+            variable: "Score".to_string(),
+            value: Value::number(1.0),
+        }),
+    );
+
+    program.validate().expect("structurally validates");
+    assert!(program.semantic_issues(&catalog).is_empty());
+    assert!(workshop_rs::rules::inspect(&program, &catalog).is_empty());
+}
+
+#[test]
+fn residual_ordering_preserves_control_flow_materialization_order() {
+    // Value residuals follow the order value nodes take when materialized:
+    // `While`, `For`, and `Else If` headers land after their bodies, while an
+    // `If` header precedes its body.
+    let catalog = catalog();
+    let locale = workshop_rs::catalog::Locale::new("en-US");
+    let source = r#"variables { global: 0: g }
+rule ("ordering") {
+    event { Ongoing - Global; }
+    actions {
+        While(unknownWhileCond());
+            Set Global Variable(g, unknownWhileBody());
+        End;
+        For Global Variable(g, unknownForStart(), unknownForStop(), unknownForStep());
+            Set Global Variable(g, unknownForBody());
+        End;
+        If(unknownIfCond());
+            Set Global Variable(g, unknownIfBody());
+        Else If(unknownElseIfCond());
+            Set Global Variable(g, unknownElseIfBody());
+        Else;
+            Set Global Variable(g, unknownElseBody());
+        End;
+    }
+}"#;
+    let program = workshop_rs::parser::parse(source, &catalog, &locale).expect("parses");
+    program.validate().expect("structurally validates");
+
+    let issues = program.semantic_issues(&catalog);
+    let names: Vec<_> = issues.iter().map(|issue| issue.name.as_str()).collect();
+    assert_eq!(
+        names,
+        [
+            "unknownWhileBody",
+            "unknownWhileCond",
+            "unknownForBody",
+            "unknownForStart",
+            "unknownForStop",
+            "unknownForStep",
+            "unknownIfCond",
+            "unknownIfBody",
+            "unknownElseIfBody",
+            "unknownElseIfCond",
+            "unknownElseBody",
+        ]
+    );
+    assert!(issues.iter().all(|issue| {
+        issue.kind == workshop_rs::rules::IncompletenessKind::UnknownValue
+            && issue.classification
+                == workshop_rs::rules::ResidualClassification::UnresolvedIdentifier
+            && issue.span.is_some()
+    }));
+}
