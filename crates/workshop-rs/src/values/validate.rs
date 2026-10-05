@@ -6,6 +6,7 @@ pub(crate) fn validate_value(
     program: &wir::Program,
     catalog: &Catalog,
     value_id: wir::ValueId,
+    tolerate_residuals: bool,
 ) -> Result<()> {
     let Some(node) = program.values.get(value_id) else {
         return Ok(());
@@ -23,6 +24,16 @@ pub(crate) fn validate_value(
                 || catalog.entry(Kind::Value, name).is_some()
                 || catalog.entry(Kind::Operator, name).is_some();
             if !known {
+                // A catalog-unknown call is a completeness residual reported
+                // by `semantic_issues`; its signature is unknowable, but its
+                // argument values are still validated so a nested known
+                // violation is not masked.
+                if tolerate_residuals {
+                    for arg in args {
+                        validate_value(program, catalog, *arg, tolerate_residuals)?;
+                    }
+                    return Ok(());
+                }
                 return Err(WorkshopError::unknown(
                     "value",
                     name.clone(),
@@ -53,7 +64,7 @@ pub(crate) fn validate_value(
                 }
             }
             for arg in args {
-                validate_value(program, catalog, *arg)?;
+                validate_value(program, catalog, *arg, tolerate_residuals)?;
             }
         }
         wir::Value::Enum {
@@ -80,16 +91,16 @@ pub(crate) fn validate_value(
         }
         wir::Value::Array(elements) => {
             for element in elements {
-                validate_value(program, catalog, *element)?;
+                validate_value(program, catalog, *element, tolerate_residuals)?;
             }
         }
         wir::Value::Vector { x, y, z } => {
-            validate_value(program, catalog, *x)?;
-            validate_value(program, catalog, *y)?;
-            validate_value(program, catalog, *z)?;
+            validate_value(program, catalog, *x, tolerate_residuals)?;
+            validate_value(program, catalog, *y, tolerate_residuals)?;
+            validate_value(program, catalog, *z, tolerate_residuals)?;
         }
         wir::Value::PlayerVariable { player, .. } => {
-            validate_value(program, catalog, *player)?;
+            validate_value(program, catalog, *player, tolerate_residuals)?;
         }
         wir::Value::Subroutine(subroutine) => {
             if !program.subroutines.contains(*subroutine) {

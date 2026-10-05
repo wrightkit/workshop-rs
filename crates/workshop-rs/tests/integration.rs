@@ -2,6 +2,8 @@ mod common;
 
 #[path = "action_layout.rs"]
 mod action_layout;
+#[path = "canonical_residuals.rs"]
+mod canonical_residuals;
 #[path = "catalog.rs"]
 mod catalog;
 #[path = "corpus.rs"]

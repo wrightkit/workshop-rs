@@ -46,7 +46,8 @@ types (`ElementCountError`, `ElementCountNode`, `ElementCountReport`,
 `ActionLayoutError`, `action_width`) are public only from `emitter`. `rules`
 re-exports the `Program` model types above and its own inspection types
 (`IncompletenessKind`, `ResidualClassification`, `SemanticIssue`, `inspect`);
-canonical validation (`validate_canonical_ids`) is public only from
+canonical validation (`validate_canonical_ids`,
+`validate_canonical_ids_tolerating_residuals`) is public only from
 `validate`. `settings::schema` is an internal module; its types and functions
 (including `validate_catalog`) are public only from `settings` directly.
 
