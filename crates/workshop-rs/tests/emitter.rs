@@ -245,6 +245,9 @@ fn remove_array_operations_preserve_distinct_identities() {
             workshop_rs::WorkshopError::Unknown {
                 kind: "modify operator",
                 ..
+            } | workshop_rs::WorkshopError::UnknownWithCandidates {
+                kind: "modify operator",
+                ..
             }
         ),
         "{error}"

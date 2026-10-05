@@ -106,7 +106,11 @@ fn strict_validation_still_rejects_residuals() {
     let error = validate::validate_canonical_ids(&program("Wait(sqrt(4));"), &catalog())
         .expect_err("strict validation rejects the unknown value");
     assert!(
-        matches!(error, workshop_rs::WorkshopError::Unknown { .. }),
+        matches!(
+            error,
+            workshop_rs::WorkshopError::Unknown { .. }
+                | workshop_rs::WorkshopError::UnknownWithCandidates { .. }
+        ),
         "strict validation reports the residual as Unknown: {error:?}"
     );
 }

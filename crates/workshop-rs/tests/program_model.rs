@@ -184,6 +184,11 @@ fn externally_constructed_program_attaches_source_and_preserves_diagnostic_span(
             kind: "value",
             span: Some(span),
             ..
+        }
+        | workshop_rs::WorkshopError::UnknownWithCandidates {
+            kind: "value",
+            span: Some(span),
+            ..
         } if span == value_span
     ));
 }

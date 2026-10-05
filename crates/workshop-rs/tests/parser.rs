@@ -435,7 +435,11 @@ fn unknown_spelling_is_reported_as_unknown() {
     let text = "rule (\"x\") { event { Ongoing - Global; } actions { Totally Unknown Thing(1); } }";
     let error = internal::try_parse(text).unwrap_err();
     assert!(
-        matches!(error, workshop_rs::WorkshopError::Unknown { .. }),
+        matches!(
+            error,
+            workshop_rs::WorkshopError::Unknown { .. }
+                | workshop_rs::WorkshopError::UnknownWithCandidates { .. }
+        ),
         "unknown action must be Unknown: {error}"
     );
     assert!(error.to_string().contains("Totally Unknown Thing"));

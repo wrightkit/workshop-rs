@@ -14,9 +14,21 @@ pub enum WorkshopError {
         kind: &'static str,
         spelling: String,
         locale: Locale,
-        /// The nearest accepted spellings for `spelling`, when the rejecting
-        /// site computed them. Diagnostics constructed without candidate
-        /// context leave it empty.
+        span: Option<Span>,
+    },
+    /// A localized spelling is unknown or ambiguous, and the rejecting site
+    /// attached its nearest accepted spellings.
+    ///
+    /// This is a separate variant from [`WorkshopError::Unknown`] so the
+    /// candidate list does not change that variant's shape; consumers
+    /// matching `Unknown` should also match this variant to handle every
+    /// unknown-spelling diagnostic.
+    UnknownWithCandidates {
+        kind: &'static str,
+        spelling: String,
+        locale: Locale,
+        /// The nearest accepted spellings for `spelling` in the rejecting
+        /// site's accepted space; empty when nothing was close.
         candidates: Vec<String>,
         span: Option<Span>,
     },
@@ -56,28 +68,45 @@ impl WorkshopError {
             kind,
             spelling: spelling.into(),
             locale,
-            candidates: Vec::new(),
             span,
         }
     }
 
-    /// Attach the nearest accepted spellings to an `Unknown` diagnostic.
-    /// Other variants are returned unchanged.
-    pub fn with_candidates(mut self, candidates: Vec<String>) -> Self {
-        if let WorkshopError::Unknown {
-            candidates: slot, ..
-        } = &mut self
-        {
-            *slot = candidates;
+    /// Attach the nearest accepted spellings to an `Unknown` diagnostic,
+    /// producing [`WorkshopError::UnknownWithCandidates`]. Calling this on
+    /// a candidate-carrying error replaces the list; other variants are
+    /// returned unchanged.
+    pub fn with_candidates(self, candidates: Vec<String>) -> Self {
+        match self {
+            WorkshopError::Unknown {
+                kind,
+                spelling,
+                locale,
+                span,
+            } => WorkshopError::UnknownWithCandidates {
+                kind,
+                spelling,
+                locale,
+                candidates,
+                span,
+            },
+            mut error => {
+                if let WorkshopError::UnknownWithCandidates {
+                    candidates: slot, ..
+                } = &mut error
+                {
+                    *slot = candidates;
+                }
+                error
+            }
         }
-        self
     }
 
     /// The nearest accepted spellings for an `Unknown` spelling, when the
     /// rejecting site computed them. Other variants report an empty slice.
     pub fn candidates(&self) -> &[String] {
         match self {
-            WorkshopError::Unknown { candidates, .. } => candidates,
+            WorkshopError::UnknownWithCandidates { candidates, .. } => candidates,
             _ => &[],
         }
     }
@@ -94,6 +123,7 @@ impl WorkshopError {
     pub fn span(&self) -> Option<Span> {
         match self {
             WorkshopError::Unknown { span, .. }
+            | WorkshopError::UnknownWithCandidates { span, .. }
             | WorkshopError::Malformed { span, .. }
             | WorkshopError::Unsupported { span, .. } => *span,
             WorkshopError::Catalog(_) | WorkshopError::MissingMapping { .. } => None,
@@ -133,6 +163,12 @@ impl std::fmt::Display for WorkshopError {
         match self {
             WorkshopError::Catalog(error) => write!(f, "{}: {}", error.code, error.message),
             WorkshopError::Unknown {
+                kind,
+                spelling,
+                locale,
+                ..
+            }
+            | WorkshopError::UnknownWithCandidates {
                 kind,
                 spelling,
                 locale,

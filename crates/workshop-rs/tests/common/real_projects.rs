@@ -110,7 +110,8 @@ impl RealProjectCaseExpectation {
                 && match (expected.kind, error) {
                     (
                         RealProjectGapKind::UnknownAction,
-                        WorkshopError::Unknown { kind, spelling, .. },
+                        WorkshopError::Unknown { kind, spelling, .. }
+                        | WorkshopError::UnknownWithCandidates { kind, spelling, .. },
                     ) => *kind == expected.kind.as_str() && spelling == expected.identity,
                     _ => false,
                 }
