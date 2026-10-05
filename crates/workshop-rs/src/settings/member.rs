@@ -49,7 +49,7 @@ impl ListKind {
         self,
         element: &SettingsListElement,
         name: &str,
-    ) -> Result<&'static str, SettingsDiagnostic> {
+    ) -> Result<&'static str, Box<SettingsDiagnostic>> {
         let english = match self {
             Self::Map => table::map_name(&element.value),
             Self::Hero => table::hero_name(&element.value),
@@ -59,7 +59,7 @@ impl ListKind {
                 Self::Map => suggest::suggest(&element.value, table::map_spellings()),
                 Self::Hero => suggest::suggest(&element.value, table::hero_spellings()),
             };
-            rejected(
+            Box::new(rejected(
                 element.span,
                 format!(
                     "unknown {} '{}' in settings list '{name}'",
@@ -67,7 +67,7 @@ impl ListKind {
                     element.value
                 ),
                 suggestion,
-            )
+            ))
         })
     }
 }
@@ -75,9 +75,9 @@ impl ListKind {
 pub(super) fn lookup(
     node: &SettingsNode,
     full: &[PathPart<'_>],
-) -> Result<&'static TableEntry, SettingsDiagnostic> {
+) -> Result<&'static TableEntry, Box<SettingsDiagnostic>> {
     table::lookup(full).ok_or_else(|| {
-        rejected(
+        Box::new(rejected(
             node.span(),
             format!(
                 "settings key '{}' is outside the emission table",
@@ -87,14 +87,14 @@ pub(super) fn lookup(
                 node.name(),
                 table::key_spellings(&full[..full.len() - 1]).into_iter(),
             ),
-        )
+        ))
     })
 }
 
 pub(super) fn accept<'a>(
     node: &'a SettingsNode,
     entry: &TableEntry,
-) -> Result<Member<'a>, SettingsDiagnostic> {
+) -> Result<Member<'a>, Box<SettingsDiagnostic>> {
     let name = node.name();
     Ok(match (node, entry.kind) {
         (SettingsNode::Flag { .. }, KeyKind::Flag) => Member::Flag,
@@ -105,11 +105,11 @@ pub(super) fn accept<'a>(
         (SettingsNode::Bool { value, .. }, KeyKind::YesNo) => Member::YesNo(*value),
         (SettingsNode::String { value, .. }, KeyKind::Enum(domain)) => {
             let english = table::enum_name(domain, value).ok_or_else(|| {
-                rejected(
+                Box::new(rejected(
                     node.span(),
                     format!("unknown value '{value}' for settings key '{name}'"),
                     suggest::suggest(value, table::enum_spellings(domain)),
-                )
+                ))
             })?;
             Member::Enum {
                 domain,
@@ -119,18 +119,18 @@ pub(super) fn accept<'a>(
         }
         (SettingsNode::Bool { value, .. }, KeyKind::BoolEnum(domain)) => {
             if !value {
-                return Err(rejected(
+                return Err(Box::new(rejected(
                     node.span(),
                     format!("unsupported false value for settings key '{name}'"),
                     None,
-                ));
+                )));
             }
             let english = table::enum_name(domain, "enabled").ok_or_else(|| {
-                rejected(
+                Box::new(rejected(
                     node.span(),
                     format!("unknown value 'enabled' for settings key '{name}'"),
                     None,
-                )
+                ))
             })?;
             Member::Enum {
                 domain,
@@ -147,11 +147,11 @@ pub(super) fn accept<'a>(
             kind: ListKind::Hero,
         },
         _ => {
-            return Err(rejected(
+            return Err(Box::new(rejected(
                 node.span(),
                 format!("settings key '{name}' does not match its table kind"),
                 None,
-            ));
+            )));
         }
     })
 }

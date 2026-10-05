@@ -694,6 +694,27 @@ impl Catalog {
         })
     }
 
+    /// The emitted form of `member_spelling` in `domain` under `locale`:
+    /// constructor-form domains (`Hero`, `Button`, `Color`, `Map`) write
+    /// `Domain(Member)` in every position and locale; every other domain
+    /// writes the member bare (docs/wrapper-forms.md).
+    pub(crate) fn enum_member_form(
+        &self,
+        domain: &str,
+        member_spelling: &str,
+        locale: &Locale,
+    ) -> String {
+        if matches!(domain, "Hero" | "Button" | "Color" | "Map") {
+            let domain_display = self
+                .enum_domain(domain)
+                .and_then(|entry| entry.spelling(locale))
+                .unwrap_or(domain);
+            format!("{domain_display}({member_spelling})")
+        } else {
+            member_spelling.to_string()
+        }
+    }
+
     /// The canonical ids and `locale` spellings of `domain` members, for
     /// nearest-candidate diagnostics that reject in the canonical space.
     pub(crate) fn canonical_member_spellings<'a>(

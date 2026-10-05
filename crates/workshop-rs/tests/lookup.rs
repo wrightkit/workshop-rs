@@ -92,9 +92,10 @@ fn signature_lists_params_defaults_and_inline_enum_members_once() {
     );
     // The same domain is not listed a second time.
     assert_eq!(text.matches("Yellow").count(), 1, "{text}");
-    // Optional enum parameters show the default, not the members.
-    assert!(text.contains("SubheaderColor=Color.White"), "{text}");
-    assert!(text.contains("TextColor=Color.White"), "{text}");
+    // Optional enum parameters show the default in emitted call form, not
+    // the members: constructor-form domains render `Domain(Member)`.
+    assert!(text.contains("SubheaderColor=Color(White)"), "{text}");
+    assert!(text.contains("TextColor=Color(White)"), "{text}");
     // Larger required enum domains still list members when inside the limit.
     assert!(
         text.contains(
@@ -127,6 +128,17 @@ fn signature_lists_params_defaults_and_inline_enum_members_once() {
 #[test]
 fn large_enum_domain_reports_member_count_and_follow_up_lists_members() {
     let catalog = catalog();
+    // The member count is catalog data: derive it so a catalog update does
+    // not break the lookup-behavior assertion.
+    let hero_count = catalog
+        .enum_domain("Hero")
+        .expect("the Hero domain exists")
+        .members
+        .len();
+    assert!(
+        hero_count > 32,
+        "the Hero domain must exceed the inline limit"
+    );
     let matches = catalog
         .lookup(&en(), "Start Forcing Player To Be Hero")
         .expect("lookup");
@@ -138,7 +150,9 @@ fn large_enum_domain_reports_member_count_and_follow_up_lists_members() {
         panic!("startForcingHero is an action with a signature");
     };
     assert!(
-        signature.text.contains("hero: Hero(53 members)"),
+        signature
+            .text
+            .contains(&format!("hero: Hero({hero_count} members)")),
         "{}",
         signature.text
     );
@@ -147,7 +161,7 @@ fn large_enum_domain_reports_member_count_and_follow_up_lists_members() {
         .iter()
         .find(|domain| domain.domain == "Hero")
         .expect("the Hero domain is exposed for follow-up");
-    assert_eq!(hero_domain.members.len(), 53);
+    assert_eq!(hero_domain.members.len(), hero_count);
 
     // A follow-up query on the domain lists every member.
     let domain_matches = catalog.lookup(&en(), "Hero").expect("lookup");
@@ -158,7 +172,7 @@ fn large_enum_domain_reports_member_count_and_follow_up_lists_members() {
         _ => None,
     });
     let members = domain.expect("the Hero domain matches a domain query");
-    assert_eq!(members.len(), 53);
+    assert_eq!(members.len(), hero_count);
     assert!(members.iter().any(|member| member.id == "SOLDIER_76"));
 }
 

@@ -183,11 +183,11 @@ fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<Set
         Ok(Member::List { elements, kind }) => {
             for element in elements {
                 if let Err(diagnostic) = kind.resolve(element, name) {
-                    errors.push(diagnostic);
+                    errors.push(*diagnostic);
                 }
             }
         }
         Ok(_) => {}
-        Err(diagnostic) => errors.push(diagnostic),
+        Err(diagnostic) => errors.push(*diagnostic),
     }
 }
