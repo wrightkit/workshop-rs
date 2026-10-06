@@ -207,7 +207,6 @@ fn settings_lookup_by_display_name_returns_keys_kinds_and_value_forms() {
             LookupMatch::Setting {
                 definition,
                 display_name,
-                ..
             } if display_name == "Score To Win" => Some(definition),
             _ => None,
         })
@@ -563,14 +562,6 @@ fn scoped_lookup_lists_settings_children_segment_by_segment() {
     assert!(
         leaves.contains(&"heroes.<team>.health%"),
         "the health leaf matches under the scope: {children:?}"
-    );
-    // A scoped leaf spells the segment below the prefix, not its full path.
-    assert!(
-        children.iter().all(|child| match child {
-            LookupMatch::Setting { spelling, .. } => !spelling.contains('.'),
-            _ => true,
-        }),
-        "scoped leaf spellings are single segments: {children:?}"
     );
 }
 
