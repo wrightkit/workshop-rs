@@ -35,10 +35,44 @@ Each match is a canonical construct the parser and emitter accept:
   name; canonical qualified queries such as `Hero.SOLDIER_76` resolve.
 - `LookupMatch::Setting` — a `settings::SettingDefinition` projected from the
   reviewed settings table, carrying the valid key, path, scope, and value
-  forms.
+  forms; `spelling` is the accepted spelling (`definition.path()`).
 
 A locale the catalog does not declare is an explicit `WorkshopError::Unsupported`;
 the catalog never answers localized names it cannot attest.
+
+## Scoped lookup
+
+`Catalog::lookup_within` lists the entries an identity *contains*: the
+members of an enum domain, the parameters of a callable, or the settings
+keys and segments under a path prefix.
+
+```rust
+use workshop_rs::catalog::{Catalog, Locale};
+use workshop_rs::lookup::LookupMatch;
+
+let catalog = Catalog::builtin()?;
+let members = catalog.lookup_within(&Locale::new("en-US"), "Team", None)?;
+assert!(members.iter().all(|m| matches!(m, LookupMatch::EnumMember { domain, .. } if domain == "Team")));
+# Ok::<(), workshop_rs::WorkshopError>(())
+```
+
+`within` resolves in a fixed order — a catalog enum domain, a
+settings-table enum domain, an action or value id or spelling, then a
+settings path prefix whose `<team>`/`<hero>` template segments accept any
+concrete segment. Children keep the scope's own order (domain order, call
+order, table order); a non-empty `query` filters and ranks them with the
+same scoring an unscoped lookup applies, so a scoped query and an
+unscoped one agree on which names match.
+
+Scoped results add two child shapes an unscoped lookup never answers:
+`LookupMatch::Parameter` — one parameter of the scoped callable with its
+call-order position, required flag, and `SignatureParam` facts (and its
+enum domain with members when enum-typed) — and `LookupMatch::SettingPath`,
+the next path segment below a settings prefix (`heroes.<team>`,
+`heroes.general`) where the prefix is not yet a leaf key. A leaf
+`Setting` child spells its own segment below the prefix rather than the
+full path. A `within` naming no known scope is an explicit
+`WorkshopError::Unknown` with `kind: "lookup scope"`.
 
 ## Signature form
 

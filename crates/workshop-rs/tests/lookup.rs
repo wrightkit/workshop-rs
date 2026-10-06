@@ -207,6 +207,7 @@ fn settings_lookup_by_display_name_returns_keys_kinds_and_value_forms() {
             LookupMatch::Setting {
                 definition,
                 display_name,
+                ..
             } if display_name == "Score To Win" => Some(definition),
             _ => None,
         })
@@ -425,5 +426,171 @@ fn unknown_settings_team_carries_valid_candidates() {
             .iter()
             .any(|candidate| candidate == "Team 1" || candidate == "Team 2"),
         "the nearest team names report as candidates: {candidates:?}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Scoped lookup (`lookup_within`)
+// ---------------------------------------------------------------------------
+
+#[test]
+fn scoped_lookup_lists_a_domains_members_in_domain_order() {
+    let catalog = catalog();
+    let members = catalog
+        .lookup_within(&en(), "Team", None)
+        .expect("a domain is a scope");
+    let members: Vec<&str> = members
+        .iter()
+        .map(|member| match member {
+            LookupMatch::EnumMember { domain, member, .. } => {
+                assert_eq!(domain, "Team");
+                member.as_str()
+            }
+            other => panic!("a domain scope lists members: {other:?}"),
+        })
+        .collect();
+    assert_eq!(members, ["ALL", "TEAM_1", "TEAM_2"]);
+}
+
+#[test]
+fn scoped_lookup_lists_settings_enum_domain_members() {
+    let catalog = catalog();
+    let members = catalog
+        .lookup_within(&en(), "mapRotation", None)
+        .expect("a settings enum domain is a scope");
+    let members: Vec<&str> = members
+        .iter()
+        .map(|member| match member {
+            LookupMatch::EnumMember { domain, member, .. } => {
+                assert_eq!(domain, "mapRotation");
+                member.as_str()
+            }
+            other => panic!("a settings enum scope lists members: {other:?}"),
+        })
+        .collect();
+    assert!(members.contains(&"afterAGame"), "members: {members:?}");
+    assert!(members.contains(&"paused"), "members: {members:?}");
+}
+
+#[test]
+fn scoped_lookup_lists_callable_parameters_in_call_order() {
+    let catalog = catalog();
+    let params = catalog
+        .lookup_within(&en(), "createHudText", None)
+        .expect("a callable is a scope");
+    let mut positions = Vec::with_capacity(params.len());
+    let names: Vec<&str> = params
+        .iter()
+        .map(|param| match param {
+            LookupMatch::Parameter {
+                callable,
+                position,
+                param,
+                ..
+            } => {
+                assert_eq!(callable, "createHudText");
+                positions.push(*position);
+                param.name.as_str()
+            }
+            other => panic!("a callable scope lists parameters: {other:?}"),
+        })
+        .collect();
+    assert_eq!(
+        positions,
+        (0..params.len()).collect::<Vec<_>>(),
+        "positions run in call order: {params:?}"
+    );
+    assert_eq!(names.first(), Some(&"VisibleTo"), "call order: {names:?}");
+    assert!(names.len() > 1);
+}
+
+#[test]
+fn scoped_query_filters_and_ranks_children_with_the_shared_matcher() {
+    let catalog = catalog();
+    // The same `name_score` that ranks unscoped matches filters and ranks
+    // scoped children: "team 1" resolves the member, not a substring test.
+    let members = catalog
+        .lookup_within(&en(), "Team", Some("team 1"))
+        .expect("scope resolves");
+    assert!(
+        !members.is_empty() && members.len() < 3,
+        "the query narrows the scope: {members:?}"
+    );
+    let LookupMatch::EnumMember { member, .. } = &members[0] else {
+        panic!("the closest member ranks first: {members:?}");
+    };
+    assert_eq!(member, "TEAM_1");
+
+    // Parameters are matchable children: a scoped query finds them by
+    // name through the same matcher.
+    let params = catalog
+        .lookup_within(&en(), "createHudText", Some("visibleTo"))
+        .expect("scope resolves");
+    let LookupMatch::Parameter { param, .. } = params.first().expect("a param matched") else {
+        panic!("a param query lists parameters: {params:?}");
+    };
+    assert_eq!(param.name, "VisibleTo");
+}
+
+#[test]
+fn scoped_lookup_lists_settings_children_segment_by_segment() {
+    let catalog = catalog();
+    let children = catalog
+        .lookup_within(&en(), "heroes", None)
+        .expect("a settings prefix is a scope");
+    let paths: Vec<&str> = children
+        .iter()
+        .map(|child| match child {
+            LookupMatch::SettingPath { path, .. } => path.as_str(),
+            LookupMatch::Setting { definition, .. } => definition.path(),
+            other => panic!("settings children are paths or leaves: {other:?}"),
+        })
+        .collect();
+    assert_eq!(paths, ["heroes.<team>", "heroes.general"]);
+
+    // A scoped settings query matches leaf keys under the prefix — the
+    // `<team>` template segment accepts the concrete `general` segment.
+    let children = catalog
+        .lookup_within(&en(), "heroes.general", Some("health"))
+        .expect("scope resolves");
+    let leaves: Vec<&str> = children
+        .iter()
+        .filter_map(|child| match child {
+            LookupMatch::Setting { definition, .. } => Some(definition.path()),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        leaves.contains(&"heroes.<team>.health%"),
+        "the health leaf matches under the scope: {children:?}"
+    );
+    // A scoped leaf spells the segment below the prefix, not its full path.
+    assert!(
+        children.iter().all(|child| match child {
+            LookupMatch::Setting { spelling, .. } => !spelling.contains('.'),
+            _ => true,
+        }),
+        "scoped leaf spellings are single segments: {children:?}"
+    );
+}
+
+#[test]
+fn scoped_lookup_reports_an_unknown_scope() {
+    let catalog = catalog();
+    let error = catalog
+        .lookup_within(&en(), "not-a-scope", None)
+        .expect_err("an unmatched scope errors");
+    assert!(
+        matches!(
+            error,
+            WorkshopError::Unknown {
+                kind: "lookup scope",
+                ..
+            } | WorkshopError::UnknownWithCandidates {
+                kind: "lookup scope",
+                ..
+            }
+        ),
+        "unknown scope is an Unknown diagnostic: {error:?}"
     );
 }
