@@ -51,6 +51,12 @@ impl SettingDefinition {
         &self.path
     }
 
+    /// The canonical path as typed segments: literal keys and the `<team>`
+    /// / `<hero>` template slots a concrete path fills.
+    pub(crate) fn path_parts(&self) -> &[PathPart<'static>] {
+        self.path_parts
+    }
+
     pub fn domain(&self) -> &SettingValueDomain {
         &self.domain
     }
