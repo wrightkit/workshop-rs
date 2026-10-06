@@ -35,7 +35,7 @@ Each match is a canonical construct the parser and emitter accept:
   name; canonical qualified queries such as `Hero.SOLDIER_76` resolve.
 - `LookupMatch::Setting` — a `settings::SettingDefinition` projected from the
   reviewed settings table, carrying the valid key, path, scope, and value
-  forms; `spelling` is the accepted spelling (`definition.path()`).
+  forms.
 
 A locale the catalog does not declare is an explicit `WorkshopError::Unsupported`;
 the catalog never answers localized names it cannot attest.
@@ -69,9 +69,8 @@ Scoped results add two child shapes an unscoped lookup never answers:
 call-order position, required flag, and `SignatureParam` facts (and its
 enum domain with members when enum-typed) — and `LookupMatch::SettingPath`,
 the next path segment below a settings prefix (`heroes.<team>`,
-`heroes.general`) where the prefix is not yet a leaf key. A leaf
-`Setting` child spells its own segment below the prefix rather than the
-full path. A `within` naming no known scope is an explicit
+`heroes.general`) where the prefix is not yet a leaf key. A `within`
+naming no known scope is an explicit
 `WorkshopError::Unknown` with `kind: "lookup scope"`.
 
 ## Signature form

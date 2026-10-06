@@ -60,10 +60,6 @@ pub enum LookupMatch {
     Setting {
         /// The canonical semantic definition.
         definition: SettingDefinition,
-        /// The accepted spelling of this match: the full path for an
-        /// unscoped match, or the segment below the scoped prefix for a
-        /// [`Catalog::lookup_within`] child.
-        spelling: String,
         /// The display name in the requested locale, or the English name
         /// when the locale has no mapping.
         display_name: String,
@@ -287,7 +283,6 @@ impl Catalog {
                 matches.push((
                     score,
                     LookupMatch::Setting {
-                        spelling: definition.path().to_string(),
                         display_name: definition
                             .presentation()
                             .localized_name(locale.as_str())
@@ -702,7 +697,6 @@ fn within_settings(
             children.push((
                 child_score(prepared, texts.into_iter().flatten()),
                 LookupMatch::Setting {
-                    spelling: segment.to_string(),
                     display_name: definition
                         .presentation()
                         .localized_name(locale.as_str())
