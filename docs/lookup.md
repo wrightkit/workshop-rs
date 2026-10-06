@@ -58,11 +58,15 @@ assert!(members.iter().all(|m| matches!(m, LookupMatch::EnumMember { domain, .. 
 
 `within` resolves in a fixed order — a catalog enum domain, a
 settings-table enum domain, an action or value id or spelling, then a
-settings path prefix whose `<team>`/`<hero>` template segments accept any
-concrete segment. Children keep the scope's own order (domain order, call
-order, table order); a non-empty `query` filters and ranks them with the
-same scoring an unscoped lookup applies, so a scoped query and an
-unscoped one agree on which names match.
+settings path prefix. `<team>`/`<hero>` template segments accept their
+own template spelling or a canonical team/hero key (`heroes.team1`,
+`heroes.<team>`), never an arbitrary value, so a literal path stays
+literal and `heroes.not-a-team` is an unknown scope. Children keep the
+scope's own order (domain order, call order, table order); a non-empty
+`query` filters and ranks them with the same scoring an unscoped lookup
+applies, so a scoped query and an unscoped one agree on which names
+match. Member spellings in the requested locale match and surface the
+same way catalog spellings do.
 
 Scoped results add two child shapes an unscoped lookup never answers:
 `LookupMatch::Parameter` — one parameter of the scoped callable with its

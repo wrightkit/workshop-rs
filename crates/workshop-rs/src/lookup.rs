@@ -14,7 +14,7 @@
 use crate::catalog::{Catalog, CatalogEntry, Kind, Locale};
 use crate::core::error::{Result, WorkshopError};
 use crate::core::suggest;
-use crate::settings::{self, SettingDefinition, SettingValueDomain};
+use crate::settings::{self, PathPart, SettingDefinition, SettingValueDomain, table};
 
 /// Members of a parameter's enum domain are listed inline in a signature
 /// when the domain has at most this many members. Larger domains report
@@ -306,8 +306,11 @@ impl Catalog {
     ///
     /// `within` resolves in a fixed order: an enum domain (catalog or
     /// settings-table), an action or value id or `locale` spelling, then
-    /// a settings path prefix whose template segments (`<team>`,
-    /// `<hero>`) accept any concrete segment. With no `query`, or an
+    /// a settings path prefix. Template segments (`<team>`, `<hero>`)
+    /// accept their own template spelling or a canonical team/hero key
+    /// the settings table recognizes — never an arbitrary value — so a
+    /// literal path stays literal (`heroes.general` lists only the
+    /// `general` group's children). With no `query`, or an
     /// empty one, children keep the scope's own order — domain order for
     /// members, call order for parameters, table order for settings — and
     /// a non-empty query filters and ranks them by the same scoring an
@@ -347,7 +350,7 @@ impl Catalog {
             .map(PreparedQuery::new);
         let mut scored = self
             .within_enum_domain(locale, within, prepared.as_ref())
-            .or_else(|| self.within_settings_enum(within, prepared.as_ref()))
+            .or_else(|| self.within_settings_enum(locale, within, prepared.as_ref()))
             .or_else(|| self.within_callable(locale, within, prepared.as_ref()))
             .or_else(|| within_settings(within, locale, prepared.as_ref()))
             .ok_or_else(|| WorkshopError::unknown("lookup scope", within, locale.clone(), None))?;
@@ -401,9 +404,12 @@ impl Catalog {
     }
 
     /// The members of one settings-table enum domain — `value` a domain
-    /// name such as `Hero` — scored against `prepared` when given.
+    /// name such as `mapRotation` — scored against `prepared` when given.
+    /// Member spellings in `locale` match and surface as the display name
+    /// the same way catalog enum members do.
     fn within_settings_enum(
         &self,
+        locale: &Locale,
         value: &str,
         prepared: Option<&PreparedQuery>,
     ) -> Option<Vec<(u32, LookupMatch)>> {
@@ -420,16 +426,24 @@ impl Catalog {
                 if !seen.insert((member.domain().to_string(), member.id().to_string())) {
                     continue;
                 }
+                let localized =
+                    table::localized_name(locale.as_str(), "enums", member.english_name());
                 let qualified = format!("{}.{}", member.domain(), member.id());
                 members.push((
                     child_score(
                         prepared,
-                        [member.id(), qualified.as_str(), member.english_name()].into_iter(),
+                        [
+                            member.id(),
+                            qualified.as_str(),
+                            member.english_name(),
+                            localized.unwrap_or_default(),
+                        ]
+                        .into_iter(),
                     ),
                     LookupMatch::EnumMember {
                         domain: member.domain().to_string(),
                         member: member.id().to_string(),
-                        display_name: Some(member.english_name().to_string()),
+                        display_name: Some(localized.unwrap_or(member.english_name()).to_string()),
                     },
                 ));
             }
@@ -638,11 +652,23 @@ fn child_score<'a>(prepared: Option<&PreparedQuery>, texts: impl Iterator<Item =
         .unwrap_or(u32::MAX)
 }
 
+/// Whether one declared path segment accepts the asked `within` segment:
+/// a literal key matches exactly; a `<team>`/`<hero>` template slot
+/// accepts its own template spelling or a canonical team/hero key the
+/// settings table recognizes (`allTeams`, `team1`, `mei`), never an
+/// arbitrary value.
+fn declared_segment_accepts(declared: PathPart<'_>, asked: &str) -> bool {
+    match declared {
+        PathPart::Part(name) => name == asked,
+        PathPart::Team => asked == "<team>" || table::team_name(asked).is_some(),
+        PathPart::Hero => asked == "<hero>" || table::hero_name(asked).is_some(),
+    }
+}
+
 /// The immediate settings children under `prefix`: leaf keys and the next
-/// path segment, matched segment by segment against the canonical paths
-/// (whose `<team>` and `<hero>` template segments accept any concrete
-/// value). An empty `prefix` lists the root. `None` reports a prefix
-/// naming no known scope.
+/// path segment, matched segment by segment against the canonical paths.
+/// An empty `prefix` lists the root. `None` reports a prefix naming no
+/// known scope.
 fn within_settings(
     prefix: &str,
     locale: &Locale,
@@ -657,33 +683,34 @@ fn within_settings(
     let mut children = Vec::new();
     let mut known = prefix.is_empty();
     for definition in settings::definitions() {
-        let segments: Vec<&str> = definition.path().split('.').collect();
-        if segments.len() < prefix_segments.len() {
+        let parts = definition.path_parts();
+        if parts.len() < prefix_segments.len() {
             continue;
         }
-        let matches_prefix =
-            prefix_segments
-                .iter()
-                .zip(segments.iter())
-                .all(|(asked, declared)| {
-                    declared == asked || *declared == "<team>" || *declared == "<hero>"
-                });
+        let matches_prefix = prefix_segments
+            .iter()
+            .zip(parts.iter())
+            .all(|(asked, declared)| declared_segment_accepts(*declared, asked));
         if !matches_prefix {
             continue;
         }
         known = true;
-        if segments.len() == prefix_segments.len() {
+        if parts.len() == prefix_segments.len() {
             // The prefix names this leaf itself — an existing but empty
             // scope, not an unknown one.
             continue;
         }
-        let segment = segments[prefix_segments.len()];
+        let segment = match &parts[prefix_segments.len()] {
+            PathPart::Part(name) => *name,
+            PathPart::Team => "<team>",
+            PathPart::Hero => "<hero>",
+        };
         let child_path = if prefix.is_empty() {
             segment.to_string()
         } else {
             format!("{prefix}.{segment}")
         };
-        if segments.len() == prefix_segments.len() + 1 {
+        if parts.len() == prefix_segments.len() + 1 {
             if !seen.insert(definition.path().to_string()) {
                 continue;
             }

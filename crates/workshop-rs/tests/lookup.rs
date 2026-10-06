@@ -472,6 +472,32 @@ fn scoped_lookup_lists_settings_enum_domain_members() {
 }
 
 #[test]
+fn scoped_lookup_scores_settings_enum_members_in_the_requested_locale() {
+    let catalog = catalog();
+    // The member spellings the locale table maps must match and surface:
+    // zh-CN "完成比赛后" is `mapRotation.afterAGame`'s localized spelling.
+    let children = catalog
+        .lookup_within(&zh(), "mapRotation", Some("完成比赛后"))
+        .expect("the domain resolves under zh-CN");
+    assert_eq!(
+        children.len(),
+        1,
+        "the localized spelling matches: {children:?}"
+    );
+    match &children[0] {
+        LookupMatch::EnumMember {
+            member,
+            display_name,
+            ..
+        } => {
+            assert_eq!(member, "afterAGame");
+            assert_eq!(display_name.as_deref(), Some("完成比赛后"));
+        }
+        other => panic!("a settings enum member: {other:?}"),
+    }
+}
+
+#[test]
 fn scoped_lookup_lists_callable_parameters_in_call_order() {
     let catalog = catalog();
     let params = catalog
@@ -547,10 +573,10 @@ fn scoped_lookup_lists_settings_children_segment_by_segment() {
         .collect();
     assert_eq!(paths, ["heroes.<team>", "heroes.general"]);
 
-    // A scoped settings query matches leaf keys under the prefix — the
-    // `<team>` template segment accepts the concrete `general` segment.
+    // A scoped settings query matches leaf keys under the prefix: the
+    // `<team>` template scope reaches every templated leaf.
     let children = catalog
-        .lookup_within(&en(), "heroes.general", Some("health"))
+        .lookup_within(&en(), "heroes.<team>", Some("health"))
         .expect("scope resolves");
     let leaves: Vec<&str> = children
         .iter()
@@ -561,8 +587,79 @@ fn scoped_lookup_lists_settings_children_segment_by_segment() {
         .collect();
     assert!(
         leaves.contains(&"heroes.<team>.health%"),
-        "the health leaf matches under the scope: {children:?}"
+        "the health leaf matches under the template scope: {children:?}"
     );
+    assert!(
+        leaves.iter().all(|path| path.starts_with("heroes.<team>.")),
+        "every matched leaf belongs to the scope: {children:?}"
+    );
+}
+
+#[test]
+fn scoped_lookup_template_segments_accept_only_recognized_values() {
+    let catalog = catalog();
+    // `heroes.general` is a literal path, not a `<team>` value: it lists
+    // only the general group's own leaf, uncontaminated by the template
+    // children `heroes.<team>` declares.
+    let children = catalog
+        .lookup_within(&en(), "heroes.general", None)
+        .expect("a literal prefix resolves");
+    let paths: Vec<&str> = children
+        .iter()
+        .map(|child| match child {
+            LookupMatch::Setting { definition, .. } => definition.path(),
+            LookupMatch::SettingPath { path, .. } => path.as_str(),
+            other => panic!("settings children are paths or leaves: {other:?}"),
+        })
+        .collect();
+    assert_eq!(paths, ["heroes.general.disabledHeroes"]);
+
+    // A canonical team key is a recognized concrete `<team>` value: the
+    // team scope lists the shared hero keys and the `<hero>` slot.
+    let children = catalog
+        .lookup_within(&en(), "heroes.team1", None)
+        .expect("a recognized team key resolves");
+    assert!(
+        children.iter().any(|child| matches!(
+            child,
+            LookupMatch::Setting { definition, .. } if definition.path() == "heroes.<team>.enabledHeroes"
+        )),
+        "a recognized team key reaches the templated leaves: {children:?}"
+    );
+    assert!(
+        children.iter().any(|child| matches!(
+            child,
+            LookupMatch::SettingPath { path, .. } if path == "heroes.team1.<hero>"
+        )),
+        "the hero slot echoes the asked concrete prefix: {children:?}"
+    );
+}
+
+#[test]
+fn scoped_lookup_rejects_unrecognized_template_values() {
+    let catalog = catalog();
+    for within in [
+        "heroes.not-a-team",
+        "heroes.team1.not-a-hero",
+        "heroes.not-a-team.not-a-hero",
+    ] {
+        let error = catalog
+            .lookup_within(&en(), within, None)
+            .expect_err("an unrecognized template value is an unknown scope");
+        assert!(
+            matches!(
+                error,
+                WorkshopError::Unknown {
+                    kind: "lookup scope",
+                    ..
+                } | WorkshopError::UnknownWithCandidates {
+                    kind: "lookup scope",
+                    ..
+                }
+            ),
+            "{within}: {error:?}"
+        );
+    }
 }
 
 #[test]
