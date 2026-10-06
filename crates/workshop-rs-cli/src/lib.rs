@@ -16,12 +16,9 @@ use workshop_rs::detect;
 use workshop_rs::emitter::{self, EmitOptions};
 use workshop_rs::parser;
 
-#[doc(hidden)]
 pub mod census;
-#[doc(hidden)]
 pub mod conformance;
 mod corpus;
-#[doc(hidden)]
 pub mod live_capture;
 
 /// The default locale override for parsing when the input locale is not
