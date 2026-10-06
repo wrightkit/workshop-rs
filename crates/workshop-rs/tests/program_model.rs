@@ -143,6 +143,37 @@ fn independently_constructed_program_preserves_near_integer_numbers() {
 }
 
 #[test]
+fn absent_value_argument_emits_the_pinned_empty_slot() {
+    // wrightkit/workshop-rs#383: the pinned OverPy compiler splices a
+    // missing display name into the argument list for `ColorLiteral.LIGHT_*`
+    // members, emitting `Set Global Variable(g, )`. `Value::Empty` lets a
+    // producer reproduce that emission exactly; the empty slot is
+    // intentionally not readable by the canonical parser.
+    let catalog = catalog();
+    let locale = workshop_rs::catalog::Locale::new("en-US");
+    let mut program = Program::new();
+    program.global_variable(Variable::new("g")).rule(
+        Rule::new("absent argument", Event::Global).action(Action::SetGlobalVariable {
+            variable: "g".to_string(),
+            value: Value::Empty,
+        }),
+    );
+
+    program.validate().expect("structurally validates");
+    workshop_rs::validate::validate_canonical_ids(&program, &catalog)
+        .expect("an absent argument is accepted in any value position");
+    let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emits");
+    assert!(
+        emitted.contains("Set Global Variable(g, )"),
+        "empty slot emission: {emitted}"
+    );
+    assert!(
+        workshop_rs::parser::parse(&emitted, &catalog, &locale).is_err(),
+        "the pinned empty slot is not canonical Workshop syntax"
+    );
+}
+
+#[test]
 fn externally_constructed_program_attaches_source_and_preserves_diagnostic_span() {
     let catalog = catalog();
     let mut program = Program::new();

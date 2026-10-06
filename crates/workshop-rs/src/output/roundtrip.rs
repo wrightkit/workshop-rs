@@ -648,6 +648,7 @@ fn value_equivalent(
             name_eq(a.subroutines.get(*s1), b.subroutines.get(*s2))
         }
         (wir::Value::EventPlayer, wir::Value::EventPlayer) => true,
+        (wir::Value::Empty, wir::Value::Empty) => true,
         (wir::Value::PlayerVariable { player, variable }, wir::Value::Call { name, args })
             if name == "memberAccess" && args.len() == 2 =>
         {

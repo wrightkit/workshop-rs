@@ -34,6 +34,9 @@ impl<'a> EmitContext<'a> {
             wir::Value::Bool(true) => out.push_str(self.spelling(Kind::Value, "true")?),
             wir::Value::Bool(false) => out.push_str(self.spelling(Kind::Value, "false")?),
             wir::Value::Null => out.push_str(self.spelling(Kind::Value, "null")?),
+            // An absent argument renders as the empty slot the pinned
+            // reference splices in (wrightkit/workshop-rs#383).
+            wir::Value::Empty => {}
             wir::Value::Array(elements) => {
                 if elements.is_empty() {
                     // The canonical empty-array constant (reference emission).

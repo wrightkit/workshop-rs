@@ -247,6 +247,7 @@ fn check_value(program: &Program, id: super::ValueId) -> Result<(), IrError> {
         | Value::LocalizedString(_)
         | Value::Bool(_)
         | Value::Null
+        | Value::Empty
         | Value::Enum { .. }
         | Value::EventPlayer => {}
     }

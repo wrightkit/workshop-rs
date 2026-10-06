@@ -134,6 +134,7 @@ pub(crate) fn validate_value(
         | wir::Value::LocalizedString(_)
         | wir::Value::Bool(_)
         | wir::Value::Null
+        | wir::Value::Empty
         | wir::Value::GlobalVariable(_)
         | wir::Value::EventPlayer => {}
     }
@@ -475,6 +476,10 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
         // Null is a valid Workshop placeholder for every value contract;
         // its runtime meaning is resolved by the enclosing builtin.
         (wir::Value::Null, _) => true,
+        // An absent argument is accepted in any position: the pinned
+        // reference splices the missing display name without checking the
+        // enclosing signature (wrightkit/workshop-rs#383).
+        (wir::Value::Empty, _) => true,
         (wir::Value::GlobalVariable(_), "Global Variable") => true,
         (wir::Value::PlayerVariable { .. }, "Player Variable") => true,
         (wir::Value::Subroutine(_), "Subroutine") => true,
@@ -554,6 +559,7 @@ fn value_type_name(program: &wir::Program, catalog: &Catalog, value_id: wir::Val
             .unwrap_or("dynamic")
             .to_string(),
         wir::Value::Null => "Null".to_string(),
+        wir::Value::Empty => "Empty".to_string(),
         wir::Value::GlobalVariable(_) | wir::Value::PlayerVariable { .. } => "Variable".to_string(),
         wir::Value::Subroutine(_) => "Subroutine".to_string(),
         wir::Value::EventPlayer => "Player".to_string(),

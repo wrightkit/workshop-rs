@@ -658,6 +658,7 @@ fn wir_value(
         Value::LocalizedString(value) => wir::Value::LocalizedString(value.clone()),
         Value::Bool(value) => wir::Value::Bool(*value),
         Value::Null => wir::Value::Null,
+        Value::Empty => wir::Value::Empty,
         Value::Array(values) => wir::Value::Array(
             values
                 .iter()

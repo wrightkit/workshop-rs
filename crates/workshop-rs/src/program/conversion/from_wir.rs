@@ -142,6 +142,7 @@ fn public_value(storage: &wir::Program, id: wir::ValueId) -> Result<Value> {
         wir::Value::LocalizedString(value) => Value::LocalizedString(value.clone()),
         wir::Value::Bool(value) => Value::Bool(*value),
         wir::Value::Null => Value::Null,
+        wir::Value::Empty => Value::Empty,
         wir::Value::Array(values) => Value::Array(
             values
                 .iter()

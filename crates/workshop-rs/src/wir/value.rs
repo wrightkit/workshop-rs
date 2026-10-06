@@ -48,6 +48,10 @@ pub(crate) enum Value {
     /// `Start Rule`. The identity is source-owned, not a catalog builtin.
     Subroutine(SubroutineId),
     EventPlayer,
+    /// An absent argument the emitter renders as an empty slot. Emission-only:
+    /// the parser never produces it, and a program containing it emits text the
+    /// canonical grammar cannot parse (wrightkit/workshop-rs#383).
+    Empty,
     /// A function call over workshop values.
     Call {
         name: String,

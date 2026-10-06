@@ -453,6 +453,7 @@ fn render_value(program: &Program, id: super::ValueId, out: &mut String) {
                 .unwrap_or_else(|| format!("<dangling subroutine {}>", subroutine.index())),
         ),
         Value::EventPlayer => out.push_str("eventPlayer"),
+        Value::Empty => out.push_str("<empty>"),
         Value::Call { name, args } => {
             out.push_str(name);
             out.push('(');

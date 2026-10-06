@@ -71,6 +71,13 @@ equivalent to their re-parsed form. For every other catalog value, including
 `vector`, `array`, and `emptyArray`, the parser produces `Value::Call` with the
 canonical id, so `Value::call` builds the parsed shape.
 
+`Value::Empty` is emission-only: it renders nothing, producing an empty
+argument slot such as `Set Global Variable(g, )`. It exists for producers
+reproducing reference emission that splices an absent argument the canonical
+grammar cannot express (wrightkit/workshop-rs#383). The parser never produces
+it, the emitted text does not reparse, and canonical validation accepts it in
+any value position.
+
 ## Compatibility-only facades
 
 No compatibility-only public facades are intentionally retained. WIR storage

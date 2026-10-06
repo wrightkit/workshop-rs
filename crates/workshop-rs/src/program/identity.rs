@@ -243,5 +243,6 @@ fn feed_value(hasher: &mut impl Hasher, value: &Value) {
             hasher.write_u8(12);
             feed_str(hasher, name);
         }
+        Value::Empty => hasher.write_u8(13),
     }
 }

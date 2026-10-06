@@ -554,6 +554,8 @@ impl Counter<'_> {
             }
             Value::Subroutine(_) => self.value_node(node_id, "subroutine", span, 1, vec![], 0),
             Value::EventPlayer => self.value_node(node_id, "event player", span, 1, vec![], 0),
+            // An absent argument emits nothing and costs no element.
+            Value::Empty => self.value_node(node_id, "empty", span, 0, vec![], 0),
             Value::Call { name, args } => {
                 if name == crate::wir::AMBIGUOUS_ENUM_CALL
                     && crate::wir::ambiguous_enum_parts(self.program, id).is_some()

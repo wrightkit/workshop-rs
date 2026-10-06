@@ -1202,6 +1202,14 @@ pub enum Value {
     },
     Subroutine(String),
     EventPlayer,
+    /// An absent argument. Emission writes nothing for the node, producing
+    /// an empty argument slot (`Name(a, , b)`) exactly as the pinned OverPy
+    /// compiler emits for enum-literal members without a display name
+    /// (wrightkit/workshop-rs#383). The emitted text is not valid canonical
+    /// Workshop: the parser never produces this node and cannot read the
+    /// output back. Producers use it only to reproduce that pinned emission;
+    /// canonical validation accepts it in any value position.
+    Empty,
     Call {
         name: String,
         args: Vec<Value>,
