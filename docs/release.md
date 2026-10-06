@@ -139,9 +139,8 @@ public library API established by #112 and listed in the
 catalog data, test support, storage internals, and `#[doc(hidden)]`
 compatibility paths are outside the gate unless they are reachable through
 that documented API. For `workshop-rs-cli`, the gate covers the crate's public
-Rust library API under the same `cargo-semver-checks` boundary: `#[doc(hidden)]`
-modules such as the census, conformance, and live-capture support surface and
-the command-line surface itself (commands, flags, output text, exit codes) are
+Rust library API under the same `cargo-semver-checks` boundary; the
+command-line surface itself (commands, flags, output text, exit codes) is
 outside this gate.
 Catalog, parse, validation, and emit changes are outside this gate; how they
 are versioned and labeled in release notes is defined in
