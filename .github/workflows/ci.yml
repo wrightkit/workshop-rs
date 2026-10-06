@@ -30,6 +30,7 @@ jobs:
   semver-check:
     name: Public API compatibility
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - name: Select compatibility release type
@@ -55,9 +56,20 @@ jobs:
     name: Catalog check
     needs: check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@1.85.0
+      - name: Restore Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: quality
+          cache-targets: true
+          cache-all-crates: false
+          cache-workspace-crates: false
+          cache-bin: false
+          save-if: false
+          cache-on-failure: false
       - name: Catalog check
         run: cargo run --locked -p workshop-rs --bin workshop-catalog-gen -- check
 
@@ -65,11 +77,22 @@ jobs:
     name: five real-project scenarios
     needs: check
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
+      - name: Restore Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: quality
+          cache-targets: true
+          cache-all-crates: false
+          cache-workspace-crates: false
+          cache-bin: false
+          save-if: false
+          cache-on-failure: false
       - name: Run real-project scenarios and publish summary
         shell: bash
         run: |
