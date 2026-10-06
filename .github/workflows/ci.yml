@@ -48,7 +48,7 @@ jobs:
       - name: Check public API compatibility
         uses: obi1kenobi/cargo-semver-checks-action@v2
         with:
-          package: workshop-rs
+          package: workshop-rs,workshop-rs-cli
           release-type: ${{ steps.release-type.outputs.value }}
 
   catalog-check:

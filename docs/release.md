@@ -130,15 +130,19 @@ crates.io, Git tags, Actions artifacts, and GitHub Releases are separate externa
 Release changes require ordinary repository CI plus release-specific static validation such as `actionlint` when the workflow changes.
 
 The `Public API compatibility` CI job runs `cargo-semver-checks` for the
-`workshop-rs` library against the latest normal release published on crates.io.
-This automatically advances the accepted baseline after each release, so
-semver-safe additive changes do not require baseline updates. The protected
-surface is the documented public library API established by #112 and
-listed in the
-[Public API and compatibility contract](compatibility-facades.md).
-The CLI crate, generated catalog data, test support, storage internals, and
-`#[doc(hidden)]` compatibility paths are outside this gate unless they are
-reachable through that documented API.
+published `workshop-rs` and `workshop-rs-cli` libraries, each against its own
+latest normal release on crates.io. This automatically advances the accepted
+baseline after each release, so semver-safe additive changes do not require
+baseline updates. For `workshop-rs`, the protected surface is the documented
+public library API established by #112 and listed in the
+[Public API and compatibility contract](compatibility-facades.md); generated
+catalog data, test support, storage internals, and `#[doc(hidden)]`
+compatibility paths are outside the gate unless they are reachable through
+that documented API. For `workshop-rs-cli`, the gate covers the crate's public
+Rust library API under the same `cargo-semver-checks` boundary: `#[doc(hidden)]`
+modules such as the census, conformance, and live-capture support surface and
+the command-line surface itself (commands, flags, output text, exit codes) are
+outside this gate.
 Catalog, parse, validation, and emit changes are outside this gate; how they
 are versioned and labeled in release notes is defined in
 [Versioning of catalog, behavior, and output changes](compatibility-facades.md#versioning-of-catalog-behavior-and-output-changes).
