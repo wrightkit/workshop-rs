@@ -14,7 +14,7 @@
 use crate::catalog::{Catalog, CatalogEntry, Kind, Locale};
 use crate::core::error::{Result, WorkshopError};
 use crate::core::suggest;
-use crate::settings::{self, SettingDefinition};
+use crate::settings::{self, SettingDefinition, SettingValueDomain};
 
 /// Members of a parameter's enum domain are listed inline in a signature
 /// when the domain has at most this many members. Larger domains report
@@ -60,9 +60,38 @@ pub enum LookupMatch {
     Setting {
         /// The canonical semantic definition.
         definition: SettingDefinition,
+        /// The accepted spelling of this match: the full path for an
+        /// unscoped match, or the segment below the scoped prefix for a
+        /// [`Catalog::lookup_within`] child.
+        spelling: String,
         /// The display name in the requested locale, or the English name
         /// when the locale has no mapping.
         display_name: String,
+    },
+    /// A parameter of a scoped callable, in call order. Returned only by
+    /// [`Catalog::lookup_within`]; an unscoped [`Catalog::lookup`] never
+    /// answers parameters.
+    Parameter {
+        /// The callable's canonical id.
+        callable: String,
+        /// The parameter's position in call order.
+        position: usize,
+        /// Whether the position must be supplied.
+        required: bool,
+        /// The parameter facts: name, declared type, domain, and default.
+        param: SignatureParam,
+        /// The enum domain this parameter accepts, with the members it
+        /// accepts, when the parameter is enum-typed.
+        domain: Option<SignatureDomain>,
+    },
+    /// The next path segment below a scoped settings prefix — an
+    /// intermediate selector such as `<team>` or `general`, not a leaf
+    /// key. Returned only by [`Catalog::lookup_within`].
+    SettingPath {
+        /// The full child path under the scoped prefix (`heroes.<team>`).
+        path: String,
+        /// The segment text (`<team>`, `general`).
+        segment: String,
     },
 }
 
@@ -258,6 +287,7 @@ impl Catalog {
                 matches.push((
                     score,
                     LookupMatch::Setting {
+                        spelling: definition.path().to_string(),
                         display_name: definition
                             .presentation()
                             .localized_name(locale.as_str())
@@ -271,6 +301,190 @@ impl Catalog {
         // Stable sort: equal-ranked matches keep catalog and table order.
         matches.sort_by_key(|(score, _)| *score);
         Ok(matches.into_iter().map(|(_, lookup)| lookup).collect())
+    }
+
+    /// The entries `within` contains under `locale` — the members of an
+    /// enum domain, the parameters of a callable, or the settings keys
+    /// and segments under a path prefix — optionally filtered and ranked
+    /// by `query` with the same matcher an unscoped [`Catalog::lookup`]
+    /// uses.
+    ///
+    /// `within` resolves in a fixed order: an enum domain (catalog or
+    /// settings-table), an action or value id or `locale` spelling, then
+    /// a settings path prefix whose template segments (`<team>`,
+    /// `<hero>`) accept any concrete segment. With no `query`, or an
+    /// empty one, children keep the scope's own order — domain order for
+    /// members, call order for parameters, table order for settings — and
+    /// a non-empty query filters and ranks them by the same scoring an
+    /// unscoped lookup applies to its candidates.
+    ///
+    /// `Err` reports a locale the catalog does not declare or a `within`
+    /// naming no known scope; an empty result reports a scope whose
+    /// children do not match `query`.
+    ///
+    /// ```
+    /// use workshop_rs::catalog::{Catalog, Locale};
+    /// use workshop_rs::lookup::LookupMatch;
+    ///
+    /// let catalog = Catalog::builtin().unwrap();
+    /// let members = catalog
+    ///     .lookup_within(&Locale::new("en-US"), "Team", None)
+    ///     .unwrap();
+    /// assert!(members.iter().all(|m| matches!(m, LookupMatch::EnumMember { domain, .. } if domain == "Team")));
+    /// ```
+    pub fn lookup_within(
+        &self,
+        locale: &Locale,
+        within: &str,
+        query: Option<&str>,
+    ) -> Result<Vec<LookupMatch>> {
+        if !self.supports(locale) {
+            return Err(WorkshopError::unsupported(
+                format!(
+                    "lookup for locale '{locale}' is not supported: \
+                     the catalog does not declare it"
+                ),
+                None,
+            ));
+        }
+        let prepared = query
+            .filter(|query| !query.is_empty())
+            .map(PreparedQuery::new);
+        let mut scored = self
+            .within_enum_domain(locale, within, prepared.as_ref())
+            .or_else(|| self.within_settings_enum(within, prepared.as_ref()))
+            .or_else(|| self.within_callable(locale, within, prepared.as_ref()))
+            .or_else(|| within_settings(within, locale, prepared.as_ref()))
+            .ok_or_else(|| WorkshopError::unknown("lookup scope", within, locale.clone(), None))?;
+        if prepared.is_some() {
+            scored.retain(|(score, _)| *score != u32::MAX);
+            scored.sort_by_key(|(score, _)| *score);
+        }
+        Ok(scored.into_iter().map(|(_, lookup)| lookup).collect())
+    }
+
+    /// The members of one catalog enum domain — `value` a canonical domain
+    /// name or a `locale` spelling — scored against `prepared` when given.
+    fn within_enum_domain(
+        &self,
+        locale: &Locale,
+        value: &str,
+        prepared: Option<&PreparedQuery>,
+    ) -> Option<Vec<(u32, LookupMatch)>> {
+        let domain = if self.enum_domain(value).is_some() {
+            Some(value.to_string())
+        } else {
+            self.resolve_enum_domain(locale, value).map(str::to_string)
+        }?;
+        let domain = self.enum_domain(&domain)?;
+        let primary = self.primary_locale();
+        let distinct_locale = locale != primary;
+        Some(
+            domain
+                .members
+                .iter()
+                .map(|member| {
+                    let qualified = format!("{}.{}", domain.domain, member.member);
+                    let mut texts = vec![member.member.as_str(), qualified.as_str()];
+                    texts.extend(member.spellings(locale).iter().map(String::as_str));
+                    if distinct_locale {
+                        texts.extend(member.spellings(primary).iter().map(String::as_str));
+                    }
+                    (
+                        child_score(prepared, texts.into_iter()),
+                        LookupMatch::EnumMember {
+                            domain: domain.domain.clone(),
+                            member: member.member.clone(),
+                            display_name: self
+                                .enum_spelling(&domain.domain, locale, &member.member)
+                                .map(String::from),
+                        },
+                    )
+                })
+                .collect(),
+        )
+    }
+
+    /// The members of one settings-table enum domain — `value` a domain
+    /// name such as `Hero` — scored against `prepared` when given.
+    fn within_settings_enum(
+        &self,
+        value: &str,
+        prepared: Option<&PreparedQuery>,
+    ) -> Option<Vec<(u32, LookupMatch)>> {
+        let mut seen = std::collections::HashSet::new();
+        let mut members = Vec::new();
+        for definition in settings::definitions() {
+            let SettingValueDomain::Enum { domain } = definition.domain() else {
+                continue;
+            };
+            if domain.as_str() != value {
+                continue;
+            }
+            for member in definition.enum_members() {
+                if !seen.insert((member.domain().to_string(), member.id().to_string())) {
+                    continue;
+                }
+                let qualified = format!("{}.{}", member.domain(), member.id());
+                members.push((
+                    child_score(
+                        prepared,
+                        [member.id(), qualified.as_str(), member.english_name()].into_iter(),
+                    ),
+                    LookupMatch::EnumMember {
+                        domain: member.domain().to_string(),
+                        member: member.id().to_string(),
+                        display_name: Some(member.english_name().to_string()),
+                    },
+                ));
+            }
+        }
+        (!members.is_empty()).then_some(members)
+    }
+
+    /// The parameters of one callable — `value` a canonical id or a
+    /// `locale` spelling — in call order, scored against `prepared` when
+    /// given.
+    fn within_callable(
+        &self,
+        locale: &Locale,
+        value: &str,
+        prepared: Option<&PreparedQuery>,
+    ) -> Option<Vec<(u32, LookupMatch)>> {
+        let entry = [Kind::Action, Kind::Value].into_iter().find_map(|kind| {
+            self.entry(kind, value)
+                .or_else(|| self.resolve(kind, locale, value))
+        })?;
+        let signature = signature(self, entry, locale)?;
+        Some(
+            signature
+                .params
+                .iter()
+                .enumerate()
+                .map(|(position, param)| {
+                    let qualified = format!("{}.{}", entry.id, param.name);
+                    (
+                        child_score(
+                            prepared,
+                            [param.name.as_str(), qualified.as_str()].into_iter(),
+                        ),
+                        LookupMatch::Parameter {
+                            callable: entry.id.clone(),
+                            position,
+                            required: position < signature.required_params,
+                            param: param.clone(),
+                            domain: param.domain.as_ref().and_then(|name| {
+                                signature
+                                    .domains
+                                    .iter()
+                                    .find(|domain| &domain.domain == name)
+                                    .cloned()
+                            }),
+                        },
+                    )
+                })
+                .collect(),
+        )
     }
 
     /// The members of `domain` with their display names under `locale`.
@@ -418,6 +632,96 @@ fn render_default(catalog: &Catalog, locale: &Locale, default: &str) -> String {
         .spelling(Kind::Value, locale, default)
         .unwrap_or(default)
         .to_string()
+}
+
+/// The best [`PreparedQuery::name_score`] over `texts`, or `u32::MAX` when
+/// there is no prepared query or no text matched; scoped lookups drop
+/// `u32::MAX` children only when a query is present.
+fn child_score<'a>(prepared: Option<&PreparedQuery>, texts: impl Iterator<Item = &'a str>) -> u32 {
+    prepared
+        .and_then(|prepared| texts.filter_map(|text| prepared.name_score(text)).min())
+        .unwrap_or(u32::MAX)
+}
+
+/// The immediate settings children under `prefix`: leaf keys and the next
+/// path segment, matched segment by segment against the canonical paths
+/// (whose `<team>` and `<hero>` template segments accept any concrete
+/// value). An empty `prefix` lists the root. `None` reports a prefix
+/// naming no known scope.
+fn within_settings(
+    prefix: &str,
+    locale: &Locale,
+    prepared: Option<&PreparedQuery>,
+) -> Option<Vec<(u32, LookupMatch)>> {
+    let prefix_segments: Vec<&str> = if prefix.is_empty() {
+        Vec::new()
+    } else {
+        prefix.split('.').collect()
+    };
+    let mut seen = std::collections::HashSet::new();
+    let mut children = Vec::new();
+    let mut known = prefix.is_empty();
+    for definition in settings::definitions() {
+        let segments: Vec<&str> = definition.path().split('.').collect();
+        if segments.len() < prefix_segments.len() {
+            continue;
+        }
+        let matches_prefix =
+            prefix_segments
+                .iter()
+                .zip(segments.iter())
+                .all(|(asked, declared)| {
+                    declared == asked || *declared == "<team>" || *declared == "<hero>"
+                });
+        if !matches_prefix {
+            continue;
+        }
+        known = true;
+        if segments.len() == prefix_segments.len() {
+            // The prefix names this leaf itself — an existing but empty
+            // scope, not an unknown one.
+            continue;
+        }
+        let segment = segments[prefix_segments.len()];
+        let child_path = if prefix.is_empty() {
+            segment.to_string()
+        } else {
+            format!("{prefix}.{segment}")
+        };
+        if segments.len() == prefix_segments.len() + 1 {
+            if !seen.insert(definition.path().to_string()) {
+                continue;
+            }
+            let texts = [
+                Some(definition.path().rsplit('.').next().unwrap_or_default()),
+                Some(definition.presentation().english_name),
+                definition.presentation().localized_name(locale.as_str()),
+                definition.id().map(|id| id.as_str()),
+                Some(definition.path()),
+            ];
+            children.push((
+                child_score(prepared, texts.into_iter().flatten()),
+                LookupMatch::Setting {
+                    spelling: segment.to_string(),
+                    display_name: definition
+                        .presentation()
+                        .localized_name(locale.as_str())
+                        .unwrap_or(definition.presentation().english_name)
+                        .to_string(),
+                    definition,
+                },
+            ));
+        } else if seen.insert(child_path.clone()) {
+            children.push((
+                child_score(prepared, [segment, child_path.as_str()].into_iter()),
+                LookupMatch::SettingPath {
+                    path: child_path,
+                    segment: segment.to_string(),
+                },
+            ));
+        }
+    }
+    known.then_some(children)
 }
 
 /// A lookup query prepared once for comparison against every candidate:
