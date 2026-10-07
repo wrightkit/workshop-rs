@@ -33,6 +33,22 @@ pub enum WorkshopError {
         candidates: Vec<String>,
         span: Option<Span>,
     },
+    /// Detection found no usable evidence in the input, so nothing was
+    /// resolved and no spelling was rejected.
+    ///
+    /// This is a separate variant from [`WorkshopError::Unknown`]: `Unknown`
+    /// reports a rejected spelling under a resolved locale, while a
+    /// zero-evidence detection has no rejected spelling to name and no
+    /// selected locale — naming the detection ranking's first candidate
+    /// would report an arbitrary ordering tiebreak as if it were evidence.
+    /// Consumers matching `Unknown` do not see this variant, which is how
+    /// they tell a nameless detection failure from a genuine rejection.
+    NotDetected {
+        kind: &'static str,
+        /// What evidence was missing and how to supply it explicitly.
+        message: String,
+        span: Option<Span>,
+    },
     /// A canonical builtin has no spelling mapped for the target locale.
     ///
     /// Missing target-locale mappings fail explicitly (never a guess, never a
@@ -69,6 +85,19 @@ impl WorkshopError {
             kind,
             spelling: spelling.into(),
             locale,
+            span,
+        }
+    }
+
+    /// A `NotDetected` detection-failure error.
+    pub fn not_detected(
+        kind: &'static str,
+        message: impl Into<String>,
+        span: Option<Span>,
+    ) -> Self {
+        WorkshopError::NotDetected {
+            kind,
+            message: message.into(),
             span,
         }
     }
@@ -125,6 +154,7 @@ impl WorkshopError {
         match self {
             WorkshopError::Unknown { span, .. }
             | WorkshopError::UnknownWithCandidates { span, .. }
+            | WorkshopError::NotDetected { span, .. }
             | WorkshopError::Malformed { span, .. }
             | WorkshopError::Unsupported { span, .. } => *span,
             WorkshopError::Catalog(_) | WorkshopError::MissingMapping { .. } => None,
@@ -187,6 +217,9 @@ impl std::fmt::Display for WorkshopError {
                     "{}",
                     crate::core::suggest::with_candidates_text(message, candidates)
                 )
+            }
+            WorkshopError::NotDetected { kind, message, .. } => {
+                write!(f, "{kind} not detected: {message}")
             }
             WorkshopError::MissingMapping { kind, id, locale } => {
                 write!(f, "missing {kind} mapping for locale '{locale}': '{id}'")

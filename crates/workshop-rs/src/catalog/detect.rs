@@ -72,10 +72,9 @@ pub fn resolve_locale(
     }
     let detection = detect(input, catalog);
     if detection.matches == 0 {
-        return Err(WorkshopError::unknown(
+        return Err(WorkshopError::not_detected(
             "language",
-            "<none>".to_string(),
-            detection.locale,
+            "no Workshop language markers found; pass an explicit locale if the input declares none",
             None,
         ));
     }
