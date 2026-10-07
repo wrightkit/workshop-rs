@@ -50,6 +50,23 @@ fn explicit_locale_override_bypasses_detection() {
 }
 
 #[test]
+fn zero_marker_input_reports_a_detection_failure() {
+    // With no language markers nothing was resolved: the error must not
+    // name an arbitrary detection-ranking locale or a `'<none>'` spelling,
+    // and stays distinguishable from a rejected-name Unknown diagnostic.
+    let error = detect::resolve_locale("0.11.0\n", &catalog(), None)
+        .expect_err("no markers means detection failure");
+    let workshop_rs::WorkshopError::NotDetected { kind, message, .. } = &error else {
+        panic!("zero-marker input is a NotDetected diagnostic: {error:?}");
+    };
+    assert_eq!(*kind, "language");
+    assert!(!message.contains("'<none>'"), "{error}");
+    assert!(!message.contains("for locale"), "{error}");
+    assert!(error.span().is_none());
+    assert!(error.candidates().is_empty());
+}
+
+#[test]
 fn insufficient_evidence_fails_explicitly() {
     let garbage = "hello world this is not workshop syntax at all";
     let error = detect::resolve_locale(garbage, &catalog(), None).expect_err("ambiguous");
@@ -254,6 +271,11 @@ fn indexed_detection_preserves_boundaries_multiplicity_and_resolution_errors() {
     assert_eq!(
         detect::detect("Shared", &catalog).candidates,
         vec![(en(), 1), (Locale::new("xx-YY"), 0)]
+    );
+    let error = detect::resolve_locale("x!a!a!", &catalog, None).expect_err("no markers");
+    assert!(
+        matches!(error, workshop_rs::WorkshopError::NotDetected { .. }),
+        "{error:?}"
     );
     let error = detect::resolve_locale("Shared", &catalog, None).expect_err("insufficient");
     assert!(error.to_string().contains("insufficient evidence"));
