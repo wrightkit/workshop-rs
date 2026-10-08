@@ -34,7 +34,7 @@ fn manifest_pins_the_export_and_exact_match_coverage() {
     );
     assert_eq!(
         manifest["source"]["commit"],
-        "d854bf01fc7bbf3b2169f67408c07a8da8989ad6"
+        "5a7d0e294b8cad73b9701987bb584d0551d7fa4d"
     );
     let excluded = manifest["excluded"].as_array().unwrap();
     assert_eq!(

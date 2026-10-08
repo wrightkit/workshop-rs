@@ -22,8 +22,8 @@ content with `identity.digest` removed. Object keys are sorted before hashing,
 so formatting and input key order do not change the identity. The loader also
 sorts heroes and abilities before building lookup indexes.
 
-The committed dataset identity is version `2026-08-12` with digest
-`sha256:0902a247fb709bf5e326bbdb5475b41d4062b991ba3e0aea9350e5ecd404bc3c`.
+The committed dataset identity is version `2026-10-06` with digest
+`sha256:06e33045154d9f32553b09bf70bb5156556bb4fe8d28812422b51dbbb5ceabb9`.
 
 ## Source records and known gaps
 
@@ -33,7 +33,7 @@ export. It also contains official-detail variant records for Bastion, D.Va,
 and Ramattra. The embedded projection includes keyword-bearing abilities and
 variants. Every hero and ability name is linked to
 `workshop-data/workshop-data.json` at commit
-`d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date 2026-08-12).
+`5a7d0e294b8cad73b9701987bb584d0551d7fa4d` (commit date 2026-10-06).
 
 Role facts are independently sourced from the official Blizzard hero-detail
 URL recorded on each role fact, with access date 2026-08-18. The export and

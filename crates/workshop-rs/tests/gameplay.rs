@@ -36,9 +36,9 @@ fn hero(id: &str, abilities: Vec<Ability>) -> Hero {
 fn identity() -> GameplayDatasetIdentity {
     GameplayDatasetIdentity::new(
         "overwatch-workshop-hero-gameplay",
-        "2026-08-12",
+        "2026-10-06",
         "sha256:test",
-        "workshop-data@d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
+        "workshop-data@5a7d0e294b8cad73b9701987bb584d0551d7fa4d",
         "MIT-compatible user-provided export",
         "Overwatch Workshop hero identity and gameplay facts",
         true,
@@ -155,7 +155,7 @@ fn gameplay_serialization_preserves_dataset_identity_and_source_records() {
     let catalog = GameplayCatalog::new(identity(), vec![hero("dva", vec![])]).unwrap();
     let encoded = serde_json::to_string(catalog.identity()).unwrap();
     assert!(encoded.contains("datasetId"));
-    assert!(encoded.contains("2026-08-12"));
+    assert!(encoded.contains("2026-10-06"));
     assert_eq!(
         catalog.identity().dataset_id,
         "overwatch-workshop-hero-gameplay"

@@ -5,8 +5,8 @@
       "total": 215
     },
     "enums": {
-      "matched": 727,
-      "total": 727
+      "matched": 728,
+      "total": 728
     },
     "events": {
       "matched": 13,
@@ -25,8 +25,8 @@
       "total": 23
     },
     "total": {
-      "matched": 1254,
-      "total": 1257
+      "matched": 1255,
+      "total": 1258
     },
     "values": {
       "matched": 259,
@@ -54,7 +54,7 @@
     }
   ],
   "generator": "workshop-catalog-gen corpus",
-  "generatorVersion": "0.7.1",
+  "generatorVersion": "1.8.0",
   "locale": "zh-CN",
   "locales": [
     "en-US",
@@ -19884,6 +19884,19 @@
       "zh-CN": null
     },
     {
+      "en-US": "Grímsvötn",
+      "id": "Map.GRIMSVOTN",
+      "kind": "enum member",
+      "localeExclusions": {},
+      "locales": {
+        "en-US": "Grímsvötn"
+      },
+      "sources": [
+        "data.maps.grimsvotn"
+      ],
+      "zh-CN": null
+    },
+    {
       "en-US": "Hanamura",
       "id": "Map.HANAMURA",
       "kind": "enum member",
@@ -33630,10 +33643,10 @@
   "method": "exact en-US spelling match between the catalog aliases and the export's localized index (actions/values/events/operators/constants/event filters/maps/heroes), plus confirmed legacy identity/GUID mappings for Set Player Allowed Heroes, and bare comparison-symbol entries; every declared locale is retained only when the export provides an unambiguous spelling; entries without an accepted match, or whose export candidates disagree on zh-CN, are excluded with a recorded reason and keep fail-explicit behavior (ADR-0001 Decision 7)",
   "schemaVersion": 2,
   "source": {
-    "commit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
-    "commitDate": "2026-08-12T15:26:38Z",
+    "commit": "5a7d0e294b8cad73b9701987bb584d0551d7fa4d",
+    "commitDate": "2026-10-06T20:03:00Z",
     "export": "workshop-data.json",
-    "fetchedAt": "2026-08-17T02:52:59Z"
+    "fetchedAt": "2026-10-08T12:25:27Z"
   },
   "sourceReview": "reviewed: workshop-rs commits its own mapping data; the user-provided JSON is build input only and is not redistributed"
 }

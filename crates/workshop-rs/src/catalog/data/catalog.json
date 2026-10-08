@@ -1606,8 +1606,24 @@
     },
     {
       "aliases": {
+        "de-DE": "Stop Forcing Player To Be Hero",
         "en-US": "Stop Forcing Player To Be Hero",
-        "zh-CN": "停止强制玩家选择英雄 "
+        "es-ES": "Stop Forcing Player To Be Hero",
+        "es-MX": "Dejar de forzar a un jugador a usar un héroe",
+        "fr-FR": "Arrêter de forcer un héros",
+        "it-IT": "Stop Forcing Player To Be Hero",
+        "ja-JP": "プレイヤーへのヒーロー強制を停止",
+        "ko-KR": "Stop Forcing Player To Be Hero",
+        "pl-PL": "Stop Forcing Player To Be Hero",
+        "pt-BR": "Parar de Forçar Jogador a Ser o Herói",
+        "ru-RU": "Stop Forcing Player To Be Hero",
+        "th-TH": "หยุดบังคับให้ผู้เล่นเป็นฮีโร่",
+        "tr-TR": "Oyuncu'yu Kahraman Olmaya Zorlamayı Bırak",
+        "zh-CN": [
+          "停止强制玩家选择英雄 ",
+          "停止强制玩家选择英雄"
+        ],
+        "zh-TW": "Stop Forcing Player To Be Hero"
       },
       "id": "stopForcingCurrentHero",
       "paramDomains": [
@@ -1705,8 +1721,24 @@
     },
     {
       "aliases": {
+        "de-DE": "Start Forcing Player To Be Hero",
         "en-US": "Start Forcing Player To Be Hero",
-        "zh-CN": "开始强制玩家选择英雄 "
+        "es-ES": "Start Forcing Player To Be Hero",
+        "es-MX": "Comenzar a forzar a un jugador a usar un héroe",
+        "fr-FR": "Forcer un héros",
+        "it-IT": "Start Forcing Player To Be Hero",
+        "ja-JP": "プレイヤーへのヒーロー強制を開始",
+        "ko-KR": "Start Forcing Player To Be Hero",
+        "pl-PL": "Start Forcing Player To Be Hero",
+        "pt-BR": "Começar a Forçar Jogador a Ser o Herói",
+        "ru-RU": "Start Forcing Player To Be Hero",
+        "th-TH": "เริ่มบังคับให้ผู้เล่นเป็นฮีโร่",
+        "tr-TR": "Oyuncu'yu Kahraman Olmaya Zorlamayı Başlat",
+        "zh-CN": [
+          "开始强制玩家选择英雄 ",
+          "开始强制玩家选择英雄"
+        ],
+        "zh-TW": "Start Forcing Player To Be Hero"
       },
       "id": "startForcingHero",
       "paramDomains": [
@@ -1728,8 +1760,24 @@
     },
     {
       "aliases": {
+        "de-DE": "Stop Chasing Global Variable",
         "en-US": "Stop Chasing Global Variable",
-        "zh-CN": "停止追踪全局变量 "
+        "es-ES": "Stop Chasing Global Variable",
+        "es-MX": "Detener seguimiento de variable global",
+        "fr-FR": "Arrêter de modifier une variable globale",
+        "it-IT": "Stop Chasing Global Variable",
+        "ja-JP": "グローバル変数の追跡を中止",
+        "ko-KR": "Stop Chasing Global Variable",
+        "pl-PL": "Stop Chasing Global Variable",
+        "pt-BR": "Parar de Acompanhar Variável Global",
+        "ru-RU": "Stop Chasing Global Variable",
+        "th-TH": "หยุดติดตามตัวแปรสากล",
+        "tr-TR": "Küresel Değişken'i İzlemeyi Bırak",
+        "zh-CN": [
+          "停止追踪全局变量 ",
+          "停止追踪全局变量"
+        ],
+        "zh-TW": "Stop Chasing Global Variable"
       },
       "id": "stopChasingGlobalVariable",
       "paramNames": [
@@ -3344,8 +3392,24 @@
     },
     {
       "aliases": {
+        "de-DE": "Start Forcing Throttle",
         "en-US": "Start Forcing Throttle",
-        "zh-CN": "开始限制阈值 "
+        "es-ES": "Start Forcing Throttle",
+        "es-MX": "Comenzar a forzar la aceleración",
+        "fr-FR": "Forcer l’accélération",
+        "it-IT": "Start Forcing Throttle",
+        "ja-JP": "強制スロットル開始",
+        "ko-KR": "Start Forcing Throttle",
+        "pl-PL": "Start Forcing Throttle",
+        "pt-BR": "Começar a Forçar Aceleração",
+        "ru-RU": "Start Forcing Throttle",
+        "th-TH": "เริ่มบังคับคันบังคับ",
+        "tr-TR": "Hızlandırmayı Zorlamayı Başlat",
+        "zh-CN": [
+          "开始限制阈值 ",
+          "开始限制阈值"
+        ],
+        "zh-TW": "Start Forcing Throttle"
       },
       "id": "startForcingThrottle",
       "paramCoercions": [
@@ -7888,7 +7952,7 @@
       ]
     }
   ],
-  "digest": "6a63080f4bb99eb25e12d13a76358bc69d5cd754d0f6c727415d917817e67773",
+  "digest": "342e5f6522b09ac4428e4e96809ab0b3e5bb7b28c5f2de812a301eff3bb65d2a",
   "enums": [
     {
       "domain": "Impulse",
@@ -17163,6 +17227,12 @@
             "en-US": "Lijiang Tower Lunar New Year"
           },
           "id": "LIJIANGTOWERLNY"
+        },
+        {
+          "aliases": {
+            "en-US": "Grímsvötn"
+          },
+          "id": "GRIMSVOTN"
         }
       ]
     },
@@ -21234,7 +21304,8 @@
       "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
       "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
       "Wait parameter labels are a separately reviewed mapping: the zh-CN spellings are 时间 and 等待行为, as identified by the documented Chinese Workshop action reference at https://overwatch.huijiwiki.com/wiki/%E5%9C%B0%E5%9B%BE%E5%B7%A5%E5%9D%8A/%E5%8A%A8%E4%BD%9C (accessed 2026-09-11); canonical parameter order and descriptions are cross-checked against the user-provided workshop-data action definition at commit d854bf01fc7bbf3b2169f67408c07a8da8989ad6. This is documented community evidence, not output from the zh-CN corpus generator, and further parameter labels require the same evidence review.",
-      "Create Dummy Bot's hero parameter accepts a single Hero or a Hero array: Workshop behavior selects randomly when multiple heroes are provided, and pinned OverPy 9.7.10 texture-tag setup emits getAllHeroes() into Create Dummy Bot (workshop-rs#238)."
+      "Create Dummy Bot's hero parameter accepts a single Hero or a Hero array: Workshop behavior selects randomly when multiple heroes are provided, and pinned OverPy 9.7.10 texture-tag setup emits getAllHeroes() into Create Dummy Bot (workshop-rs#238).",
+      "Map enum member GRIMSVOTN (Grímsvötn) is reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d; the export declares no guid or non-en-US spellings for it yet"
     ]
   },
   "schemaVersion": 1,
