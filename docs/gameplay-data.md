@@ -23,7 +23,7 @@ so formatting and input key order do not change the identity. The loader also
 sorts heroes and abilities before building lookup indexes.
 
 The committed dataset identity is version `2026-10-06` with digest
-`sha256:e7c0ca7aeb4466b2a96001b34aad9e8128e8568aecad7575259e1b654878c151`.
+`sha256:0f80dcfbf4014ffe68d05ffba471d26e221ca6789407af6dc4c7eb601e284a87`.
 
 ## Source records and known gaps
 
@@ -34,6 +34,15 @@ and Ramattra. The embedded projection includes keyword-bearing abilities and
 variants. Every hero and ability name is linked to
 `workshop-data/workshop-data.json` at commit
 `5a7d0e294b8cad73b9701987bb584d0551d7fa4d` (commit date 2026-10-06).
+One hero, Doctrine (`doctrine`, support), is absent from that export and is
+recorded with official-source attribution only: its hero identity, role,
+ability-slot order, and localized names come from the official localized hero
+detail pages and the official Overwatch China hero detail, accessed
+2026-10-08. It is intentionally not added to the canonical catalog enums,
+which mirror the pinned Workshop export surface. zh-CN names absent from the
+export (D.Mon's kit and hero name, the Bastion/D.Va/Ramattra variant
+primaries, and Sojourn's Charged Shot) are likewise filled from the official
+Overwatch China hero detail pages and patch notes, accessed 2026-10-08.
 
 Role facts are independently sourced from the official Blizzard hero-detail
 URL recorded on each role fact, with access date 2026-08-18. The export and
