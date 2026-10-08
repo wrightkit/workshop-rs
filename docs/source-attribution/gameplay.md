@@ -15,10 +15,14 @@ export-declared named ability slots, plus official-detail variant records for
 Bastion, D.Va, and Ramattra. Each hero/ability name fact and export record
 carries the export path as a `SourceReference`. Each role fact carries its
 official Blizzard hero-detail URL and access date 2026-08-18 as a separate
-source reference.
+source reference. D.Mon's localized ability names were verified against the
+official localized hero-detail pages (`overwatch.blizzard.com/<locale>/heroes/dmon/`,
+accessed 2026-10-08), and its `zh-CN` names come from the official Overwatch
+China patch notes (`ow.blizzard.cn`, accessed 2026-10-08) because the export
+carries no `zh-CN` spellings for them yet.
 
 The current identity digest is
-`sha256:06e33045154d9f32553b09bf70bb5156556bb4fe8d28812422b51dbbb5ceabb9`.
+`sha256:e7c0ca7aeb4466b2a96001b34aad9e8128e8568aecad7575259e1b654878c151`.
 
 Representative ability keywords are semantic labels, not Blizzard or Workshop
 enum values. Their labels and the six variant names/shapes are source-linked to

@@ -1257,6 +1257,16 @@
                 "locator": "data.heroes.dmon.secondaryFire",
                 "note": "commitDate=2026-10-06",
                 "source": "workshop-data/workshop-data.json@5a7d0e294b8cad73b9701987bb584d0551d7fa4d"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/dmon/",
+                "note": "localized ability names verified on the official localized hero detail pages; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/news/patch-notes/live/2026/08/",
+                "note": "zh-CN ability names; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -1271,6 +1281,7 @@
               "pl-PL": "Bariera Mocy",
               "pt-BR": "Barreira de Poder",
               "ru-RU": "Энергетический щит",
+              "zh-CN": "强力屏障",
               "zh-TW": "能量屏障"
             }
           },
@@ -1290,6 +1301,16 @@
                 "locator": "data.heroes.dmon.ability1",
                 "note": "commitDate=2026-10-06",
                 "source": "workshop-data/workshop-data.json@5a7d0e294b8cad73b9701987bb584d0551d7fa4d"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/dmon/",
+                "note": "localized ability names verified on the official localized hero detail pages; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/news/patch-notes/live/2026/08/",
+                "note": "zh-CN ability names; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -1304,6 +1325,7 @@
               "pl-PL": "Dopalacze",
               "pt-BR": "Propulsores",
               "ru-RU": "Двигатели",
+              "zh-CN": "助推器",
               "zh-TW": "推進器"
             }
           },
@@ -1323,6 +1345,16 @@
                 "locator": "data.heroes.dmon.ability2",
                 "note": "commitDate=2026-10-06",
                 "source": "workshop-data/workshop-data.json@5a7d0e294b8cad73b9701987bb584d0551d7fa4d"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/dmon/",
+                "note": "localized ability names verified on the official localized hero detail pages; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/news/patch-notes/live/2026/08/",
+                "note": "zh-CN ability names; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -1337,6 +1369,7 @@
               "pl-PL": "Miotacz Fuzyjny",
               "pt-BR": "Repetidor de Fusão",
               "ru-RU": "Атомный пулемет",
+              "zh-CN": "聚变连发枪",
               "zh-TW": "熱核連射砲"
             }
           },
@@ -1356,6 +1389,16 @@
                 "locator": "data.heroes.dmon.ultimate",
                 "note": "commitDate=2026-10-06",
                 "source": "workshop-data/workshop-data.json@5a7d0e294b8cad73b9701987bb584d0551d7fa4d"
+              },
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/dmon/",
+                "note": "localized ability names verified on the official localized hero detail pages; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/news/patch-notes/live/2026/08/",
+                "note": "zh-CN ability names; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
@@ -1370,6 +1413,7 @@
               "pl-PL": "Łamanie Granic",
               "pt-BR": "Quebra de Limites",
               "ru-RU": "Запредельный удар",
+              "zh-CN": "无极斩",
               "zh-TW": "突破極限"
             }
           },
@@ -1399,7 +1443,7 @@
       "role": {
         "sources": [
           {
-            "locator": "https://overwatch.blizzard.com/en-us/heroes/dva/",
+            "locator": "https://overwatch.blizzard.com/en-us/heroes/dmon/",
             "note": "role metadata; accessed 2026-08-18",
             "source": "Blizzard Entertainment official Overwatch hero detail"
           }
@@ -9381,7 +9425,7 @@
   ],
   "identity": {
     "datasetId": "overwatch-workshop-hero-gameplay",
-    "digest": "sha256:06e33045154d9f32553b09bf70bb5156556bb4fe8d28812422b51dbbb5ceabb9",
+    "digest": "sha256:e7c0ca7aeb4466b2a96001b34aad9e8128e8568aecad7575259e1b654878c151",
     "license": "MIT-compatible user-provided export",
     "reviewed": true,
     "source": "workshop-data/workshop-data.json@5a7d0e294b8cad73b9701987bb584d0551d7fa4d",
