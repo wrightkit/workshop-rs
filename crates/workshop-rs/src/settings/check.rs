@@ -2,9 +2,10 @@
 //!
 //! [`crate::Program::validate`] runs [`check_emission`] on every program, so
 //! checking raw Workshop input reports the same settings errors emission
-//! would. The raw parser leaves unresolvable leaf members as verbatim
-//! [`SettingsNode::Raw`] payloads; [`check_emission`] reports every other
-//! member the emitter would reject, without producing Workshop text.
+//! would. Members the catalog does not declare are carried as written
+//! ([`SettingsNode::Raw`], [`SettingsNode::Verbatim`], or a block of them) and
+//! accepted; [`check_emission`] reports every other member the emitter would
+//! reject, without producing Workshop text.
 //!
 //! Member acceptance is shared with emission. Locale and hero display-name
 //! resolution can still fail inside emission and are not checked here.
@@ -38,33 +39,11 @@ pub struct SettingsDiagnostic {
 /// the node's recorded source span when present.
 pub fn check_emission_diagnostics(settings: &Settings) -> Vec<SettingsDiagnostic> {
     let mut diagnostics = Vec::new();
-    for child in &settings.children {
-        match child {
-            SettingsNode::Workshop { children, .. } => {
-                check_workshop_children(children, &mut diagnostics)
-            }
-            SettingsNode::Group { name, children, .. } => match name.as_str() {
-                "main" | "lobby" => {
-                    for member in children {
-                        check_member(member, &[PathPart::Part(name)], &mut diagnostics);
-                    }
-                }
-                "gamemodes" => check_modes(children, &mut diagnostics),
-                "heroes" => check_heroes(children, &mut diagnostics),
-                "extensions" => {
-                    for member in children {
-                        check_member(member, &[PathPart::Part("extensions")], &mut diagnostics);
-                    }
-                }
-                _ => check_opaque_children(children, &mut diagnostics),
-            },
-            other => diagnostics.push(rejected(
-                other.span(),
-                "settings block children must be groups".to_string(),
-                None,
-            )),
-        }
-    }
+    walk(settings, &mut |visit| match visit {
+        Visit::Rejected(diagnostic) => diagnostics.push(diagnostic),
+        Visit::Member(node, path) => check_member(node, path, &mut diagnostics),
+        Visit::OpaqueLeaf(node) => check_member(node, &[], &mut diagnostics),
+    });
     diagnostics
 }
 
@@ -77,108 +56,220 @@ pub fn check_emission(settings: &Settings) -> Vec<WorkshopError> {
         .collect()
 }
 
-fn check_workshop_children(children: &[SettingsNode], errors: &mut Vec<SettingsDiagnostic>) {
-    for child in children {
+/// A settings member emitted as written rather than through the catalog.
+pub(crate) struct VerbatimMember<'a> {
+    /// The uncatalogued key, or the undeclared value of a catalogued key.
+    pub(crate) name: &'a str,
+    pub(crate) span: Option<crate::source::Span>,
+    /// The canonical spelling the name was close to, if exactly one was.
+    pub(crate) suggestion: Option<String>,
+}
+
+/// The members emission writes verbatim: uncatalogued members and blocks,
+/// and catalogued keys carrying an undeclared value. Members inside an
+/// uncatalogued top-level group are reported individually; a member block is
+/// reported as one member.
+pub(crate) fn verbatim_members(settings: &Settings) -> Vec<VerbatimMember<'_>> {
+    let mut members = Vec::new();
+    walk(settings, &mut |visit| match visit {
+        Visit::Rejected(_) => {}
+        Visit::Member(node, path) => {
+            let mut full = path.to_vec();
+            full.push(PathPart::Part(node.name()));
+            let catalogued = table::lookup(&full);
+            let member = match (node, catalogued) {
+                (SettingsNode::Raw { .. }, _) | (SettingsNode::Group { .. }, None) => {
+                    VerbatimMember {
+                        name: node.name(),
+                        span: node.span(),
+                        suggestion: suggest::suggest(
+                            node.name(),
+                            table::key_spellings(path).into_iter(),
+                        ),
+                    }
+                }
+                (SettingsNode::Verbatim { value, .. }, Some(entry)) => VerbatimMember {
+                    name: value,
+                    span: node.span(),
+                    suggestion: match entry.kind {
+                        table::KeyKind::Enum(domain) => {
+                            suggest::suggest(value, table::enum_spellings(domain))
+                        }
+                        _ => None,
+                    },
+                },
+                (SettingsNode::Verbatim { .. }, None) => VerbatimMember {
+                    name: node.name(),
+                    span: node.span(),
+                    suggestion: suggest::suggest(
+                        node.name(),
+                        table::key_spellings(path).into_iter(),
+                    ),
+                },
+                _ => return,
+            };
+            members.push(member);
+        }
+        Visit::OpaqueLeaf(node @ (SettingsNode::Raw { .. } | SettingsNode::Verbatim { .. })) => {
+            members.push(VerbatimMember {
+                name: node.name(),
+                span: node.span(),
+                suggestion: None,
+            });
+        }
+        Visit::OpaqueLeaf(_) => {}
+    });
+    members
+}
+
+enum Visit<'a, 'p> {
+    /// A structural problem emission rejects before reaching any member.
+    Rejected(SettingsDiagnostic),
+    /// A member at a catalogued position, with its parent path.
+    Member(&'a SettingsNode, &'p [PathPart<'a>]),
+    /// A leaf inside an uncatalogued top-level group.
+    OpaqueLeaf(&'a SettingsNode),
+}
+
+/// Visit every settings member the way emission reaches it.
+fn walk<'a>(settings: &'a Settings, visit: &mut dyn FnMut(Visit<'a, '_>)) {
+    for child in &settings.children {
         match child {
-            SettingsNode::Group { children, .. } | SettingsNode::Workshop { children, .. } => {
-                check_workshop_children(children, errors);
+            SettingsNode::Workshop { children, .. } => walk_workshop(children, visit),
+            SettingsNode::Group { name, children, .. } => match name.as_str() {
+                "main" | "lobby" | "extensions" => {
+                    for member in children {
+                        visit(Visit::Member(member, &[PathPart::Part(name)]));
+                    }
+                }
+                "gamemodes" => walk_modes(children, visit),
+                "heroes" => walk_heroes(children, visit),
+                _ => walk_opaque(children, visit),
+            },
+            other => {
+                visit(Visit::Rejected(rejected(
+                    other.span(),
+                    "settings block children must be groups".to_string(),
+                    None,
+                )));
+                // A stray verbatim member is still a preserved residual.
+                if matches!(
+                    other,
+                    SettingsNode::Raw { .. } | SettingsNode::Verbatim { .. }
+                ) {
+                    visit(Visit::OpaqueLeaf(other));
+                }
             }
-            SettingsNode::Raw { .. } => {}
-            other => errors.push(rejected(
-                other.span(),
-                "settings.workshop contains a typed builtin setting".to_string(),
-                None,
-            )),
         }
     }
 }
 
-fn check_modes(modes: &[SettingsNode], errors: &mut Vec<SettingsDiagnostic>) {
+fn walk_workshop<'a>(children: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_>)) {
+    for child in children {
+        match child {
+            SettingsNode::Group { children, .. } | SettingsNode::Workshop { children, .. } => {
+                walk_workshop(children, visit);
+            }
+            SettingsNode::Raw { .. } | SettingsNode::Verbatim { .. } => {}
+            other => visit(Visit::Rejected(rejected(
+                other.span(),
+                "settings.workshop contains a typed builtin setting".to_string(),
+                None,
+            ))),
+        }
+    }
+}
+
+fn walk_modes<'a>(modes: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_>)) {
     for mode in modes {
         let SettingsNode::Group { name, children, .. } = mode else {
-            errors.push(rejected(
+            visit(Visit::Rejected(rejected(
                 mode.span(),
                 "mode entries must be groups".to_string(),
                 None,
-            ));
+            )));
             continue;
         };
+        let path = [PathPart::Part("gamemodes"), PathPart::Part(name)];
         for member in children {
             // `enabled` bools are consumed by the mode header and never reach
             // the emission table.
             if matches!(member, SettingsNode::Bool { name, .. } if name == "enabled") {
                 continue;
             }
-            check_member(
-                member,
-                &[PathPart::Part("gamemodes"), PathPart::Part(name)],
-                errors,
-            );
+            visit(Visit::Member(member, &path));
         }
     }
 }
 
-fn check_heroes(teams: &[SettingsNode], errors: &mut Vec<SettingsDiagnostic>) {
+fn walk_heroes<'a>(teams: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_>)) {
+    const TEAM: [PathPart<'static>; 2] = [PathPart::Part("heroes"), PathPart::Team];
+    const HERO: [PathPart<'static>; 3] = [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero];
     for team in teams {
         let SettingsNode::Group { name, children, .. } = team else {
-            errors.push(rejected(
+            visit(Visit::Rejected(rejected(
                 team.span(),
                 "team entries must be groups".to_string(),
                 None,
-            ));
+            )));
             continue;
         };
         if table::team_name(name).is_none() {
-            errors.push(rejected(
+            visit(Visit::Rejected(rejected(
                 team.span(),
                 format!("unknown team '{name}'"),
                 suggest::suggest(name, table::team_spellings()),
-            ));
+            )));
             continue;
         }
         for member in children {
             match member {
                 SettingsNode::Group { name, children, .. } => {
                     if table::hero_name(name).is_none() {
-                        errors.push(rejected(
+                        visit(Visit::Rejected(rejected(
                             member.span(),
                             format!("unknown hero '{name}'"),
                             suggest::suggest(name, table::hero_spellings()),
-                        ));
+                        )));
                         continue;
                     }
                     for inner in children {
-                        check_member(
-                            inner,
-                            &[PathPart::Part("heroes"), PathPart::Team, PathPart::Hero],
-                            errors,
-                        );
+                        visit(Visit::Member(inner, &HERO));
                     }
                 }
-                other => check_member(other, &[PathPart::Part("heroes"), PathPart::Team], errors),
+                other => visit(Visit::Member(other, &TEAM)),
             }
         }
     }
 }
 
-fn check_opaque_children(children: &[SettingsNode], errors: &mut Vec<SettingsDiagnostic>) {
+fn walk_opaque<'a>(children: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_>)) {
     for child in children {
         match child {
             // Mirrors `emit_opaque_group`: nested groups pass through
             // verbatim; only leaf members are table-checked.
-            SettingsNode::Group { children, .. } => check_opaque_children(children, errors),
-            other => check_member(other, &[], errors),
+            SettingsNode::Group { children, .. } => walk_opaque(children, visit),
+            other => visit(Visit::OpaqueLeaf(other)),
         }
     }
 }
 
 fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<SettingsDiagnostic>) {
-    if matches!(node, SettingsNode::Raw { .. }) {
-        return;
-    }
     let name = node.name();
     let mut full = path.to_vec();
     full.push(PathPart::Part(name));
+    match (node, table::lookup(&full)) {
+        (SettingsNode::Raw { .. } | SettingsNode::Verbatim { .. }, _) => return,
+        // Mirrors `settings_member`: an uncatalogued block is emitted as
+        // written; only its leaves must have a written form.
+        (SettingsNode::Group { children, .. }, None) => {
+            for child in children {
+                check_member(child, &[], errors);
+            }
+            return;
+        }
+        _ => {}
+    }
     match member::lookup(node, &full).and_then(|entry| member::accept(node, entry)) {
         Ok(Member::List { elements, kind }) => {
             for element in elements {

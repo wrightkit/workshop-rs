@@ -1456,24 +1456,136 @@ rule("r")
 }
 
 #[test]
-fn issue_360_unknown_braced_key_suggests_canonical_spelling() {
+fn issue_360_unknown_braced_key_is_kept_verbatim_with_a_suggestion() {
     // `Enabled Mpas` does not resolve, so the braced member is an opaque
-    // group that emission rejects; the diagnostic names `enabled maps`.
+    // block emitted as written; the residual names `enabled maps`.
     let source = issue_360_source("Enabled Mpas", "Château Guillard");
     let program = parser::parse(&source, &catalog(), &en()).expect("source parses");
-    let error = program.validate().expect_err("check rejects the key");
+    program
+        .validate()
+        .expect("an uncatalogued block is carried verbatim");
+    assert!(program.settings_diagnostics().is_empty());
+    let issue = program
+        .semantic_issues(&catalog())
+        .into_iter()
+        .find(|issue| issue.name == "Enabled Mpas")
+        .expect("the block is a residual");
+    assert_eq!(issue.suggestion.as_deref(), Some("enabled maps"));
+    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
     assert!(
-        error.to_string().contains("outside the emission table"),
-        "{error}"
+        emitted.contains("Enabled Mpas {\n                Château Guillard\n            }"),
+        "{emitted}"
     );
-    assert!(
-        error.to_string().contains("did you mean 'enabled maps'?"),
-        "{error}"
-    );
-    let diagnostics = program.settings_diagnostics();
-    assert_eq!(diagnostics.len(), 1);
-    assert_eq!(diagnostics[0].suggestion.as_deref(), Some("enabled maps"));
     assert_check_compile_parity(&source);
+}
+
+#[test]
+fn undeclared_settings_values_and_empty_members_round_trip_verbatim() {
+    // Values the catalog does not declare, an empty `name:` member, and
+    // adjacent value tokens are written back exactly as authored.
+    let source = r#"settings
+{
+    lobby
+    {
+        Map Rotation: Sometimes
+        Project Empty:
+    }
+
+    heroes
+    {
+        General
+        {
+            Project Scalar: 500%
+        }
+    }
+}
+rule("r")
+{
+    event
+    {
+        Ongoing - Global;
+    }
+    actions
+    {
+        Wait(1, Ignore Condition);
+    }
+}
+"#;
+    let program = parser::parse(source, &catalog(), &en()).expect("source parses");
+    program.validate().expect("verbatim members are accepted");
+    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    for line in [
+        "Map Rotation: Sometimes",
+        "Project Empty: ",
+        "Project Scalar: 500%",
+    ] {
+        assert!(
+            emitted.lines().any(|emitted| emitted.trim_start() == line),
+            "{line:?} in {emitted}"
+        );
+    }
+    let issue = program
+        .semantic_issues(&catalog())
+        .into_iter()
+        .find(|issue| issue.name == "Sometimes")
+        .expect("the undeclared value is a residual");
+    assert_eq!(issue.suggestion, None);
+    assert_check_compile_parity(source);
+}
+
+#[test]
+fn typed_verbatim_members_localize_catalogued_keys_only() {
+    use workshop_rs::settings::{Settings, SettingsNode};
+
+    let mut program = workshop_rs::Program::new();
+    let verbatim = |name: &str, value: &str| SettingsNode::Verbatim {
+        name: name.into(),
+        value: value.into(),
+        span: None,
+    };
+    let raw = |name: &str| SettingsNode::Raw {
+        name: name.into(),
+        value: String::new(),
+        span: None,
+    };
+    program.settings = Some(Settings {
+        span: None,
+        children: vec![
+            SettingsNode::Group {
+                name: "lobby".into(),
+                children: vec![
+                    verbatim("mapRotation", "Sometimes"),
+                    verbatim("projectKey", ""),
+                    SettingsNode::Group {
+                        name: "projectList".into(),
+                        children: vec![raw("1"), raw("2")],
+                        span: None,
+                    },
+                ],
+                span: None,
+            },
+            SettingsNode::Group {
+                name: "gamemodes".into(),
+                children: Vec::new(),
+                span: None,
+            },
+        ],
+    });
+    program.validate().expect("verbatim members are accepted");
+    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let lines: Vec<&str> = emitted.lines().map(str::trim).collect();
+    for line in [
+        "Map Rotation: Sometimes",
+        "projectKey:",
+        "projectList {",
+        "1",
+        "2",
+    ] {
+        assert!(lines.contains(&line), "{line:?} in {emitted}");
+    }
+    let localized = emitter::emit(&program, &catalog(), &zh()).expect("emits zh-CN");
+    assert!(!localized.contains("mapRotation"), "{localized}");
+    assert!(localized.contains(": Sometimes"), "{localized}");
 }
 
 #[test]

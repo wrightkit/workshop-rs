@@ -117,8 +117,9 @@ spelling (a case or accent difference, or a small unambiguous edit distance)
 names that spelling in the diagnostic message (`did you mean '...'?`); the
 same suggestion is also exposed as structured data on
 `SettingsDiagnostic::suggestion`, so callers can apply it without parsing
-message text. Distant or ambiguous spellings carry none. The input stays
-rejected either way — the suggestion never rewrites it.
+message text. Distant or ambiguous spellings carry none. The suggestion never
+rewrites the input. An unknown member key is not rejected but carried as
+written (see below), with the same suggestion on its residual.
 
 `Program::validate` uses `check_emission`, which shares locale-independent
 member acceptance with the emitter. `Program::settings_diagnostics` exposes
@@ -126,6 +127,31 @@ every rejection as a `SettingsDiagnostic`; validation and emission return
 the first relevant error. Locale mapping and hero ability display-name
 resolution remain emission concerns and can fail before value acceptance,
 so first-error parity does not apply universally across output locales.
+
+## Members outside the catalog
+
+Members the catalog does not declare are carried as written rather than
+rejected, so a project can keep settings the catalog has not caught up with
+(and rewrite them after compilation):
+
+- a leaf whose key is unknown parses to `SettingsNode::Raw` (`name: value`,
+  or a bare `name`);
+- a braced block whose key is unknown parses to a `SettingsNode::Group` of
+  such leaves, emitted as the same block;
+- a catalogued key whose value is not a declared enum member, and an unknown
+  `name:` with nothing after the colon, parse to `SettingsNode::Verbatim`.
+
+`SettingsNode::Verbatim { name, value }` writes `name: value` with the value
+as authored. At a catalogued path `name` is the canonical key and is emitted
+in the target locale; elsewhere it is written as is. Programmatic producers
+use it for the same purpose. Raw values keep their authored token spacing
+(`500%` stays `500%`).
+
+`check_emission` accepts these members. `Program::semantic_issues` reports
+each as a `RawSetting` residual: the unknown key or block name, or the
+undeclared value, with `SemanticIssue::suggestion` naming the canonical
+spelling it was close to when exactly one was (`Enabled Mpas` →
+`enabled maps`).
 
 Sources: Deltinteger's `TextToElement` matches settings, mode, map, hero, and
 enum names with `caseSensitive: false`; the pinned oracle's decompiler

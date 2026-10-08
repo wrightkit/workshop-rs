@@ -279,6 +279,18 @@ fn nodes_equivalent(
                         ..
                     },
                 ) => left_name == right_name && left_value == right_value,
+                (
+                    crate::settings::SettingsNode::Verbatim {
+                        name: left_name,
+                        value: left_value,
+                        ..
+                    },
+                    crate::settings::SettingsNode::Verbatim {
+                        name: right_name,
+                        value: right_value,
+                        ..
+                    },
+                ) => left_name == right_name && left_value == right_value,
                 _ => false,
             })
 }
