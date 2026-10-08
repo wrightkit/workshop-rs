@@ -750,10 +750,16 @@
                 "locator": "https://overwatch.blizzard.com/en-us/heroes/bastion/",
                 "note": "official ability description; accessed 2026-08-18",
                 "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/heroes/bastion/",
+                "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
-              "en-US": "Configuration: Assault"
+              "en-US": "Configuration: Assault",
+              "zh-CN": "强攻模式"
             }
           },
           "slot": "primaryFire",
@@ -773,10 +779,16 @@
                 "locator": "https://overwatch.blizzard.com/en-us/heroes/bastion/",
                 "note": "official ability description; accessed 2026-08-18",
                 "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/heroes/bastion/",
+                "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
-              "en-US": "Configuration: Recon"
+              "en-US": "Configuration: Recon",
+              "zh-CN": "侦察模式"
             }
           },
           "slot": "primaryFire",
@@ -1434,10 +1446,16 @@
             "locator": "data.heroes.dmon",
             "note": "commitDate=2026-10-06",
             "source": "workshop-data/workshop-data.json@5a7d0e294b8cad73b9701987bb584d0551d7fa4d"
+          },
+          {
+            "locator": "https://ow.blizzard.cn/heroes/dmon/",
+            "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+            "source": "Blizzard Entertainment official Overwatch hero detail"
           }
         ],
         "value": {
-          "en-US": "D.Mon"
+          "en-US": "D.Mon",
+          "zh-CN": "D.Mon"
         }
       },
       "role": {
@@ -1450,6 +1468,252 @@
         ],
         "value": "tank"
       }
+    },
+    {
+      "abilities": [
+        {
+          "sources": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+              "note": "hero identity and ability slot order per official hero detail; accessed 2026-10-08",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
+            }
+          ],
+          "name": {
+            "sources": [
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+                "note": "localized names verified on the official localized hero detail pages; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/heroes/doctrine/",
+                "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              }
+            ],
+            "value": {
+              "de-DE": "Ewiges Zepter",
+              "en-US": "Eternal Scepter",
+              "es-ES": "Cetro eterno",
+              "es-MX": "Cetro eterno",
+              "fr-FR": "Sceptre éternel",
+              "it-IT": "Scettro Eterno",
+              "ja-JP": "エターナル・ステッキ",
+              "ko-KR": "영겁의 홀",
+              "pl-PL": "Wieczne Berło",
+              "pt-BR": "Cetro Eterno",
+              "ru-RU": "Вечный скипетр",
+              "zh-CN": "永生权杖",
+              "zh-TW": "永恆節杖"
+            }
+          },
+          "slot": "primaryFire"
+        },
+        {
+          "sources": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+              "note": "hero identity and ability slot order per official hero detail; accessed 2026-10-08",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
+            }
+          ],
+          "name": {
+            "sources": [
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+                "note": "localized names verified on the official localized hero detail pages; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/heroes/doctrine/",
+                "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              }
+            ],
+            "value": {
+              "de-DE": "Erfüllen",
+              "en-US": "Infuse",
+              "es-ES": "Imbuir",
+              "es-MX": "Infusión",
+              "fr-FR": "Imprégnation",
+              "it-IT": "Infusione",
+              "ja-JP": "強化",
+              "ko-KR": "주입",
+              "pl-PL": "Nasycenie",
+              "pt-BR": "Infusão",
+              "ru-RU": "Насыщение",
+              "zh-CN": "灌注",
+              "zh-TW": "注能"
+            }
+          },
+          "slot": "secondaryFire"
+        },
+        {
+          "sources": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+              "note": "hero identity and ability slot order per official hero detail; accessed 2026-10-08",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
+            }
+          ],
+          "name": {
+            "sources": [
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+                "note": "localized names verified on the official localized hero detail pages; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/heroes/doctrine/",
+                "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              }
+            ],
+            "value": {
+              "de-DE": "Stärkende Drohnen",
+              "en-US": "Invigorating Drones",
+              "es-ES": "Drones vigorizantes",
+              "es-MX": "Drones revitalizantes",
+              "fr-FR": "Drones revigorants",
+              "it-IT": "Droni Rinvigorenti",
+              "ja-JP": "ヴァイタル・ドローン",
+              "ko-KR": "활기 드론",
+              "pl-PL": "Drony Witalizujące",
+              "pt-BR": "Drones Revigorantes",
+              "ru-RU": "Живительные дроны",
+              "zh-CN": "焕生无人机",
+              "zh-TW": "振奮無人機"
+            }
+          },
+          "slot": "ability1"
+        },
+        {
+          "sources": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+              "note": "hero identity and ability slot order per official hero detail; accessed 2026-10-08",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
+            }
+          ],
+          "name": {
+            "sources": [
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+                "note": "localized names verified on the official localized hero detail pages; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/heroes/doctrine/",
+                "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              }
+            ],
+            "value": {
+              "de-DE": "Schattensturm",
+              "en-US": "Shrouded Momentum",
+              "es-ES": "Impulso velado",
+              "es-MX": "Impulso oculto",
+              "fr-FR": "Élan enveloppé",
+              "it-IT": "Sciame Protettivo",
+              "ja-JP": "クリムゾン・ヴェール",
+              "ko-KR": "추진형 장막",
+              "pl-PL": "Zasnuty Pęd",
+              "pt-BR": "Impulso Oculto",
+              "ru-RU": "Ускоряющая завеса",
+              "zh-CN": "迅影疾行",
+              "zh-TW": "隱匿勢能"
+            }
+          },
+          "slot": "ability2"
+        },
+        {
+          "sources": [
+            {
+              "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+              "note": "hero identity and ability slot order per official hero detail; accessed 2026-10-08",
+              "source": "Blizzard Entertainment official Overwatch hero detail"
+            }
+          ],
+          "name": {
+            "sources": [
+              {
+                "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+                "note": "localized names verified on the official localized hero detail pages; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/heroes/doctrine/",
+                "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
+              }
+            ],
+            "value": {
+              "de-DE": "Erlösung",
+              "en-US": "Deliverance",
+              "es-ES": "Liberación",
+              "es-MX": "Liberación",
+              "fr-FR": "Délivrance",
+              "it-IT": "Liberazione",
+              "ja-JP": "デリヴァランス",
+              "ko-KR": "구제",
+              "pl-PL": "Wybawienie",
+              "pt-BR": "Libertação",
+              "ru-RU": "Искупление",
+              "zh-CN": "救赎恩典",
+              "zh-TW": "救贖"
+            }
+          },
+          "slot": "ultimate"
+        }
+      ],
+      "id": "doctrine",
+      "name": {
+        "sources": [
+          {
+            "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+            "note": "localized names verified on the official localized hero detail pages; accessed 2026-10-08",
+            "source": "Blizzard Entertainment official Overwatch hero detail"
+          },
+          {
+            "locator": "https://ow.blizzard.cn/heroes/doctrine/",
+            "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+            "source": "Blizzard Entertainment official Overwatch hero detail"
+          }
+        ],
+        "value": {
+          "de-DE": "Doctrine",
+          "en-US": "Doctrine",
+          "es-ES": "Doctrine",
+          "es-MX": "Doctrine",
+          "fr-FR": "Doctrine",
+          "it-IT": "Doctrine",
+          "ja-JP": "ドクトリン",
+          "ko-KR": "독트린",
+          "pl-PL": "Doctrine",
+          "pt-BR": "Doctrine",
+          "ru-RU": "Догмат",
+          "zh-CN": "血律",
+          "zh-TW": "血律"
+        }
+      },
+      "role": {
+        "sources": [
+          {
+            "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+            "note": "role metadata; accessed 2026-10-08",
+            "source": "Blizzard Entertainment official Overwatch hero detail"
+          }
+        ],
+        "value": "support"
+      },
+      "sources": [
+        {
+          "locator": "https://overwatch.blizzard.com/en-us/heroes/doctrine/",
+          "note": "hero identity and ability slot order per official hero detail; accessed 2026-10-08",
+          "source": "Blizzard Entertainment official Overwatch hero detail"
+        }
+      ]
     },
     {
       "abilities": [
@@ -1997,10 +2261,16 @@
                 "locator": "https://overwatch.blizzard.com/en-us/heroes/dva/",
                 "note": "official ability description; accessed 2026-08-18",
                 "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/heroes/dva/",
+                "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
-              "en-US": "Fusion Cannons"
+              "en-US": "Fusion Cannons",
+              "zh-CN": "聚变机炮"
             }
           },
           "slot": "primaryFire",
@@ -2020,10 +2290,16 @@
                 "locator": "https://overwatch.blizzard.com/en-us/heroes/dva/",
                 "note": "official ability description; accessed 2026-08-18",
                 "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/heroes/dva/",
+                "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
-              "en-US": "Light Gun"
+              "en-US": "Light Gun",
+              "zh-CN": "光枪"
             }
           },
           "slot": "primaryFire",
@@ -6017,10 +6293,16 @@
                 "locator": "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
                 "note": "official ability description; accessed 2026-08-18",
                 "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/heroes/ramattra/",
+                "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
-              "en-US": "Void Accelerator"
+              "en-US": "Void Accelerator",
+              "zh-CN": "虚空加速器（智械形态）"
             }
           },
           "slot": "primaryFire",
@@ -6040,10 +6322,16 @@
                 "locator": "https://overwatch.blizzard.com/en-us/heroes/ramattra/",
                 "note": "official ability description; accessed 2026-08-18",
                 "source": "Blizzard Entertainment official Overwatch hero detail"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/heroes/ramattra/",
+                "note": "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
-              "en-US": "Pummel"
+              "en-US": "Pummel",
+              "zh-CN": "猛拳（天罚形态）"
             }
           },
           "slot": "primaryFire",
@@ -7061,10 +7349,16 @@
                 "locator": "data.heroes.sojourn.secondaryFire",
                 "note": "commitDate=2026-10-06",
                 "source": "workshop-data/workshop-data.json@5a7d0e294b8cad73b9701987bb584d0551d7fa4d"
+              },
+              {
+                "locator": "https://ow.blizzard.cn/news/patch-notes/live/2026/07/",
+                "note": "zh-CN ability name; accessed 2026-10-08",
+                "source": "Blizzard Entertainment official Overwatch hero detail"
               }
             ],
             "value": {
-              "en-US": "Charged Shot"
+              "en-US": "Charged Shot",
+              "zh-CN": "充能射击"
             }
           },
           "slot": "secondaryFire"
@@ -9425,7 +9719,7 @@
   ],
   "identity": {
     "datasetId": "overwatch-workshop-hero-gameplay",
-    "digest": "sha256:e7c0ca7aeb4466b2a96001b34aad9e8128e8568aecad7575259e1b654878c151",
+    "digest": "sha256:0f80dcfbf4014ffe68d05ffba471d26e221ca6789407af6dc4c7eb601e284a87",
     "license": "MIT-compatible user-provided export",
     "reviewed": true,
     "source": "workshop-data/workshop-data.json@5a7d0e294b8cad73b9701987bb584d0551d7fa4d",

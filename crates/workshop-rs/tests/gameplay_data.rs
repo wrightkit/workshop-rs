@@ -53,7 +53,7 @@ fn ability(name: &str, slot: &str, variant: Option<&str>) -> Ability {
 #[test]
 fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
     let catalog = builtin().expect("embedded gameplay data should load");
-    assert_eq!(catalog.heroes().len(), 53);
+    assert_eq!(catalog.heroes().len(), 54);
 
     let expected = [
         ("ana", &["ability1", "ability2", "ultimate"][..]),
@@ -78,6 +78,16 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
         (
             "dmon",
             &["secondaryFire", "ability1", "ability2", "ultimate"][..],
+        ),
+        (
+            "doctrine",
+            &[
+                "primaryFire",
+                "secondaryFire",
+                "ability1",
+                "ability2",
+                "ultimate",
+            ][..],
         ),
         (
             "domina",
@@ -299,7 +309,7 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
         .flat_map(|hero| hero.abilities())
         .filter(|ability| ability.variant().is_some())
         .count();
-    assert_eq!(ability_count, 207);
+    assert_eq!(ability_count, 212);
     assert!(keyword_count > 0);
     assert!(variant_count > 0);
 
@@ -557,15 +567,96 @@ fn embedded_dmon_abilities_carry_the_verified_locale_names() {
             "official zh-CN name for dmon {slot}"
         );
     }
+    assert_eq!(
+        dmon.name().value().get("zh-CN"),
+        Some("D.Mon"),
+        "official zh-CN hero name for dmon"
+    );
+}
+
+#[test]
+fn embedded_doctrine_is_an_official_source_only_hero() {
+    let catalog = builtin().unwrap();
+    let doctrine = catalog.hero_by_id("doctrine").unwrap();
+    assert_eq!(doctrine.role().unwrap().value().as_str(), "support");
+    for (locale, name) in [("en-US", "Doctrine"), ("zh-CN", "血律"), ("zh-TW", "血律")] {
+        assert_eq!(doctrine.name().value().get(locale), Some(name));
+    }
+    for (slot, en, zh_cn) in [
+        ("primaryFire", "Eternal Scepter", "永生权杖"),
+        ("secondaryFire", "Infuse", "灌注"),
+        ("ability1", "Invigorating Drones", "焕生无人机"),
+        ("ability2", "Shrouded Momentum", "迅影疾行"),
+        ("ultimate", "Deliverance", "救赎恩典"),
+    ] {
+        let ability = doctrine.ability(&LogicalSlot::new(slot)).unwrap();
+        assert_eq!(ability.name().value().get("en-US"), Some(en));
+        assert_eq!(ability.name().value().get("zh-CN"), Some(zh_cn));
+    }
+    // doctrine is absent from the pinned workshop-data export; every fact on
+    // the record is official-source-only.
+    for source_record in doctrine.sources().iter().chain(doctrine.name().sources()) {
+        assert_eq!(source_record.source, OFFICIAL_HERO_SOURCE);
+    }
+}
+
+#[test]
+fn official_zh_cn_names_fill_export_gaps() {
+    let catalog = builtin().unwrap();
+    for (hero_id, slot, variant, zh_cn) in [
+        ("dva", "primaryFire", "mech", "聚变机炮"),
+        ("dva", "primaryFire", "pilot", "光枪"),
+        ("bastion", "primaryFire", "assault", "强攻模式"),
+        ("bastion", "primaryFire", "recon", "侦察模式"),
+        ("ramattra", "primaryFire", "omnic", "虚空加速器（智械形态）"),
+        ("ramattra", "primaryFire", "nemesis", "猛拳（天罚形态）"),
+    ] {
+        let hero = catalog.hero_by_id(hero_id).unwrap();
+        let ability = hero
+            .ability_variant(&LogicalSlot::new(slot), &AbilityVariant::new(variant))
+            .unwrap();
+        assert_eq!(ability.name().value().get("zh-CN"), Some(zh_cn));
+    }
+    let sojourn = catalog.hero_by_id("sojourn").unwrap();
+    assert_eq!(
+        sojourn
+            .ability(&LogicalSlot::new("secondaryFire"))
+            .unwrap()
+            .name()
+            .value()
+            .get("zh-CN"),
+        Some("充能射击")
+    );
 }
 
 #[test]
 fn embedded_records_keep_pinned_source_metadata_on_every_fact() {
     let catalog = builtin().unwrap();
     for hero in catalog.heroes() {
-        for source_record in hero.sources().iter().chain(hero.name().sources()) {
-            assert_eq!(source_record.source, SOURCE);
-            assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-10-06"));
+        for source_record in hero.sources() {
+            if source_record.source == SOURCE {
+                assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-10-06"));
+            } else {
+                // doctrine is absent from the pinned export; its hero-level
+                // records are official-source-only.
+                assert_eq!(hero.id().as_str(), "doctrine");
+                assert_eq!(source_record.source, OFFICIAL_HERO_SOURCE);
+            }
+        }
+        for source_record in hero.name().sources() {
+            if source_record.source == SOURCE {
+                assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-10-06"));
+            } else {
+                assert_eq!(source_record.source, OFFICIAL_HERO_SOURCE);
+                assert!(matches!(
+                    source_record.note.as_deref(),
+                    Some(
+                        "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08"
+                    ) | Some(
+                        "localized names verified on the official localized hero detail pages; accessed 2026-10-08"
+                    )
+                ));
+            }
         }
         let role = hero.role().expect("official role sources for every hero");
         let role_source = &role.sources()[0];
@@ -578,10 +669,10 @@ fn embedded_records_keep_pinned_source_metadata_on_every_fact() {
                 .locator
                 .starts_with("https://overwatch.blizzard.com/en-us/heroes/")
         );
-        assert_eq!(
+        assert!(matches!(
             role_source.note.as_deref(),
-            Some("role metadata; accessed 2026-08-18")
-        );
+            Some("role metadata; accessed 2026-08-18") | Some("role metadata; accessed 2026-10-08")
+        ));
         for ability in hero.abilities() {
             for source_record in ability.sources().iter().chain(ability.name().sources()) {
                 if source_record.source == SOURCE {
@@ -598,16 +689,34 @@ fn embedded_records_keep_pinned_source_metadata_on_every_fact() {
                                 | Some(
                                     "localized ability names verified on the official localized hero detail pages; accessed 2026-10-08"
                                 )
+                                | Some(
+                                    "hero identity and ability slot order per official hero detail; accessed 2026-10-08"
+                                )
+                                | Some(
+                                    "localized names verified on the official localized hero detail pages; accessed 2026-10-08"
+                                )
                         ));
-                    } else {
-                        assert_eq!(
-                            source_record.locator,
-                            "https://ow.blizzard.cn/news/patch-notes/live/2026/08/"
-                        );
+                    } else if source_record
+                        .locator
+                        .starts_with("https://ow.blizzard.cn/heroes/")
+                    {
                         assert_eq!(
                             source_record.note.as_deref(),
-                            Some("zh-CN ability names; accessed 2026-10-08")
+                            Some(
+                                "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08"
+                            )
                         );
+                    } else {
+                        assert!(matches!(
+                            source_record.locator.as_str(),
+                            "https://ow.blizzard.cn/news/patch-notes/live/2026/08/"
+                                | "https://ow.blizzard.cn/news/patch-notes/live/2026/07/"
+                        ));
+                        assert!(matches!(
+                            source_record.note.as_deref(),
+                            Some("zh-CN ability names; accessed 2026-10-08")
+                                | Some("zh-CN ability name; accessed 2026-10-08")
+                        ));
                     }
                 } else {
                     panic!(
@@ -645,7 +754,7 @@ fn representative_hero_and_ability_records_round_trip_through_json() {
 #[test]
 fn loader_rejects_stale_digest_and_unsupported_schema() {
     let stale = GAMEPLAY_DATA.replacen(
-        "e7c0ca7aeb4466b2a96001b34aad9e8128e8568aecad7575259e1b654878c151",
+        "0f80dcfbf4014ffe68d05ffba471d26e221ca6789407af6dc4c7eb601e284a87",
         "e15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
         1,
     );

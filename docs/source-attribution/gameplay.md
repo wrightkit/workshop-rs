@@ -21,8 +21,16 @@ accessed 2026-10-08), and its `zh-CN` names come from the official Overwatch
 China patch notes (`ow.blizzard.cn`, accessed 2026-10-08) because the export
 carries no `zh-CN` spellings for them yet.
 
+One hero, Doctrine, is not present in the pinned export at all: its entire
+record is sourced from the official localized hero detail pages and the
+official Overwatch China hero detail, accessed 2026-10-08. zh-CN names absent
+from the export (D.Mon's kit and hero name, the Bastion/D.Va/Ramattra variant
+primaries, and Sojourn's Charged Shot) are filled from the official Overwatch
+China hero detail pages (`ow.blizzard.cn/heroes/<id>/`) and patch notes,
+accessed 2026-10-08.
+
 The current identity digest is
-`sha256:e7c0ca7aeb4466b2a96001b34aad9e8128e8568aecad7575259e1b654878c151`.
+`sha256:0f80dcfbf4014ffe68d05ffba471d26e221ca6789407af6dc4c7eb601e284a87`.
 
 Representative ability keywords are semantic labels, not Blizzard or Workshop
 enum values. Their labels and the six variant names/shapes are source-linked to

@@ -6,7 +6,10 @@ user-provided `workshop-data` export at commit
 `5a7d0e294b8cad73b9701987bb584d0551d7fa4d` (commit date 2026-10-06), whose
 `meta.topLevelKeyCounts.heroes` is 53. The export records Workshop-facing
 canonical hero and logical-slot topology plus localized/display names; unsupported gameplay
-facts remain absent until separately sourced.
+facts remain absent until separately sourced. The embedded dataset additionally
+carries `doctrine` (primaryFire, secondaryFire, ability1, ability2, ultimate)
+with official-source-only attribution — the hero is not present in this export,
+so it does not appear in the table below.
 
 | Hero identity | Named logical slots in source data |
 | --- | --- |
