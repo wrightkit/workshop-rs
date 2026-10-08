@@ -38,8 +38,9 @@ One hero, Doctrine (`doctrine`, support), is absent from that export and is
 recorded with official-source attribution only: its hero identity, role,
 ability-slot order, and localized names come from the official localized hero
 detail pages and the official Overwatch China hero detail, accessed
-2026-10-08. It is intentionally not added to the canonical catalog enums,
-which mirror the pinned Workshop export surface. zh-CN names absent from the
+2026-10-08. The canonical catalog carries the same boundary: `Hero.DOCTRINE`
+is an official-source-only member recorded as an unmatched exclusion in the
+corpus manifest. zh-CN names absent from the
 export (D.Mon's kit and hero name, the Bastion/D.Va/Ramattra variant
 primaries, and Sojourn's Charged Shot) are likewise filled from the official
 Overwatch China hero detail pages and patch notes, accessed 2026-10-08.

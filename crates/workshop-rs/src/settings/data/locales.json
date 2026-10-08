@@ -6,7 +6,7 @@
     },
     "heroes": {
       "matched": 42,
-      "total": 53
+      "total": 54
     },
     "labels": {
       "matched": 181,
@@ -2058,6 +2058,11 @@
       "en-US": "Jetpack Cat",
       "reason": "no exact en-US match in the export",
       "surface": "hero.jetpackCat.name"
+    },
+    {
+      "en-US": "Doctrine",
+      "reason": "no exact en-US match in the export",
+      "surface": "hero.doctrine.name"
     },
     {
       "en-US": "Enabled",
