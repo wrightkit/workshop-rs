@@ -21,7 +21,7 @@
 
 pub mod detect;
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -159,6 +159,13 @@ pub struct CatalogEntry {
     /// Source-backed return type for Value entries. Actions must leave this
     /// unset; an absent value remains unresolved.
     pub(crate) return_type: Option<String>,
+    /// Reevaluation coverage for the action's `*Reeval` parameter, keyed by
+    /// enum member id: which parameter positions the selected reevaluation
+    /// member keeps re-evaluating. `None` when the action has no `*Reeval`
+    /// parameter or coverage is not reviewed. Members absent from the map
+    /// are unknown, not empty — an empty vector is a reviewed "reevaluates
+    /// nothing" claim.
+    pub(crate) reevaluation_coverage: Option<BTreeMap<String, Vec<usize>>>,
     /// Whether the final declared parameter repeats for additional arguments.
     pub(crate) variadic: bool,
     pub(crate) aliases: HashMap<Locale, Vec<String>>,
@@ -272,6 +279,26 @@ impl CatalogEntry {
     /// The declared enum domain for an argument position, when one exists.
     pub fn param_domain(&self, index: usize) -> Option<&str> {
         param_at(&self.param_domains, index, self.variadic).and_then(Option::as_deref)
+    }
+
+    /// The parameter positions the given `*Reeval` enum member keeps
+    /// re-evaluating on this action, when the action declares reviewed
+    /// reevaluation coverage. `Some(&[])` means the member re-evaluates no
+    /// parameter of this action; `None` means the member's coverage is
+    /// unknown for this action and callers must stay conservative.
+    ///
+    /// `member` is the canonical enum member id (e.g. `COLOR`), the same
+    /// spelling a parsed `Value::Enum` carries.
+    pub fn reevaluation_coverage(&self, member: &str) -> Option<&[usize]> {
+        self.reevaluation_coverage
+            .as_ref()
+            .and_then(|coverage| coverage.get(member).map(Vec::as_slice))
+    }
+
+    /// Whether this action declares reviewed per-parameter reevaluation
+    /// coverage for its `*Reeval` parameter.
+    pub fn has_reevaluation_coverage(&self) -> bool {
+        self.reevaluation_coverage.is_some()
     }
 
     /// The source-backed semantic type for an argument position, when

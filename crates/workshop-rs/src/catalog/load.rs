@@ -2,7 +2,7 @@
 //! deterministic digest. [`Catalog`] accessors live in `mod.rs`; this file
 //! owns how catalog bytes become the validated structure.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use serde::Deserialize;
 
@@ -74,6 +74,13 @@ struct EntryFile {
     param_coercions: Vec<Option<ParamCoercions>>,
     #[serde(default)]
     return_type: Option<String>,
+    /// Reviewed reevaluation coverage keyed by enum member id (e.g.
+    /// `COLOR`), listing the parameter positions each member keeps
+    /// re-evaluating. Declared only on actions whose `*Reeval` parameter
+    /// selects the reevaluation mode; validated against that domain's
+    /// members and the parameter arity.
+    #[serde(default)]
+    reevaluation_coverage: Option<BTreeMap<String, Vec<usize>>>,
     #[serde(default)]
     variadic: bool,
 }
@@ -295,6 +302,7 @@ impl Catalog {
             param_types: item.param_types,
             param_coercions: item.param_coercions,
             return_type: item.return_type,
+            reevaluation_coverage: item.reevaluation_coverage,
             variadic: item.variadic,
             aliases,
         });
@@ -368,6 +376,69 @@ impl Catalog {
                         entry.kind.as_str(),
                         entry.id
                     )));
+                }
+            }
+            if let Some(coverage) = &entry.reevaluation_coverage {
+                let reeval_params: Vec<usize> = (0..entry.params.len())
+                    .filter(|index| {
+                        entry
+                            .param_domains
+                            .get(*index)
+                            .and_then(Option::as_deref)
+                            .is_some_and(|domain| domain.ends_with("Reeval"))
+                    })
+                    .collect();
+                if reeval_params.len() != 1 {
+                    return Err(CatalogError::validation(format!(
+                        "{} '{}' declares reevaluation coverage but has {} *Reeval parameters",
+                        entry.kind.as_str(),
+                        entry.id,
+                        reeval_params.len()
+                    )));
+                }
+                let domain_name = entry.param_domains[reeval_params[0]]
+                    .as_deref()
+                    .expect("filtered above");
+                let domain = self
+                    .enum_by_domain
+                    .get(domain_name)
+                    .map(|index| &self.enums[*index])
+                    .expect("param domain validated above");
+                for (member, positions) in coverage {
+                    if !domain.members.iter().any(|m| m.member == *member) {
+                        return Err(CatalogError::validation(format!(
+                            "{} '{}' declares reevaluation coverage for '{member}', which is not a member of '{domain_name}'",
+                            entry.kind.as_str(),
+                            entry.id
+                        )));
+                    }
+                    for position in positions {
+                        if *position >= entry.params.len() {
+                            return Err(CatalogError::validation(format!(
+                                "{} '{}' reevaluation coverage for '{member}' names parameter {position}, out of {} params",
+                                entry.kind.as_str(),
+                                entry.id,
+                                entry.params.len()
+                            )));
+                        }
+                        if *position == reeval_params[0] {
+                            return Err(CatalogError::validation(format!(
+                                "{} '{}' reevaluation coverage for '{member}' covers the reevaluation parameter itself",
+                                entry.kind.as_str(),
+                                entry.id
+                            )));
+                        }
+                    }
+                }
+                for member in &domain.members {
+                    if !coverage.contains_key(&member.member) {
+                        return Err(CatalogError::validation(format!(
+                            "{} '{}' reevaluation coverage does not review '{domain_name}' member '{}'",
+                            entry.kind.as_str(),
+                            entry.id,
+                            member.member
+                        )));
+                    }
                 }
             }
             for aliases in &entry.param_aliases {
