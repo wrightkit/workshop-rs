@@ -1516,7 +1516,7 @@ rule("r")
     let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
     for line in [
         "Map Rotation: Sometimes",
-        "Project Empty: ",
+        "Project Empty:",
         "Project Scalar: 500%",
     ] {
         assert!(

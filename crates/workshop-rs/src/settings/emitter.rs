@@ -77,7 +77,11 @@ impl EmitContext<'_> {
             }
             SettingsNode::Workshop { children, .. } => self.emit_workshop_settings(children, level),
             SettingsNode::Verbatim { name, value, .. } => {
-                self.line(level, &format!("{name}: {value}"))
+                if value.is_empty() {
+                    self.line(level, &format!("{name}:"))
+                } else {
+                    self.line(level, &format!("{name}: {value}"))
+                }
             }
             SettingsNode::Raw { name, value, .. } => {
                 if value.is_empty() {
@@ -221,7 +225,11 @@ impl EmitContext<'_> {
                     Some(entry) => self.member_display_name(&full, hero, entry)?,
                     None => name.to_string(),
                 };
-                return self.line(level, &format!("{display_name}: {value}"));
+                return if value.is_empty() {
+                    self.line(level, &format!("{display_name}:"))
+                } else {
+                    self.line(level, &format!("{display_name}: {value}"))
+                };
             }
             // A block the catalog does not declare is carried as written.
             (SettingsNode::Group { children, .. }, None) => {
