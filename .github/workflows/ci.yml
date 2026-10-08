@@ -44,7 +44,7 @@ jobs:
           breaking_title='^[[:alnum:]][[:alnum:].-]*(\([^)]*\))?!:'
           if [[ "$version" == 0.* && "$PR_TITLE" =~ $breaking_title ]]; then
             echo "value=major" >> "$GITHUB_OUTPUT"
-          elif [[ "$PR_LABELS" == *'"name":"semver-exception"'* ]]; then
+          elif echo "$PR_LABELS" | jq -e '.[] | select(.name == "semver-exception")' >/dev/null; then
             # An owner-approved API break shipped outside a major release;
             # see docs/release.md "Public API compatibility".
             echo "value=major" >> "$GITHUB_OUTPUT"
