@@ -540,4 +540,8 @@ fn exercised_enum_domains_resolve_members_to_canonical_identity() {
         catalog.resolve_enum_member("Map", &en(), "Watchpoint: Gibraltar"),
         Some(("Map".to_string(), "WATCHPOINT_GIBRALTAR".to_string()))
     );
+    assert_eq!(
+        catalog.resolve_enum_member("Map", &en(), "Grímsvötn"),
+        Some(("Map".to_string(), "GRIMSVOTN".to_string()))
+    );
 }

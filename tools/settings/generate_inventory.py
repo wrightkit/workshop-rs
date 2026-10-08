@@ -13,13 +13,29 @@ import hashlib
 import json
 from pathlib import Path
 
+# The inventory records the catalog's working locales: canonical en-US
+# spellings plus the zh-CN corpus translations.
+LOCALES = ("en-US", "zh-CN")
+
 
 def localized_aliases(value):
     return {
         key: child
         for key, child in value.items()
-        if isinstance(child, str) and key not in {"source", "sources"}
+        if key in LOCALES and isinstance(child, str)
     }
+
+
+def labeled_record(aliases, source, identifier=None):
+    record = {}
+    if identifier is not None:
+        record["id"] = identifier
+    if "en-US" in aliases:
+        record["en-US"] = aliases["en-US"]
+    record["source"] = source
+    if "zh-CN" in aliases:
+        record["zh-CN"] = aliases["zh-CN"]
+    return record
 
 
 def walk_labels(value, path, out):
@@ -27,8 +43,7 @@ def walk_labels(value, path, out):
         for key, child in value.items():
             aliases = localized_aliases(child) if isinstance(child, dict) else {}
             if aliases:
-                record = {**aliases, "source": ".".join((*path, key))}
-                out.append(record)
+                out.append(labeled_record(aliases, ".".join((*path, key))))
             else:
                 walk_labels(child, (*path, key), out)
     elif isinstance(value, list):
@@ -44,8 +59,7 @@ def top_level_entries(data, category):
         aliases = localized_aliases(item)
         if not aliases:
             continue
-        record = {"id": key, **aliases, "source": f"data.{category}.{key}"}
-        result.append(record)
+        result.append(labeled_record(aliases, f"data.{category}.{key}", identifier=key))
     return sorted(result, key=lambda item: item["id"])
 
 
@@ -69,7 +83,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--export", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--expected-commit", default="d854bf01fc7bbf3b2169f67408c07a8da8989ad6")
+    parser.add_argument("--expected-commit", default="5a7d0e294b8cad73b9701987bb584d0551d7fa4d")
     args = parser.parse_args()
 
     raw = args.export.read_bytes()

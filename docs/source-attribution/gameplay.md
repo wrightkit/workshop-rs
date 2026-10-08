@@ -6,8 +6,8 @@
 
 The gameplay dataset is a workshop-rs-owned, MIT-compatible projection of the
 user-provided `workshop-data/workshop-data.json` export. Its source is pinned
-to commit `d854bf01fc7bbf3b2169f67408c07a8da8989ad6` (commit date
-2026-08-12). The export is used only for hero identity, localized naming, and
+to commit `5a7d0e294b8cad73b9701987bb584d0551d7fa4d` (commit date
+2026-10-06). The export is used only for hero identity, localized naming, and
 declared named ability-slot topology; no OverPy or OSTW data is copied.
 
 The committed projection contains hero identities, role facts, and
@@ -18,7 +18,7 @@ official Blizzard hero-detail URL and access date 2026-08-18 as a separate
 source reference.
 
 The current identity digest is
-`sha256:0902a247fb709bf5e326bbdb5475b41d4062b991ba3e0aea9350e5ecd404bc3c`.
+`sha256:06e33045154d9f32553b09bf70bb5156556bb4fe8d28812422b51dbbb5ceabb9`.
 
 Representative ability keywords are semantic labels, not Blizzard or Workshop
 enum values. Their labels and the six variant names/shapes are source-linked to

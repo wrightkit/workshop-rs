@@ -5,12 +5,13 @@ not generated at test runtime and the test never reads `catalog.json` to build
 the expected set.
 
 Provenance: the #86 language-support audit records 52 supported domains and
-their member counts/examples. The 52-domain, 727-leaf expected set was
+their member counts/examples. The 52-domain, 728-leaf expected set was
 reconciled against the pinned external Workshop-data export at revision
-`d854bf01fc7bbf3b2169f67408c07a8da8989ad6`, which is also recorded in the
-catalog provenance. The fixture is the durable reviewed snapshot; the
-conformance test compares the implementation catalog against it and reports
-missing or extra canonical members.
+`5a7d0e294b8cad73b9701987bb584d0551d7fa4d` (which adds `Map.GRIMSVOTN`),
+and earlier revisions it supersedes; the pin is also recorded in the catalog
+provenance. The fixture is the durable reviewed snapshot; the conformance
+test compares the implementation catalog against it and reports missing or
+extra canonical members.
 
 | Domain | Member |
 | --- | --- |
@@ -232,6 +233,7 @@ missing or extra canonical members.
 | `Map` | `ESPERANCA` |
 | `Map` | `ESTADIODASRAS` |
 | `Map` | `GOGADORO` |
+| `Map` | `GRIMSVOTN` |
 | `Map` | `HANAMURA` |
 | `Map` | `HANAMURA_WINTER` |
 | `Map` | `HANAOKA` |

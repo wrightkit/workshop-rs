@@ -1,24 +1,24 @@
 {
   "coverage": {
     "enums": {
-      "matched": 122,
-      "total": 136
+      "matched": 106,
+      "total": 117
     },
     "heroes": {
-      "matched": 85,
-      "total": 106
+      "matched": 42,
+      "total": 53
     },
     "labels": {
       "matched": 181,
       "total": 206
     },
     "maps": {
-      "matched": 86,
+      "matched": 84,
       "total": 92
     },
     "modes": {
-      "matched": 10,
-      "total": 10
+      "matched": 22,
+      "total": 22
     },
     "namespaces": {
       "matched": 6,
@@ -1965,6 +1965,11 @@
       "surface": "heroes.<team>.<hero>.ultBarrierHealth%"
     },
     {
+      "en-US": "Lijiang Tower Lunar",
+      "reason": "no exact en-US match in the export",
+      "surface": "map.lijiangTowerLunar.name"
+    },
+    {
       "en-US": "Aatlis",
       "reason": "no exact en-US match in the export",
       "surface": "map.aatlis.name"
@@ -1972,7 +1977,7 @@
     {
       "en-US": "Arena Victoriae",
       "reason": "no exact en-US match in the export",
-      "surface": "map.arenaVictoriae.name"
+      "surface": "map.arenavictoriae.name"
     },
     {
       "en-US": "Gogadoro",
@@ -1980,114 +1985,29 @@
       "surface": "map.gogadoro.name"
     },
     {
-      "en-US": "Neon Junction",
+      "en-US": "Redwood Dam",
       "reason": "no exact en-US match in the export",
-      "surface": "map.neonJunction.name"
+      "surface": "map.redwooddam.name"
     },
     {
       "en-US": "Place Lacroix",
       "reason": "no exact en-US match in the export",
-      "surface": "map.placeLacroix.name"
+      "surface": "map.placelacroix.name"
     },
     {
-      "en-US": "Redwood Dam",
+      "en-US": "Neon Junction",
       "reason": "no exact en-US match in the export",
-      "surface": "map.redwoodDam.name"
+      "surface": "map.neonjunction.name"
     },
     {
-      "en-US": "Anran",
+      "en-US": "Grímsvötn",
       "reason": "no exact en-US match in the export",
-      "surface": "hero.anran.name"
-    },
-    {
-      "en-US": "D.Mon",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.dmon.name"
-    },
-    {
-      "en-US": "Domina",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.domina.name"
-    },
-    {
-      "en-US": "Emre",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.emre.name"
+      "surface": "map.grimsvotn.name"
     },
     {
       "en-US": "Freja",
       "reason": "no exact en-US match in the export",
       "surface": "hero.freja.name"
-    },
-    {
-      "en-US": "Jetpack Cat",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.jetpackCat.name"
-    },
-    {
-      "en-US": "Mizuki",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.mizuki.name"
-    },
-    {
-      "en-US": "Shion",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.shion.name"
-    },
-    {
-      "en-US": "Sierra",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.sierra.name"
-    },
-    {
-      "en-US": "Wuyang",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.wuyang.name"
-    },
-    {
-      "en-US": "Anran",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.anran.name"
-    },
-    {
-      "en-US": "D.Mon",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.dmon.name"
-    },
-    {
-      "en-US": "Domina",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.domina.name"
-    },
-    {
-      "en-US": "Emre",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.emre.name"
-    },
-    {
-      "en-US": "Freja",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.freja.name"
-    },
-    {
-      "en-US": "Jetpack Cat",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.jetpackCat.name"
-    },
-    {
-      "en-US": "Mizuki",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.mizuki.name"
-    },
-    {
-      "en-US": "Shion",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.shion.name"
-    },
-    {
-      "en-US": "Sierra",
-      "reason": "no exact en-US match in the export",
-      "surface": "hero.sierra.name"
     },
     {
       "en-US": "Vendetta",
@@ -2095,19 +2015,54 @@
       "surface": "hero.vendetta.name"
     },
     {
+      "en-US": "Emre",
+      "reason": "no exact en-US match in the export",
+      "surface": "hero.emre.name"
+    },
+    {
+      "en-US": "Anran",
+      "reason": "no exact en-US match in the export",
+      "surface": "hero.anran.name"
+    },
+    {
+      "en-US": "Domina",
+      "reason": "no exact en-US match in the export",
+      "surface": "hero.jinyu.name"
+    },
+    {
+      "en-US": "Sierra",
+      "reason": "no exact en-US match in the export",
+      "surface": "hero.sierra.name"
+    },
+    {
+      "en-US": "Shion",
+      "reason": "no exact en-US match in the export",
+      "surface": "hero.shion.name"
+    },
+    {
+      "en-US": "D.Mon",
+      "reason": "no exact en-US match in the export",
+      "surface": "hero.dMon.name"
+    },
+    {
       "en-US": "Wuyang",
       "reason": "no exact en-US match in the export",
       "surface": "hero.wuyang.name"
     },
     {
-      "en-US": "Enabled",
-      "reason": "ambiguous: export candidates disagree on zh-CN (customGameSettings.gamemodes.values.general.values.spawnHealthPacks.values.enabled, other.customGameSettings.__enabled__)",
-      "surface": "enum.matchVoiceChat.enabled"
+      "en-US": "Mizuki",
+      "reason": "no exact en-US match in the export",
+      "surface": "hero.mizuki.name"
+    },
+    {
+      "en-US": "Jetpack Cat",
+      "reason": "no exact en-US match in the export",
+      "surface": "hero.jetpackCat.name"
     },
     {
       "en-US": "Enabled",
       "reason": "ambiguous: export candidates disagree on zh-CN (customGameSettings.gamemodes.values.general.values.spawnHealthPacks.values.enabled, other.customGameSettings.__enabled__)",
-      "surface": "enum.spawnHealthPacks.enabled"
+      "surface": "enum.matchVoiceChat.enabled"
     },
     {
       "en-US": "All",
@@ -2145,11 +2100,6 @@
       "surface": "enum.setting_gamemodes_flashpoint_firstActiveControlPoint.random"
     },
     {
-      "en-US": "Enabled",
-      "reason": "ambiguous: export candidates disagree on zh-CN (customGameSettings.gamemodes.values.general.values.spawnHealthPacks.values.enabled, other.customGameSettings.__enabled__)",
-      "surface": "enum.setting_gamemodes_general_spawnHealthPacks.enabled"
-    },
-    {
       "en-US": "All",
       "reason": "ambiguous: export candidates disagree on zh-CN (constants.Invis.ALL, customGameSettings.gamemodes.values.control.values.setValidControlPoints.values.all, customGameSettings.gamemodes.values.controlAprilFools.values.setValidControlPoints.values.all, customGameSettings.gamemodes.values.ctf.values.flagCarrierAbilities.values.all, customGameSettings.gamemodes.values.skirmish.values.setValidControlPoints.values.all, customGameSettings.heroes.values.lifeweaver.values.weaponsEnabled.values.all, customGameSettings.heroes.values.mercy.values.weaponsEnabled.values.all, customGameSettings.heroes.values.torbjorn.values.weaponsEnabled.values.all)",
       "surface": "enum.setting_gamemodes_skirmish_setValidControlPoints.all"
@@ -2160,14 +2110,9 @@
       "surface": "enum.setting_heroes_TEAM_HERO_weaponsEnabled.all"
     },
     {
-      "en-US": "All",
-      "reason": "ambiguous: export candidates disagree on zh-CN (constants.Invis.ALL, customGameSettings.gamemodes.values.control.values.setValidControlPoints.values.all, customGameSettings.gamemodes.values.controlAprilFools.values.setValidControlPoints.values.all, customGameSettings.gamemodes.values.ctf.values.flagCarrierAbilities.values.all, customGameSettings.gamemodes.values.skirmish.values.setValidControlPoints.values.all, customGameSettings.heroes.values.lifeweaver.values.weaponsEnabled.values.all, customGameSettings.heroes.values.mercy.values.weaponsEnabled.values.all, customGameSettings.heroes.values.torbjorn.values.weaponsEnabled.values.all)",
-      "surface": "enum.setting_heroes_TEAM_HERO_weaponsEnabled.all"
-    },
-    {
-      "en-US": "All",
-      "reason": "ambiguous: export candidates disagree on zh-CN (constants.Invis.ALL, customGameSettings.gamemodes.values.control.values.setValidControlPoints.values.all, customGameSettings.gamemodes.values.controlAprilFools.values.setValidControlPoints.values.all, customGameSettings.gamemodes.values.ctf.values.flagCarrierAbilities.values.all, customGameSettings.gamemodes.values.skirmish.values.setValidControlPoints.values.all, customGameSettings.heroes.values.lifeweaver.values.weaponsEnabled.values.all, customGameSettings.heroes.values.mercy.values.weaponsEnabled.values.all, customGameSettings.heroes.values.torbjorn.values.weaponsEnabled.values.all)",
-      "surface": "enum.setting_heroes_TEAM_HERO_weaponsEnabled.all"
+      "en-US": "Enabled",
+      "reason": "ambiguous: export candidates disagree on zh-CN (customGameSettings.gamemodes.values.general.values.spawnHealthPacks.values.enabled, other.customGameSettings.__enabled__)",
+      "surface": "enum.spawnHealthPacks.enabled"
     }
   ],
   "heroes": {
@@ -8945,6 +8890,27 @@
       "zh-CN": "攻防作战",
       "zh-TW": "佔領"
     },
+    "Bounty Hunter": {
+      "de-DE": "Kopfgeldjäger",
+      "en-US": "Bounty Hunter",
+      "es-ES": "Cazarrecompensas",
+      "es-MX": "Cazarrecompensas",
+      "fr-FR": "Chasseur de primes",
+      "it-IT": "Cacciatori di Taglie",
+      "ja-JP": "バウンティ・ハンター",
+      "ko-KR": "현상금 사냥꾼",
+      "pl-PL": "Łowca nagród",
+      "pt-BR": "Caçador de Recompensas",
+      "ru-RU": "Охота за головами",
+      "sources": [
+        "gamemodes.bountyHunter",
+        "data.gamemodes.bountyHunter"
+      ],
+      "th-TH": "นักล่าค่าหัว",
+      "tr-TR": "Ödül Avcısı",
+      "zh-CN": "赏金猎手",
+      "zh-TW": "賞金獵人"
+    },
     "Capture The Flag": {
       "de-DE": "Flaggeneroberung",
       "en-US": "Capture The Flag",
@@ -8965,6 +8931,27 @@
       "tr-TR": "Bayrak Kapmaca",
       "zh-CN": "勇夺锦旗",
       "zh-TW": "搶旗"
+    },
+    "Clash": {
+      "de-DE": "Clash",
+      "en-US": "Clash",
+      "es-ES": "Contienda",
+      "es-MX": "Batalla",
+      "fr-FR": "Clash",
+      "it-IT": "Scontro",
+      "ja-JP": "クラッシュ",
+      "ko-KR": "격돌",
+      "pl-PL": "Starcie",
+      "pt-BR": "Embate",
+      "ru-RU": "Битва",
+      "sources": [
+        "gamemodes.clash",
+        "data.gamemodes.clash"
+      ],
+      "th-TH": "ปะทะ",
+      "tr-TR": "Kapışma",
+      "zh-CN": "攻防阵线",
+      "zh-TW": "交鋒"
     },
     "Control": {
       "de-DE": "Kontrolle",
@@ -8987,6 +8974,12 @@
       "zh-CN": "占领要点",
       "zh-TW": "控制"
     },
+    "Control April Fools": {
+      "en-US": "Control April Fools",
+      "sources": [
+        "data.gamemodes.controlAprilFools"
+      ]
+    },
     "Deathmatch": {
       "de-DE": "Deathmatch",
       "en-US": "Deathmatch",
@@ -9008,6 +9001,27 @@
       "zh-CN": "死斗",
       "zh-TW": "死鬥"
     },
+    "Elimination": {
+      "de-DE": "Eliminierung",
+      "en-US": "Elimination",
+      "es-ES": "Eliminación",
+      "es-MX": "Eliminación",
+      "fr-FR": "Élimination",
+      "it-IT": "Eliminazione",
+      "ja-JP": "エリミネーション",
+      "ko-KR": "섬멸전",
+      "pl-PL": "Eliminacja",
+      "pt-BR": "Eliminação",
+      "ru-RU": "Ликвидация",
+      "sources": [
+        "gamemodes.elimination",
+        "data.gamemodes.elimination"
+      ],
+      "th-TH": "อิลิมิเนชัน",
+      "tr-TR": "Bertaraf",
+      "zh-CN": "决斗先锋",
+      "zh-TW": "鬥陣對決"
+    },
     "Escort": {
       "de-DE": "Eskorte",
       "en-US": "Escort",
@@ -9028,6 +9042,39 @@
       "tr-TR": "Koruma",
       "zh-CN": "运载目标",
       "zh-TW": "護送"
+    },
+    "Escort April Fools": {
+      "en-US": "Escort April Fools",
+      "sources": [
+        "data.gamemodes.escortAprilFools"
+      ]
+    },
+    "Flashpoint": {
+      "de-DE": "Flashpoint",
+      "en-US": "Flashpoint",
+      "es-ES": "Operación",
+      "es-MX": "Punto crítico",
+      "fr-FR": "Point chaud",
+      "it-IT": "Punto Critico",
+      "ja-JP": "フラッシュポイント",
+      "ko-KR": "플래시포인트",
+      "pl-PL": "Punkt Krytyczny",
+      "pt-BR": "Ponto de Tumulto",
+      "ru-RU": "Точка возгорания",
+      "sources": [
+        "gamemodes.flashpoint",
+        "data.gamemodes.flashpoint"
+      ],
+      "th-TH": "แย่งชิงพื้นที่",
+      "tr-TR": "Akın Noktası",
+      "zh-CN": "闪点作战",
+      "zh-TW": "閃擊點"
+    },
+    "Flashpoint April Fools": {
+      "en-US": "Flashpoint April Fools",
+      "sources": [
+        "data.gamemodes.flashpointAprilFools"
+      ]
     },
     "General": {
       "de-DE": "Allgemein",
@@ -9070,6 +9117,79 @@
       "zh-CN": "攻击护送",
       "zh-TW": "混合"
     },
+    "Hybrid April Fools": {
+      "en-US": "Hybrid April Fools",
+      "sources": [
+        "data.gamemodes.hybridAprilFools"
+      ]
+    },
+    "Junkenstein's Revenge": {
+      "de-DE": "Junkensteins Rache",
+      "en-US": "Junkenstein's Revenge",
+      "es-ES": "La venganza de Junkenstein",
+      "es-MX": "La venganza de Junkenstein",
+      "fr-FR": "La vengeance du Dr Schakalstein",
+      "it-IT": "La vendetta di Junkenstein",
+      "ja-JP": "ジャンケン<br>シュタインの<br>復讐",
+      "ko-KR": "정켄슈타인의 복수",
+      "pl-PL": "Zemsta dr. Złomensteina",
+      "pt-BR": "A vingança de Junkenstein",
+      "ru-RU": "Месть Крысенштейна",
+      "sources": [
+        "maps.junkenstein"
+      ],
+      "th-TH": "การแก้แค้นของจังค์เค็นสไตน์",
+      "tr-TR": "Junkenstein'ın İntikamı",
+      "zh-CN": "怪鼠复仇",
+      "zh-TW": "鼠肯斯坦復仇記"
+    },
+    "Practice Range": {
+      "de-DE": "Trainingsbereich",
+      "en-US": "Practice Range",
+      "es-ES": "Práctica de combate",
+      "es-MX": "Campo de pruebas",
+      "fr-FR": "Champ de tir",
+      "it-IT": "Zona d'addestramento",
+      "ja-JP": "練習場",
+      "ko-KR": "훈련장",
+      "pl-PL": "Obszar treningowy",
+      "pt-BR": "Campo de Treinamento",
+      "ru-RU": "УЧЕБНЫЙ ПОЛИГОН",
+      "sources": [
+        "maps.practiceRange"
+      ],
+      "th-TH": "สนามฝึกซ้อม",
+      "tr-TR": "Poligon",
+      "zh-CN": "训练靶场",
+      "zh-TW": "訓練中心"
+    },
+    "Push": {
+      "de-DE": "Schub",
+      "en-US": "Push",
+      "es-ES": "Avance",
+      "es-MX": "Avance",
+      "fr-FR": "Avancée",
+      "it-IT": "Scorta",
+      "ja-JP": "プッシュ",
+      "ko-KR": "밀기",
+      "pl-PL": "Przepychanka",
+      "pt-BR": "Avanço",
+      "ru-RU": "Натиск",
+      "sources": [
+        "gamemodes.push",
+        "data.gamemodes.push"
+      ],
+      "th-TH": "ดันของ",
+      "tr-TR": "İttir",
+      "zh-CN": "机动推进",
+      "zh-TW": "推進"
+    },
+    "Push April Fools": {
+      "en-US": "Push April Fools",
+      "sources": [
+        "data.gamemodes.pushAprilFools"
+      ]
+    },
     "Skirmish": {
       "de-DE": "Übungsgefecht",
       "en-US": "Skirmish",
@@ -9090,6 +9210,13 @@
       "tr-TR": "Müsademe",
       "zh-CN": "突击模式",
       "zh-TW": "衝突戰"
+    },
+    "Stadium Practice Range": {
+      "en-US": "Stadium Practice Range",
+      "sources": [
+        "data.gamemodes.stadiumPracticeRange"
+      ],
+      "zh-CN": "决斗领域"
     },
     "Team Deathmatch": {
       "de-DE": "Team-Deathmatch",
@@ -9237,11 +9364,11 @@
   },
   "projection": "multi-locale-settings/v1",
   "provenance": {
-    "commit": "d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
-    "commitDate": "2026-08-12T15:26:38Z",
-    "fetchedAt": "2026-08-17T02:52:59Z",
+    "commit": "5a7d0e294b8cad73b9701987bb584d0551d7fa4d",
+    "commitDate": "2026-10-06T20:03:00Z",
+    "fetchedAt": "2026-10-08T12:25:27Z",
     "generator": "workshop-catalog-gen corpus",
-    "generatorVersion": "0.4.2",
+    "generatorVersion": "1.8.0",
     "method": "exact en-US spelling match between the declared settings surface (settings::schema) and every locale translation carried by the export's customGameSettings/gamemodes/maps/heroes labels, direct data.gamemodes entries, and other.customGameSettings tokens; the two hero Ultimate Generation labels are composed per reviewed locale from exact export templates and hero identities; entries without an accepted match keep fail-explicit behavior (ADR-0001 Decision 7)",
     "source": "user-provided workshop-data export (workshop-data.json)",
     "sourceReview": "reviewed: workshop-rs commits its own settings mapping data; the user-provided JSON is build input only and is not redistributed"

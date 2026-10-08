@@ -255,7 +255,7 @@ const FALLBACK_RULE: &str = "rule (\"setup\") {
     }
     actions {
         Disable Inspector Recording;
-        Stop Forcing Player To Be Hero(Event Player);
+        Disable Game Mode In-World UI(Event Player);
     }
 }
 ";
@@ -270,31 +270,25 @@ fn opt_in_fallback_emits_with_recorded_fallback_ids() {
         fallback_locale: Some(en()),
     };
     let output =
-        emitter::emit_wir_with_options(&program, &catalog, &Locale::new("fr-FR"), &options)
+        emitter::emit_wir_with_options(&program, &catalog, &Locale::new("th-TH"), &options)
             .expect("fallback emits");
+    assert!(output.text.contains("ดำเนินอยู่ - ทั่วโลก"), "{}", output.text);
     assert!(
-        output.text.contains("Toute la partie - Tout le monde"),
-        "{}",
-        output.text
-    );
-    assert!(
-        output
-            .text
-            .contains("Désactiver l’enregistrement du contrôleur"),
+        output.text.contains("ปิดใช้งานการบันทึกของตัวตรวจสอบ"),
         "{}",
         output.text
     );
     assert!(
         output
             .fallback_ids
-            .contains(&"stopForcingCurrentHero".to_string()),
+            .contains(&"disableGameModeInworldUI".to_string()),
         "the unsupported target locale records the fallback identity: {:?}",
         output.fallback_ids
     );
     assert!(
         output
             .text
-            .contains("Stop Forcing Player To Be Hero(Joueur exécutant)"),
+            .contains("Disable Game Mode In-World UI(Event Player)"),
         "{}",
         output.text
     );
@@ -311,25 +305,20 @@ fn opt_in_fallback_conversion_round_trips_through_zh_cn() {
         FALLBACK_RULE,
         &catalog,
         &en(),
-        &Locale::new("fr-FR"),
+        &Locale::new("th-TH"),
         &options,
     )
     .expect("fallback conversion emits");
     assert!(!out.fallback_ids.is_empty(), "fallback is recorded");
+    assert!(out.text.contains("ดำเนินอยู่ - ทั่วโลก"), "{}", out.text);
     assert!(
-        out.text.contains("Toute la partie - Tout le monde"),
-        "{}",
-        out.text
-    );
-    assert!(
-        out.text
-            .contains("Désactiver l’enregistrement du contrôleur"),
+        out.text.contains("ปิดใช้งานการบันทึกของตัวตรวจสอบ"),
         "{}",
         out.text
     );
     assert!(
         out.fallback_ids
-            .contains(&"stopForcingCurrentHero".to_string())
+            .contains(&"disableGameModeInworldUI".to_string())
     );
 }
 

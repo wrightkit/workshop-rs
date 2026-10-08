@@ -25,6 +25,7 @@ pub(crate) static GENERATED_MAP_NAMES: &[NameMap] = &[
     named("esperanca", "Esperança"),
     named("estadioDasRas", "Estádio das Rãs"),
     named("gogadoro", "Gogadoro"),
+    named("grimsvotn", "Grímsvötn"),
     named("hanamura", "Hanamura"),
     named("hanamuraWinter", "Hanamura Winter"),
     named("hanaoka", "Hanaoka"),

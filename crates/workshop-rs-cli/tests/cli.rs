@@ -207,7 +207,7 @@ fn convert_to_zh_cn_with_fallback_reports_the_choice() {
     let file = dir.join("unmapped.ws");
     std::fs::write(
         &file,
-        "rule (\"setup\") { event { Ongoing - Global; } actions { Disable Inspector Recording; Stop Forcing Player To Be Hero(Event Player); } }",
+        "rule (\"setup\") { event { Ongoing - Global; } actions { Disable Inspector Recording; Disable Game Mode In-World UI(Event Player); } }",
     )
     .unwrap();
     let output = run(&[
@@ -216,7 +216,7 @@ fn convert_to_zh_cn_with_fallback_reports_the_choice() {
         "--from",
         "en-US",
         "--to",
-        "fr-FR",
+        "th-TH",
         "--fallback-locale",
         "en-US",
     ]);
@@ -226,17 +226,14 @@ fn convert_to_zh_cn_with_fallback_reports_the_choice() {
         String::from_utf8_lossy(&output.stderr)
     );
     let stdout = String::from_utf8(output.stdout).unwrap();
+    assert!(stdout.contains("ดำเนินอยู่ - ทั่วโลก"), "{stdout}");
     assert!(
-        stdout.contains("Toute la partie - Tout le monde"),
-        "{stdout}"
-    );
-    assert!(
-        stdout.contains("Stop Forcing Player To Be Hero(Joueur exécutant)"),
+        stdout.contains("Disable Game Mode In-World UI(Event Player)"),
         "{stdout}"
     );
     let stderr = String::from_utf8_lossy(&output.stderr);
     assert!(
-        stderr.contains("fallback-locale spelling") && stderr.contains("stopForcingCurrentHero"),
+        stderr.contains("fallback-locale spelling") && stderr.contains("disableGameModeInworldUI"),
         "the fallback choice is visible in tooling output: {stderr}"
     );
     let _ = std::fs::remove_dir_all(&dir);

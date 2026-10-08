@@ -6,11 +6,11 @@ use workshop_rs::gameplay::{
     Hero, HeroId, LocalizedText, LogicalSlot, Quantity, SourceReference, StatKey, StatValue, Unit,
 };
 
-const SOURCE: &str = "workshop-data/workshop-data.json@d854bf01fc7bbf3b2169f67408c07a8da8989ad6";
+const SOURCE: &str = "workshop-data/workshop-data.json@5a7d0e294b8cad73b9701987bb584d0551d7fa4d";
 const OFFICIAL_HERO_SOURCE: &str = "Blizzard Entertainment official Overwatch hero detail";
 
 fn source_reference(locator: &str) -> SourceReference {
-    SourceReference::new(SOURCE, locator).with_note("commitDate=2026-08-12")
+    SourceReference::new(SOURCE, locator).with_note("commitDate=2026-10-06")
 }
 
 fn names(name: &str, locator: &str) -> Fact<LocalizedText> {
@@ -535,12 +535,37 @@ fn embedded_facts_have_representative_names_values_and_official_sources() {
 }
 
 #[test]
+fn embedded_dmon_abilities_carry_the_exported_locale_names() {
+    let catalog = builtin().unwrap();
+    let dmon = catalog.hero_by_id("dmon").unwrap();
+    for (slot, en, zh_tw) in [
+        ("secondaryFire", "Power Barrier", "能量屏障"),
+        ("ability1", "Propulsors", "推進器"),
+        ("ability2", "Fusion Repeater", "熱核連射砲"),
+        ("ultimate", "Limit Break", "突破極限"),
+    ] {
+        let value = dmon
+            .ability(&LogicalSlot::new(slot))
+            .unwrap()
+            .name()
+            .value();
+        assert_eq!(value.get("en-US"), Some(en));
+        assert_eq!(value.get("zh-TW"), Some(zh_tw));
+        assert_eq!(
+            value.get("zh-CN"),
+            None,
+            "the export carries no zh-CN name for dmon {slot}"
+        );
+    }
+}
+
+#[test]
 fn embedded_records_keep_pinned_source_metadata_on_every_fact() {
     let catalog = builtin().unwrap();
     for hero in catalog.heroes() {
         for source_record in hero.sources().iter().chain(hero.name().sources()) {
             assert_eq!(source_record.source, SOURCE);
-            assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-08-12"));
+            assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-10-06"));
         }
         let role = hero.role().expect("official role sources for every hero");
         let role_source = &role.sources()[0];
@@ -561,7 +586,7 @@ fn embedded_records_keep_pinned_source_metadata_on_every_fact() {
             for source_record in ability.sources().iter().chain(ability.name().sources()) {
                 if source_record.source == SOURCE {
                     assert!(source_record.locator.starts_with("data.heroes."));
-                    assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-08-12"));
+                    assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-10-06"));
                 } else if source_record.source == OFFICIAL_HERO_SOURCE {
                     assert!(
                         source_record
@@ -608,7 +633,7 @@ fn representative_hero_and_ability_records_round_trip_through_json() {
 #[test]
 fn loader_rejects_stale_digest_and_unsupported_schema() {
     let stale = GAMEPLAY_DATA.replacen(
-        "0902a247fb709bf5e326bbdb5475b41d4062b991ba3e0aea9350e5ecd404bc3c",
+        "06e33045154d9f32553b09bf70bb5156556bb4fe8d28812422b51dbbb5ceabb9",
         "e15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
         1,
     );
