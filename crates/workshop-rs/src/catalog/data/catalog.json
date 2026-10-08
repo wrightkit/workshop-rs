@@ -234,7 +234,36 @@
         "Reevaluation",
         "Color",
         "ShowWhenOffscreen"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "COLOR": [
+          4
+        ],
+        "NONE": [],
+        "POSITION": [
+          1
+        ],
+        "POSITION_AND_COLOR": [
+          1,
+          4
+        ],
+        "VISIBILITY": [
+          0
+        ],
+        "VISIBILITY_AND_COLOR": [
+          0,
+          4
+        ],
+        "VISIBILITY_AND_POSITION": [
+          0,
+          1
+        ],
+        "VISIBILITY_POSITION_AND_COLOR": [
+          0,
+          1,
+          4
+        ]
+      }
     },
     {
       "aliases": {
@@ -1430,7 +1459,19 @@
         "Object",
         "Number",
         "DamageReeval"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "NONE": [],
+        "RECEIVERS_AND_DAMAGERS": [
+          0,
+          1
+        ],
+        "RECEIVERS_DAMAGERS_AND_DMGPERCENT": [
+          0,
+          1,
+          2
+        ]
+      }
     },
     {
       "aliases": {
@@ -2359,7 +2400,15 @@
         "Number",
         "Relativity",
         "AccelReeval"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "DIRECTION_RATE_AND_MAX_SPEED": [
+          1,
+          2,
+          3
+        ],
+        "NONE": []
+      }
     },
     {
       "aliases": {
@@ -2423,7 +2472,44 @@
         "Color",
         "ProgressHudReeval",
         "SpecVisibility"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "COLOR": [
+          5,
+          6
+        ],
+        "NONE": [],
+        "VALUES": [
+          1,
+          2
+        ],
+        "VALUES_AND_COLOR": [
+          1,
+          2,
+          5,
+          6
+        ],
+        "VISIBILITY": [
+          0
+        ],
+        "VISIBILITY_AND_COLOR": [
+          0,
+          5,
+          6
+        ],
+        "VISIBILITY_AND_VALUES": [
+          0,
+          1,
+          2
+        ],
+        "VISIBILITY_VALUES_AND_COLOR": [
+          0,
+          1,
+          2,
+          5,
+          6
+        ]
+      }
     },
     {
       "aliases": {
@@ -2574,7 +2660,53 @@
         "Object",
         "Object",
         "HudReeval"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "COLOR": [],
+        "NONE": [],
+        "SORT_ORDER": [],
+        "SORT_ORDER_AND_COLOR": [],
+        "SORT_ORDER_AND_STRING": [
+          1
+        ],
+        "SORT_ORDER_STRING_AND_COLOR": [
+          1
+        ],
+        "STRING": [
+          1
+        ],
+        "STRING_AND_COLOR": [
+          1
+        ],
+        "VISIBILITY": [
+          0
+        ],
+        "VISIBILITY_AND_SORT_ORDER": [
+          0
+        ],
+        "VISIBILITY_AND_STRING": [
+          0,
+          1
+        ],
+        "VISIBILITY_SORT_ORDER_AND_COLOR": [
+          0
+        ],
+        "VISIBILITY_SORT_ORDER_AND_STRING": [
+          0,
+          1
+        ],
+        "VISIBILITY_SORT_ORDER_STRING_AND_COLOR": [
+          0,
+          1
+        ],
+        "VISIBLE_TO_AND_COLOR": [
+          0
+        ],
+        "VISIBLE_TO_STRING_AND_COLOR": [
+          0,
+          1
+        ]
+      }
     },
     {
       "aliases": {
@@ -3638,7 +3770,14 @@
         "Turn Rate",
         "Relativity",
         "Reevaluation"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "DIRECTION_AND_TURN_RATE": [
+          1,
+          2
+        ],
+        "NONE": []
+      }
     },
     {
       "aliases": {
@@ -4290,7 +4429,40 @@
         "EndPosition",
         "Color",
         "Reevaluation"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "COLOR": [
+          4
+        ],
+        "NONE": [],
+        "POSITION_AND_RADIUS": [
+          2,
+          3
+        ],
+        "POSITION_RADIUS_AND_COLOR": [
+          2,
+          3,
+          4
+        ],
+        "VISIBILITY": [
+          0
+        ],
+        "VISIBILITY_AND_COLOR": [
+          0,
+          4
+        ],
+        "VISIBILITY_POSITION_RADIUS_AND_COLOR": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "VISIBLE_TO_POSITION_AND_RADIUS": [
+          0,
+          2,
+          3
+        ]
+      }
     },
     {
       "aliases": {
@@ -4397,7 +4569,104 @@
         "TextColor",
         "Reevaluation",
         "Spectators"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "COLOR": [
+          6,
+          7,
+          8
+        ],
+        "NONE": [],
+        "SORT_ORDER": [
+          5
+        ],
+        "SORT_ORDER_AND_COLOR": [
+          5,
+          6,
+          7,
+          8
+        ],
+        "SORT_ORDER_AND_STRING": [
+          1,
+          2,
+          3,
+          5
+        ],
+        "SORT_ORDER_STRING_AND_COLOR": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          8
+        ],
+        "STRING": [
+          1,
+          2,
+          3
+        ],
+        "STRING_AND_COLOR": [
+          1,
+          2,
+          3,
+          6,
+          7,
+          8
+        ],
+        "VISIBILITY": [
+          0
+        ],
+        "VISIBILITY_AND_SORT_ORDER": [
+          0,
+          5
+        ],
+        "VISIBILITY_AND_STRING": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "VISIBILITY_SORT_ORDER_AND_COLOR": [
+          0,
+          5,
+          6,
+          7,
+          8
+        ],
+        "VISIBILITY_SORT_ORDER_AND_STRING": [
+          0,
+          1,
+          2,
+          3,
+          5
+        ],
+        "VISIBILITY_SORT_ORDER_STRING_AND_COLOR": [
+          0,
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          8
+        ],
+        "VISIBLE_TO_AND_COLOR": [
+          0,
+          6,
+          7,
+          8
+        ],
+        "VISIBLE_TO_STRING_AND_COLOR": [
+          0,
+          1,
+          2,
+          3,
+          6,
+          7,
+          8
+        ]
+      }
     },
     {
       "aliases": {
@@ -4816,7 +5085,14 @@
         "Destination",
         "Rate",
         "Reevaluation"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "DESTINATION_AND_RATE": [
+          1,
+          2
+        ],
+        "NONE": []
+      }
     },
     {
       "aliases": {
@@ -4872,7 +5148,14 @@
         "Destination",
         "Duration",
         "Reevaluation"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "DESTINATION_AND_DURATION": [
+          1,
+          2
+        ],
+        "NONE": []
+      }
     },
     {
       "aliases": {
@@ -4920,7 +5203,14 @@
         "Destination",
         "Rate",
         "Reevaluation"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "DESTINATION_AND_RATE": [
+          2,
+          3
+        ],
+        "NONE": []
+      }
     },
     {
       "aliases": {
@@ -4968,7 +5258,14 @@
         "Destination",
         "Duration",
         "Reevaluation"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "DESTINATION_AND_DURATION": [
+          2,
+          3
+        ],
+        "NONE": []
+      }
     },
     {
       "aliases": {
@@ -5369,7 +5666,40 @@
         "Position",
         "Radius",
         "Reevaluation"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "COLOR": [
+          2
+        ],
+        "NONE": [],
+        "POSITION_AND_RADIUS": [
+          3,
+          4
+        ],
+        "POSITION_RADIUS_AND_COLOR": [
+          2,
+          3,
+          4
+        ],
+        "VISIBILITY": [
+          0
+        ],
+        "VISIBILITY_AND_COLOR": [
+          0,
+          2
+        ],
+        "VISIBILITY_POSITION_RADIUS_AND_COLOR": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "VISIBLE_TO_POSITION_AND_RADIUS": [
+          0,
+          3,
+          4
+        ]
+      }
     },
     {
       "aliases": {
@@ -5456,7 +5786,56 @@
         "Reevaluation",
         "TextColor",
         "Spectators"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "COLOR": [
+          6
+        ],
+        "NONE": [],
+        "STRING": [
+          1
+        ],
+        "STRING_AND_COLOR": [
+          1,
+          6
+        ],
+        "VISIBILITY": [
+          0
+        ],
+        "VISIBILITY_AND_COLOR": [
+          0,
+          6
+        ],
+        "VISIBILITY_AND_POSITION": [
+          0,
+          2
+        ],
+        "VISIBILITY_AND_STRING": [
+          0,
+          1
+        ],
+        "VISIBILITY_POSITION_AND_COLOR": [
+          0,
+          2,
+          6
+        ],
+        "VISIBILITY_POSITION_AND_STRING": [
+          0,
+          1,
+          2
+        ],
+        "VISIBILITY_POSITION_STRING_AND_COLOR": [
+          0,
+          1,
+          2,
+          6
+        ],
+        "VISIBILITY_STRING_AND_COLOR": [
+          0,
+          1,
+          6
+        ]
+      }
     },
     {
       "aliases": {
@@ -5524,7 +5903,88 @@
         "TextColor",
         "Reevaluation",
         "NonteamSpectators"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "COLOR": [
+          6,
+          7
+        ],
+        "NONE": [],
+        "POSITION": [
+          3
+        ],
+        "POSITION_AND_COLOR": [
+          3,
+          6,
+          7
+        ],
+        "POSITION_AND_VALUES": [
+          1,
+          2,
+          3
+        ],
+        "POSITION_VALUES_AND_COLOR": [
+          1,
+          2,
+          3,
+          6,
+          7
+        ],
+        "VALUES": [
+          1,
+          2
+        ],
+        "VALUES_AND_COLOR": [
+          1,
+          2,
+          6,
+          7
+        ],
+        "VISIBILITY": [
+          0
+        ],
+        "VISIBILITY_AND_COLOR": [
+          0,
+          6,
+          7
+        ],
+        "VISIBILITY_AND_POSITION": [
+          0,
+          3
+        ],
+        "VISIBILITY_AND_VALUES": [
+          0,
+          1,
+          2
+        ],
+        "VISIBILITY_POSITION_AND_COLOR": [
+          0,
+          3,
+          6,
+          7
+        ],
+        "VISIBILITY_POSITION_AND_VALUES": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "VISIBILITY_POSITION_VALUES_AND_COLOR": [
+          0,
+          1,
+          2,
+          3,
+          6,
+          7
+        ],
+        "VISIBILITY_VALUES_AND_COLOR": [
+          0,
+          1,
+          2,
+          6,
+          7
+        ]
+      }
     },
     {
       "aliases": {
@@ -5761,7 +6221,14 @@
         "Relativity",
         "Throttle",
         "ThrottleReeval"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "DIRECTION_AND_MAGNITUDE": [
+          1,
+          2
+        ],
+        "NONE": []
+      }
     },
     {
       "aliases": {
@@ -6822,7 +7289,14 @@
         "Object",
         "Object",
         "AssistReeval"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "ASSISTERS_AND_TARGETS": [
+          0,
+          1
+        ],
+        "NONE": []
+      }
     },
     {
       "aliases": {
@@ -7528,7 +8002,19 @@
         "Object",
         "Number",
         "HealingReeval"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "NONE": [],
+        "RECEIVERS_AND_HEALERS": [
+          0,
+          1
+        ],
+        "RECEIVERS_HEALERS_AND_HEALPERCENT": [
+          0,
+          1,
+          2
+        ]
+      }
     },
     {
       "aliases": {
@@ -7949,10 +8435,47 @@
         "Direction",
         "Number",
         "ProjectileEffectReeval"
-      ]
+      ],
+      "reevaluationCoverage": {
+        "FRIENDLINESS": [
+          2
+        ],
+        "FRIENDLINESS_POSITION_DIRECTION_AND_SIZE": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "NONE": [],
+        "POSITION_DIRECTION_AND_SIZE": [
+          3,
+          4,
+          5
+        ],
+        "VISIBILITY": [
+          0
+        ],
+        "VISIBILITY_AND_FRIENDLINESS": [
+          0,
+          2
+        ],
+        "VISIBILITY_FRIENDLINESS_POSITION_DIRECTION_AND_SIZE": [
+          0,
+          2,
+          3,
+          4,
+          5
+        ],
+        "VISIBILITY_POSITION_DIRECTION_AND_SIZE": [
+          0,
+          3,
+          4,
+          5
+        ]
+      }
     }
   ],
-  "digest": "d3f6262d8666fccadb2e9145f760c14990236f31d5ecaafb6f56dbc666bd1ff7",
+  "digest": "ff037bc65f9e98bb9b6e24022ca8767339df9b105b394ac916a3be22a471d3f7",
   "enums": [
     {
       "domain": "Impulse",

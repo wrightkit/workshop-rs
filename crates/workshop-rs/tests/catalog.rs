@@ -551,3 +551,81 @@ fn exercised_enum_domains_resolve_members_to_canonical_identity() {
         Some(("Map".to_string(), "GRIMSVOTN".to_string()))
     );
 }
+
+/// Per-parameter reevaluation coverage (wright#562): each `*Reeval` action
+/// member resolves to the parameter positions it keeps re-evaluating. The
+/// data is pinned to the reviewed member-to-parameter map; positions are
+/// into `params`, and members that keep nothing live resolve to an empty
+/// coverage rather than `None`.
+#[test]
+fn reevaluation_coverage_is_per_parameter() {
+    let catalog = catalog();
+
+    // `Create Beam Effect` under `COLOR` reevaluates only its Color input;
+    // `VISIBLE_TO_POSITION_AND_RADIUS` keeps Visible To + both positions
+    // live (the beam has no separate radius parameter).
+    let beam = catalog
+        .entry(Kind::Action, "createBeamEffect")
+        .expect("createBeamEffect");
+    assert_eq!(beam.param_domain(5), Some("EffectReeval"));
+    assert!(beam.has_reevaluation_coverage());
+    assert_eq!(beam.reevaluation_coverage("NONE"), Some(&[][..]));
+    assert_eq!(beam.reevaluation_coverage("COLOR"), Some(&[4][..]));
+    assert_eq!(
+        beam.reevaluation_coverage("VISIBLE_TO_POSITION_AND_RADIUS"),
+        Some(&[0, 2, 3][..])
+    );
+    assert_eq!(
+        beam.reevaluation_coverage("VISIBILITY_POSITION_RADIUS_AND_COLOR"),
+        Some(&[0, 2, 3, 4][..])
+    );
+
+    // A member that names fields the action does not declare covers
+    // nothing, not the whole action: `Create Icon`'s COLOR selects only its
+    // Color parameter.
+    let icon = catalog
+        .entry(Kind::Action, "createIcon")
+        .expect("createIcon");
+    assert_eq!(icon.reevaluation_coverage("COLOR"), Some(&[4][..]));
+
+    // Non-Reeval actions and unknown members stay unknown.
+    assert!(
+        catalog
+            .entry(Kind::Action, "setGlobalVariableAtIndex")
+            .expect("setGlobalVariableAtIndex")
+            .reevaluation_coverage("COLOR")
+            .is_none()
+    );
+    assert!(beam.reevaluation_coverage("NOT_A_MEMBER").is_none());
+
+    // Every *Reeval action in the committed catalog declares reviewed
+    // coverage for every member of its reevaluation domain — the dataset is
+    // complete, not partial.
+    let mut reeval_actions = 0;
+    for entry in catalog.entries_of(Kind::Action) {
+        let Some(reeval_index) = (0..entry.param_count()).find(|index| {
+            entry
+                .param_domain(*index)
+                .is_some_and(|domain| domain.ends_with("Reeval"))
+        }) else {
+            continue;
+        };
+        reeval_actions += 1;
+        let domain = entry.param_domain(reeval_index).unwrap();
+        let members: Vec<&str> = catalog
+            .enum_domain(domain)
+            .unwrap()
+            .members
+            .iter()
+            .map(|m| m.member.as_str())
+            .collect();
+        for member in members {
+            assert!(
+                entry.reevaluation_coverage(member).is_some(),
+                "{}'s coverage does not review {domain}::{member}",
+                entry.id
+            );
+        }
+    }
+    assert_eq!(reeval_actions, 19);
+}
