@@ -7952,7 +7952,7 @@
       ]
     }
   ],
-  "digest": "342e5f6522b09ac4428e4e96809ab0b3e5bb7b28c5f2de812a301eff3bb65d2a",
+  "digest": "d3f6262d8666fccadb2e9145f760c14990236f31d5ecaafb6f56dbc666bd1ff7",
   "enums": [
     {
       "domain": "Impulse",
@@ -14810,6 +14810,24 @@
             "zh-TW": "火箭貓"
           },
           "id": "JETPACK_CAT"
+        },
+        {
+          "aliases": {
+            "de-DE": "Doctrine",
+            "en-US": "Doctrine",
+            "es-ES": "Doctrine",
+            "es-MX": "Doctrine",
+            "fr-FR": "Doctrine",
+            "it-IT": "Doctrine",
+            "ja-JP": "ドクトリン",
+            "ko-KR": "독트린",
+            "pl-PL": "Doctrine",
+            "pt-BR": "Doctrine",
+            "ru-RU": "Догмат",
+            "zh-CN": "血律",
+            "zh-TW": "血律"
+          },
+          "id": "DOCTRINE"
         }
       ]
     },
@@ -21305,7 +21323,8 @@
       "Map enum members reconciled from workshop-data export d854bf01fc7bbf3b2169f67408c07a8da8989ad6",
       "Wait parameter labels are a separately reviewed mapping: the zh-CN spellings are 时间 and 等待行为, as identified by the documented Chinese Workshop action reference at https://overwatch.huijiwiki.com/wiki/%E5%9C%B0%E5%9B%BE%E5%B7%A5%E5%9D%8A/%E5%8A%A8%E4%BD%9C (accessed 2026-09-11); canonical parameter order and descriptions are cross-checked against the user-provided workshop-data action definition at commit d854bf01fc7bbf3b2169f67408c07a8da8989ad6. This is documented community evidence, not output from the zh-CN corpus generator, and further parameter labels require the same evidence review.",
       "Create Dummy Bot's hero parameter accepts a single Hero or a Hero array: Workshop behavior selects randomly when multiple heroes are provided, and pinned OverPy 9.7.10 texture-tag setup emits getAllHeroes() into Create Dummy Bot (workshop-rs#238).",
-      "Map enum member GRIMSVOTN (Grímsvötn) is reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d; the export declares no guid or non-en-US spellings for it yet"
+      "Map enum member GRIMSVOTN (Grímsvötn) is reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d; the export declares no guid or non-en-US spellings for it yet",
+      "Hero.DOCTRINE (Doctrine) and its aliases are transcribed from the official Blizzard hero-detail pages (accessed 2026-10-08); the hero is absent from the pinned workshop-data export, so the member carries no export match in tools/corpus/zh-cn-corpus.json"
     ]
   },
   "schemaVersion": 1,

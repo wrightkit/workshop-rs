@@ -7,6 +7,7 @@ pub(crate) static GENERATED_HERO_NAMES: &[NameMap] = &[
     named("brigitte", "Brigitte"),
     named("cassidy", "Cassidy"),
     named("dmon", "D.Mon"),
+    named("doctrine", "Doctrine"),
     named("domina", "Domina"),
     named("doomfist", "Doomfist"),
     named("dva", "D.Va"),

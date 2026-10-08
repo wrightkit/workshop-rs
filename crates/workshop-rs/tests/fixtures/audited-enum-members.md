@@ -351,6 +351,7 @@ extra canonical members.
 | `Hero` | `BASTION` |
 | `Hero` | `BRIGITTE` |
 | `Hero` | `CASSIDY` |
+| `Hero` | `DOCTRINE` |
 | `Hero` | `DOOMFIST` |
 | `Hero` | `DVA` |
 | `Hero` | `D_MON` |

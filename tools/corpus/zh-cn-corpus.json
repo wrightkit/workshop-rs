@@ -6,7 +6,7 @@
     },
     "enums": {
       "matched": 728,
-      "total": 728
+      "total": 729
     },
     "events": {
       "matched": 13,
@@ -26,7 +26,7 @@
     },
     "total": {
       "matched": 1255,
-      "total": 1258
+      "total": 1259
     },
     "values": {
       "matched": 259,
@@ -34,6 +34,12 @@
     }
   },
   "excluded": [
+    {
+      "en-US": "Doctrine",
+      "id": "Hero.DOCTRINE",
+      "kind": "enum member",
+      "reason": "no exact en-US match in the export"
+    },
     {
       "en-US": "Player Took Knockback",
       "id": "playerReceivedKnockback",

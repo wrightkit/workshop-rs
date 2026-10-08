@@ -46,6 +46,7 @@ fn manifest_pins_the_export_and_exact_match_coverage() {
             ))
             .collect::<Vec<_>>(),
         vec![
+            ("enum member", "Hero.DOCTRINE"),
             ("event", "playerReceivedKnockback"),
             ("operator", "max"),
             ("operator", "min"),

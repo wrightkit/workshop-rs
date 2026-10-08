@@ -497,6 +497,12 @@ fn exercised_enum_domains_resolve_members_to_canonical_identity() {
         catalog.resolve_enum_member("Hero", &en(), "D.Va"),
         Some(("Hero".to_string(), "DVA".to_string()))
     );
+    // Doctrine is an official-source-only member: absent from the pinned
+    // export, its aliases come from the official localized hero-detail pages.
+    assert_eq!(
+        catalog.resolve_enum_member("Hero", &zh(), "血律"),
+        Some(("Hero".to_string(), "DOCTRINE".to_string()))
+    );
     assert_eq!(
         catalog.enum_spelling("Hero", &en(), "WRECKING_BALL"),
         Some("Wrecking Ball")
