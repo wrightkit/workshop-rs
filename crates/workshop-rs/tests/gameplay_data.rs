@@ -535,14 +535,14 @@ fn embedded_facts_have_representative_names_values_and_official_sources() {
 }
 
 #[test]
-fn embedded_dmon_abilities_carry_the_exported_locale_names() {
+fn embedded_dmon_abilities_carry_the_verified_locale_names() {
     let catalog = builtin().unwrap();
     let dmon = catalog.hero_by_id("dmon").unwrap();
-    for (slot, en, zh_tw) in [
-        ("secondaryFire", "Power Barrier", "能量屏障"),
-        ("ability1", "Propulsors", "推進器"),
-        ("ability2", "Fusion Repeater", "熱核連射砲"),
-        ("ultimate", "Limit Break", "突破極限"),
+    for (slot, en, zh_cn, zh_tw) in [
+        ("secondaryFire", "Power Barrier", "强力屏障", "能量屏障"),
+        ("ability1", "Propulsors", "助推器", "推進器"),
+        ("ability2", "Fusion Repeater", "聚变连发枪", "熱核連射砲"),
+        ("ultimate", "Limit Break", "无极斩", "突破極限"),
     ] {
         let value = dmon
             .ability(&LogicalSlot::new(slot))
@@ -553,8 +553,8 @@ fn embedded_dmon_abilities_carry_the_exported_locale_names() {
         assert_eq!(value.get("zh-TW"), Some(zh_tw));
         assert_eq!(
             value.get("zh-CN"),
-            None,
-            "the export carries no zh-CN name for dmon {slot}"
+            Some(zh_cn),
+            "official zh-CN name for dmon {slot}"
         );
     }
 }
@@ -588,15 +588,27 @@ fn embedded_records_keep_pinned_source_metadata_on_every_fact() {
                     assert!(source_record.locator.starts_with("data.heroes."));
                     assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-10-06"));
                 } else if source_record.source == OFFICIAL_HERO_SOURCE {
-                    assert!(
-                        source_record
-                            .locator
-                            .starts_with("https://overwatch.blizzard.com/en-us/heroes/")
-                    );
-                    assert_eq!(
-                        source_record.note.as_deref(),
-                        Some("official ability description; accessed 2026-08-18")
-                    );
+                    if source_record
+                        .locator
+                        .starts_with("https://overwatch.blizzard.com/en-us/heroes/")
+                    {
+                        assert!(matches!(
+                            source_record.note.as_deref(),
+                            Some("official ability description; accessed 2026-08-18")
+                                | Some(
+                                    "localized ability names verified on the official localized hero detail pages; accessed 2026-10-08"
+                                )
+                        ));
+                    } else {
+                        assert_eq!(
+                            source_record.locator,
+                            "https://ow.blizzard.cn/news/patch-notes/live/2026/08/"
+                        );
+                        assert_eq!(
+                            source_record.note.as_deref(),
+                            Some("zh-CN ability names; accessed 2026-10-08")
+                        );
+                    }
                 } else {
                     panic!(
                         "unexpected ability source reference: {}",
@@ -633,7 +645,7 @@ fn representative_hero_and_ability_records_round_trip_through_json() {
 #[test]
 fn loader_rejects_stale_digest_and_unsupported_schema() {
     let stale = GAMEPLAY_DATA.replacen(
-        "06e33045154d9f32553b09bf70bb5156556bb4fe8d28812422b51dbbb5ceabb9",
+        "e7c0ca7aeb4466b2a96001b34aad9e8128e8568aecad7575259e1b654878c151",
         "e15bf17d413e7057bc7ef25e90a6e33df1a79e279a9dbff41e643a30fb9f7635",
         1,
     );
