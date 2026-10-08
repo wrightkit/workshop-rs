@@ -158,6 +158,13 @@ intentional breaking changes unless the corresponding major version release
 is being made. After that release is published, the compatibility gate
 automatically uses it as the next baseline.
 
+An owner-approved break shipped outside a major release (for example an
+additive variant an owner has accepted in a minor release) is recorded by
+applying the `semver-exception` label to the pull request: the gate then
+checks the change as a major transition instead of blocking it. The label
+is the approval record; the pull request documents why the exception was
+granted.
+
 Those checks do not prove external publication behavior. A material release-topology change is considered established only after at least one real release completes the declared production path:
 
 ```text

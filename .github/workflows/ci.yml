@@ -7,7 +7,7 @@ on:
       - "**/*.md"
       - "docs/**"
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
     paths-ignore:
       - "**/*.md"
       - "docs/**"
@@ -38,10 +38,15 @@ jobs:
         shell: bash
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_LABELS: ${{ toJson(github.event.pull_request.labels) }}
         run: |
           version="$(awk -F'"' '$1 ~ /^version = / { print $2; exit }' Cargo.toml)"
           breaking_title='^[[:alnum:]][[:alnum:].-]*(\([^)]*\))?!:'
           if [[ "$version" == 0.* && "$PR_TITLE" =~ $breaking_title ]]; then
+            echo "value=major" >> "$GITHUB_OUTPUT"
+          elif [[ "$PR_LABELS" == *'"name":"semver-exception"'* ]]; then
+            # An owner-approved API break shipped outside a major release;
+            # see docs/release.md "Public API compatibility".
             echo "value=major" >> "$GITHUB_OUTPUT"
           else
             echo "value=" >> "$GITHUB_OUTPUT"
