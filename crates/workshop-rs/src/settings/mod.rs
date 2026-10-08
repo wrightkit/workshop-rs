@@ -103,6 +103,16 @@ pub enum SettingsNode {
         value: String,
         span: Option<Span>,
     },
+    /// A member written as `name: value` with the value as authored and never
+    /// interpreted. At a catalogued path `name` is the canonical key and is
+    /// emitted in the target locale; elsewhere it is written as is. Carries
+    /// catalogued keys with values the catalog does not declare, and members
+    /// whose empty value still needs its `:`.
+    Verbatim {
+        name: String,
+        value: String,
+        span: Option<Span>,
+    },
 }
 
 /// One element of a settings list (corpus lists are all strings).
@@ -123,7 +133,8 @@ impl SettingsNode {
             | SettingsNode::Flag { span, .. }
             | SettingsNode::String { span, .. }
             | SettingsNode::List { span, .. }
-            | SettingsNode::Raw { span, .. } => *span,
+            | SettingsNode::Raw { span, .. }
+            | SettingsNode::Verbatim { span, .. } => *span,
         }
     }
 
@@ -137,7 +148,8 @@ impl SettingsNode {
             | SettingsNode::Flag { name, .. }
             | SettingsNode::String { name, .. }
             | SettingsNode::List { name, .. }
-            | SettingsNode::Raw { name, .. } => name,
+            | SettingsNode::Raw { name, .. }
+            | SettingsNode::Verbatim { name, .. } => name,
         }
     }
 }

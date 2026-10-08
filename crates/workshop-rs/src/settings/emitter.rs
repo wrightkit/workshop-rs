@@ -1,4 +1,5 @@
 use super::member::{self, Member};
+use super::table::TableEntry;
 use crate::core::suggest;
 use crate::output::emitter::*;
 use crate::source::Span;
@@ -75,6 +76,9 @@ impl EmitContext<'_> {
                 Ok(())
             }
             SettingsNode::Workshop { children, .. } => self.emit_workshop_settings(children, level),
+            SettingsNode::Verbatim { name, value, .. } => {
+                self.line(level, &format!("{name}: {value}"))
+            }
             SettingsNode::Raw { name, value, .. } => {
                 if value.is_empty() {
                     self.line(level, name)
@@ -211,33 +215,22 @@ impl EmitContext<'_> {
         let name = node.name();
         let mut full = path.to_vec();
         full.push(PathPart::Part(name));
-        let entry = member::lookup(node, &full).map_err(|diagnostic| diagnostic.error)?;
-        let display_name = if let (Some(hero), Some(key)) = (
-            hero,
-            full.last().and_then(|part| match part {
-                PathPart::Part(key) => Some(*key),
-                _ => None,
-            }),
-        ) {
-            if let Some(name) = table::hero_setting_name(hero, key, self.locale.as_str()) {
-                name.to_string()
-            } else if !matches!(
-                key,
-                "enableAbility1" | "enableAbility2" | "enableAbility3" | "enableSecondaryFire"
-            ) {
-                if let Some(slot) = table::ability_slot_for_path(&full) {
-                    self.gameplay_setting_name(hero, slot, &table::path_string(&full))?
-                } else {
-                    self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
-                }
-            } else {
-                self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
+        match (node, table::lookup(&full)) {
+            (SettingsNode::Verbatim { value, .. }, entry) => {
+                let display_name = match entry {
+                    Some(entry) => self.member_display_name(&full, hero, entry)?,
+                    None => name.to_string(),
+                };
+                return self.line(level, &format!("{display_name}: {value}"));
             }
-        } else if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(&full)) {
-            self.gameplay_setting_name(hero, slot, &table::path_string(&full))?
-        } else {
-            self.setting_name("labels", entry.workshop_name, &table::path_string(&full))?
-        };
+            // A block the catalog does not declare is carried as written.
+            (SettingsNode::Group { children, .. }, None) => {
+                return self.emit_opaque_group(children, name, level);
+            }
+            _ => {}
+        }
+        let entry = member::lookup(node, &full).map_err(|diagnostic| diagnostic.error)?;
+        let display_name = self.member_display_name(&full, hero, entry)?;
         match member::accept(node, entry).map_err(|diagnostic| diagnostic.error)? {
             Member::Flag => self.line(level, &display_name)?,
             Member::String(value) => self.line(
@@ -300,6 +293,44 @@ impl EmitContext<'_> {
             }
         }
         Ok(())
+    }
+
+    /// The display name of a catalogued member: hero-specific and gameplay
+    /// ability names first, then the shared label table.
+    fn member_display_name(
+        &mut self,
+        full: &[PathPart],
+        hero: Option<&str>,
+        entry: &TableEntry,
+    ) -> Result<String> {
+        Ok(
+            if let (Some(hero), Some(key)) = (
+                hero,
+                full.last().and_then(|part| match part {
+                    PathPart::Part(key) => Some(*key),
+                    _ => None,
+                }),
+            ) {
+                if let Some(name) = table::hero_setting_name(hero, key, self.locale.as_str()) {
+                    name.to_string()
+                } else if !matches!(
+                    key,
+                    "enableAbility1" | "enableAbility2" | "enableAbility3" | "enableSecondaryFire"
+                ) {
+                    if let Some(slot) = table::ability_slot_for_path(full) {
+                        self.gameplay_setting_name(hero, slot, &table::path_string(full))?
+                    } else {
+                        self.setting_name("labels", entry.workshop_name, &table::path_string(full))?
+                    }
+                } else {
+                    self.setting_name("labels", entry.workshop_name, &table::path_string(full))?
+                }
+            } else if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(full)) {
+                self.gameplay_setting_name(hero, slot, &table::path_string(full))?
+            } else {
+                self.setting_name("labels", entry.workshop_name, &table::path_string(full))?
+            },
+        )
     }
 
     pub(crate) fn emit_opaque_group(

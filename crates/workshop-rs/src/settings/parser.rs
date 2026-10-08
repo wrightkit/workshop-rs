@@ -334,12 +334,24 @@ impl ParseContext<'_> {
                 })
             }
             KeyKind::Enum(domain) => {
-                let value = self.resolve_enum_settings_name(domain)?;
-                Ok(SettingsNode::String {
-                    name: name.to_string(),
-                    value,
-                    span: Some(Span::new(self.file(), start, self.previous_span().1)),
-                })
+                let value_start = self.pos;
+                match self.resolve_enum_settings_name(domain) {
+                    Ok(value) => Ok(SettingsNode::String {
+                        name: name.to_string(),
+                        value,
+                        span: Some(Span::new(self.file(), start, self.previous_span().1)),
+                    }),
+                    // A value the catalog does not declare is kept as written.
+                    Err(_) => {
+                        self.pos = value_start;
+                        let value = self.raw_settings_line()?;
+                        Ok(SettingsNode::Verbatim {
+                            name: name.to_string(),
+                            value,
+                            span: Some(Span::new(self.file(), start, self.previous_span().1)),
+                        })
+                    }
+                }
             }
             KeyKind::ListMap | KeyKind::ListHero => {
                 Err(self.malformed("settings list requires a brace block", self.previous()))
@@ -380,16 +392,18 @@ impl ParseContext<'_> {
         start: Position,
     ) -> Result<SettingsNode> {
         let mut value = String::new();
-        if matches!(self.peek().map(|token| token.kind), Some(TokenKind::Colon)) {
+        let colon = matches!(self.peek().map(|token| token.kind), Some(TokenKind::Colon));
+        if colon {
             self.pos += 1;
             value = self.raw_settings_line()?;
         }
         let end = self.previous_span().1;
-        Ok(SettingsNode::Raw {
-            name,
-            value,
-            span: Some(Span::new(self.file(), start, end)),
-        })
+        let span = Some(Span::new(self.file(), start, end));
+        // `name:` with nothing after the colon keeps its colon.
+        if value.is_empty() && colon {
+            return Ok(SettingsNode::Verbatim { name, value, span });
+        }
+        Ok(SettingsNode::Raw { name, value, span })
     }
 
     pub(crate) fn opaque_name_on_line(&mut self) -> Result<(String, Position, Position)> {
@@ -429,7 +443,8 @@ impl ParseContext<'_> {
 
     pub(crate) fn raw_settings_line(&mut self) -> Result<String> {
         let line = self.peek().map(|token| token.start.line);
-        let mut parts = Vec::new();
+        let mut text = String::new();
+        let mut previous_end = None;
         while let Some(token) = self.peek() {
             if line.is_some_and(|line| token.start.line != line)
                 || matches!(token.kind, TokenKind::RBrace)
@@ -437,9 +452,14 @@ impl ParseContext<'_> {
                 break;
             }
             self.pos += 1;
-            parts.push(raw_token_text(&token.kind));
+            // Keep the authored spacing: `500%` stays one word.
+            if previous_end.is_some_and(|end| end != token.start) {
+                text.push(' ');
+            }
+            text.push_str(&raw_token_text(&token.kind));
+            previous_end = Some(token.end);
         }
-        Ok(parts.join(" "))
+        Ok(text)
     }
 
     pub(crate) fn settings_number(&mut self) -> Result<f64> {

@@ -70,6 +70,8 @@ pub struct SemanticIssue {
     pub name: String,
     pub span: Option<Span>,
     pub classification: ResidualClassification,
+    /// The canonical spelling `name` was close to, when exactly one was.
+    pub suggestion: Option<String>,
 }
 
 /// Report preserved or catalog-unknown constructs that must not be treated as
@@ -87,6 +89,15 @@ pub struct SemanticIssue {
 pub fn inspect(program: &crate::Program, catalog: &Catalog) -> Vec<SemanticIssue> {
     let mut issues = Vec::new();
     if let Some(settings) = &program.settings {
+        for member in crate::settings::check::verbatim_members(settings) {
+            issues.push(SemanticIssue {
+                kind: IncompletenessKind::RawSetting,
+                name: member.name.to_string(),
+                span: member.span,
+                classification: ResidualClassification::ProjectDefinedConstruct,
+                suggestion: member.suggestion,
+            });
+        }
         for node in &settings.children {
             inspect_setting(node, &mut issues);
         }
@@ -136,12 +147,7 @@ fn inspect_setting(node: &SettingsNode, issues: &mut Vec<SemanticIssue>) {
                 inspect_setting(child, issues);
             }
         }
-        SettingsNode::Raw { name, span, .. } => issues.push(SemanticIssue {
-            kind: IncompletenessKind::RawSetting,
-            name: name.clone(),
-            span: *span,
-            classification: ResidualClassification::ProjectDefinedConstruct,
-        }),
+
         SettingsNode::List { name, elements, .. } => {
             let element_known: fn(&crate::settings::SettingsListElement) -> bool =
                 match name.as_str() {
@@ -164,6 +170,7 @@ fn inspect_setting(node: &SettingsNode, issues: &mut Vec<SemanticIssue>) {
                         name: element.value.clone(),
                         span: element.span,
                         classification: ResidualClassification::ProjectDefinedConstruct,
+                        suggestion: None,
                     });
                 }
             }
@@ -171,7 +178,9 @@ fn inspect_setting(node: &SettingsNode, issues: &mut Vec<SemanticIssue>) {
         SettingsNode::Number { .. }
         | SettingsNode::Bool { .. }
         | SettingsNode::Flag { .. }
-        | SettingsNode::String { .. } => {}
+        | SettingsNode::String { .. }
+        | SettingsNode::Raw { .. }
+        | SettingsNode::Verbatim { .. } => {}
     }
 }
 
@@ -203,6 +212,7 @@ fn inspect_action(
                     name: name.clone(),
                     span: program.action_span(rule, position),
                     classification,
+                    suggestion: None,
                 });
             }
         }
@@ -350,6 +360,7 @@ fn inspect_value_tree(
                 } else {
                     ResidualClassification::UnresolvedIdentifier
                 },
+                suggestion: None,
             });
         }
     }
