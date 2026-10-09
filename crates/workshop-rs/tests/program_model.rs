@@ -89,6 +89,33 @@ fn applying_a_source_map_drops_stale_settings_spans() {
 }
 
 #[test]
+fn file_source_retention_prunes_spans_outside_the_text() {
+    // A provider map can record a span whose extent is not a position in the
+    // authored member — macro expansion attributes expanded text by shifting
+    // it onto the invocation site, so a recorded end column can run past the
+    // line (wrightkit/wright#583). Retaining the member's text clears such
+    // spans instead of letting them fail validation.
+    let workshop = "rule (\"tick\") {\n    event { Ongoing - Each Player; All; All; }\n    actions { Wait(1); }\n}\n";
+    let mut reparsed = parser::parse(workshop, &catalog(), &en()).expect("parses");
+    SourceMap::extract(&reparsed)
+        .apply(&mut reparsed)
+        .expect("map applies");
+    assert!(reparsed.rule_span(0).is_some());
+
+    // One line covers the `rule` header start but not the name span end.
+    assert!(reparsed.set_file_source(FileId::from_index(0), "rule (\"t"));
+    assert_eq!(reparsed.rule_span(0), None);
+    reparsed.validate().expect("mapped program validates");
+
+    // A span that fits the retained text survives.
+    let mut full = parser::parse(workshop, &catalog(), &en()).expect("parses");
+    SourceMap::extract(&full).apply(&mut full).expect("applies");
+    assert!(full.set_file_source(FileId::from_index(0), workshop));
+    assert!(full.rule_span(0).is_some());
+    full.validate().expect("in-bounds spans validate");
+}
+
+#[test]
 fn values_and_conditions_are_composable() {
     let value = Value::call(
         "add",
