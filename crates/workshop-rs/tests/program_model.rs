@@ -37,6 +37,19 @@ fn program_is_constructible_without_storage_ids() {
 }
 
 #[test]
+fn file_source_attaches_to_registered_files() {
+    let mut program = Program::new();
+    let file = program.add_file(SourceFile::new("main.opy"));
+    assert!(program.source(file).is_none());
+
+    assert!(program.set_file_source(file, "x = 1\n"));
+    assert_eq!(program.source(file).unwrap().text(), "x = 1\n");
+
+    let missing = workshop_rs::source::FileId::from_index(9);
+    assert!(!program.set_file_source(missing, "x = 1\n"));
+}
+
+#[test]
 fn values_and_conditions_are_composable() {
     let value = Value::call(
         "add",
