@@ -291,6 +291,7 @@ impl ParseContext<'_> {
             });
         }
         self.expect(TokenKind::Colon, "expected ':' after settings key")?;
+        let colon_line = self.previous_span().0.line;
         match entry.kind {
             KeyKind::Flag => unreachable!("presence-only settings returned before ':'"),
             KeyKind::String => {
@@ -344,7 +345,7 @@ impl ParseContext<'_> {
                     // A value the catalog does not declare is kept as written.
                     Err(_) => {
                         self.pos = value_start;
-                        let value = self.raw_settings_line()?;
+                        let value = self.raw_settings_line(colon_line)?;
                         Ok(SettingsNode::RawValue {
                             name: name.to_string(),
                             value,
@@ -392,15 +393,24 @@ impl ParseContext<'_> {
         start: Position,
     ) -> Result<SettingsNode> {
         let mut value = String::new();
-        let colon = matches!(self.peek().map(|token| token.kind), Some(TokenKind::Colon));
-        if colon {
-            self.pos += 1;
-            value = self.raw_settings_line()?;
+        let colon = match self.peek() {
+            Some(Token {
+                kind: TokenKind::Colon,
+                start: colon_start,
+                ..
+            }) => {
+                self.pos += 1;
+                Some(colon_start.line)
+            }
+            _ => None,
+        };
+        if let Some(line) = colon {
+            value = self.raw_settings_line(line)?;
         }
         let end = self.previous_span().1;
         let span = Some(Span::new(self.file(), start, end));
         // `name:` with nothing after the colon keeps its colon.
-        if value.is_empty() && colon {
+        if value.is_empty() && colon.is_some() {
             return Ok(SettingsNode::RawValue { name, value, span });
         }
         Ok(SettingsNode::Raw { name, value, span })
@@ -441,14 +451,14 @@ impl ParseContext<'_> {
         ))
     }
 
-    pub(crate) fn raw_settings_line(&mut self) -> Result<String> {
-        let line = self.peek().map(|token| token.start.line);
+    /// Read the tokens of a raw settings value on `line`. A bare `name:`
+    /// must not consume the following line, so the accepted line is the
+    /// colon's own line, not the first token after it.
+    pub(crate) fn raw_settings_line(&mut self, line: u32) -> Result<String> {
         let mut text = String::new();
         let mut previous_end = None;
         while let Some(token) = self.peek() {
-            if line.is_some_and(|line| token.start.line != line)
-                || matches!(token.kind, TokenKind::RBrace)
-            {
+            if token.start.line != line || matches!(token.kind, TokenKind::RBrace) {
                 break;
             }
             self.pos += 1;

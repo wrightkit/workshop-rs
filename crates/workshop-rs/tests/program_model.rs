@@ -959,3 +959,38 @@ rule ("ordering") {
             && issue.span.is_some()
     }));
 }
+
+#[test]
+fn empty_settings_member_does_not_consume_the_following_member() {
+    // A bare `name:` member is its own member with an empty value; the next
+    // line still parses as its own member (issue 402).
+    let catalog = catalog();
+    let locale = workshop_rs::catalog::Locale::new("en-US");
+    let source = r#"settings
+{
+    lobby
+    {
+        Project Empty:
+        Map Rotation: After A Game
+    }
+}
+rule("r")
+{
+    event
+    {
+        Ongoing - Global;
+    }
+    actions
+    {
+        Wait(1, Ignore Condition);
+    }
+}
+"#;
+    let program = workshop_rs::parser::parse(source, &catalog, &locale).expect("parses");
+    let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emits");
+    let lines: Vec<&str> = emitted.lines().map(str::trim).collect();
+    assert!(lines.contains(&"Project Empty:"), "{emitted}");
+    assert!(lines.contains(&"Map Rotation: After A Game"), "{emitted}");
+    let reparsed = workshop_rs::parser::parse(&emitted, &catalog, &locale).expect("reparses");
+    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
+}
