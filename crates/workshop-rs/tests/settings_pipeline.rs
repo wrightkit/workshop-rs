@@ -218,6 +218,41 @@ fn pinned_ai_hero_setting_aliases_are_canonical() {
 }
 
 #[test]
+fn pinned_hero_setting_names_emit_the_oracle_spellings() {
+    let catalog = catalog();
+    let en = en();
+    let source = "settings { heroes { General { \
+        Ana { No Automatic Fire: Off No Scope: Off } \
+        Genji { Secondary Fire: Off } \
+        Roadhog { Take a Breather Cooldown Time: 50% Take a Breather Maximum Time: 60% Take a Breather Recharge Rate: 70% Secondary Fire: Off Pig Pen: Off Pig Pen Cooldown Time: 80% } \
+        Vendetta { Warding Stance Regen Scalar: 90% } \
+        } } }";
+    let program = internal::parse_in(source, &en);
+    let emitted = internal::emit_in(&program, &en);
+    for expected in [
+        "No Automatic Fire: Off",
+        "No Scope: Off",
+        "Secondary Fire: Off",
+        "Take a Breather Cooldown Time: 50%",
+        "Take a Breather Maximum Time: 60%",
+        "Take a Breather Recharge Rate: 70%",
+        "Pig Pen: Off",
+        "Pig Pen Cooldown Time: 80%",
+        "Warding Stance Regen Scalar: 90%",
+    ] {
+        assert!(emitted.contains(expected), "{emitted} missing {expected}");
+    }
+    let reparsed = internal::parse_in(&emitted, &en);
+    assert!(roundtrip::equivalent_wir(&program, &reparsed));
+    assert!(
+        program
+            .semantic_issues(&catalog)
+            .iter()
+            .all(|issue| issue.kind != workshop_rs::rules::IncompletenessKind::RawSetting)
+    );
+}
+
+#[test]
 fn mixed_locale_primary_hero_setting_name_is_canonical() {
     let catalog = catalog();
     let source = "设置 { 英雄 { 队伍1 { D.Mon { 伤害量: 140% } } } }";

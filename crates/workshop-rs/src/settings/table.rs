@@ -719,7 +719,6 @@ pub(crate) fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static st
             Some("ultimate")
         }
         Some(PathPart::Part("enablePassive")) => Some("passive"),
-        Some(PathPart::Part("enableAutomaticFire" | "enableScoping")) => Some("primaryFire"),
         _ => None,
     }
 }
