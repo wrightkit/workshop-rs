@@ -102,7 +102,7 @@ pub(crate) fn uncatalogued_members(settings: &Settings) -> Vec<UncataloguedMembe
             full.push(PathPart::Part(node.name()));
             let catalogued = table::lookup(&full);
             let member = match (node, catalogued) {
-                (SettingsNode::Raw { .. }, _) | (SettingsNode::Group { .. }, None) => {
+                (SettingsNode::Raw { .. }, _) | (SettingsNode::Group { .. }, _) => {
                     UncataloguedMember {
                         name: node.name(),
                         span: node.span(),
@@ -333,9 +333,10 @@ fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<Set
     }
     match (node, table::lookup(&full)) {
         (SettingsNode::Raw { .. } | SettingsNode::RawValue { .. }, _) => return,
-        // Mirrors `settings_member`: an uncatalogued block is emitted as
-        // written; only its leaves must have a written form.
-        (SettingsNode::Group { children, .. }, None) => {
+        // Mirrors `settings_member`: a block is carried as written whether
+        // or not its key is catalogued; only its leaves must have a written
+        // form (#412).
+        (SettingsNode::Group { children, .. }, _) => {
             for child in children {
                 check_member(child, &[], errors);
             }
