@@ -231,9 +231,15 @@ impl EmitContext<'_> {
                     self.line(level, &format!("{display_name}: {value}"))
                 };
             }
-            // A block the catalog does not declare is carried as written.
-            (SettingsNode::Group { children, .. }, None) => {
-                return self.emit_opaque_group(children, name, level);
+            // A block is carried as written: under an uncatalogued key
+            // verbatim, and under a catalogued key as an undeclared value
+            // with the key's display name (#412).
+            (SettingsNode::Group { children, .. }, entry) => {
+                let block_name = match entry {
+                    Some(entry) => self.member_display_name(&full, hero, entry)?,
+                    None => name.to_string(),
+                };
+                return self.emit_opaque_group(children, &block_name, level);
             }
             _ => {}
         }

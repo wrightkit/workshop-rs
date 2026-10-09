@@ -230,6 +230,13 @@ impl ParseContext<'_> {
             _ => return Err(self.malformed("settings entry has no leaf key", self.previous())),
         };
         if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace)) {
+            // A block under a catalogued non-list key carries an undeclared
+            // value: the pinned source compilers write it as an opaque
+            // block, so it parses like an uncatalogued-key block (#412).
+            if !matches!(entry.kind, KeyKind::ListMap | KeyKind::ListHero) {
+                self.pos += 1;
+                return self.settings_opaque_group(name, start);
+            }
             self.expect(TokenKind::LBrace, "expected '{' after settings list")?;
             let mut elements = Vec::new();
             while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
@@ -266,11 +273,7 @@ impl ParseContext<'_> {
                             &value,
                         )
                         .unwrap_or(value.as_str()),
-                    _ => {
-                        return Err(
-                            self.malformed("only settings lists may use braces", self.previous())
-                        );
-                    }
+                    _ => unreachable!("non-list kinds return an opaque group above"),
                 };
                 elements.push(SettingsListElement {
                     value: canonical.to_string(),

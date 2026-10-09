@@ -1603,6 +1603,113 @@ fn typed_uncatalogued_members_localize_catalogued_keys_only() {
 }
 
 #[test]
+fn issue_412_catalogued_key_block_round_trips_as_written() {
+    // A block under a catalogued non-list key carries an undeclared value:
+    // the pinned source compilers emit this shape, so parse, check, and
+    // emit treat it as an opaque block under the key's display name.
+    let source = r#"settings
+{
+    lobby
+    {
+        Map Rotation
+        {
+            a
+            b
+        }
+    }
+}
+rule("r")
+{
+    event
+    {
+        Ongoing - Global;
+    }
+    actions
+    {
+        Wait(1, Ignore Condition);
+    }
+}
+"#;
+    let program = parser::parse(source, &catalog(), &en()).expect("source parses");
+    program.validate().expect("a carried block is accepted");
+    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let lines: Vec<&str> = emitted.lines().map(str::trim).collect();
+    for line in ["Map Rotation {", "a", "b"] {
+        assert!(lines.contains(&line), "{line:?} in {emitted}");
+    }
+    // The emitted text reparses, validates, and re-emits identically.
+    let reparsed = parser::parse(&emitted, &catalog(), &en()).expect("emitted text reparses");
+    reparsed.validate().expect("emitted text validates");
+    assert_eq!(
+        emitter::emit(&reparsed, &catalog(), &en()).expect("re-emits"),
+        emitted
+    );
+    // The carried block is a residual under its canonical key, not a
+    // misspelling.
+    let issue = program
+        .semantic_issues(&catalog())
+        .into_iter()
+        .find(|issue| issue.name == "mapRotation")
+        .expect("the carried block is a residual");
+    assert_eq!(issue.suggestion, None);
+    assert_eq!(
+        issue.classification,
+        semantic::ResidualClassification::ProjectDefinedConstruct
+    );
+    assert_check_compile_parity(source);
+}
+
+#[test]
+fn issue_412_catalogued_key_block_emits_the_display_name() {
+    // A `SettingsNode::Group` under a catalogued key writes the localized
+    // display name with opaque children; an uncatalogued key keeps its
+    // authored name.
+    use workshop_rs::settings::{Settings, SettingsNode};
+
+    let raw = |name: &str| SettingsNode::Raw {
+        name: name.into(),
+        value: String::new(),
+        span: None,
+    };
+    let mut program = workshop_rs::Program::new();
+    program.settings = Some(Settings {
+        span: None,
+        children: vec![
+            SettingsNode::Group {
+                name: "lobby".into(),
+                children: vec![
+                    SettingsNode::Group {
+                        name: "mapRotation".into(),
+                        children: vec![raw("a"), raw("b")],
+                        span: None,
+                    },
+                    SettingsNode::Group {
+                        name: "team1Slots".into(),
+                        children: vec![raw("x")],
+                        span: None,
+                    },
+                ],
+                span: None,
+            },
+            SettingsNode::Group {
+                name: "gamemodes".into(),
+                children: Vec::new(),
+                span: None,
+            },
+        ],
+    });
+    program.validate().expect("carried blocks are accepted");
+    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let lines: Vec<&str> = emitted.lines().map(str::trim).collect();
+    for line in ["Map Rotation {", "a", "b", "Max Team 1 Players {", "x"] {
+        assert!(lines.contains(&line), "{line:?} in {emitted}");
+    }
+    let localized = emitter::emit(&program, &catalog(), &zh()).expect("emits zh-CN");
+    assert!(!localized.contains("mapRotation"), "{localized}");
+    assert!(!localized.contains("Max Team 1 Players"), "{localized}");
+}
+
+#[test]
 fn issue_360_opaque_settings_remain_verbatim() {
     // Unrecognized leaf members and `settings.workshop` payloads stay
     // project-defined: both check and compile accept them unchanged.

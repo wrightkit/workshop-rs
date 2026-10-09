@@ -138,6 +138,9 @@ rejected, so a project can keep settings the catalog has not caught up with
   or a bare `name`);
 - a braced block whose key is unknown parses to a `SettingsNode::Group` of
   such leaves, emitted as the same block;
+- a braced block under a catalogued non-list key also parses to a
+  `SettingsNode::Group`: the key emits under its display name (localized)
+  while the block contents stay as written;
 - a catalogued key whose value is not a declared enum member, and an unknown
   `name:` with nothing after the colon, parse to `SettingsNode::RawValue`.
 

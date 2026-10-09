@@ -3,8 +3,9 @@
 //! [`crate::Program::validate`] runs [`check_emission`] on every program, so
 //! checking raw Workshop input reports the same settings errors emission
 //! would. Members the catalog does not declare are carried as written
-//! ([`SettingsNode::Raw`], [`SettingsNode::RawValue`], or a block of them) and
-//! accepted; [`check_emission`] reports every other member the emitter would
+//! ([`SettingsNode::Raw`], [`SettingsNode::RawValue`], or a block of them —
+//! under an unknown key or a catalogued non-list key) and accepted;
+//! [`check_emission`] reports every other member the emitter would
 //! reject, without producing Workshop text. A carried member close to
 //! exactly one declared spelling is additionally reported as a
 //! [`DiagnosticSeverity::Warning`] diagnostic — a likely misspelling — by
@@ -102,7 +103,7 @@ pub(crate) fn uncatalogued_members(settings: &Settings) -> Vec<UncataloguedMembe
             full.push(PathPart::Part(node.name()));
             let catalogued = table::lookup(&full);
             let member = match (node, catalogued) {
-                (SettingsNode::Raw { .. }, _) | (SettingsNode::Group { .. }, None) => {
+                (SettingsNode::Raw { .. }, _) | (SettingsNode::Group { .. }, _) => {
                     UncataloguedMember {
                         name: node.name(),
                         span: node.span(),
@@ -333,9 +334,10 @@ fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<Set
     }
     match (node, table::lookup(&full)) {
         (SettingsNode::Raw { .. } | SettingsNode::RawValue { .. }, _) => return,
-        // Mirrors `settings_member`: an uncatalogued block is emitted as
-        // written; only its leaves must have a written form.
-        (SettingsNode::Group { children, .. }, None) => {
+        // Mirrors `settings_member`: a block is carried as written whether
+        // or not its key is catalogued; only its leaves must have a written
+        // form (#412).
+        (SettingsNode::Group { children, .. }, _) => {
             for child in children {
                 check_member(child, &[], errors);
             }
