@@ -116,6 +116,49 @@ fn file_source_retention_prunes_spans_outside_the_text() {
 }
 
 #[test]
+fn file_source_retention_prunes_only_the_attached_file() {
+    // Provider-mapped programs attach each file's text in sequence (the
+    // documented consumer pattern): a span in a file whose source has not
+    // arrived yet cannot be judged and must survive every other file's
+    // attach (wrightkit/workshop-rs#410 regression).
+    let workshop = "rule (\"tick\") {\n    event { Ongoing - Each Player; All; All; }\n    actions { Wait(1); }\n}\n";
+    let mut program = parser::parse(workshop, &catalog(), &en()).expect("parses");
+    SourceMap::extract(&program)
+        .apply(&mut program)
+        .expect("map applies");
+    let other = program.add_file(SourceFile::new("included.opy"));
+    // Re-point the rule span into the second file, as a multi-file map would.
+    program
+        .set_rule_span(
+            0,
+            Some(Span::new(other, Position::new(1, 1), Position::new(2, 1))),
+        )
+        .expect("file 1 span attaches");
+    let name = program.rule_name_span(0).expect("file 0 name span");
+
+    // Attaching file 0 audits file-0 spans only.
+    assert!(program.set_file_source(FileId::from_index(0), workshop));
+    assert_eq!(program.rule_span(0).map(|s| s.file), Some(other));
+    assert_eq!(program.rule_name_span(0), Some(name));
+
+    // Attaching file 1 audits file-1 spans only.
+    assert!(program.set_file_source(other, "rule (\"tick\") {\n}\n"));
+    assert!(program.rule_span(0).is_some());
+    assert_eq!(program.rule_name_span(0), Some(name));
+
+    // A file-1 span past its attached text is still pruned on its own attach.
+    program
+        .set_rule_span(
+            0,
+            Some(Span::new(other, Position::new(1, 1), Position::new(9, 1))),
+        )
+        .expect("file 1 span reattaches");
+    assert!(program.set_file_source(other, "x"));
+    assert_eq!(program.rule_span(0), None);
+    assert_eq!(program.rule_name_span(0), Some(name));
+}
+
+#[test]
 fn values_and_conditions_are_composable() {
     let value = Value::call(
         "add",
