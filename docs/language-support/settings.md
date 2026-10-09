@@ -147,11 +147,15 @@ in the target locale; elsewhere it is written as is. Programmatic producers
 use it for the same purpose. Raw values keep their authored token spacing
 (`500%` stays `500%`).
 
-`check_emission` accepts these members. `Program::semantic_issues` reports
-each as a `RawSetting` residual: the unknown key or block name, or the
-undeclared value, with `SemanticIssue::suggestion` naming the canonical
-spelling it was close to when exactly one was (`Enabled Mpas` →
-`enabled maps`).
+`check_emission` accepts these members. A carried member close to exactly
+one declared spelling is a likely misspelling, not a new project-defined
+construct: `check_emission_diagnostics` reports it as a
+`DiagnosticSeverity::Warning` naming the nearest declared spelling (`Enabled
+Mpas` → `enabled maps`), `Program::semantic_issues` classifies the residual
+as `CatalogSpellingNearMiss` instead of `ProjectDefinedConstruct`, and
+`workshop-rs-cli parse`/`emit` print the warning on stderr. Carried members
+close to nothing stay silent and keep the `ProjectDefinedConstruct`
+classification.
 
 Sources: Deltinteger's `TextToElement` matches settings, mode, map, hero, and
 enum names with `caseSensitive: false`; the pinned oracle's decompiler

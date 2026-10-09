@@ -42,7 +42,9 @@ impl<'b> PartialEq<PathPart<'b>> for PathPart<'_> {
 
 impl Eq for PathPart<'_> {}
 
-pub use check::{SettingsDiagnostic, check_emission, check_emission_diagnostics};
+pub use check::{
+    DiagnosticSeverity, SettingsDiagnostic, check_emission, check_emission_diagnostics,
+};
 pub use schema::{
     Applicability, EffectiveNumber, NumericBounds, NumericBoundsError, SettingDefinition,
     SettingEnumMember, SettingId, SettingIdentity, SettingOccurrence, SettingOperationError,

@@ -5,7 +5,10 @@
 //! would. Members the catalog does not declare are carried as written
 //! ([`SettingsNode::Raw`], [`SettingsNode::RawValue`], or a block of them) and
 //! accepted; [`check_emission`] reports every other member the emitter would
-//! reject, without producing Workshop text.
+//! reject, without producing Workshop text. A carried member close to
+//! exactly one declared spelling is additionally reported as a
+//! [`DiagnosticSeverity::Warning`] diagnostic — a likely misspelling — by
+//! [`check_emission_diagnostics`].
 //!
 //! Member acceptance is shared with emission. Locale and hero display-name
 //! resolution can still fail inside emission and are not checked here.
@@ -17,16 +20,31 @@ use super::member::{self, Member, rejected};
 use super::table;
 use super::{PathPart, Settings, SettingsNode};
 
-/// One rejected settings member: the [`WorkshopError`] a caller would see,
+/// Whether a settings diagnostic rejects the member or only advises about
+/// it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DiagnosticSeverity {
+    /// Emission rejects the member; [`crate::Program::validate`] fails.
+    Error,
+    /// The member is carried and emitted as written, but it is close to a
+    /// declared spelling and is likely a misspelling. Warnings never fail
+    /// validation.
+    Warning,
+}
+
+/// One reported settings member: the [`WorkshopError`] a caller would see,
 /// plus the canonical spelling it was close to when exactly one candidate
 /// qualifies. The error's message already names the suggestion; the field
 /// lets callers apply or render it without parsing text.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct SettingsDiagnostic {
-    /// The rejection, with its source span and any suggestion in the message.
+    /// Whether the diagnostic rejects the member or only advises about it.
+    pub severity: DiagnosticSeverity,
+    /// The rejection or advisory, with its source span and any suggestion in
+    /// the message. Warnings carry [`WorkshopError::Warning`].
     pub error: WorkshopError,
-    /// The single canonical spelling the rejected input was close to (a case
+    /// The single canonical spelling the reported input was close to (a case
     /// or accent difference, or a small edit distance). `None` when no
     /// candidate is close or several are. The spelling is a Workshop display
     /// name (`enabled maps`, `Château Guillard`) — the form source text
@@ -37,6 +55,10 @@ pub struct SettingsDiagnostic {
 /// Check that emission accepts `settings`, returning the structured
 /// diagnostics a caller can apply: one per offending member, each carrying
 /// the node's recorded source span when present.
+/// Check that emission accepts `settings`, returning the structured
+/// diagnostics a caller can apply: one per offending member (rejected, or a
+/// carried near-miss of a declared spelling), each carrying the node's
+/// recorded source span when present.
 pub fn check_emission_diagnostics(settings: &Settings) -> Vec<SettingsDiagnostic> {
     let mut diagnostics = Vec::new();
     walk(settings, &mut |visit| match visit {
@@ -48,10 +70,12 @@ pub fn check_emission_diagnostics(settings: &Settings) -> Vec<SettingsDiagnostic
 }
 
 /// Check that emission accepts `settings`, returning one error per offending
-/// member. Each error carries the node's recorded source span when present.
+/// member. Warnings are excluded: they describe accepted members. Each error
+/// carries the node's recorded source span when present.
 pub fn check_emission(settings: &Settings) -> Vec<WorkshopError> {
     check_emission_diagnostics(settings)
         .into_iter()
+        .filter(|diagnostic| diagnostic.severity == DiagnosticSeverity::Error)
         .map(|diagnostic| diagnostic.error)
         .collect()
 }
@@ -82,29 +106,18 @@ pub(crate) fn uncatalogued_members(settings: &Settings) -> Vec<UncataloguedMembe
                     UncataloguedMember {
                         name: node.name(),
                         span: node.span(),
-                        suggestion: suggest::suggest(
-                            node.name(),
-                            table::key_spellings(path).into_iter(),
-                        ),
+                        suggestion: carried_suggestion(node, path),
                     }
                 }
-                (SettingsNode::RawValue { value, .. }, Some(entry)) => UncataloguedMember {
+                (SettingsNode::RawValue { value, .. }, Some(_)) => UncataloguedMember {
                     name: value,
                     span: node.span(),
-                    suggestion: match entry.kind {
-                        table::KeyKind::Enum(domain) => {
-                            suggest::suggest(value, table::enum_spellings(domain))
-                        }
-                        _ => None,
-                    },
+                    suggestion: carried_suggestion(node, path),
                 },
                 (SettingsNode::RawValue { .. }, None) => UncataloguedMember {
                     name: node.name(),
                     span: node.span(),
-                    suggestion: suggest::suggest(
-                        node.name(),
-                        table::key_spellings(path).into_iter(),
-                    ),
+                    suggestion: carried_suggestion(node, path),
                 },
                 _ => return,
             };
@@ -120,6 +133,29 @@ pub(crate) fn uncatalogued_members(settings: &Settings) -> Vec<UncataloguedMembe
         Visit::OpaqueLeaf(_) => {}
     });
     members
+}
+
+/// The declared spelling a carried (verbatim-emitted) member was close to,
+/// when exactly one qualifies: a carried key is compared with the leaf
+/// spellings valid under `path`, and a carried value under a catalogued enum
+/// key is compared with that enum's declared spellings. `None` for members
+/// that are not carried, or whose spelling is close to nothing.
+pub(crate) fn carried_suggestion(node: &SettingsNode, path: &[PathPart<'_>]) -> Option<String> {
+    let mut full = path.to_vec();
+    full.push(PathPart::Part(node.name()));
+    match (node, table::lookup(&full)) {
+        (SettingsNode::Raw { .. }, _) | (SettingsNode::Group { .. }, None) => {
+            suggest::suggest(node.name(), table::key_spellings(path).into_iter())
+        }
+        (SettingsNode::RawValue { value, .. }, Some(entry)) => match entry.kind {
+            table::KeyKind::Enum(domain) => suggest::suggest(value, table::enum_spellings(domain)),
+            _ => None,
+        },
+        (SettingsNode::RawValue { .. }, None) => {
+            suggest::suggest(node.name(), table::key_spellings(path).into_iter())
+        }
+        _ => None,
+    }
 }
 
 enum Visit<'a, 'p> {
@@ -243,6 +279,33 @@ fn walk_heroes<'a>(teams: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_
     }
 }
 
+/// Build the warning for a carried member close to one declared spelling:
+/// a misspelled key names the declared key, a misspelled value under a
+/// catalogued key names the declared enum member.
+fn warn_near_miss(
+    node: &SettingsNode,
+    path: &[PathPart<'_>],
+    spelling: String,
+) -> SettingsDiagnostic {
+    let mut full = path.to_vec();
+    full.push(PathPart::Part(node.name()));
+    let message = match node {
+        // A catalogued key carrying an undeclared value: the value is the
+        // misspelled spelling.
+        SettingsNode::RawValue { value, .. } if table::lookup(&full).is_some() => format!(
+            "settings value '{value}' for key '{}' is not declared",
+            table::path_string(&full)
+        ),
+        other => format!("settings key '{}' is not declared", other.name()),
+    };
+    let message = suggest::with_suggestion_text(message, Some(&spelling));
+    SettingsDiagnostic {
+        severity: DiagnosticSeverity::Warning,
+        error: WorkshopError::warning(message, node.span()),
+        suggestion: Some(spelling),
+    }
+}
+
 fn walk_opaque<'a>(children: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_>)) {
     for child in children {
         match child {
@@ -258,6 +321,16 @@ fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<Set
     let name = node.name();
     let mut full = path.to_vec();
     full.push(PathPart::Part(name));
+    // A carried member close to exactly one declared spelling is a likely
+    // misspelling: accept it, but report a warning naming that spelling.
+    // Members of an uncatalogued block are checked with an empty path
+    // because they belong to opaque project data, not to any catalogued
+    // position, so they never suggest.
+    if !path.is_empty() {
+        if let Some(spelling) = carried_suggestion(node, path) {
+            errors.push(warn_near_miss(node, path, spelling));
+        }
+    }
     match (node, table::lookup(&full)) {
         (SettingsNode::Raw { .. } | SettingsNode::RawValue { .. }, _) => return,
         // Mirrors `settings_member`: an uncatalogued block is emitted as

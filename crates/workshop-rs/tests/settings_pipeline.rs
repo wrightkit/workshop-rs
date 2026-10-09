@@ -1464,13 +1464,27 @@ fn issue_360_unknown_braced_key_is_kept_as_written_with_a_suggestion() {
     program
         .validate()
         .expect("an uncatalogued block is carried as written");
-    assert!(program.settings_diagnostics().is_empty());
+    // A block key close to one declared spelling reports a warning, not an
+    // error: emission still accepts it.
+    let warnings: Vec<_> = program
+        .settings_diagnostics()
+        .into_iter()
+        .filter(|diagnostic| {
+            diagnostic.severity == workshop_rs::settings::DiagnosticSeverity::Warning
+        })
+        .collect();
+    assert_eq!(warnings.len(), 1);
+    assert_eq!(warnings[0].suggestion.as_deref(), Some("enabled maps"));
     let issue = program
         .semantic_issues(&catalog())
         .into_iter()
         .find(|issue| issue.name == "Enabled Mpas")
         .expect("the block is a residual");
     assert_eq!(issue.suggestion.as_deref(), Some("enabled maps"));
+    assert_eq!(
+        issue.classification,
+        semantic::ResidualClassification::CatalogSpellingNearMiss
+    );
     let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
     assert!(
         emitted.contains("Enabled Mpas {\n                Château Guillard\n            }"),
@@ -1914,4 +1928,100 @@ fn typed_member_emission_keeps_missing_locale_mapping_and_fallback_reporting() {
         output.text
     );
     assert_eq!(output.fallback_ids, ["settings"]);
+}
+
+#[test]
+fn misspelled_declared_members_warn_with_the_nearest_spelling() {
+    use workshop_rs::settings::DiagnosticSeverity;
+    // ws-rs#403 rows: an undeclared enum value near a declared member, and an
+    // undeclared list key near a declared key, stay accepted but warn.
+    let enum_source = r#"settings
+{
+    lobby
+    {
+        Map Rotation: After A Gmae
+    }
+}
+rule("r")
+{
+    event
+    {
+        Ongoing - Global;
+    }
+    actions
+    {
+        Wait(1, Ignore Condition);
+    }
+}
+"#;
+    let key_source = issue_360_source("enabled mpas", "Route 66");
+    for (source, expected) in [
+        (enum_source, "did you mean 'After A Game'?"),
+        (&key_source, "did you mean 'enabled maps'?"),
+    ] {
+        let catalog = catalog();
+        let program = parser::parse(source, &catalog, &en()).expect("source parses");
+        program
+            .validate()
+            .expect("a misspelled carried member stays accepted");
+        let diagnostics = program.settings_diagnostics();
+        let warnings: Vec<_> = diagnostics
+            .iter()
+            .filter(|diagnostic| diagnostic.severity == DiagnosticSeverity::Warning)
+            .collect();
+        assert_eq!(warnings.len(), 1, "{diagnostics:?}");
+        assert!(
+            warnings[0].error.to_string().contains(expected),
+            "{}",
+            warnings[0].error
+        );
+        assert!(
+            diagnostics
+                .iter()
+                .all(|diagnostic| diagnostic.severity == DiagnosticSeverity::Warning),
+            "a near-miss must not produce an error: {diagnostics:?}"
+        );
+        assert!(
+            emitter::emit(&program, &catalog, &en()).is_ok(),
+            "a warned member still emits"
+        );
+    }
+}
+
+#[test]
+fn correctly_spelled_and_distant_members_warn_on_nothing() {
+    use workshop_rs::settings::DiagnosticSeverity;
+    // Correctly spelled declared members and uncatalogued spellings close to
+    // nothing produce no warning; `semantic_issues` classifies the near-miss
+    // separately from a project-defined construct.
+    let source = issue_360_source("enabled maps", "Route 66");
+    let catalog = catalog();
+    let program = parser::parse(&source, &catalog, &en()).expect("source parses");
+    assert!(
+        program
+            .settings_diagnostics()
+            .iter()
+            .all(|diagnostic| diagnostic.severity == DiagnosticSeverity::Error),
+        "{:?}",
+        program.settings_diagnostics()
+    );
+
+    let distant = issue_360_source("a wholly novel knob", "Route 66");
+    let program = parser::parse(&distant, &catalog, &en()).expect("source parses");
+    let diagnostics = program.settings_diagnostics();
+    assert!(
+        diagnostics
+            .iter()
+            .all(|diagnostic| diagnostic.severity == DiagnosticSeverity::Error),
+        "a distant uncatalogued key warns on nothing: {diagnostics:?}"
+    );
+    let issue = program
+        .semantic_issues(&catalog)
+        .into_iter()
+        .find(|issue| issue.name == "a wholly novel knob")
+        .expect("the uncatalogued key is a residual");
+    assert_eq!(
+        issue.classification,
+        semantic::ResidualClassification::ProjectDefinedConstruct
+    );
 }

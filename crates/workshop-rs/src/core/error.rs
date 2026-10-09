@@ -61,6 +61,12 @@ pub enum WorkshopError {
     },
     /// The input is syntactically malformed.
     Malformed { message: String, span: Option<Span> },
+    /// An advisory diagnostic about accepted input: the construct is
+    /// carried and emitted as written, but a caller should surface the
+    /// message (for example a misspelling of a declared settings member).
+    /// Warnings never appear where an error decides acceptance; they are
+    /// returned only through diagnostic inventories that carry a severity.
+    Warning { message: String, span: Option<Span> },
     /// A construct is recognized but outside the supported surface.
     Unsupported { message: String, span: Option<Span> },
 }
@@ -141,6 +147,14 @@ impl WorkshopError {
         }
     }
 
+    /// A `Warning` advisory diagnostic.
+    pub fn warning(message: impl Into<String>, span: Option<Span>) -> Self {
+        WorkshopError::Warning {
+            message: message.into(),
+            span,
+        }
+    }
+
     /// An `Unsupported` construct error.
     pub fn unsupported(message: impl Into<String>, span: Option<Span>) -> Self {
         WorkshopError::Unsupported {
@@ -156,6 +170,7 @@ impl WorkshopError {
             | WorkshopError::UnknownWithCandidates { span, .. }
             | WorkshopError::NotDetected { span, .. }
             | WorkshopError::Malformed { span, .. }
+            | WorkshopError::Warning { span, .. }
             | WorkshopError::Unsupported { span, .. } => *span,
             WorkshopError::Catalog(_) | WorkshopError::MissingMapping { .. } => None,
         }
@@ -225,6 +240,7 @@ impl std::fmt::Display for WorkshopError {
                 write!(f, "missing {kind} mapping for locale '{locale}': '{id}'")
             }
             WorkshopError::Malformed { message, .. } => write!(f, "malformed: {message}"),
+            WorkshopError::Warning { message, .. } => write!(f, "{message}"),
             WorkshopError::Unsupported { message, .. } => write!(f, "unsupported: {message}"),
         }
     }
