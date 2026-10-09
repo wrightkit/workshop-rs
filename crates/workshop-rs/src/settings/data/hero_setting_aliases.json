@@ -3,6 +3,8 @@
   { "hero": "roadhog", "key": "secondaryFireCooldown%", "locale": "zh-CN", "display": "secondaryFireCooldown%" },
   { "hero": "roadhog", "key": "secondaryFireCooldown%", "locale": "zh-CN", "display": "呼吸器冷却时间" },
   { "hero": "roadhog", "key": "secondaryFireMaximumTime%", "locale": "en-US", "display": "Take a Breather Maximum Time" },
+  { "hero": "roadhog", "key": "secondaryFireMaximumTime%", "locale": "zh-CN", "display": "secondaryFireMaximumTime%" },
+  { "hero": "roadhog", "key": "secondaryFireMaximumTime%", "locale": "zh-CN", "display": "呼吸器最长时间" },
   { "hero": "roadhog", "key": "secondaryFireRechargeRate%", "locale": "en-US", "display": "Take a Breather Recharge Rate" },
   { "hero": "roadhog", "key": "secondaryFireRechargeRate%", "locale": "zh-CN", "display": "secondaryFireRechargeRate%" },
   { "hero": "roadhog", "key": "secondaryFireRechargeRate%", "locale": "zh-CN", "display": "呼吸器充能速度" },
