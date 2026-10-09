@@ -3,7 +3,7 @@
 //! [`crate::Program::validate`] runs [`check_emission`] on every program, so
 //! checking raw Workshop input reports the same settings errors emission
 //! would. Members the catalog does not declare are carried as written
-//! ([`SettingsNode::Raw`], [`SettingsNode::Verbatim`], or a block of them) and
+//! ([`SettingsNode::Raw`], [`SettingsNode::RawValue`], or a block of them) and
 //! accepted; [`check_emission`] reports every other member the emitter would
 //! reject, without producing Workshop text.
 //!
@@ -57,7 +57,7 @@ pub fn check_emission(settings: &Settings) -> Vec<WorkshopError> {
 }
 
 /// A settings member emitted as written rather than through the catalog.
-pub(crate) struct VerbatimMember<'a> {
+pub(crate) struct UncataloguedMember<'a> {
     /// The uncatalogued key, or the undeclared value of a catalogued key.
     pub(crate) name: &'a str,
     pub(crate) span: Option<crate::source::Span>,
@@ -65,11 +65,11 @@ pub(crate) struct VerbatimMember<'a> {
     pub(crate) suggestion: Option<String>,
 }
 
-/// The members emission writes verbatim: uncatalogued members and blocks,
+/// The members emission writes as authored: uncatalogued members and blocks,
 /// and catalogued keys carrying an undeclared value. Members inside an
 /// uncatalogued top-level group are reported individually; a member block is
 /// reported as one member.
-pub(crate) fn verbatim_members(settings: &Settings) -> Vec<VerbatimMember<'_>> {
+pub(crate) fn uncatalogued_members(settings: &Settings) -> Vec<UncataloguedMember<'_>> {
     let mut members = Vec::new();
     walk(settings, &mut |visit| match visit {
         Visit::Rejected(_) => {}
@@ -79,7 +79,7 @@ pub(crate) fn verbatim_members(settings: &Settings) -> Vec<VerbatimMember<'_>> {
             let catalogued = table::lookup(&full);
             let member = match (node, catalogued) {
                 (SettingsNode::Raw { .. }, _) | (SettingsNode::Group { .. }, None) => {
-                    VerbatimMember {
+                    UncataloguedMember {
                         name: node.name(),
                         span: node.span(),
                         suggestion: suggest::suggest(
@@ -88,7 +88,7 @@ pub(crate) fn verbatim_members(settings: &Settings) -> Vec<VerbatimMember<'_>> {
                         ),
                     }
                 }
-                (SettingsNode::Verbatim { value, .. }, Some(entry)) => VerbatimMember {
+                (SettingsNode::RawValue { value, .. }, Some(entry)) => UncataloguedMember {
                     name: value,
                     span: node.span(),
                     suggestion: match entry.kind {
@@ -98,7 +98,7 @@ pub(crate) fn verbatim_members(settings: &Settings) -> Vec<VerbatimMember<'_>> {
                         _ => None,
                     },
                 },
-                (SettingsNode::Verbatim { .. }, None) => VerbatimMember {
+                (SettingsNode::RawValue { .. }, None) => UncataloguedMember {
                     name: node.name(),
                     span: node.span(),
                     suggestion: suggest::suggest(
@@ -110,8 +110,8 @@ pub(crate) fn verbatim_members(settings: &Settings) -> Vec<VerbatimMember<'_>> {
             };
             members.push(member);
         }
-        Visit::OpaqueLeaf(node @ (SettingsNode::Raw { .. } | SettingsNode::Verbatim { .. })) => {
-            members.push(VerbatimMember {
+        Visit::OpaqueLeaf(node @ (SettingsNode::Raw { .. } | SettingsNode::RawValue { .. })) => {
+            members.push(UncataloguedMember {
                 name: node.name(),
                 span: node.span(),
                 suggestion: None,
@@ -152,10 +152,10 @@ fn walk<'a>(settings: &'a Settings, visit: &mut dyn FnMut(Visit<'a, '_>)) {
                     "settings block children must be groups".to_string(),
                     None,
                 )));
-                // A stray verbatim member is still a preserved residual.
+                // A stray raw member is still a preserved residual.
                 if matches!(
                     other,
-                    SettingsNode::Raw { .. } | SettingsNode::Verbatim { .. }
+                    SettingsNode::Raw { .. } | SettingsNode::RawValue { .. }
                 ) {
                     visit(Visit::OpaqueLeaf(other));
                 }
@@ -170,7 +170,7 @@ fn walk_workshop<'a>(children: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'
             SettingsNode::Group { children, .. } | SettingsNode::Workshop { children, .. } => {
                 walk_workshop(children, visit);
             }
-            SettingsNode::Raw { .. } | SettingsNode::Verbatim { .. } => {}
+            SettingsNode::Raw { .. } | SettingsNode::RawValue { .. } => {}
             other => visit(Visit::Rejected(rejected(
                 other.span(),
                 "settings.workshop contains a typed builtin setting".to_string(),
@@ -259,7 +259,7 @@ fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<Set
     let mut full = path.to_vec();
     full.push(PathPart::Part(name));
     match (node, table::lookup(&full)) {
-        (SettingsNode::Raw { .. } | SettingsNode::Verbatim { .. }, _) => return,
+        (SettingsNode::Raw { .. } | SettingsNode::RawValue { .. }, _) => return,
         // Mirrors `settings_member`: an uncatalogued block is emitted as
         // written; only its leaves must have a written form.
         (SettingsNode::Group { children, .. }, None) => {

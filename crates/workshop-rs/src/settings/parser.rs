@@ -345,7 +345,7 @@ impl ParseContext<'_> {
                     Err(_) => {
                         self.pos = value_start;
                         let value = self.raw_settings_line()?;
-                        Ok(SettingsNode::Verbatim {
+                        Ok(SettingsNode::RawValue {
                             name: name.to_string(),
                             value,
                             span: Some(Span::new(self.file(), start, self.previous_span().1)),
@@ -401,7 +401,7 @@ impl ParseContext<'_> {
         let span = Some(Span::new(self.file(), start, end));
         // `name:` with nothing after the colon keeps its colon.
         if value.is_empty() && colon {
-            return Ok(SettingsNode::Verbatim { name, value, span });
+            return Ok(SettingsNode::RawValue { name, value, span });
         }
         Ok(SettingsNode::Raw { name, value, span })
     }

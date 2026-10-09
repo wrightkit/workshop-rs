@@ -108,7 +108,7 @@ pub enum SettingsNode {
     /// emitted in the target locale; elsewhere it is written as is. Carries
     /// catalogued keys with values the catalog does not declare, and members
     /// whose empty value still needs its `:`.
-    Verbatim {
+    RawValue {
         name: String,
         value: String,
         span: Option<Span>,
@@ -134,7 +134,7 @@ impl SettingsNode {
             | SettingsNode::String { span, .. }
             | SettingsNode::List { span, .. }
             | SettingsNode::Raw { span, .. }
-            | SettingsNode::Verbatim { span, .. } => *span,
+            | SettingsNode::RawValue { span, .. } => *span,
         }
     }
 
@@ -149,7 +149,7 @@ impl SettingsNode {
             | SettingsNode::String { name, .. }
             | SettingsNode::List { name, .. }
             | SettingsNode::Raw { name, .. }
-            | SettingsNode::Verbatim { name, .. } => name,
+            | SettingsNode::RawValue { name, .. } => name,
         }
     }
 }

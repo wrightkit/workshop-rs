@@ -280,12 +280,12 @@ fn nodes_equivalent(
                     },
                 ) => left_name == right_name && left_value == right_value,
                 (
-                    crate::settings::SettingsNode::Verbatim {
+                    crate::settings::SettingsNode::RawValue {
                         name: left_name,
                         value: left_value,
                         ..
                     },
-                    crate::settings::SettingsNode::Verbatim {
+                    crate::settings::SettingsNode::RawValue {
                         name: right_name,
                         value: right_value,
                         ..

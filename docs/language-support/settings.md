@@ -139,9 +139,9 @@ rejected, so a project can keep settings the catalog has not caught up with
 - a braced block whose key is unknown parses to a `SettingsNode::Group` of
   such leaves, emitted as the same block;
 - a catalogued key whose value is not a declared enum member, and an unknown
-  `name:` with nothing after the colon, parse to `SettingsNode::Verbatim`.
+  `name:` with nothing after the colon, parse to `SettingsNode::RawValue`.
 
-`SettingsNode::Verbatim { name, value }` writes `name: value` with the value
+`SettingsNode::RawValue { name, value }` writes `name: value` with the value
 as authored. At a catalogued path `name` is the canonical key and is emitted
 in the target locale; elsewhere it is written as is. Programmatic producers
 use it for the same purpose. Raw values keep their authored token spacing
