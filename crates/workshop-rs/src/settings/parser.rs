@@ -273,11 +273,7 @@ impl ParseContext<'_> {
                             &value,
                         )
                         .unwrap_or(value.as_str()),
-                    _ => {
-                        return Err(
-                            self.malformed("only settings lists may use braces", self.previous())
-                        );
-                    }
+                    _ => unreachable!("non-list kinds return an opaque group above"),
                 };
                 elements.push(SettingsListElement {
                     value: canonical.to_string(),

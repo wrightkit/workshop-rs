@@ -1637,6 +1637,13 @@ rule("r")
     for line in ["Map Rotation {", "a", "b"] {
         assert!(lines.contains(&line), "{line:?} in {emitted}");
     }
+    // The emitted text reparses, validates, and re-emits identically.
+    let reparsed = parser::parse(&emitted, &catalog(), &en()).expect("emitted text reparses");
+    reparsed.validate().expect("emitted text validates");
+    assert_eq!(
+        emitter::emit(&reparsed, &catalog(), &en()).expect("re-emits"),
+        emitted
+    );
     // The carried block is a residual under its canonical key, not a
     // misspelling.
     let issue = program

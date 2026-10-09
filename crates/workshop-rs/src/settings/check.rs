@@ -3,8 +3,9 @@
 //! [`crate::Program::validate`] runs [`check_emission`] on every program, so
 //! checking raw Workshop input reports the same settings errors emission
 //! would. Members the catalog does not declare are carried as written
-//! ([`SettingsNode::Raw`], [`SettingsNode::RawValue`], or a block of them) and
-//! accepted; [`check_emission`] reports every other member the emitter would
+//! ([`SettingsNode::Raw`], [`SettingsNode::RawValue`], or a block of them —
+//! under an unknown key or a catalogued non-list key) and accepted;
+//! [`check_emission`] reports every other member the emitter would
 //! reject, without producing Workshop text. A carried member close to
 //! exactly one declared spelling is additionally reported as a
 //! [`DiagnosticSeverity::Warning`] diagnostic — a likely misspelling — by
