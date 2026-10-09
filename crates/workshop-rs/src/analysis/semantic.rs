@@ -29,6 +29,10 @@ pub enum ResidualClassification {
     ProducerExtension,
     LegacyOpaque,
     UnresolvedIdentifier,
+    /// A carried settings member whose spelling is close to exactly one
+    /// declared key or enum member — a likely misspelling, not a new
+    /// project-defined construct.
+    CatalogSpellingNearMiss,
 }
 
 impl ResidualClassification {
@@ -39,6 +43,7 @@ impl ResidualClassification {
             Self::ProducerExtension => "producer-extension",
             Self::LegacyOpaque => "legacy-opaque-construct",
             Self::UnresolvedIdentifier => "truly-unresolved-identifier",
+            Self::CatalogSpellingNearMiss => "catalog-spelling-near-miss",
         }
     }
 
@@ -58,6 +63,9 @@ impl ResidualClassification {
             }
             Self::UnresolvedIdentifier => {
                 "the identifier matches neither a source declaration nor a canonical catalog identity"
+            }
+            Self::CatalogSpellingNearMiss => {
+                "the spelling is within a small edit distance of exactly one declared settings member"
             }
         }
     }
@@ -94,7 +102,12 @@ pub fn inspect(program: &crate::Program, catalog: &Catalog) -> Vec<SemanticIssue
                 kind: IncompletenessKind::RawSetting,
                 name: member.name.to_string(),
                 span: member.span,
-                classification: ResidualClassification::ProjectDefinedConstruct,
+                // A member close to exactly one declared spelling is a
+                // likely misspelling of it, not a project-defined construct.
+                classification: match member.suggestion {
+                    Some(_) => ResidualClassification::CatalogSpellingNearMiss,
+                    None => ResidualClassification::ProjectDefinedConstruct,
+                },
                 suggestion: member.suggestion,
             });
         }

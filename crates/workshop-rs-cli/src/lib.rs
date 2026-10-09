@@ -192,6 +192,7 @@ fn parse_command(args: Vec<String>) -> i32 {
     if let Err(error) = program.validate() {
         return fail(format!("WIR validation failed: {error}"));
     }
+    report_settings_warnings(&program);
     print!("{}", program.dump());
     0
 }
@@ -209,6 +210,7 @@ fn emit_command(args: Vec<String>) -> i32 {
         Ok(parsed) => parsed,
         Err(error) => return fail(error),
     };
+    report_settings_warnings(&program);
     let mut emit_options = EmitOptions::default();
     emit_options.fallback_locale = options.locale("--fallback-locale");
     match emitter::emit_with_options(&program, &catalog, &locale, &emit_options) {
@@ -246,6 +248,17 @@ fn convert_command(args: Vec<String>) -> i32 {
             0
         }
         Err(error) => fail(error),
+    }
+}
+
+/// Print settings warnings — accepted members that are close to a declared
+/// spelling and likely misspelled — to stderr so a command-line user sees
+/// them without the emission failing.
+fn report_settings_warnings(program: &Program) {
+    for diagnostic in program.settings_diagnostics() {
+        if diagnostic.severity == workshop_rs::settings::DiagnosticSeverity::Warning {
+            eprintln!("workshop-rs-cli: warning: {}", diagnostic.error);
+        }
     }
 }
 

@@ -2,7 +2,7 @@ use crate::core::error::WorkshopError;
 use crate::core::suggest;
 use crate::source::Span;
 
-use super::check::SettingsDiagnostic;
+use super::check::{DiagnosticSeverity, SettingsDiagnostic};
 use super::table::{self, KeyKind, TableEntry};
 use super::{PathPart, SettingsListElement, SettingsNode};
 
@@ -163,6 +163,7 @@ pub(super) fn rejected(
 ) -> SettingsDiagnostic {
     let message = suggest::with_suggestion_text(message, suggestion.as_deref());
     SettingsDiagnostic {
+        severity: DiagnosticSeverity::Error,
         error: WorkshopError::malformed(message, span),
         suggestion,
     }

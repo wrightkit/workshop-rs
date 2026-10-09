@@ -635,10 +635,13 @@ impl Program {
         Ok(())
     }
 
-    /// Report every settings member the emission table rejects, each with
-    /// its source span and, when exactly one canonical spelling is close
-    /// enough, the structured suggestion a caller can apply. [`validate`]
-    /// already fails on the first of these; this exposes all of them.
+    /// Report every settings member the emission table rejects — plus, as
+    /// [`crate::settings::DiagnosticSeverity::Warning`] entries, carried
+    /// members close enough to a declared spelling to look like a
+    /// misspelling — each with its source span and, when exactly one
+    /// canonical spelling is close enough, the structured suggestion a
+    /// caller can apply. [`validate`] already fails on the first error;
+    /// warnings describe accepted members and never fail validation.
     ///
     /// [`validate`]: Program::validate
     pub fn settings_diagnostics(&self) -> Vec<crate::settings::SettingsDiagnostic> {
