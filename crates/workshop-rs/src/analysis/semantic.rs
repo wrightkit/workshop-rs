@@ -89,7 +89,7 @@ pub struct SemanticIssue {
 pub fn inspect(program: &crate::Program, catalog: &Catalog) -> Vec<SemanticIssue> {
     let mut issues = Vec::new();
     if let Some(settings) = &program.settings {
-        for member in crate::settings::check::verbatim_members(settings) {
+        for member in crate::settings::check::uncatalogued_members(settings) {
             issues.push(SemanticIssue {
                 kind: IncompletenessKind::RawSetting,
                 name: member.name.to_string(),
@@ -180,7 +180,7 @@ fn inspect_setting(node: &SettingsNode, issues: &mut Vec<SemanticIssue>) {
         | SettingsNode::Flag { .. }
         | SettingsNode::String { .. }
         | SettingsNode::Raw { .. }
-        | SettingsNode::Verbatim { .. } => {}
+        | SettingsNode::RawValue { .. } => {}
     }
 }
 

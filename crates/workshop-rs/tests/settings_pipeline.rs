@@ -1456,14 +1456,14 @@ rule("r")
 }
 
 #[test]
-fn issue_360_unknown_braced_key_is_kept_verbatim_with_a_suggestion() {
+fn issue_360_unknown_braced_key_is_kept_as_written_with_a_suggestion() {
     // `Enabled Mpas` does not resolve, so the braced member is an opaque
     // block emitted as written; the residual names `enabled maps`.
     let source = issue_360_source("Enabled Mpas", "Château Guillard");
     let program = parser::parse(&source, &catalog(), &en()).expect("source parses");
     program
         .validate()
-        .expect("an uncatalogued block is carried verbatim");
+        .expect("an uncatalogued block is carried as written");
     assert!(program.settings_diagnostics().is_empty());
     let issue = program
         .semantic_issues(&catalog())
@@ -1480,7 +1480,7 @@ fn issue_360_unknown_braced_key_is_kept_verbatim_with_a_suggestion() {
 }
 
 #[test]
-fn undeclared_settings_values_and_empty_members_round_trip_verbatim() {
+fn undeclared_settings_values_and_empty_members_round_trip_as_written() {
     // Values the catalog does not declare, an empty `name:` member, and
     // adjacent value tokens are written back exactly as authored.
     let source = r#"settings
@@ -1512,7 +1512,7 @@ rule("r")
 }
 "#;
     let program = parser::parse(source, &catalog(), &en()).expect("source parses");
-    program.validate().expect("verbatim members are accepted");
+    program.validate().expect("raw members are accepted");
     let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
     for line in [
         "Map Rotation: Sometimes",
@@ -1534,11 +1534,11 @@ rule("r")
 }
 
 #[test]
-fn typed_verbatim_members_localize_catalogued_keys_only() {
+fn typed_uncatalogued_members_localize_catalogued_keys_only() {
     use workshop_rs::settings::{Settings, SettingsNode};
 
     let mut program = workshop_rs::Program::new();
-    let verbatim = |name: &str, value: &str| SettingsNode::Verbatim {
+    let raw_value = |name: &str, value: &str| SettingsNode::RawValue {
         name: name.into(),
         value: value.into(),
         span: None,
@@ -1554,8 +1554,8 @@ fn typed_verbatim_members_localize_catalogued_keys_only() {
             SettingsNode::Group {
                 name: "lobby".into(),
                 children: vec![
-                    verbatim("mapRotation", "Sometimes"),
-                    verbatim("projectKey", ""),
+                    raw_value("mapRotation", "Sometimes"),
+                    raw_value("projectKey", ""),
                     SettingsNode::Group {
                         name: "projectList".into(),
                         children: vec![raw("1"), raw("2")],
@@ -1571,7 +1571,7 @@ fn typed_verbatim_members_localize_catalogued_keys_only() {
             },
         ],
     });
-    program.validate().expect("verbatim members are accepted");
+    program.validate().expect("raw members are accepted");
     let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
     let lines: Vec<&str> = emitted.lines().map(str::trim).collect();
     for line in [

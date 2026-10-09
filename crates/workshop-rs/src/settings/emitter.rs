@@ -76,7 +76,7 @@ impl EmitContext<'_> {
                 Ok(())
             }
             SettingsNode::Workshop { children, .. } => self.emit_workshop_settings(children, level),
-            SettingsNode::Verbatim { name, value, .. } => {
+            SettingsNode::RawValue { name, value, .. } => {
                 if value.is_empty() {
                     self.line(level, &format!("{name}:"))
                 } else {
@@ -220,7 +220,7 @@ impl EmitContext<'_> {
         let mut full = path.to_vec();
         full.push(PathPart::Part(name));
         match (node, table::lookup(&full)) {
-            (SettingsNode::Verbatim { value, .. }, entry) => {
+            (SettingsNode::RawValue { value, .. }, entry) => {
                 let display_name = match entry {
                     Some(entry) => self.member_display_name(&full, hero, entry)?,
                     None => name.to_string(),

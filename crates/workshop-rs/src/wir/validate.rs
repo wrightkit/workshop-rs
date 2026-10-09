@@ -314,7 +314,7 @@ fn check_settings_node(node: &IrSettingsNode, program: &Program) -> Result<(), I
         | IrSettingsNode::Flag { span, .. }
         | IrSettingsNode::String { span, .. }
         | IrSettingsNode::Raw { span, .. }
-        | IrSettingsNode::Verbatim { span, .. } => check_span(*span, program),
+        | IrSettingsNode::RawValue { span, .. } => check_span(*span, program),
         IrSettingsNode::List { elements, span, .. } => {
             check_span(*span, program)?;
             for element in elements {
