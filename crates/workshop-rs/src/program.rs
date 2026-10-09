@@ -117,24 +117,29 @@ impl SpanSlot for ActionProvenance {
     }
 }
 
-/// The recorded span of one value node and its children, mirroring the
-/// structure of the public [`Value`] tree.
-/// Clear every recorded span in `provenance` that does not resolve inside
-/// `document` — `SourceDocument::byte_range` already rejects spans whose file
-/// or extent does not fit.
-fn prune_spans_outside(provenance: &mut ProgramProvenance, document: &SourceDocument) {
-    fn prune_slot(slot: &mut Option<Span>, document: &SourceDocument) {
+/// Clear every recorded span in `provenance` that belongs to `file` and does
+/// not resolve inside `document`. A span in another file is not stale: its
+/// own source has not been attached yet, so it cannot be judged against this
+/// document — `SourceDocument::byte_range` already rejects both a file
+/// mismatch and an out-of-bounds extent, so the span's own file gate is what
+/// keeps foreign-file spans alive until their source arrives.
+fn prune_spans_outside(
+    provenance: &mut ProgramProvenance,
+    file: FileId,
+    document: &SourceDocument,
+) {
+    fn prune_slot(slot: &mut Option<Span>, file: FileId, document: &SourceDocument) {
         if let Some(span) = slot {
-            if document.byte_range(*span).is_none() {
+            if span.file == file && document.byte_range(*span).is_none() {
                 *slot = None;
             }
         }
     }
-    fn prune_value(record: &mut ValueProvenance, document: &SourceDocument) {
-        prune_slot(&mut record.span, document);
-        prune_slot(&mut record.identifier, document);
+    fn prune_value(record: &mut ValueProvenance, file: FileId, document: &SourceDocument) {
+        prune_slot(&mut record.span, file, document);
+        prune_slot(&mut record.identifier, file, document);
         for child in &mut record.children {
-            prune_value(child, document);
+            prune_value(child, file, document);
         }
     }
     for declaration in provenance
@@ -143,21 +148,21 @@ fn prune_spans_outside(provenance: &mut ProgramProvenance, document: &SourceDocu
         .chain(&mut provenance.player_variables)
         .chain(&mut provenance.subroutines)
     {
-        prune_slot(&mut declaration.span, document);
-        prune_slot(&mut declaration.name_span, document);
+        prune_slot(&mut declaration.span, file, document);
+        prune_slot(&mut declaration.name_span, file, document);
     }
     for rule in &mut provenance.rules {
-        prune_slot(&mut rule.span, document);
-        prune_slot(&mut rule.name, document);
-        prune_slot(&mut rule.event_name, document);
+        prune_slot(&mut rule.span, file, document);
+        prune_slot(&mut rule.name, file, document);
+        prune_slot(&mut rule.event_name, file, document);
         for condition in &mut rule.conditions {
-            prune_value(condition, document);
+            prune_value(condition, file, document);
         }
         for action in &mut rule.actions {
-            prune_slot(&mut action.span, document);
-            prune_slot(&mut action.identifier, document);
+            prune_slot(&mut action.span, file, document);
+            prune_slot(&mut action.identifier, file, document);
             for argument in &mut action.arguments {
-                prune_value(argument, document);
+                prune_value(argument, file, document);
             }
         }
     }
@@ -280,12 +285,14 @@ impl Program {
     /// Attach authored source text to a registered file. Returns `false` when
     /// `file` is not a known file entry.
     ///
-    /// Attaching text audits provenance: a recorded span that does not
-    /// resolve inside the retained document is stale data — for a
-    /// provider-mapped program it can describe the pre-expansion token stream
-    /// or a coordinate space the map no longer owns — and is cleared so
-    /// consumers see no span rather than a wrong one, matching how
-    /// `record_identities` retires displaced records (wrightkit/wright#583).
+    /// Attaching text audits the provenance that belongs to this file: a
+    /// recorded span in `file` that does not resolve inside the retained
+    /// document is stale data — for a provider-mapped program it can describe
+    /// the pre-expansion token stream or a coordinate space the map no longer
+    /// owns — and is cleared so consumers see no span rather than a wrong
+    /// one, matching how `record_identities` retires displaced records
+    /// (wrightkit/wright#583). Spans recorded against other files are left
+    /// untouched; they are audited when their own source is attached.
     pub fn set_file_source(&mut self, file: FileId, source: impl Into<String>) -> bool {
         let Some(entry) = self.files.get_mut(file.index()) else {
             return false;
@@ -295,7 +302,7 @@ impl Program {
             self.provenance.as_mut(),
             self.files.get(file.index()).and_then(SourceFile::source),
         ) {
-            prune_spans_outside(provenance, document);
+            prune_spans_outside(provenance, file, document);
         }
         true
     }
