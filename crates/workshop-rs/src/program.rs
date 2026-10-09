@@ -233,6 +233,16 @@ impl Program {
         self.files.get(file.index()).and_then(SourceFile::source)
     }
 
+    /// Attach authored source text to a registered file. Returns `false` when
+    /// `file` is not a known file entry.
+    pub fn set_file_source(&mut self, file: FileId, source: impl Into<String>) -> bool {
+        let Some(entry) = self.files.get_mut(file.index()) else {
+            return false;
+        };
+        entry.set_source(source);
+        true
+    }
+
     /// Attach the authored span of a public rule.
     pub fn set_rule_span(
         &mut self,

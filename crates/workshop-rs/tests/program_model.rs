@@ -1,6 +1,8 @@
-use crate::common::catalog;
-use workshop_rs::source::{Position, SourceFile, Span};
-use workshop_rs::{Action, Condition, Event, Program, Rule, Subroutine, Value, Variable};
+use crate::common::{catalog, en};
+use workshop_rs::source::{FileId, Position, SourceFile, Span};
+use workshop_rs::{
+    Action, Condition, Event, Program, Rule, SourceMap, Subroutine, Value, Variable, parser,
+};
 
 #[test]
 fn program_is_constructible_without_storage_ids() {
@@ -34,6 +36,56 @@ fn program_is_constructible_without_storage_ids() {
         Action::Disabled { .. }
     ));
     assert!(matches!(program.rules[0].actions[6], Action::End));
+}
+
+#[test]
+fn file_source_attaches_to_registered_files() {
+    let mut program = Program::new();
+    let file = program.add_file(SourceFile::new("main.opy"));
+    assert!(program.source(file).is_none());
+
+    assert!(program.set_file_source(file, "x = 1\n"));
+    assert_eq!(program.source(file).unwrap().text(), "x = 1\n");
+
+    let missing = workshop_rs::source::FileId::from_index(9);
+    assert!(!program.set_file_source(missing, "x = 1\n"));
+}
+
+#[test]
+fn applying_a_source_map_drops_stale_settings_spans() {
+    // The settings tree is carried into the program inertly: a source map
+    // holds no settings entries, so spans parsed against the emitted text
+    // cannot be re-anchored to the authored members the applied file table
+    // names. `SourceMap::apply` clears them; otherwise the stale positions
+    // fail `Program::validate` once a member retains shorter authored source
+    // (wrightkit/wright#583).
+    // Rules first so the stale settings span ends past the short authored
+    // text while the map-carried rule span stays in bounds.
+    let workshop = "rule (\"tick\") {\n    event { Ongoing - Each Player; All; All; }\n    actions { Wait(1); }\n}\n\nsettings {\n    main {\n        Description: \"Streak race\"\n    }\n}\n";
+    let mut reparsed = parser::parse(workshop, &catalog(), &en()).expect("parses");
+    assert!(reparsed.settings.as_ref().is_some_and(|s| s.span.is_some()));
+
+    let map = SourceMap::extract(&reparsed);
+    map.apply(&mut reparsed).expect("map applies");
+
+    let settings = reparsed.settings.as_ref().expect("settings survive");
+    assert!(settings.span.is_none());
+    assert!(settings.children.iter().all(|node| node.span().is_none()));
+
+    // Retain authored text that covers every map-carried span (the rule
+    // block at lines 1–4) but ends before the stale settings span
+    // (lines 6–9): the dropped settings span cannot fail validation
+    // (wrightkit/wright#583).
+    let authored = workshop
+        .lines()
+        .take(5)
+        .fold(String::new(), |mut text, line| {
+            text.push_str(line);
+            text.push('\n');
+            text
+        });
+    assert!(reparsed.set_file_source(FileId::from_index(0), authored));
+    reparsed.validate().expect("mapped program validates");
 }
 
 #[test]

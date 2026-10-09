@@ -124,6 +124,27 @@ pub struct SettingsListElement {
     pub span: Option<Span>,
 }
 
+impl SettingsListElement {
+    fn clear_span(&mut self) {
+        self.span = None;
+    }
+}
+
+impl Settings {
+    /// Drop every span recorded on the block and its members.
+    ///
+    /// Called when the program's file table is rebound to a different
+    /// coordinate space (`SourceMap::apply`): the map carries no settings
+    /// entries, so the spans parsed against the previous text cannot be
+    /// re-anchored and must not survive as stale positions.
+    pub(crate) fn clear_spans(&mut self) {
+        self.span = None;
+        for node in &mut self.children {
+            node.clear_spans();
+        }
+    }
+}
+
 impl SettingsNode {
     /// The source span of this node, if any.
     pub fn span(&self) -> Option<Span> {
@@ -137,6 +158,31 @@ impl SettingsNode {
             | SettingsNode::List { span, .. }
             | SettingsNode::Raw { span, .. }
             | SettingsNode::RawValue { span, .. } => *span,
+        }
+    }
+
+    /// Drop this node's span and, for containers, every descendant span.
+    fn clear_spans(&mut self) {
+        match self {
+            SettingsNode::Workshop { children, span }
+            | SettingsNode::Group { children, span, .. } => {
+                *span = None;
+                for node in children {
+                    node.clear_spans();
+                }
+            }
+            SettingsNode::Number { span, .. }
+            | SettingsNode::Bool { span, .. }
+            | SettingsNode::Flag { span, .. }
+            | SettingsNode::String { span, .. }
+            | SettingsNode::Raw { span, .. }
+            | SettingsNode::RawValue { span, .. } => *span = None,
+            SettingsNode::List { elements, span, .. } => {
+                *span = None;
+                for element in elements {
+                    element.clear_span();
+                }
+            }
         }
     }
 

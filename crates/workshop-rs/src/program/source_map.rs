@@ -486,6 +486,14 @@ impl SourceMap {
         for path in &self.files {
             program.add_file(SourceFile::new(path.clone()));
         }
+        // The map carries no settings entries, so the settings tree's spans
+        // still index the text the program was parsed from, not the authored
+        // members the rebound file table names. Clear them rather than leave
+        // stale positions that would fail validation once a member retains
+        // source text (wrightkit/wright#583).
+        if let Some(settings) = &mut program.settings {
+            settings.clear_spans();
+        }
         program.provenance = Some(Box::new(provenance));
         program.record_identities();
         Ok(())
