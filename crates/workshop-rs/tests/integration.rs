@@ -32,3 +32,5 @@ mod program_model;
 mod public_api;
 #[path = "real_projects.rs"]
 mod real_projects;
+#[path = "rule_content.rs"]
+mod rule_content;

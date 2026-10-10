@@ -20,6 +20,9 @@ unicode-ident.workspace = true
 unicode-normalization.workspace = true
 
 [dev-dependencies]
+# The default `resolve-http`/`cli` features pull reqwest and clap into the
+# test graph; draft-2020-12 validation is all these tests need.
+jsonschema = { version = "0.18", default-features = false, features = ["draft202012"] }
 regex = "1"
 
 [[test]]

@@ -141,9 +141,10 @@ after each addition, and attaching `None` records the shape without a span.
 
 ## Canonical artifact formats
 
-`workshop-rs` owns two canonical Workshop artifact formats. Provider protocols
-carry them as opaque artifacts; they do not give the protocol Workshop
-semantics.
+`workshop-rs` owns two canonical Workshop *artifact* formats — the opaque
+payloads provider protocols carry; they do not give the protocol Workshop
+semantics. The structured rule-content export (`workshop-rs/rule-content-v1`)
+is a separate API contract documented in `compatibility-facades.md`.
 
 - `workshop-rs/text-v1`: Workshop text alone.
 - `workshop-rs/mapped-text-v1`: Workshop text plus a file table, the program

@@ -51,7 +51,10 @@ impl PlayerEventKind {
         })
     }
 
-    pub(crate) fn catalog_id(self) -> &'static str {
+    /// The canonical catalog event id (`playerDealtDamage`) the Workshop
+    /// event section resolves this kind from. Public since
+    /// `rule-content-v1` names events by this id.
+    pub fn catalog_id(self) -> &'static str {
         match self {
             Self::DealtDamage => "playerDealtDamage",
             Self::DealtFinalBlow => "playerDealtFinalBlow",
@@ -123,7 +126,10 @@ impl ModifyOp {
         }
     }
 
-    pub(crate) fn catalog_id(self) -> &'static str {
+    /// The canonical catalog operator id (`add`, `removeFromArrayByIndex`)
+    /// the Workshop modify-operator position resolves this operation from.
+    /// Public since `rule-content-v1` names modify operands by this id.
+    pub fn catalog_id(self) -> &'static str {
         match self {
             Self::Add => "add",
             Self::Subtract => "subtract",
