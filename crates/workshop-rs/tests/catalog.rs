@@ -550,6 +550,21 @@ fn exercised_enum_domains_resolve_members_to_canonical_identity() {
         catalog.resolve_enum_member("Map", &en(), "Grímsvötn"),
         Some(("Map".to_string(), "GRIMSVOTN".to_string()))
     );
+    // The export carries only Grímsvötn's en-US spelling; the localized
+    // aliases are transcribed from the official localized Season 5
+    // announcement pages.
+    assert_eq!(
+        catalog.resolve_enum_member("Map", &zh(), "格里姆火山"),
+        Some(("Map".to_string(), "GRIMSVOTN".to_string()))
+    );
+    assert_eq!(
+        catalog.enum_spelling("Map", &Locale::new("ja-JP"), "GRIMSVOTN"),
+        Some("GRÍMSVÖTN")
+    );
+    assert_eq!(
+        catalog.enum_spelling("Map", &Locale::new("ko-KR"), "GRIMSVOTN"),
+        Some("그림스뵈튼")
+    );
 }
 
 /// Per-parameter reevaluation coverage (wright#562): each `*Reeval` action

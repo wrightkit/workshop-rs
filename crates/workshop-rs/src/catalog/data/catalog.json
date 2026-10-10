@@ -8475,7 +8475,7 @@
       }
     }
   ],
-  "digest": "ff037bc65f9e98bb9b6e24022ca8767339df9b105b394ac916a3be22a471d3f7",
+  "digest": "2b87271277a68f67a1d58ea51f7c8257475d2eb861b1160a58a5678986b6230f",
   "enums": [
     {
       "domain": "Impulse",
@@ -17771,7 +17771,18 @@
         },
         {
           "aliases": {
-            "en-US": "Grímsvötn"
+            "de-DE": "Grímsvötn",
+            "en-US": "Grímsvötn",
+            "es-ES": "Grímsvötn",
+            "es-MX": "Grímsvötn",
+            "fr-FR": "Grímsvötn",
+            "it-IT": "Grímsvötn",
+            "ja-JP": "GRÍMSVÖTN",
+            "ko-KR": "그림스뵈튼",
+            "pl-PL": "Grímsvötn",
+            "pt-BR": "Grímsvötn",
+            "zh-CN": "格里姆火山",
+            "zh-TW": "格里姆火山"
           },
           "id": "GRIMSVOTN"
         }
@@ -21847,6 +21858,7 @@
       "Wait parameter labels are a separately reviewed mapping: the zh-CN spellings are 时间 and 等待行为, as identified by the documented Chinese Workshop action reference at https://overwatch.huijiwiki.com/wiki/%E5%9C%B0%E5%9B%BE%E5%B7%A5%E5%9D%8A/%E5%8A%A8%E4%BD%9C (accessed 2026-09-11); canonical parameter order and descriptions are cross-checked against the user-provided workshop-data action definition at commit d854bf01fc7bbf3b2169f67408c07a8da8989ad6. This is documented community evidence, not output from the zh-CN corpus generator, and further parameter labels require the same evidence review.",
       "Create Dummy Bot's hero parameter accepts a single Hero or a Hero array: Workshop behavior selects randomly when multiple heroes are provided, and pinned OverPy 9.7.10 texture-tag setup emits getAllHeroes() into Create Dummy Bot (workshop-rs#238).",
       "Map enum member GRIMSVOTN (Grímsvötn) is reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d; the export declares no guid or non-en-US spellings for it yet",
+      "Map.GRIMSVOTN localized aliases are transcribed from the official localized Blizzard Season 5 announcement pages (overwatch.blizzard.com/<locale>/news/24303008/) and the official Overwatch China announcement (ow.blizzard.cn/news/24303008/, zh-CN 格里姆火山), accessed 2026-10-10; the ja-JP page names the map 「WATCHPOINT: GRÍMSVÖTN」, matching the ja-JP all-caps map convention, while the ru-RU, th-TH, and tr-TR pages fall back to English and stay absent; the export carries only its en-US spelling, so its non-en-US locales have no export match in tools/corpus/zh-cn-corpus.json",
       "Hero.DOCTRINE (Doctrine) and its aliases are transcribed from the official Blizzard hero-detail pages (accessed 2026-10-08); the hero is absent from the pinned workshop-data export, so the member carries no export match in tools/corpus/zh-cn-corpus.json"
     ]
   },

@@ -60,7 +60,7 @@
     }
   ],
   "generator": "workshop-catalog-gen corpus",
-  "generatorVersion": "1.8.0",
+  "generatorVersion": "1.12.0",
   "locale": "zh-CN",
   "locales": [
     "en-US",
