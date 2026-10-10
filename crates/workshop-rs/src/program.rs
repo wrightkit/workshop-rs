@@ -1172,6 +1172,21 @@ pub enum Event {
     Subroutine(String),
 }
 
+impl Event {
+    /// The canonical catalog event id (`global`, `eachPlayer`, `subroutine`,
+    /// or a [`PlayerEventKind`] catalog id) this event declares. A
+    /// `Subroutine` event's declared name is data, not part of the id.
+    /// Public since `rule-content-v1` names events by this id.
+    pub fn catalog_id(&self) -> &'static str {
+        match self {
+            Self::Global => "global",
+            Self::EachPlayer | Self::EachPlayerWithFilters { .. } => "eachPlayer",
+            Self::Player { kind, .. } => kind.catalog_id(),
+            Self::Subroutine(_) => "subroutine",
+        }
+    }
+}
+
 /// A Workshop action line. Control flow is represented in the same order as
 /// the Workshop source, including its explicit `End` lines.
 #[derive(Debug, Clone)]

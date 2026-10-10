@@ -52,6 +52,20 @@ canonical validation (`validate_canonical_ids`,
 `validate`. `settings::schema` is an internal module; its types and functions
 (including `validate_catalog`) are public only from `settings` directly.
 
+## Structured rule content
+
+`rules::content` owns the versioned `workshop-rs/rule-content-v1` export:
+`Rule::content`/`rule_content` render one rule as the deterministic JSON
+document the published schema
+([`schemas/rule-content-v1.schema.json`](../schemas/rule-content-v1.schema.json))
+defines, `RULE_CONTENT_V1` is the format id, and `RULE_CONTENT_V1_SCHEMA`
+carries the schema text. The catalog ids the format names are public:
+`Event::catalog_id`, `PlayerEventKind::catalog_id`, and
+`ModifyOp::catalog_id`. The document shape itself is versioned by its format
+id, not by Rust API stability: an incompatible content change needs a new
+format id, and the JSON output is a data contract consumers may hold across
+versions.
+
 ## Catalog-backed actions and values
 
 Catalog actions and values are built with `Action::call` and `Value::call`,

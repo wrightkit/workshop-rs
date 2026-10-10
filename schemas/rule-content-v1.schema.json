@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wrightkit.dev/schemas/rule-content-v1.schema.json",
+  "title": "workshop-rs/rule-content-v1",
+  "description": "The versioned structured export of one Workshop rule's content, produced by workshop-rs from the canonical Program model. Every action, value, and operator is a call node named by its catalog id; literals, strings, enum members, and declared names use tagged forms. The document is deterministic for a given rule and independent of the source locale.",
+  "type": "object",
+  "required": ["format", "event", "disabled", "conditions", "actions"],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "workshop-rs/rule-content-v1",
+      "description": "The versioned format identity. An incompatible change needs a new format id."
+    },
+    "event": { "$ref": "#/$defs/Event" },
+    "disabled": {
+      "type": "boolean",
+      "description": "True when the whole rule is disabled."
+    },
+    "conditions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Condition" }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Action" },
+      "description": "The rule's flat action stream: index i is Rule.actions[i]. Nesting is recoverable from If/Else If/Else/While/For and End call nodes."
+    }
+  },
+  "$defs": {
+    "Event": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "description": "The event's catalog id plus the filters the event takes. `subroutine` is present only for a subroutine event.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The catalog event id: `global`, `eachPlayer`, `subroutine`, or a public `PlayerEventKind` catalog id such as `playerDealtDamage`."
+        },
+        "team": {
+          "$ref": "#/$defs/EventTeamFilter",
+          "description": "Present only when the rule declares event filters."
+        },
+        "player": {
+          "$ref": "#/$defs/EventPlayerFilter",
+          "description": "Present only when the rule declares event filters."
+        },
+        "subroutine": {
+          "type": "string",
+          "description": "The declared subroutine name; present only when `id` is `subroutine`."
+        }
+      }
+    },
+    "EventTeamFilter": {
+      "type": "string",
+      "enum": ["ALL", "TEAM_1", "TEAM_2"],
+      "description": "A canonical EventTeam enum member id."
+    },
+    "EventPlayerFilter": {
+      "type": "string",
+      "description": "A canonical EventPlayer member id (`ALL` or `SLOT_n`), or a Hero enum member id (e.g. `ANA`)."
+    },
+    "Condition": {
+      "type": "object",
+      "required": ["value"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "$ref": "#/$defs/Node" },
+        "disabled": {
+          "const": true,
+          "description": "Present only when the condition is disabled."
+        }
+      }
+    },
+    "Action": {
+      "type": "object",
+      "required": ["call", "args"],
+      "additionalProperties": false,
+      "properties": {
+        "call": { "$ref": "#/$defs/CallId" },
+        "args": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Node" }
+        },
+        "disabled": {
+          "const": true,
+          "description": "Present only when the action carries the disabled modifier. The modifier wraps the whole node."
+        }
+      }
+    },
+    "CallId": {
+      "type": "string",
+      "description": "A public catalog action, value, or operator id, or a documented reserved id. Reserved ids for constructs the catalog does not name: `globalVariable` (a global variable read, args = [variable]), `playerVariable` (a player variable read, args = [player, variable]), `assignMember` (a plain member assignment, args = [target, value]), `modifyMember` (a compound member assignment, args = [target, operation, value]). A modify operation is a zero-argument operator call such as `{\"call\":\"add\",\"args\":[]}`; comparison operators likewise appear as call ids (`==`, `!=`, `<`, `<=`, `>`, `>=`)."
+    },
+    "Node": {
+      "description": "A value node: a JSON literal, a tagged string/enum/name, or a call.",
+      "oneOf": [
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "$ref": "#/$defs/StringNode" },
+        { "$ref": "#/$defs/LocalizedStringNode" },
+        { "$ref": "#/$defs/EnumNode" },
+        { "$ref": "#/$defs/VariableNode" },
+        { "$ref": "#/$defs/SubroutineNode" },
+        { "$ref": "#/$defs/CallNode" }
+      ]
+    },
+    "StringNode": {
+      "type": "object",
+      "required": ["string"],
+      "additionalProperties": false,
+      "properties": {
+        "string": {
+          "type": "string",
+          "description": "A custom string literal's text."
+        }
+      }
+    },
+    "LocalizedStringNode": {
+      "type": "object",
+      "required": ["localizedString"],
+      "additionalProperties": false,
+      "properties": {
+        "localizedString": {
+          "type": "string",
+          "description": "A preset localized string's catalog id."
+        }
+      }
+    },
+    "EnumNode": {
+      "type": "object",
+      "required": ["enum", "member"],
+      "additionalProperties": false,
+      "properties": {
+        "enum": {
+          "type": "string",
+          "description": "The canonical enum domain name, e.g. `Status`."
+        },
+        "member": {
+          "type": "string",
+          "description": "The canonical enum member id, e.g. `STUNNED`."
+        }
+      }
+    },
+    "VariableNode": {
+      "type": "object",
+      "required": ["variable"],
+      "additionalProperties": false,
+      "properties": {
+        "variable": {
+          "type": "string",
+          "description": "A declared global or player variable name used as an argument."
+        }
+      }
+    },
+    "SubroutineNode": {
+      "type": "object",
+      "required": ["subroutine"],
+      "additionalProperties": false,
+      "properties": {
+        "subroutine": {
+          "type": "string",
+          "description": "A declared subroutine name used as an argument."
+        }
+      }
+    },
+    "CallNode": {
+      "type": "object",
+      "required": ["call", "args"],
+      "additionalProperties": false,
+      "properties": {
+        "call": { "$ref": "#/$defs/CallId" },
+        "args": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Node" }
+        }
+      }
+    }
+  }
+}

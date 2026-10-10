@@ -7,7 +7,7 @@ to understand. The public domain entry points are:
 | --- | --- | --- |
 | Actions | `actions` | Public action forms, action layout, and element counting |
 | Events | `events` | Public event identities and filters |
-| Rules | `rules` | Public rules, declarations, whole-program inspection, and canonical validation |
+| Rules | `rules` | Public rules, declarations, whole-program inspection, canonical validation, and the `rule-content-v1` export |
 | Values | `values` | Public value and expression forms |
 | Settings | `settings` | Typed custom-game settings and locale-aware settings data |
 | Gameplay | `gameplay` | Hero facts, gameplay data loading, and semantic queries |
