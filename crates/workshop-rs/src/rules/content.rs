@@ -23,8 +23,7 @@ use crate::wir::AMBIGUOUS_ENUM_CALL;
 pub const RULE_CONTENT_V1: &str = "workshop-rs/rule-content-v1";
 
 /// The published JSON Schema for [`RULE_CONTENT_V1`] documents.
-pub const RULE_CONTENT_V1_SCHEMA: &str =
-    include_str!("../../../../schemas/rule-content-v1.schema.json");
+pub const RULE_CONTENT_V1_SCHEMA: &str = include_str!("../../schemas/rule-content-v1.schema.json");
 
 /// The reserved call id for a global variable read.
 pub const GLOBAL_VARIABLE_CALL: &str = "globalVariable";
@@ -34,6 +33,13 @@ pub const PLAYER_VARIABLE_CALL: &str = "playerVariable";
 pub const ASSIGN_MEMBER_CALL: &str = "assignMember";
 /// The reserved call id for a compound member assignment (`target op= value`).
 pub const MODIFY_MEMBER_CALL: &str = "modifyMember";
+/// The reserved call id for a receiver member read (`receiver.member` or
+/// `receiver.member[index]`). It appears inside [`ASSIGN_MEMBER_CALL`] and
+/// [`MODIFY_MEMBER_CALL`] targets and anywhere a member read is a value.
+pub const MEMBER_ACCESS_CALL: &str = "memberAccess";
+/// The reserved call id for an opaque action the parser preserved without
+/// canonical content (a raw Workshop residual). It carries no arguments.
+pub const RAW_WORKSHOP_ACTION_CALL: &str = "rawWorkshopAction";
 
 impl Rule {
     /// Render this rule in the [`RULE_CONTENT_V1`] format.

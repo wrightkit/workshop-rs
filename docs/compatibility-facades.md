@@ -57,7 +57,7 @@ canonical validation (`validate_canonical_ids`,
 `rules::content` owns the versioned `workshop-rs/rule-content-v1` export:
 `Rule::content`/`rule_content` render one rule as the deterministic JSON
 document the published schema
-([`schemas/rule-content-v1.schema.json`](../schemas/rule-content-v1.schema.json))
+([`crates/workshop-rs/schemas/rule-content-v1.schema.json`](../crates/workshop-rs/schemas/rule-content-v1.schema.json))
 defines, `RULE_CONTENT_V1` is the format id, and `RULE_CONTENT_V1_SCHEMA`
 carries the schema text. The catalog ids the format names are public:
 `Event::catalog_id`, `PlayerEventKind::catalog_id`, and

@@ -638,6 +638,61 @@ fn parsed_program_rules_render_through_the_public_api() {
 }
 
 #[test]
+fn documented_reserved_ids_render_for_member_access_and_opaque_residuals() {
+    // `receiver.member[i]` renders as `memberAccess` — the target an
+    // `assignMember`/`modifyMember` action carries, and any member read
+    // position. `rawWorkshopAction` is the parser-preserved opaque action.
+    let member = Value::call(
+        "memberAccess",
+        [
+            Value::GlobalVariable("myArray".to_string()),
+            Value::string("length"),
+            Value::from(0.0),
+        ],
+    );
+    let rule = Rule::new("reserved ids", Event::Global)
+        .action(Action::AssignMember {
+            target: member,
+            op: None,
+            value: Value::from(1.0),
+        })
+        .action(Action::call("rawWorkshopAction", []));
+    let content = content_of(&rule);
+    assert_eq!(
+        content["actions"][0],
+        json!({
+            "call": "assignMember",
+            "args": [
+                {
+                    "call": "memberAccess",
+                    "args": [
+                        {"call": "globalVariable", "args": [{"variable": "myArray"}]},
+                        {"string": "length"},
+                        0.0
+                    ]
+                },
+                1.0
+            ]
+        })
+    );
+    assert_eq!(
+        content["actions"][1],
+        json!({ "call": "rawWorkshopAction", "args": [] })
+    );
+}
+
+#[test]
+fn a_non_finite_number_never_reaches_the_document() {
+    // NaN/Infinity have no JSON literal; the format rejects them rather than
+    // serializing `null` or a non-standard token.
+    for number in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        let rule =
+            Rule::new("non-finite", Event::Global).condition(Condition::new(Value::from(number)));
+        rule_content(&rule).expect_err("non-finite numbers are rejected");
+    }
+}
+
+#[test]
 fn internal_sentinels_never_reach_the_document() {
     let mut program = Program::new();
     program.subroutine(Subroutine::new("tick"));
