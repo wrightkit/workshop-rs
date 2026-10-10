@@ -642,6 +642,7 @@ fn documented_reserved_ids_render_for_member_access_and_opaque_residuals() {
     // `receiver.member[i]` renders as `memberAccess` — the target an
     // `assignMember`/`modifyMember` action carries, and any member read
     // position. `rawWorkshopAction` is the parser-preserved opaque action.
+    // An operator token used as a call renders as an arithmetic helper call.
     let member = Value::call(
         "memberAccess",
         [
@@ -656,8 +657,16 @@ fn documented_reserved_ids_render_for_member_access_and_opaque_residuals() {
             op: None,
             value: Value::from(1.0),
         })
-        .action(Action::call("rawWorkshopAction", []));
+        .action(Action::call("rawWorkshopAction", []))
+        .condition(Condition::new(Value::call(
+            "+",
+            [Value::from(1.0), Value::from(2.0)],
+        )));
     let content = content_of(&rule);
+    assert_eq!(
+        content["conditions"][0]["value"],
+        json!({"call": "+", "args": [1.0, 2.0]})
+    );
     assert_eq!(
         content["actions"][0],
         json!({
