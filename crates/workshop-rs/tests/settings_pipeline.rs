@@ -1745,6 +1745,141 @@ fn issue_412_catalogued_key_block_emits_the_display_name() {
 }
 
 #[test]
+fn issue_417_pass_through_groups_emit_verbatim_at_resolved_positions() {
+    // `SettingsNode::RawGroup` marks a non-scalar member as pass-through:
+    // the emitter writes the authored name and block verbatim at positions
+    // where a plain `Group` is name-resolved or kind-checked. Matches the
+    // pinned oracle's output for `heroes.allTeams.general` members and an
+    // inapplicable catalogued key.
+    use workshop_rs::settings::{Settings, SettingsNode};
+
+    let raw = |name: &str| SettingsNode::Raw {
+        name: name.into(),
+        value: String::new(),
+        span: None,
+    };
+    let raw_value = |name: &str, value: &str| SettingsNode::RawValue {
+        name: name.into(),
+        value: value.into(),
+        span: None,
+    };
+    let group = |name: &str, children: Vec<SettingsNode>| SettingsNode::Group {
+        name: name.into(),
+        children,
+        span: None,
+    };
+    let raw_group = |name: &str, children: Vec<SettingsNode>| SettingsNode::RawGroup {
+        name: name.into(),
+        children,
+        span: None,
+    };
+    let mut program = workshop_rs::Program::new();
+    program.settings = Some(Settings {
+        span: None,
+        children: vec![
+            group(
+                "heroes",
+                vec![group(
+                    "allTeams",
+                    vec![
+                        // A team member that is no hero: verbatim group.
+                        raw_group("mccree", vec![raw_value("health%", "50")]),
+                        // A catalogued hero-list name carried verbatim.
+                        raw_group("enabledHeroes", vec![raw("mccree"), raw("genji")]),
+                        // A catalogued scalar keeps canonical emission.
+                        SettingsNode::Number {
+                            name: "damageDealt%".into(),
+                            value: 50.0,
+                            span: None,
+                        },
+                        // An inapplicable hero key carried as a verbatim block.
+                        group(
+                            "ana",
+                            vec![raw_group("ability3Cooldown%", vec![raw("11"), raw("22")])],
+                        ),
+                    ],
+                )],
+            ),
+            group("gamemodes", Vec::new()),
+        ],
+    });
+    program
+        .validate()
+        .expect("pass-through members are accepted");
+    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
+    let lines: Vec<&str> = emitted.lines().map(str::trim).collect();
+    for line in [
+        "mccree {",
+        "health%: 50",
+        "enabledHeroes {",
+        "genji",
+        "Damage Dealt: 50%",
+        "Ana {",
+        "ability3Cooldown% {",
+        "22",
+    ] {
+        assert!(lines.contains(&line), "{line:?} in {emitted}");
+    }
+    assert!(
+        !emitted.contains("enabled heroes"),
+        "verbatim block keeps the authored name: {emitted}"
+    );
+    let localized = emitter::emit(&program, &catalog(), &zh()).expect("emits zh-CN");
+    assert!(localized.contains("mccree"), "{localized}");
+    assert!(localized.contains("ability3Cooldown%"), "{localized}");
+}
+
+#[test]
+fn issue_417_unmarked_members_keep_name_and_kind_validation() {
+    // The pass-through mark is explicit: unmarked nodes still resolve names
+    // and kinds, and a typed leaf inside a pass-through block still has no
+    // written form.
+    use workshop_rs::settings::{Settings, SettingsNode};
+
+    let group = |name: &str, children: Vec<SettingsNode>| SettingsNode::Group {
+        name: name.into(),
+        children,
+        span: None,
+    };
+    let with_member = |member: SettingsNode| {
+        let mut program = workshop_rs::Program::new();
+        program.settings = Some(Settings {
+            span: None,
+            children: vec![
+                group("heroes", vec![group("allTeams", vec![member])]),
+                group("gamemodes", Vec::new()),
+            ],
+        });
+        program
+    };
+    let unknown_hero = with_member(group(
+        "mccree",
+        vec![SettingsNode::Number {
+            name: "health%".into(),
+            value: 50.0,
+            span: None,
+        }],
+    ));
+    assert!(
+        unknown_hero.validate().is_err(),
+        "an unmarked group under a team still resolves as a hero"
+    );
+    let typed_leaf = with_member(SettingsNode::RawGroup {
+        name: "mccree".into(),
+        children: vec![SettingsNode::Number {
+            name: "health%".into(),
+            value: 50.0,
+            span: None,
+        }],
+        span: None,
+    });
+    assert!(
+        typed_leaf.validate().is_err(),
+        "a typed leaf inside a pass-through block has no written form"
+    );
+}
+
+#[test]
 fn issue_360_opaque_settings_remain_verbatim() {
     // Unrecognized leaf members and `settings.workshop` payloads stay
     // project-defined: both check and compile accept them unchanged.

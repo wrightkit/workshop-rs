@@ -17,11 +17,19 @@ impl EmitContext<'_> {
                 self.emit_workshop_settings(children, 1)?;
                 continue;
             }
-            let SettingsNode::Group { name, children, .. } = child else {
-                return Err(WorkshopError::malformed(
-                    "settings block children must be groups",
-                    child.span(),
-                ));
+            let (name, children) = match child {
+                SettingsNode::Group { name, children, .. } => (name, children),
+                // A pass-through group emits verbatim wherever it lands.
+                SettingsNode::RawGroup { name, children, .. } => {
+                    self.emit_opaque_group(children, name, 1)?;
+                    continue;
+                }
+                _ => {
+                    return Err(WorkshopError::malformed(
+                        "settings block children must be groups",
+                        child.span(),
+                    ));
+                }
             };
             match name.as_str() {
                 "main" | "lobby" => {
@@ -67,7 +75,8 @@ impl EmitContext<'_> {
 
     pub(crate) fn emit_workshop_node(&mut self, node: &SettingsNode, level: usize) -> Result<()> {
         match node {
-            SettingsNode::Group { name, children, .. } => {
+            SettingsNode::Group { name, children, .. }
+            | SettingsNode::RawGroup { name, children, .. } => {
                 self.line(level, &format!("{name} {{"))?;
                 for child in children {
                     self.emit_workshop_node(child, level + 1)?;
@@ -102,6 +111,10 @@ impl EmitContext<'_> {
         let modes_keyword = self.setting_name("namespaces", "modes", "namespace.modes")?;
         self.line(1, &format!("{modes_keyword} {{"))?;
         for mode in modes {
+            if let SettingsNode::RawGroup { name, children, .. } = mode {
+                self.emit_opaque_group(children, name, 2)?;
+                continue;
+            }
             let SettingsNode::Group { name, children, .. } = mode else {
                 return Err(WorkshopError::malformed(
                     "mode entries must be groups",
@@ -149,6 +162,10 @@ impl EmitContext<'_> {
         let heroes_keyword = self.setting_name("namespaces", "heroes", "namespace.heroes")?;
         self.line(1, &format!("{heroes_keyword} {{"))?;
         for team in teams {
+            if let SettingsNode::RawGroup { name, children, .. } = team {
+                self.emit_opaque_group(children, name, 2)?;
+                continue;
+            }
             let SettingsNode::Group { name, children, .. } = team else {
                 return Err(WorkshopError::malformed(
                     "team entries must be groups",
@@ -166,6 +183,9 @@ impl EmitContext<'_> {
             self.line(2, &format!("{display} {{"))?;
             for member in children {
                 match member {
+                    SettingsNode::RawGroup { name, children, .. } => {
+                        self.emit_opaque_group(children, name, 3)?;
+                    }
                     SettingsNode::Group { name, children, .. } => {
                         let english = table::hero_name(name).ok_or_else(|| {
                             suggested(
@@ -240,6 +260,11 @@ impl EmitContext<'_> {
                     None => name.to_string(),
                 };
                 return self.emit_opaque_group(children, &block_name, level);
+            }
+            // A pass-through block emits verbatim under its authored name at
+            // any position.
+            (SettingsNode::RawGroup { children, .. }, _) => {
+                return self.emit_opaque_group(children, name, level);
             }
             _ => {}
         }
@@ -356,7 +381,8 @@ impl EmitContext<'_> {
         self.line(level, &format!("{name} {{"))?;
         for child in children {
             match child {
-                SettingsNode::Group { name, children, .. } => {
+                SettingsNode::Group { name, children, .. }
+                | SettingsNode::RawGroup { name, children, .. } => {
                     self.emit_opaque_group(children, name, level + 1)?;
                 }
                 _ => self.settings_member(child, level + 1, &[], None)?,

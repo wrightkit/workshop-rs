@@ -3,8 +3,9 @@
 //! [`crate::Program::validate`] runs [`check_emission`] on every program, so
 //! checking raw Workshop input reports the same settings errors emission
 //! would. Members the catalog does not declare are carried as written
-//! ([`SettingsNode::Raw`], [`SettingsNode::RawValue`], or a block of them —
-//! under an unknown key or a catalogued non-list key) and accepted;
+//! ([`SettingsNode::Raw`], [`SettingsNode::RawValue`], or
+//! [`SettingsNode::RawGroup`] for a block of them — under an unknown key or
+//! a catalogued non-list key) and accepted;
 //! [`check_emission`] reports every other member the emitter would
 //! reject, without producing Workshop text. A carried member close to
 //! exactly one declared spelling is additionally reported as a
@@ -103,13 +104,16 @@ pub(crate) fn uncatalogued_members(settings: &Settings) -> Vec<UncataloguedMembe
             full.push(PathPart::Part(node.name()));
             let catalogued = table::lookup(&full);
             let member = match (node, catalogued) {
-                (SettingsNode::Raw { .. }, _) | (SettingsNode::Group { .. }, _) => {
-                    UncataloguedMember {
-                        name: node.name(),
-                        span: node.span(),
-                        suggestion: carried_suggestion(node, path),
-                    }
-                }
+                (
+                    SettingsNode::Raw { .. }
+                    | SettingsNode::Group { .. }
+                    | SettingsNode::RawGroup { .. },
+                    _,
+                ) => UncataloguedMember {
+                    name: node.name(),
+                    span: node.span(),
+                    suggestion: carried_suggestion(node, path),
+                },
                 (SettingsNode::RawValue { value, .. }, Some(_)) => UncataloguedMember {
                     name: value,
                     span: node.span(),
@@ -145,7 +149,8 @@ pub(crate) fn carried_suggestion(node: &SettingsNode, path: &[PathPart<'_>]) -> 
     let mut full = path.to_vec();
     full.push(PathPart::Part(node.name()));
     match (node, table::lookup(&full)) {
-        (SettingsNode::Raw { .. }, _) | (SettingsNode::Group { .. }, None) => {
+        (SettingsNode::Raw { .. }, _)
+        | (SettingsNode::Group { .. } | SettingsNode::RawGroup { .. }, None) => {
             suggest::suggest(node.name(), table::key_spellings(path).into_iter())
         }
         (SettingsNode::RawValue { value, .. }, Some(entry)) => match entry.kind {
@@ -183,6 +188,9 @@ fn walk<'a>(settings: &'a Settings, visit: &mut dyn FnMut(Visit<'a, '_>)) {
                 "heroes" => walk_heroes(children, visit),
                 _ => walk_opaque(children, visit),
             },
+            // Pass-through groups emit verbatim wherever they land; only
+            // their leaves need a written form.
+            SettingsNode::RawGroup { children, .. } => walk_opaque(children, visit),
             other => {
                 visit(Visit::Rejected(rejected(
                     other.span(),
@@ -204,7 +212,9 @@ fn walk<'a>(settings: &'a Settings, visit: &mut dyn FnMut(Visit<'a, '_>)) {
 fn walk_workshop<'a>(children: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_>)) {
     for child in children {
         match child {
-            SettingsNode::Group { children, .. } | SettingsNode::Workshop { children, .. } => {
+            SettingsNode::Group { children, .. }
+            | SettingsNode::Workshop { children, .. }
+            | SettingsNode::RawGroup { children, .. } => {
                 walk_workshop(children, visit);
             }
             SettingsNode::Raw { .. } | SettingsNode::RawValue { .. } => {}
@@ -219,6 +229,10 @@ fn walk_workshop<'a>(children: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'
 
 fn walk_modes<'a>(modes: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_>)) {
     for mode in modes {
+        if let SettingsNode::RawGroup { children, .. } = mode {
+            walk_opaque(children, visit);
+            continue;
+        }
         let SettingsNode::Group { name, children, .. } = mode else {
             visit(Visit::Rejected(rejected(
                 mode.span(),
@@ -243,6 +257,10 @@ fn walk_heroes<'a>(teams: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_
     const TEAM: [PathPart<'static>; 2] = [PathPart::Part("heroes"), PathPart::Team];
     const HERO: [PathPart<'static>; 3] = [PathPart::Part("heroes"), PathPart::Team, PathPart::Hero];
     for team in teams {
+        if let SettingsNode::RawGroup { children, .. } = team {
+            walk_opaque(children, visit);
+            continue;
+        }
         let SettingsNode::Group { name, children, .. } = team else {
             visit(Visit::Rejected(rejected(
                 team.span(),
@@ -261,6 +279,7 @@ fn walk_heroes<'a>(teams: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_
         }
         for member in children {
             match member {
+                SettingsNode::RawGroup { children, .. } => walk_opaque(children, visit),
                 SettingsNode::Group { name, children, .. } => {
                     if table::hero_name(name).is_none() {
                         visit(Visit::Rejected(rejected(
@@ -312,7 +331,9 @@ fn walk_opaque<'a>(children: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a,
         match child {
             // Mirrors `emit_opaque_group`: nested groups pass through
             // verbatim; only leaf members are table-checked.
-            SettingsNode::Group { children, .. } => walk_opaque(children, visit),
+            SettingsNode::Group { children, .. } | SettingsNode::RawGroup { children, .. } => {
+                walk_opaque(children, visit)
+            }
             other => visit(Visit::OpaqueLeaf(other)),
         }
     }
@@ -337,7 +358,7 @@ fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<Set
         // Mirrors `settings_member`: a block is carried as written whether
         // or not its key is catalogued; only its leaves must have a written
         // form (#412).
-        (SettingsNode::Group { children, .. }, _) => {
+        (SettingsNode::Group { children, .. } | SettingsNode::RawGroup { children, .. }, _) => {
             for child in children {
                 check_member(child, &[], errors);
             }

@@ -302,7 +302,8 @@ fn check_settings_node(node: &IrSettingsNode, program: &Program) -> Result<(), I
             }
             Ok(())
         }
-        IrSettingsNode::Group { children, span, .. } => {
+        IrSettingsNode::Group { children, span, .. }
+        | IrSettingsNode::RawGroup { children, span, .. } => {
             check_span(*span, program)?;
             for child in children {
                 check_settings_node(child, program)?;

@@ -115,6 +115,17 @@ pub enum SettingsNode {
         value: String,
         span: Option<Span>,
     },
+    /// A member written as `name { ... }` with the block emitted verbatim:
+    /// the pass-through marker for non-scalar members at positions where a
+    /// plain `Group` is name-resolved or kind-checked (a hero group under a
+    /// team, a member block under a catalogued key). The name is written as
+    /// authored and children carry their written form; a typed leaf inside
+    /// still fails the written-form checks the opaque-group path applies.
+    RawGroup {
+        name: String,
+        children: Vec<SettingsNode>,
+        span: Option<Span>,
+    },
 }
 
 /// One element of a settings list (corpus lists are all strings).
@@ -157,7 +168,8 @@ impl SettingsNode {
             | SettingsNode::String { span, .. }
             | SettingsNode::List { span, .. }
             | SettingsNode::Raw { span, .. }
-            | SettingsNode::RawValue { span, .. } => *span,
+            | SettingsNode::RawValue { span, .. }
+            | SettingsNode::RawGroup { span, .. } => *span,
         }
     }
 
@@ -165,7 +177,8 @@ impl SettingsNode {
     fn clear_spans(&mut self) {
         match self {
             SettingsNode::Workshop { children, span }
-            | SettingsNode::Group { children, span, .. } => {
+            | SettingsNode::Group { children, span, .. }
+            | SettingsNode::RawGroup { children, span, .. } => {
                 *span = None;
                 for node in children {
                     node.clear_spans();
@@ -197,7 +210,8 @@ impl SettingsNode {
             | SettingsNode::String { name, .. }
             | SettingsNode::List { name, .. }
             | SettingsNode::Raw { name, .. }
-            | SettingsNode::RawValue { name, .. } => name,
+            | SettingsNode::RawValue { name, .. }
+            | SettingsNode::RawGroup { name, .. } => name,
         }
     }
 }

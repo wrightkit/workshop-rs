@@ -192,13 +192,25 @@ fn nodes_equivalent(
                         children: right, ..
                     },
                 ) => nodes_equivalent(left, right),
+                // The pass-through mark is an emission hint: a `RawGroup`
+                // reparsed as a `Group` is semantically the same block.
                 (
                     crate::settings::SettingsNode::Group {
                         name: left_name,
                         children: left_children,
                         ..
+                    }
+                    | crate::settings::SettingsNode::RawGroup {
+                        name: left_name,
+                        children: left_children,
+                        ..
                     },
                     crate::settings::SettingsNode::Group {
+                        name: right_name,
+                        children: right_children,
+                        ..
+                    }
+                    | crate::settings::SettingsNode::RawGroup {
                         name: right_name,
                         children: right_children,
                         ..

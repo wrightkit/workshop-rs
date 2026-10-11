@@ -144,6 +144,18 @@ rejected, so a project can keep settings the catalog has not caught up with
 - a catalogued key whose value is not a declared enum member, and an unknown
   `name:` with nothing after the colon, parse to `SettingsNode::RawValue`.
 
+`SettingsNode::RawGroup { name, children, span }` is the programmatic
+counterpart for producers (such as `opy-rs` pass-through lowering) that must
+mark a non-scalar member verbatim rather than catalog-carried: a `name
+{ ... }` block emitted under its authored name at any position — including
+catalogued paths and positions where a plain `Group` would resolve as a
+team, hero, or catalogued member — skipping display-name and kind
+resolution for the marked node only. Its children still need a written
+form, so a typed leaf inside a `RawGroup` is rejected by both the emitter
+and `check_emission`, and unmarked nodes keep the same resolution and
+validation as before. Round-trip equivalence treats a reparsed `Group` and
+the authored `RawGroup` as the same block; the mark is an emission hint.
+
 `SettingsNode::RawValue { name, value }` writes `name: value` with the value
 as authored. At a catalogued path `name` is the canonical key and is emitted
 in the target locale; elsewhere it is written as is. Programmatic producers

@@ -555,9 +555,9 @@ fn find_node<'a>(children: &'a [SettingsNode], path: &[String]) -> Option<&'a Se
         Some(node)
     } else {
         match node {
-            SettingsNode::Workshop { children, .. } | SettingsNode::Group { children, .. } => {
-                find_node(children, rest)
-            }
+            SettingsNode::Workshop { children, .. }
+            | SettingsNode::Group { children, .. }
+            | SettingsNode::RawGroup { children, .. } => find_node(children, rest),
             _ => None,
         }
     }
@@ -573,9 +573,9 @@ fn find_node_mut<'a>(
         Some(node)
     } else {
         match node {
-            SettingsNode::Workshop { children, .. } | SettingsNode::Group { children, .. } => {
-                find_node_mut(children, rest)
-            }
+            SettingsNode::Workshop { children, .. }
+            | SettingsNode::Group { children, .. }
+            | SettingsNode::RawGroup { children, .. } => find_node_mut(children, rest),
             _ => None,
         }
     }

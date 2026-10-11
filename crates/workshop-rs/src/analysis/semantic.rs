@@ -155,7 +155,7 @@ pub(crate) fn inspect_wir(program: &crate::wir::Program, catalog: &Catalog) -> V
 fn inspect_setting(node: &SettingsNode, issues: &mut Vec<SemanticIssue>) {
     match node {
         SettingsNode::Workshop { .. } => {}
-        SettingsNode::Group { children, .. } => {
+        SettingsNode::Group { children, .. } | SettingsNode::RawGroup { children, .. } => {
             for child in children {
                 inspect_setting(child, issues);
             }
