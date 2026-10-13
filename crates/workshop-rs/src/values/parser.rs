@@ -430,7 +430,7 @@ impl ParseContext<'_> {
                 match canonical_value {
                     "true" => Ok(self.push_bool(true, start, end)),
                     "false" => Ok(self.push_bool(false, start, end)),
-                    "Event Player" => Ok(self.target.values.push(ValueNode::new(
+                    "eventPlayer" | "Event Player" => Ok(self.target.values.push(ValueNode::new(
                         Value::EventPlayer,
                         Some(Span::new(self.file(), start, end)),
                     ))),
@@ -881,6 +881,12 @@ impl ParseContext<'_> {
                     Some(Span::new(self.file(), start, end)),
                 )));
             }
+            if entry.id == "eventPlayer" {
+                return Ok(self.target.values.push(ValueNode::new(
+                    Value::EventPlayer,
+                    Some(Span::new(self.file(), start, end)),
+                )));
+            }
             return Ok(self.target.values.push(ValueNode::new(
                 Value::Call {
                     name: entry.id.clone(),
@@ -1170,6 +1176,26 @@ impl ParseContext<'_> {
     /// `memberAccess` call shape shared by the postfix loop and the
     /// post-paren receiver path.
     fn member_access(&mut self, receiver: wir::ValueId, name: String) -> Result<wir::ValueId> {
+        // A member access on the event player over a declared variable name
+        // is the player-variable read (`Event Player.score`, and its
+        // localized spellings that reach here through catalog resolution).
+        if matches!(
+            self.target.values.get(receiver),
+            Some(ValueNode {
+                value: Value::EventPlayer,
+                ..
+            })
+        ) && self.players.contains_key(&name)
+        {
+            let variable = self.player_by_name(&name)?;
+            return Ok(self.target.values.push(ValueNode::new(
+                Value::PlayerVariable {
+                    player: receiver,
+                    variable,
+                },
+                None,
+            )));
+        }
         let member = self
             .target
             .values

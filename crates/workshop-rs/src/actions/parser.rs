@@ -31,17 +31,7 @@ impl ParseContext<'_> {
                         self.pos += 1;
                         continue;
                     }
-                    let mut disabled = false;
-                    if let Some(Token {
-                        kind: TokenKind::Word(word),
-                        ..
-                    }) = self.peek()
-                    {
-                        if self.settings_name_matches("tokens", "disabled", &word) {
-                            self.pos += 1;
-                            disabled = true;
-                        }
-                    }
+                    let disabled = self.consume_disabled();
                     self.condition_pending = true;
                     let value = self.value()?;
                     self.expect_semi("expected ';' after condition")?;
@@ -123,9 +113,10 @@ impl ParseContext<'_> {
                         continue;
                     }
                     let saved = self.pos;
-                    let (phrase, start, end) = self.phrase()?;
-                    if let Some(rest) = self.disabled_action_rest(&phrase) {
-                        if let Some(structural) = self.resolve_entry(Kind::Structural, rest) {
+                    let disabled = self.consume_disabled();
+                    let (mut phrase, mut start, mut end) = self.phrase()?;
+                    if disabled {
+                        if let Some(structural) = self.resolve_entry(Kind::Structural, &phrase) {
                             match structural.id.as_str() {
                                 "while" => {
                                     let group = self.while_group(self.previous_span().0)?;
@@ -139,33 +130,24 @@ impl ParseContext<'_> {
                                 }
                                 _ => {
                                     let action =
-                                        self.action_call_from_phrase(rest.to_string(), start, end)?;
+                                        self.action_call_from_phrase(phrase, start, end)?;
                                     actions.push(self.disabled_action(action));
                                     continue;
                                 }
                             }
                         }
-                        if self.resolve_entry(Kind::Action, rest).is_some() {
-                            let canonical = rest;
-                            let call =
-                                self.action_call_from_phrase(canonical.to_string(), start, end)?;
+                        if self.resolve_entry(Kind::Action, &phrase).is_some() {
+                            let call = self.action_call_from_phrase(phrase, start, end)?;
                             actions.push(self.disabled_action(call));
                             continue;
                         }
-                    }
-                    if canonical_keyword(&phrase) == "disabled"
-                        && matches!(
-                            self.peek(),
-                            Some(Token {
-                                kind: TokenKind::Word(word),
-                                ..
-                            }) if canonical_keyword(&word) == "While"
-                        )
-                    {
-                        self.pos += 1;
-                        let group = self.while_group(self.previous_span().0)?;
-                        actions.push(self.disabled_action(group));
-                        continue;
+                        // Not a recognized disabled form: rewind so the
+                        // modifier stays part of the dispatched phrase.
+                        self.pos = saved;
+                        let reparsed = self.phrase()?;
+                        phrase = reparsed.0;
+                        start = reparsed.1;
+                        end = reparsed.2;
                     }
                     match self.canonical_keyword(&phrase).as_str() {
                         "end" => {
@@ -230,17 +212,9 @@ impl ParseContext<'_> {
     /// modifier is not followed by an assignment form.
     fn disabled_assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
         let saved = self.pos;
-        let Some(Token {
-            kind: TokenKind::Word(word),
-            ..
-        }) = self.peek()
-        else {
-            return Ok(None);
-        };
-        if !self.settings_name_matches("tokens", "disabled", &word) {
+        if !self.consume_disabled() {
             return Ok(None);
         }
-        self.pos += 1;
         match self.assignment_action()? {
             Some(action) => Ok(Some(self.disabled_action(action))),
             None => {
@@ -250,21 +224,58 @@ impl ParseContext<'_> {
         }
     }
 
+    /// Consume the `disabled` modifier if the cursor spells it: the
+    /// structural keyword's catalog/fallback spellings (including multi-word
+    /// and dotted forms like tr `devre dışı` and pl `wył.`) or the settings
+    /// `tokens.disabled` name.
+    pub(crate) fn consume_disabled(&mut self) -> bool {
+        if self.keyword_prefix(&["disabled"]).is_some() {
+            return true;
+        }
+        if let Some(Token {
+            kind: TokenKind::Word(word),
+            ..
+        }) = self.peek()
+        {
+            if self.settings_name_matches("tokens", "disabled", &word) {
+                self.pos += 1;
+                return true;
+            }
+        }
+        false
+    }
+
     /// Wrap a parsed action in the `disabled` modifier.
     fn disabled_action(&mut self, action: wir::ActionId) -> wir::ActionId {
         let span = self.target.actions.get(action).and_then(Action::span);
         self.target.actions.push(Action::Disabled { action, span })
     }
 
-    /// Return the action spelling after the locale-declared disabled
-    /// modifier. The modifier itself is settings/catalog data, not a parser
-    /// branch for a fixed pair of client locales.
-    pub(crate) fn disabled_action_rest<'a>(&self, phrase: &'a str) -> Option<&'a str> {
-        if let Some(rest) = phrase.strip_prefix("disabled ") {
-            return Some(rest);
+    /// The token count of an `eventPlayer` value spelling at the cursor when
+    /// it is followed by `.` — `Event Player` or any reviewed localized
+    /// alias (fr `Joueur exécutant`, tr `Etkinlik Oyuncusu`, zh `事件玩家`).
+    fn event_player_spelling_len(&self) -> Option<usize> {
+        let mut words = Vec::new();
+        let mut offset = 0;
+        while let Some(token) = self.peek_at(offset) {
+            match &token.kind {
+                TokenKind::Word(word) => {
+                    words.push(word.clone());
+                    offset += 1;
+                }
+                TokenKind::Dot => break,
+                _ => return None,
+            }
         }
-        let localized = table::localized_name(self.locale.as_str(), "tokens", "disabled")?;
-        phrase.strip_prefix(localized)?.strip_prefix(' ')
+        if !matches!(
+            self.peek_at(offset).map(|token| token.kind),
+            Some(TokenKind::Dot)
+        ) {
+            return None;
+        }
+        self.resolve_entry(Kind::Value, &words.join(" "))
+            .filter(|entry| entry.id == "eventPlayer")
+            .map(|_| offset)
     }
 
     pub(crate) fn assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
@@ -278,7 +289,7 @@ impl ParseContext<'_> {
             return Ok(None);
         };
 
-        if matches!(canonical_keyword(&first), "Global" | "global") {
+        if matches!(self.canonical_keyword(&first).as_str(), "Global" | "global") {
             self.pos += 1;
             self.expect(TokenKind::Dot, "expected '.' after 'Global'")?;
             let (name, name_start, target_end) = self.phrase()?;
@@ -341,32 +352,26 @@ impl ParseContext<'_> {
             })));
         }
 
-        let first_canonical = canonical_keyword(&first);
-        let is_event_player = first_canonical == "Event Player"
-            || (matches!(first_canonical, "Event" | "event")
-                && matches!(
-                    self.peek_at(1).map(|token| token.kind),
-                    Some(TokenKind::Word(word))
-                        if matches!(canonical_keyword(&word), "Player" | "player")
-                ));
-        if !is_event_player {
+        // An Event Player receiver may carry any catalog spelling, including
+        // multi-word aliases (fr `Joueur exécutant`, tr `Etkinlik Oyuncusu`);
+        // resolve the word run before `.` against the value catalog rather
+        // than matching individual words.
+        let Some(event_player_len) = self.event_player_spelling_len() else {
             // Object/member assignments use the same value grammar as member
             // reads (`receiver.member` and `receiver.member[index]`). Keep
             // this native member-assignment form distinct from catalog actions: the
             // receiver and member are dynamic Workshop values, not a builtin
             // identity. Global and Event Player assignments are handled by
             // their dedicated variable paths above and below.
-            if !matches!(first_canonical, "Event" | "event") {
+            if !matches!(
+                self.canonical_keyword(&first).as_str(),
+                "Event" | "event" | "Event Player"
+            ) {
                 return self.member_assignment_action(saved, start);
             }
             return Ok(None);
-        }
-
-        if first_canonical == "Event Player" {
-            self.pos += 1;
-        } else {
-            self.pos += 2;
-        }
+        };
+        self.pos += event_player_len;
         let event_player = self.target.values.push(ValueNode::new(
             Value::EventPlayer,
             Some(Span::new(self.file(), start, self.previous_span().1)),
@@ -610,12 +615,12 @@ impl ParseContext<'_> {
         loop {
             match stop {
                 Stop::End => {
-                    self.consume_phrase("End")?;
+                    self.consume_keyword("end")?;
                     self.expect_semi("expected ';' after 'End'")?;
                     break;
                 }
                 Stop::ElseIf => {
-                    self.consume_phrase("Else If")?;
+                    self.consume_keyword("elseIf")?;
                     self.expect(TokenKind::LParen, "expected '(' after 'Else If'")?;
                     self.condition_pending = true;
                     let condition = self.value()?;
@@ -626,7 +631,7 @@ impl ParseContext<'_> {
                     stop = next;
                 }
                 Stop::Else => {
-                    self.consume_phrase("Else")?;
+                    self.consume_keyword("else")?;
                     self.expect_semi("expected ';' after 'Else'")?;
                     let (body, next) = self.actions_until_end()?;
                     else_body = Some(body);
@@ -735,7 +740,7 @@ impl ParseContext<'_> {
         if stop != Stop::End {
             return Err(self.malformed(missing_end_message, self.previous()));
         }
-        self.consume_phrase("End")?;
+        self.consume_keyword("end")?;
         self.expect_semi("expected ';' after 'End'")?;
         Ok((body, self.previous_span().1))
     }
@@ -746,10 +751,7 @@ impl ParseContext<'_> {
         start: Position,
         end: Position,
     ) -> Result<wir::ActionId> {
-        match self
-            .catalog
-            .resolve(Kind::Structural, &self.locale, &phrase)
-        {
+        match self.resolve_entry(Kind::Structural, &phrase) {
             Some(entry) => match entry.id.as_str() {
                 "setGlobalVariable" | "modifyGlobalVariable" => {
                     let modify = entry.id == "modifyGlobalVariable";
@@ -982,22 +984,15 @@ impl ParseContext<'_> {
 
     pub(crate) fn modify_op(&mut self) -> Result<ModifyOp> {
         let (phrase, start, end) = self.phrase()?;
-        let entry = self
-            .catalog
-            .resolve(Kind::Operator, &self.locale, &phrase)
-            .ok_or_else(|| {
-                WorkshopError::unknown(
-                    "modify operator",
-                    phrase.clone(),
-                    self.locale.clone(),
-                    Some(Span::new(self.file(), start, end)),
-                )
-                .with_candidates(self.spelling_candidates(
-                    Kind::Operator,
-                    &phrase,
-                    false,
-                ))
-            })?;
+        let entry = self.resolve_entry(Kind::Operator, &phrase).ok_or_else(|| {
+            WorkshopError::unknown(
+                "modify operator",
+                phrase.clone(),
+                self.locale.clone(),
+                Some(Span::new(self.file(), start, end)),
+            )
+            .with_candidates(self.spelling_candidates(Kind::Operator, &phrase, false))
+        })?;
         ModifyOp::from_catalog_id(&entry.id).ok_or_else(|| {
             WorkshopError::unsupported(
                 format!("unsupported modify operator '{}'", entry.id),

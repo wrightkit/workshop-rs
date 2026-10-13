@@ -3,6 +3,9 @@ use crate::frontend::parser::*;
 impl ParseContext<'_> {
     pub(crate) fn settings_section(&mut self) -> Result<()> {
         let start = self.expect_keyword("settings")?;
+        if self.target.settings.is_some() {
+            return Err(self.malformed("duplicate 'settings' block", self.previous()));
+        }
         self.expect(TokenKind::LBrace, "expected '{' after 'settings'")?;
         let mut children = Vec::new();
         while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
@@ -217,6 +220,32 @@ impl ParseContext<'_> {
                     .zip(path.iter())
                     .all(|(left, right)| left == right)
                 && self.settings_name_matches_for_path(candidate, &display, hero)
+        });
+        // A declared mode group inherits the `gamemodes.general` leaf set
+        // (the same fallback `table::lookup` applies); resolve the authored
+        // spelling against the shared general entry so an inherited member
+        // stays typed instead of demoting to a carried raw member.
+        let entry = entry.or_else(|| {
+            let [PathPart::Part("gamemodes"), PathPart::Part(mode)] = path else {
+                return None;
+            };
+            table::entries()
+                .filter(|candidate| {
+                    matches!(
+                        candidate.path,
+                        [
+                            PathPart::Part("gamemodes"),
+                            PathPart::Part("general"),
+                            PathPart::Part(key)
+                        ] if table::mode_inherited_entry(&[
+                            PathPart::Part("gamemodes"),
+                            PathPart::Part(mode),
+                            PathPart::Part(key),
+                        ])
+                        .is_some()
+                    )
+                })
+                .find(|candidate| self.settings_name_matches_for_path(candidate, &display, hero))
         });
         let Some(entry) = entry else {
             if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace)) {
@@ -651,27 +680,54 @@ impl ParseContext<'_> {
             {
                 return true;
             }
+            // Duplicate upstream rows carry additional reviewed spellings the
+            // first-row `hero_setting_name` lookup never returns.
+            if table::hero_setting_display_matches(hero, key, self.locale.as_str(), display) {
+                return true;
+            }
             if table::hero_setting_alias(hero, key, self.locale.as_str(), display) {
                 return true;
             }
         }
         if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(candidate.path)) {
-            if candidate.workshop_name.contains("%1$s")
-                || matches!(
-                    candidate.path.last(),
-                    Some(PathPart::Part("enableAbility1" | "enableAbility2"))
-                )
+            // A producer alias is the spelling emission prefers; the export's
+            // generated label and `%1$s` template are shadowed and must not
+            // bind a display the emitter cannot reproduce.
+            let aliased = candidate
+                .path
+                .last()
+                .and_then(|part| match part {
+                    PathPart::Part(key) => Some(*key),
+                    _ => None,
+                })
+                .is_some_and(|key| table::hero_setting_has_alias(hero, key, self.locale.as_str()));
+            if let Some(PathPart::Part(key)) = candidate.path.last()
+                && !aliased
             {
-                return crate::gameplay::data::builtin()
-                    .ok()
-                    .and_then(|catalog| {
-                        catalog
-                            .query()
-                            .ability_name(hero, slot, None, self.locale.as_str())
-                            .ok()
-                            .map(|name| table::names_eq(name, display))
-                    })
-                    .unwrap_or(false);
+                if let Some(template) = table::hero_key_template(key).or_else(|| {
+                    candidate
+                        .workshop_name
+                        .contains("%1$s")
+                        .then_some(candidate.workshop_name)
+                }) {
+                    return crate::gameplay::data::builtin()
+                        .ok()
+                        .and_then(|catalog| {
+                            catalog
+                                .query()
+                                .ability_name(hero, slot, None, self.locale.as_str())
+                                .ok()
+                                .map(str::to_string)
+                        })
+                        .map(|name| {
+                            table::names_eq(name.as_str(), display)
+                                || table::names_eq(
+                                    template.replace("%1$s", name.as_str()).as_str(),
+                                    display,
+                                )
+                        })
+                        .unwrap_or(false);
+                }
             }
         }
         self.settings_name_matches("labels", candidate.workshop_name, display)

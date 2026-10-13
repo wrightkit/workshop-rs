@@ -127,10 +127,24 @@ impl SettingDefinition {
         Ok(match (&self.target, target) {
             (TargetPattern::Global, SettingTarget::Global) => Applicability::Applicable,
             (TargetPattern::Mode(expected), SettingTarget::Mode(actual)) => {
-                if expected
-                    .as_deref()
-                    .is_none_or(|expected| expected == actual)
-                {
+                let applies = match self.inherited_general_key() {
+                    // A `gamemodes.general` leaf applies to a mode only when
+                    // the mode inherits it (`elimination` copies a subset);
+                    // `general` itself is the literal authored group.
+                    Some(key) => {
+                        actual == "general"
+                            || table::mode_inherited_entry(&[
+                                PathPart::Part("gamemodes"),
+                                PathPart::Part(actual.as_str()),
+                                PathPart::Part(key),
+                            ])
+                            .is_some()
+                    }
+                    None => expected
+                        .as_deref()
+                        .is_none_or(|expected| expected == actual),
+                };
+                if applies {
                     Applicability::Applicable
                 } else {
                     Applicability::NotApplicable
@@ -335,6 +349,10 @@ impl SettingDefinition {
                 target: target.clone(),
             }
         })?;
+        // Same leaf gate as `read`/`write`: a group or pass-through
+        // occurrence has no scalar value bytes to edit, and
+        // `source_value_range` would carve the range out of the block.
+        value_from_node(node, &self.domain, &id)?;
         validate_value(&self.domain, &id, &value, node.span())?;
         let span = node
             .span()
@@ -401,10 +419,35 @@ impl SettingDefinition {
             })
     }
 
+    /// For `gamemodes.general` definitions, the leaf key whose occurrences
+    /// live under each inheriting mode.
+    fn inherited_general_key(&self) -> Option<&'static str> {
+        match self.path_parts {
+            [
+                PathPart::Part("gamemodes"),
+                PathPart::Part("general"),
+                PathPart::Part(key),
+            ] => Some(key),
+            _ => None,
+        }
+    }
+
     fn concrete_path(&self, target: &SettingTarget) -> Vec<String> {
+        let mode = match target {
+            SettingTarget::Mode(mode) => Some(mode.as_str()),
+            _ => None,
+        };
         self.path_parts
             .iter()
-            .map(|part| match part {
+            .enumerate()
+            .map(|(index, part)| match part {
+                // An inherited `gamemodes.general` leaf occurs under the
+                // requested mode's group.
+                PathPart::Part("general")
+                    if index == 1 && self.inherited_general_key().is_some() && mode.is_some() =>
+                {
+                    mode.unwrap().to_string()
+                }
                 PathPart::Part(name) => (*name).to_string(),
                 PathPart::Team => target_team(target),
                 PathPart::Hero => target_hero(target),

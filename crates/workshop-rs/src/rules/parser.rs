@@ -13,7 +13,7 @@ impl ParseContext<'_> {
         let _ = file;
 
         loop {
-            let phrase = match self.peek() {
+            let word = match self.peek() {
                 Some(Token {
                     kind: TokenKind::Word(word),
                     ..
@@ -27,20 +27,23 @@ impl ParseContext<'_> {
                 }
                 None => break,
             };
-            match self.canonical_keyword(&phrase).as_str() {
-                "settings" => self.settings_section()?,
-                "variables" => self.variables_section()?,
-                "subroutines" => self.subroutines_section()?,
-                "rule" => self.rule(false, self.span_here().0)?,
-                "disabled" => {
-                    let rule_start = self.span_here().0;
-                    self.pos += 1;
+            let rule_start = self.span_here().0;
+            let saved = self.pos;
+            let section = self.keyword_prefix(TOP_LEVEL_SECTIONS);
+            self.pos = saved;
+            match section.as_deref() {
+                Some("settings") => self.settings_section()?,
+                Some("variables") => self.variables_section()?,
+                Some("subroutines") => self.subroutines_section()?,
+                Some("rule") => self.rule(false, rule_start)?,
+                Some("disabled") => {
+                    self.consume_keyword("disabled")?;
                     self.rule(true, rule_start)?;
                 }
-                other => {
+                _ => {
                     return Err(self
-                        .unknown("top-level section", other)
-                        .with_candidates(self.section_candidates(other, TOP_LEVEL_SECTIONS)));
+                        .unknown("top-level section", &word)
+                        .with_candidates(self.section_candidates(&word, TOP_LEVEL_SECTIONS)));
                 }
             }
         }
@@ -61,10 +64,9 @@ impl ParseContext<'_> {
                     break;
                 }
                 Some(Token {
-                    kind: TokenKind::Word(word),
+                    kind: TokenKind::Word(_),
                     ..
-                }) if matches!(self.canonical_keyword(&word).as_str(), "Global" | "global") => {
-                    self.pos += 1;
+                }) if self.keyword_prefix(&["global"]).is_some() => {
                     self.expect(TokenKind::Colon, "expected ':' after 'global'")?;
                     while let Some(Token {
                         kind: TokenKind::Number { .. },
@@ -74,6 +76,22 @@ impl ParseContext<'_> {
                         let variable = self.variable_line()?;
                         self.next_global_index =
                             self.next_global_index.max(variable.index.saturating_add(1));
+                        if let Some(id) = self.globals.get(&variable.name).copied() {
+                            // A spanless declaration was fabricated by a
+                            // forward reference: rebind it to the declared
+                            // index so earlier references keep their ID.
+                            if self.target.global_variables.get(id).unwrap().span.is_none() {
+                                *self.target.global_variables.get_mut(id).unwrap() = variable;
+                                continue;
+                            }
+                            return Err(self.malformed(
+                                &format!(
+                                    "duplicate variable declaration '{}'",
+                                    self.target.global_variables.get(id).unwrap().name
+                                ),
+                                self.previous(),
+                            ));
+                        }
                         let id = self.target.global_variables.push(variable);
                         self.globals.insert(
                             self.target.global_variables.get(id).unwrap().name.clone(),
@@ -83,10 +101,9 @@ impl ParseContext<'_> {
                     saw_section = true;
                 }
                 Some(Token {
-                    kind: TokenKind::Word(word),
+                    kind: TokenKind::Word(_),
                     ..
-                }) if self.canonical_keyword(&word) == "player" => {
-                    self.pos += 1;
+                }) if self.keyword_prefix(&["player"]).is_some() => {
                     self.expect(TokenKind::Colon, "expected ':' after 'player'")?;
                     while let Some(Token {
                         kind: TokenKind::Number { .. },
@@ -96,6 +113,19 @@ impl ParseContext<'_> {
                         let variable = self.variable_line()?;
                         self.next_player_index =
                             self.next_player_index.max(variable.index.saturating_add(1));
+                        if let Some(id) = self.players.get(&variable.name).copied() {
+                            if self.target.player_variables.get(id).unwrap().span.is_none() {
+                                *self.target.player_variables.get_mut(id).unwrap() = variable;
+                                continue;
+                            }
+                            return Err(self.malformed(
+                                &format!(
+                                    "duplicate variable declaration '{}'",
+                                    self.target.player_variables.get(id).unwrap().name
+                                ),
+                                self.previous(),
+                            ));
+                        }
                         let id = self.target.player_variables.push(variable);
                         self.players.insert(
                             self.target.player_variables.get(id).unwrap().name.clone(),
@@ -118,17 +148,38 @@ impl ParseContext<'_> {
         Ok(())
     }
 
-    pub(crate) fn variable_line(&mut self) -> Result<wir::WorkshopVariable> {
-        let index = match self.next() {
+    /// A declaration index must be a whole u32: `as u32` alone truncates
+    /// fractions and saturates overflow, silently merging declarations.
+    fn declaration_index(&mut self) -> Result<u32> {
+        match self.next() {
             Some(Token {
                 kind: TokenKind::Number { value, .. },
                 ..
-            }) => value as u32,
-            Some(token) => return Err(self.malformed("expected a variable index", &token)),
-            None => return Err(self.malformed("expected a variable index", self.eof())),
-        };
+            }) if value.fract() == 0.0 && (0.0..=u32::MAX as f64).contains(&value) => {
+                Ok(value as u32)
+            }
+            Some(token) => Err(self.malformed("expected an integer index", &token)),
+            None => Err(self.malformed("expected an index", self.eof())),
+        }
+    }
+
+    /// A declaration name must be expressible as a reference: `phrase_on_line`
+    /// joins `.`/`%`/`:`/spaced `-`, none of which `phrase` can parse back.
+    fn check_decl_name(&mut self, name: &str) -> Result<()> {
+        if name.contains('.') || name.contains('%') || name.contains(':') || name.contains(" - ") {
+            return Err(self.malformed(
+                &format!("declaration name '{name}' cannot be referenced"),
+                self.previous(),
+            ));
+        }
+        Ok(())
+    }
+
+    pub(crate) fn variable_line(&mut self) -> Result<wir::WorkshopVariable> {
+        let index = self.declaration_index()?;
         self.expect(TokenKind::Colon, "expected ':' after variable index")?;
         let (name, name_start, name_end) = self.phrase_on_line()?;
+        self.check_decl_name(&name)?;
         let name_span = Span::new(self.file(), name_start, name_end);
         Ok(wir::WorkshopVariable {
             name,
@@ -146,15 +197,10 @@ impl ParseContext<'_> {
             ..
         }) = self.peek()
         {
-            let index = match self.next() {
-                Some(Token {
-                    kind: TokenKind::Number { value, .. },
-                    ..
-                }) => value as u32,
-                _ => unreachable!(),
-            };
+            let index = self.declaration_index()?;
             self.expect(TokenKind::Colon, "expected ':' after subroutine index")?;
             let (name, start, end) = self.phrase_on_line()?;
+            self.check_decl_name(&name)?;
             let id = self.target.subroutines.push(wir::WorkshopSubroutine {
                 name,
                 index,

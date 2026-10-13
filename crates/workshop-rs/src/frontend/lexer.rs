@@ -97,7 +97,7 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
 
     while let Some(ch) = cursor.peek() {
         match ch {
-            ' ' | '\t' | '\r' | '\n' => {
+            ' ' | '\t' | '\r' | '\n' | '\u{FEFF}' => {
                 cursor.advance();
             }
             '(' | ')' | ',' | ';' | '{' | '}' | ':' | '.' | '[' | ']' | '?' | '-' => {

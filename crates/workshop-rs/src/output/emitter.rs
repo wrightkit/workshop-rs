@@ -181,7 +181,18 @@ impl EmitContext<'_> {
 /// representation truncated to 16 significant digits (OverPy behavior;
 /// evidence: the pinned oracle snapshots).
 pub(crate) fn escape_string(value: &str) -> String {
-    value.replace('"', "\\\"")
+    let mut out = String::with_capacity(value.len());
+    for ch in value.chars() {
+        match ch {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            other => out.push(other),
+        }
+    }
+    out
 }
 
 /// Re-escape a decoded value string the way the pinned oracle does (#87):

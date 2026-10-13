@@ -337,19 +337,19 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
         [
             Part("gamemodes"),
             Part("general"),
-            Part("gameModeStartTrigger")
+            Part("gamemodeStartTrigger")
         ],
         "Game Mode Start",
-        KeyKind::Enum("gameModeStartTrigger")
+        KeyKind::Enum("gamemodeStartTrigger")
     ),
     entry!(
         [
             Part("gamemodes"),
             Part("assault"),
-            Part("gameModeStartTrigger")
+            Part("gamemodeStartTrigger")
         ],
         "Game Mode Start",
-        KeyKind::Enum("gameModeStartTrigger")
+        KeyKind::Enum("gamemodeStartTrigger")
     ),
     entry!(
         [
@@ -469,7 +469,6 @@ pub(crate) static HERO_NAMES: &[NameMap] = &[
     named("hanzo", "Hanzo"),
     named("moira", "Moira"),
     named("reinhardt", "Reinhardt"),
-    named("hammond", "Wrecking Ball"),
     named("hazard", "Hazard"),
     named("illari", "Illari"),
     named("juno", "Juno"),
@@ -548,8 +547,9 @@ pub(crate) static ENUM_MEMBERS: &[EnumMember] = &[
     enum_member("returnToLobby", "never", "Never"),
     enum_member("returnToLobby", "afterAGame", "After A Game"),
     enum_member("returnToLobby", "afterMirrorMatch", "After A Mirror Match"),
-    enum_member("gameModeStartTrigger", "immediately", "Immediately"),
-    enum_member("gameModeStartTrigger", "manual", "Manual"),
+    enum_member("gamemodeStartTrigger", "immediately", "Immediately"),
+    enum_member("gamemodeStartTrigger", "manual", "Manual"),
+    enum_member("gamemodeStartTrigger", "allSlotsFilled", "All Slots Filled"),
     enum_member("spawnHealthPacks", "disabled", "Disabled"),
     enum_member("spawnHealthPacks", "modeDependent", "Determined By Mode"),
     enum_member("spawnHealthPacks", "enabled", "Enabled"),
@@ -562,6 +562,11 @@ pub(crate) static ENUM_MEMBERS: &[EnumMember] = &[
     enum_member("roleLimit", "off", "Off"),
     enum_member("tankPassiveHealthBonus", "alwaysEnabled", "Always Enabled"),
     enum_member("tankPassiveHealthBonus", "disabled", "Disabled"),
+    enum_member(
+        "tankPassiveHealthBonus",
+        "1Tank2Offense2Support",
+        "1 Tank 2 Offense 2 Support",
+    ),
     enum_member("heroLimit", "off", "Off"),
     enum_member("heroLimit", "1PerTeam", "1 Per Team"),
     enum_member("heroLimit", "2PerTeam", "2 Per Team"),
@@ -605,7 +610,7 @@ static ELIMINATION_GENERAL_KEYS: &[&str] = &[
     "teamOverlay",
 ];
 
-fn mode_inherited_entry(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
+pub(crate) fn mode_inherited_entry(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
     let [
         PathPart::Part("gamemodes"),
         PathPart::Part(mode),
@@ -757,6 +762,49 @@ pub(crate) fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&
         })
 }
 
+/// Parse-side display match against every generated row for `(hero, key)`.
+/// Emission reads only the first row, but duplicate upstream rows carry
+/// additional reviewed spellings the parser must still accept. A producer
+/// alias shadows the export labels entirely: emission prefers the alias, so
+/// accepting a shadowed generated spelling would bind a display the emitter
+/// cannot reproduce.
+pub(crate) fn hero_setting_display_matches(
+    hero: &str,
+    key: &str,
+    locale: &str,
+    display: &str,
+) -> bool {
+    if hero_setting_has_alias(hero, key, locale) {
+        return false;
+    }
+    GENERATED_HERO_SETTING_NAMES
+        .iter()
+        .filter(|entry| entry.hero == hero && entry.key == key)
+        .filter_map(|entry| entry.localized(locale))
+        .any(|name| names_eq(name, display))
+}
+
+/// The `%1$s` composition template a hero-scoped leaf key carries: the
+/// generated export's placeholder form, which the emitter fills with the
+/// hero's gameplay ability name when no reviewed per-hero label exists.
+pub(crate) fn hero_key_template(key: &str) -> Option<&'static str> {
+    GENERATED_ENTRIES
+        .iter()
+        .find(|entry| {
+            matches!(
+                entry.path,
+                [
+                    PathPart::Part("heroes"),
+                    PathPart::Team,
+                    PathPart::Hero,
+                    PathPart::Part(candidate)
+                ] if *candidate == key
+            )
+        })
+        .map(|entry| entry.workshop_name)
+        .filter(|name| name.contains("%1$s"))
+}
+
 #[derive(Deserialize)]
 struct HeroSettingAlias {
     hero: String,
@@ -770,6 +818,14 @@ fn hero_setting_aliases() -> &'static [HeroSettingAlias] {
     ALIASES.get_or_init(|| {
         serde_json::from_str(include_str!("data/hero_setting_aliases.json"))
             .expect("hero setting alias data is valid JSON")
+    })
+}
+
+/// Whether a reviewed producer alias exists for `(hero, key)` in `locale` —
+/// the alias shadows the export's generated labels and `%1$s` templates.
+pub(crate) fn hero_setting_has_alias(hero: &str, key: &str, locale: &str) -> bool {
+    hero_setting_aliases().iter().any(|alias| {
+        alias.hero == hero && alias.key == key && alias.locale.eq_ignore_ascii_case(locale)
     })
 }
 
