@@ -27,22 +27,39 @@ fn rule_name_backslash_round_trips() {
         emitted.contains("\"a\\\\nb\""),
         "backslash must re-escape, got:\n{emitted}"
     );
+    internal::assert_emit_round_trip(&program);
 }
 
 /// W3: fractional and out-of-range declaration indexes must be rejected
 /// rather than truncated/saturated by `as u32`.
 #[test]
 fn non_integer_variable_index_is_rejected() {
-    assert!(internal::try_parse("variables\n{\n    global:\n        1.9: b\n}").is_err());
-    assert!(internal::try_parse("variables\n{\n    global:\n        4294967296: b\n}").is_err());
+    for source in [
+        "variables\n{\n    global:\n        1.9: b\n}",
+        "variables\n{\n    global:\n        4294967296: b\n}",
+    ] {
+        let error = internal::try_parse(source).unwrap_err();
+        assert!(
+            error.to_string().contains("integer index"),
+            "the diagnostic must name the index, got: {error}"
+        );
+    }
     assert!(internal::try_parse("variables\n{\n    player:\n        -1: b\n}").is_err());
 }
 
 /// W4: a declaration name a reference can never express must be rejected.
 #[test]
 fn unreferenceable_variable_name_is_rejected() {
-    assert!(internal::try_parse("variables\n{\n    global:\n        0: a.b\n}").is_err());
-    assert!(internal::try_parse("variables\n{\n    global:\n        0: a % b\n}").is_err());
+    for source in [
+        "variables\n{\n    global:\n        0: a.b\n}",
+        "variables\n{\n    global:\n        0: a % b\n}",
+    ] {
+        let error = internal::try_parse(source).unwrap_err();
+        assert!(
+            error.to_string().contains("cannot be referenced"),
+            "the diagnostic must name the unreferenceable name, got: {error}"
+        );
+    }
 }
 
 /// W7: a second `settings {}` block must be rejected, not silently
@@ -50,7 +67,11 @@ fn unreferenceable_variable_name_is_rejected() {
 #[test]
 fn duplicate_settings_block_is_rejected() {
     let source = "settings\n{\n    main\n    {\n        Description: \"first\"\n    }\n}\nsettings\n{\n    main\n    {\n        Description: \"second\"\n    }\n}";
-    assert!(internal::try_parse(source).is_err());
+    let error = internal::try_parse(source).unwrap_err();
+    assert!(
+        error.to_string().contains("duplicate 'settings' block"),
+        "the diagnostic must name the duplicate block, got: {error}"
+    );
 }
 
 /// W9: opaque settings string values must re-emit decoded control
@@ -65,6 +86,7 @@ fn opaque_settings_string_reescapes_controls() {
         emitted.contains("Custom Key: \"a\\nb\\rc\\\\d\""),
         "control characters must re-escape, got:\n{emitted}"
     );
+    internal::assert_emit_round_trip(&program);
 }
 
 /// W10: a forward variable reference must reuse the real declaration's
@@ -85,6 +107,7 @@ fn forward_reference_binds_to_later_declaration() {
     let reparsed = internal::parse(&emitted);
     let var = reparsed.global_variables.iter().next().unwrap();
     assert_eq!(var.index, 3);
+    internal::assert_emit_round_trip(&program);
 }
 
 /// W10 companion: two declarations of the same name must be rejected.
