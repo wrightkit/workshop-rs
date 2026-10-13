@@ -565,7 +565,7 @@ impl<'a> EmitContext<'a> {
         )
     }
 
-    fn ambiguous_enum_spelling_from_args(&self, args: &[wir::ValueId]) -> Result<String> {
+    fn ambiguous_enum_spelling_from_args(&mut self, args: &[wir::ValueId]) -> Result<String> {
         if args.len() != 2 {
             return Err(WorkshopError::malformed(
                 "ambiguous enum value expects spelling and candidates".to_string(),
@@ -612,7 +612,7 @@ impl<'a> EmitContext<'a> {
     }
 
     fn ambiguous_enum_spelling(
-        &self,
+        &mut self,
         spelling: &str,
         candidates: &[(String, String)],
     ) -> Result<String> {
@@ -657,8 +657,9 @@ impl<'a> EmitContext<'a> {
         if let Some(mapped) = common_spelling(&self.locale) {
             return Ok(mapped);
         }
-        if let Some(fallback) = &self.fallback {
+        if let Some(fallback) = &self.fallback.clone() {
             if let Some(mapped) = common_spelling(fallback) {
+                self.fallback_ids.push(format!("enumMember:{spelling}"));
                 return Ok(mapped);
             }
         }

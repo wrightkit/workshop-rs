@@ -40,11 +40,13 @@ def labeled_record(aliases, source, identifier=None):
 
 def walk_labels(value, path, out):
     if isinstance(value, dict):
+        # A node may carry its own locale labels AND labeled children — record
+        # the labels, then keep descending so the subtree is not dropped.
+        aliases = localized_aliases(value)
+        if aliases:
+            out.append(labeled_record(aliases, ".".join(path)))
         for key, child in value.items():
-            aliases = localized_aliases(child) if isinstance(child, dict) else {}
-            if aliases:
-                out.append(labeled_record(aliases, ".".join((*path, key))))
-            else:
+            if key not in LOCALES:
                 walk_labels(child, (*path, key), out)
     elif isinstance(value, list):
         for index, child in enumerate(value):
@@ -69,7 +71,9 @@ def reject_alias_conflicts(entries, category, locales):
         for entry in entries:
             alias = entry.get(locale)
             if alias:
-                by_alias.setdefault((locale, alias), []).append(entry["id"])
+                by_alias.setdefault((locale, alias), []).append(
+                    entry.get("id") or entry["source"]
+                )
     conflicts = {
         f"{locale}:{alias}": ids
         for (locale, alias), ids in by_alias.items()
@@ -114,9 +118,12 @@ def main():
             if locale not in {"id", "source"}
         }
     )
-    settings_groups.sort(key=lambda item: (item.get(locales[0], ""), item["source"]))
+    settings_groups.sort(
+        key=lambda item: (item.get(locales[0], "") if locales else "", item["source"])
+    )
     for category, category_entries in entries.items():
         reject_alias_conflicts(category_entries, category, locales)
+    reject_alias_conflicts(settings_groups, "settingsGroups", locales)
     output = {
         "schemaVersion": 1,
         "source": {

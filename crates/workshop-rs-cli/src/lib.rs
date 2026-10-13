@@ -11,10 +11,9 @@ use std::path::{Path, PathBuf};
 
 use workshop_rs::Program;
 use workshop_rs::catalog::{Catalog, Locale};
-use workshop_rs::convert::{self, ConvertOptions};
 use workshop_rs::detect;
 use workshop_rs::emitter::{self, EmitOptions};
-use workshop_rs::parser;
+use workshop_rs::{parser, validate};
 
 pub mod census;
 pub mod conformance;
@@ -173,6 +172,8 @@ fn parse_file(
     let locale = resolve_parse_locale(&input, &catalog, explicit_locale)?;
     let program = parser::parse_with_context(&input, &catalog, &locale, &catalog)
         .map_err(|error| error.to_string())?;
+    validate::validate_canonical_ids(&program, &catalog)
+        .map_err(|error| format!("canonical identity validation failed: {error}"))?;
     Ok((catalog, locale, program))
 }
 
@@ -239,9 +240,20 @@ fn convert_command(args: Vec<String>) -> i32 {
         (Ok(catalog), Ok(input)) => (catalog, input),
         (Err(error), _) | (_, Err(error)) => return fail(error),
     };
-    let mut convert_options = ConvertOptions::default();
-    convert_options.fallback_locale = options.locale("--fallback-locale");
-    match convert::convert(&input, &catalog, &from, &to, &convert_options) {
+    let program = parser::parse_with_context(&input, &catalog, &from, &catalog)
+        .map_err(|error| error.to_string())
+        .and_then(|program| {
+            validate::validate_canonical_ids(&program, &catalog)
+                .map_err(|error| format!("canonical identity validation failed: {error}"))?;
+            Ok(program)
+        });
+    let program = match program {
+        Ok(program) => program,
+        Err(error) => return fail(error),
+    };
+    let mut emit_options = EmitOptions::default();
+    emit_options.fallback_locale = options.locale("--fallback-locale");
+    match emitter::emit_with_options(&program, &catalog, &to, &emit_options) {
         Ok(output) => {
             report_fallbacks(&output.fallback_ids);
             print!("{}", output.text);
@@ -343,20 +355,20 @@ fn census_command(args: Vec<String>) -> i32 {
     };
     let catalog = match Catalog::builtin() {
         Ok(catalog) => catalog,
-        Err(error) => return usage_error(&format!("cannot load catalog: {error}")),
+        Err(error) => return fail(format!("cannot load catalog: {error}")),
     };
     let census = match census::Census::builtin(&catalog) {
         Ok(census) => census,
-        Err(error) => return usage_error(&format!("cannot build census: {error}")),
+        Err(error) => return fail(format!("cannot build census: {error}")),
     };
     let report = census.run(&catalog);
     if let Err(error) = report.validate_against(&catalog) {
-        return usage_error(&format!("invalid census report: {error}"));
+        return fail(format!("invalid census report: {error}"));
     }
     if json {
         match report.to_json() {
             Ok(text) => println!("{text}"),
-            Err(error) => return usage_error(&format!("cannot serialize census: {error}")),
+            Err(error) => return fail(format!("cannot serialize census: {error}")),
         }
     } else {
         println!(

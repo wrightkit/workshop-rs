@@ -472,13 +472,97 @@ impl<'a> ParseContext<'a> {
         Ok(())
     }
 
+    /// The spellings a structural keyword accepts here: catalog aliases for
+    /// the active and primary locales, plus the hardcoded fallback keys that
+    /// resolve to the same id in the primary locale.
+    fn structural_spellings(&self, id: &str) -> Vec<String> {
+        let mut spellings = Vec::new();
+        if let Some(entry) = self.catalog.entry(Kind::Structural, id) {
+            spellings.extend(entry.spellings(&self.locale).iter().cloned());
+            let primary = self.catalog.primary_locale();
+            if self.locale != *primary {
+                spellings.extend(entry.spellings(primary).iter().cloned());
+            }
+        }
+        for (spelling, english) in structural_keyword_map() {
+            if self
+                .catalog
+                .resolve(Kind::Structural, self.catalog.primary_locale(), english)
+                .is_some_and(|entry| entry.id == id)
+            {
+                spellings.push(spelling.clone());
+            }
+        }
+        spellings
+    }
+
+    /// How many tokens a structural spelling spans at the cursor: words and
+    /// numbers compare case-insensitively, a trailing `.` needs a Dot token.
+    fn match_spelling_tokens(&self, spelling: &str) -> Option<usize> {
+        let mut offset = 0;
+        for piece in spelling.split(' ') {
+            let (word, dotted) = match piece.strip_suffix('.') {
+                Some(word) => (word, true),
+                None => (piece, false),
+            };
+            if !word.is_empty() {
+                match self.peek_at(offset).map(|token| token.kind) {
+                    Some(TokenKind::Word(ref candidate)) if table::names_eq(candidate, word) => {}
+                    Some(TokenKind::Number { ref text, .. }) if text == word => {}
+                    _ => return None,
+                }
+                offset += 1;
+            }
+            if dotted {
+                match self.peek_at(offset).map(|token| token.kind) {
+                    Some(TokenKind::Dot) => offset += 1,
+                    _ => return None,
+                }
+            }
+        }
+        (offset > 0).then_some(offset)
+    }
+
+    /// Consume the longest structural keyword prefix among `ids` at the
+    /// cursor, returning its canonical id. Multi-word and dotted spellings
+    /// (tr `devre dışı`, pl `wył.`, fr `de joueur`) resolve like single-word
+    /// aliases; nothing is consumed on a miss.
+    pub(crate) fn keyword_prefix(&mut self, ids: &[&str]) -> Option<String> {
+        let mut best: Option<(String, usize)> = None;
+        for id in ids {
+            for spelling in self.structural_spellings(id) {
+                if let Some(len) = self.match_spelling_tokens(&spelling) {
+                    if best.as_ref().is_none_or(|(_, length)| len > *length) {
+                        best = Some(((*id).to_string(), len));
+                    }
+                }
+            }
+        }
+        if let Some((id, len)) = best {
+            self.pos += len;
+            Some(id)
+        } else {
+            None
+        }
+    }
+
+    /// Consume one structural keyword by canonical id, verifying spelling.
+    pub(crate) fn consume_keyword(&mut self, id: &str) -> Result<()> {
+        if self.keyword_prefix(&[id]).is_some() {
+            return Ok(());
+        }
+        match self.peek() {
+            Some(token) => Err(self.malformed(&format!("expected '{id}'"), &token)),
+            None => Err(self.malformed(&format!("expected '{id}'"), self.eof())),
+        }
+    }
+
     pub(crate) fn expect_keyword(&mut self, expected: &str) -> Result<Position> {
+        let start = self.peek().map(|token| token.start);
+        if self.keyword_prefix(&[expected]).is_some() {
+            return Ok(start.unwrap_or_else(|| self.previous().start));
+        }
         match self.next() {
-            Some(Token {
-                kind: TokenKind::Word(word),
-                start,
-                ..
-            }) if self.canonical_keyword(&word) == expected => Ok(start),
             Some(token) => Err(self.malformed(&format!("expected '{expected}'"), &token)),
             None => Err(self.malformed(&format!("expected '{expected}'"), self.eof())),
         }
@@ -660,13 +744,16 @@ impl<'a> ParseContext<'a> {
     }
 }
 
-pub(crate) fn canonical_keyword(keyword: &str) -> &str {
+fn structural_keyword_map() -> &'static HashMap<String, String> {
     static KEYWORDS: OnceLock<HashMap<String, String>> = OnceLock::new();
-    KEYWORDS
-        .get_or_init(|| {
-            serde_json::from_str(include_str!("structural_keywords.json"))
-                .expect("structural keyword data is valid JSON")
-        })
+    KEYWORDS.get_or_init(|| {
+        serde_json::from_str(include_str!("structural_keywords.json"))
+            .expect("structural keyword data is valid JSON")
+    })
+}
+
+pub(crate) fn canonical_keyword(keyword: &str) -> &str {
+    structural_keyword_map()
         .get(keyword)
         .map(String::as_str)
         .unwrap_or(keyword)
@@ -676,7 +763,10 @@ pub(crate) fn raw_token_text(kind: &TokenKind) -> String {
     match kind {
         TokenKind::Word(value) => value.clone(),
         TokenKind::Number { text, .. } => text.clone(),
-        TokenKind::String(value) => format!("\"{}\"", value.replace('"', "\\\"")),
+        TokenKind::String(value) => format!(
+            "\"{}\"",
+            crate::output::emitter::escape_settings_string(value)
+        ),
         TokenKind::Op(value) => value.clone(),
         TokenKind::LParen => "(".to_string(),
         TokenKind::RParen => ")".to_string(),

@@ -38,7 +38,18 @@ impl SettingDefinition {
             .unwrap_or("");
         let target = target_for(entry.path);
         let path = table::path_string(entry.path);
-        let domain = domain_for(entry.kind);
+        let enum_domain = match entry.kind {
+            KeyKind::BoolEnum(domain) | KeyKind::Enum(domain) => {
+                Some(reconciled_enum_domain(domain))
+            }
+            _ => None,
+        };
+        let domain = match entry.kind {
+            KeyKind::Enum(_) => SettingValueDomain::Enum {
+                domain: enum_domain.unwrap().to_string(),
+            },
+            _ => domain_for(entry.kind),
+        };
         let identity = canonical_id(scope, key, entry.path)
             .map(SettingIdentity::Known)
             .unwrap_or(SettingIdentity::Unknown);
@@ -50,10 +61,7 @@ impl SettingDefinition {
             key,
             target,
             domain,
-            enum_domain: match entry.kind {
-                KeyKind::BoolEnum(domain) | KeyKind::Enum(domain) => Some(domain),
-                _ => None,
-            },
+            enum_domain,
             presentation: SettingPresentation {
                 english_name: entry.workshop_name,
                 locale_section: "labels",
@@ -89,7 +97,10 @@ fn scope_for(path: &[PathPart<'_>]) -> SettingScope {
 
 fn target_for(path: &[PathPart<'_>]) -> TargetPattern {
     match path {
-        [PathPart::Part("gamemodes"), PathPart::Part("general"), ..] => TargetPattern::Global,
+        // `gamemodes.general` leaves exist only as inherited members under
+        // each mode — there is no literal `general` group in source, so the
+        // target is a mode, not the global scope.
+        [PathPart::Part("gamemodes"), PathPart::Part("general"), ..] => TargetPattern::Mode(None),
         [PathPart::Part("gamemodes"), PathPart::Part(mode), ..] => {
             TargetPattern::Mode(Some((*mode).to_string()))
         }
@@ -150,6 +161,25 @@ fn semantic_ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str>
         Some(PathPart::Part(key)) if key.starts_with("ability3") => Some("ability3"),
         Some(PathPart::Part(key)) if key.starts_with("secondaryFire") => Some("secondaryFire"),
         _ => table::ability_slot_for_path(path),
+    }
+}
+
+/// Generated enum domains declared equivalent to a reviewed fixture domain in
+/// the reconciliation manifest resolve to the canonical domain so one concept
+/// never exposes divergent value sets.
+fn reconciled_enum_domain(domain: &'static str) -> &'static str {
+    let mut targets = reconciliation::data()
+        .enum_member_mappings
+        .iter()
+        .filter(|mapping| mapping.source_domain == domain)
+        .map(|mapping| mapping.target_domain.as_str());
+    let Some(first) = targets.next() else {
+        return domain;
+    };
+    if targets.all(|target| target == first) {
+        first
+    } else {
+        domain
     }
 }
 

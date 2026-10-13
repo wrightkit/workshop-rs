@@ -310,6 +310,18 @@ impl EmitContext<'_> {
                 if args.is_empty() {
                     self.line(level, &format!("{spelling};"))?;
                 } else {
+                    // When the leading `player, name` pair is merged into one
+                    // player-variable value, arg 0 splits back into two textual
+                    // arguments — arg 1 is then the index, not the name slot.
+                    let player_pair_merged = matches!(
+                        name.as_str(),
+                        "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex"
+                    ) && args
+                        .first()
+                        .and_then(|id| self.program.values.get(*id))
+                        .is_some_and(|node| {
+                            matches!(node.value, wir::Value::PlayerVariable { .. })
+                        });
                     let mut args_text = String::new();
                     for (index, arg) in args.iter().enumerate() {
                         if index > 0 {
@@ -318,12 +330,7 @@ impl EmitContext<'_> {
                         // The frontend merges the leading `player, name` pair of
                         // the indexed player-variable actions into one
                         // player-variable value; split it back.
-                        if index == 0
-                            && matches!(
-                                name.as_str(),
-                                "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex"
-                            )
-                        {
+                        if index == 0 && player_pair_merged {
                             if let Some(wir::Value::PlayerVariable { player, variable }) =
                                 self.program.values.get(*arg).map(|node| &node.value)
                             {
@@ -338,7 +345,7 @@ impl EmitContext<'_> {
                                 index == 0
                             }
                             "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex" => {
-                                index == 1
+                                index == 1 && !player_pair_merged
                             }
                             _ => false,
                         };

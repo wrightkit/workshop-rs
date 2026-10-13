@@ -99,6 +99,17 @@ pub(super) fn accept<'a>(
     Ok(match (node, entry.kind) {
         (SettingsNode::Flag { .. }, KeyKind::Flag) => Member::Flag,
         (SettingsNode::String { value, .. }, KeyKind::String) => Member::String(value),
+        // Mirrors `validate_value`: a non-finite number has no emittable
+        // spelling, so check must reject it rather than emit `inf`/`NaN`.
+        (SettingsNode::Number { value, .. }, KeyKind::Number | KeyKind::Percent)
+            if !value.is_finite() =>
+        {
+            return Err(Box::new(rejected(
+                node.span(),
+                format!("settings key '{name}' must be a finite number"),
+                None,
+            )));
+        }
         (SettingsNode::Number { value, .. }, KeyKind::Number) => Member::Number(*value),
         (SettingsNode::Number { value, .. }, KeyKind::Percent) => Member::Percent(*value),
         (SettingsNode::Bool { value, .. }, KeyKind::Bool) => Member::Bool(*value),

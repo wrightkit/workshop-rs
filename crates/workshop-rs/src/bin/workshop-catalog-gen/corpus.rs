@@ -634,7 +634,16 @@ pub(crate) fn generate(
     let total_entries: usize = coverage.iter().map(|(_, _, t)| t).sum();
 
     // --- merge reviewed locale aliases into the catalog data -------------
-    let merged = merge_localized_aliases(&catalog, &matches, &locales)?;
+    let (merged, dropped) = merge_localized_aliases(&catalog, &matches, &locales)?;
+    for (kind, id, locale, spelling) in dropped {
+        if let Some(matched) = matches.iter_mut().find(|m| m.kind == kind && m.id == id) {
+            matched.locales.remove(&locale);
+            matched.locale_exclusions.insert(
+                locale,
+                format!("alias '{spelling}' conflicts with another catalog identity"),
+            );
+        }
+    }
     let merged_text = canonical_json(&merged)?;
     Catalog::load_unverified(&merged_text)
         .map_err(|error| format!("merged catalog is invalid: {error}"))?;
@@ -782,7 +791,15 @@ fn locale_aliases(
             Ok(Some(spelling)) => {
                 aliases.insert(locale.clone(), spelling);
             }
-            Ok(None) => {}
+            Ok(None) => {
+                // Partial coverage is recorded like an ambiguity: otherwise a
+                // candidate that simply lacks the locale is indistinguishable
+                // from a locale the export never carried at all.
+                exclusions.insert(
+                    locale.clone(),
+                    "no export candidate carries this locale".to_string(),
+                );
+            }
             Err(reason) => {
                 exclusions.insert(locale.clone(), reason);
             }
@@ -847,15 +864,22 @@ fn canonical_json(value: &Value) -> Result<String, String> {
     Ok(out)
 }
 
+/// A `(kind, id, locale, spelling)` alias candidate dropped over a conflict.
+type DroppedAlias = (String, String, String, String);
+
 /// Merge reviewed locale aliases into the catalog data. Existing aliases
-/// remain accepted aliases; no spelling is fabricated (ADR-0001).
+/// remain accepted aliases; no spelling is fabricated (ADR-0001). Also
+/// returns every dropped candidate so the manifest can record the drop in
+/// `localeExclusions` instead of listing a spelling the merged catalog never
+/// received.
 fn merge_localized_aliases(
     catalog: &Value,
     matches: &[Match],
     locales: &[String],
-) -> Result<Value, String> {
+) -> Result<(Value, Vec<DroppedAlias>), String> {
     let mut merged = catalog.clone();
     let conflicts = localized_alias_conflicts(&merged, matches);
+    let mut dropped = Vec::new();
     let Some(object) = merged.as_object_mut() else {
         return Err("catalog is not an object".to_string());
     };
@@ -879,7 +903,7 @@ fn merge_localized_aliases(
             continue;
         };
         for entry in list {
-            let Some(id) = entry.get("id").and_then(Value::as_str) else {
+            let Some(id) = entry.get("id").and_then(Value::as_str).map(str::to_string) else {
                 continue;
             };
             let kind = match category {
@@ -891,9 +915,15 @@ fn merge_localized_aliases(
                 "localizedStrings" => "localizedString",
                 _ => unreachable!(),
             };
-            if let Some(matched) = by_identity.get(&(kind, id)).copied() {
+            if let Some(matched) = by_identity.get(&(kind, id.as_str())).copied() {
                 for (locale, spelling) in &matched.locales {
                     if conflicts.contains(&(kind.to_string(), locale.clone(), spelling.clone())) {
+                        dropped.push((
+                            kind.to_string(),
+                            id.to_string(),
+                            locale.clone(),
+                            spelling.clone(),
+                        ));
                         continue;
                     }
                     set_alias(entry, locale, spelling)?;
@@ -925,6 +955,12 @@ fn merge_localized_aliases(
                             locale.clone(),
                             spelling.clone(),
                         )) {
+                            dropped.push((
+                                "enum member".to_string(),
+                                key.clone(),
+                                locale.clone(),
+                                spelling.clone(),
+                            ));
                             continue;
                         }
                         set_alias(member, locale, spelling)?;
@@ -933,7 +969,7 @@ fn merge_localized_aliases(
             }
         }
     }
-    Ok(merged)
+    Ok((merged, dropped))
 }
 
 fn localized_alias_conflicts(
@@ -1378,7 +1414,12 @@ fn preserve_existing_settings(entries: &mut Map<String, Value>, previous: &Value
         }
     }
     for (name, previous_entry) in previous_entries {
-        let current_entry = entries.entry(name).or_insert(previous_entry.clone());
+        // Only merge into entries the current export still produces: a stale
+        // row must not resurrect an excluded entry, and previous spellings
+        // fill gaps but never override freshly matched upstream values.
+        let Some(current_entry) = entries.get_mut(&name) else {
+            continue;
+        };
         let (Some(current), Some(previous)) =
             (current_entry.as_object_mut(), previous_entry.as_object())
         else {
@@ -1386,19 +1427,9 @@ fn preserve_existing_settings(entries: &mut Map<String, Value>, previous: &Value
         };
         for locale in ["en-US", "zh-CN"] {
             if let Some(value) = previous.get(locale).and_then(Value::as_str) {
-                current.insert(locale.to_string(), Value::String(value.to_string()));
-            }
-        }
-        if let Some(previous_sources) = previous.get("sources").and_then(Value::as_array) {
-            let sources = current
-                .entry("sources")
-                .or_insert_with(|| Value::Array(Vec::new()));
-            if let Some(sources) = sources.as_array_mut() {
-                for source in previous_sources {
-                    if !sources.contains(source) {
-                        sources.push(source.clone());
-                    }
-                }
+                current
+                    .entry(locale.to_string())
+                    .or_insert_with(|| Value::String(value.to_string()));
             }
         }
     }

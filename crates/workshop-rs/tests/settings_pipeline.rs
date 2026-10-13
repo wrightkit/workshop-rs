@@ -684,10 +684,18 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
         .iter()
         .find(|definition| definition.path() == "gamemodes.general.heroLimit")
         .expect("general mode-group setting");
-    assert_eq!(general.target_kind(), SettingTargetKind::Global);
+    // `gamemodes.general` leaves only exist as inherited members under each
+    // mode — the target is a mode, not the global scope.
+    assert_eq!(general.target_kind(), SettingTargetKind::Mode);
     assert_eq!(
         general
             .applicability(&SettingTarget::Global)
+            .expect("applicability"),
+        Applicability::NotApplicable
+    );
+    assert_eq!(
+        general
+            .applicability(&SettingTarget::Mode("assault".to_string()))
             .expect("applicability"),
         Applicability::Applicable
     );
@@ -801,11 +809,12 @@ fn settings_schema_catalog_is_complete_and_conflict_checked() {
 #[test]
 fn reconciled_export_enum_members_remain_writable() {
     let _catalog = catalog();
-    for (source, id, path, member, expected) in [
+    for (source, id, path, target, member, expected) in [
         (
             "settings { modes { General { Hero Limit: Off } } }",
             "setting.gameMode.heroLimit",
             "gamemodes.general.heroLimit",
+            SettingTarget::Mode("general".to_string()),
             "1PerTeam",
             "Hero Limit: 1 Per Team",
         ),
@@ -813,6 +822,7 @@ fn reconciled_export_enum_members_remain_writable() {
             "settings { lobby { Map Rotation: After A Game } }",
             "setting.lobby.mapRotation",
             "lobby.mapRotation",
+            SettingTarget::Global,
             "afterMirrorMatch",
             "Map Rotation: After A Mirror Match",
         ),
@@ -824,7 +834,7 @@ fn reconciled_export_enum_members_remain_writable() {
         definition
             .write(
                 program.settings.as_mut().expect("settings"),
-                &SettingTarget::Global,
+                &target,
                 SettingValue::Enum(member.to_string()),
             )
             .expect("export-backed enum member remains writable");

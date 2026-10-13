@@ -759,10 +759,14 @@ fn enum_probe(catalog: &Catalog, domain: &EnumDomain, member: &str) -> String {
     let member_spelling = catalog
         .enum_spelling(&domain.domain, &locale, member)
         .unwrap_or(member);
-    rule_source(
-        "Enum",
-        &format!("Set Global Variable(probe, {domain_spelling}({member_spelling}));"),
-    )
+    // Only the constructor-form domains parse `Domain(Member)`; every other
+    // domain writes the member bare (mirrors `Catalog::enum_member_form`).
+    let operand = if matches!(domain.domain.as_str(), "Hero" | "Button" | "Color" | "Map") {
+        format!("{domain_spelling}({member_spelling})")
+    } else {
+        member_spelling.to_string()
+    };
+    rule_source("Enum", &format!("Set Global Variable(probe, {operand});"))
 }
 
 fn settings_probe(definition: &SettingDefinition, catalog: &Catalog) -> String {

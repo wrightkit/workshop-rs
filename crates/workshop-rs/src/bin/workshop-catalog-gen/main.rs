@@ -72,7 +72,10 @@ fn flag_value(args: &mut impl Iterator<Item = String>, flag: &str) -> PathBuf {
 }
 
 fn main() -> ExitCode {
-    let mut args = std::env::args().skip(1);
+    // `args_os` + lossy conversion: `env::args` panics on non-UTF-8 argv.
+    let mut args = std::env::args_os()
+        .skip(1)
+        .map(|arg| arg.to_string_lossy().into_owned());
     let command = args.next();
     let mut file = PathBuf::from(DEFAULT_FILE);
     let mut json = false;
@@ -108,6 +111,19 @@ fn main() -> ExitCode {
     match command.as_deref() {
         Some("check") => match Catalog::load(&content) {
             Ok(catalog) => {
+                let identity = catalog.identity();
+                if identity.catalog_digest.is_none() {
+                    eprintln!(
+                        "workshop-catalog-gen: catalog declares no content digest — run `workshop-catalog-gen build` to record one"
+                    );
+                    return ExitCode::from(1);
+                }
+                if identity.catalog_version == "dev" {
+                    eprintln!(
+                        "workshop-catalog-gen: catalog declares no version — run `workshop-catalog-gen build`"
+                    );
+                    return ExitCode::from(1);
+                }
                 if let Err(errors) = native_spellings(&content) {
                     for error in errors {
                         eprintln!("workshop-catalog-gen: {error}");
@@ -120,7 +136,6 @@ fn main() -> ExitCode {
                     }
                     return ExitCode::from(1);
                 }
-                let identity = catalog.identity();
                 if json {
                     match serde_json::to_string_pretty(&identity) {
                         Ok(text) => println!("{text}"),

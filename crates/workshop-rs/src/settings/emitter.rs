@@ -352,14 +352,25 @@ impl EmitContext<'_> {
             ) {
                 if let Some(name) = table::hero_setting_name(hero, key, self.locale.as_str()) {
                     name.to_string()
-                } else if !matches!(
-                    key,
-                    "enableAbility1" | "enableAbility2" | "enableAbility3" | "enableSecondaryFire"
-                ) {
-                    if let Some(slot) = table::ability_slot_for_path(full) {
-                        self.gameplay_setting_name(hero, slot, &table::path_string(full))?
-                    } else {
-                        self.setting_name("labels", entry.workshop_name, &table::path_string(full))?
+                } else if let Some(slot) = table::ability_slot_for_path(full) {
+                    // A hero without a generated settings row has no reviewed
+                    // per-hero label: substitute the gameplay ability name
+                    // into the `%1$s` template the export carries (emitting
+                    // the template literally would produce unparseable `$`).
+                    let ability =
+                        self.gameplay_setting_name(hero, slot, &table::path_string(full))?;
+                    match table::hero_key_template(key).or_else(|| {
+                        entry
+                            .workshop_name
+                            .contains("%1$s")
+                            .then_some(entry.workshop_name)
+                    }) {
+                        Some(template) => template.replace("%1$s", &ability),
+                        None => self.setting_name(
+                            "labels",
+                            entry.workshop_name,
+                            &table::path_string(full),
+                        )?,
                     }
                 } else {
                     self.setting_name("labels", entry.workshop_name, &table::path_string(full))?
@@ -442,12 +453,19 @@ impl EmitContext<'_> {
         if let Some(spelling) = table::localized_name(self.locale.as_str(), section, english) {
             return Ok(spelling.to_string());
         }
+        // The fallback locale resolves generically — the same contract
+        // `gameplay_setting_name` applies — not only when it is English.
         if let Some(fallback) = &self.fallback {
-            if *fallback == en_us {
+            let spelling = if *fallback == en_us {
+                Some(english)
+            } else {
+                table::localized_name(fallback.as_str(), section, english)
+            };
+            if let Some(spelling) = spelling {
                 if !self.fallback_ids.iter().any(|value| value == "settings") {
                     self.fallback_ids.push("settings".to_string());
                 }
-                return Ok(english.to_string());
+                return Ok(spelling.to_string());
             }
         }
         Err(WorkshopError::MissingMapping {

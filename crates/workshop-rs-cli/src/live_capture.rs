@@ -212,16 +212,16 @@ impl LiveCapture {
                         ));
                     }
 
-                    let uncertain = is_runtime_uncertain(previous) || is_runtime_uncertain(current);
-                    if uncertain {
-                        runtime_uncertainty.push(DiffEntry::result(
-                            DiffCategory::RuntimeUncertainty,
-                            current,
-                            "result is not a comparable semantic match",
-                        ));
-                    }
                     if previous.status != current.status {
-                        if !uncertain {
+                        if is_runtime_uncertain(previous) {
+                            // The baseline was never comparable, so a status
+                            // drift cannot be attributed to a real change.
+                            runtime_uncertainty.push(DiffEntry::result(
+                                DiffCategory::RuntimeUncertainty,
+                                current,
+                                "result is not a comparable semantic match",
+                            ));
+                        } else {
                             changes.push(DiffEntry::result(
                                 DiffCategory::SemanticSchema,
                                 current,
@@ -231,6 +231,12 @@ impl LiveCapture {
                                 ),
                             ));
                         }
+                    } else if is_runtime_uncertain(current) {
+                        runtime_uncertainty.push(DiffEntry::result(
+                            DiffCategory::RuntimeUncertainty,
+                            current,
+                            "result is not a comparable semantic match",
+                        ));
                     } else if previous.comparison.mode != current.comparison.mode {
                         changes.push(DiffEntry::result(
                             DiffCategory::SemanticSchema,
@@ -368,7 +374,16 @@ fn validate_name(field: &str, value: &str) -> Result<(), LiveCaptureError> {
 
 fn validate_timestamp(value: &str) -> Result<(), LiveCaptureError> {
     validate_name("capturedAt", value)?;
-    if !value.contains('T') || !(value.ends_with('Z') || value.contains('+')) {
+    // RFC-3339 requires a `T` separator and either `Z`/`z` or a `+HH:MM`/
+    // `-HH:MM` offset — a `-` inside the date part must not count, so only
+    // the portion after `T` is inspected for the offset sign.
+    let Some(time) = value.split_once('T').map(|(_, time)| time) else {
+        return Err(invalid(
+            "capturedAt must use an ISO-8601 timestamp with a timezone",
+        ));
+    };
+    let has_offset = time.ends_with('Z') || time.ends_with('z') || time.contains(['+', '-']);
+    if !has_offset {
         return Err(invalid(
             "capturedAt must use an ISO-8601 timestamp with a timezone",
         ));
@@ -645,16 +660,77 @@ mod tests {
         assert!(categories.contains(&DiffCategory::Catalog));
         assert!(categories.contains(&DiffCategory::Content));
         assert!(categories.contains(&DiffCategory::SemanticSchema));
-        assert!(!diff.runtime_uncertainty.is_empty());
+        // A `Matched` baseline that drifts to any other status is a real
+        // change, not a runtime uncertainty.
+        assert!(
+            diff.changes
+                .iter()
+                .any(|entry| entry.detail.contains("conformance status changed")),
+            "status drift from a comparable baseline must be a change: {:?}",
+            diff.changes
+        );
         assert!(
             diff.runtime_uncertainty
                 .iter()
-                .all(|entry| entry.category == DiffCategory::RuntimeUncertainty)
+                .all(|entry| !entry.detail.contains("comparable semantic match")),
+            "a certain baseline reports drift as a change, not uncertainty"
         );
         let json = diff.to_json().expect("structured diff serializes");
         let document: serde_json::Value = serde_json::from_str(&json).expect("valid diff JSON");
         assert!(document["changes"].is_array());
         assert!(document["runtimeUncertainty"].is_array());
+    }
+
+    /// C2 companion: drift *from* an uncertain baseline is unverifiable and
+    /// lands in `runtime_uncertainty`, not `changes`.
+    #[test]
+    fn diff_reports_uncertainty_when_baseline_not_comparable() {
+        let prior = make_capture(
+            "capture-a",
+            "en-US",
+            DIGEST,
+            ConformanceStatus::Inconclusive,
+            "one",
+        );
+        let newer = make_capture(
+            "capture-b",
+            "en-US",
+            DIGEST,
+            ConformanceStatus::Matched,
+            "one",
+        );
+        let diff = prior.diff(&newer).expect("constructed diff validates");
+        assert!(
+            diff.runtime_uncertainty
+                .iter()
+                .any(|entry| entry.category == DiffCategory::RuntimeUncertainty),
+            "an uncertain baseline cannot attribute drift to a real change"
+        );
+        assert!(
+            !diff
+                .changes
+                .iter()
+                .any(|entry| entry.detail.contains("conformance status changed")),
+            "status drift on an uncertain baseline is not a change: {:?}",
+            diff.changes
+        );
+    }
+
+    /// C3: RFC-3339 offsets other than `Z`/`+` must validate, and a `+`
+    /// anywhere outside the time part must not count as an offset.
+    #[test]
+    fn timestamp_accepts_rfc3339_offsets() {
+        for valid in [
+            "2026-08-18T00:00:00Z",
+            "2026-08-18T00:00:00z",
+            "2026-08-18T00:00:00-08:00",
+            "2026-08-18T00:00:00+08:00",
+        ] {
+            validate_timestamp(valid).unwrap_or_else(|_| panic!("{valid} must validate"));
+        }
+        for invalid in ["2026-08-18", "2026-08-18T00:00:00", "not+a+timestamp"] {
+            assert!(validate_timestamp(invalid).is_err(), "{invalid} must fail");
+        }
     }
 
     #[test]
