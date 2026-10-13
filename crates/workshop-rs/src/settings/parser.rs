@@ -701,9 +701,11 @@ impl ParseContext<'_> {
                     _ => None,
                 })
                 .is_some_and(|key| table::hero_setting_has_alias(hero, key, self.locale.as_str()));
-            if let Some(PathPart::Part(key)) = candidate.path.last()
-                && !aliased
-            {
+            let unshadowed_key = candidate.path.last().and_then(|part| match part {
+                PathPart::Part(key) if !aliased => Some(*key),
+                _ => None,
+            });
+            if let Some(key) = unshadowed_key {
                 if let Some(template) = table::hero_key_template(key).or_else(|| {
                     candidate
                         .workshop_name
