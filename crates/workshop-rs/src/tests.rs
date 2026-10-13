@@ -1,5 +1,7 @@
 #[path = "../tests/audit_benchmarks.rs"]
 mod audit_benchmarks;
+#[path = "../tests/audit_regressions.rs"]
+mod audit_regressions;
 #[path = "../tests/closure.rs"]
 mod closure;
 #[path = "../tests/common/mod.rs"]

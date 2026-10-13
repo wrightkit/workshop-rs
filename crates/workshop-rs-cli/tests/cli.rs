@@ -169,6 +169,45 @@ fn parse_reports_unknown_spellings_with_failure_exit() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
+/// C6: canonical-identity validation gates the CLI — a call with the wrong
+/// arity for its declared signature must fail, not parse and re-emit
+/// verbatim.
+#[test]
+fn parse_rejects_noncanonical_call_arity() {
+    let dir = std::env::temp_dir().join("workshop-rs-cli-arity");
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("arity.ws");
+    std::fs::write(
+        &file,
+        "rule (\"x\") { event { Ongoing - Global; } actions { Wait(1, 2, 3, 4, 5); } }",
+    )
+    .unwrap();
+    for command in ["parse", "emit"] {
+        let output = run(&[command, "--locale", "en-US", file.to_str().unwrap()]);
+        assert_eq!(
+            output.status.code(),
+            Some(1),
+            "{command} must fail on non-canonical arity: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+    let output = run(&[
+        "convert",
+        file.to_str().unwrap(),
+        "--from",
+        "en-US",
+        "--to",
+        "zh-CN",
+    ]);
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "convert must fail on non-canonical arity: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
 #[test]
 fn emit_emits_localized_text() {
     let file = fixture("basic-rule");
