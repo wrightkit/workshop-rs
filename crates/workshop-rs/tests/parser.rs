@@ -460,6 +460,19 @@ fn canonical_validation_enforces_declared_arity_and_enum_domain() {
             .contains("action 'wait' expects 1..2 argument(s), got 0")
     );
 
+    // Surplus arguments past the non-variadic signature are rejected with
+    // the same named-arity diagnostic the CLI reports (workshop-rs#430).
+    let surplus =
+        r#"rule ("surplus") { event { Ongoing - Global; } actions { Wait(1, 2, 3, 4, 5); } }"#;
+    let program = internal::parse(surplus);
+    let error = validate::validate_canonical_ids_wir(&program, &catalog)
+        .expect_err("surplus signature arguments must be rejected");
+    assert!(
+        error
+            .to_string()
+            .contains("action 'wait' expects 1..2 argument(s), got 5")
+    );
+
     // A partially supplied signature is rejected with a source-located
     // diagnostic, not only an empty argument list (workshop-rs#341).
     let partial = r#"rule ("partial") { event { Ongoing - Global; } actions { Big Message(All Players(All Teams)); } }"#;
