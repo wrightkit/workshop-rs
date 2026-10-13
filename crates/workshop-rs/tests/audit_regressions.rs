@@ -8,11 +8,32 @@ use workshop_rs::settings::{
     SettingId, SettingOperationError, SettingTarget, SettingValue, definitions, definitions_by_id,
 };
 
-/// W1: a leading UTF-8 BOM must not be a lex error.
+/// W1: a leading UTF-8 BOM must not be a lex error. The BOM stays inside
+/// the source coordinate space — it occupies 1:1, so the `rule` keyword
+/// starts at 1:2 rather than 1:1 — and emission is identical to the
+/// BOM-less input.
 #[test]
 fn utf8_bom_is_accepted() {
-    let source = "\u{FEFF}rule(\"r\")\n{\n    event\n    {\n        Ongoing - Global;\n    }\n}";
-    internal::parse(source);
+    let plain = "rule(\"r\")\n{\n    event\n    {\n        Ongoing - Global;\n    }\n}";
+    let source = format!("\u{FEFF}{plain}");
+    let program = internal::parse(&source);
+    assert_eq!(
+        internal::emit(&program),
+        internal::emit(&internal::parse(plain)),
+        "a BOM-prefixed program emits identically to the BOM-less one"
+    );
+    let span = program
+        .rules
+        .iter()
+        .next()
+        .unwrap()
+        .span
+        .expect("rule span");
+    assert_eq!(
+        (span.start.line, span.start.col),
+        (1, 2),
+        "spans index the authored text including the BOM"
+    );
 }
 
 /// W2: a backslash in a rule name must re-escape on emission so the name
