@@ -283,15 +283,11 @@ fn wrecking_ball_zh_label_binds_secondary_fire() {
 #[test]
 fn general_hero_scope_stays_addressable() {
     assert!(
-        definitions()
-            .find(|definition| definition.path() == "heroes.general.disabledHeroes")
-            .is_some(),
+        definitions().any(|definition| definition.path() == "heroes.general.disabledHeroes"),
         "the literal general group's leaf must project a definition"
     );
     assert!(
-        definitions()
-            .find(|definition| definition.path() == "heroes.<team>.disabledHeroes")
-            .is_some(),
+        definitions().any(|definition| definition.path() == "heroes.<team>.disabledHeroes"),
         "the reachable wildcard entry still projects"
     );
 }
