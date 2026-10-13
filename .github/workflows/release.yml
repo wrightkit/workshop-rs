@@ -37,14 +37,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: wrightkit/.github/.github/actions/setup-rust@main
         with:
+          toolchain: stable
           targets: ${{ matrix.target }}
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: release-${{ matrix.target }}
-          save-if: false
+          cache-shared-key: release-${{ matrix.target }}
 
       - name: Build
         run: cargo build --locked --profile dist -p workshop-rs-cli --target ${{ matrix.target }}
@@ -91,12 +89,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: dtolnay/rust-toolchain@stable
-
-      - uses: Swatinem/rust-cache@v2
+      - name: Set up Rust
+        uses: wrightkit/.github/.github/actions/setup-rust@main
         with:
-          shared-key: release-catalog
-          save-if: false
+          toolchain: stable
+          cache-shared-key: release-catalog
 
       - name: Generate catalog-identity.json
         run: cargo run --locked -p workshop-rs-cli -- version --json > catalog-identity.json
