@@ -116,7 +116,8 @@ fn player_variable_at_index_keeps_qualified_index() {
 }
 
 /// S1: `source_edit` must reject a non-leaf occurrence instead of carving a
-/// corrupting range out of the block's interior.
+/// corrupting range out of the block's interior — with the same error
+/// `write` reports for the same occurrence.
 #[test]
 fn source_edit_rejects_non_leaf_occurrence() {
     let source = "settings\n{\n    main\n    {\n        Description\n        {\n            Custom: X\n        }\n    }\n}";
@@ -124,7 +125,7 @@ fn source_edit_rejects_non_leaf_occurrence() {
     let definition = definitions_by_id(&SettingId::from("setting.main.description"))
         .next()
         .expect("main.description definition");
-    let error = definition
+    let edit_error = definition
         .source_edit(
             source,
             program.settings.as_ref().expect("settings"),
@@ -134,8 +135,88 @@ fn source_edit_rejects_non_leaf_occurrence() {
         )
         .expect_err("a group occurrence is not a scalar source edit");
     assert!(
-        matches!(error, SettingOperationError::InvalidValue { .. }),
-        "expected the same leaf gate read/write apply, got {error:?}"
+        matches!(edit_error, SettingOperationError::InvalidValue { .. }),
+        "expected the same leaf gate read/write apply, got {edit_error:?}"
+    );
+    let mut settings = program.settings.clone().expect("settings");
+    let write_error = definition
+        .write(
+            &mut settings,
+            &SettingTarget::Global,
+            SettingValue::String("new".to_string()),
+        )
+        .expect_err("a group occurrence is not a scalar write");
+    assert_eq!(
+        edit_error, write_error,
+        "source_edit and write must refuse a non-leaf occurrence identically"
+    );
+}
+
+/// S1 follow-up: the leaf gate applies to every non-leaf variant the first
+/// same-named occurrence can take — a parsed `Group`, a programmatically
+/// carried `RawGroup` — while a typed leaf remains editable.
+#[test]
+fn source_edit_leaf_gate_covers_group_variants_and_leaf() {
+    use workshop_rs::settings::{Settings, SettingsNode};
+    let definition = definitions_by_id(&SettingId::from("setting.main.description"))
+        .next()
+        .expect("main.description definition");
+    let mut settings = Settings {
+        span: None,
+        children: vec![SettingsNode::Group {
+            name: "main".to_string(),
+            children: vec![SettingsNode::RawGroup {
+                name: "description".to_string(),
+                children: vec![SettingsNode::Raw {
+                    name: "Custom".to_string(),
+                    value: "X".to_string(),
+                    span: None,
+                }],
+                span: None,
+            }],
+            span: None,
+        }],
+    };
+    let edit_error = definition
+        .source_edit(
+            "settings { main { Description { Custom: X } } }",
+            &settings,
+            "en-US",
+            &SettingTarget::Global,
+            SettingValue::String("new".to_string()),
+        )
+        .expect_err("a raw-group occurrence is not a scalar source edit");
+    assert!(
+        matches!(edit_error, SettingOperationError::InvalidValue { .. }),
+        "expected the same leaf gate read/write apply, got {edit_error:?}"
+    );
+    let write_error = definition
+        .write(
+            &mut settings,
+            &SettingTarget::Global,
+            SettingValue::String("new".to_string()),
+        )
+        .expect_err("a raw-group occurrence is not a scalar write");
+    assert_eq!(
+        edit_error, write_error,
+        "source_edit and write must refuse a raw-group occurrence identically"
+    );
+
+    let leaf_source = "settings\n{\n    main\n    {\n        Description: \"old\"\n    }\n}";
+    let leaf_program = internal::parse(leaf_source);
+    let edit = definition
+        .source_edit(
+            leaf_source,
+            leaf_program.settings.as_ref().expect("settings"),
+            "en-US",
+            &SettingTarget::Global,
+            SettingValue::String("new".to_string()),
+        )
+        .expect("a typed-leaf occurrence stays editable");
+    let applied = edit.apply(leaf_source).expect("edit applies");
+    assert!(
+        applied.contains("Description: \"new\""),
+        "the leaf edit replaces only the value bytes, got:\n{applied}"
     );
 }
 
