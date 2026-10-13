@@ -5,7 +5,8 @@ use super::common::{catalog, en};
 use super::internal;
 use workshop_rs::parser;
 use workshop_rs::settings::{
-    SettingId, SettingOperationError, SettingTarget, SettingValue, definitions, definitions_by_id,
+    DiagnosticSeverity, SettingId, SettingOperationError, SettingTarget, SettingValue, definitions,
+    definitions_by_id,
 };
 
 /// W1: a leading UTF-8 BOM must not be a lex error. The BOM stays inside
@@ -378,6 +379,33 @@ fn rowless_hero_composes_templated_labels() {
         "the template context must be emitted, got:\n{emitted}"
     );
     internal::assert_emit_round_trip(&program);
+}
+
+/// S5/S6 follow-up: a hero-scoped member whose slot the hero provably
+/// lacks — and which no reviewed label row names — is rejected by `check`
+/// with a diagnostic instead of reaching emission's missing-mapping
+/// failure or a malformed `%1$s` spelling. The rejection keys on the
+/// missing ability, not on the hero lacking generated rows: Doctrine's
+/// `ability1Cooldown%` still emits through the gameplay-name template.
+#[test]
+fn hero_member_without_slot_is_rejected_by_check() {
+    let source = "settings\n{\n    heroes\n    {\n        Team 1\n        {\n            Doctrine\n            {\n                enableAbility3: Off\n            }\n        }\n    }\n}";
+    let program = parser::parse(source, &catalog(), &en()).expect("source parses");
+    let diagnostics = program.settings_diagnostics();
+    assert!(
+        diagnostics.iter().any(|diagnostic| {
+            diagnostic.severity == DiagnosticSeverity::Error
+                && diagnostic.error.to_string().contains("ability3")
+        }),
+        "check must reject the slot-less member with a diagnostic, got {diagnostics:?}"
+    );
+    assert!(
+        program.validate().is_err(),
+        "validation must fail on the unemittable member"
+    );
+    internal::assert_emit_round_trip(&internal::parse(
+        "settings\n{\n    heroes\n    {\n        Team 1\n        {\n            Doctrine\n            {\n                ability1Cooldown%: 50%\n            }\n        }\n    }\n}",
+    ));
 }
 
 /// S8: under `wreckingBall` the zh spelling `工程抓钩冷却时间` is the

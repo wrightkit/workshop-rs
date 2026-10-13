@@ -290,6 +290,9 @@ fn walk_heroes<'a>(teams: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_
                         continue;
                     }
                     for inner in children {
+                        if let Some(diagnostic) = unemittable_hero_member(inner, name) {
+                            visit(Visit::Rejected(diagnostic));
+                        }
                         visit(Visit::Member(inner, &HERO));
                     }
                 }
@@ -297,6 +300,50 @@ fn walk_heroes<'a>(teams: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_
             }
         }
     }
+}
+
+/// A hero-scoped member the emitter can never spell: the key derives from an
+/// ability slot the hero provably lacks and no reviewed per-hero label row
+/// exists to substitute, so emission fails with a missing-mapping error.
+/// The rejection is reported here so `check` agrees with emission; a hero
+/// absent from gameplay data is not provable and is left to the emit-time
+/// failure the module header documents.
+fn unemittable_hero_member(node: &SettingsNode, hero: &str) -> Option<SettingsDiagnostic> {
+    // `Raw` and `RawGroup` members emit verbatim and never resolve a
+    // display name.
+    if matches!(
+        node,
+        SettingsNode::Raw { .. } | SettingsNode::RawGroup { .. }
+    ) {
+        return None;
+    }
+    let key = node.name();
+    let slot = table::ability_slot_for_path(&[
+        PathPart::Part("heroes"),
+        PathPart::Team,
+        PathPart::Hero,
+        PathPart::Part(key),
+    ])?;
+    if table::hero_setting_name(hero, key, "en-US").is_some() {
+        return None;
+    }
+    hero_provably_lacks_slot(hero, slot).then(|| {
+        rejected(
+            node.span(),
+            format!("hero '{hero}' has no '{slot}' ability for settings key '{key}'"),
+            None,
+        )
+    })
+}
+
+fn hero_provably_lacks_slot(hero: &str, slot: &str) -> bool {
+    crate::gameplay::data::builtin_ref()
+        .ok()
+        .and_then(|catalog| catalog.hero(&crate::gameplay::HeroId::new(hero)))
+        .is_some_and(|hero| {
+            hero.abilities_in_slot(&crate::gameplay::LogicalSlot::new(slot))
+                .is_empty()
+        })
 }
 
 /// Build the warning for a carried member close to one declared spelling:
