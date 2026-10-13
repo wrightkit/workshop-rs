@@ -321,6 +321,11 @@ impl SettingDefinition {
                 target: target.clone(),
             }
         })?;
+        // Same leaf gate as `read`/`source_edit`: refuse a group or
+        // pass-through occurrence before judging the supplied value.
+        if !is_typed_leaf(node) {
+            return Err(not_typed_leaf(node, &id));
+        }
         let span = node.span();
         validate_value(&self.domain, &id, &value, span)?;
         apply_value(node, &id, value)
@@ -679,6 +684,25 @@ fn validate_value(
     }
 }
 
+fn is_typed_leaf(node: &SettingsNode) -> bool {
+    matches!(
+        node,
+        SettingsNode::Bool { .. }
+            | SettingsNode::Number { .. }
+            | SettingsNode::String { .. }
+            | SettingsNode::Flag { .. }
+            | SettingsNode::List { .. }
+    )
+}
+
+fn not_typed_leaf(node: &SettingsNode, id: &SettingId) -> SettingOperationError {
+    SettingOperationError::InvalidValue {
+        setting: id.clone(),
+        message: "settings occurrence is not a typed leaf".to_string(),
+        span: node.span(),
+    }
+}
+
 fn value_from_node(
     node: &SettingsNode,
     domain: &SettingValueDomain,
@@ -705,13 +729,7 @@ fn value_from_node(
                 _ => SettingValue::MapList(values),
             }
         }
-        _ => {
-            return Err(SettingOperationError::InvalidValue {
-                setting: id.clone(),
-                message: "settings occurrence is not a typed leaf".to_string(),
-                span: node.span(),
-            });
-        }
+        _ => return Err(not_typed_leaf(node, id)),
     };
     validate_value(domain, id, &value, node.span())?;
     Ok(value)
