@@ -38,6 +38,11 @@ relevant code/tests/data and current Issue contract.
 [`implementation-role.md`](implementation-role.md) is retained only as a
 compatibility pointer for older links.
 
+## Usage
+
+- [Library and CLI usage](spec/usage.md): CLI commands, library examples, and the
+  catalog data pipeline.
+
 ## Workshop language support
 
 - [Language support matrix](language-support.md): current declared Workshop
