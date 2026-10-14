@@ -691,9 +691,11 @@ fn localization_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
             }
         }
         for domain in catalog.enum_domains() {
-            if CONSTRUCTOR_DOMAINS.contains(&domain.domain.as_str())
-                && let Some(spelling) = domain.spelling(locale)
-            {
+            let domain_spelling = CONSTRUCTOR_DOMAINS
+                .contains(&domain.domain.as_str())
+                .then(|| domain.spelling(locale))
+                .flatten();
+            if let Some(spelling) = domain_spelling {
                 let Some(member) = domain.members.first() else {
                     continue;
                 };

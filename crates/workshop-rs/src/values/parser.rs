@@ -517,8 +517,10 @@ impl ParseContext<'_> {
         let prefer_enum = self.catalog.enum_domain("Hero").is_some()
             && (canonical_keyword(phrase) == "Hero"
                 || self.resolve_enum_domain_mixed(phrase) == Some("Hero"));
-        if !prefer_enum && let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
-            return self.value_call(entry, phrase, start, end);
+        if !prefer_enum {
+            if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
+                return self.value_call(entry, phrase, start, end);
+            }
         }
         // An action spelling can collide with an enum domain (`Wait` is
         // both). The enum reading only stands when the call actually parses
