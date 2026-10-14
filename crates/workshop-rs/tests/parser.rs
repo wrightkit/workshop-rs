@@ -53,6 +53,126 @@ rule("colonated enum")
 }
 
 #[test]
+fn bare_colon_enum_members_resolve_without_a_signature_domain() {
+    // #441: members whose canonical spelling contains a colon resolve in bare
+    // positions even when the enclosing signature does not pin an enum domain.
+    for (spelling, domain, member) in [
+        (
+            "Soldier: 76 Sprint Start Sound",
+            "DynamicEffect",
+            "SOLDIER_SPRINT_START_SOUND",
+        ),
+        (
+            "Soldier: 76 Sprinting Effect",
+            "Effect",
+            "SOLDIER_SPRINTING",
+        ),
+        ("Arrow: Up", "Icon", "ARROW_UP"),
+        ("Arrow: Down", "Icon", "ARROW_DOWN"),
+        ("Arrow: Left", "Icon", "ARROW_LEFT"),
+        ("Arrow: Right", "Icon", "ARROW_RIGHT"),
+    ] {
+        let source = format!(
+            "variables {{ global: 0: probe }}\nrule (\"t\") {{ event {{ Ongoing - Global; }} actions {{ Set Global Variable(probe, {spelling}); }} }}"
+        );
+        let program = internal::parse(&source);
+        assert!(
+            program.values.iter().any(|value| matches!(
+                value.value,
+                wir::Value::Enum { ref value_type, ref value }
+                    if value_type == domain && value == member
+            )),
+            "'{spelling}' must resolve to {domain}.{member}"
+        );
+    }
+}
+
+#[test]
+fn colon_enum_members_parse_in_both_conditional_branches() {
+    let source = r#"variables { global: 0: probe }
+rule ("t") { event { Ongoing - Global; } actions {
+    Set Global Variable(probe, True ? Arrow: Up : Arrow: Down);
+} }"#;
+    let program = internal::parse(source);
+    let conditional = program
+        .values
+        .iter()
+        .find(|value| matches!(&value.value, wir::Value::Call { name, .. } if name == "ifThenElse"))
+        .expect("the conditional parses as an ifThenElse call");
+    let wir::Value::Call { args, .. } = &conditional.value else {
+        unreachable!()
+    };
+    let members: Vec<&str> = args
+        .iter()
+        .filter_map(|arg| match &program.values.get(*arg)?.value {
+            wir::Value::Enum { value, .. } => Some(value.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(members, ["ARROW_UP", "ARROW_DOWN"]);
+}
+
+#[test]
+fn an_ordinary_conditional_value_still_parses() {
+    let source = r#"variables { global: 0: probe }
+rule ("t") { event { Ongoing - Global; } actions {
+    Set Global Variable(probe, True ? 1 : 2);
+} }"#;
+    let program = internal::parse(source);
+    assert!(program.values.iter().any(|value| matches!(
+        &value.value,
+        wir::Value::Call { name, args } if name == "ifThenElse" && args.len() == 3
+    )));
+}
+
+#[test]
+fn colon_enum_members_round_trip_through_every_declared_locale() {
+    // #441: each localized member spelling, including the locale-specific
+    // colon spacings (fr-FR `Soldat : 76`, ja-JP `矢印:下`, zh-CN `箭头：向下`),
+    // emits and reparses in its own locale and still emits the canonical
+    // en-US spelling.
+    let catalog = catalog();
+    let en = en();
+    for (domain, member) in [
+        ("DynamicEffect", "SOLDIER_SPRINT_START_SOUND"),
+        ("Effect", "SOLDIER_SPRINTING"),
+        ("Icon", "ARROW_UP"),
+        ("Icon", "ARROW_DOWN"),
+        ("Icon", "ARROW_LEFT"),
+        ("Icon", "ARROW_RIGHT"),
+    ] {
+        let canonical = catalog
+            .enum_spelling(domain, &en, member)
+            .unwrap_or_else(|| panic!("{domain}.{member} has an en-US spelling"));
+        let source = format!(
+            "variables {{ global: 0: probe }}\nrule (\"t\") {{ event {{ Ongoing - Global; }} actions {{ Set Global Variable(probe, {canonical}); }} }}"
+        );
+        let program = internal::parse_in(&source, &en);
+        for locale in catalog.locales() {
+            if catalog.enum_spelling(domain, locale, member).is_none() {
+                continue;
+            }
+            let emitted = internal::emit_in(&program, locale);
+            let reparsed = internal::parse_in(&emitted, locale);
+            assert!(
+                reparsed.values.iter().any(|value| matches!(
+                    value.value,
+                    wir::Value::Enum { ref value_type, ref value }
+                        if value_type == domain && value == member
+                )),
+                "{domain}.{member} must reparse in {}",
+                locale.as_str()
+            );
+            assert!(
+                internal::emit_in(&reparsed, &en).contains(canonical),
+                "{domain}.{member} reparsed in {} must emit the en-US spelling '{canonical}'",
+                locale.as_str()
+            );
+        }
+    }
+}
+
+#[test]
 fn evidenced_uppercase_hex_literal_matches_decimal_program() {
     let hex_source = common::corpus_text("minimized/opy-syntax-surface-hex");
     let decimal_source = hex_source.replace("0X20", "32");
