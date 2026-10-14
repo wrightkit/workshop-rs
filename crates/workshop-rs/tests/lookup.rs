@@ -126,6 +126,30 @@ fn signature_lists_params_defaults_and_inline_enum_members_once() {
 }
 
 #[test]
+fn indexed_player_variable_signature_lists_the_surface_parameters() {
+    // workshop-rs#442: the player-variable index actions declare their
+    // surface signature — including the `player` argument the source syntax
+    // requires — even though WIR folds `(player, variable)` into one value.
+    let catalog = catalog();
+    let matches = catalog
+        .lookup(&en(), "Set Player Variable At Index")
+        .expect("lookup");
+    let LookupMatch::Builtin {
+        signature: Some(signature),
+        ..
+    } = builtin_id(&matches, "setPlayerVariableAtIndex")
+    else {
+        panic!("setPlayerVariableAtIndex is an action with a signature");
+    };
+    assert_eq!(
+        signature.text,
+        "Set Player Variable At Index(player: Player|Array, variable: Variable, index: Number|Boolean, value: Object|Array)"
+    );
+    assert_eq!(signature.params.len(), 4);
+    assert_eq!(signature.required_params, 4);
+}
+
+#[test]
 fn large_enum_domain_reports_member_count_and_follow_up_lists_members() {
     let catalog = catalog();
     // The member count is catalog data: derive it so a catalog update does

@@ -107,7 +107,7 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Modify Global Variable` | ✅ Supported | Parameters: (Variable: Variable, Operation: Operation, Value: Any). |
 | `Modify Global Variable At Index` | ✅ Supported | Parameters: (Variable: Global Variable, Index: Number|Boolean, Operation: Operation, Value: Object|Array). |
 | `Modify Player Score` | ✅ Supported | Parameters: (Object: Player|Array, Number: Number). |
-| `Modify Player Variable At Index` | ✅ Supported | Parameters: (Variable: Player Variable, Index: Number|Boolean, Operation: Operation, Value: Object|Array). |
+| `Modify Player Variable At Index` | ✅ Supported | Parameters: (Player: Player|Array, Variable: Variable, Index: Number|Boolean, Operation: Operation, Value: Object|Array). |
 | `Modify Team Score` | ✅ Supported | Parameters: (Team: Team, Number: Number). |
 | `Move Player to Team` | ✅ Supported | Parameters: (Object: Player|Array, Team: Team, Number: Number). |
 | `Pause Match Time` | ✅ Supported | No parameters. |
@@ -152,7 +152,7 @@ This document inventories the canonical Workshop actions supported by `workshop-
 | `Set Player Allowed Heroes` | ✅ Supported | Parameters: (Player: Player|Array, Heroes: Hero|Array). |
 | `Set Player Health` | ✅ Supported | Parameters: (player: Player|Array, amount: Number). |
 | `Set Player Score` | ✅ Supported | Parameters: (Object: Player|Array, Number: Number). |
-| `Set Player Variable At Index` | ✅ Supported | Parameters: (Variable: Player Variable, Index: Number|Boolean, Value: Object|Array). |
+| `Set Player Variable At Index` | ✅ Supported | Parameters: (Player: Player|Array, Variable: Variable, Index: Number|Boolean, Value: Object|Array). |
 | `Set Primary Fire Enabled` | ✅ Supported | Parameters: (Object: Player|Array, Boolean: Boolean). |
 | `Set Projectile Gravity` | ✅ Supported | Parameters: (Object: Player|Array, Number: Number). |
 | `Set Projectile Speed` | ✅ Supported | Parameters: (Object: Player|Array, Number: Number). |

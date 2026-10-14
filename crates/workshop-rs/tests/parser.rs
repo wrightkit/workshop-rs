@@ -616,7 +616,7 @@ fn canonical_validation_rejects_incompatible_variable_reference_types() {
     player: 0: p
 }
 rule ("type") { event { Ongoing - Global; } actions {
-    Set Player Variable At Index(1, 0, 1);
+    Set Player Variable At Index(Event Player, 0, 1, 2);
 } }"#;
     let program = internal::parse(source);
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
@@ -624,8 +624,50 @@ rule ("type") { event { Ongoing - Global; } actions {
     assert!(
         error
             .to_string()
-            .contains("must have semantic type 'Player Variable'")
+            .contains("must have semantic type 'Variable'")
     );
+}
+
+#[test]
+fn indexed_player_variable_actions_use_their_declared_surface_signature() {
+    // workshop-rs#442: the catalog declares the surface signature of the
+    // player-variable index actions, so a call built parameter-by-parameter
+    // from the declaration must parse, validate, and emit in the same
+    // surface form — the `(player, variable)` pair folds into one
+    // `PlayerVariable` WIR argument internally.
+    let catalog = catalog();
+    for id in ["setPlayerVariableAtIndex", "modifyPlayerVariableAtIndex"] {
+        let entry = catalog
+            .entry(workshop_rs::catalog::Kind::Action, id)
+            .expect("catalog entry");
+        let spelling = entry.spelling(&en()).expect("en-US spelling");
+        let args: Vec<&str> = (0..entry.param_count())
+            .map(|index| {
+                if entry.param_domain(index) == Some("Operation") {
+                    return "Add";
+                }
+                match entry.param_type(index).and_then(|ty| ty.split('|').next()) {
+                    Some("Player") => "Event Player",
+                    Some("Variable") => "probe",
+                    Some("Number") => "0",
+                    _ => "Null",
+                }
+            })
+            .collect();
+        let action = format!("{spelling}({});", args.join(", "));
+        let source = format!(
+            "variables {{\n    player:\n        0: probe\n}}\n\nrule (\"probe\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{\n        {action}\n    }}\n}}\n"
+        );
+        let program = internal::parse(&source);
+        validate::validate_canonical_ids_wir(&program, &catalog).unwrap_or_else(|error| {
+            panic!("{action} must satisfy its declared signature: {error}")
+        });
+        let emitted = internal::emit(&program);
+        assert!(
+            emitted.contains(&action),
+            "{id} must emit the same surface form, got:\n{emitted}"
+        );
+    }
 }
 
 #[test]
