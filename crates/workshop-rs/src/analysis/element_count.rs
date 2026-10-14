@@ -466,18 +466,26 @@ impl Counter<'_> {
                 }
                 name = action_name.as_str();
                 for (index, argument) in args.iter().enumerate() {
-                    self.name_slot = variable_slot(self.catalog, Kind::Action, action_name, index)
-                        || (index == 0 && takes_variable(self.catalog, Kind::Action, action_name));
+                    self.name_slot = variable_slot(
+                        self.program,
+                        self.catalog,
+                        Kind::Action,
+                        action_name,
+                        args,
+                        index,
+                    ) || (index == 0
+                        && takes_variable(self.catalog, Kind::Action, action_name));
                     self.push_action_value(&mut children, &mut heroes, *argument)?;
                 }
                 // An omitted argument is still a filled slot; its default is a
                 // direct argument, so it costs its own value minus one.
                 base = (base as isize
                     + omitted_default_cost(
+                        self.program,
                         self.catalog,
                         Kind::Action,
                         action_name,
-                        args.len(),
+                        args,
                         true,
                     ))
                 .max(0) as usize;
@@ -589,8 +597,14 @@ impl Counter<'_> {
                     } else {
                         1
                     };
-                    let omitted =
-                        omitted_default_cost(self.catalog, Kind::Value, name, args.len(), false);
+                    let omitted = omitted_default_cost(
+                        self.program,
+                        self.catalog,
+                        Kind::Value,
+                        name,
+                        args,
+                        false,
+                    );
                     let mut counted = self.value_children(
                         node_id,
                         name,
@@ -648,8 +662,9 @@ impl Counter<'_> {
         let mut children = Vec::with_capacity(ids.len());
         let mut heroes = 0;
         for (index, child) in ids.iter().enumerate() {
-            self.name_slot =
-                owner.is_some_and(|(kind, name)| variable_slot(self.catalog, kind, name, index));
+            self.name_slot = owner.is_some_and(|(kind, name)| {
+                variable_slot(self.program, self.catalog, kind, name, ids, index)
+            });
             let counted = self.value(*child, false)?;
             heroes += counted.heroes;
             children.push(counted.node);
@@ -664,15 +679,19 @@ fn pair_surcharge(heroes: usize) -> isize {
 
 /// The cost of the defaults filled in for arguments a call leaves out.
 fn omitted_default_cost(
+    program: &wir::Program,
     catalog: &Catalog,
     kind: Kind,
     name: &str,
-    given: usize,
+    args: &[ValueId],
     direct: bool,
 ) -> isize {
     let Some(entry) = catalog.entry(kind, name) else {
         return 0;
     };
+    // `args` counts supplied WIR arguments; a folded `(player, variable)`
+    // pair covers one extra declared surface position.
+    let given = args.len() + usize::from(entry.wir_args_folded(program, args));
     (given..entry.param_count())
         .filter_map(|index| entry.param_default(index))
         .map(|default| {
@@ -696,9 +715,18 @@ fn literal_enum_cost(value_type: &str) -> usize {
     }
 }
 
-/// Whether argument `index` of a call names a variable instead of reading one.
-fn variable_slot(catalog: &Catalog, kind: Kind, name: &str, index: usize) -> bool {
+/// Whether WIR argument `index` of `args` names a variable instead of
+/// reading one, mapped through the entry's surface signature.
+fn variable_slot(
+    program: &wir::Program,
+    catalog: &Catalog,
+    kind: Kind,
+    name: &str,
+    args: &[ValueId],
+    index: usize,
+) -> bool {
     catalog.entry(kind, name).is_some_and(|entry| {
+        let index = entry.wir_arg_param_index(program, args, index);
         entry.param_type(index) == Some("Variable")
             || entry
                 .params()
@@ -707,11 +735,17 @@ fn variable_slot(catalog: &Catalog, kind: Kind, name: &str, index: usize) -> boo
     })
 }
 
-/// Whether a call has a parameter that names a variable; the player and the
-/// variable of a player variable are then one argument here.
+/// Whether a call declares a parameter that names a variable; the player
+/// and the variable of a player variable are then one WIR argument.
 fn takes_variable(catalog: &Catalog, kind: Kind, name: &str) -> bool {
     catalog.entry(kind, name).is_some_and(|entry| {
-        (0..entry.param_count()).any(|index| variable_slot(catalog, kind, name, index))
+        (0..entry.param_count()).any(|index| {
+            entry.param_type(index) == Some("Variable")
+                || entry
+                    .params()
+                    .get(index)
+                    .is_some_and(|param| param == "Variable")
+        })
     })
 }
 

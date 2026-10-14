@@ -214,18 +214,12 @@ pub(crate) fn validate_call_signature(
     if entry.param_count() == 0 && entry.required_param_count() == 0 {
         return Ok(());
     }
-    // `Stop Chasing Player Variable` packs its source `(player, variable)`
-    // arguments into one `PlayerVariable` value whose shape the parser
-    // already enforces, so that single WIR argument covers both declared
-    // positions.
-    let supplied = args.len()
-        + usize::from(matches!(
-            (entry.id.as_str(), args),
-            ("stopChasingPlayerVariable", [arg]) if matches!(
-                program.values.get(*arg).map(|node| &node.value),
-                Some(wir::Value::PlayerVariable { .. })
-            )
-        ));
+    // Signatures whose leading `(player, variable)` parameters fold into one
+    // `PlayerVariable` WIR argument (`Stop Chasing Player Variable`, the
+    // player-variable index actions) supply two declared positions with a
+    // single argument whose shape the parser already enforces.
+    let folded = entry.wir_args_folded(program, args);
+    let supplied = args.len() + usize::from(folded);
     // Trailing defaults may make a signature partial, but every declared
     // required position must be supplied, and every supplied argument is
     // still checked against its declared position.
@@ -259,78 +253,109 @@ pub(crate) fn validate_call_signature(
                 program.values.get(*arg_id).and_then(|node| node.span),
             ));
         }
-        if let Some(expected) = entry.param_type(index) {
-            if !value_matches_type(program, catalog, *arg_id, expected)
-                && !contextual_value_matches(entry, index, program, *arg_id, expected)
+        // A folded `PlayerVariable` argument also supplies the declared
+        // `Player` position through its inner player; the value itself is
+        // checked at the `Variable` position it maps to.
+        if index == 0 && folded {
+            if let Some(wir::ValueNode {
+                value: wir::Value::PlayerVariable { player, .. },
+                ..
+            }) = program.values.get(*arg_id)
             {
-                let actual = value_type_name(program, catalog, *arg_id);
-                return Err(WorkshopError::unsupported(
-                    format!(
-                        "{} '{}' argument {} must have semantic type '{}', got {}",
-                        entry.kind.as_str(),
-                        entry.id,
-                        index + 1,
-                        expected,
-                        actual
-                    ),
-                    program.values.get(*arg_id).and_then(|node| node.span),
-                ));
+                validate_call_argument(entry, 0, *player, program, catalog)?;
             }
         }
-        let Some(domain) = entry.param_domain(index) else {
-            continue;
-        };
-        let Some(node) = program.values.get(*arg_id) else {
-            continue;
-        };
-        // A declared enum domain constrains enum literals. Dynamic values,
-        // Null, and defaults remain valid expressions for the same position;
-        // their runtime value cannot be proven from WIR alone.
-        let valid = match &node.value {
-            wir::Value::Enum {
-                value_type, value, ..
-            } => enum_member_matches_domain(catalog, value_type, value, domain),
-            wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
-                wir::ambiguous_enum_parts(program, *arg_id).is_some_and(|(_, candidate_ids)| {
-                    candidate_ids.iter().any(|candidate_id| {
-                        matches!(
-                            program.values.get(*candidate_id),
-                            Some(wir::ValueNode {
-                                value: wir::Value::Enum { value_type, value },
-                                ..
-                            }) if enum_member_matches_domain(catalog, value_type, value, domain)
-                        )
-                    })
-                })
-            }
-            _ => true,
-        };
-        if !valid {
-            let actual = match &node.value {
-                wir::Value::Enum {
-                    value_type, value, ..
-                } => {
-                    format!("{value_type}.{value}")
-                }
-                wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
-                    wir::ambiguous_enum_parts(program, *arg_id)
-                        .map(|(spelling, _)| format!("ambiguous '{spelling}'"))
-                        .unwrap_or_else(|| "malformed ambiguous enum".to_string())
-                }
-                _ => "non-enum expression".to_string(),
-            };
+        validate_call_argument(
+            entry,
+            entry.wir_arg_param_index(program, args, index),
+            *arg_id,
+            program,
+            catalog,
+        )?;
+    }
+    Ok(())
+}
+
+/// Check one WIR-supplied value against the declared `index`-th parameter's
+/// semantic type and enum domain.
+fn validate_call_argument(
+    entry: &crate::catalog::CatalogEntry,
+    index: usize,
+    arg_id: wir::ValueId,
+    program: &wir::Program,
+    catalog: &Catalog,
+) -> Result<()> {
+    if let Some(expected) = entry.param_type(index) {
+        if !value_matches_type(program, catalog, arg_id, expected)
+            && !contextual_value_matches(entry, index, program, arg_id, expected)
+        {
+            let actual = value_type_name(program, catalog, arg_id);
             return Err(WorkshopError::unsupported(
                 format!(
-                    "{} '{}' argument {} must be a member of enum domain '{}', got {}",
+                    "{} '{}' argument {} must have semantic type '{}', got {}",
                     entry.kind.as_str(),
                     entry.id,
                     index + 1,
-                    domain,
+                    expected,
                     actual
                 ),
-                node.span,
+                program.values.get(arg_id).and_then(|node| node.span),
             ));
         }
+    }
+    let Some(domain) = entry.param_domain(index) else {
+        return Ok(());
+    };
+    let Some(node) = program.values.get(arg_id) else {
+        return Ok(());
+    };
+    // A declared enum domain constrains enum literals. Dynamic values,
+    // Null, and defaults remain valid expressions for the same position;
+    // their runtime value cannot be proven from WIR alone.
+    let valid = match &node.value {
+        wir::Value::Enum {
+            value_type, value, ..
+        } => enum_member_matches_domain(catalog, value_type, value, domain),
+        wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
+            wir::ambiguous_enum_parts(program, arg_id).is_some_and(|(_, candidate_ids)| {
+                candidate_ids.iter().any(|candidate_id| {
+                    matches!(
+                        program.values.get(*candidate_id),
+                        Some(wir::ValueNode {
+                            value: wir::Value::Enum { value_type, value },
+                            ..
+                        }) if enum_member_matches_domain(catalog, value_type, value, domain)
+                    )
+                })
+            })
+        }
+        _ => true,
+    };
+    if !valid {
+        let actual = match &node.value {
+            wir::Value::Enum {
+                value_type, value, ..
+            } => {
+                format!("{value_type}.{value}")
+            }
+            wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
+                wir::ambiguous_enum_parts(program, arg_id)
+                    .map(|(spelling, _)| format!("ambiguous '{spelling}'"))
+                    .unwrap_or_else(|| "malformed ambiguous enum".to_string())
+            }
+            _ => "non-enum expression".to_string(),
+        };
+        return Err(WorkshopError::unsupported(
+            format!(
+                "{} '{}' argument {} must be a member of enum domain '{}', got {}",
+                entry.kind.as_str(),
+                entry.id,
+                index + 1,
+                domain,
+                actual
+            ),
+            node.span,
+        ));
     }
     Ok(())
 }
@@ -476,7 +501,6 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
         // its runtime meaning is resolved by the enclosing builtin.
         (wir::Value::Null, _) => true,
         (wir::Value::GlobalVariable(_), "Global Variable") => true,
-        (wir::Value::PlayerVariable { .. }, "Player Variable") => true,
         (wir::Value::Subroutine(_), "Subroutine") => true,
         // Event Player is statically Player-typed, so it validates like any
         // other Player-returning expression rather than as an opaque runtime
@@ -491,10 +515,7 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
             | wir::Value::PlayerVariable { .. }
             | wir::Value::Subroutine(_),
             expected,
-        ) => !matches!(
-            expected,
-            "Global Variable" | "Player Variable" | "Subroutine"
-        ),
+        ) => !matches!(expected, "Global Variable" | "Subroutine"),
         _ => false,
     }
 }

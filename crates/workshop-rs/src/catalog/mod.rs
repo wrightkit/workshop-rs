@@ -321,6 +321,49 @@ impl CatalogEntry {
     pub fn is_variadic(&self) -> bool {
         self.variadic
     }
+
+    /// Whether the surface signature's leading `(player, variable)`
+    /// parameters fold into one `PlayerVariable` WIR argument. The declared
+    /// shape is a `Player|Array` parameter directly followed by a `Variable`
+    /// parameter (`stopChasingPlayerVariable`, `chasePlayerVariableAtRate`,
+    /// `chasePlayerVariableOverTime`, `setPlayerVariableAtIndex`,
+    /// `modifyPlayerVariableAtIndex`).
+    pub(crate) fn folds_player_variable_pair(&self) -> bool {
+        self.param_type(0) == Some("Player|Array") && self.param_type(1) == Some("Variable")
+    }
+
+    /// Whether `args`, a WIR argument list for this entry, actually carries
+    /// the folded pair: the signature is foldable and WIR arg 0 is a
+    /// `PlayerVariable` value. An unparseable or hand-built argument list
+    /// that never folded still positions its arguments one-to-one.
+    pub(crate) fn wir_args_folded(
+        &self,
+        program: &crate::wir::Program,
+        args: &[crate::wir::ValueId],
+    ) -> bool {
+        self.folds_player_variable_pair()
+            && matches!(
+                args.first()
+                    .and_then(|arg| program.values.get(*arg))
+                    .map(|node| &node.value),
+                Some(crate::wir::Value::PlayerVariable { .. })
+            )
+    }
+
+    /// The surface parameter index that `args[wir_index]` supplies for this
+    /// entry's signature. Positions map one-to-one unless `args` carries the
+    /// folded `(player, variable)` pair ([`wir_args_folded`]): the folded
+    /// `PlayerVariable` then sits at the `Variable` position and supplies
+    /// the `Player` position through its inner `player` field, and every
+    /// later WIR argument maps to param `wir_index + 1`.
+    pub(crate) fn wir_arg_param_index(
+        &self,
+        program: &crate::wir::Program,
+        args: &[crate::wir::ValueId],
+        wir_index: usize,
+    ) -> usize {
+        wir_index + usize::from(self.wir_args_folded(program, args))
+    }
 }
 
 fn param_at<T>(values: &[T], index: usize, variadic: bool) -> Option<&T> {

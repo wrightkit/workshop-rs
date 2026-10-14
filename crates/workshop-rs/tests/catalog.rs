@@ -392,9 +392,11 @@ fn documented_action_and_value_signatures_are_inventory_entries() {
     let indexed = catalog
         .entry(Kind::Action, "setPlayerVariableAtIndex")
         .expect("indexed player-variable action");
-    assert_eq!(indexed.params(), ["Variable", "Index", "Value"]);
-    assert_eq!(indexed.param_type(0), Some("Player Variable"));
-    assert_eq!(indexed.param_type(2), Some("Object|Array"));
+    // The catalog declares the surface signature; the `(player, variable)`
+    // pair is what the WIR argument list folds into one `PlayerVariable`.
+    assert_eq!(indexed.params(), ["Player", "Variable", "Index", "Value"]);
+    assert_eq!(indexed.param_type(0), Some("Player|Array"));
+    assert_eq!(indexed.param_type(3), Some("Object|Array"));
 
     let custom_string = catalog
         .entry(Kind::Value, "customString")

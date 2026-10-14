@@ -938,16 +938,6 @@ impl ParseContext<'_> {
         let mut arg_index = 0usize;
         let mut raw_modify_operator = false;
         loop {
-            let canonical_arg_index = if matches!(
-                call_id,
-                "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex"
-            ) && arg_index >= 2
-                && args.len() == arg_index - 1
-            {
-                arg_index - 1
-            } else {
-                arg_index
-            };
             // Indexed variable actions carry a project-local variable name,
             // not a Workshop value expression. Resolve it through the symbol
             // table so names such as `Brigitte` remain variable identities.
@@ -995,7 +985,7 @@ impl ParseContext<'_> {
                     );
                 } else {
                     self.pos = saved;
-                    let domain = self.context.expected_domain(call_id, canonical_arg_index);
+                    let domain = self.context.expected_domain(call_id, arg_index);
                     args.push(self.value_in_domain(domain)?);
                 }
             } else if matches!(
@@ -1032,7 +1022,7 @@ impl ParseContext<'_> {
                 // calls override the expectation for their own arguments.
                 let domain = self
                     .context
-                    .expected_domain(call_id, canonical_arg_index)
+                    .expected_domain(call_id, arg_index)
                     .or_else(|| {
                         self.expected_domain
                             .filter(|_| matches!(call_id, "array" | "randomValueInArray"))

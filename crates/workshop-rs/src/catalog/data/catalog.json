@@ -1096,6 +1096,7 @@
       "id": "modifyPlayerVariableAtIndex",
       "paramCoercions": [
         null,
+        null,
         {
           "falseAsNumber": true,
           "trueAsNumber": true
@@ -1106,22 +1107,26 @@
       "paramDomains": [
         null,
         null,
+        null,
         "Operation",
         null
       ],
       "paramNames": [
+        "player",
         "variable",
         "index",
         "operation",
         "value"
       ],
       "paramTypes": [
-        "Player Variable",
+        "Player|Array",
+        "Variable",
         "Number|Boolean",
         "Operation",
         "Object|Array"
       ],
       "params": [
+        "Player",
         "Variable",
         "Index",
         "Operation",
@@ -3246,6 +3251,7 @@
       "id": "setPlayerVariableAtIndex",
       "paramCoercions": [
         null,
+        null,
         {
           "falseAsNumber": true,
           "trueAsNumber": true
@@ -3253,16 +3259,19 @@
         null
       ],
       "paramNames": [
+        "player",
         "variable",
         "index",
         "value"
       ],
       "paramTypes": [
-        "Player Variable",
+        "Player|Array",
+        "Variable",
         "Number|Boolean",
         "Object|Array"
       ],
       "params": [
+        "Player",
         "Variable",
         "Index",
         "Value"
@@ -8475,7 +8484,7 @@
       }
     }
   ],
-  "digest": "2b87271277a68f67a1d58ea51f7c8257475d2eb861b1160a58a5678986b6230f",
+  "digest": "be089cfaff1e60f1c5ebc6fc23238a0f6c085d4581fc73c5c41b13d3b9e983ee",
   "enums": [
     {
       "domain": "Impulse",
