@@ -10,7 +10,8 @@ use crate::core::error::{CatalogError, Result};
 
 use super::{
     CATALOG_DATA, Catalog, CatalogEntry, EnumDomain, EnumMember, Kind, Locale,
-    LocalizedStringEntry, ParamCoercions, Provenance, TargetMeta,
+    LocalizedStringEntry, NormalizedIndex, ParamCoercions, Provenance, TargetMeta,
+    normalize_spelling,
 };
 
 #[derive(Deserialize)]
@@ -185,6 +186,7 @@ impl Catalog {
             enum_alias_to_domain: HashMap::new(),
             enum_alias_to_member: HashMap::new(),
             bare_member_index: HashMap::new(),
+            normalized: NormalizedIndex::default(),
         };
 
         for (kind, items) in [
@@ -220,6 +222,7 @@ impl Catalog {
                 }
             }
         }
+        catalog.build_normalized_index();
         catalog.validate_param_domains()?;
         catalog.detection_index =
             Some(super::detect::AliasIndex::build(&catalog).map_err(|error| {
@@ -232,6 +235,97 @@ impl Catalog {
     pub fn builtin() -> Result<Catalog> {
         Self::load(CATALOG_DATA)
     }
+    /// Mirror the verbatim spelling indexes under whitespace-collapsed
+    /// keys (#448). A normalized key claimed by distinct targets is poisoned
+    /// (`None`) so it resolves nothing rather than guessing; identical
+    /// targets (two declared spellings that differ only in whitespace, such
+    /// as zh-CN `66号公路`/`66 号公路`) keep their single meaning.
+    fn build_normalized_index(&mut self) {
+        fn insert<T: PartialEq + Clone>(
+            map: &mut HashMap<String, Option<T>>,
+            key: String,
+            value: T,
+        ) {
+            match map.get_mut(&key) {
+                Some(slot) if *slot != Some(value.clone()) => *slot = None,
+                Some(_) => {}
+                None => {
+                    map.insert(key, Some(value));
+                }
+            }
+        }
+
+        let mut normalized = NormalizedIndex::default();
+        for (locale, by_kind) in &self.alias_to_entry {
+            let by_kind_norm = normalized
+                .alias_to_entry
+                .entry(locale.clone())
+                .or_insert_with(|| std::array::from_fn(|_| HashMap::new()));
+            for (kind_index, map) in by_kind.iter().enumerate() {
+                for (spelling, &entry_index) in map {
+                    let key = normalize_spelling(spelling);
+                    if &key != spelling {
+                        insert(&mut by_kind_norm[kind_index], key, entry_index);
+                    }
+                }
+            }
+        }
+        for (locale, map) in &self.localized_string_alias {
+            let norm = normalized
+                .localized_string_alias
+                .entry(locale.clone())
+                .or_default();
+            for (spelling, &string_index) in map {
+                let key = normalize_spelling(spelling);
+                if &key != spelling {
+                    insert(norm, key, string_index);
+                }
+            }
+        }
+        for (locale, map) in &self.enum_alias_to_domain {
+            let norm = normalized
+                .enum_alias_to_domain
+                .entry(locale.clone())
+                .or_default();
+            for (spelling, domain) in map {
+                let key = normalize_spelling(spelling);
+                if &key != spelling {
+                    insert(norm, key, domain.clone());
+                }
+            }
+        }
+        for (locale, domains) in &self.enum_alias_to_member {
+            let norm = normalized
+                .enum_alias_to_member
+                .entry(locale.clone())
+                .or_default();
+            for (domain, map) in domains {
+                let norm_map = norm.entry(domain.clone()).or_default();
+                for (spelling, &indexes) in map {
+                    let key = normalize_spelling(spelling);
+                    if &key != spelling {
+                        insert(norm_map, key, indexes);
+                    }
+                }
+            }
+        }
+        for (locale, map) in &self.bare_member_index {
+            let norm = normalized.bare_member.entry(locale.clone()).or_default();
+            for (spelling, matches) in map {
+                let key = normalize_spelling(spelling);
+                if &key != spelling {
+                    let merged = norm.entry(key).or_default();
+                    for pair in matches {
+                        if !merged.contains(pair) {
+                            merged.push(pair.clone());
+                        }
+                    }
+                }
+            }
+        }
+        self.normalized = normalized;
+    }
+
     fn insert_entry(&mut self, kind: Kind, item: EntryFile) -> Result<()> {
         let index = self.entries.len();
         let aliases = self.collect_aliases(

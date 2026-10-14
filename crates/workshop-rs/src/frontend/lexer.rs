@@ -274,6 +274,15 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                     });
                 }
             }
+            '<' if starts_markup_word(&cursor)
+                || (markup_tag_len(cursor.rest).is_some()
+                    && tokens.last().is_some_and(|token: &Token| {
+                        token.end == cursor.pos()
+                            && matches!(token.kind, TokenKind::Word(_) | TokenKind::Number { .. })
+                    })) =>
+            {
+                tokens.push(take_word(&mut cursor));
+            }
             '<' | '>' => {
                 let start = cursor.pos();
                 let op = cursor.advance().unwrap();
@@ -314,24 +323,7 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                 });
             }
             c if is_word_start(c) => {
-                let start = cursor.pos();
-                let mut word = String::new();
-                while let Some(c) = cursor.peek() {
-                    let interior_dash = c == '-'
-                        && cursor.peek_at(1).is_some_and(|next| {
-                            unicode_ident::is_xid_continue(next) || next == '_'
-                        });
-                    if is_word_character(c) || interior_dash {
-                        word.push(cursor.advance().unwrap());
-                    } else {
-                        break;
-                    }
-                }
-                tokens.push(Token {
-                    kind: TokenKind::Word(word),
-                    start,
-                    end: cursor.pos(),
-                });
+                tokens.push(take_word(&mut cursor));
             }
             other => {
                 return Err(LexError {
@@ -351,6 +343,64 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
     Ok(tokens)
 }
 
+/// Consume one word token: identifier characters, interior dashes, and
+/// localization markup sequences (`<en>`, `<br>`, `<hy>`), which the
+/// reviewed catalog carries verbatim inside member spellings such as
+/// `Meis Schneeball<hy>schlacht` and `<en>Orisa<en>` (#448).
+fn take_word(cursor: &mut Cursor) -> Token {
+    let start = cursor.pos();
+    let mut word = String::new();
+    while let Some(c) = cursor.peek() {
+        if c == '<' {
+            if let Some(len) = markup_tag_len(cursor.rest) {
+                // Tag bytes are all ASCII, so the byte length is also the
+                // character count.
+                for _ in 0..len {
+                    word.push(cursor.advance().unwrap());
+                }
+                continue;
+            }
+        }
+        let interior_dash = c == '-'
+            && cursor
+                .peek_at(1)
+                .is_some_and(|next| unicode_ident::is_xid_continue(next) || next == '_');
+        if is_word_character(c) || interior_dash {
+            word.push(cursor.advance().unwrap());
+        } else {
+            break;
+        }
+    }
+    Token {
+        kind: TokenKind::Word(word),
+        start,
+        end: cursor.pos(),
+    }
+}
+
+/// Whether the `<` at the cursor opens a markup-led word such as
+/// `<en>Orisa<en>` rather than a comparison operator: a `<tag>` sequence
+/// directly followed by a word character.
+fn starts_markup_word(cursor: &Cursor) -> bool {
+    match markup_tag_len(cursor.rest) {
+        Some(len) => cursor.rest[len..].chars().next().is_some_and(is_word_start),
+        None => false,
+    }
+}
+
+/// The byte length of a `<tag>` markup sequence at the start of `rest`
+/// (`<en>`, `<br>`, `<hy>`), or `None` when `rest` does not open one.
+fn markup_tag_len(rest: &str) -> Option<usize> {
+    let inner = rest.strip_prefix('<')?;
+    let close = inner.find('>')?;
+    let name = &inner[..close];
+    if !name.is_empty() && name.chars().all(|c| c.is_ascii_lowercase()) {
+        Some(1 + close + 1)
+    } else {
+        None
+    }
+}
+
 fn is_word_start(ch: char) -> bool {
     unicode_ident::is_xid_start(ch) || ch == '_' || is_raw_label_punctuation(ch)
 }
@@ -364,25 +414,104 @@ fn is_word_character(ch: char) -> bool {
 
 fn is_raw_label_punctuation(ch: char) -> bool {
     // Punctuation found inside reviewed catalog spellings that is not
-    // Workshop syntax: typographic quotes/brackets and the en dash used by
-    // member names such as de-DE `Effekt – Sprint von Soldier: 76` or ja-JP
-    // `ソルジャー76の〈スプリント〉のエフェクト`.
+    // Workshop syntax (#448): typographic quotes/brackets, the en dash, and
+    // the fullwidth/ideographic marks used by member and value names such as
+    // es-ES `¡Alto!`, fr-FR `Portrait « en feu »`, ja-JP
+    // `条件が「TRUE」の場合中止`, or ja-JP `対面・垂直角`.
     matches!(
         ch,
-        '“' | '”'
+        '¡' | '«'
+            | '»'
+            | '–'
+            | '“'
+            | '”'
+            | '、'
+            | '。'
+            | '〈'
+            | '〉'
+            | '「'
+            | '」'
+            | '・'
+            | '！'
             | '（'
             | '）'
             | '，'
-            | '、'
-            | '！'
-            | '？'
             | '：'
-            | '【'
-            | '】'
-            | '［'
-            | '］'
-            | '–'
-            | '〈'
-            | '〉'
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn kinds(source: &str) -> Vec<TokenKind> {
+        tokenize(source)
+            .expect("tokenizes")
+            .into_iter()
+            .map(|token| token.kind)
+            .collect()
+    }
+
+    /// Catalog spellings carry locale punctuation the lexer must accept as
+    /// word content (#448): `¡`, `«»`, `「」`, `・`, `。`, `–`, `〈〉`.
+    #[test]
+    fn localized_punctuation_is_word_content() {
+        for (spelling, expected) in [
+            ("¡Alto", "¡Alto"),
+            ("«Горизонт»", "«Горизонт»"),
+            ("条件が「TRUE」の場合ループ", "条件が「TRUE」の場合ループ"),
+            ("イベント・プレイヤー", "イベント・プレイヤー"),
+            ("最も近いプレイヤー。基準", "最も近いプレイヤー。基準"),
+            ("Orisa–Stać", "Orisa–Stać"),
+            (
+                "ソルジャー76の〈スプリント〉のエフェクト",
+                "ソルジャー76の〈スプリント〉のエフェクト",
+            ),
+        ] {
+            assert_eq!(
+                kinds(spelling),
+                vec![TokenKind::Word(expected.to_string()), TokenKind::Eof],
+                "{spelling:?} must lex as one word"
+            );
+        }
+    }
+
+    /// Localization markup sequences (`<en>`, `<br>`, `<hy>`) stay inside
+    /// the word they interrupt or open (#448).
+    #[test]
+    fn markup_tags_join_their_word() {
+        assert_eq!(
+            kinds("Meis Schneeball<hy>schlacht"),
+            vec![
+                TokenKind::Word("Meis".to_string()),
+                TokenKind::Word("Schneeball<hy>schlacht".to_string()),
+                TokenKind::Eof,
+            ]
+        );
+        assert_eq!(
+            kinds("ジャンケン<br>シュタインの<br>復讐"),
+            vec![
+                TokenKind::Word("ジャンケン<br>シュタインの<br>復讐".to_string()),
+                TokenKind::Eof,
+            ]
+        );
+        assert_eq!(
+            kinds("<en>Orisa<en>"),
+            vec![TokenKind::Word("<en>Orisa<en>".to_string()), TokenKind::Eof]
+        );
+    }
+
+    /// A `<` that does not open a `<tag>` sequence keeps its operator
+    /// reading, so `a < b` and `a<b` still lex as comparisons.
+    #[test]
+    fn less_than_still_lexes_as_operator() {
+        for source in ["a < b", "a<b", "a<=b", "a <b "] {
+            assert!(
+                kinds(source)
+                    .iter()
+                    .any(|kind| matches!(kind, TokenKind::Op(op) if op.starts_with('<'))),
+                "{source:?} lost its `<` operator"
+            );
+        }
+    }
 }

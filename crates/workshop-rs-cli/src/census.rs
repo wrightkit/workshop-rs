@@ -5,7 +5,7 @@
 //! produces structured results, not a source-language inventory or a
 //! live-client oracle.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -16,7 +16,11 @@ use crate::conformance::{
     TestArtifact, is_sha256_digest,
 };
 use workshop_rs::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
-use workshop_rs::settings::{self as settings_schema, SettingDefinition, SettingValueDomain};
+use workshop_rs::gameplay::{self, HeroId};
+use workshop_rs::settings::{
+    self as settings_schema, SettingDefinition, SettingTarget, SettingTargetKind,
+    SettingValueDomain,
+};
 use workshop_rs::{WorkshopError, convert, emitter, parser, roundtrip};
 
 #[derive(Clone, Copy)]
@@ -276,7 +280,7 @@ impl Census {
             enum_shard(catalog)?,
             settings_shard(catalog)?,
             wir_shard()?,
-            localization_shard()?,
+            localization_shard(catalog)?,
             content_id_shard(catalog)?,
         ])
     }
@@ -290,17 +294,53 @@ impl Census {
     }
 
     /// Execute all cases. No result state is dropped or converted to success.
+    /// Cases are independent and the report sorts results by case ID, so the
+    /// run parallelizes over available cores without changing the output.
     pub fn run(&self, catalog: &Catalog) -> CensusReport {
-        let mut results: Vec<_> = self
+        let cases: Vec<(&str, &CensusCase)> = self
             .shards
             .iter()
             .flat_map(|shard| {
                 shard
                     .cases
                     .iter()
-                    .map(move |case| run_case(case, &shard.shard_id, catalog))
+                    .map(move |case| (shard.shard_id.as_str(), case))
             })
             .collect();
+        let workers = std::thread::available_parallelism()
+            .map(std::num::NonZero::get)
+            .unwrap_or(1)
+            .min(cases.len().max(1));
+        let results: Vec<ConformanceResult> = if workers <= 1 {
+            cases
+                .iter()
+                .map(|(shard_id, case)| run_case(case, shard_id, catalog))
+                .collect()
+        } else {
+            let next = std::sync::atomic::AtomicUsize::new(0);
+            std::thread::scope(|scope| {
+                let handles: Vec<_> = (0..workers)
+                    .map(|_| {
+                        scope.spawn(|| {
+                            let mut worker_results = Vec::new();
+                            loop {
+                                let index = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                                let Some((shard_id, case)) = cases.get(index) else {
+                                    break;
+                                };
+                                worker_results.push(run_case(case, shard_id, catalog));
+                            }
+                            worker_results
+                        })
+                    })
+                    .collect();
+                handles
+                    .into_iter()
+                    .flat_map(|handle| handle.join().expect("census worker panicked"))
+                    .collect()
+            })
+        };
+        let mut results = results;
         results.sort_by(|left, right| left.case_id.cmp(&right.case_id));
         CensusReport {
             schema_version: CENSUS_SCHEMA_VERSION,
@@ -597,31 +637,891 @@ fn wir_shard() -> Result<CensusShard, CensusError> {
     CensusShard::new("wir", cases)
 }
 
-fn localization_shard() -> Result<CensusShard, CensusError> {
-    CensusShard::new(
-        "localization",
-        vec![
-            CensusCase::probe(
-                "localization/en-us-to-zh-cn".to_string(),
-                vec![feature(
-                    FeatureNamespace::Localization,
-                    FeatureKind::Localization,
-                    "en-us-to-zh-cn",
-                )],
-                LOCALIZATION_EN_US_SOURCE.to_string(),
-            ),
-            CensusCase::probe(
-                "localization/zh-cn-to-en-us".to_string(),
-                vec![feature(
-                    FeatureNamespace::Localization,
-                    FeatureKind::Localization,
-                    "zh-cn-to-en-us",
-                )],
-                LOCALIZATION_ZH_CN_SOURCE.to_string(),
-            )
-            .locale(ZH_CN),
-        ],
+fn localization_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
+    let mut cases = vec![
+        CensusCase::probe(
+            "localization/en-us-to-zh-cn".to_string(),
+            vec![feature(
+                FeatureNamespace::Localization,
+                FeatureKind::Localization,
+                "en-us-to-zh-cn",
+            )],
+            LOCALIZATION_EN_US_SOURCE.to_string(),
+        ),
+        CensusCase::probe(
+            "localization/zh-cn-to-en-us".to_string(),
+            vec![feature(
+                FeatureNamespace::Localization,
+                FeatureKind::Localization,
+                "zh-cn-to-en-us",
+            )],
+            LOCALIZATION_ZH_CN_SOURCE.to_string(),
+        )
+        .locale(ZH_CN),
+    ];
+    // #448: every spelling the catalog declares for a locale gets a case
+    // written in that spelling, so an alias the frontend cannot represent
+    // shows up as an explicit result instead of never being exercised.
+    let settings_index = SettingsSpellings::build();
+    for locale in catalog.locales() {
+        for kind in [
+            Kind::Event,
+            Kind::Action,
+            Kind::Value,
+            Kind::Operator,
+            Kind::Structural,
+        ] {
+            for entry in catalog.entries_of(kind) {
+                for (index, spelling) in entry.spellings(locale).iter().enumerate() {
+                    cases.push(
+                        CensusCase::probe(
+                            format!(
+                                "localization/{}/{}/{}/{}",
+                                locale.as_str(),
+                                kind.as_str(),
+                                entry.id,
+                                index
+                            ),
+                            vec![catalog_feature(kind, &entry.id)],
+                            localized_probe(catalog, locale, kind, entry, spelling),
+                        )
+                        .locale(locale.as_str()),
+                    );
+                }
+            }
+        }
+        for domain in catalog.enum_domains() {
+            let domain_spelling = CONSTRUCTOR_DOMAINS
+                .contains(&domain.domain.as_str())
+                .then(|| domain.spelling(locale))
+                .flatten();
+            if let Some(spelling) = domain_spelling {
+                let Some(member) = domain.members.first() else {
+                    continue;
+                };
+                let member_spelling =
+                    localized_member(catalog, &domain.domain, &member.member, locale);
+                cases.push(
+                    CensusCase::probe(
+                        format!(
+                            "localization/{}/enum-domain/{}",
+                            locale.as_str(),
+                            domain.domain
+                        ),
+                        vec![catalog_feature(Kind::Enum, &domain.domain)],
+                        global_probe(catalog, locale, &format!("{spelling}({member_spelling})")),
+                    )
+                    .locale(locale.as_str()),
+                );
+            }
+            for member in &domain.members {
+                for (index, spelling) in member.spellings(locale).iter().enumerate() {
+                    cases.push(
+                        CensusCase::probe(
+                            format!(
+                                "localization/{}/enum/{}/{}/{}",
+                                locale.as_str(),
+                                domain.domain,
+                                member.member,
+                                index
+                            ),
+                            vec![
+                                FeatureId::from_enum_member(&domain.domain, &member.member)
+                                    .expect("canonical enum member ID"),
+                            ],
+                            member_probe(catalog, locale, domain, spelling),
+                        )
+                        .locale(locale.as_str()),
+                    );
+                }
+            }
+        }
+        for entry in catalog.localized_strings() {
+            for (index, spelling) in entry.spellings(locale).iter().enumerate() {
+                let string_call = catalog
+                    .spelling(Kind::Value, locale, "string")
+                    .or_else(|| catalog.spelling(Kind::Value, &Locale::new(EN_US), "string"))
+                    .unwrap_or("string");
+                cases.push(
+                    CensusCase::probe(
+                        format!(
+                            "localization/{}/localized-string/{}/{}",
+                            locale.as_str(),
+                            entry.id,
+                            index
+                        ),
+                        vec![feature(
+                            FeatureNamespace::Localization,
+                            FeatureKind::String,
+                            entry.id.clone(),
+                        )],
+                        global_probe(catalog, locale, &format!("{string_call}({spelling})")),
+                    )
+                    .locale(locale.as_str()),
+                );
+            }
+        }
+        for (row, name) in settings_schema::localized_setting_names()
+            .iter()
+            .enumerate()
+        {
+            if !name.locale.eq_ignore_ascii_case(locale.as_str()) {
+                continue;
+            }
+            let case_id = format!(
+                "localization/{}/settings/{}/{}",
+                locale.as_str(),
+                name.section,
+                row
+            );
+            let feature_id = feature(
+                FeatureNamespace::Settings,
+                FeatureKind::Setting,
+                format!("{}/{}", name.section, slug(name.english)),
+            );
+            match localized_settings_probe(catalog, &settings_index, name, locale) {
+                Ok(source) => cases.push(
+                    CensusCase::probe(case_id, vec![feature_id], source).locale(locale.as_str()),
+                ),
+                Err(detail) => cases.push(
+                    CensusCase {
+                        case_id,
+                        features: vec![feature_id],
+                        source_locale: locale.as_str().to_string(),
+                        // The row has no writable context; the source is a
+                        // placeholder only (known-gap cases are not run).
+                        source: "settings {\n}".to_string(),
+                        reference_source: None,
+                        support: CensusSupport::KnownGap {
+                            detail: format!(
+                                "settings {} {:?} for {}: {detail}",
+                                name.section, name.spelling, name.english
+                            ),
+                        },
+                    }
+                    .locale(locale.as_str()),
+                ),
+            }
+        }
+    }
+    CensusShard::new("localization", cases)
+}
+
+/// Enum domains whose members are written in `Domain(Member)` constructor
+/// form (#448 census probes mirror `Catalog::enum_member_form`).
+const CONSTRUCTOR_DOMAINS: &[&str] = &["Hero", "Button", "Color", "Map"];
+
+/// A feature-safe name fragment: catalog `english` display names can carry
+/// spaces (`"Flag Carrier Abilities"`), which `FeatureId` rejects.
+fn slug(name: &str) -> String {
+    name.chars()
+        .map(|character| {
+            if character.is_whitespace() || character == '/' {
+                '-'
+            } else {
+                character
+            }
+        })
+        .collect()
+}
+
+/// The declared spelling of `id` in `locale`, falling back to en-US.
+fn localized_spelling(catalog: &Catalog, kind: Kind, locale: &Locale, id: &str) -> String {
+    catalog
+        .spelling(kind, locale, id)
+        .or_else(|| catalog.spelling(kind, &Locale::new(EN_US), id))
+        .unwrap_or(id)
+        .to_string()
+}
+
+/// The declared member spelling in `locale`, falling back to en-US.
+fn localized_member(catalog: &Catalog, domain: &str, member: &str, locale: &Locale) -> String {
+    catalog
+        .enum_spelling(domain, locale, member)
+        .or_else(|| catalog.enum_spelling(domain, &Locale::new(EN_US), member))
+        .unwrap_or(member)
+        .to_string()
+}
+
+/// A source-form argument for `param` of `entry` in `locale`, used to fill
+/// the non-tested positions of a probe call (#448). Declared defaults are
+/// written verbatim-resolved so the emission of a call stays stable.
+fn probe_filler(catalog: &Catalog, locale: &Locale, entry: &CatalogEntry, index: usize) -> String {
+    if let Some(domain) = entry.param_domain(index) {
+        let member = catalog
+            .enum_domain(domain)
+            .and_then(|domain| domain.members.first())
+            .map(|member| member.member.as_str())
+            .unwrap_or("ALL");
+        let spelling = localized_member(catalog, domain, member, locale);
+        if CONSTRUCTOR_DOMAINS.contains(&domain) {
+            let domain_spelling = catalog
+                .enum_domain(domain)
+                .and_then(|domain| domain.spelling(locale))
+                .unwrap_or(domain);
+            return format!("{domain_spelling}({spelling})");
+        }
+        return spelling;
+    }
+    if let Some(default) = entry.param_default(index) {
+        return param_default_filler(catalog, locale, default);
+    }
+    match entry.param_type(index) {
+        Some("Variable") => "probe".to_string(),
+        Some("Subroutine") | Some("Subroutines") => "probe".to_string(),
+        Some("Bool") => localized_spelling(catalog, Kind::Value, locale, "true"),
+        // `Hero`-typed params take the member spelling bare; the enclosing
+        // `Hero(...)` call is the value under test or the entry's own name.
+        Some("Hero") => {
+            let member = catalog
+                .enum_domain("Hero")
+                .and_then(|domain| domain.members.first())
+                .map(|member| member.member.as_str())
+                .unwrap_or("ANA");
+            localized_member(catalog, "Hero", member, locale)
+        }
+        // String params emit canonically as `Custom String("...")`, so the
+        // probe writes that form instead of a bare literal (#448).
+        Some("String") => {
+            let custom_string = localized_spelling(catalog, Kind::Value, locale, "customString");
+            format!("{custom_string}(\"x\")")
+        }
+        Some(kind) if kind.contains("Player") || kind.contains("EntityId") => {
+            localized_spelling(catalog, Kind::Value, locale, "eventPlayer")
+        }
+        _ => "0".to_string(),
+    }
+}
+
+/// Source for a declared `paramDefaults` value: `Domain.MEMBER` resolves
+/// through the enum tables, `Hello` is a localized-string id, `null` and
+/// value ids resolve through the value catalog (#448).
+fn param_default_filler(catalog: &Catalog, locale: &Locale, default: &str) -> String {
+    if let Some((domain, member)) = default.split_once('.') {
+        let spelling = localized_member(catalog, domain, member, locale);
+        if CONSTRUCTOR_DOMAINS.contains(&domain) {
+            let domain_spelling = catalog
+                .enum_domain(domain)
+                .and_then(|domain| domain.spelling(locale))
+                .unwrap_or(domain);
+            return format!("{domain_spelling}({spelling})");
+        }
+        return spelling;
+    }
+    if catalog.entry(Kind::Value, default).is_some() {
+        return localized_spelling(catalog, Kind::Value, locale, default);
+    }
+    if let Some(spelling) = catalog.localized_string_spelling(locale, default) {
+        return spelling.to_string();
+    }
+    default.to_string()
+}
+
+fn probe_args(catalog: &Catalog, locale: &Locale, entry: &CatalogEntry) -> String {
+    (0..entry.param_count())
+        .map(|index| probe_filler(catalog, locale, entry, index))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+/// A probe rule written fully in `locale` (#448): every fixed token —
+/// section keywords, the header event, `Wait`, `If`, `End` — carries that
+/// locale's declared spelling so a cross-locale round trip compares the
+/// tested spelling rather than fallback noise in the boilerplate.
+fn probe_rule(catalog: &Catalog, locale: &Locale, actions: &str) -> String {
+    let variables = localized_spelling(catalog, Kind::Structural, locale, "variables");
+    let global = localized_spelling(catalog, Kind::Structural, locale, "global");
+    let player = localized_spelling(catalog, Kind::Structural, locale, "player");
+    let subroutines = localized_spelling(catalog, Kind::Structural, locale, "subroutines");
+    let rule = localized_spelling(catalog, Kind::Structural, locale, "rule");
+    let event = localized_spelling(catalog, Kind::Structural, locale, "event");
+    let ongoing_global = localized_spelling(catalog, Kind::Event, locale, "global");
+    let actions_section = localized_spelling(catalog, Kind::Structural, locale, "actions");
+    format!(
+        "{variables} {{\n    {global}:\n        0: probe\n    {player}:\n        0: probe\n}}\n\n{subroutines} {{\n    0: probe\n}}\n\n{rule} (\"probe\") {{\n    {event} {{\n        {ongoing_global};\n    }}\n    {actions_section} {{\n        {actions}\n    }}\n}}\n"
     )
+}
+
+fn global_probe(catalog: &Catalog, locale: &Locale, operand: &str) -> String {
+    let set_global = localized_spelling(catalog, Kind::Structural, locale, "setGlobalVariable");
+    probe_rule(catalog, locale, &format!("{set_global}(probe, {operand});"))
+}
+
+/// A probe source that writes `spelling` where `entry` belongs, for a
+/// catalog kind case in `locale` (#448).
+fn localized_probe(
+    catalog: &Catalog,
+    locale: &Locale,
+    kind: Kind,
+    entry: &CatalogEntry,
+    spelling: &str,
+) -> String {
+    match kind {
+        Kind::Event => {
+            let extra = match entry.id.as_str() {
+                "global" => String::new(),
+                "subroutine" => "        probe;\n".to_string(),
+                _ => format!(
+                    "        {};\n        {};\n",
+                    localized_member(catalog, "EventTeam", "ALL", locale),
+                    localized_member(catalog, "EventPlayer", "ALL", locale),
+                ),
+            };
+            let subroutines = localized_spelling(catalog, Kind::Structural, locale, "subroutines");
+            let rule = localized_spelling(catalog, Kind::Structural, locale, "rule");
+            let event = localized_spelling(catalog, Kind::Structural, locale, "event");
+            let actions = localized_spelling(catalog, Kind::Structural, locale, "actions");
+            let wait = localized_spelling(catalog, Kind::Action, locale, "wait");
+            format!(
+                "{subroutines} {{\n    0: probe\n}}\n\n{rule} (\"e\") {{\n    {event} {{\n        {spelling};\n{extra}    }}\n    {actions} {{\n        {wait};\n    }}\n}}\n"
+            )
+        }
+        Kind::Action => {
+            let call = if entry.param_count() == 0 {
+                format!("{spelling};")
+            } else {
+                format!("{spelling}({});", probe_args(catalog, locale, entry))
+            };
+            // `For * Variable` actions open a block that needs `End`.
+            let call = if entry.id.starts_with("__for") {
+                let wait = localized_spelling(catalog, Kind::Action, locale, "wait");
+                let end = localized_spelling(catalog, Kind::Structural, locale, "end");
+                format!("{call}\n        {wait}(0);\n    {end};")
+            } else {
+                call
+            };
+            probe_rule(catalog, locale, &call)
+        }
+        Kind::Value => {
+            let operand = match entry.id.as_str() {
+                "string" => {
+                    let hello = catalog
+                        .localized_string_spelling(locale, "hello")
+                        .or_else(|| catalog.localized_string_spelling(&Locale::new(EN_US), "hello"))
+                        .unwrap_or("Hello");
+                    format!("{spelling}({hello})")
+                }
+                "compare" => {
+                    let eq = localized_spelling(catalog, Kind::Operator, locale, "==");
+                    format!("{spelling}(1, {eq}, 1)")
+                }
+                _ if entry.param_count() == 0 => spelling.to_string(),
+                _ => format!("{spelling}({})", probe_args(catalog, locale, entry)),
+            };
+            global_probe(catalog, locale, &operand)
+        }
+        Kind::Operator => {
+            if matches!(entry.id.as_str(), "==" | "!=" | "<" | "<=" | ">" | ">=") {
+                let if_ = localized_spelling(catalog, Kind::Structural, locale, "if");
+                let wait = localized_spelling(catalog, Kind::Action, locale, "wait");
+                let end = localized_spelling(catalog, Kind::Structural, locale, "end");
+                probe_rule(
+                    catalog,
+                    locale,
+                    &format!("{if_}(1 {spelling} 1);\n        {wait}(0);\n    {end};"),
+                )
+            } else {
+                let modify =
+                    localized_spelling(catalog, Kind::Structural, locale, "modifyGlobalVariable");
+                probe_rule(catalog, locale, &format!("{modify}(probe, {spelling}, 1);"))
+            }
+        }
+        Kind::Structural => structural_spelling_probe(catalog, locale, &entry.id, spelling),
+        _ => unreachable!("settings and enum spellings use their own probes"),
+    }
+}
+
+fn structural_spelling_probe(
+    catalog: &Catalog,
+    locale: &Locale,
+    id: &str,
+    spelling: &str,
+) -> String {
+    let kw = |name: &str| localized_spelling(catalog, Kind::Structural, locale, name);
+    let wait = localized_spelling(catalog, Kind::Action, locale, "wait");
+    let true_ = localized_spelling(catalog, Kind::Value, locale, "true");
+    let ongoing_global = localized_spelling(catalog, Kind::Event, locale, "global");
+    let event_player = localized_spelling(catalog, Kind::Value, locale, "eventPlayer");
+    let end = kw("end");
+    let block = |head: &str| format!("{head}\n        {wait}(0);\n    {end};");
+    match id {
+        "settings" => format!("{spelling} {{\n}}\n"),
+        "workshop" => format!("{} {{\n    {spelling} {{\n    }}\n}}\n", kw("settings")),
+        "variables" => format!(
+            "{spelling} {{\n    {}:\n        0: probe\n}}\n",
+            kw("global")
+        ),
+        "global" | "player" => {
+            format!(
+                "{} {{\n    {spelling}:\n        0: probe\n}}\n",
+                kw("variables")
+            )
+        }
+        "subroutines" => format!("{spelling} {{\n    0: probe\n}}\n"),
+        "rule" => format!(
+            "{spelling} (\"r\") {{\n    {} {{\n        {ongoing_global};\n    }}\n    {} {{\n        {wait};\n    }}\n}}\n",
+            kw("event"),
+            kw("actions"),
+        ),
+        "event" => format!(
+            "{} (\"r\") {{\n    {spelling} {{\n        {ongoing_global};\n    }}\n    {} {{\n        {wait};\n    }}\n}}\n",
+            kw("rule"),
+            kw("actions"),
+        ),
+        "conditions" => {
+            // Conditions emit canonically in `a == b` comparison form.
+            let equals = localized_spelling(catalog, Kind::Operator, locale, "==");
+            format!(
+                "{} (\"c\") {{\n    {} {{\n        {ongoing_global};\n    }}\n    {spelling} {{\n        {true_} {equals} {true_};\n    }}\n    {} {{\n        {wait};\n    }}\n}}\n",
+                kw("rule"),
+                kw("event"),
+                kw("actions"),
+            )
+        }
+        "actions" => format!(
+            "{} (\"r\") {{\n    {} {{\n        {ongoing_global};\n    }}\n    {spelling} {{\n        {wait};\n    }}\n}}\n",
+            kw("rule"),
+            kw("event"),
+        ),
+        "disabled" => probe_rule(catalog, locale, &format!("{spelling} {wait}(0);")),
+        "if" => probe_rule(catalog, locale, &block(&format!("{spelling}({true_});"))),
+        "elseIf" => {
+            let if_ = kw("if");
+            probe_rule(
+                catalog,
+                locale,
+                &format!(
+                    "{if_}({true_});\n        {wait}(0);\n    {spelling}({true_});\n        {wait}(0);\n    {end};"
+                ),
+            )
+        }
+        "else" => {
+            let if_ = kw("if");
+            probe_rule(
+                catalog,
+                locale,
+                &format!(
+                    "{if_}({true_});\n        {wait}(0);\n    {spelling};\n        {wait}(0);\n    {end};"
+                ),
+            )
+        }
+        "end" => {
+            let if_ = kw("if");
+            probe_rule(
+                catalog,
+                locale,
+                &format!("{if_}({true_});\n        {wait}(0);\n    {spelling};"),
+            )
+        }
+        "while" => probe_rule(catalog, locale, &block(&format!("{spelling}({true_});"))),
+        "forGlobalVariable" => probe_rule(
+            catalog,
+            locale,
+            &block(&format!("{spelling}(probe, 0, 1, 1);")),
+        ),
+        "forPlayerVariable" => probe_rule(
+            catalog,
+            locale,
+            &block(&format!("{spelling}({event_player}, probe, 0, 1, 1);")),
+        ),
+        "setGlobalVariable" => probe_rule(catalog, locale, &format!("{spelling}(probe, 1);")),
+        "modifyGlobalVariable" => {
+            let add = localized_spelling(catalog, Kind::Operator, locale, "add");
+            probe_rule(catalog, locale, &format!("{spelling}(probe, {add}, 1);"))
+        }
+        "setPlayerVariable" => probe_rule(
+            catalog,
+            locale,
+            &format!("{spelling}({event_player}, probe, 1);"),
+        ),
+        "modifyPlayerVariable" => {
+            let add = localized_spelling(catalog, Kind::Operator, locale, "add");
+            probe_rule(
+                catalog,
+                locale,
+                &format!("{spelling}({event_player}, probe, {add}, 1);"),
+            )
+        }
+        "callSubroutine" => probe_rule(catalog, locale, &format!("{spelling}(probe);")),
+        _ => probe_rule(catalog, locale, &format!("{spelling};")),
+    }
+}
+
+/// A source that writes `spelling` where a member of `domain` belongs
+/// (#448): constructor domains wrap it, `EventTeam`/`EventPlayer` sit in
+/// the event header, and other domains prefer a declared host parameter,
+/// falling back to a bare member.
+fn member_probe(catalog: &Catalog, locale: &Locale, domain: &EnumDomain, spelling: &str) -> String {
+    if CONSTRUCTOR_DOMAINS.contains(&domain.domain.as_str()) {
+        let domain_spelling = domain.spelling(locale).unwrap_or(&domain.domain);
+        return global_probe(catalog, locale, &format!("{domain_spelling}({spelling})"));
+    }
+    if domain.domain == "EventTeam" || domain.domain == "EventPlayer" {
+        let event = localized_spelling(catalog, Kind::Event, locale, "eachPlayer");
+        let other = if domain.domain == "EventTeam" {
+            localized_member(catalog, "EventPlayer", "ALL", locale)
+        } else {
+            localized_member(catalog, "EventTeam", "ALL", locale)
+        };
+        let (team, player) = if domain.domain == "EventTeam" {
+            (spelling.to_string(), other)
+        } else {
+            (other, spelling.to_string())
+        };
+        let rule = localized_spelling(catalog, Kind::Structural, locale, "rule");
+        let event_kw = localized_spelling(catalog, Kind::Structural, locale, "event");
+        let actions = localized_spelling(catalog, Kind::Structural, locale, "actions");
+        let wait = localized_spelling(catalog, Kind::Action, locale, "wait");
+        return format!(
+            "{rule} (\"e\") {{\n    {event_kw} {{\n        {event};\n        {team};\n        {player};\n    }}\n    {actions} {{\n        {wait};\n    }}\n}}\n"
+        );
+    }
+    let host = [Kind::Value, Kind::Action]
+        .into_iter()
+        .flat_map(|kind| catalog.entries_of(kind))
+        .filter(|entry| {
+            (0..entry.param_count()).any(|index| entry.param_domain(index) == Some(&domain.domain))
+        })
+        .min_by_key(|entry| entry.required_param_count());
+    let Some(host) = host else {
+        return global_probe(catalog, locale, spelling);
+    };
+    let target = (0..host.param_count())
+        .find(|index| host.param_domain(*index) == Some(&domain.domain))
+        .expect("host was selected for carrying this domain");
+    let mut call_args: Vec<String> = (0..host.param_count())
+        .map(|index| probe_filler(catalog, locale, host, index))
+        .collect();
+    call_args[target] = spelling.to_string();
+    let host_spelling = localized_spelling(catalog, host.kind, locale, &host.id);
+    let call = format!("{host_spelling}({})", call_args.join(", "));
+    match host.kind {
+        Kind::Value => global_probe(catalog, locale, &call),
+        _ => probe_rule(catalog, locale, &format!("{call};")),
+    }
+}
+
+/// Settings definitions indexed by the label and enum-member names they
+/// render, so a declared locale row can be placed in a real settings
+/// context (#448).
+struct SettingsSpellings {
+    by_label: HashMap<String, Vec<SettingDefinition>>,
+    by_member: HashMap<String, Vec<SettingDefinition>>,
+    /// `(locale, section, english)` → declared spelling, for the fixed
+    /// settings group/leaf names around the tested row (#448).
+    names: HashMap<(String, String, String), String>,
+}
+
+impl SettingsSpellings {
+    fn build() -> Self {
+        let mut by_label: HashMap<String, Vec<SettingDefinition>> = HashMap::new();
+        let mut by_member: HashMap<String, Vec<SettingDefinition>> = HashMap::new();
+        for definition in settings_schema::definitions() {
+            by_label
+                .entry(definition.presentation().english_name.to_string())
+                .or_default()
+                .push(definition.clone());
+            for member in definition.enum_members() {
+                by_member
+                    .entry(member.english_name().to_string())
+                    .or_default()
+                    .push(definition.clone());
+            }
+        }
+        let mut names = HashMap::new();
+        for row in settings_schema::localized_setting_names() {
+            names.insert(
+                (
+                    row.locale.to_string(),
+                    row.section.to_string(),
+                    row.english.to_string(),
+                ),
+                row.spelling.to_string(),
+            );
+        }
+        Self {
+            by_label,
+            by_member,
+            names,
+        }
+    }
+
+    /// The declared `section` spelling for `english` in `locale`, falling
+    /// back to the en-US spelling then to the English name itself.
+    fn name(&self, locale: &str, section: &str, english: &str) -> String {
+        self.lookup(locale, section, english)
+            .or_else(|| self.lookup(EN_US, section, english))
+            .unwrap_or(english)
+            .to_string()
+    }
+
+    fn lookup(&self, locale: &str, section: &str, english: &str) -> Option<&str> {
+        self.names
+            .get(&(locale.to_string(), section.to_string(), english.to_string()))
+            .map(String::as_str)
+    }
+}
+
+/// A probe hero for `definition`'s `<hero>` slot: ability-scoped defs need
+/// a hero that owns the slot; prefer a hero whose emitted name equals the
+/// tested label so generic labels exercise the typed path (#448).
+fn settings_probe_hero(definition: &SettingDefinition, english: &str) -> Option<Option<String>> {
+    if !definition.path().contains(".<hero>.") && !definition.path().ends_with(".<hero>") {
+        return Some(None);
+    }
+    let data = gameplay::data::builtin().ok()?;
+    let heroes = data.query().heroes().to_vec();
+    let hero_ids: Vec<String> = match definition.target_kind() {
+        SettingTargetKind::HeroAbility { slot, variant } => heroes
+            .iter()
+            .filter(|hero| {
+                data.query()
+                    .ability_name(hero.id().as_str(), slot.as_str(), variant.as_ref(), EN_US)
+                    .is_ok()
+            })
+            .map(|hero| hero.id().as_str().to_string())
+            .collect(),
+        _ => heroes
+            .iter()
+            .map(|hero| hero.id().as_str().to_string())
+            .collect(),
+    };
+    // Prefer a hero that actually renders the tested label (generic
+    // spellings are shadowed by hero-specific ability names), but any hero
+    // carrying the slot still writes the spelling verbatim.
+    let mut matching = Vec::new();
+    let mut any = Vec::new();
+    for id in hero_ids {
+        let target = match definition.target_kind() {
+            SettingTargetKind::HeroAbility { slot, variant } => SettingTarget::HeroAbility {
+                team: None,
+                hero: HeroId::new(id.as_str()),
+                slot,
+                variant,
+            },
+            _ => SettingTarget::Hero {
+                team: None,
+                hero: HeroId::new(id.as_str()),
+            },
+        };
+        let emitted = definition
+            .localized_name(EN_US, &target)
+            .ok()
+            .flatten()
+            .map(str::to_string);
+        any.push(id.clone());
+        if emitted.as_deref() == Some(english) {
+            matching.push(id);
+        }
+    }
+    matching.into_iter().chain(any).next().map(Some)
+}
+
+/// Substitute the ability slot's localized name into a `%1$s` template
+/// spelling — the only form in which such a label can appear in source.
+/// Returns None when the definition is not hero-ability scoped or the hero
+/// has no ability name to substitute (#448).
+fn substitute_template(
+    definition: &SettingDefinition,
+    spelling: &str,
+    hero: Option<&str>,
+    locale: &str,
+) -> Option<String> {
+    if !spelling.contains("%1$s") {
+        return Some(spelling.to_string());
+    }
+    let SettingTargetKind::HeroAbility { slot, variant } = definition.target_kind() else {
+        return None;
+    };
+    let ability = gameplay::data::builtin()
+        .ok()?
+        .query()
+        .ability_name(hero?, slot.as_str(), variant.as_ref(), locale)
+        .ok()?
+        .to_string();
+    Some(spelling.replace("%1$s", &ability))
+}
+
+/// The `name { ... }` group stack for a definition's path, plus the leaf
+/// (#448), with every fixed group name in `locale`'s declared spelling.
+/// `hero` is the written hero group name when the path carries a `<hero>`
+/// slot.
+fn localized_settings_context(
+    catalog: &Catalog,
+    index: &SettingsSpellings,
+    locale: &Locale,
+    definition: &SettingDefinition,
+    leaf: &str,
+    hero: Option<&str>,
+) -> String {
+    let hero_name = hero
+        .and_then(|id| {
+            gameplay::data::builtin()
+                .ok()?
+                .query()
+                .heroes()
+                .iter()
+                .find(|hero| hero.id().as_str() == id)
+                .and_then(|hero| hero.name().value().get(EN_US).map(str::to_string))
+        })
+        .map(|english| index.name(locale.as_str(), "heroes", &english))
+        .unwrap_or_else(|| index.name(locale.as_str(), "heroes", "Ana"));
+    let settings = localized_spelling(catalog, Kind::Structural, locale, "settings");
+    let mut lines = vec![format!("{settings} {{")];
+    let mut depth = 1;
+    let parts: Vec<_> = definition.path().split('.').collect();
+    // The last part is the leaf key, not a group.
+    for (part_index, part) in parts.iter().take(parts.len() - 1).enumerate() {
+        let name = match *part {
+            "gamemodes" => index.name(locale.as_str(), "namespaces", "modes"),
+            "heroes" => index.name(locale.as_str(), "namespaces", "heroes"),
+            "<team>" | "general" => index.name(locale.as_str(), "teams", "General"),
+            "<hero>" => hero_name.clone(),
+            value if part_index == 1 && parts.first() == Some(&"gamemodes") => {
+                let english = catalog_enum_spelling(catalog, "Gamemode", value)
+                    .unwrap_or_else(|| value.to_string());
+                index.name(locale.as_str(), "modes", &english)
+            }
+            value => index.name(locale.as_str(), "labels", value),
+        };
+        lines.push(format!("{}{} {{", "    ".repeat(depth), name));
+        depth += 1;
+    }
+    lines.push(format!("{}{leaf}", "    ".repeat(depth)));
+    while depth > 1 {
+        depth -= 1;
+        lines.push(format!("{}{}", "    ".repeat(depth), "}"));
+    }
+    lines.push("}".to_string());
+    lines.join("\n")
+}
+
+/// A settings leaf value for `definition` in `locale`: the first declared
+/// member spelling for enum-like domains, literal forms otherwise (#448).
+fn leaf_value(
+    index: &SettingsSpellings,
+    locale: &Locale,
+    definition: &SettingDefinition,
+) -> String {
+    match definition.domain() {
+        SettingValueDomain::PresenceOnly => String::new(),
+        SettingValueDomain::String => ": \"x\"".to_string(),
+        SettingValueDomain::Boolean | SettingValueDomain::Enum { .. } => {
+            let member = definition
+                .enum_members()
+                .next()
+                .map(|member| {
+                    // Settings members are declared under `enums`; the
+                    // boolean tokens (On/Off/Yes/No) live under `tokens`.
+                    index
+                        .lookup(locale.as_str(), "enums", member.english_name())
+                        .or_else(|| index.lookup(locale.as_str(), "tokens", member.english_name()))
+                        .unwrap_or(member.english_name())
+                        .to_string()
+                })
+                .unwrap_or_else(|| index.name(locale.as_str(), "tokens", "On"));
+            format!(": {member}")
+        }
+        SettingValueDomain::Number(_) => ": 1".to_string(),
+        SettingValueDomain::Percent(_) => ": 100%".to_string(),
+        SettingValueDomain::HeroList | SettingValueDomain::MapList => " {\n}".to_string(),
+        _ => ": 0".to_string(),
+    }
+}
+
+/// A probe source writing `name.spelling` in a real settings context for
+/// `locale`, or Err when no context can carry the row (for example a bare
+/// `%1$s` template without a hero-ability slot, #448).
+fn localized_settings_probe(
+    catalog: &Catalog,
+    index: &SettingsSpellings,
+    name: &settings_schema::LocalizedSettingName,
+    locale: &Locale,
+) -> Result<String, String> {
+    let english = name.english;
+    let spelling = name.spelling;
+    let loc = locale.as_str();
+    let settings = localized_spelling(catalog, Kind::Structural, locale, "settings");
+    let modes = index.name(loc, "namespaces", "modes");
+    let heroes = index.name(loc, "namespaces", "heroes");
+    let general = index.name(loc, "teams", "General");
+    let assault = index.name(loc, "modes", "Assault");
+    match name.section {
+        "namespaces" => Ok(format!("{settings} {{\n    {spelling} {{\n    }}\n}}")),
+        "modes" => Ok(format!(
+            "{settings} {{\n    {modes} {{\n        {spelling} {{\n        }}\n    }}\n}}"
+        )),
+        "teams" => Ok(format!(
+            "{settings} {{\n    {heroes} {{\n        {spelling} {{\n            {} {{\n            }}\n        }}\n    }}\n}}",
+            index.name(loc, "heroes", "Ana")
+        )),
+        "heroes" => Ok(format!(
+            "{settings} {{\n    {heroes} {{\n        {general} {{\n            {spelling} {{\n            }}\n        }}\n    }}\n}}"
+        )),
+        "maps" => Ok(format!(
+            "{settings} {{\n    {modes} {{\n        {assault} {{\n            {} {{\n                {spelling}\n            }}\n        }}\n    }}\n}}",
+            index.name(loc, "labels", "enabled maps")
+        )),
+        "tokens" => match english {
+            "disabled" => Ok(format!(
+                "{settings} {{\n    {modes} {{\n        {spelling} {assault} {{\n        }}\n    }}\n}}"
+            )),
+            _ => Ok(format!(
+                "{settings} {{\n    {modes} {{\n        {assault} {{\n            {}: {spelling}\n        }}\n    }}\n}}",
+                index.name(loc, "labels", "Competitive Rules")
+            )),
+        },
+        "labels" => {
+            let Some(defs) = index.by_label.get(english) else {
+                return Err(format!("no settings definition named {english:?}"));
+            };
+            let mut reasons = Vec::new();
+            for definition in defs {
+                let hero = settings_probe_hero(definition, english);
+                let leaf = match substitute_template(
+                    definition,
+                    spelling,
+                    hero.as_ref().and_then(|hero| hero.as_deref()),
+                    loc,
+                ) {
+                    Some(leaf) => leaf,
+                    None => {
+                        reasons.push("template needs a hero-ability context".to_string());
+                        continue;
+                    }
+                };
+                return Ok(localized_settings_context(
+                    catalog,
+                    index,
+                    locale,
+                    definition,
+                    &format!("{leaf}{}", leaf_value(index, locale, definition)),
+                    hero.as_ref().and_then(|hero| hero.as_deref()),
+                ));
+            }
+            Err(reasons
+                .into_iter()
+                .next()
+                .unwrap_or_else(|| "no probe context".to_string()))
+        }
+        "enums" => {
+            let Some(defs) = index.by_member.get(english) else {
+                return Err(format!("no settings definition takes member {english:?}"));
+            };
+            let definition = &defs[0];
+            let hero = settings_probe_hero(definition, definition.presentation().english_name);
+            let label = index.name(loc, "labels", definition.presentation().english_name);
+            Ok(localized_settings_context(
+                catalog,
+                index,
+                locale,
+                definition,
+                &format!("{label}: {spelling}"),
+                hero.as_ref().and_then(|hero| hero.as_deref()),
+            ))
+        }
+        other => Err(format!("unhandled settings section {other:?}")),
+    }
 }
 
 fn wir_case(case_id: &str, kind: FeatureKind, name: &str, source: String) -> CensusCase {
@@ -967,6 +1867,21 @@ fn run_pipeline(
                 .map_err(|error| Fail::workshop(&error, to))
         };
 
+    // Some declared spellings are inherently ambiguous in a locale: zh-CN
+    // writes `下` for `down`, `Vector.DOWN`, and `Rounding.DOWN` alike, so a
+    // faithful conversion reparses to a preserved `__ambiguous_enum` rather
+    // than the resolved node. When the target program emits byte-identical
+    // canonical text, the client-observable surface is right and only the
+    // resolved-identity check is undecidable — report that explicitly as
+    // Inconclusive instead of a regression (#448).
+    let surface_equivalent =
+        |a: &workshop_rs::Program, b: &workshop_rs::Program, locale: &Locale| {
+            let (Ok(x), Ok(y)) = (emit(a, locale), emit(b, locale)) else {
+                return false;
+            };
+            normalize_workshop(&x) == normalize_workshop(&y)
+        };
+
     let program = parse(&case.source, &source_locale)?;
     validate(&program, &source_locale)?;
     let emitted = emit(&program, &source_locale)?;
@@ -986,6 +1901,16 @@ fn run_pipeline(
     let target_program = parse(&converted.text, &target_locale)?;
     validate(&target_program, &target_locale)?;
     if !roundtrip::equivalent(&program, &target_program) {
+        if surface_equivalent(&program, &target_program, &target_locale) {
+            return Err(Fail {
+                code: ReasonCode::Inconclusive,
+                detail: "converted text matches the canonical emission, but the \
+                         target-locale spelling is ambiguous across enum domains; \
+                         resolved semantics cannot be independently verified"
+                    .to_string(),
+                locale: target_locale,
+            });
+        }
         return Err(Fail::regression(
             "zh-CN conversion changed canonical WIR semantics",
             &target_locale,
@@ -993,9 +1918,22 @@ fn run_pipeline(
     }
     let back = convert_or(&converted.text, &target_locale, &source_locale)?;
     let back_program = parse(&back.text, &source_locale)?;
+    // Compare against the canonical emission, not the raw source: probes
+    // written in a non-canonical declared alias (#448) still must land on
+    // the same canonical program and surface form after a round trip.
     if !roundtrip::equivalent(&program, &back_program)
-        || normalize_workshop(&back.text) != normalize_workshop(&case.source)
+        || normalize_workshop(&back.text) != normalize_workshop(&emitted)
     {
+        if surface_equivalent(&program, &back_program, &source_locale) {
+            return Err(Fail {
+                code: ReasonCode::Inconclusive,
+                detail: "round-trip text matches the canonical emission, but the \
+                         source-locale spelling is ambiguous across enum domains; \
+                         resolved semantics cannot be independently verified"
+                    .to_string(),
+                locale: source_locale,
+            });
+        }
         return Err(Fail::regression(
             "cross-locale semantic or normalized gate diverged",
             &source_locale,
@@ -1219,20 +2157,60 @@ mod tests {
             .validate_against(&catalog)
             .expect("census results use canonical catalog identities");
         assert_eq!(report.census, census.identity());
+        // Every declared case produces exactly one attributable result; the
+        // localization shard carries the two conversion probes plus one case
+        // per declared localized spelling (#448).
+        assert_eq!(
+            report.results.len(),
+            census.cases().count(),
+            "census drops or duplicates cases"
+        );
+        let localization_cases = census
+            .cases()
+            .filter(|case| case.case_id.starts_with("localization/"))
+            .count();
         assert_eq!(
             report
                 .results
                 .iter()
                 .filter(|result| result.case_id.starts_with("localization/"))
                 .count(),
-            2
+            localization_cases
+        );
+        assert!(
+            localization_cases > 2,
+            "localization shard must enumerate per-spelling cases"
+        );
+        // Aliases that cannot be written in any context are explicit
+        // known-gap results, not silent passes or hidden inconclusive rows.
+        assert!(
+            report.results.iter().any(|result| {
+                result.case_id.starts_with("localization/")
+                    && result.status == ConformanceStatus::KnownGap
+            }),
+            "unwritable localized settings spellings must report as known gaps"
         );
     }
 
     #[test]
     fn census_report_rejects_a_malformed_identity_digest() {
         let catalog = Catalog::builtin().expect("builtin catalog");
-        let census = Census::builtin(&catalog).expect("census");
+        let census = Census::assemble(vec![
+            CensusShard::new(
+                "state-tests",
+                vec![CensusCase::probe(
+                    "state-tests/probe".to_string(),
+                    vec![feature(
+                        FeatureNamespace::Wir,
+                        FeatureKind::Structural,
+                        "probe",
+                    )],
+                    "rule (\"probe\") {}".to_string(),
+                )],
+            )
+            .unwrap(),
+        ])
+        .unwrap();
         let mut report = census.run(&catalog);
         report.census.digest = "not-a-digest".to_string();
 
@@ -1240,5 +2218,33 @@ mod tests {
             .validate_against(&catalog)
             .expect_err("report identity must carry a SHA-256 digest");
         assert!(error.to_string().contains("SHA-256"));
+    }
+}
+
+#[cfg(test)]
+mod probe_debug {
+    use super::*;
+
+    #[test]
+    fn dump_failing_localization_probes() {
+        let catalog = Catalog::builtin().unwrap();
+        let census = Census::builtin(&catalog).unwrap();
+        let wanted = [
+            "localization/es-mx/value/hero/0",
+            "localization/fr-fr/value/hero/0",
+        ];
+        for case in census.cases() {
+            if !wanted.contains(&case.case_id.as_str()) {
+                continue;
+            }
+            println!("==== {} ====", case.case_id);
+            println!("{}", case.source);
+            let result = run_case(case, "localization", &catalog);
+            println!(
+                "-> {:?} {:?}",
+                result.status,
+                result.reason.map(|r| r.detail)
+            );
+        }
     }
 }

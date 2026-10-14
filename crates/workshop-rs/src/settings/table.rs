@@ -44,6 +44,64 @@ pub(crate) fn localized_name(locale: &str, section: &str, english: &str) -> Opti
     })
 }
 
+/// A localized settings name declared by the reviewed locale data (#448).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LocalizedSettingName {
+    /// The locale-data section the name belongs to (`namespaces`,
+    /// `labels`, `modes`, `heroes`, `maps`, `teams`, `tokens`, `enums`).
+    pub section: &'static str,
+    /// The en-US display name this row localizes.
+    pub english: &'static str,
+    /// The declaring locale.
+    pub locale: &'static str,
+    /// The declared spelling.
+    pub spelling: &'static str,
+}
+
+/// Sections of the generated locale data that carry per-locale spellings.
+const LOCALE_SECTIONS: &[&str] = &[
+    "enums",
+    "heroes",
+    "labels",
+    "maps",
+    "modes",
+    "namespaces",
+    "teams",
+    "tokens",
+];
+
+/// Every localized settings name the reviewed locale data declares, in
+/// deterministic section/name/locale order.
+pub fn localized_setting_names() -> &'static [LocalizedSettingName] {
+    static NAMES: OnceLock<Vec<LocalizedSettingName>> = OnceLock::new();
+    NAMES.get_or_init(|| {
+        let data = locale_data();
+        let mut names = Vec::new();
+        for section in LOCALE_SECTIONS {
+            let Some(rows) = data.get(section).and_then(Value::as_object) else {
+                continue;
+            };
+            for (english, row) in rows {
+                let Some(aliases) = row.as_object() else {
+                    continue;
+                };
+                for (locale, value) in aliases {
+                    let Some(spelling) = value.as_str() else {
+                        continue;
+                    };
+                    names.push(LocalizedSettingName {
+                        section,
+                        english,
+                        locale,
+                        spelling,
+                    });
+                }
+            }
+        }
+        names
+    })
+}
+
 /// A leaf key kind: how a settings leaf renders and validates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum KeyKind {
@@ -848,10 +906,15 @@ fn name_in(maps: &[NameMap], key: &str) -> Option<&'static str> {
 /// Settings-name comparison: the Workshop client matches setting keys and
 /// value spellings without regard to case (Deltinteger's `TextToElement`
 /// settings matcher is `caseSensitive: false`; the pinned oracle's
-/// decompiler lowercases both sides). Accents remain significant: `Chateau
-/// Guillard` does not match `Château Guillard`.
+/// decompiler lowercases both sides). Whitespace differences in a reviewed
+/// spelling (`66号公路`/`66 号公路`, `1팀`/`1 팀`, #448) are likewise
+/// insignificant. Accents remain significant: `Chateau Guillard` does not
+/// match `Château Guillard`.
 pub(crate) fn names_eq(left: &str, right: &str) -> bool {
-    left == right || left.to_lowercase() == right.to_lowercase()
+    left == right
+        || left.to_lowercase() == right.to_lowercase()
+        || crate::catalog::normalize_spelling(left).to_lowercase()
+            == crate::catalog::normalize_spelling(right).to_lowercase()
 }
 
 /// Canonical map spellings for suggestion candidates (English names).

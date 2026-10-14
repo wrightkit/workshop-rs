@@ -114,7 +114,7 @@ impl ParseContext<'_> {
                     }
                     let saved = self.pos;
                     let disabled = self.consume_disabled();
-                    let (mut phrase, mut start, mut end) = self.phrase()?;
+                    let (mut phrase, mut start, mut end) = self.action_spelling()?;
                     if disabled {
                         if let Some(structural) = self.resolve_entry(Kind::Structural, &phrase) {
                             match structural.id.as_str() {
@@ -144,7 +144,7 @@ impl ParseContext<'_> {
                         // Not a recognized disabled form: rewind so the
                         // modifier stays part of the dispatched phrase.
                         self.pos = saved;
-                        let reparsed = self.phrase()?;
+                        let reparsed = self.action_spelling()?;
                         phrase = reparsed.0;
                         start = reparsed.1;
                         end = reparsed.2;
@@ -193,6 +193,32 @@ impl ParseContext<'_> {
                     // not executable actions.
                     self.pos += 1;
                 }
+                Some(Token {
+                    kind: TokenKind::Number { .. },
+                    ..
+                }) => {
+                    // A catalog action may open with a number (`1.
+                    // Kabiliyeti Etkinleştir`, #448); the spelled text must
+                    // resolve to a declared action or structural entry,
+                    // otherwise the member-assignment path applies.
+                    let saved = self.pos;
+                    let (phrase, start, end) = self.action_spelling()?;
+                    if self.resolve_entry(Kind::Action, &phrase).is_some()
+                        || self.resolve_entry(Kind::Structural, &phrase).is_some()
+                    {
+                        actions.push(self.action_call_from_phrase(phrase, start, end)?);
+                        continue;
+                    }
+                    self.pos = saved;
+                    let token = self
+                        .peek()
+                        .expect("number token was peeked by the dispatch");
+                    if let Some(action) = self.member_assignment_action(saved, token.start)? {
+                        actions.push(action);
+                    } else {
+                        return Err(self.malformed("expected an action", &token));
+                    }
+                }
                 Some(token) => {
                     let saved = self.pos;
                     if let Some(action) = self.member_assignment_action(saved, token.start)? {
@@ -222,6 +248,21 @@ impl ParseContext<'_> {
                 Ok(None)
             }
         }
+    }
+
+    /// An action-position spelling: the maximal word run, extended through
+    /// an adjacent `.`/`:`/`!` tail when the joined text resolves to a
+    /// declared action or structural entry (`Bekle:`, `Maks.`, #448). The
+    /// tail is consumed only when the whole joined spelling resolves, so a
+    /// `:`/`!` that belongs to syntax stays put.
+    fn action_spelling(&mut self) -> Result<(String, Position, Position)> {
+        let (phrase, start, end) = self.phrase()?;
+        if let Some((joined, joined_end)) =
+            self.extend_entry_spelling(&phrase, end, &[Kind::Action, Kind::Structural])
+        {
+            return Ok((joined, start, joined_end));
+        }
+        Ok((phrase, start, end))
     }
 
     /// Consume the `disabled` modifier if the cursor spells it: the
@@ -984,6 +1025,12 @@ impl ParseContext<'_> {
 
     pub(crate) fn modify_op(&mut self) -> Result<ModifyOp> {
         let (phrase, start, end) = self.phrase()?;
+        // Operator spellings carry the same punctuation/trailing-space
+        // shapes as other catalog aliases (#448); an adjacent tail is part
+        // of the spelling only when the joined text resolves.
+        let (phrase, end) = self
+            .extend_entry_spelling(&phrase, end, &[Kind::Operator])
+            .unwrap_or((phrase, end));
         let entry = self.resolve_entry(Kind::Operator, &phrase).ok_or_else(|| {
             WorkshopError::unknown(
                 "modify operator",
