@@ -363,8 +363,26 @@ fn is_word_character(ch: char) -> bool {
 }
 
 fn is_raw_label_punctuation(ch: char) -> bool {
+    // Punctuation found inside reviewed catalog spellings that is not
+    // Workshop syntax: typographic quotes/brackets and the en dash used by
+    // member names such as de-DE `Effekt – Sprint von Soldier: 76` or ja-JP
+    // `ソルジャー76の〈スプリント〉のエフェクト`.
     matches!(
         ch,
-        '“' | '”' | '（' | '）' | '，' | '、' | '！' | '？' | '：' | '【' | '】' | '［' | '］'
+        '“' | '”'
+            | '（'
+            | '）'
+            | '，'
+            | '、'
+            | '！'
+            | '？'
+            | '：'
+            | '【'
+            | '】'
+            | '［'
+            | '］'
+            | '–'
+            | '〈'
+            | '〉'
     )
 }

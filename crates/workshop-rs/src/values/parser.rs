@@ -711,21 +711,39 @@ impl ParseContext<'_> {
     ) -> Result<wir::ValueId> {
         // Some enum members use a colon in their Workshop spelling (for
         // example `Arrow: Up`). `phrase()` intentionally stops at the colon
-        // for ordinary identifiers, so complete the member only when the
-        // enclosing signature has already declared an enum domain.
+        // for ordinary identifiers, so complete the member only when a
+        // joined spelling resolves through the same member lookups
+        // `bare_member_resolved` uses; otherwise the colon stays where it was
+        // (conditional `a ? b : c`, named-argument separators).
         if !matches!(phrase, "None" | "无" | "True" | "真" | "False" | "假")
             && matches!(self.peek().map(|token| token.kind), Some(TokenKind::Colon))
         {
             let saved = self.pos;
             self.pos += 1;
             let (suffix, _, suffix_end) = self.phrase()?;
-            let owned_phrase = format!("{phrase}: {suffix}");
-            let recognized = self
-                .expected_domain
-                .and_then(|domain| self.resolve_enum_member_mixed(domain, &owned_phrase))
-                .or_else(|| self.resolve_enum_member_mixed("Hero", &owned_phrase));
-            if recognized.is_some() {
-                return self.bare_member_resolved(&owned_phrase, start, suffix_end);
+            // Catalog spellings differ in colon spacing across locales
+            // (`Arrow: Up`, fr-FR `Soldat : 76`, ja-JP `矢印:下`); probe each
+            // joining so a declared spelling resolves regardless of how the
+            // source spaced the colon token.
+            for joined in [
+                format!("{phrase}: {suffix}"),
+                format!("{phrase} : {suffix}"),
+                format!("{phrase}:{suffix}"),
+                format!("{phrase} :{suffix}"),
+            ] {
+                let recognized = self
+                    .expected_domain
+                    .and_then(|domain| self.resolve_enum_member_mixed(domain, &joined))
+                    .or_else(|| self.resolve_enum_member_mixed("Hero", &joined))
+                    .is_some()
+                    || self
+                        .catalog
+                        .bare_member_matches(&self.locale, &joined)
+                        .iter()
+                        .any(|(domain, _)| domain != "EventTeam" && domain != "EventPlayer");
+                if recognized {
+                    return self.bare_member_resolved(&joined, start, suffix_end);
+                }
             }
             self.pos = saved;
         }
