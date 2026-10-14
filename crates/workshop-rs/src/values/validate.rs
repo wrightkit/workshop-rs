@@ -285,79 +285,77 @@ fn validate_call_argument(
     program: &wir::Program,
     catalog: &Catalog,
 ) -> Result<()> {
-    {
-        if let Some(expected) = entry.param_type(index) {
-            if !value_matches_type(program, catalog, arg_id, expected)
-                && !contextual_value_matches(entry, index, program, arg_id, expected)
-            {
-                let actual = value_type_name(program, catalog, arg_id);
-                return Err(WorkshopError::unsupported(
-                    format!(
-                        "{} '{}' argument {} must have semantic type '{}', got {}",
-                        entry.kind.as_str(),
-                        entry.id,
-                        index + 1,
-                        expected,
-                        actual
-                    ),
-                    program.values.get(arg_id).and_then(|node| node.span),
-                ));
-            }
-        }
-        let Some(domain) = entry.param_domain(index) else {
-            return Ok(());
-        };
-        let Some(node) = program.values.get(arg_id) else {
-            return Ok(());
-        };
-        // A declared enum domain constrains enum literals. Dynamic values,
-        // Null, and defaults remain valid expressions for the same position;
-        // their runtime value cannot be proven from WIR alone.
-        let valid = match &node.value {
-            wir::Value::Enum {
-                value_type, value, ..
-            } => enum_member_matches_domain(catalog, value_type, value, domain),
-            wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
-                wir::ambiguous_enum_parts(program, arg_id).is_some_and(|(_, candidate_ids)| {
-                    candidate_ids.iter().any(|candidate_id| {
-                        matches!(
-                            program.values.get(*candidate_id),
-                            Some(wir::ValueNode {
-                                value: wir::Value::Enum { value_type, value },
-                                ..
-                            }) if enum_member_matches_domain(catalog, value_type, value, domain)
-                        )
-                    })
-                })
-            }
-            _ => true,
-        };
-        if !valid {
-            let actual = match &node.value {
-                wir::Value::Enum {
-                    value_type, value, ..
-                } => {
-                    format!("{value_type}.{value}")
-                }
-                wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
-                    wir::ambiguous_enum_parts(program, arg_id)
-                        .map(|(spelling, _)| format!("ambiguous '{spelling}'"))
-                        .unwrap_or_else(|| "malformed ambiguous enum".to_string())
-                }
-                _ => "non-enum expression".to_string(),
-            };
+    if let Some(expected) = entry.param_type(index) {
+        if !value_matches_type(program, catalog, arg_id, expected)
+            && !contextual_value_matches(entry, index, program, arg_id, expected)
+        {
+            let actual = value_type_name(program, catalog, arg_id);
             return Err(WorkshopError::unsupported(
                 format!(
-                    "{} '{}' argument {} must be a member of enum domain '{}', got {}",
+                    "{} '{}' argument {} must have semantic type '{}', got {}",
                     entry.kind.as_str(),
                     entry.id,
                     index + 1,
-                    domain,
+                    expected,
                     actual
                 ),
-                node.span,
+                program.values.get(arg_id).and_then(|node| node.span),
             ));
         }
+    }
+    let Some(domain) = entry.param_domain(index) else {
+        return Ok(());
+    };
+    let Some(node) = program.values.get(arg_id) else {
+        return Ok(());
+    };
+    // A declared enum domain constrains enum literals. Dynamic values,
+    // Null, and defaults remain valid expressions for the same position;
+    // their runtime value cannot be proven from WIR alone.
+    let valid = match &node.value {
+        wir::Value::Enum {
+            value_type, value, ..
+        } => enum_member_matches_domain(catalog, value_type, value, domain),
+        wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
+            wir::ambiguous_enum_parts(program, arg_id).is_some_and(|(_, candidate_ids)| {
+                candidate_ids.iter().any(|candidate_id| {
+                    matches!(
+                        program.values.get(*candidate_id),
+                        Some(wir::ValueNode {
+                            value: wir::Value::Enum { value_type, value },
+                            ..
+                        }) if enum_member_matches_domain(catalog, value_type, value, domain)
+                    )
+                })
+            })
+        }
+        _ => true,
+    };
+    if !valid {
+        let actual = match &node.value {
+            wir::Value::Enum {
+                value_type, value, ..
+            } => {
+                format!("{value_type}.{value}")
+            }
+            wir::Value::Call { name, .. } if name == wir::AMBIGUOUS_ENUM_CALL => {
+                wir::ambiguous_enum_parts(program, arg_id)
+                    .map(|(spelling, _)| format!("ambiguous '{spelling}'"))
+                    .unwrap_or_else(|| "malformed ambiguous enum".to_string())
+            }
+            _ => "non-enum expression".to_string(),
+        };
+        return Err(WorkshopError::unsupported(
+            format!(
+                "{} '{}' argument {} must be a member of enum domain '{}', got {}",
+                entry.kind.as_str(),
+                entry.id,
+                index + 1,
+                domain,
+                actual
+            ),
+            node.span,
+        ));
     }
     Ok(())
 }
