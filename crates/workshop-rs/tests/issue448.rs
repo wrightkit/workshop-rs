@@ -133,6 +133,120 @@ fn localized_ability_templates_resolve() {
     parse_in(&hero_setting("Ana", "Habilidade 1: On"), &pt);
 }
 
+/// Enum-member spellings written with punctuation the lexer must keep:
+/// a digit-led member (`1. Kabiliyet`), a ` : `-spaced member
+/// (`Observatoire : Gibraltar`), and a spaced-dash member
+/// (`Spray - Baixo`) (#448).
+#[test]
+fn punctuated_enum_member_spellings_parse() {
+    for (locale, expr) in [
+        ("tr-TR", "Button(1. Kabiliyet)"),
+        ("fr-FR", "Map(Observatoire : Gibraltar)"),
+        ("pt-BR", "Spray - Baixo"),
+        ("ja-JP", "対ワールド:"),
+    ] {
+        parse_in(
+            &value_rule(&format!("Set Global Variable(probe, {expr});")),
+            &common::locale(locale),
+        );
+    }
+}
+
+/// Action/operator spellings carrying `.` or a trailing `:` must resolve as
+/// whole spellings, not split at the punctuation (`Forcer le nom de l’I.A.`,
+/// `Resurrección:`, `Bekle:`, `Élévation à une puissance `,
+/// `เพิ่มเข้าในอาร์เรย์`, #448).
+#[test]
+fn punctuated_action_and_operator_spellings_parse() {
+    for (locale, action) in [
+        ("fr-FR", "Forcer le nom de l’I.A.(Event Player)"),
+        ("es-ES", "Resurrección:(Event Player)"),
+        ("tr-TR", "Bekle:(Ignore Condition)"),
+        (
+            "fr-FR",
+            "Modify Global Variable(probe, Élévation à une puissance, 2)",
+        ),
+        ("th-TH", "Modify Global Variable(probe, เพิ่มเข้าในอาร์เรย์, 0)"),
+    ] {
+        parse_in(&value_rule(&format!("{action};")), &common::locale(locale));
+    }
+}
+
+/// Markup sequences inside declared spellings stay inside the word
+/// (`Meis Schneeball<hy>schlacht`, `ジャンケン<br>シュタインの<br>復讐`,
+/// #448): the lexer joins `<tag>` runs rather than reading `<` operators.
+#[test]
+fn markup_inside_member_spellings_parses() {
+    for (locale, expr) in [
+        ("de-DE", "Hero(Meis Schneeball<hy>schlacht)"),
+        ("ja-JP", "Map(ジャンケン<br>シュタインの<br>復讐)"),
+    ] {
+        parse_in(
+            &value_rule(&format!("Set Global Variable(probe, {expr});")),
+            &common::locale(locale),
+        );
+    }
+}
+
+/// Locale punctuation outside ASCII stays word content (`¡Alto!`,
+/// `「FALSE」`, `・`), so a declared name containing it parses (#448).
+#[test]
+fn locale_punctuation_inside_spellings_parses() {
+    for (locale, expr) in [
+        ("es-ES", "Haz de enganche de ¡Alto! de Orisa"),
+        ("ja-JP", "「FALSE」の場合中止"),
+        ("ru-RU", "Map(Лунная колония «Горизонт»)"),
+    ] {
+        parse_in(
+            &value_rule(&format!("Set Global Variable(probe, {expr});")),
+            &common::locale(locale),
+        );
+    }
+}
+
+/// Settings booleans can end with a period (`Wł.`, `Вкл.`) — the bounded
+/// spelling run must keep it instead of dropping to `unknown` (#448).
+#[test]
+fn dotted_settings_booleans_parse() {
+    for (locale, boolean) in [("pl-PL", "Wł."), ("ru-RU", "Вкл."), ("ko-KR", "켜기")] {
+        let src = format!("settings {{\n    lobby {{\n        Map Rotation: {boolean}\n    }}\n}}");
+        parse_in(&src, &common::locale(locale));
+    }
+}
+
+/// Team names carry a leading digit and period (`1. Takım`) or inner
+/// whitespace (`1 팀`); both resolve to the same canonical team (#448).
+#[test]
+fn digit_and_spaced_team_names_parse() {
+    for (locale, team) in [("tr-TR", "1. Takım"), ("ko-KR", "1 팀")] {
+        let src = format!(
+            "settings {{\n    heroes {{\n        {team} {{\n            Ana {{\n                Ability 1: On\n            }}\n        }}\n    }}\n}}"
+        );
+        parse_in(&src, &common::locale(locale));
+    }
+}
+
+/// Settings name errors must carry the rejected spelling's span so tooling
+/// can point at the offending line (#448).
+#[test]
+fn settings_name_errors_carry_a_span() {
+    let catalog = common::catalog();
+    let error = parser::parse_with_context(
+        "settings {\n    heroes {\n        Bogus Team {\n            Ana {\n                Ability 1: On\n            }\n        }\n    }\n}",
+        &catalog,
+        &common::en(),
+        &catalog,
+    )
+    .expect_err("an undeclared team name must be rejected");
+    let span = match &error {
+        workshop_rs::WorkshopError::Unknown { span, .. }
+        | workshop_rs::WorkshopError::UnknownWithCandidates { span, .. } => span,
+        _ => panic!("expected an unknown-spelling diagnostic, got {error}"),
+    };
+    let span = span.expect("the rejected spelling carries a span");
+    assert_eq!(span.start.line, 3);
+}
+
 /// Localized `disabled` mode prefixes can be multi-word (`Devre Dışı`,
 /// `No permitir`) or punctuated (`Откл.`); a single-token peek missed them.
 #[test]
