@@ -8484,7 +8484,7 @@
       }
     }
   ],
-  "digest": "be089cfaff1e60f1c5ebc6fc23238a0f6c085d4581fc73c5c41b13d3b9e983ee",
+  "digest": "61452c110de5a0c47acaf18233cf6b9a865ff7ce0b2e602d521ae64cedaece99",
   "enums": [
     {
       "domain": "Impulse",
@@ -21681,6 +21681,7 @@
         "ja-JP": "追加",
         "ko-KR": "Add",
         "pl-PL": "Add",
+        "pt-BR": "Adicionar",
         "ru-RU": "Add",
         "th-TH": "เพิ่ม",
         "tr-TR": "Topla",
@@ -21697,6 +21698,7 @@
         "es-MX": "Restar",
         "fr-FR": "Soustraction",
         "it-IT": "Subtract",
+        "ja-JP": "引く",
         "ko-KR": "Subtract",
         "pl-PL": "Subtract",
         "pt-BR": "Subtrair",
@@ -21716,10 +21718,12 @@
         "es-MX": "Multiplicar",
         "fr-FR": "Multiplication",
         "it-IT": "Multiply",
+        "ja-JP": "掛ける",
         "ko-KR": "Multiply",
         "pl-PL": "Multiply",
         "pt-BR": "Multiplicar",
         "ru-RU": "Multiply",
+        "th-TH": "คูณ",
         "tr-TR": "Çarp",
         "zh-CN": "乘",
         "zh-TW": "Multiply"
@@ -21734,10 +21738,12 @@
         "es-MX": "Dividir",
         "fr-FR": "Division",
         "it-IT": "Divide",
+        "ja-JP": "割る",
         "ko-KR": "Divide",
         "pl-PL": "Divide",
         "pt-BR": "Dividir",
         "ru-RU": "Divide",
+        "th-TH": "หาร",
         "tr-TR": "Böl",
         "zh-CN": "除",
         "zh-TW": "Divide"
@@ -21757,6 +21763,7 @@
         "pl-PL": "Modulo",
         "pt-BR": "Modular",
         "ru-RU": "Modulo",
+        "th-TH": "โมดูโล",
         "tr-TR": "Modülo",
         "zh-CN": "余数",
         "zh-TW": "Modulo"
@@ -21765,15 +21772,47 @@
     },
     {
       "aliases": {
+        "de-DE": "Min",
         "en-US": "Min",
-        "zh-CN": "较小"
+        "es-ES": "Min",
+        "es-MX": "Mínimo",
+        "fr-FR": "Minimum",
+        "it-IT": "Min",
+        "ja-JP": "最小",
+        "ko-KR": "Min",
+        "pl-PL": "Min",
+        "pt-BR": "Mín.",
+        "ru-RU": "Min",
+        "th-TH": "ต่ำสุด",
+        "tr-TR": "Min.",
+        "zh-CN": [
+          "较小",
+          "最小"
+        ],
+        "zh-TW": "Min"
       },
       "id": "min"
     },
     {
       "aliases": {
+        "de-DE": "Max",
         "en-US": "Max",
-        "zh-CN": "较大"
+        "es-ES": "Max",
+        "es-MX": "Máximo",
+        "fr-FR": "Maximum",
+        "it-IT": "Max",
+        "ja-JP": "最大",
+        "ko-KR": "Max",
+        "pl-PL": "Max",
+        "pt-BR": "Máx.",
+        "ru-RU": "Max",
+        "th-TH": "สูงสุด",
+        "tr-TR": "Maks.",
+        "zh-CN": [
+          "较大",
+          "最大"
+        ],
+        "zh-TW": "Max"
       },
       "id": "max"
     },
@@ -21785,10 +21824,12 @@
         "es-MX": "Elevar a la potencia",
         "fr-FR": "Élévation à une puissance ",
         "it-IT": "Raise To Power",
+        "ja-JP": "冪乗",
         "ko-KR": "Raise To Power",
         "pl-PL": "Raise To Power",
         "pt-BR": "Elevar à Potência",
         "ru-RU": "Raise To Power",
+        "th-TH": "เพิ่มไปเป็นพลัง",
         "tr-TR": "Üssünü Al",
         "zh-CN": "乘方",
         "zh-TW": "Raise To Power"
@@ -21808,6 +21849,7 @@
         "pl-PL": "Append To Array",
         "pt-BR": "Juntar à Matriz",
         "ru-RU": "Append To Array",
+        "th-TH": "เพิ่มเข้าในอาร์เรย์",
         "tr-TR": "Dizine Ekle",
         "zh-CN": "添加至数组",
         "zh-TW": "Append To Array"

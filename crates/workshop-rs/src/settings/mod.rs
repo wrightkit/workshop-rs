@@ -52,6 +52,7 @@ pub use schema::{
     SettingTarget, SettingTargetKind, SettingValue, SettingValueDomain, TeamId, definition,
     definitions, definitions_by_id, validate_catalog,
 };
+pub use table::{LocalizedSettingName, localized_setting_names};
 
 use crate::core::source::Span;
 

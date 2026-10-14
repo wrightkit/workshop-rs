@@ -486,7 +486,12 @@ pub(crate) fn generate(
         merge_index(&mut index, data_index_at(&export, &["other", "eventSlots"]));
         index
     };
-    let operators = localized_index(&export, &["values.", "constants.__Operation__."]);
+    // Operator aliases come from the `__Operation__` constants rows only:
+    // the export also carries duplicate `values.*` rows for the same en-US
+    // spellings whose locales disagree with the operation rows (pt-BR
+    // `Adicionar` vs `Somar`, zh-CN `最小` vs `较小`, #448). The constants
+    // row is what the client's modify-operator slot emits, so it wins.
+    let operators = localized_index(&export, &["constants.__Operation__."]);
     let maps = {
         let mut index = localized_index(&export, &["maps."]);
         merge_index(&mut index, data_index(&export, "maps"));

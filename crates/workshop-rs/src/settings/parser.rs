@@ -92,13 +92,34 @@ impl ParseContext<'_> {
                     disabled = true;
                 }
             }
-            let (display, mode_start, _) = self.phrase_on_line()?;
+            if !disabled {
+                // Multi-token disabled prefixes (`Devre Dışı`,
+                // `No permitir`, `Откл.`) sit on the same line as the mode
+                // name, so the run must stop at the longest declared
+                // spelling rather than consuming the mode name (#448).
+                let mut accepted = vec!["disabled", "Disabled"];
+                if let Some(localized) =
+                    table::localized_name(self.locale.as_str(), "tokens", "disabled")
+                {
+                    accepted.push(localized);
+                }
+                disabled = self
+                    .catalog_spelling(|spelling| {
+                        accepted
+                            .iter()
+                            .any(|candidate| table::names_eq(candidate, spelling))
+                    })
+                    .is_some();
+            }
+            let (display, mode_start, mode_end) = self.phrase_on_line()?;
             let mode = self
                 .resolve_settings_name_extended(
                     table::MODE_NAMES,
                     table::GENERATED_MODE_NAMES,
                     "modes",
                     &display,
+                    mode_start,
+                    mode_end,
                 )
                 .ok();
             self.expect(TokenKind::LBrace, "expected '{' after game mode")?;
@@ -134,8 +155,14 @@ impl ParseContext<'_> {
     pub(crate) fn settings_heroes(&mut self, start: Position) -> Result<SettingsNode> {
         let mut teams = Vec::new();
         while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
-            let (team_display, team_start, _) = self.phrase_on_line_with_colon()?;
-            let team = self.resolve_settings_name(table::TEAM_NAMES, "teams", &team_display)?;
+            let (team_display, team_start, team_end) = self.phrase_on_line_with_colon()?;
+            let team = self.resolve_settings_name(
+                table::TEAM_NAMES,
+                "teams",
+                &team_display,
+                team_start,
+                team_end,
+            )?;
             self.expect(TokenKind::LBrace, "expected '{' after team settings group")?;
             let mut team_children = Vec::new();
             while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
@@ -147,6 +174,8 @@ impl ParseContext<'_> {
                             table::GENERATED_HERO_NAMES,
                             "heroes",
                             &display,
+                            child_start,
+                            child_end,
                         )
                         .is_ok()
                 {
@@ -155,6 +184,8 @@ impl ParseContext<'_> {
                         table::GENERATED_HERO_NAMES,
                         "heroes",
                         &display,
+                        child_start,
+                        child_end,
                     )?;
                     self.expect(TokenKind::LBrace, "expected '{' after hero settings group")?;
                     let children = self.settings_members(
@@ -205,55 +236,115 @@ impl ParseContext<'_> {
         Ok(children)
     }
 
+    /// Resolve `display` to the settings table entry under `path` (with
+    /// `gamemodes.general` inheritance for mode groups), or None when no
+    /// candidate accepts it.
+    fn find_settings_entry(
+        &self,
+        display: &str,
+        path: &[PathPart<'static>],
+        hero: Option<&str>,
+    ) -> Option<&'static table::TableEntry> {
+        table::entries()
+            .find(|candidate| {
+                candidate.path.len() == path.len() + 1
+                    && candidate.path[..path.len()]
+                        .iter()
+                        .zip(path.iter())
+                        .all(|(left, right)| left == right)
+                    && self.settings_name_matches_for_path(candidate, display, hero)
+            })
+            // A declared mode group inherits the `gamemodes.general` leaf set
+            // (the same fallback `table::lookup` applies); resolve the authored
+            // spelling against the shared general entry so an inherited member
+            // stays typed instead of demoting to a carried raw member.
+            .or_else(|| {
+                let [PathPart::Part("gamemodes"), PathPart::Part(mode)] = path else {
+                    return None;
+                };
+                table::entries()
+                    .filter(|candidate| {
+                        matches!(
+                            candidate.path,
+                            [
+                                PathPart::Part("gamemodes"),
+                                PathPart::Part("general"),
+                                PathPart::Part(key)
+                            ] if table::mode_inherited_entry(&[
+                                PathPart::Part("gamemodes"),
+                                PathPart::Part(mode),
+                                PathPart::Part(key),
+                            ])
+                            .is_some()
+                        )
+                    })
+                    .find(|candidate| self.settings_name_matches_for_path(candidate, display, hero))
+            })
+    }
+
     pub(crate) fn settings_member_named(
         &mut self,
-        display: String,
+        mut display: String,
         start: Position,
         _end: Position,
         path: &[PathPart<'static>],
         hero: Option<&str>,
     ) -> Result<SettingsNode> {
-        let entry = table::entries().find(|candidate| {
-            candidate.path.len() == path.len() + 1
-                && candidate.path[..path.len()]
-                    .iter()
-                    .zip(path.iter())
-                    .all(|(left, right)| left == right)
-                && self.settings_name_matches_for_path(candidate, &display, hero)
-        });
-        // A declared mode group inherits the `gamemodes.general` leaf set
-        // (the same fallback `table::lookup` applies); resolve the authored
-        // spelling against the shared general entry so an inherited member
-        // stays typed instead of demoting to a carried raw member.
-        let entry = entry.or_else(|| {
-            let [PathPart::Part("gamemodes"), PathPart::Part(mode)] = path else {
-                return None;
-            };
-            table::entries()
-                .filter(|candidate| {
-                    matches!(
-                        candidate.path,
-                        [
-                            PathPart::Part("gamemodes"),
-                            PathPart::Part("general"),
-                            PathPart::Part(key)
-                        ] if table::mode_inherited_entry(&[
-                            PathPart::Part("gamemodes"),
-                            PathPart::Part(mode),
-                            PathPart::Part(key),
-                        ])
-                        .is_some()
-                    )
-                })
-                .find(|candidate| self.settings_name_matches_for_path(candidate, &display, hero))
-        });
-        let Some(entry) = entry else {
-            if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace)) {
-                self.pos += 1;
-                return self.settings_opaque_group(&display, start);
+        // Localized labels can embed a colon (`Время восстановления: Удар
+        // щитом`, #448): candidates are tried shortest-prefix first, and a
+        // prefix that resolves but whose value fails — or that resolves to
+        // nothing — is extended across the next colon and retried.
+        let fallback_pos = self.pos;
+        let fallback_display = display.clone();
+        let mut first_error = None;
+        loop {
+            if let Some(entry) = self.find_settings_entry(&display, path, hero) {
+                let checkpoint = self.pos;
+                match self.settings_typed_member(entry, start) {
+                    Ok(node) => return Ok(node),
+                    Err(err) => {
+                        first_error.get_or_insert(err);
+                        self.pos = checkpoint;
+                    }
+                }
             }
-            return self.settings_raw_member(display, start);
-        };
+            let checkpoint = self.pos;
+            let extended = match self.peek().map(|token| token.kind) {
+                Some(TokenKind::Colon) => {
+                    self.pos += 1;
+                    self.phrase_on_line()
+                        .ok()
+                        .filter(|(_, _, end)| end.line == start.line)
+                        .map(|(extra, _, _)| format!("{display}:{extra}"))
+                }
+                _ => None,
+            };
+            match extended {
+                Some(candidate) => display = candidate,
+                None => {
+                    self.pos = checkpoint;
+                    break;
+                }
+            }
+        }
+        if let Some(err) = first_error {
+            return Err(err);
+        }
+        self.pos = fallback_pos;
+        if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace)) {
+            self.pos += 1;
+            return self.settings_opaque_group(&fallback_display, start);
+        }
+        self.settings_raw_member(fallback_display, start)
+    }
+
+    /// Parse the `:`-separated value or `{` block of a member whose `entry`
+    /// already matched the authored name.
+    fn settings_typed_member(
+        &mut self,
+        entry: &'static table::TableEntry,
+        start: Position,
+    ) -> Result<SettingsNode> {
         let name = match entry.path.last() {
             Some(PathPart::Part(name)) => *name,
             _ => return Err(self.malformed("settings entry has no leaf key", self.previous())),
@@ -277,6 +368,8 @@ impl ParseContext<'_> {
                             table::GENERATED_MAP_NAMES,
                             "maps",
                             &value,
+                            value_start,
+                            value_end,
                         )
                         .or_else(|_| {
                             value
@@ -288,10 +381,14 @@ impl ParseContext<'_> {
                                         table::GENERATED_MAP_NAMES,
                                         "maps",
                                         name,
+                                        value_start,
+                                        value_end,
                                     )
                                     .ok()
                                 })
-                                .ok_or_else(|| self.unknown("setting", &value))
+                                .ok_or_else(|| {
+                                    self.unknown_at("setting", &value, value_start, value_end)
+                                })
                         })
                         .unwrap_or(value.as_str()),
                     KeyKind::ListHero => self
@@ -300,6 +397,8 @@ impl ParseContext<'_> {
                             table::GENERATED_HERO_NAMES,
                             "heroes",
                             &value,
+                            value_start,
+                            value_end,
                         )
                         .unwrap_or(value.as_str()),
                     _ => unreachable!("non-list kinds return an opaque group above"),
@@ -467,20 +566,12 @@ impl ParseContext<'_> {
             }
             self.pos += 1;
             end = token.end;
-            parts.push(raw_token_text(&token.kind));
+            parts.push((raw_token_text(&token.kind), token.start, token.end));
         }
         if parts.is_empty() {
             return Err(self.malformed("expected an identifier", &first));
         }
-        Ok((
-            parts
-                .join(" ")
-                .replace(" : ", ":")
-                .replace(" .", ".")
-                .replace(". ", "."),
-            start,
-            end,
-        ))
+        Ok((join_as_written(&parts), start, end))
     }
 
     /// Read the tokens of a raw settings value on `line`. A bare `name:`
@@ -529,26 +620,47 @@ impl ParseContext<'_> {
         Ok(value)
     }
 
+    /// A settings boolean spelled in the page locale: the whole value run
+    /// so dotted abbreviations (`Wł.`, `Вкл.`, #448) resolve like full
+    /// words, with the diagnostic pointing at the spelled value.
     pub(crate) fn settings_bool(&mut self) -> Result<bool> {
         let token = self
-            .next()
+            .peek()
             .ok_or_else(|| self.malformed("expected a settings boolean", self.eof()))?;
-        let TokenKind::Word(value) = token.kind else {
+        if !matches!(token.kind, TokenKind::Word(_) | TokenKind::Number { .. }) {
             return Err(self.malformed("expected a settings boolean", &token));
-        };
-        if self.settings_name_matches("tokens", "On", &value)
-            || self.settings_name_matches("tokens", "Yes", &value)
-        {
-            Ok(true)
-        } else if self.settings_name_matches("tokens", "Off", &value)
-            || self.settings_name_matches("tokens", "No", &value)
-        {
-            Ok(false)
-        } else {
-            Err(self.unknown("setting boolean", &value).with_candidates(
-                self.settings_name_candidates(["On", "Off", "Yes", "No"], "tokens", &value),
-            ))
         }
+        // Settings members can share a line (`Cryo-Freeze: Off Ice Wall:
+        // On`), so the value cannot read to end-of-line: consume the
+        // longest run prefix that resolves to a boolean token and leave
+        // the rest for the next member (#448).
+        let start = token.start;
+        let run = self.spelling_run(self.pos, None);
+        for (count, value, _) in &run {
+            if self.settings_name_matches("tokens", "On", value)
+                || self.settings_name_matches("tokens", "Yes", value)
+            {
+                self.pos += count;
+                return Ok(true);
+            }
+            if self.settings_name_matches("tokens", "Off", value)
+                || self.settings_name_matches("tokens", "No", value)
+            {
+                self.pos += count;
+                return Ok(false);
+            }
+        }
+        let (value, end) = run
+            .first()
+            .map(|(_, text, end)| (text.clone(), *end))
+            .unwrap_or_else(|| (raw_token_text(&token.kind), token.end));
+        Err(self
+            .unknown_at("setting boolean", &value, start, end)
+            .with_candidates(self.settings_name_candidates(
+                ["On", "Off", "Yes", "No"],
+                "tokens",
+                &value,
+            )))
     }
 
     pub(crate) fn settings_bool_enum(&mut self, domain: &str) -> Result<bool> {
@@ -571,36 +683,44 @@ impl ParseContext<'_> {
     }
 
     pub(crate) fn resolve_enum_settings_name(&mut self, domain: &str) -> Result<String> {
-        let (display, _, _) = self.phrase_on_line()?;
-        table::ENUM_MEMBERS
-            .iter()
-            .find(|member| {
-                member.domain == domain
-                    && self.settings_name_matches("enums", member.name, &display)
-            })
-            .map(|member| member.member.to_string())
-            .or_else(|| {
-                table::GENERATED_ENUM_MEMBERS
-                    .iter()
-                    .find(|member| {
-                        member.domain == domain
-                            && self.settings_name_matches("enums", member.name, &display)
-                    })
-                    .map(|member| member.member.to_string())
-            })
-            .ok_or_else(|| {
-                self.unknown("settings enum", &display).with_candidates(
-                    self.settings_name_candidates(
-                        table::ENUM_MEMBERS
-                            .iter()
-                            .chain(table::GENERATED_ENUM_MEMBERS.iter())
-                            .filter(|entry| entry.domain == domain)
-                            .map(|entry| entry.name),
-                        "enums",
-                        &display,
-                    ),
-                )
-            })
+        let token = self
+            .peek()
+            .ok_or_else(|| self.malformed("expected a settings enum member", self.eof()))?;
+        let start = token.start;
+        // Same bounded match as `settings_bool`: the next member can follow
+        // on the same line, so only the longest run prefix resolving to a
+        // member of this domain is consumed (#448).
+        let run = self.spelling_run(self.pos, None);
+        for (count, display, _) in &run {
+            let member = table::ENUM_MEMBERS
+                .iter()
+                .chain(table::GENERATED_ENUM_MEMBERS.iter())
+                .find(|member| {
+                    member.domain == domain
+                        && self.settings_name_matches("enums", member.name, display)
+                });
+            if let Some(member) = member {
+                self.pos += count;
+                return Ok(member.member.to_string());
+            }
+        }
+        let (display, end) = run
+            .first()
+            .map(|(_, text, end)| (text.clone(), *end))
+            .unwrap_or_else(|| (raw_token_text(&token.kind), token.end));
+        Err(self
+            .unknown_at("settings enum", &display, start, end)
+            .with_candidates(
+                self.settings_name_candidates(
+                    table::ENUM_MEMBERS
+                        .iter()
+                        .chain(table::GENERATED_ENUM_MEMBERS.iter())
+                        .filter(|entry| entry.domain == domain)
+                        .map(|entry| entry.name),
+                    "enums",
+                    &display,
+                ),
+            ))
     }
 
     pub(crate) fn resolve_settings_name(
@@ -608,13 +728,15 @@ impl ParseContext<'_> {
         names: &[table::NameMap],
         section: &str,
         display: &str,
+        start: Position,
+        end: Position,
     ) -> Result<&'static str> {
         names
             .iter()
             .find(|candidate| self.settings_name_matches(section, candidate.name, display))
             .map(|candidate| candidate.key)
             .ok_or_else(|| {
-                self.unknown("setting", display)
+                self.unknown_at("setting", display, start, end)
                     .with_candidates(self.settings_name_candidates(
                         names.iter().map(|entry| entry.name),
                         section,
@@ -629,6 +751,8 @@ impl ParseContext<'_> {
         generated: &[table::NameMap],
         section: &str,
         display: &str,
+        start: Position,
+        end: Position,
     ) -> Result<&'static str> {
         names
             .iter()
@@ -636,7 +760,7 @@ impl ParseContext<'_> {
             .find(|candidate| self.settings_name_matches(section, candidate.name, display))
             .map(|candidate| candidate.key)
             .ok_or_else(|| {
-                self.unknown("setting", display)
+                self.unknown_at("setting", display, start, end)
                     .with_candidates(self.settings_name_candidates(
                         names.iter().chain(generated.iter()).map(|entry| entry.name),
                         section,
@@ -712,23 +836,33 @@ impl ParseContext<'_> {
                         .contains("%1$s")
                         .then_some(candidate.workshop_name)
                 }) {
-                    return crate::gameplay::data::builtin()
-                        .ok()
-                        .and_then(|catalog| {
-                            catalog
-                                .query()
-                                .ability_name(hero, slot, None, self.locale.as_str())
-                                .ok()
-                                .map(str::to_string)
-                        })
-                        .map(|name| {
-                            table::names_eq(name.as_str(), display)
-                                || table::names_eq(
-                                    template.replace("%1$s", name.as_str()).as_str(),
-                                    display,
-                                )
-                        })
-                        .unwrap_or(false);
+                    // A `%1$s`-only template substitutes to the bare
+                    // ability name; longer templates (`%1$s Cooldown
+                    // Time`) must not bind it (#448). The producer fills
+                    // the locale's template spelling when one exists
+                    // (`Tempo de recarga de %1$s`), and mixed-locale
+                    // sources may carry the en-US form.
+                    let ability_name = |locale: &str| {
+                        crate::gameplay::data::builtin()
+                            .ok()?
+                            .query()
+                            .ability_name(hero, slot, None, locale)
+                            .ok()
+                            .map(str::to_string)
+                    };
+                    let substitute = |template: &str, name: &str| {
+                        table::names_eq(template.replace("%1$s", name).as_str(), display)
+                    };
+                    let localized_template =
+                        table::localized_name(self.locale.as_str(), "labels", template)
+                            .unwrap_or(template);
+                    let matched = ability_name(self.locale.as_str()).is_some_and(|name| {
+                        substitute(localized_template, &name) || substitute(template, &name)
+                    }) || (self.locale.as_str() != "en-US"
+                        && ability_name("en-US").is_some_and(|name| substitute(template, &name)));
+                    if matched {
+                        return true;
+                    }
                 }
             }
         }

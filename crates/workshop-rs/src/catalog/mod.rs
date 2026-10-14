@@ -470,6 +470,35 @@ pub struct CatalogIdentity {
 
 pub(crate) type MemberIndexMap = HashMap<String, HashMap<String, (usize, usize)>>;
 
+/// domain -> normalized member spelling -> member index, for
+/// `NormalizedIndex::enum_alias_to_member`.
+type EnumMemberAliasMap = HashMap<String, HashMap<String, Option<(usize, usize)>>>;
+
+/// Whitespace-collapsed secondary spelling indexes (#448).
+///
+/// Reviewed export spellings carry whitespace the lexer cannot reproduce
+/// inside a token stream — trailing spaces (`ヒーロー: `,
+/// `Élévation à une puissance `), leading spaces, and spacing variants the
+/// client itself normalizes (`66号公路`/`66 号公路`, `1팀`/`1 팀`). Every
+/// verbatim index is mirrored here keyed by [`normalize_spelling`]; the
+/// verbatim index is always consulted first, and a normalized key shared
+/// by distinct targets (`None` after a collision) resolves nothing rather
+/// than guessing.
+#[derive(Debug, Clone, Default)]
+pub(crate) struct NormalizedIndex {
+    pub(crate) alias_to_entry: HashMap<Locale, [HashMap<String, Option<usize>>; Kind::NUM_KINDS]>,
+    pub(crate) localized_string_alias: HashMap<Locale, HashMap<String, Option<usize>>>,
+    pub(crate) enum_alias_to_domain: HashMap<Locale, HashMap<String, Option<String>>>,
+    pub(crate) enum_alias_to_member: HashMap<Locale, EnumMemberAliasMap>,
+    pub(crate) bare_member: HashMap<Locale, HashMap<String, Vec<(String, String)>>>,
+}
+
+/// The whitespace-collapsed comparison form of a catalog spelling: all
+/// Unicode whitespace removed, characters otherwise unchanged (#448).
+pub(crate) fn normalize_spelling(spelling: &str) -> String {
+    spelling.chars().filter(|c| !c.is_whitespace()).collect()
+}
+
 /// The validated canonical Workshop catalog.
 #[derive(Debug, Clone)]
 pub struct Catalog {
@@ -496,6 +525,9 @@ pub struct Catalog {
     pub(crate) enum_alias_to_domain: HashMap<Locale, HashMap<String, String>>,
     pub(crate) enum_alias_to_member: HashMap<Locale, MemberIndexMap>,
     pub(crate) bare_member_index: HashMap<Locale, HashMap<String, Vec<(String, String)>>>,
+    /// Whitespace-collapsed mirrors of the verbatim indexes; see
+    /// [`NormalizedIndex`].
+    pub(crate) normalized: NormalizedIndex,
 }
 
 /// Catalog loading and digest machinery lives in `load.rs`.
@@ -602,12 +634,22 @@ impl Catalog {
             .map(|i| &self.entries[*i])
     }
 
-    /// Resolve a localized spelling to its canonical builtin.
+    /// Resolve a localized spelling to its canonical builtin. The verbatim
+    /// index answers first; on a miss the whitespace-collapsed index
+    /// answers a spelling whose declared form carries unwritable
+    /// whitespace (`ヒーロー: `, `Élévation à une puissance `, #448).
     pub fn resolve(&self, kind: Kind, locale: &Locale, spelling: &str) -> Option<&CatalogEntry> {
         self.alias_to_entry
             .get(locale)
             .and_then(|by_kind| by_kind[kind.as_index()].get(spelling))
             .map(|i| &self.entries[*i])
+            .or_else(|| {
+                self.normalized.alias_to_entry.get(locale)?[kind.as_index()]
+                    .get(&normalize_spelling(spelling))
+                    .copied()
+                    .flatten()
+                    .map(|i| &self.entries[i])
+            })
     }
 
     /// The localized spelling of a canonical builtin id.
@@ -630,6 +672,15 @@ impl Catalog {
             .get(locale)
             .and_then(|map| map.get(spelling))
             .map(|index| &self.localized_strings[*index])
+            .or_else(|| {
+                self.normalized
+                    .localized_string_alias
+                    .get(locale)?
+                    .get(&normalize_spelling(spelling))
+                    .copied()
+                    .flatten()
+                    .map(|index| &self.localized_strings[index])
+            })
     }
 
     /// Resolve the emitted spelling of a localized preset identity.
@@ -671,6 +722,13 @@ impl Catalog {
                     .and_then(|map| map.get(spelling))
                     .map(String::as_str)
             })
+            .or_else(|| {
+                self.normalized
+                    .enum_alias_to_domain
+                    .get(locale)?
+                    .get(&normalize_spelling(spelling))?
+                    .as_deref()
+            })
     }
 
     /// Every enum domain, in catalog order.
@@ -685,11 +743,22 @@ impl Catalog {
         locale: &Locale,
         spelling: &str,
     ) -> Option<(String, String)> {
-        let &(domain_index, member_index) = self
+        let indexes = self
             .enum_alias_to_member
             .get(locale)?
             .get(domain)?
-            .get(spelling)?;
+            .get(spelling)
+            .copied()
+            .or_else(|| {
+                self.normalized
+                    .enum_alias_to_member
+                    .get(locale)?
+                    .get(domain)?
+                    .get(&normalize_spelling(spelling))
+                    .copied()
+                    .flatten()
+            })?;
+        let (domain_index, member_index) = indexes;
         Some((
             domain.to_string(),
             self.enums[domain_index].members[member_index]
@@ -740,11 +809,20 @@ impl Catalog {
     /// Every `(domain, canonical member)` match for a bare (domain-less)
     /// localized member spelling. Returns all matches so callers can report
     /// ambiguity; a well-formed catalog has at most one meaningful match for
-    /// a given spelling.
+    /// a given spelling. The verbatim index answers first; a spelling that
+    /// differs only in whitespace falls back to the collapsed index (#448).
     pub fn bare_member_matches(&self, locale: &Locale, spelling: &str) -> Vec<(String, String)> {
-        self.bare_member_index
+        if let Some(matches) = self
+            .bare_member_index
             .get(locale)
             .and_then(|map| map.get(spelling))
+        {
+            return matches.clone();
+        }
+        self.normalized
+            .bare_member
+            .get(locale)
+            .and_then(|map| map.get(&normalize_spelling(spelling)))
             .cloned()
             .unwrap_or_default()
     }

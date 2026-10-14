@@ -1,3 +1,4 @@
+use crate::catalog::CatalogEntry;
 use crate::frontend::parser::*;
 
 impl ParseContext<'_> {
@@ -163,10 +164,22 @@ impl ParseContext<'_> {
                 )))
             }
             Some(Token {
-                kind: TokenKind::Number { value, text },
-                start,
-                end,
+                kind: TokenKind::Number { .. },
+                ..
             }) => {
+                // A number may open a declared catalog spelling (`0. Yuva`,
+                // `1. Takım`, #448); only a recognized spelling is consumed.
+                if let Some((phrase, start, end)) = self.catalog_value_spelling() {
+                    return self.catalog_value_call_or_member(phrase, start, end);
+                }
+                let Some(Token {
+                    kind: TokenKind::Number { value, text },
+                    start,
+                    end,
+                }) = self.peek()
+                else {
+                    unreachable!("number arm entered on a non-number token")
+                };
                 let span = Some(Span::new(self.file(), start, end));
                 self.pos += 1;
                 Ok(self
@@ -419,8 +432,8 @@ impl ParseContext<'_> {
                 }
             }
             _ => {
-                if let Some((phrase, start, end)) = self.catalog_phrase_with_dot() {
-                    return self.bare_member_resolved(&phrase, start, end);
+                if let Some((phrase, start, end)) = self.catalog_value_spelling() {
+                    return self.catalog_value_call_or_member(phrase, start, end);
                 }
                 let (phrase, start, end) = self.phrase()?;
                 let canonical_value = self
@@ -454,52 +467,42 @@ impl ParseContext<'_> {
         }
     }
 
-    /// Consume a dotted phrase only when the complete spelling is a reviewed
-    /// catalog value or enum member. Dots otherwise remain member-access
-    /// syntax, and unresolved dotted identifiers keep the existing diagnostic
-    /// path instead of being accepted as catalog names.
-    pub(crate) fn catalog_phrase_with_dot(&mut self) -> Option<(String, Position, Position)> {
-        let first = self.peek()?;
-        if !matches!(first.kind, TokenKind::Word(_)) {
-            return None;
-        }
-        let has_dot_ahead = self.tokens[self.pos..]
-            .iter()
-            .take_while(|t| {
-                matches!(
-                    t.kind,
-                    TokenKind::Word(_) | TokenKind::Number { .. } | TokenKind::Dot
-                )
+    /// Consume the longest run at the cursor that spells a reviewed catalog
+    /// value or bare enum member, covering interior `.`, `:`, `!` and
+    /// number-leading spellings (`Maks. Can`, `Resurrección:`, `0. Yuva`,
+    /// #448). Dots otherwise remain member-access syntax, and unresolved
+    /// spellings keep the existing diagnostic path.
+    pub(crate) fn catalog_value_spelling(&mut self) -> Option<(String, Position, Position)> {
+        let catalog = self.catalog;
+        let locale = self.locale.clone();
+        let primary = catalog.primary_locale();
+        self.catalog_spelling(|spelling| {
+            catalog.resolve(Kind::Value, &locale, spelling).is_some()
+                || (locale != *primary && catalog.resolve(Kind::Value, primary, spelling).is_some())
+                || !catalog.bare_member_matches(&locale, spelling).is_empty()
+        })
+    }
+
+    /// A consumed catalog value/member spelling continues as a call when
+    /// `(` follows (`Is Jumping(...)`, `ヒーロー:(...)`), else as a bare
+    /// member/constant (#448).
+    fn catalog_value_call_or_member(
+        &mut self,
+        phrase: String,
+        start: Position,
+        end: Position,
+    ) -> Result<wir::ValueId> {
+        if matches!(
+            self.peek(),
+            Some(Token {
+                kind: TokenKind::LParen,
+                ..
             })
-            .any(|t| matches!(t.kind, TokenKind::Dot));
-        if !has_dot_ahead {
-            return None;
+        ) {
+            self.call_or_enum(&phrase, start, end)
+        } else {
+            self.bare_member_resolved(&phrase, start, end)
         }
-        let start = first.start;
-        let mut end = first.end;
-        let mut parts = Vec::new();
-        let mut index = self.pos;
-        while let Some(token) = self.tokens.get(index) {
-            match &token.kind {
-                TokenKind::Word(word) => parts.push(word.clone()),
-                TokenKind::Number { text, .. } => parts.push(text.clone()),
-                TokenKind::Dot => parts.push(".".to_string()),
-                _ => break,
-            }
-            end = token.end;
-            index += 1;
-        }
-        let phrase = parts.join(" ").replace(" .", ".").replace(". ", ".");
-        let known_value = self.resolve_entry(Kind::Value, &phrase).is_some();
-        let known_member = !self
-            .catalog
-            .bare_member_matches(&self.locale, &phrase)
-            .is_empty();
-        if !known_value && !known_member {
-            return None;
-        }
-        self.pos = index;
-        Some((phrase, start, end))
     }
 
     pub(crate) fn call_or_enum(
@@ -514,55 +517,8 @@ impl ParseContext<'_> {
         let prefer_enum = self.catalog.enum_domain("Hero").is_some()
             && (canonical_keyword(phrase) == "Hero"
                 || self.resolve_enum_domain_mixed(phrase) == Some("Hero"));
-        if !prefer_enum {
-            if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
-                self.expect(TokenKind::LParen, "expected '(' after value name")?;
-                if entry.id == "compare" {
-                    // Compare(a, op, b) -> Call(op, [a, b]). The operands are
-                    // value positions, not signature-pinned arguments, so the
-                    // enclosing expected domain must not leak in (#111).
-                    let left = self.value_in_domain(None)?;
-                    self.expect(TokenKind::Comma, "expected ',' after Compare operand")?;
-                    let (op, op_start, op_end) = match self.next() {
-                        Some(Token {
-                            kind: TokenKind::Op(op),
-                            start,
-                            end,
-                        }) => (op, start, end),
-                        Some(token) => {
-                            return Err(
-                                self.malformed("expected a comparison operator in Compare", &token)
-                            );
-                        }
-                        None => {
-                            return Err(self.malformed(
-                                "expected a comparison operator in Compare",
-                                self.eof(),
-                            ));
-                        }
-                    };
-                    self.expect(TokenKind::Comma, "expected ',' after Compare operator")?;
-                    let right = self.value_in_domain(None)?;
-                    self.expect(TokenKind::RParen, "expected ')'")?;
-                    let span = Some(Span::new(self.file(), op_start, op_end));
-                    return Ok(self.target.values.push(ValueNode::new(
-                        Value::Call {
-                            name: op,
-                            args: vec![left, right],
-                        },
-                        span,
-                    )));
-                }
-                let args = self.value_args(entry.id.as_str())?;
-                self.expect(TokenKind::RParen, "expected ')'")?;
-                return Ok(self.target.values.push(ValueNode::new(
-                    Value::Call {
-                        name: entry.id.clone(),
-                        args,
-                    },
-                    Some(Span::new(self.file(), start, end)),
-                )));
-            }
+        if !prefer_enum && let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
+            return self.value_call(entry, phrase, start, end);
         }
         // An action spelling can collide with an enum domain (`Wait` is
         // both). The enum reading only stands when the call actually parses
@@ -577,10 +533,26 @@ impl ParseContext<'_> {
                 .catalog
                 .enum_domain(domain_name)
                 .expect("resolved enum domain must exist");
+            let saved = self.pos;
             return match (self.enum_call(domain, start, end), action_error) {
                 (Ok(value), _) => Ok(value),
                 (Err(_), Some(error)) => Err(error),
-                (Err(error), None) => Err(error),
+                (Err(enum_error), None) => {
+                    // A spelling shared by an enum domain and a value prefers
+                    // the enum form, but the value call still applies when
+                    // the call is not a single-member enum literal — zh-CN
+                    // emits `英雄(英雄(D.Va))` for `hero(Hero.DVA)` (#448).
+                    if prefer_enum {
+                        self.pos = saved;
+                        if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
+                            if let Ok(value) = self.value_call(entry, phrase, start, end) {
+                                return Ok(value);
+                            }
+                        }
+                        self.pos = saved;
+                    }
+                    Err(enum_error)
+                }
             };
         }
         if let Some(error) = action_error {
@@ -604,6 +576,60 @@ impl ParseContext<'_> {
             Value::Call {
                 name: phrase.to_string(),
                 args: Vec::new(),
+            },
+            Some(Span::new(self.file(), start, end)),
+        )))
+    }
+
+    /// A `name(args)` call for a resolved catalog value entry. Assumes the
+    /// `(` is next; parses the signature-pinned arguments (#448).
+    fn value_call(
+        &mut self,
+        entry: &CatalogEntry,
+        _phrase: &str,
+        start: Position,
+        end: Position,
+    ) -> Result<wir::ValueId> {
+        self.expect(TokenKind::LParen, "expected '(' after value name")?;
+        if entry.id == "compare" {
+            // Compare(a, op, b) -> Call(op, [a, b]). The operands are
+            // value positions, not signature-pinned arguments, so the
+            // enclosing expected domain must not leak in (#111).
+            let left = self.value_in_domain(None)?;
+            self.expect(TokenKind::Comma, "expected ',' after Compare operand")?;
+            let (op, op_start, op_end) = match self.next() {
+                Some(Token {
+                    kind: TokenKind::Op(op),
+                    start,
+                    end,
+                }) => (op, start, end),
+                Some(token) => {
+                    return Err(self.malformed("expected a comparison operator in Compare", &token));
+                }
+                None => {
+                    return Err(
+                        self.malformed("expected a comparison operator in Compare", self.eof())
+                    );
+                }
+            };
+            self.expect(TokenKind::Comma, "expected ',' after Compare operator")?;
+            let right = self.value_in_domain(None)?;
+            self.expect(TokenKind::RParen, "expected ')'")?;
+            let span = Some(Span::new(self.file(), op_start, op_end));
+            return Ok(self.target.values.push(ValueNode::new(
+                Value::Call {
+                    name: op,
+                    args: vec![left, right],
+                },
+                span,
+            )));
+        }
+        let args = self.value_args(entry.id.as_str())?;
+        self.expect(TokenKind::RParen, "expected ')'")?;
+        Ok(self.target.values.push(ValueNode::new(
+            Value::Call {
+                name: entry.id.clone(),
+                args,
             },
             Some(Span::new(self.file(), start, end)),
         )))
@@ -1074,11 +1100,30 @@ impl ParseContext<'_> {
                 .peek()
                 .is_some_and(|token| matches!(&token.kind, TokenKind::LParen | TokenKind::Dot));
         self.pos = saved;
-        if expression_like || !matches!(token.kind, TokenKind::Word(_)) {
+        if expression_like || !matches!(token.kind, TokenKind::Word(_) | TokenKind::Number { .. }) {
             return self.value();
         }
 
+        // A preset spelling may carry punctuation or a leading number
+        // (`ヒーロー: `, `Player 1`, #448); accept the longest declared
+        // spelling before falling back to the bare phrase.
+        let catalog = self.catalog;
+        let locale = self.locale.clone();
+        if let Some((text, start, end)) = self.catalog_spelling(|spelling| {
+            catalog
+                .resolve_localized_string(&locale, spelling)
+                .is_some()
+        }) {
+            return self.localized_string_literal(text, Some(Span::new(self.file(), start, end)));
+        }
         let (text, start, end) = self.phrase()?;
+        let (text, end) = self
+            .extend_catalog_spelling(&text, end, |spelling| {
+                catalog
+                    .resolve_localized_string(&locale, spelling)
+                    .is_some()
+            })
+            .unwrap_or((text, end));
         self.localized_string_literal(text, Some(Span::new(self.file(), start, end)))
     }
 
