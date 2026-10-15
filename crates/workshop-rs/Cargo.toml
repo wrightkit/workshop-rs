@@ -36,3 +36,7 @@ path = "tests/source_attachment.rs"
 [[test]]
 name = "surface_signature_calls"
 path = "tests/surface_signature_calls.rs"
+
+[[test]]
+name = "check_emit_agreement"
+path = "tests/check_emit_agreement.rs"
