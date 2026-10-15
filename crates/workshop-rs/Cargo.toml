@@ -28,3 +28,7 @@ regex = "1"
 [[test]]
 name = "integration"
 path = "tests/integration.rs"
+
+[[test]]
+name = "surface_signature_calls"
+path = "tests/surface_signature_calls.rs"
