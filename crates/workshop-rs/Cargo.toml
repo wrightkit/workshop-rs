@@ -38,5 +38,9 @@ name = "surface_signature_calls"
 path = "tests/surface_signature_calls.rs"
 
 [[test]]
+name = "check_emit_agreement"
+path = "tests/check_emit_agreement.rs"
+
+[[test]]
 name = "edit_path_agreement"
 path = "tests/edit_path_agreement.rs"
