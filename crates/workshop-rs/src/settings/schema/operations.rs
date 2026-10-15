@@ -328,6 +328,14 @@ impl SettingDefinition {
         }
         let span = node.span();
         validate_value(&self.domain, &id, &value, span)?;
+        // Same unsupported-value gate `source_edit` applies before
+        // spelling: writing a value the carrier cannot emit — a
+        // boolean-enum leaf has no authored `false` form — must fail here
+        // rather than produce an unemittable occurrence.
+        let kind = table::lookup(self.path_parts)
+            .expect("settings definition must retain its table entry")
+            .kind;
+        ensure_supported_value(kind, &id, &value, span)?;
         apply_value(node, &id, value)
     }
 
@@ -354,20 +362,35 @@ impl SettingDefinition {
                 target: target.clone(),
             }
         })?;
+        let span = node.span();
         // Same leaf gate as `read`/`write`: a group or pass-through
         // occurrence has no scalar value bytes to edit, and
         // `source_value_range` would carve the range out of the block.
-        value_from_node(node, &self.domain, &id)?;
-        validate_value(&self.domain, &id, &value, node.span())?;
-        let span = node
-            .span()
-            .ok_or_else(|| SettingOperationError::SourceUnavailable {
-                setting: id.clone(),
-            })?;
-        let range = source_value_range(source, span, &id)?;
+        let Some(authored) = typed_leaf_value(node, &self.domain) else {
+            return Err(not_typed_leaf(node, &id));
+        };
+        validate_value(&self.domain, &id, &value, span)?;
         let kind = table::lookup(self.path_parts)
             .expect("settings definition must retain its table entry")
             .kind;
+        ensure_supported_value(kind, &id, &value, span)?;
+        // Same carrier-shape agreement `write` reaches through
+        // `apply_value`: the leaf's authored value kind must be the
+        // domain's before the edit may replace the member's value bytes.
+        // The authored value itself is replaced wholesale, so only its
+        // kind is checked — never the value.
+        if authored.kind() != self.domain.kind() {
+            return Err(SettingOperationError::WrongValueKind {
+                setting: id.clone(),
+                expected: "existing typed value",
+                actual: value.kind(),
+                span,
+            });
+        }
+        let span = span.ok_or_else(|| SettingOperationError::SourceUnavailable {
+            setting: id.clone(),
+        })?;
+        let range = source_value_range(source, span, &id)?;
         let replacement = source_value_spelling(&self.domain, kind, locale, &id, value)?;
         let edit = crate::core::source::SourceEdit::from_source(source, range, replacement)
             .map_err(|_| SettingOperationError::SourceUnavailable {
@@ -564,11 +587,7 @@ fn source_value_spelling(
             localized("enums", english)
         }
         (SettingValueDomain::Boolean, KeyKind::BoolEnum(_), SettingValue::Boolean(false)) => {
-            Err(SettingOperationError::InvalidValue {
-                setting: setting.clone(),
-                message: "false is unsupported by this Workshop boolean-enum setting".to_string(),
-                span: None,
-            })
+            Err(bool_enum_false_unsupported(setting, None))
         }
         (SettingValueDomain::Number(_), KeyKind::Number, SettingValue::Number(value)) => {
             Ok(crate::format::format_setting_number(value))
@@ -703,11 +722,10 @@ fn not_typed_leaf(node: &SettingsNode, id: &SettingId) -> SettingOperationError 
     }
 }
 
-fn value_from_node(
-    node: &SettingsNode,
-    domain: &SettingValueDomain,
-    id: &SettingId,
-) -> Result<SettingValue, SettingOperationError> {
+/// The typed value a leaf occurrence carries for `domain` — the shared
+/// carrier-shape mapping behind `value_from_node` and the `source_edit`
+/// leaf gate. `None` for a group or pass-through occurrence.
+fn typed_leaf_value(node: &SettingsNode, domain: &SettingValueDomain) -> Option<SettingValue> {
     let value = match node {
         SettingsNode::Bool { value, .. } => SettingValue::Boolean(*value),
         SettingsNode::Number { value, .. } => match domain {
@@ -729,8 +747,48 @@ fn value_from_node(
                 _ => SettingValue::MapList(values),
             }
         }
-        _ => return Err(not_typed_leaf(node, id)),
+        _ => return None,
     };
+    Some(value)
+}
+
+/// The supplied value must have an authored form for this key kind — the
+/// check `write` and `source_edit` share before mutating or editing. A
+/// boolean-enum leaf renders `true` through its enabled-member token only;
+/// `false` has no authored spelling and the emitter rejects the carrier,
+/// so both paths refuse it identically.
+fn ensure_supported_value(
+    kind: KeyKind,
+    id: &SettingId,
+    value: &SettingValue,
+    span: Option<crate::core::source::Span>,
+) -> Result<(), SettingOperationError> {
+    if matches!(
+        (kind, value),
+        (KeyKind::BoolEnum(_), SettingValue::Boolean(false))
+    ) {
+        return Err(bool_enum_false_unsupported(id, span));
+    }
+    Ok(())
+}
+
+fn bool_enum_false_unsupported(
+    id: &SettingId,
+    span: Option<crate::core::source::Span>,
+) -> SettingOperationError {
+    SettingOperationError::InvalidValue {
+        setting: id.clone(),
+        message: "false is unsupported by this Workshop boolean-enum setting".to_string(),
+        span,
+    }
+}
+
+fn value_from_node(
+    node: &SettingsNode,
+    domain: &SettingValueDomain,
+    id: &SettingId,
+) -> Result<SettingValue, SettingOperationError> {
+    let value = typed_leaf_value(node, domain).ok_or_else(|| not_typed_leaf(node, id))?;
     validate_value(domain, id, &value, node.span())?;
     Ok(value)
 }
