@@ -91,6 +91,22 @@ Catalog updates are bounded data changes with recorded provenance:
 Do not use unreviewed or license-incompatible upstream compiler data as a
 canonical source.
 
+## Contract rules
+
+- **Sibling paths share checks.** When a second path faces a contract an
+  established path already enforces (`write` and `source_edit`, CLI and
+  library, strict and tolerant, scoped and unscoped), reuse the established
+  path's checks instead of reimplementing a subset. Add a test asserting both
+  paths agree on the same inputs.
+- **Signatures follow the Workshop surface syntax.** Declared signatures,
+  spellings, and aliases must match what Workshop source can express, not only
+  catalog-derived docs, which are regenerated from the catalog and cannot
+  verify it. Where the surface and WIR shapes differ, a hand-written surface
+  call must parse.
+- **Emitted output is reparsed.** A change to emitted output must include a
+  test that re-parses the emitted text and checks the result; asserting the
+  emitted string alone is not enough.
+
 ## Validation
 
 ```sh
@@ -100,6 +116,11 @@ cargo test --workspace --all-targets
 cargo run -p workshop-rs --bin workshop-catalog-gen -- check
 git diff --check
 ```
+
+The workspace declares `rust-version = "1.85.0"`. Before pushing, also run
+`cargo +1.85.0 clippy --workspace --all-targets -- -D warnings` and
+`cargo +1.85.0 test --workspace --all-targets`; newer syntax such as
+let-chains passes on stable and is caught only by the `Rust (1.85.0)` CI job.
 
 A local pass is not proof of live-client behavior. Claims about current
 Workshop acceptance or seasonal behavior require the corresponding client or
