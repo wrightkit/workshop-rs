@@ -164,9 +164,6 @@ fn semantic_ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str>
     }
 }
 
-/// Generated enum domains declared equivalent to a reviewed fixture domain in
-/// the reconciliation manifest resolve to the canonical domain so one concept
-/// never exposes divergent value sets.
 fn reconciled_enum_domain(domain: &'static str) -> &'static str {
     let mut targets = reconciliation::data()
         .enum_member_mappings
@@ -215,9 +212,6 @@ fn canonical_id(scope: SettingScope, key: &str, path: &[PathPart<'_>]) -> Option
     Some(SettingId::new(format!("setting.{prefix}.{concept}")))
 }
 
-/// Map a Workshop leaf to a locale-independent setting concept. These names
-/// intentionally describe the setting's meaning, while hero and logical slot
-/// topology stays in `SettingTarget`.
 fn canonical_concept(key: &str, path: &[PathPart<'_>]) -> Option<String> {
     let key = key.trim_end_matches('%');
     Some(match key {
@@ -317,9 +311,6 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
     }
 }
 
-/// Reject raw table overlaps unless their complete parser/emitter contract is
-/// identical. Effective lookup may deduplicate exact repeats, but must never
-/// make a divergent generated or fixture projection silently win.
 pub(super) fn validate_raw_projection(
     entries: impl IntoIterator<Item = table::ProjectedEntry>,
 ) -> Vec<String> {
@@ -391,9 +382,6 @@ fn key_kind_matches(kind: KeyKind, expected: &reconciliation::EntryContract) -> 
     }
 }
 
-/// Validate enum members independently of entry lookup order. This catches
-/// both stale enum projections and conflicting duplicate spellings that the
-/// lookup helper would otherwise hide.
 pub(super) fn validate_enum_projection(
     fixture_entries: impl IntoIterator<Item = &'static table::EnumMember>,
     generated_entries: impl IntoIterator<Item = &'static table::EnumMember>,

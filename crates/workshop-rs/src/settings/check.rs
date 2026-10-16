@@ -1,20 +1,3 @@
-//! Locale-independent emission acceptance checks for settings trees.
-//!
-//! [`crate::Program::validate`] runs [`check_emission`] on every program, so
-//! checking raw Workshop input reports the same settings errors emission
-//! would. Members the catalog does not declare are carried as written
-//! ([`SettingsNode::Raw`], [`SettingsNode::RawValue`], or
-//! [`SettingsNode::RawGroup`] for a block of them — under an unknown key or
-//! a catalogued non-list key) and accepted;
-//! [`check_emission`] reports every other member the emitter would
-//! reject, without producing Workshop text. A carried member close to
-//! exactly one declared spelling is additionally reported as a
-//! [`DiagnosticSeverity::Warning`] diagnostic — a likely misspelling — by
-//! [`check_emission_diagnostics`].
-//!
-//! Member acceptance is shared with emission. Locale and hero display-name
-//! resolution can still fail inside emission and are not checked here.
-
 use crate::core::error::WorkshopError;
 use crate::core::suggest;
 
@@ -55,9 +38,6 @@ pub struct SettingsDiagnostic {
 }
 
 /// Check that emission accepts `settings`, returning the structured
-/// diagnostics a caller can apply: one per offending member, each carrying
-/// the node's recorded source span when present.
-/// Check that emission accepts `settings`, returning the structured
 /// diagnostics a caller can apply: one per offending member (rejected, or a
 /// carried near-miss of a declared spelling), each carrying the node's
 /// recorded source span when present.
@@ -82,19 +62,12 @@ pub fn check_emission(settings: &Settings) -> Vec<WorkshopError> {
         .collect()
 }
 
-/// A settings member emitted as written rather than through the catalog.
 pub(crate) struct UncataloguedMember<'a> {
-    /// The uncatalogued key, or the undeclared value of a catalogued key.
     pub(crate) name: &'a str,
     pub(crate) span: Option<crate::source::Span>,
-    /// The canonical spelling the name was close to, if exactly one was.
     pub(crate) suggestion: Option<String>,
 }
 
-/// The members emission writes as authored: uncatalogued members and blocks,
-/// and catalogued keys carrying an undeclared value. Members inside an
-/// uncatalogued top-level group are reported individually; a member block is
-/// reported as one member.
 pub(crate) fn uncatalogued_members(settings: &Settings) -> Vec<UncataloguedMember<'_>> {
     let mut members = Vec::new();
     walk(settings, &mut |visit| match visit {
@@ -140,11 +113,6 @@ pub(crate) fn uncatalogued_members(settings: &Settings) -> Vec<UncataloguedMembe
     members
 }
 
-/// The declared spelling a carried (verbatim-emitted) member was close to,
-/// when exactly one qualifies: a carried key is compared with the leaf
-/// spellings valid under `path`, and a carried value under a catalogued enum
-/// key is compared with that enum's declared spellings. `None` for members
-/// that are not carried, or whose spelling is close to nothing.
 pub(crate) fn carried_suggestion(node: &SettingsNode, path: &[PathPart<'_>]) -> Option<String> {
     let mut full = path.to_vec();
     full.push(PathPart::Part(node.name()));
@@ -165,15 +133,11 @@ pub(crate) fn carried_suggestion(node: &SettingsNode, path: &[PathPart<'_>]) -> 
 }
 
 enum Visit<'a, 'p> {
-    /// A structural problem emission rejects before reaching any member.
     Rejected(SettingsDiagnostic),
-    /// A member at a catalogued position, with its parent path.
     Member(&'a SettingsNode, &'p [PathPart<'a>]),
-    /// A leaf inside an uncatalogued top-level group.
     OpaqueLeaf(&'a SettingsNode),
 }
 
-/// Visit every settings member the way emission reaches it.
 fn walk<'a>(settings: &'a Settings, visit: &mut dyn FnMut(Visit<'a, '_>)) {
     for child in &settings.children {
         match child {
@@ -188,24 +152,23 @@ fn walk<'a>(settings: &'a Settings, visit: &mut dyn FnMut(Visit<'a, '_>)) {
                 "heroes" => walk_heroes(children, visit),
                 _ => walk_opaque(children, visit),
             },
-            // Pass-through groups emit verbatim wherever they land; only
-            // their leaves need a written form.
             SettingsNode::RawGroup { children, .. } => walk_opaque(children, visit),
-            other => {
-                visit(Visit::Rejected(rejected(
-                    other.span(),
-                    "settings block children must be groups".to_string(),
-                    None,
-                )));
-                // A stray raw member is still a preserved residual.
-                if matches!(
-                    other,
-                    SettingsNode::Raw { .. } | SettingsNode::RawValue { .. }
-                ) {
-                    visit(Visit::OpaqueLeaf(other));
-                }
-            }
+            other => reject_stray_member(other, visit),
         }
+    }
+}
+
+fn reject_stray_member<'a>(node: &'a SettingsNode, visit: &mut dyn FnMut(Visit<'a, '_>)) {
+    visit(Visit::Rejected(rejected(
+        node.span(),
+        "settings block children must be groups".to_string(),
+        None,
+    )));
+    if matches!(
+        node,
+        SettingsNode::Raw { .. } | SettingsNode::RawValue { .. }
+    ) {
+        visit(Visit::OpaqueLeaf(node));
     }
 }
 
@@ -302,15 +265,7 @@ fn walk_heroes<'a>(teams: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_
     }
 }
 
-/// A hero-scoped member the emitter can never spell: the key derives from an
-/// ability slot the hero provably lacks and no reviewed per-hero label row
-/// exists to substitute, so emission fails with a missing-mapping error.
-/// The rejection is reported here so `check` agrees with emission; a hero
-/// absent from gameplay data is not provable and is left to the emit-time
-/// failure the module header documents.
 fn unemittable_hero_member(node: &SettingsNode, hero: &str) -> Option<SettingsDiagnostic> {
-    // `Raw` and `RawGroup` members emit verbatim and never resolve a
-    // display name.
     if matches!(
         node,
         SettingsNode::Raw { .. } | SettingsNode::RawGroup { .. }
@@ -346,9 +301,6 @@ fn hero_provably_lacks_slot(hero: &str, slot: &str) -> bool {
         })
 }
 
-/// Build the warning for a carried member close to one declared spelling:
-/// a misspelled key names the declared key, a misspelled value under a
-/// catalogued key names the declared enum member.
 fn warn_near_miss(
     node: &SettingsNode,
     path: &[PathPart<'_>],
@@ -357,8 +309,6 @@ fn warn_near_miss(
     let mut full = path.to_vec();
     full.push(PathPart::Part(node.name()));
     let message = match node {
-        // A catalogued key carrying an undeclared value: the value is the
-        // misspelled spelling.
         SettingsNode::RawValue { value, .. } if table::lookup(&full).is_some() => format!(
             "settings value '{value}' for key '{}' is not declared",
             table::path_string(&full)
@@ -376,8 +326,6 @@ fn warn_near_miss(
 fn walk_opaque<'a>(children: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_>)) {
     for child in children {
         match child {
-            // Mirrors `emit_opaque_group`: nested groups pass through
-            // verbatim; only leaf members are table-checked.
             SettingsNode::Group { children, .. } | SettingsNode::RawGroup { children, .. } => {
                 walk_opaque(children, visit)
             }
@@ -390,11 +338,6 @@ fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<Set
     let name = node.name();
     let mut full = path.to_vec();
     full.push(PathPart::Part(name));
-    // A carried member close to exactly one declared spelling is a likely
-    // misspelling: accept it, but report a warning naming that spelling.
-    // Members of an uncatalogued block are checked with an empty path
-    // because they belong to opaque project data, not to any catalogued
-    // position, so they never suggest.
     if !path.is_empty() {
         if let Some(spelling) = carried_suggestion(node, path) {
             errors.push(warn_near_miss(node, path, spelling));

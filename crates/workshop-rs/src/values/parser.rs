@@ -43,14 +43,15 @@ impl ParseContext<'_> {
             })
     }
 
-    pub(crate) fn value(&mut self) -> Result<wir::ValueId> {
-        // The outermost `value` call claims the pending condition role; nested
-        // argument recursion re-enters here with it already consumed, so
-        // `in_condition` only marks the whole condition expression (#340).
-        let saved = std::mem::replace(
+    fn claim_condition_pending(&mut self) -> bool {
+        std::mem::replace(
             &mut self.in_condition,
             std::mem::take(&mut self.condition_pending),
-        );
+        )
+    }
+
+    pub(crate) fn value(&mut self) -> Result<wir::ValueId> {
+        let saved = self.claim_condition_pending();
         let mut value = self.primary()?;
         loop {
             if let Some(Token {
@@ -113,8 +114,6 @@ impl ParseContext<'_> {
                         || matches!(op.as_str(), "and" | "or" | "+" | "-" | "*" | "/" | "%"))
                 {
                     self.pos += 1;
-                    // An operator operand is a value position nested inside the
-                    // condition, not the condition itself (#340).
                     let saved_condition = std::mem::replace(&mut self.in_condition, false);
                     let right = self.primary();
                     self.in_condition = saved_condition;
@@ -637,8 +636,6 @@ impl ParseContext<'_> {
         )))
     }
 
-    /// Enum call: `Color(Yellow)`. An unresolved member spelling is preserved
-    /// for canonical validation rather than rejected here.
     fn enum_call(
         &mut self,
         domain: &crate::catalog::EnumDomain,
@@ -649,7 +646,7 @@ impl ParseContext<'_> {
         let (member_phrase, _, _) = self.enum_member_phrase()?;
         let member = self
             .resolve_enum_member_mixed(&domain.domain, &member_phrase)
-            .unwrap_or_else(|| (domain.domain.clone(), member_phrase.clone()));
+            .unwrap_or_else(|| unresolved_enum_member(&domain.domain, &member_phrase));
         self.expect(TokenKind::RParen, "expected ')' after enum member")?;
         Ok(self.target.values.push(ValueNode::new(
             Value::Enum {
@@ -703,8 +700,6 @@ impl ParseContext<'_> {
         })
     }
 
-    /// The end position of the call whose `(` is next, or `end` when the
-    /// call is absent or unclosed.
     fn call_site_end(&self, end: Position) -> Position {
         if !matches!(
             self.peek(),
@@ -919,7 +914,6 @@ impl ParseContext<'_> {
                 Some(Span::new(self.file(), start, end)),
             )));
         }
-        // A bare value constant (e.g. Empty Array).
         if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
             if entry.id == "null" {
                 return Ok(self.target.values.push(ValueNode::new(
@@ -1227,9 +1221,6 @@ impl ParseContext<'_> {
             Some(Span::new(self.file(), start, end)),
         ))
     }
-    /// `receiver.member` / `receiver.member[index]` — the canonical
-    /// `memberAccess` call shape shared by the postfix loop and the
-    /// post-paren receiver path.
     fn member_access(&mut self, receiver: wir::ValueId, name: String) -> Result<wir::ValueId> {
         // A member access on the event player over a declared variable name
         // is the player-variable read (`Event Player.score`, and its
@@ -1275,4 +1266,8 @@ impl ParseContext<'_> {
             None,
         )))
     }
+}
+
+fn unresolved_enum_member(domain: &str, spelling: &str) -> (String, String) {
+    (domain.to_string(), spelling.to_string())
 }

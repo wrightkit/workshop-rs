@@ -5,10 +5,6 @@ use crate::output::emitter::*;
 use crate::source::Span;
 
 impl EmitContext<'_> {
-    /// Emit the `settings { ... }` section from the settings carrier,
-    /// table-driven (fixture-backed names). Programs that build settings
-    /// trees directly (rather than parsing raw Workshop) check table
-    /// acceptance through [`crate::settings::check_emission`] first.
     pub(crate) fn emit_settings(&mut self, settings: &SettingsTree) -> Result<()> {
         let settings_keyword = self.structural("settings")?;
         self.line(0, &format!("{settings_keyword} {{"))?;
@@ -19,7 +15,6 @@ impl EmitContext<'_> {
             }
             let (name, children) = match child {
                 SettingsNode::Group { name, children, .. } => (name, children),
-                // A pass-through group emits verbatim wherever it lands.
                 SettingsNode::RawGroup { name, children, .. } => {
                     self.emit_opaque_group(children, name, 1)?;
                     continue;
@@ -106,7 +101,6 @@ impl EmitContext<'_> {
         }
     }
 
-    /// Emit the `modes { <Mode> { ... } }` block of a gamemodes group.
     pub(crate) fn emit_modes(&mut self, modes: &[SettingsNode]) -> Result<()> {
         let modes_keyword = self.setting_name("namespaces", "modes", "namespace.modes")?;
         self.line(1, &format!("{modes_keyword} {{"))?;
@@ -157,7 +151,6 @@ impl EmitContext<'_> {
         Ok(())
     }
 
-    /// Emit the `heroes { <Team> { ... } }` block of a heroes group.
     pub(crate) fn emit_heroes(&mut self, teams: &[SettingsNode]) -> Result<()> {
         let heroes_keyword = self.setting_name("namespaces", "heroes", "namespace.heroes")?;
         self.line(1, &format!("{heroes_keyword} {{"))?;
@@ -220,7 +213,6 @@ impl EmitContext<'_> {
         Ok(())
     }
 
-    /// Emit one leaf-level settings member (`Name: value`, lists as blocks).
     pub(crate) fn settings_member(
         &mut self,
         node: &SettingsNode,
@@ -261,8 +253,6 @@ impl EmitContext<'_> {
                 };
                 return self.emit_opaque_group(children, &block_name, level);
             }
-            // A pass-through block emits verbatim under its authored name at
-            // any position.
             (SettingsNode::RawGroup { children, .. }, _) => {
                 return self.emit_opaque_group(children, name, level);
             }
@@ -334,8 +324,6 @@ impl EmitContext<'_> {
         Ok(())
     }
 
-    /// The display name of a catalogued member: hero-specific and gameplay
-    /// ability names first, then the shared label table.
     fn member_display_name(
         &mut self,
         full: &[PathPart],
@@ -403,9 +391,6 @@ impl EmitContext<'_> {
         Ok(())
     }
 
-    /// Resolve a settings spelling from the generated locale corpus. The
-    /// English table remains the explicit fallback only when the caller opts
-    /// into `en-US`, matching the catalog's missing-mapping contract.
     pub(crate) fn gameplay_setting_name(
         &mut self,
         hero: &str,
@@ -453,8 +438,6 @@ impl EmitContext<'_> {
         if let Some(spelling) = table::localized_name(self.locale.as_str(), section, english) {
             return Ok(spelling.to_string());
         }
-        // The fallback locale resolves generically — the same contract
-        // `gameplay_setting_name` applies — not only when it is English.
         if let Some(fallback) = &self.fallback {
             let spelling = if *fallback == en_us {
                 Some(english)
@@ -476,8 +459,6 @@ impl EmitContext<'_> {
     }
 }
 
-/// A `Malformed` rejection whose message names the canonical suggestion when
-/// one was identified — the same rendering `check_emission` produces.
 fn suggested(message: String, suggestion: Option<String>, span: Option<Span>) -> WorkshopError {
     WorkshopError::malformed(
         suggest::with_suggestion_text(message, suggestion.as_deref()),

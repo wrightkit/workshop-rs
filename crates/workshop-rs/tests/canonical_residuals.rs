@@ -1,10 +1,3 @@
-//! Executable witnesses for
-//! `validate::validate_canonical_ids_tolerating_residuals`: catalog-unknown
-//! calls are completeness residuals reported by `semantic_issues`, so the
-//! tolerant validator leaves them alone — but never lets them mask a
-//! canonical violation elsewhere, including inside a residual's own
-//! arguments.
-
 use super::common::{catalog, en};
 use workshop_rs::{Action, Value, parser, validate};
 
@@ -55,8 +48,6 @@ fn residuals_do_not_mask_later_canonical_violations_in_either_order() {
     }
 }
 
-/// A residual alone is not a canonical error: the residual channel reports
-/// it, and validation accepts the known remainder.
 #[test]
 fn a_residual_alone_does_not_reject() {
     for program in [
@@ -69,8 +60,6 @@ fn a_residual_alone_does_not_reject() {
     }
 }
 
-/// Arguments of a residual call are still validated: a known canonically
-/// invalid call nested under an unknown one must surface.
 #[test]
 fn nested_known_violations_inside_residual_arguments_still_reject() {
     // Unknown value call wrapping a slot-type-invalid known value (the
@@ -100,7 +89,6 @@ fn nested_known_violations_inside_residual_arguments_still_reject() {
     );
 }
 
-/// Strict validation is unchanged: residuals reject as `Unknown` errors.
 #[test]
 fn strict_validation_still_rejects_residuals() {
     let error = validate::validate_canonical_ids(&program("Wait(sqrt(4));"), &catalog())
@@ -115,7 +103,6 @@ fn strict_validation_still_rejects_residuals() {
     );
 }
 
-/// Trailing catalog defaults remain optional under the tolerant entry point.
 #[test]
 fn catalog_defaults_stay_accepted() {
     for actions in ["Wait(1);", "Wait(1, Ignore Condition);"] {

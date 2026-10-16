@@ -418,9 +418,13 @@ fn apply_action_provenance(
                     };
                 }
             }
-            // Leaf actions consume one row; new block-shaped variants also
-            // need an explicit arm in `public_action_provenance`.
-            _ => {
+            wir::Action::SetGlobalVariable { .. }
+            | wir::Action::ModifyGlobalVariable { .. }
+            | wir::Action::SetPlayerVariable { .. }
+            | wir::Action::ModifyPlayerVariable { .. }
+            | wir::Action::AssignMember { .. }
+            | wir::Action::CallSubroutine { .. }
+            | wir::Action::Call { .. } => {
                 let record = provenance.get(*position);
                 let public_action = public.get(*position);
                 *position += 1;
@@ -433,17 +437,12 @@ fn apply_action_provenance(
     Ok(())
 }
 
-/// Whether a recorded row still describes the public action at `position`.
 fn row_matches(record: &ActionProvenance, public: &[Action], position: usize) -> bool {
     public
         .get(position)
         .is_some_and(|action| record.identity == action_identity(action))
 }
 
-/// The provenance record and public value for the direct argument at
-/// `argument`, while the recorded table still matches the action's argument
-/// count. Whether the record also describes the value's content is decided
-/// by [`apply_value_provenance`].
 fn argument_value<'a>(
     source: &'a ActionProvenance,
     public: &'a Action,
@@ -494,13 +493,6 @@ fn apply_action_source(
     }
 }
 
-/// Write a recorded value-provenance tree back onto a WIR value subtree.
-/// `public` is the public value `value` was lowered from and
-/// `root_identity` the identity `source` was recorded for — a condition
-/// record keeps the condition's identity, every other record keeps its
-/// value's. A node's own fields are written only while it still has the
-/// recorded identity; descending only requires each level's child table to
-/// match, so a stale node does not hide unaffected siblings.
 fn apply_value_provenance(
     storage: &mut wir::Program,
     value: wir::ValueId,

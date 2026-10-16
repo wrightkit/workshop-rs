@@ -170,8 +170,6 @@ impl ParseContext<'_> {
         Ok((team, target))
     }
 
-    /// The nearest accepted event-player spellings for a rejected event
-    /// player parameter: `EventPlayer` members plus hero members.
     fn event_player_candidates(&self, spelling: &str) -> Vec<String> {
         crate::core::suggest::nearest(
             spelling,

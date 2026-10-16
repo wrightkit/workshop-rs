@@ -12,7 +12,6 @@ use workshop_rs::{
 pub(crate) mod real_projects;
 pub(crate) use real_projects::{RealProjectCaseExpectation, RealProjectStage};
 
-/// The built-in catalog, loaded and validated.
 pub(crate) fn catalog() -> Catalog {
     Catalog::builtin().expect("built-in catalog validates")
 }
@@ -29,7 +28,6 @@ pub(crate) fn zh() -> Locale {
     locale("zh-CN")
 }
 
-/// `tests/fixtures/<group>/<name>` path resolution relative to the crate.
 pub(crate) fn fixture(group: &str, name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures")
@@ -43,12 +41,10 @@ pub(crate) fn fixture_text(group: &str, name: &str) -> String {
         .unwrap_or_else(|error| panic!("cannot read fixture {path:?}: {error}"))
 }
 
-/// `tests/fixtures/corpus/<id>.ws`.
 pub(crate) fn corpus_text(fixture_id: &str) -> String {
     fixture_text("corpus", &format!("{fixture_id}.ws"))
 }
 
-/// `tests/fixtures/settings/<id>.settings.ws`.
 pub(crate) fn settings_text(fixture_id: &str) -> String {
     fixture_text("settings", &format!("{fixture_id}.settings.ws"))
 }

@@ -58,7 +58,6 @@ pub struct LocalizedSettingName {
     pub spelling: &'static str,
 }
 
-/// Sections of the generated locale data that carry per-locale spellings.
 const LOCALE_SECTIONS: &[&str] = &[
     "enums",
     "heroes",
@@ -129,7 +128,6 @@ pub(crate) enum KeyKind {
     ListHero,
 }
 
-/// One table entry: an exact key path, its workshop name, and its kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct TableEntry {
     pub(crate) path: &'static [PathPart<'static>],
@@ -159,7 +157,6 @@ macro_rules! entry {
 /// mode) are `settings-unknown-key` at validation (only source-backed in
 /// oracle-failing programs; corpus-bounded).
 pub(crate) static ENTRIES: &[TableEntry] = &[
-    // main
     entry!(
         [Part("main"), Part("description")],
         "Description",
@@ -170,7 +167,6 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
         "Mode Name",
         KeyKind::String
     ),
-    // lobby
     entry!(
         [Part("lobby"), Part("ffaSlots")],
         "Max FFA Players",
@@ -348,7 +344,6 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
         "Competitive Rules",
         KeyKind::Bool
     ),
-    // gamemodes.general
     entry!(
         [
             Part("gamemodes"),
@@ -423,7 +418,6 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
         "Spawn Health Packs",
         KeyKind::Enum("spawnHealthPacks")
     ),
-    // heroes.<team>
     entry!(
         [Part("heroes"), Team, Part("enabledHeroes")],
         "enabled heroes",
@@ -439,7 +433,6 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
         "disabled heroes",
         KeyKind::ListHero
     ),
-    // heroes.<team>.<hero> config groups
     entry!(
         [Part("heroes"), Team, Hero, Part("enablePrimaryFire")],
         "Primary Fire",
@@ -477,7 +470,6 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
     ),
 ];
 
-/// A slot name mapping (key -> localized workshop name).
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct NameMap {
     pub(crate) key: &'static str,
@@ -501,13 +493,11 @@ pub(crate) static MODE_NAMES: &[NameMap] = &[
     named("general", "General"),
 ];
 
-/// Map names inside `enabledMaps` lists.
 pub(crate) static MAP_NAMES: &[NameMap] = &[
     named("workshopIsland", "Workshop Island"),
     named("kingsRowWinter", "King's Row Winter"),
 ];
 
-/// Hero names inside hero lists and hero-config groups.
 pub(crate) static HERO_NAMES: &[NameMap] = &[
     named("anran", "Anran"),
     named("ana", "Ana"),
@@ -574,7 +564,6 @@ pub(crate) static TEAM_NAMES: &[NameMap] = &[
     named("team2", "Team 2"),
 ];
 
-/// An enum domain member (domain -> localized workshop name).
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct EnumMember {
     pub(crate) domain: &'static str,
@@ -733,7 +722,6 @@ pub(crate) struct ProjectedEntry {
     pub(crate) entry: &'static TableEntry,
 }
 
-/// The source that supplied a raw settings projection entry.
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum ProjectionSource {
     FixtureTable,
@@ -762,9 +750,6 @@ pub(crate) fn is_generated_entry(entry: &TableEntry) -> bool {
         .any(|candidate| std::ptr::eq(candidate, entry))
 }
 
-/// Map the existing hero-settings leaf keys to canonical gameplay slots.
-/// The setting tree remains the owner of the keys; display names are resolved
-/// from the gameplay catalog by the parser/emitter when a hero context exists.
 pub(crate) fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static str> {
     match path.last() {
         Some(PathPart::Part("ability1Cooldown%" | "enableAbility1")) => Some("ability1"),
@@ -786,7 +771,6 @@ pub(crate) fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static st
     }
 }
 
-/// Resolve a source-backed hero-specific setting label.
 pub(crate) fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static str> {
     // A producer alias is the spelling pinned OverPy writes, so it is emitted
     // in preference to the export label.
@@ -917,7 +901,6 @@ pub(crate) fn names_eq(left: &str, right: &str) -> bool {
             == crate::catalog::normalize_spelling(right).to_lowercase()
 }
 
-/// Canonical map spellings for suggestion candidates (English names).
 pub(crate) fn map_spellings() -> impl Iterator<Item = &'static str> {
     MAP_NAMES
         .iter()
@@ -925,7 +908,6 @@ pub(crate) fn map_spellings() -> impl Iterator<Item = &'static str> {
         .map(|m| m.name)
 }
 
-/// Canonical hero spellings for suggestion candidates (English names).
 pub(crate) fn hero_spellings() -> impl Iterator<Item = &'static str> {
     HERO_NAMES
         .iter()
@@ -933,12 +915,10 @@ pub(crate) fn hero_spellings() -> impl Iterator<Item = &'static str> {
         .map(|m| m.name)
 }
 
-/// Canonical team spellings for suggestion candidates (English names).
 pub(crate) fn team_spellings() -> impl Iterator<Item = &'static str> {
     TEAM_NAMES.iter().map(|m| m.name)
 }
 
-/// Canonical member spellings of an enum domain for suggestion candidates.
 pub(crate) fn enum_spellings(domain: &str) -> impl Iterator<Item = &'static str> {
     enum_members(domain).map(|member| member.name)
 }
@@ -1004,27 +984,22 @@ pub(crate) fn key_spellings(parent: &[PathPart<'_>]) -> Vec<&'static str> {
     spellings
 }
 
-/// The localized name of a game mode.
 pub(crate) fn mode_name(key: &str) -> Option<&'static str> {
     name_in(MODE_NAMES, key).or_else(|| name_in(GENERATED_MODE_NAMES, key))
 }
 
-/// The localized name of a map.
 pub(crate) fn map_name(key: &str) -> Option<&'static str> {
     name_in(MAP_NAMES, key).or_else(|| name_in(GENERATED_MAP_NAMES, key))
 }
 
-/// The localized name of a hero.
 pub(crate) fn hero_name(key: &str) -> Option<&'static str> {
     name_in(HERO_NAMES, key).or_else(|| name_in(GENERATED_HERO_NAMES, key))
 }
 
-/// The localized name of a team.
 pub(crate) fn team_name(key: &str) -> Option<&'static str> {
     name_in(TEAM_NAMES, key)
 }
 
-/// The localized name of an enum member in a domain.
 pub(crate) fn enum_name(domain: &str, member: &str) -> Option<&'static str> {
     ENUM_MEMBERS
         .iter()
@@ -1045,7 +1020,6 @@ pub(crate) fn enum_members(domain: &str) -> impl Iterator<Item = &'static EnumMe
         .filter(move |member| member.domain == domain)
 }
 
-/// A human-readable rendering of a path (diagnostics).
 pub(crate) fn path_string(path: &[PathPart<'_>]) -> String {
     path.iter()
         .map(|part| match part {

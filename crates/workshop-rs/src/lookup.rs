@@ -16,9 +16,6 @@ use crate::core::error::{Result, WorkshopError};
 use crate::core::suggest;
 use crate::settings::{self, PathPart, SettingDefinition, SettingValueDomain, table};
 
-/// Members of a parameter's enum domain are listed inline in a signature
-/// when the domain has at most this many members. Larger domains report
-/// their member count; a query on the domain itself lists them.
 const INLINE_MEMBER_LIMIT: usize = 32;
 
 /// One canonical construct matching a [`Catalog::lookup`] query.
@@ -293,7 +290,6 @@ impl Catalog {
                 ));
             }
         }
-        // Stable sort: equal-ranked matches keep catalog and table order.
         matches.sort_by_key(|(score, _)| *score);
         Ok(matches.into_iter().map(|(_, lookup)| lookup).collect())
     }
@@ -361,8 +357,6 @@ impl Catalog {
         Ok(scored.into_iter().map(|(_, lookup)| lookup).collect())
     }
 
-    /// The members of one catalog enum domain — `value` a canonical domain
-    /// name or a `locale` spelling — scored against `prepared` when given.
     fn within_enum_domain(
         &self,
         locale: &Locale,
@@ -403,10 +397,6 @@ impl Catalog {
         )
     }
 
-    /// The members of one settings-table enum domain — `value` a domain
-    /// name such as `mapRotation` — scored against `prepared` when given.
-    /// Member spellings in `locale` match and surface as the display name
-    /// the same way catalog enum members do.
     fn within_settings_enum(
         &self,
         locale: &Locale,
@@ -451,9 +441,6 @@ impl Catalog {
         (!members.is_empty()).then_some(members)
     }
 
-    /// The parameters of one callable — `value` a canonical id or a
-    /// `locale` spelling — in call order, scored against `prepared` when
-    /// given.
     fn within_callable(
         &self,
         locale: &Locale,
@@ -496,7 +483,6 @@ impl Catalog {
         )
     }
 
-    /// The members of `domain` with their display names under `locale`.
     fn enum_members(&self, domain: &str, locale: &Locale) -> Vec<LookupEnumMember> {
         self.enum_domain(domain)
             .map(|domain| {
@@ -515,8 +501,6 @@ impl Catalog {
     }
 }
 
-/// The [`Signature`] for a catalog `entry` under `locale`, when the entry is
-/// an action or value.
 fn signature(catalog: &Catalog, entry: &CatalogEntry, locale: &Locale) -> Option<Signature> {
     if !matches!(entry.kind, Kind::Action | Kind::Value) {
         return None;
@@ -555,10 +539,6 @@ fn signature(catalog: &Catalog, entry: &CatalogEntry, locale: &Locale) -> Option
     })
 }
 
-/// Render `entry`'s call signature in `locale`'s call syntax, following the
-/// shared signature form: `name: Type` without a declared default,
-/// `name=default` or `name?` with one, and `name: Domain(members|count)` for
-/// an enum-typed parameter without a default.
 fn signature_text(
     catalog: &Catalog,
     entry: &CatalogEntry,
@@ -626,11 +606,6 @@ fn signature_text(
     format!("{}({})", display, rendered.join(", "))
 }
 
-/// Render a declared parameter default in `locale`'s call syntax: a
-/// `Domain.Member` literal resolves to the localized emitted member form
-/// (constructor-form domains write `Domain(Member)`, other domains write
-/// the member bare), a canonical value id resolves to its localized
-/// spelling, and any other literal stays as declared.
 fn render_default(catalog: &Catalog, locale: &Locale, default: &str) -> String {
     if let Some((domain, member)) = default.split_once('.') {
         if let Some(member_spelling) = catalog.enum_spelling(domain, locale, member) {
@@ -643,20 +618,12 @@ fn render_default(catalog: &Catalog, locale: &Locale, default: &str) -> String {
         .to_string()
 }
 
-/// The best [`PreparedQuery::name_score`] over `texts`, or `u32::MAX` when
-/// there is no prepared query or no text matched; scoped lookups drop
-/// `u32::MAX` children only when a query is present.
 fn child_score<'a>(prepared: Option<&PreparedQuery>, texts: impl Iterator<Item = &'a str>) -> u32 {
     prepared
         .and_then(|prepared| texts.filter_map(|text| prepared.name_score(text)).min())
         .unwrap_or(u32::MAX)
 }
 
-/// Whether one declared path segment accepts the asked `within` segment:
-/// a literal key matches exactly; a `<team>`/`<hero>` template slot
-/// accepts its own template spelling or a canonical team/hero key the
-/// settings table recognizes (`allTeams`, `team1`, `mei`), never an
-/// arbitrary value.
 fn declared_segment_accepts(declared: PathPart<'_>, asked: &str) -> bool {
     match declared {
         PathPart::Part(name) => name == asked,
@@ -665,10 +632,6 @@ fn declared_segment_accepts(declared: PathPart<'_>, asked: &str) -> bool {
     }
 }
 
-/// The immediate settings children under `prefix`: leaf keys and the next
-/// path segment, matched segment by segment against the canonical paths.
-/// An empty `prefix` lists the root. `None` reports a prefix naming no
-/// known scope.
 fn within_settings(
     prefix: &str,
     locale: &Locale,
@@ -696,8 +659,6 @@ fn within_settings(
         }
         known = true;
         if parts.len() == prefix_segments.len() {
-            // The prefix names this leaf itself — an existing but empty
-            // scope, not an unknown one.
             continue;
         }
         let segment = match &parts[prefix_segments.len()] {
@@ -745,8 +706,6 @@ fn within_settings(
     known.then_some(children)
 }
 
-/// A lookup query prepared once for comparison against every candidate:
-/// the raw text, its comparison fold, and its folded tokens.
 struct PreparedQuery {
     raw: String,
     folded: String,
@@ -772,12 +731,6 @@ impl PreparedQuery {
         }
     }
 
-    /// How closely the query resembles `candidate`: exact equality ranks 0,
-    /// a comparison-fold equality (case, accents, punctuation, and
-    /// whitespace are insignificant) ranks 1, a small edit distance ranks
-    /// 2 + distance, a token prefix match ranks 6, and a substring guess
-    /// ranks 8. Guesses shorter than three folded characters only rank on
-    /// exact or near forms so that vague queries do not flood the result.
     fn name_score(&self, candidate: &str) -> Option<u32> {
         if self.raw == candidate {
             return Some(0);
@@ -813,9 +766,6 @@ impl PreparedQuery {
         None
     }
 
-    /// Whether every whitespace/punctuation-separated query token is a
-    /// prefix of some `candidate` token (`hud text` matches
-    /// `Create HUD Text`, `create hud` matches `Create HUD Text`).
     fn token_prefix_match(&self, candidate: &str) -> bool {
         let candidate_tokens = candidate
             .split(|character: char| !character.is_alphanumeric())
@@ -830,8 +780,6 @@ impl PreparedQuery {
     }
 }
 
-/// The [`suggest::fold_loose`] of `candidate`, fast-pathed for ASCII
-/// spellings (the overwhelmingly common catalog and table form).
 fn fold_candidate(candidate: &str) -> String {
     if candidate.is_ascii() {
         candidate
@@ -844,10 +792,6 @@ fn fold_candidate(candidate: &str) -> String {
     }
 }
 
-/// Whether `query_segments` prefix-matches `path` segment for segment: a
-/// `<team>` or `<hero>` template segment accepts any query segment, and a
-/// literal segment accepts a case-insensitive equal query segment. A full
-/// match ranks 2; each unmatched trailing path segment lowers the rank.
 fn path_prefix_score(query_segments: &[&str], path: &str) -> Option<u32> {
     let mut path_segments = path.split('.');
     let mut consumed = 0usize;

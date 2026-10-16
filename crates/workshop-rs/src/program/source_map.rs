@@ -1,5 +1,3 @@
-//! Canonical Workshop artifact formats and the public [`SourceMap`].
-
 use serde::{Deserialize, Serialize};
 
 use super::identity::{condition_identity, value_identity};
@@ -525,13 +523,6 @@ impl SourceMap {
         })
     }
 
-    /// Map serialized children onto a public value's children by position.
-    ///
-    /// Emission can canonicalize a value into a form with a different public
-    /// arity — `(expr).member` reparse as a variable read drops the member-name
-    /// child, for example — so children are matched positionally: entries
-    /// beyond the value's children are dropped and positions with no entry are
-    /// left unmapped.
     fn mapped_children(
         &self,
         wire: &[WireValue],
@@ -614,12 +605,6 @@ impl MappedText {
     }
 }
 
-/// The wire form of recorded value-provenance children, paired with the
-/// public children they describe: children keep their position up to the
-/// last mapped one, a record whose value no longer has the recorded identity
-/// serializes as unmapped, a level whose recorded count no longer matches is
-/// dropped entirely, and a level with no recorded provenance at all is
-/// omitted.
 fn wire_children(children: &[ValueProvenance], values: &[&Value]) -> Vec<WireValue> {
     if children.len() != values.len() {
         return Vec::new();
@@ -651,7 +636,6 @@ fn wire_value(provenance: &ValueProvenance, value: &Value) -> WireValue {
     }
 }
 
-/// Whether a serialized value entry contributes any position.
 fn wire_value_unmapped(value: &WireValue) -> bool {
     value.span.is_none()
         && value.identifier_span.is_none()
@@ -832,8 +816,6 @@ enum MappedNode {
     },
 }
 
-/// The mapped provenance of one value node, mirroring the structure of the
-/// public [`Value`] tree: `children` addresses child values by position.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 struct WireValue {
     #[serde(default, skip_serializing_if = "Option::is_none")]

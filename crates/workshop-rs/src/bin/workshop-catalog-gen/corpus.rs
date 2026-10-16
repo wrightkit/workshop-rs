@@ -1,15 +1,12 @@
 use super::*;
 use serde_json::{Map, Value};
 
-/// A match candidate inside the export: the export key (for provenance)
-/// and every reviewed locale spelling.
 #[derive(Debug, Clone)]
 struct Candidate {
     key: String,
     locales: std::collections::BTreeMap<String, String>,
 }
 
-/// An exact-en-US-spelling index over a slice of the export.
 #[derive(Debug, Clone, Default)]
 struct Index {
     by_en: HashMap<String, Vec<Candidate>>,
@@ -83,8 +80,6 @@ impl Index {
     }
 }
 
-/// Build an index from `localized` entries with any of the given key
-/// prefixes.
 fn localized_index(export: &Value, prefixes: &[&str]) -> Index {
     let mut index = Index::default();
     let Some(localized) = export.get("localized").and_then(Value::as_object) else {
@@ -109,13 +104,10 @@ fn localized_index(export: &Value, prefixes: &[&str]) -> Index {
     index
 }
 
-/// Build an index from `data.<section>` with direct locale fields.
 fn data_index(export: &Value, section: &str) -> Index {
     data_index_at(export, &[section])
 }
 
-/// Build an index from a nested `data.*` section, keyed by its full path
-/// for provenance.
 fn data_index_at(export: &Value, sections: &[&str]) -> Index {
     let mut index = Index::default();
     let data = sections.iter().fold(export.get("data"), |value, section| {
@@ -245,7 +237,6 @@ fn confirmed_identity_match(export: &Value, kind: &str, id: &str) -> Option<Vec<
     }])
 }
 
-/// One matched corpus entry.
 #[derive(Debug, Clone)]
 struct Match {
     kind: String,
@@ -256,7 +247,6 @@ struct Match {
     sources: Vec<String>,
 }
 
-/// One excluded catalog identity with its reason.
 #[derive(Debug, Clone)]
 struct Exclusion {
     kind: String,
@@ -295,10 +285,6 @@ struct Report<'a> {
 }
 
 fn settings_surface(catalog: &Catalog) -> SettingsSurface {
-    // The declared label surface is the set of distinct rendered names;
-    // per-mode repeats (enabled maps, Limit Roles, Competitive Rules)
-    // share one label. The per-mode `enabled` members render no label
-    // (the mode header's `disabled` prefix instead) and are excluded.
     let namespaces = [
         ("namespace.main", "main"),
         ("namespace.lobby", "lobby"),
@@ -447,7 +433,6 @@ pub(crate) fn generate(
     out_dir: &Path,
     settings_out: &Path,
 ) -> Result<Vec<String>, String> {
-    // The base catalog must be valid before merging corpus data.
     let settings_catalog =
         Catalog::load_unverified(catalog_data).map_err(|error| format!("catalog data: {error}"))?;
     let export_text = std::fs::read_to_string(export_path)
@@ -459,7 +444,6 @@ pub(crate) fn generate(
     let catalog: Value =
         serde_json::from_str(catalog_data).map_err(|error| format!("catalog data: {error}"))?;
 
-    // --- builtin corpus -------------------------------------------------
     let actions = localized_index(&export, &["actions."]);
     let structural = {
         let mut index = localized_index(&export, &["other.rules."]);
@@ -638,7 +622,6 @@ pub(crate) fn generate(
     let total_matched: usize = coverage.iter().map(|(_, m, _)| m).sum();
     let total_entries: usize = coverage.iter().map(|(_, _, t)| t).sum();
 
-    // --- merge reviewed locale aliases into the catalog data -------------
     let (merged, dropped) = merge_localized_aliases(&catalog, &matches, &locales)?;
     for (kind, id, locale, spelling) in dropped {
         if let Some(matched) = matches.iter_mut().find(|m| m.kind == kind && m.id == id) {
@@ -655,7 +638,6 @@ pub(crate) fn generate(
     std::fs::write(catalog_file, &merged_text)
         .map_err(|error| format!("cannot write {}: {error}", catalog_file.display()))?;
 
-    // --- corpus manifest -------------------------------------------------
     let manifest = manifest(
         &meta,
         &matches,
@@ -671,7 +653,6 @@ pub(crate) fn generate(
     std::fs::write(&manifest_path, canonical_json(&manifest)?)
         .map_err(|error| format!("cannot write {}: {error}", manifest_path.display()))?;
 
-    // --- settings locale corpus ------------------------------------------
     let settings = settings_corpus(&export, settings_out, &settings_catalog)?;
     if let Some(parent) = settings_out.parent() {
         std::fs::create_dir_all(parent)
@@ -738,7 +719,6 @@ fn record_entry_match(
     }
 }
 
-/// The export index for one catalog enum domain.
 fn enum_domains(catalog: &Value) -> Result<Vec<String>, String> {
     let mut domains = Vec::new();
     for domain in catalog
@@ -797,9 +777,6 @@ fn locale_aliases(
                 aliases.insert(locale.clone(), spelling);
             }
             Ok(None) => {
-                // Partial coverage is recorded like an ambiguity: otherwise a
-                // candidate that simply lacks the locale is indistinguishable
-                // from a locale the export never carried at all.
                 exclusions.insert(
                     locale.clone(),
                     "no export candidate carries this locale".to_string(),
@@ -813,7 +790,6 @@ fn locale_aliases(
     (aliases, exclusions)
 }
 
-/// The en-US alias of a catalog entry/member.
 /// The en-US alias spellings of a catalog entry or enum member. A single
 /// string alias is a one-element list; an array lists alternative en-US
 /// spellings that are each eligible for exact export matching.
@@ -845,8 +821,6 @@ fn en_aliases(entry: &Value) -> Result<Vec<&str>, String> {
     }
 }
 
-/// Try every en-US alias spelling in order against the index; returns the
-/// first exact match with the alias that matched, or the last miss reason.
 fn match_en_aliases<'a>(
     index: &Index,
     aliases: &'a [&'a str],
@@ -861,7 +835,6 @@ fn match_en_aliases<'a>(
     Err(reason)
 }
 
-/// Canonical (sorted-key, pretty) JSON serialization, byte-idempotent.
 fn canonical_json(value: &Value) -> Result<String, String> {
     let mut out = serde_json::to_string_pretty(value)
         .map_err(|error| format!("cannot serialize JSON: {error}"))?;
@@ -1081,7 +1054,6 @@ fn record_alias_owners(owners: &mut AliasOwners, kind: &str, id: &str, entry: &V
     }
 }
 
-/// Set (or extend) the reviewed aliases of one catalog entry.
 fn set_alias(entry: &mut Value, locale: &str, spelling: &str) -> Result<(), String> {
     let Some(aliases) = entry.get_mut("aliases").and_then(Value::as_object_mut) else {
         return Err("catalog entry without aliases object".to_string());
@@ -1194,7 +1166,6 @@ fn manifest(
     })
 }
 
-/// The settings locale corpus for the declared settings surface.
 fn settings_corpus(
     export: &Value,
     settings_out: &Path,
@@ -1295,8 +1266,6 @@ fn settings_corpus(
         }
     }
 
-    // Split the flat matched entries into per-section maps mirroring the
-    // declared settings surface.
     let mut labels = Map::new();
     let mut namespaces = Map::new();
     let mut modes = Map::new();
@@ -1419,9 +1388,6 @@ fn preserve_existing_settings(entries: &mut Map<String, Value>, previous: &Value
         }
     }
     for (name, previous_entry) in previous_entries {
-        // Only merge into entries the current export still produces: a stale
-        // row must not resurrect an excluded entry, and previous spellings
-        // fill gaps but never override freshly matched upstream values.
         let Some(current_entry) = entries.get_mut(&name) else {
             continue;
         };
@@ -1430,12 +1396,19 @@ fn preserve_existing_settings(entries: &mut Map<String, Value>, previous: &Value
         else {
             continue;
         };
-        for locale in ["en-US", "zh-CN"] {
-            if let Some(value) = previous.get(locale).and_then(Value::as_str) {
-                current
-                    .entry(locale.to_string())
-                    .or_insert_with(|| Value::String(value.to_string()));
-            }
+        fill_locale_gaps(current, previous);
+    }
+}
+
+fn fill_locale_gaps(
+    current: &mut serde_json::Map<String, Value>,
+    previous: &serde_json::Map<String, Value>,
+) {
+    for locale in ["en-US", "zh-CN"] {
+        if let Some(value) = previous.get(locale).and_then(Value::as_str) {
+            current
+                .entry(locale.to_string())
+                .or_insert_with(|| Value::String(value.to_string()));
         }
     }
 }

@@ -1,7 +1,3 @@
-//! Catalog data pipeline: the checked-in JSON schema, loading, and
-//! deterministic digest. [`Catalog`] accessors live in `mod.rs`; this file
-//! owns how catalog bytes become the validated structure.
-
 use std::collections::{BTreeMap, HashMap};
 
 use serde::Deserialize;
@@ -21,10 +17,8 @@ struct CatalogFile {
     locales: Vec<String>,
     target: TargetMeta,
     provenance: Provenance,
-    /// The catalog dataset version; absent in ad-hoc test data.
     #[serde(default)]
     version: Option<String>,
-    /// The declared content digest; absent in ad-hoc test data.
     #[serde(default)]
     digest: Option<String>,
     #[serde(default)]
@@ -438,7 +432,6 @@ impl Catalog {
         Ok(())
     }
 
-    /// Every declared `paramDomains` domain must name a declared enum domain.
     fn validate_param_domains(&self) -> Result<()> {
         for entry in &self.entries {
             for (name, count) in [
@@ -627,10 +620,6 @@ impl Catalog {
         Ok(())
     }
 
-    /// Collect per-locale alias spellings for one catalog item: reject
-    /// undeclared locales, normalize each spelling list, hand every spelling
-    /// to `register` for the caller's index/dup check, and — when
-    /// `require_primary` — require coverage of the primary locale.
     fn collect_aliases(
         &mut self,
         id: &str,
@@ -669,7 +658,6 @@ impl Catalog {
 /// reproducible. Validation intentionally skips digest verification so a
 /// stale digest can be repaired by [`build_canonical`].
 pub fn canonicalize(json: &str) -> Result<String> {
-    // Validate the semantic content first.
     Catalog::load_unverified(json)?;
     let value: serde_json::Value = serde_json::from_str(json)
         .map_err(|error| CatalogError::malformed(format!("catalog data: {error}")))?;
@@ -687,8 +675,6 @@ pub fn build_canonical(json: &str) -> Result<String> {
         object.insert("digest".to_string(), serde_json::Value::String(digest));
     }
     let output = pretty_json(&value)?;
-    // Validate the semantic content (including the fresh digest) before
-    // returning the rebuilt file.
     Catalog::load(&output)?;
     Ok(output)
 }
@@ -710,8 +696,6 @@ pub fn content_digest(json: &str) -> Result<String> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
-/// Sorted-key pretty JSON with a trailing newline — the canonical catalog
-/// byte form all digest and rebuild paths share.
 fn pretty_json(value: &serde_json::Value) -> Result<String> {
     serde_json::to_string_pretty(value)
         .map(|mut out| {

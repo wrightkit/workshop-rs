@@ -2,6 +2,12 @@ use crate::catalog::{Catalog, Kind};
 use crate::core::error::{Result, WorkshopError};
 use crate::wir;
 
+fn is_known_call_name(catalog: &Catalog, name: &str, argument_count: usize) -> bool {
+    wir::is_canonical_helper_call(name, argument_count)
+        || catalog.entry(Kind::Value, name).is_some()
+        || catalog.entry(Kind::Operator, name).is_some()
+}
+
 pub(crate) fn validate_value(
     program: &wir::Program,
     catalog: &Catalog,
@@ -16,24 +22,31 @@ pub(crate) fn validate_value(
             if name == wir::AMBIGUOUS_ENUM_CALL {
                 return validate_ambiguous_enum(program, catalog, value_id, node.span);
             }
-            // Comparison operators are represented as call names (`==`, `<`,
-            // …) following the `Compare(a, op, b)` convention, so both value
-            // and operator identities are valid call names.
-            let canonical_helper = wir::is_canonical_helper_call(name, args.len());
-            let known = canonical_helper
-                || catalog.entry(Kind::Value, name).is_some()
-                || catalog.entry(Kind::Operator, name).is_some();
-            if !known {
-                // A catalog-unknown call is a completeness residual reported
-                // by `semantic_issues`; its signature is unknowable, but its
-                // argument values are still validated so a nested known
-                // violation is not masked.
-                if tolerate_residuals {
-                    for arg in args {
-                        validate_value(program, catalog, *arg, tolerate_residuals)?;
+            if is_known_call_name(catalog, name, args.len()) {
+                if name == "memberAccess" {
+                    if !(2..=3).contains(&args.len()) {
+                        return Err(WorkshopError::malformed(
+                            "memberAccess expects two or three arguments".to_string(),
+                            node.span,
+                        ));
+                    } else if !matches!(
+                        program.values.get(args[1]),
+                        Some(wir::ValueNode {
+                            value: wir::Value::String(_),
+                            ..
+                        })
+                    ) {
+                        return Err(WorkshopError::malformed(
+                            "memberAccess member must be a string".to_string(),
+                            node.span,
+                        ));
                     }
-                    return Ok(());
+                } else if !wir::is_canonical_helper_call(name, args.len()) {
+                    if let Some(entry) = catalog.entry(Kind::Value, name) {
+                        validate_call_signature(entry, args, node.span, program, catalog)?;
+                    }
                 }
+            } else if !tolerate_residuals {
                 return Err(WorkshopError::unknown(
                     "value",
                     name.clone(),
@@ -49,28 +62,6 @@ pub(crate) fn validate_value(
                         ),
                     crate::core::suggest::CANDIDATE_LIMIT,
                 )));
-            } else if name == "memberAccess" {
-                if !(2..=3).contains(&args.len()) {
-                    return Err(WorkshopError::malformed(
-                        "memberAccess expects two or three arguments".to_string(),
-                        node.span,
-                    ));
-                } else if !matches!(
-                    program.values.get(args[1]),
-                    Some(wir::ValueNode {
-                        value: wir::Value::String(_),
-                        ..
-                    })
-                ) {
-                    return Err(WorkshopError::malformed(
-                        "memberAccess member must be a string".to_string(),
-                        node.span,
-                    ));
-                }
-            } else if !canonical_helper {
-                if let Some(entry) = catalog.entry(Kind::Value, name) {
-                    validate_call_signature(entry, args, node.span, program, catalog)?;
-                }
             }
             for arg in args {
                 validate_value(program, catalog, *arg, tolerate_residuals)?;
@@ -214,15 +205,8 @@ pub(crate) fn validate_call_signature(
     if entry.param_count() == 0 && entry.required_param_count() == 0 {
         return Ok(());
     }
-    // Signatures whose leading `(player, variable)` parameters fold into one
-    // `PlayerVariable` WIR argument (`Stop Chasing Player Variable`, the
-    // player-variable index actions) supply two declared positions with a
-    // single argument whose shape the parser already enforces.
-    let folded = entry.wir_args_folded(program, args);
-    let supplied = args.len() + usize::from(folded);
-    // Trailing defaults may make a signature partial, but every declared
-    // required position must be supplied, and every supplied argument is
-    // still checked against its declared position.
+    let player_pair_folded = entry.wir_args_folded(program, args);
+    let supplied = args.len() + usize::from(player_pair_folded);
     if supplied < entry.required_param_count()
         || (!entry.is_variadic() && supplied > entry.param_count())
     {
@@ -253,10 +237,7 @@ pub(crate) fn validate_call_signature(
                 program.values.get(*arg_id).and_then(|node| node.span),
             ));
         }
-        // A folded `PlayerVariable` argument also supplies the declared
-        // `Player` position through its inner player; the value itself is
-        // checked at the `Variable` position it maps to.
-        if index == 0 && folded {
+        if index == 0 && player_pair_folded {
             if let Some(wir::ValueNode {
                 value: wir::Value::PlayerVariable { player, .. },
                 ..
@@ -276,8 +257,6 @@ pub(crate) fn validate_call_signature(
     Ok(())
 }
 
-/// Check one WIR-supplied value against the declared `index`-th parameter's
-/// semantic type and enum domain.
 fn validate_call_argument(
     entry: &crate::catalog::CatalogEntry,
     index: usize,
@@ -506,18 +485,18 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
         // other Player-returning expression rather than as an opaque runtime
         // expression (workshop-rs#336).
         (wir::Value::EventPlayer, expected) => semantic_types_compatible("Player", expected),
-        // Variables and other runtime expressions are intentionally accepted
-        // for value contracts whose runtime contents are not statically
-        // knowable, but their statically known reference category must not be
-        // coerced into another variable/reference category.
         (
             wir::Value::GlobalVariable(_)
             | wir::Value::PlayerVariable { .. }
             | wir::Value::Subroutine(_),
             expected,
-        ) => !matches!(expected, "Global Variable" | "Subroutine"),
+        ) => !is_variable_reference_type(expected),
         _ => false,
     }
+}
+
+fn is_variable_reference_type(expected: &str) -> bool {
+    matches!(expected, "Global Variable" | "Subroutine")
 }
 
 fn enum_type_matches_domain(

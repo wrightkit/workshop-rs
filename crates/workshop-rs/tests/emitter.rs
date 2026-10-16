@@ -1,12 +1,8 @@
-//! Emitter tests: byte-stable localized emission, round-trip
-//! equivalence, and structured failure for unsupported/unknown output.
-
 use workshop_rs::parser;
 use workshop_rs::wir;
 
 use super::common::{self, catalog, en, zh};
 
-/// Remove span suffixes so dumps can be compared modulo source locations.
 fn without_spans(dump: &str) -> String {
     let re = regex::Regex::new(r" @\d+:\d+:\d+-\d+:\d+").unwrap();
     re.replace_all(dump, "").into_owned()
@@ -62,8 +58,6 @@ fn emission_is_byte_stable_and_a_fixed_point() {
     let second = internal::emit(&program);
     assert_eq!(first, second, "emission must be byte-stable");
 
-    // The emitted text is a fixed point: re-emitting the reparsed program
-    // produces identical text.
     let reparsed = internal::parse(&first);
     let reemitted = internal::emit(&reparsed);
     assert_eq!(first, reemitted, "emission must be a fixed point");
@@ -540,7 +534,6 @@ fn program_with_settings(settings: Settings) -> wir::Program {
     }
 }
 
-/// The `settings` section of a Workshop text (the text starts with it).
 fn settings_section(text: &str) -> String {
     let start = text.find("settings").expect("text has a settings section");
     let mut depth = 0usize;
@@ -751,7 +744,6 @@ rule ("r") {
         !emitted.contains("End;"),
         "no trailing End; in the rule-final if-else"
     );
-    // Middle-of-rule if keeps End;.
     let middle = parser::parse_wir(
         r#"variables {
     global:
@@ -897,8 +889,6 @@ fn constant_float_format_arguments_use_two_decimals() {
 
 #[test]
 fn split_and_reescaped_value_strings_round_trip_byte_identically() {
-    // A long string (split continuation chain) and an escaped string parse
-    // and re-emit byte-identically through the ws parser.
     let mut program = wir::Program::default();
     let file = program
         .files
@@ -1157,9 +1147,6 @@ fn playervar_reads_parenthesize_the_receiver() {
 
 #[test]
 fn receiver_call_actions_and_values_emit_catalog_spellings() {
-    // `.opy` receiver calls lower to `Action::Call`/`Value::Call` whose
-    // `name` is the receiver method; emission resolves those names through
-    // the catalog (general path, no per-name special cases).
     let mut program = wir::Program::default();
     program
         .files

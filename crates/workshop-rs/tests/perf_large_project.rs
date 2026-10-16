@@ -13,7 +13,6 @@ use workshop_rs::program::{Action, Program, Value};
 const BASTION: &str = include_str!("fixtures/real-projects/bastion.ow");
 
 fn time<T>(label: &str, iterations: usize, mut operation: impl FnMut() -> T) -> Duration {
-    // warmup
     black_box(operation());
     let start = Instant::now();
     for _ in 0..iterations {

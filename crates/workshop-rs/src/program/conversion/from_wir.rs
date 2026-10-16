@@ -450,15 +450,17 @@ fn public_action_provenance(
         wir::Action::Disabled { action, .. } => {
             public_action_provenance(storage, *action, output)?;
         }
-        // Leaf actions emit one row; new block-shaped variants also need an
-        // explicit arm in `apply_action_provenance` to keep rows aligned.
-        _ => push(output, &action.value_args()),
+        wir::Action::SetGlobalVariable { .. }
+        | wir::Action::ModifyGlobalVariable { .. }
+        | wir::Action::SetPlayerVariable { .. }
+        | wir::Action::ModifyPlayerVariable { .. }
+        | wir::Action::AssignMember { .. }
+        | wir::Action::CallSubroutine { .. }
+        | wir::Action::Call { .. } => push(output, &action.value_args()),
     }
     Ok(())
 }
 
-/// The recorded provenance of a WIR value node and its children, mirroring
-/// the public [`Value`] tree.
 fn value_provenance(storage: &wir::Program, id: wir::ValueId) -> ValueProvenance {
     let Some(node) = storage.values.get(id) else {
         return ValueProvenance::default();

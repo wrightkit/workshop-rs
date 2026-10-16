@@ -1,13 +1,3 @@
-//! Deterministic localized Workshop emitter.
-//!
-//! Serializes validated public Workshop programs into localized Workshop text with a
-//! selectable output locale. Canonical catalog identities resolve to
-//! locale-specific spellings; missing target-locale mappings fail explicitly
-//! with a [`WorkshopError::MissingMapping`] diagnostic — never a guess, never
-//! a silent passthrough of another locale's spelling. Fallback to another
-//! declared locale is opt-in ([`EmitOptions`]) and every fell-back identity
-//! is recorded in [`EmitOutput::fallback_ids`].
-
 pub(crate) use std::fmt::Write;
 
 pub(crate) use crate::catalog::{Catalog, Kind, Locale};
@@ -102,9 +92,7 @@ pub(crate) struct EmitContext<'a> {
     pub(crate) program: &'a wir::Program,
     pub(crate) catalog: &'a Catalog,
     pub(crate) locale: Locale,
-    /// The opt-in fallback locale for missing target-locale mappings.
     pub(crate) fallback: Option<Locale>,
-    /// Canonical ids emitted with a fallback-locale spelling.
     pub(crate) fallback_ids: Vec<String>,
     pub(crate) out: String,
     pub(crate) line_count: usize,
@@ -112,7 +100,6 @@ pub(crate) struct EmitContext<'a> {
 
 impl EmitContext<'_> {
     pub(crate) fn run(&mut self) -> Result<()> {
-        // Section order: settings, variables, subroutines, rules.
         if let Some(settings) = &self.program.settings {
             self.emit_settings(settings)?;
             self.out.push('\n');
@@ -176,10 +163,6 @@ impl EmitContext<'_> {
     }
 }
 
-/// Format a float like the reference frontend: integers print without a
-/// decimal point, and non-integers print the shortest round-trip
-/// representation truncated to 16 significant digits (OverPy behavior;
-/// evidence: the pinned oracle snapshots).
 pub(crate) fn escape_string(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {

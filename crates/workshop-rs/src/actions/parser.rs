@@ -86,9 +86,6 @@ impl ParseContext<'_> {
         }
     }
 
-    /// Parse actions until a structural `else`/`elseIf`/`end` terminator
-    /// (not consumed; the token position is preserved) or the enclosing `}`
-    /// (consumed). Returns where the parse stopped.
     pub(crate) fn actions_until_end(&mut self) -> Result<(Vec<wir::ActionId>, Stop)> {
         let mut actions = Vec::new();
         loop {
@@ -104,11 +101,11 @@ impl ParseContext<'_> {
                     kind: TokenKind::Word(_),
                     ..
                 }) => {
-                    if let Some(action) = self.disabled_assignment_action()? {
+                    if let Some(action) = self.try_disabled_assignment_action()? {
                         actions.push(action);
                         continue;
                     }
-                    if let Some(action) = self.assignment_action()? {
+                    if let Some(action) = self.try_assignment_action()? {
                         actions.push(action);
                         continue;
                     }
@@ -141,8 +138,6 @@ impl ParseContext<'_> {
                             actions.push(self.disabled_action(call));
                             continue;
                         }
-                        // Not a recognized disabled form: rewind so the
-                        // modifier stays part of the dispatched phrase.
                         self.pos = saved;
                         let reparsed = self.action_spelling()?;
                         phrase = reparsed.0;
@@ -234,14 +229,12 @@ impl ParseContext<'_> {
         }
     }
 
-    /// Parse `disabled <assignment>;`, restoring the position when the
-    /// modifier is not followed by an assignment form.
-    fn disabled_assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
+    fn try_disabled_assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
         let saved = self.pos;
         if !self.consume_disabled() {
             return Ok(None);
         }
-        match self.assignment_action()? {
+        match self.try_assignment_action()? {
             Some(action) => Ok(Some(self.disabled_action(action))),
             None => {
                 self.pos = saved;
@@ -286,7 +279,6 @@ impl ParseContext<'_> {
         false
     }
 
-    /// Wrap a parsed action in the `disabled` modifier.
     fn disabled_action(&mut self, action: wir::ActionId) -> wir::ActionId {
         let span = self.target.actions.get(action).and_then(Action::span);
         self.target.actions.push(Action::Disabled { action, span })
@@ -319,7 +311,7 @@ impl ParseContext<'_> {
             .map(|_| offset)
     }
 
-    pub(crate) fn assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
+    pub(crate) fn try_assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
         let saved = self.pos;
         let Some(Token {
             kind: TokenKind::Word(first),
@@ -888,7 +880,6 @@ impl ParseContext<'_> {
                 )),
             },
             None => {
-                // Generic action call; the argument list is optional.
                 let Some(action) = self
                     .resolve_entry(Kind::Action, &phrase)
                     .or_else(|| self.resolve_entry(Kind::Action, &format!("{phrase} ")))

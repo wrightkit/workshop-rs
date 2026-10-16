@@ -157,7 +157,6 @@ impl CensusShard {
 }
 
 impl CensusCase {
-    /// A generated en-US probe case without an independent expectation.
     fn probe(case_id: impl Into<String>, features: Vec<FeatureId>, source: String) -> Self {
         Self {
             case_id: case_id.into(),
@@ -169,19 +168,16 @@ impl CensusCase {
         }
     }
 
-    /// Mark the case exercised by its generated source.
     fn exercise(mut self) -> Self {
         self.support = CensusSupport::Exercise;
         self
     }
 
-    /// Record a non-default source locale.
     fn locale(mut self, locale: &str) -> Self {
         self.source_locale = locale.to_string();
         self
     }
 
-    /// Override the support classification.
     #[cfg(test)]
     fn with_support(mut self, support: CensusSupport) -> Self {
         self.support = support;
@@ -531,9 +527,6 @@ fn content_id_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
     enum_member_cases(catalog, "content-ids", true, false)
 }
 
-/// Emit one probe case per enum member. `content_only` restricts to the
-/// Hero/Map content-id domains; `domain_feature` also records the domain
-/// itself as a covered feature.
 fn enum_member_cases(
     catalog: &Catalog,
     shard_id: &str,
@@ -788,8 +781,6 @@ fn localization_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
                         case_id,
                         features: vec![feature_id],
                         source_locale: locale.as_str().to_string(),
-                        // The row has no writable context; the source is a
-                        // placeholder only (known-gap cases are not run).
                         source: "settings {\n}".to_string(),
                         reference_source: None,
                         support: CensusSupport::KnownGap {
@@ -807,12 +798,8 @@ fn localization_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
     CensusShard::new("localization", cases)
 }
 
-/// Enum domains whose members are written in `Domain(Member)` constructor
-/// form (#448 census probes mirror `Catalog::enum_member_form`).
 const CONSTRUCTOR_DOMAINS: &[&str] = &["Hero", "Button", "Color", "Map"];
 
-/// A feature-safe name fragment: catalog `english` display names can carry
-/// spaces (`"Flag Carrier Abilities"`), which `FeatureId` rejects.
 fn slug(name: &str) -> String {
     name.chars()
         .map(|character| {
@@ -825,7 +812,6 @@ fn slug(name: &str) -> String {
         .collect()
 }
 
-/// The declared spelling of `id` in `locale`, falling back to en-US.
 fn localized_spelling(catalog: &Catalog, kind: Kind, locale: &Locale, id: &str) -> String {
     catalog
         .spelling(kind, locale, id)
@@ -834,7 +820,6 @@ fn localized_spelling(catalog: &Catalog, kind: Kind, locale: &Locale, id: &str) 
         .to_string()
 }
 
-/// The declared member spelling in `locale`, falling back to en-US.
 fn localized_member(catalog: &Catalog, domain: &str, member: &str, locale: &Locale) -> String {
     catalog
         .enum_spelling(domain, locale, member)
@@ -843,9 +828,6 @@ fn localized_member(catalog: &Catalog, domain: &str, member: &str, locale: &Loca
         .to_string()
 }
 
-/// A source-form argument for `param` of `entry` in `locale`, used to fill
-/// the non-tested positions of a probe call (#448). Declared defaults are
-/// written verbatim-resolved so the emission of a call stays stable.
 fn probe_filler(catalog: &Catalog, locale: &Locale, entry: &CatalogEntry, index: usize) -> String {
     if let Some(domain) = entry.param_domain(index) {
         let member = catalog
@@ -893,9 +875,6 @@ fn probe_filler(catalog: &Catalog, locale: &Locale, entry: &CatalogEntry, index:
     }
 }
 
-/// Source for a declared `paramDefaults` value: `Domain.MEMBER` resolves
-/// through the enum tables, `Hello` is a localized-string id, `null` and
-/// value ids resolve through the value catalog (#448).
 fn param_default_filler(catalog: &Catalog, locale: &Locale, default: &str) -> String {
     if let Some((domain, member)) = default.split_once('.') {
         let spelling = localized_member(catalog, domain, member, locale);
@@ -947,8 +926,6 @@ fn global_probe(catalog: &Catalog, locale: &Locale, operand: &str) -> String {
     probe_rule(catalog, locale, &format!("{set_global}(probe, {operand});"))
 }
 
-/// A probe source that writes `spelling` where `entry` belongs, for a
-/// catalog kind case in `locale` (#448).
 fn localized_probe(
     catalog: &Catalog,
     locale: &Locale,
@@ -1147,10 +1124,6 @@ fn structural_spelling_probe(
     }
 }
 
-/// A source that writes `spelling` where a member of `domain` belongs
-/// (#448): constructor domains wrap it, `EventTeam`/`EventPlayer` sit in
-/// the event header, and other domains prefer a declared host parameter,
-/// falling back to a bare member.
 fn member_probe(catalog: &Catalog, locale: &Locale, domain: &EnumDomain, spelling: &str) -> String {
     if CONSTRUCTOR_DOMAINS.contains(&domain.domain.as_str()) {
         let domain_spelling = domain.spelling(locale).unwrap_or(&domain.domain);
@@ -1201,14 +1174,9 @@ fn member_probe(catalog: &Catalog, locale: &Locale, domain: &EnumDomain, spellin
     }
 }
 
-/// Settings definitions indexed by the label and enum-member names they
-/// render, so a declared locale row can be placed in a real settings
-/// context (#448).
 struct SettingsSpellings {
     by_label: HashMap<String, Vec<SettingDefinition>>,
     by_member: HashMap<String, Vec<SettingDefinition>>,
-    /// `(locale, section, english)` → declared spelling, for the fixed
-    /// settings group/leaf names around the tested row (#448).
     names: HashMap<(String, String, String), String>,
 }
 
@@ -1246,8 +1214,6 @@ impl SettingsSpellings {
         }
     }
 
-    /// The declared `section` spelling for `english` in `locale`, falling
-    /// back to the en-US spelling then to the English name itself.
     fn name(&self, locale: &str, section: &str, english: &str) -> String {
         self.lookup(locale, section, english)
             .or_else(|| self.lookup(EN_US, section, english))
@@ -1342,10 +1308,6 @@ fn substitute_template(
     Some(spelling.replace("%1$s", &ability))
 }
 
-/// The `name { ... }` group stack for a definition's path, plus the leaf
-/// (#448), with every fixed group name in `locale`'s declared spelling.
-/// `hero` is the written hero group name when the path carries a `<hero>`
-/// slot.
 fn localized_settings_context(
     catalog: &Catalog,
     index: &SettingsSpellings,
@@ -1370,7 +1332,6 @@ fn localized_settings_context(
     let mut lines = vec![format!("{settings} {{")];
     let mut depth = 1;
     let parts: Vec<_> = definition.path().split('.').collect();
-    // The last part is the leaf key, not a group.
     for (part_index, part) in parts.iter().take(parts.len() - 1).enumerate() {
         let name = match *part {
             "gamemodes" => index.name(locale.as_str(), "namespaces", "modes"),
@@ -1396,8 +1357,6 @@ fn localized_settings_context(
     lines.join("\n")
 }
 
-/// A settings leaf value for `definition` in `locale`: the first declared
-/// member spelling for enum-like domains, literal forms otherwise (#448).
 fn leaf_value(
     index: &SettingsSpellings,
     locale: &Locale,
@@ -1429,9 +1388,6 @@ fn leaf_value(
     }
 }
 
-/// A probe source writing `name.spelling` in a real settings context for
-/// `locale`, or Err when no context can carry the row (for example a bare
-/// `%1$s` template without a hero-ability slot, #448).
 fn localized_settings_probe(
     catalog: &Catalog,
     index: &SettingsSpellings,
@@ -1661,7 +1617,7 @@ fn enum_probe(catalog: &Catalog, domain: &EnumDomain, member: &str) -> String {
         .unwrap_or(member);
     // Only the constructor-form domains parse `Domain(Member)`; every other
     // domain writes the member bare (mirrors `Catalog::enum_member_form`).
-    let operand = if matches!(domain.domain.as_str(), "Hero" | "Button" | "Color" | "Map") {
+    let operand = if CONSTRUCTOR_DOMAINS.contains(&domain.domain.as_str()) {
         format!("{domain_spelling}({member_spelling})")
     } else {
         member_spelling.to_string()
@@ -1785,7 +1741,6 @@ fn run_case(case: &CensusCase, shard_id: &str, catalog: &Catalog) -> Conformance
     }
 }
 
-/// A pipeline failure carrying the stage's reason code and locale.
 struct Fail {
     code: ReasonCode,
     detail: String,
@@ -1834,9 +1789,6 @@ fn execute_case(
     }
 }
 
-/// Run the census probe pipeline: en-US parse/validate/emit/reparse checks,
-/// the target-locale round trip, and the independent-reference comparison.
-/// Returns the matched comparison record and source locale on success.
 fn run_pipeline(
     case: &CensusCase,
     catalog: &Catalog,
@@ -2157,9 +2109,6 @@ mod tests {
             .validate_against(&catalog)
             .expect("census results use canonical catalog identities");
         assert_eq!(report.census, census.identity());
-        // Every declared case produces exactly one attributable result; the
-        // localization shard carries the two conversion probes plus one case
-        // per declared localized spelling (#448).
         assert_eq!(
             report.results.len(),
             census.cases().count(),
@@ -2181,8 +2130,6 @@ mod tests {
             localization_cases > 2,
             "localization shard must enumerate per-spelling cases"
         );
-        // Aliases that cannot be written in any context are explicit
-        // known-gap results, not silent passes or hidden inconclusive rows.
         assert!(
             report.results.iter().any(|result| {
                 result.case_id.starts_with("localization/")

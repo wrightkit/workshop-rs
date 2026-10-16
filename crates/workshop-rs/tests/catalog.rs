@@ -1,8 +1,3 @@
-//! Catalog tests: canonical identities resolve localized spellings to
-//! locale-independent ids and back, and catalog validation rejects
-//! malformed or colliding data. The primary locale (en-US) is complete;
-//! additional declared locales may be partially covered.
-
 use crate::common::{catalog, en, zh};
 use workshop_rs::catalog::{Catalog, Kind, Locale};
 
@@ -21,7 +16,6 @@ fn builtin_catalog_loads_and_declares_the_pinned_workshop_locales() {
             "pt-br", "ru-ru", "th-th", "tr-tr", "zh-cn", "zh-tw",
         ]
     );
-    // The primary locale is first and complete.
     assert_eq!(catalog.locales()[0], en());
     assert_eq!(catalog.primary_locale(), &en());
     assert_eq!(
@@ -38,7 +32,6 @@ fn builtin_catalog_loads_and_declares_the_pinned_workshop_locales() {
 fn localized_spelling_resolves_to_canonical_id_and_back() {
     let catalog = catalog();
 
-    // Action: "Disable Inspector Recording" -> disableInspector -> spelling.
     let entry = catalog
         .resolve(Kind::Action, &en(), "Disable Inspector Recording")
         .expect("spelling resolves");
@@ -48,7 +41,6 @@ fn localized_spelling_resolves_to_canonical_id_and_back() {
         Some("Disable Inspector Recording")
     );
 
-    // Value: multi-word "Count Of" -> countOf.
     let entry = catalog
         .resolve(Kind::Value, &en(), "Count Of")
         .expect("count of resolves");
@@ -58,7 +50,6 @@ fn localized_spelling_resolves_to_canonical_id_and_back() {
         Some("Count Of")
     );
 
-    // Structural: "For Global Variable" -> forGlobalVariable.
     let entry = catalog
         .resolve(Kind::Structural, &en(), "For Global Variable")
         .expect("structural resolves");
@@ -240,7 +231,6 @@ fn duplicate_aliases_fail_validation() {
 
 #[test]
 fn missing_primary_locale_alias_fails_validation() {
-    // The primary locale's declared surface must be complete.
     let bad = r#"{
         "schemaVersion": 1,
         "locales": ["en-US"],
@@ -309,7 +299,6 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
     // en-US spellings are catalog-owned.
     let catalog = catalog();
 
-    // Action with a full canonical param list.
     let effect = catalog
         .entry(Kind::Action, "createEffect")
         .expect("createEffect is in the catalog");
@@ -329,7 +318,6 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
         Some("Create Effect")
     );
 
-    // Value with no params.
     let event_player = catalog
         .entry(Kind::Value, "eventPlayer")
         .expect("eventPlayer is in the catalog");
@@ -339,7 +327,6 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
         Some("Event Player")
     );
 
-    // A shared canonical identity: `Wait`/`MinWait` both bind to `wait`.
     assert_eq!(
         catalog
             .entry(Kind::Action, "wait")
@@ -352,7 +339,6 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
     assert_eq!(crouch.param_name(0), Some("player"));
     assert_eq!(crouch.param_name(1), Some("enabled"));
 
-    // The exercised param surface resolves by en-US spelling too.
     assert!(
         catalog
             .resolve(
@@ -494,7 +480,6 @@ fn array_removal_value_and_modification_identities_are_distinct() {
 fn exercised_enum_domains_resolve_members_to_canonical_identity() {
     let catalog = catalog();
 
-    // Hero members resolve with their canonical ids and en-US spellings.
     assert_eq!(
         catalog.resolve_enum_member("Hero", &en(), "D.Va"),
         Some(("Hero".to_string(), "DVA".to_string()))
@@ -510,8 +495,6 @@ fn exercised_enum_domains_resolve_members_to_canonical_identity() {
         Some("Wrecking Ball")
     );
 
-    // Button, Team, Color, and the reevaluation domains exercised by the
-    // protect-ban closure.
     assert_eq!(
         catalog.resolve_enum_member("Button", &en(), "Ability 2"),
         Some(("Button".to_string(), "ABILITY_2".to_string()))
@@ -543,7 +526,6 @@ fn exercised_enum_domains_resolve_members_to_canonical_identity() {
         ))
     );
 
-    // Map members resolve (exercised by the protect-ban MapData surface).
     assert_eq!(
         catalog.resolve_enum_member("Map", &en(), "Watchpoint: Gibraltar"),
         Some(("Map".to_string(), "WATCHPOINT_GIBRALTAR".to_string()))
@@ -597,15 +579,11 @@ fn reevaluation_coverage_is_per_parameter() {
         Some(&[0, 2, 3, 4][..])
     );
 
-    // A member that names fields the action does not declare covers
-    // nothing, not the whole action: `Create Icon`'s COLOR selects only its
-    // Color parameter.
     let icon = catalog
         .entry(Kind::Action, "createIcon")
         .expect("createIcon");
     assert_eq!(icon.reevaluation_coverage("COLOR"), Some(&[4][..]));
 
-    // Non-Reeval actions and unknown members stay unknown.
     assert!(
         catalog
             .entry(Kind::Action, "setGlobalVariableAtIndex")
@@ -615,9 +593,6 @@ fn reevaluation_coverage_is_per_parameter() {
     );
     assert!(beam.reevaluation_coverage("NOT_A_MEMBER").is_none());
 
-    // Every *Reeval action in the committed catalog declares reviewed
-    // coverage for every member of its reevaluation domain — the dataset is
-    // complete, not partial.
     let mut reeval_actions = 0;
     for entry in catalog.entries_of(Kind::Action) {
         let Some(reeval_index) = (0..entry.param_count()).find(|index| {

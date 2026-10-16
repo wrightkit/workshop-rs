@@ -1,9 +1,3 @@
-//! Lookup-surface tests: `Catalog::lookup` answers in canonical Workshop
-//! terms (identity, kind, localized display name, signature, settings keys)
-//! derived from the same catalog and settings table that drive parsing and
-//! emission, and `unknown ... spelling` diagnostics carry nearest valid
-//! candidates.
-
 use crate::common::{catalog, en, zh};
 use workshop_rs::WorkshopError;
 use workshop_rs::catalog::{Kind, Locale};
@@ -72,16 +66,13 @@ fn signature_lists_params_defaults_and_inline_enum_members_once() {
         panic!("createHudText is an action with a signature");
     };
     let text = &signature.text;
-    // Required non-enum parameters show `name: Type`.
     assert!(
         text.starts_with("Create HUD Text(VisibleTo: Player|Array"),
         "{text}"
     );
     assert!(text.contains("Header: Object|String"), "{text}");
-    // Declared null defaults read `name?`; the type is omitted.
     assert!(text.contains("Subheader?"), "{text}");
     assert!(text.contains("Text?"), "{text}");
-    // Required enum parameters list the domain's members once per entry.
     assert!(
         text.contains("Location: HudPosition(Left|Right|Top)"),
         "{text}"
@@ -90,13 +81,9 @@ fn signature_lists_params_defaults_and_inline_enum_members_once() {
         text.contains("HeaderColor: Color(Yellow|White|Red|Orange|Green|Purple|Blue|Aqua|Sky Blue|Turquoise|Lime Green|Gray|Violet|Rose|Black|Team 1|Team 2)"),
         "{text}"
     );
-    // The same domain is not listed a second time.
     assert_eq!(text.matches("Yellow").count(), 1, "{text}");
-    // Optional enum parameters show the default in emitted call form, not
-    // the members: constructor-form domains render `Domain(Member)`.
     assert!(text.contains("SubheaderColor=Color(White)"), "{text}");
     assert!(text.contains("TextColor=Color(White)"), "{text}");
-    // Larger required enum domains still list members when inside the limit.
     assert!(
         text.contains(
             "Spectators: SpecVisibility(Default Visibility|Visible Always|Visible Never)"
@@ -114,7 +101,6 @@ fn signature_lists_params_defaults_and_inline_enum_members_once() {
     let subheader_color = &signature.params[7];
     assert_eq!(subheader_color.default.as_deref(), Some("Color.WHITE"));
 
-    // Referenced domains are exposed for follow-up member inspection.
     let domains: Vec<&str> = signature
         .domains
         .iter()
@@ -152,8 +138,6 @@ fn indexed_player_variable_signature_lists_the_surface_parameters() {
 #[test]
 fn large_enum_domain_reports_member_count_and_follow_up_lists_members() {
     let catalog = catalog();
-    // The member count is catalog data: derive it so a catalog update does
-    // not break the lookup-behavior assertion.
     let hero_count = catalog
         .enum_domain("Hero")
         .expect("the Hero domain exists")
@@ -187,7 +171,6 @@ fn large_enum_domain_reports_member_count_and_follow_up_lists_members() {
         .expect("the Hero domain is exposed for follow-up");
     assert_eq!(hero_domain.members.len(), hero_count);
 
-    // A follow-up query on the domain lists every member.
     let domain_matches = catalog.lookup(&en(), "Hero").expect("lookup");
     let domain = domain_matches.iter().find_map(|lookup| match lookup {
         LookupMatch::EnumDomain {
@@ -257,7 +240,6 @@ fn settings_lookup_by_path_prefix_includes_templated_paths() {
         "a path prefix returns the keys below it: {matches:?}"
     );
 
-    // Template segments accept concrete team and hero names.
     let hero_matches = catalog.lookup(&en(), "heroes.team1.ana").expect("lookup");
     let paths: Vec<&str> = hero_matches
         .iter()
@@ -280,9 +262,6 @@ fn settings_lookup_by_path_prefix_includes_templated_paths() {
 
 #[test]
 fn every_parser_accepted_construct_is_reachable_through_lookup() {
-    // Divergence protection: lookup draws from the same catalog and settings
-    // table as the parser and emitter, so every accepted identity and every
-    // declared settings path must resolve back to itself.
     let catalog = catalog();
     for kind in [Kind::Structural, Kind::Event, Kind::Action, Kind::Value] {
         for entry in catalog.entries_of(kind) {
@@ -314,7 +293,6 @@ fn every_parser_accepted_construct_is_reachable_through_lookup() {
 #[test]
 fn a_query_the_catalog_cannot_answer_is_explicitly_unsupported() {
     let catalog = catalog();
-    // An undeclared locale cannot answer localized names at all.
     let error = catalog
         .lookup(&Locale::new("es-CL"), "Create HUD Text")
         .expect_err("an undeclared locale is unsupported");
@@ -322,7 +300,6 @@ fn a_query_the_catalog_cannot_answer_is_explicitly_unsupported() {
         matches!(error, WorkshopError::Unsupported { .. }),
         "{error:?}"
     );
-    // A query with no near construct answers nothing rather than guessing.
     let matches = catalog.lookup(&en(), "zzqqxxjjj").expect("lookup answers");
     assert!(matches.is_empty(), "{matches:?}");
 }
@@ -387,8 +364,6 @@ fn unknown_spelling_candidates_cover_observed_near_spellings() {
 
 #[test]
 fn unknown_spelling_candidates_follow_the_rejecting_locale() {
-    // The candidate space is the rejecting locale's accepted spellings, so a
-    // zh-CN near spelling names zh-CN candidates.
     let source = "规则 (\"x\") {\n    事件 {\n        持续 - 全局;\n    }\n    动作 {\n        创建HUD文(0);\n    }\n}\n";
     let error = parser::parse(source, &catalog(), &zh())
         .expect_err("a near zh-CN action spelling must not parse");
@@ -451,10 +426,6 @@ fn unknown_settings_team_carries_valid_candidates() {
         "the nearest team names report as candidates: {candidates:?}"
     );
 }
-
-// ---------------------------------------------------------------------------
-// Scoped lookup (`lookup_within`)
-// ---------------------------------------------------------------------------
 
 #[test]
 fn scoped_lookup_lists_a_domains_members_in_domain_order() {
@@ -556,8 +527,6 @@ fn scoped_lookup_lists_callable_parameters_in_call_order() {
 #[test]
 fn scoped_query_filters_and_ranks_children_with_the_shared_matcher() {
     let catalog = catalog();
-    // The same `name_score` that ranks unscoped matches filters and ranks
-    // scoped children: "team 1" resolves the member, not a substring test.
     let members = catalog
         .lookup_within(&en(), "Team", Some("team 1"))
         .expect("scope resolves");
@@ -570,8 +539,6 @@ fn scoped_query_filters_and_ranks_children_with_the_shared_matcher() {
     };
     assert_eq!(member, "TEAM_1");
 
-    // Parameters are matchable children: a scoped query finds them by
-    // name through the same matcher.
     let params = catalog
         .lookup_within(&en(), "createHudText", Some("visibleTo"))
         .expect("scope resolves");
@@ -597,8 +564,6 @@ fn scoped_lookup_lists_settings_children_segment_by_segment() {
         .collect();
     assert_eq!(paths, ["heroes.<team>", "heroes.general"]);
 
-    // A scoped settings query matches leaf keys under the prefix: the
-    // `<team>` template scope reaches every templated leaf.
     let children = catalog
         .lookup_within(&en(), "heroes.<team>", Some("health"))
         .expect("scope resolves");
@@ -638,8 +603,6 @@ fn scoped_lookup_template_segments_accept_only_recognized_values() {
         .collect();
     assert_eq!(paths, ["heroes.general.disabledHeroes"]);
 
-    // A canonical team key is a recognized concrete `<team>` value: the
-    // team scope lists the shared hero keys and the `<hero>` slot.
     let children = catalog
         .lookup_within(&en(), "heroes.team1", None)
         .expect("a recognized team key resolves");

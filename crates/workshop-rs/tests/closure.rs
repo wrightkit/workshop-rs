@@ -11,7 +11,6 @@
 
 use super::internal;
 
-/// Parse an emitted artifact, re-emit, and assert byte-identity.
 fn assert_closure(label: &str, artifact: &str) {
     let program = internal::parse(artifact);
     let reemitted = internal::emit(&program);

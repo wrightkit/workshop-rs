@@ -1,5 +1,3 @@
-//! Reviewed reconciliation rules for overlapping raw settings projections.
-
 use std::sync::OnceLock;
 
 use serde::Deserialize;
@@ -49,8 +47,6 @@ pub(crate) fn data() -> &'static Reconciliation {
     })
 }
 
-/// Reject ambiguous reconciliation rules before callers can use their
-/// first-match lookup behavior.
 pub(crate) fn validate() -> Vec<String> {
     validate_manifest(data())
 }

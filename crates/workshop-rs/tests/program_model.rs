@@ -102,12 +102,10 @@ fn file_source_retention_prunes_spans_outside_the_text() {
         .expect("map applies");
     assert!(reparsed.rule_span(0).is_some());
 
-    // One line covers the `rule` header start but not the name span end.
     assert!(reparsed.set_file_source(FileId::from_index(0), "rule (\"t"));
     assert_eq!(reparsed.rule_span(0), None);
     reparsed.validate().expect("mapped program validates");
 
-    // A span that fits the retained text survives.
     let mut full = parser::parse(workshop, &catalog(), &en()).expect("parses");
     SourceMap::extract(&full).apply(&mut full).expect("applies");
     assert!(full.set_file_source(FileId::from_index(0), workshop));
@@ -127,7 +125,6 @@ fn file_source_retention_prunes_only_the_attached_file() {
         .apply(&mut program)
         .expect("map applies");
     let other = program.add_file(SourceFile::new("included.opy"));
-    // Re-point the rule span into the second file, as a multi-file map would.
     program
         .set_rule_span(
             0,
@@ -136,17 +133,14 @@ fn file_source_retention_prunes_only_the_attached_file() {
         .expect("file 1 span attaches");
     let name = program.rule_name_span(0).expect("file 0 name span");
 
-    // Attaching file 0 audits file-0 spans only.
     assert!(program.set_file_source(FileId::from_index(0), workshop));
     assert_eq!(program.rule_span(0).map(|s| s.file), Some(other));
     assert_eq!(program.rule_name_span(0), Some(name));
 
-    // Attaching file 1 audits file-1 spans only.
     assert!(program.set_file_source(other, "rule (\"tick\") {\n}\n"));
     assert!(program.rule_span(0).is_some());
     assert_eq!(program.rule_name_span(0), Some(name));
 
-    // A file-1 span past its attached text is still pruned on its own attach.
     program
         .set_rule_span(
             0,
@@ -576,7 +570,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         span_text(&program, program.subroutine_name_span(0).unwrap()),
         "tick"
     );
-    // Rule names sit inside their `rule("name")` string token.
     assert_eq!(
         span_text(&program, program.rule_name_span(0).unwrap()),
         "identifiers"
@@ -586,9 +579,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         "subroutine runner"
     );
 
-    // Every variable write names its target identifier: standard-form
-    // `Set`/`Modify`, infix `Global.name`/`Event Player.name` assignments,
-    // `For` loops, and `Call Subroutine` callees.
     for action in [0, 1, 2, 6, 7, 11] {
         assert_eq!(
             span_text(&program, program.action_identifier_span(0, action).unwrap()),
@@ -607,14 +597,10 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         span_text(&program, program.action_identifier_span(0, 5).unwrap()),
         "tick"
     );
-    // Generic calls carry no action-level identifier; the subroutine or
-    // variable they name is provenance of a value argument instead.
     assert_eq!(program.action_identifier_span(0, 8), None);
     assert_eq!(program.action_identifier_span(0, 9), None);
     assert_eq!(program.action_identifier_span(0, 10), None);
 
-    // A read nested inside another value is addressed by a path into the
-    // public value tree: `Add(Event Player.playerScore, 1)` argument 0.
     assert_eq!(
         span_text(
             &program,
@@ -622,7 +608,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         ),
         "playerScore"
     );
-    // `PlayerVariable` exposes its player expression as child 0.
     assert_eq!(
         span_text(
             &program,
@@ -632,7 +617,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         ),
         "Event Player"
     );
-    // `Vector` components are addressed as children 0/1/2.
     assert_eq!(
         span_text(
             &program,
@@ -640,7 +624,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         ),
         "3"
     );
-    // A `disabled` action's provenance is that of the wrapped action.
     assert_eq!(
         span_text(
             &program,
@@ -648,7 +631,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         ),
         "playerScore"
     );
-    // The same spellings inside a condition resolve to their identifiers.
     assert_eq!(
         span_text(
             &program,
@@ -663,8 +645,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         ),
         "cakePos"
     );
-    // `Start Rule`'s subroutine argument and an `... At Index` variable name
-    // record their identifiers as value provenance.
     assert_eq!(
         span_text(
             &program,
@@ -679,8 +659,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         ),
         "cakePos"
     );
-    // A string literal carrying the same spelling is string provenance, not
-    // the identifier; the real argument next to it inside `Custom String` is.
     assert_eq!(
         span_text(
             &program,
@@ -696,8 +674,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         "cakePos"
     );
 
-    // `For` action spans cover the full `For ... End;` block, starting at
-    // the `For` keyword rather than the last word of its phrase.
     assert!(
         span_text(&program, program.action_span(0, 11).unwrap())
             .starts_with("For Global Variable(cakePos, 0, 10, 1);")
@@ -708,8 +684,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
             .starts_with("For Player Variable(Event Player, playerScore, 0, 5, 1);")
     );
 
-    // Indexed writes are `... Variable At Index` calls: the action itself
-    // carries no identifier, the variable argument records the name.
     for action in [17, 18, 19, 20, 21] {
         assert_eq!(
             program.action_identifier_span(0, action),
@@ -736,8 +710,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         );
     }
 
-    // `Global Variable(name)` and `Player Variable(player, name)` read forms
-    // inside a `Set` value argument.
     assert_eq!(
         span_text(&program, program.action_identifier_span(0, 22).unwrap(),),
         "my var"
@@ -765,7 +737,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         ),
         "Event Player"
     );
-    // A parenthesized `(Event Player).name` read.
     assert_eq!(
         span_text(
             &program,
@@ -773,8 +744,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         ),
         "playerScore"
     );
-    // `Stop Chasing`/`Chase` variable forms record the name on the folded
-    // variable argument.
     for (action, expected) in [
         (24, "playerScore"),
         (25, "playerScore"),
@@ -792,7 +761,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
             "action {action}"
         );
     }
-    // `If` and `Else If` conditions carry their reads as value provenance.
     assert_eq!(
         span_text(
             &program,
@@ -808,14 +776,12 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         "playerScore"
     );
 
-    // A `Subroutine` event binding records the bound name.
     assert_eq!(
         span_text(&program, program.rule_event_name_span(1).unwrap()),
         "tick"
     );
     assert_eq!(program.rule_event_name_span(0), None);
 
-    // An empty path addresses the argument or condition value itself.
     assert_eq!(
         program.action_argument_value_span(0, 6, 0, &[]),
         program.action_argument_span(0, 6, 0)
@@ -824,7 +790,6 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         program.condition_value_span(0, 0, &[]),
         program.condition_span(0, 0)
     );
-    // Positions outside the value tree carry no span.
     assert_eq!(
         program.action_argument_value_span(0, 6, 0, &[0, 0, 0]),
         None
@@ -1029,9 +994,6 @@ fn fully_understood_program_reports_an_empty_residual_inventory() {
 
 #[test]
 fn residual_ordering_preserves_control_flow_materialization_order() {
-    // Value residuals follow the order value nodes take when materialized:
-    // `While`, `For`, and `Else If` headers land after their bodies, while an
-    // `If` header precedes its body.
     let catalog = catalog();
     let locale = workshop_rs::catalog::Locale::new("en-US");
     let source = r#"variables { global: 0: g }

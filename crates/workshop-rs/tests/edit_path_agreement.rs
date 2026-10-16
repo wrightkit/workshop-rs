@@ -26,8 +26,6 @@ use workshop_rs::settings::{
     SettingValue, Settings, SettingsNode, TeamId, definitions, definitions_by_id,
 };
 
-/// Parse a `settings { ... }` block to the carrier `write` mutates and
-/// `source_edit` addresses through `source`.
 fn parse_settings(source: &str) -> Settings {
     parser::parse(source, &common::catalog(), &common::en())
         .expect("settings source parses")
@@ -41,9 +39,6 @@ fn definition(path: &str) -> SettingDefinition {
         .unwrap_or_else(|| panic!("no definition for path {path}"))
 }
 
-/// Both sibling paths facing the same input: `write` mutates a clone of
-/// the carrier while `source_edit` derives a checked range from `source`
-/// against the untouched tree.
 fn both_paths(
     definition: &SettingDefinition,
     source: &str,
@@ -59,8 +54,6 @@ fn both_paths(
     (written, edited)
 }
 
-/// `write` rejects ⟺ `source_edit` rejects — and because the refusal comes
-/// from a shared check the diagnostic is identical on both paths.
 #[track_caller]
 fn assert_agree_reject(
     definition: &SettingDefinition,
@@ -79,9 +72,6 @@ fn assert_agree_reject(
     );
 }
 
-/// `write` accepts ⟺ `source_edit` accepts — and both land on the same
-/// resulting occurrence value: the written carrier reads back `value`, and
-/// the applied edit reparses to the same read.
 #[track_caller]
 fn assert_agree_accept(
     definition: &SettingDefinition,
@@ -132,8 +122,6 @@ fn group(name: &str, children: Vec<SettingsNode>) -> SettingsNode {
     }
 }
 
-/// `ensure_write_target`: a target the definition does not apply to is
-/// `NotApplicable` on both paths.
 #[test]
 fn rejects_not_applicable_targets_identically() {
     let settings = parse_settings("settings { main { Description: \"old\" } }");
@@ -143,7 +131,6 @@ fn rejects_not_applicable_targets_identically() {
     let enabled_heroes = definition("heroes.<team>.enabledHeroes");
 
     for (definition, settings, target, label) in [
-        // A global-scope definition does not apply to a mode.
         (
             &description,
             &settings,
@@ -165,7 +152,6 @@ fn rejects_not_applicable_targets_identically() {
             },
             "global definition with a hero target",
         ),
-        // A mode-pinned definition does not apply to other targets.
         (
             &enabled,
             &settings,
@@ -205,8 +191,6 @@ fn rejects_not_applicable_targets_identically() {
     }
 }
 
-/// `ensure_write_target`: a target whose applicability cannot be proven is
-/// `ApplicabilityUnknown` on both paths — writes fail closed.
 #[test]
 fn rejects_unknown_applicability_targets_identically() {
     let settings = parse_settings("settings { main { Description: \"old\" } }");
@@ -270,15 +254,11 @@ fn rejects_unknown_applicability_targets_identically() {
     }
 }
 
-/// `find_node`: no occurrence at the concrete path — missing leaf, missing
-/// group, and an intermediate leaf that blocks descent — is `NotFound` on
-/// both paths.
 #[test]
 fn rejects_missing_occurrences_identically() {
     let description = definition("main.description");
     let spectators = definition("lobby.spectatorSlots");
 
-    // The leaf's group is absent entirely.
     let no_lobby = parse_settings("settings { main { Description: \"old\" } }");
     assert_agree_reject(
         &spectators,
@@ -288,7 +268,6 @@ fn rejects_missing_occurrences_identically() {
         SettingValue::Number(4.0),
     );
 
-    // The group exists but the leaf is absent.
     let no_spectators = parse_settings("settings { lobby { Max FFA Players: 4 } }");
     assert_agree_reject(
         &spectators,
@@ -298,8 +277,6 @@ fn rejects_missing_occurrences_identically() {
         SettingValue::Number(4.0),
     );
 
-    // An intermediate node that is a leaf, not a group: descent ends, so
-    // the occurrence is missing rather than non-leaf.
     let leaf_main = Settings {
         span: None,
         children: vec![SettingsNode::Number {
@@ -316,8 +293,6 @@ fn rejects_missing_occurrences_identically() {
         SettingValue::String("new".to_string()),
     );
 
-    // A parsed occurrence under a different mode does not satisfy the
-    // requested mode's concrete path.
     let kill_cam = definitions_by_id(&SettingId::from("setting.gameMode.enableKillCam"))
         .find(|definition| definition.path() == "gamemodes.general.enableKillCam")
         .expect("enableKillCam definition");
@@ -341,7 +316,6 @@ fn rejects_non_leaf_occurrences_identically() {
     let description = definition("main.description");
     let map_rotation = definition("lobby.mapRotation");
 
-    // A parsed block under a catalogued scalar key is a `Group`.
     let grouped = parse_settings("settings { main { Description { Custom: X } } }");
     assert_agree_reject(
         &description,
@@ -351,8 +325,6 @@ fn rejects_non_leaf_occurrences_identically() {
         SettingValue::String("new".to_string()),
     );
 
-    // A catalogued enum key carrying an undeclared member is kept as a
-    // `RawValue` pass-through, not a scalar leaf.
     let raw_value_source = "settings { lobby { Map Rotation: Not A Member } }";
     let raw_value = parse_settings(raw_value_source);
     assert_agree_reject(
@@ -363,8 +335,6 @@ fn rejects_non_leaf_occurrences_identically() {
         SettingValue::Enum("afterAGame".to_string()),
     );
 
-    // Programmatically carried pass-through occurrences — `Raw` and
-    // `RawGroup` — refuse identically.
     for leaf in [
         SettingsNode::Raw {
             name: "description".to_string(),
@@ -395,8 +365,6 @@ fn rejects_non_leaf_occurrences_identically() {
     }
 }
 
-/// `validate_value`: a supplied value whose kind is not the domain's kind
-/// is `WrongValueKind` on both paths.
 #[test]
 fn rejects_wrong_value_kinds_identically() {
     let string_source = "settings { main { Description: \"old\" } }";
@@ -460,9 +428,6 @@ fn rejects_wrong_value_kinds_identically() {
     );
 }
 
-/// `validate_value`: domain-invalid supplied values — non-finite numbers,
-/// undeclared enum members, unknown heroes and maps — are `InvalidValue`
-/// on both paths.
 #[test]
 fn rejects_invalid_values_identically() {
     let number_source = "settings { lobby { Max Spectators: 2 } }";
@@ -540,9 +505,6 @@ fn rejects_unsupported_boolean_enum_false_identically() {
     );
 }
 
-/// The carrier-shape agreement `apply_value` enforces inside `write`: a
-/// leaf whose authored value kind is not the domain's is `WrongValueKind`
-/// on both paths.
 #[test]
 fn rejects_mismatched_leaf_shape_identically() {
     let description = definition("main.description");
@@ -603,8 +565,6 @@ fn repairs_a_leaf_holding_an_undeclared_value_identically() {
 
     let map_rotation = definition("lobby.mapRotation");
     let value = SettingValue::Enum("afterAGame".to_string());
-    // `write` accepts: the carrier's stale member is overwritten.
-    // `source_edit` must accept too: the edit rewrites the value bytes.
     assert_agree_accept(
         &map_rotation,
         source,
@@ -615,10 +575,6 @@ fn repairs_a_leaf_holding_an_undeclared_value_identically() {
     );
 }
 
-/// `write` accepts ⟺ `source_edit` accepts across the scalar leaf surface:
-/// every domain/kind spelling both paths support. The edit covers exactly
-/// the authored value bytes, and both paths converge on the same
-/// observable occurrence value.
 #[test]
 fn accepts_the_same_scalar_edits() {
     let cases = [
@@ -744,8 +700,6 @@ fn rejects_list_length_changes() {
 /// the boundary explicit.
 #[test]
 fn source_edit_fails_closed_where_no_scalar_edit_exists() {
-    // A same-length list write is a legal carrier mutation, but the
-    // brace-block member carries no value bytes for an edit to replace.
     let maps_source = "settings { modes { Skirmish { enabled maps { King's Row Winter } } } }";
     let enabled_maps = definition("gamemodes.skirmish.enabledMaps");
     let (written, edited) = both_paths(
@@ -761,8 +715,6 @@ fn source_edit_fails_closed_where_no_scalar_edit_exists() {
         "no scalar value bytes exist to replace: {edited:?}"
     );
 
-    // A presence-only flag is itself the value — there is no `:` to
-    // address a replacement through.
     let flag_source = "settings { extensions { Beam Effects } }";
     let beam_effects = definition("extensions.beamEffects");
     let (written, edited) = both_paths(
@@ -778,7 +730,6 @@ fn source_edit_fails_closed_where_no_scalar_edit_exists() {
         "no scalar value bytes exist to replace: {edited:?}"
     );
 
-    // A carrier with no recorded spans gives the edit nothing to anchor.
     let unspanned = Settings {
         span: None,
         children: vec![group(

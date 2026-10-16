@@ -206,9 +206,6 @@ fn span(file: workshop_rs::core::ids::Id<SourceFile>, line: u32, col: u32, end_c
     Span::new(file, Position::new(line, col), Position::new(line, end_col))
 }
 
-/// Build a WIR program representing the corpus Workshop surface: one global
-/// variable, a rule with a condition, a For loop, an If, a Modify action, a
-/// generic action, and the catalog-backed values.
 fn build_surface_program() -> wir::Program {
     let mut program = wir::Program::default();
     let file = program.files.push(SourceFile::new("workshop.txt"));
@@ -413,7 +410,6 @@ fn unknown_action_id_is_rejected_with_location() {
 #[test]
 fn unknown_enum_member_is_rejected() {
     let mut program = build_surface_program();
-    // The Color enum node is at a known value id; replace its member.
     for node in program.values.iter() {
         if let Value::Enum {
             value_type, value, ..
@@ -424,7 +420,6 @@ fn unknown_enum_member_is_rejected() {
             }
         }
     }
-    // Rebuild a bad enum node: find the Color enum and mutate it.
     let color_id = program
         .values
         .iter()
@@ -469,11 +464,9 @@ fn unknown_value_id_is_rejected() {
 
 #[test]
 fn canonical_validation_is_locale_independent() {
-    // Resolution uses canonical ids; locale spelling never appears in WIR.
     let program = build_surface_program();
     let _ = en();
     validate::validate_canonical_ids_wir(&program, &catalog()).expect("valid");
-    // No WIR dump contains a localized spelling.
     let dump = program.dump();
     assert!(!dump.contains("Disable Inspector Recording"));
 }
@@ -483,19 +476,16 @@ fn canonical_validation_returns_first_error_and_short_circuits() {
     let catalog = catalog();
     let mut program = wir::Program::default();
 
-    // Action 1: Unknown action "unknownActionOne"
     let action_1 = program.actions.push(Action::Call {
         name: "unknownActionOne".into(),
         args: vec![],
         span: None,
     });
-    // Action 2: Unknown action "unknownActionTwo"
     let action_2 = program.actions.push(Action::Call {
         name: "unknownActionTwo".into(),
         args: vec![],
         span: None,
     });
-    // Rule 1 has action_1 then action_2
     program.rules.push(wir::Rule {
         name: "rule_one".into(),
         span: None,
@@ -506,7 +496,6 @@ fn canonical_validation_returns_first_error_and_short_circuits() {
         actions: vec![action_1, action_2],
     });
 
-    // Action 3: Unknown action "unknownActionThree" in Rule 2
     let action_3 = program.actions.push(Action::Call {
         name: "unknownActionThree".into(),
         args: vec![],
@@ -529,7 +518,6 @@ fn canonical_validation_returns_first_error_and_short_circuits() {
         "expected first error for unknownActionOne, got: {error}"
     );
 
-    // Also verify event error precedes action error
     let mut program_event = wir::Program::default();
     let bad_action = program_event.actions.push(Action::Call {
         name: "unknownActionInEventTest".into(),
@@ -556,7 +544,6 @@ fn canonical_validation_returns_first_error_and_short_circuits() {
         "expected event error, got: {event_error}"
     );
 
-    // Action error precedes Condition error in the same rule
     let mut program_action_cond = wir::Program::default();
     let bad_action = program_action_cond.actions.push(Action::Call {
         name: "unknownActionBeforeCondition".into(),
@@ -591,9 +578,7 @@ fn canonical_validation_returns_first_error_and_short_circuits() {
         "expected action error before condition error, got: {action_cond_error}"
     );
 
-    // Call signature error precedes argument value error
     let mut program_sig = wir::Program::default();
-    // "Wait" requires at least 1 argument; passing empty args causes arity error before arg evaluation
     let bad_call = program_sig.actions.push(Action::Call {
         name: "wait".into(),
         args: vec![],
@@ -615,7 +600,6 @@ fn canonical_validation_returns_first_error_and_short_circuits() {
         "expected arity error, got: {sig_error}"
     );
 
-    // Argument 1 error precedes Argument 2 error
     let mut program_args = wir::Program::default();
     let bad_arg1 = program_args.values.push(ValueNode::new(
         Value::Call {
@@ -631,9 +615,6 @@ fn canonical_validation_returns_first_error_and_short_circuits() {
         },
         None,
     ));
-    // `modifyGlobalVariable` requires three arguments; a valid third argument
-    // keeps this Call inside the declared signature so argument errors are
-    // reached in order.
     let good_arg3 = program_args.values.push(ValueNode::new(
         Value::Number {
             value: 1.0,

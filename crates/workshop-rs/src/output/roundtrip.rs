@@ -1,10 +1,3 @@
-//! Cross-language Workshop round-trip compatibility suite.
-//!
-//! [`round_trip`] records the `Workshop(locale) -> Program -> Workshop(locale)
-//! -> Program` regression check, and [`equivalent`] compares
-//! two public programs structurally, ignoring presentation-only differences
-//! (source spans and file paths) while preserving operations, references,
-//! control flow, and values.
 use crate::wir;
 
 use crate::catalog::{Catalog, Locale};
@@ -142,9 +135,6 @@ pub(crate) fn equivalent_wir(a: &wir::Program, b: &wir::Program) -> bool {
     if subs_a != subs_b {
         return false;
     }
-    // Emission intentionally drops pass-only/condition-only rules because
-    // they have no executable behavior. Ignore those presentation-only
-    // source rules when comparing observable semantics.
     let rules_a: Vec<_> = a
         .rules
         .iter()
@@ -192,8 +182,6 @@ fn nodes_equivalent(
                         children: right, ..
                     },
                 ) => nodes_equivalent(left, right),
-                // The pass-through mark is an emission hint: a `RawGroup`
-                // reparsed as a `Group` is semantically the same block.
                 (
                     crate::settings::SettingsNode::Group {
                         name: left_name,

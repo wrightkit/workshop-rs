@@ -1,10 +1,7 @@
-//! Deterministic debug dump for the Workshop IR model.
-
 use crate::core::source::Span;
 
 use super::{Action, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Program, Value};
 
-/// Render a deterministic, human-readable dump of the workshop program.
 pub(crate) fn dump(program: &Program) -> String {
     let mut out = String::new();
     out.push_str("program (Workshop IR)\n");
@@ -39,8 +36,6 @@ pub(crate) fn dump(program: &Program) -> String {
     out
 }
 
-/// `name`/`index`/`span` access shared by the variable and subroutine
-/// declaration tables for the header dump.
 trait Declared {
     fn name(&self) -> &str;
     fn index(&self) -> u32;
@@ -148,8 +143,6 @@ fn player_event_name(kind: PlayerEventKind) -> &'static str {
     }
 }
 
-/// The infix separator for assignment dumps: ` = ` for sets, the canonical
-/// modify operator spelling for `Modify*`/`AssignMember`.
 fn op_separator(action: &Action) -> String {
     action
         .modify_op()

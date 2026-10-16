@@ -1,7 +1,3 @@
-//! Cross-language round-trip suite: every supported-locale fixture
-//! round-trips with regression fixtures; equivalence ignores presentation-only
-//! differences, and negative fixtures fail at the right stage.
-
 use super::common::{self, catalog, en};
 use super::internal;
 use workshop_rs::roundtrip::{self, RoundTripRecord};
@@ -43,8 +39,6 @@ fn every_corpus_fixture_round_trips_with_full_evidence() {
 
 #[test]
 fn same_locale_round_trip_is_a_release_gate() {
-    // The suite fails closed: any fixture failing round-trip equivalence
-    // blocks the gate, including unpinned shared preset members.
     let failures: Vec<String> = [
         "basic-rule",
         "control-flow",
@@ -77,9 +71,7 @@ fn same_locale_round_trip_is_a_release_gate() {
 fn equivalence_ignores_presentation_but_preserves_semantics() {
     let a = workshop_rs::wir::Program::default();
     let b = workshop_rs::wir::Program::default();
-    // Two empty programs are equivalent.
     assert!(roundtrip::equivalent_wir(&a, &b));
-    // Same semantics, different file ids in spans: still equivalent.
     let mut c = workshop_rs::wir::Program::default();
     c.files
         .push(workshop_rs::source::SourceFile::new("other.txt"));
@@ -165,7 +157,6 @@ fn malformed_input_is_recorded_not_crashed() {
 
 #[test]
 fn unknown_builtin_fails_at_emit_stage() {
-    // A program that parses but contains a non-catalog value fails emit.
     let mut program = workshop_rs::wir::Program::default();
     program
         .files
@@ -191,7 +182,6 @@ fn unknown_builtin_fails_at_emit_stage() {
         conditions: vec![],
         actions: vec![call],
     });
-    // Equivalent to the round-trip emit stage: emission of unknown ids fails.
     let error = internal::try_emit(&program).expect_err("unknown id");
     assert!(error.to_string().contains("notACatalogId"));
 }
@@ -268,8 +258,6 @@ fn context_free_chase_none_is_preserved() {
 
 #[test]
 fn context_chase_none_emission_is_a_fixed_point() {
-    // Parse the emitted form with context, emit, reparse with context, and
-    // emit again: the text is a fixed point.
     let text = "variables { global: 0: g }\nrule (\"chase\") { event { Ongoing - Global; } actions { Chase Global Variable Over Time(Global.g, 0, 30, None); } }";
     let _catalog = catalog();
     let first = internal::parse(text);

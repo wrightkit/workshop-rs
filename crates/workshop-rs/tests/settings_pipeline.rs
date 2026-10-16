@@ -1,6 +1,3 @@
-//! End-to-end raw Workshop settings coverage using the reviewed en-US and
-//! zh-CN settings mappings.
-
 use super::common::{self, catalog, en, zh};
 use super::internal;
 use workshop_rs::catalog::Catalog;
@@ -1216,8 +1213,6 @@ fn declared_modes_inherit_general_settings_entries() {
         ],
     };
     assert!(check_emission(&settings).is_empty());
-    // The inherited path resolves to the same canonical definition as the
-    // `general` leaf.
     let inherited = workshop_rs::settings::definition(&[
         workshop_rs::settings::PathPart::Part("gamemodes"),
         workshop_rs::settings::PathPart::Part("ffa"),
@@ -1263,7 +1258,6 @@ fn declared_modes_inherit_general_settings_entries() {
         "{errors:?}"
     );
 
-    // An undeclared mode slot keeps every member outside the emission table.
     let settings = Settings {
         span: None,
         children: vec![group(
@@ -1374,8 +1368,6 @@ rule("r")
     )
 }
 
-/// `check` (parse + `Program::validate`) and `compile` (`emitter::emit`) must
-/// agree on settings blocks: same failure, same message, same span.
 fn assert_check_compile_parity(source: &str) {
     let program = parser::parse(source, &catalog(), &en()).expect("source parses");
     let check = program.validate();
@@ -1426,8 +1418,6 @@ fn issue_360_accent_stripped_map_is_rejected_with_suggestion() {
         "{error}"
     );
     assert!(error.span().is_some());
-    // The structured diagnostic carries the suggestion so a caller can
-    // apply it without parsing the message.
     let diagnostics = program.settings_diagnostics();
     assert_eq!(diagnostics.len(), 1);
     assert_eq!(
@@ -1439,7 +1429,6 @@ fn issue_360_accent_stripped_map_is_rejected_with_suggestion() {
 
 #[test]
 fn issue_360_distant_and_ambiguous_spellings_suggest_nothing() {
-    // Distant spelling: no candidate is close.
     let source = issue_360_source("enabled maps", "Zzyzx Wonderland");
     let program = parser::parse(&source, &catalog(), &en()).expect("source parses");
     let error = program.validate().expect_err("check rejects the map");
@@ -1479,8 +1468,6 @@ rule("r")
 "#;
     match parser::parse(ambiguous, &catalog(), &en()) {
         Err(error) => {
-            // The unknown-spelling diagnostic names the tied candidates
-            // rather than collapsing the ambiguity into one suggestion.
             let message = error.to_string();
             assert!(
                 message.contains("'Team 1'") && message.contains("'Team 2'"),
@@ -1502,15 +1489,11 @@ rule("r")
 
 #[test]
 fn issue_360_unknown_braced_key_is_kept_as_written_with_a_suggestion() {
-    // `Enabled Mpas` does not resolve, so the braced member is an opaque
-    // block emitted as written; the residual names `enabled maps`.
     let source = issue_360_source("Enabled Mpas", "Château Guillard");
     let program = parser::parse(&source, &catalog(), &en()).expect("source parses");
     program
         .validate()
         .expect("an uncatalogued block is carried as written");
-    // A block key close to one declared spelling reports a warning, not an
-    // error: emission still accepts it.
     let warnings: Vec<_> = program
         .settings_diagnostics()
         .into_iter()
@@ -1540,8 +1523,6 @@ fn issue_360_unknown_braced_key_is_kept_as_written_with_a_suggestion() {
 
 #[test]
 fn undeclared_settings_values_and_empty_members_round_trip_as_written() {
-    // Values the catalog does not declare, an empty `name:` member, and
-    // adjacent value tokens are written back exactly as authored.
     let source = r#"settings
 {
     lobby
@@ -1682,15 +1663,12 @@ rule("r")
     for line in ["Map Rotation {", "a", "b"] {
         assert!(lines.contains(&line), "{line:?} in {emitted}");
     }
-    // The emitted text reparses, validates, and re-emits identically.
     let reparsed = parser::parse(&emitted, &catalog(), &en()).expect("emitted text reparses");
     reparsed.validate().expect("emitted text validates");
     assert_eq!(
         emitter::emit(&reparsed, &catalog(), &en()).expect("re-emits"),
         emitted
     );
-    // The carried block is a residual under its canonical key, not a
-    // misspelling.
     let issue = program
         .semantic_issues(&catalog())
         .into_iter()
@@ -1706,9 +1684,6 @@ rule("r")
 
 #[test]
 fn issue_412_catalogued_key_block_emits_the_display_name() {
-    // A `SettingsNode::Group` under a catalogued key writes the localized
-    // display name with opaque children; an uncatalogued key keeps its
-    // authored name.
     use workshop_rs::settings::{Settings, SettingsNode};
 
     let raw = |name: &str| SettingsNode::Raw {
@@ -1792,17 +1767,13 @@ fn issue_417_pass_through_groups_emit_verbatim_at_resolved_positions() {
                 vec![group(
                     "allTeams",
                     vec![
-                        // A team member that is no hero: verbatim group.
                         raw_group("mccree", vec![raw_value("health%", "50")]),
-                        // A catalogued hero-list name carried verbatim.
                         raw_group("enabledHeroes", vec![raw("mccree"), raw("genji")]),
-                        // A catalogued scalar keeps canonical emission.
                         SettingsNode::Number {
                             name: "damageDealt%".into(),
                             value: 50.0,
                             span: None,
                         },
-                        // An inapplicable hero key carried as a verbatim block.
                         group(
                             "ana",
                             vec![raw_group("ability3Cooldown%", vec![raw("11"), raw("22")])],
@@ -1841,9 +1812,6 @@ fn issue_417_pass_through_groups_emit_verbatim_at_resolved_positions() {
 
 #[test]
 fn issue_417_unmarked_members_keep_name_and_kind_validation() {
-    // The pass-through mark is explicit: unmarked nodes still resolve names
-    // and kinds, and a typed leaf inside a pass-through block still has no
-    // written form.
     use workshop_rs::settings::{Settings, SettingsNode};
 
     let group = |name: &str, children: Vec<SettingsNode>| SettingsNode::Group {
@@ -1891,8 +1859,6 @@ fn issue_417_unmarked_members_keep_name_and_kind_validation() {
 
 #[test]
 fn issue_360_opaque_settings_remain_verbatim() {
-    // Unrecognized leaf members and `settings.workshop` payloads stay
-    // project-defined: both check and compile accept them unchanged.
     let source = r#"settings
 {
     main
@@ -2278,9 +2244,6 @@ rule("r")
 #[test]
 fn correctly_spelled_and_distant_members_warn_on_nothing() {
     use workshop_rs::settings::DiagnosticSeverity;
-    // Correctly spelled declared members and uncatalogued spellings close to
-    // nothing produce no warning; `semantic_issues` classifies the near-miss
-    // separately from a project-defined construct.
     let source = issue_360_source("enabled maps", "Route 66");
     let catalog = catalog();
     let program = parser::parse(&source, &catalog, &en()).expect("source parses");

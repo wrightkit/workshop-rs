@@ -262,8 +262,6 @@ const FALLBACK_RULE: &str = "rule (\"setup\") {
 
 #[test]
 fn opt_in_fallback_emits_with_recorded_fallback_ids() {
-    // Fallback is opt-in: with a fallback locale the emission succeeds and
-    // the fell-back identities are recorded (visible in tooling output).
     let catalog = catalog();
     let program = internal::parse(FALLBACK_RULE);
     let options = EmitOptions {
@@ -296,7 +294,6 @@ fn opt_in_fallback_emits_with_recorded_fallback_ids() {
 
 #[test]
 fn opt_in_fallback_conversion_round_trips_through_zh_cn() {
-    // Convert en-US to an unsupported locale with fallback to en-US.
     let catalog = catalog();
     let options = ConvertOptions {
         fallback_locale: Some(en()),
@@ -331,8 +328,6 @@ fn parsing_zh_cn_input_uses_corpus_aliases() {
 
 #[test]
 fn explicit_zh_cn_override_passes_locale_support() {
-    // The locale machinery accepts an explicit override to a declared
-    // locale, independently of the corpus coverage.
     use workshop_rs::detect;
     let catalog = catalog();
     let locale = detect::resolve_locale("garbage", &catalog, Some(&zh())).expect("override wins");
@@ -539,8 +534,6 @@ fn partial_coverage_fails_explicitly_only_for_unmapped_identities() {
 
 #[test]
 fn canonical_ids_are_locale_independent_in_wir() {
-    // Parsing the same program in en-US and xx-YY yields the same canonical
-    // WIR (ids, not spellings).
     let catalog = synthetic_catalog();
     let en_program = internal::parse(SYNTHETIC_SOURCE);
     let xx_program =

@@ -1,17 +1,11 @@
-//! Structured IR errors.
-//!
-//! All fallible IR operations (conversion, validation, lowering) report
-//! [`IrError`] with a stable code and, when the offending source position is
-//! known, a span. Human-readable wording is not part of the stable contract.
-
 use crate::core::source::Span;
 
-/// A structured IR error.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum IrError {
-    /// A node reference is dangling or out of range.
-    DanglingReference { what: &'static str, id: u32 },
-    /// A structural or invariant violation.
+    DanglingReference {
+        what: &'static str,
+        id: u32,
+    },
     Invalid {
         code: &'static str,
         message: String,
@@ -20,7 +14,6 @@ pub(crate) enum IrError {
 }
 
 impl IrError {
-    /// Stable machine-readable code.
     pub(crate) fn code(&self) -> &'static str {
         match self {
             IrError::DanglingReference { .. } => "dangling-reference",
@@ -28,7 +21,6 @@ impl IrError {
         }
     }
 
-    /// Human-readable message.
     pub(crate) fn message(&self) -> String {
         match self {
             IrError::DanglingReference { what, id } => {
@@ -38,7 +30,6 @@ impl IrError {
         }
     }
 
-    /// The offending source span, when known.
     pub(crate) fn span(&self) -> Option<Span> {
         match self {
             IrError::Invalid { span, .. } => *span,

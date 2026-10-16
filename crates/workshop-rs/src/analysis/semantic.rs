@@ -1,13 +1,3 @@
-//! Semantic-completeness inspection for permissive raw Workshop parsing.
-//!
-//! Inspection is defined over the public canonical `Program` model and is
-//! independent from structural validation: residuals observable in the public
-//! model are reported even when the program cannot be materialized to
-//! internal WIR. Structural validity deliberately remains separate from this
-//! report: a preserved node can be structurally valid while still being
-//! unsuitable for definitive analysis, and a structurally invalid program can
-//! still carry inspectable semantic residuals.
-
 use crate::catalog::{Catalog, Kind};
 use crate::core::source::Span;
 use crate::program::{action_argument_values, value_children};
@@ -102,8 +92,6 @@ pub fn inspect(program: &crate::Program, catalog: &Catalog) -> Vec<SemanticIssue
                 kind: IncompletenessKind::RawSetting,
                 name: member.name.to_string(),
                 span: member.span,
-                // A member close to exactly one declared spelling is a
-                // likely misspelling of it, not a project-defined construct.
                 classification: match member.suggestion {
                     Some(_) => ResidualClassification::CatalogSpellingNearMiss,
                     None => ResidualClassification::ProjectDefinedConstruct,
@@ -236,12 +224,6 @@ fn inspect_action(
     }
 }
 
-/// Visit every action value argument in the order internal materialization
-/// pushes value nodes: an `If` header precedes its body, while `While`,
-/// `For`, and `Else If` headers follow their bodies. Control-flow terminators
-/// stop a body scan without being consumed; a stray terminator at stream top
-/// level is visited like any other action, so malformed rules still expose
-/// every observable value. `stop_at_terminator` distinguishes the two scans.
 fn inspect_action_values(
     actions: &[crate::Action],
     position: &mut usize,
@@ -306,8 +288,6 @@ fn inspect_action_values(
     }
 }
 
-/// Inspect the direct value arguments of one public action in their mapped
-/// order.
 fn inspect_action_arguments(
     rule: usize,
     action: usize,
@@ -328,9 +308,6 @@ fn inspect_action_arguments(
     }
 }
 
-/// Walk a public value tree in post-order — children before their node, the
-/// order value nodes take when materialized to the internal arena — flagging
-/// every `Value::Call` identity the catalog does not resolve.
 fn inspect_value_tree(
     value: &crate::Value,
     path: &mut Vec<usize>,
@@ -345,9 +322,6 @@ fn inspect_value_tree(
         path.pop();
     }
     if let crate::Value::Call { name, args } = value {
-        // These names are canonical helpers rather than Workshop
-        // builtins: memberAccess preserves dynamic receiver properties, and
-        // infix operators are lowered to their source spelling for emission.
         let canonical_helper = name == crate::wir::AMBIGUOUS_ENUM_CALL
             || crate::wir::is_canonical_helper_call(name, args.len());
         if canonical_helper {

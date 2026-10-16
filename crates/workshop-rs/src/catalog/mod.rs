@@ -530,7 +530,6 @@ pub struct Catalog {
     pub(crate) normalized: NormalizedIndex,
 }
 
-/// Catalog loading and digest machinery lives in `load.rs`.
 mod load;
 
 pub use load::{build_canonical, canonicalize, content_digest};

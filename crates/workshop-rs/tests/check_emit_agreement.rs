@@ -23,8 +23,6 @@ use common::{catalog, en};
 use workshop_rs::settings::{DiagnosticSeverity, Settings, SettingsNode, check_emission};
 use workshop_rs::{Program, emitter, parser};
 
-/// The pipeline verdict for one input. `ParseRejected` inputs never reach
-/// check or emit — rejection is uniform by construction.
 #[derive(Debug, PartialEq, Eq)]
 enum Verdict {
     ParseRejected,
@@ -32,20 +30,12 @@ enum Verdict {
     Rejected,
 }
 
-/// One parsed-input run through the pipeline.
 #[derive(Debug)]
 struct Outcome {
     verdict: Verdict,
-    /// Error-severity settings diagnostics (`check`), empty when the parse
-    /// failed or check accepted.
     check_errors: Vec<String>,
-    /// Any warning diagnostics; warnings describe accepted members and must
-    /// never coincide with a rejection at either stage.
     warnings: Vec<String>,
-    /// Emission result text or error message; `None` when parse failed.
     emit: Option<Result<String, String>>,
-    /// `Program::validate` — the public check entry — agrees with the
-    /// diagnostic list (it fails on the first error).
     validate_ok: bool,
 }
 
@@ -126,10 +116,6 @@ fn run_tree(children: Vec<SettingsNode>) -> Outcome {
     }
 }
 
-/// The agreement assertion at the heart of the issue: for every input, the
-/// accept/reject outcome is identical at every reachable stage. An accept
-/// at check that emit rejects — or a reject at check that emit accepts —
-/// is the defect class this test exists to catch.
 fn assert_agree(case: &str, outcome: &Outcome) {
     let Some(emit) = &outcome.emit else {
         return;
@@ -169,7 +155,6 @@ fn assert_tree(case: &str, children: Vec<SettingsNode>, expected: Verdict) -> Ou
     outcome
 }
 
-/// A settings source placing `member` under `hero` in the General team.
 fn hero_source(hero: &str, member: &str) -> String {
     format!(
         "settings {{\n    heroes {{\n        General {{\n            {hero} {{\n                {member}\n            }}\n        }}\n    }}\n}}"
@@ -249,7 +234,6 @@ fn hero_members_without_a_spellable_slot_are_rejected_identically() {
             "check must name the missing slot: {:?}",
             outcome.check_errors
         );
-        // The emit failure is the missing-mapping path the check mirrors.
         assert!(
             matches!(
                 outcome.emit.as_ref().expect("emit ran"),
@@ -260,9 +244,6 @@ fn hero_members_without_a_spellable_slot_are_rejected_identically() {
         );
     }
 
-    // A `Group` block under the same slot key resolves its display name
-    // through the same path: both stages reject where a `RawGroup` pass-
-    // through (below) would carry it verbatim.
     assert_source(
         "doctrine/enableAbility3 block",
         &hero_source("doctrine", "enableAbility3 { leaf: 1 }"),
@@ -270,9 +251,6 @@ fn hero_members_without_a_spellable_slot_are_rejected_identically() {
     );
 }
 
-/// The accepted side of the slot guard: members whose hero can spell them —
-/// through a reviewed label row, a gameplay ability name, or a shared
-/// label — pass check and emit identically.
 #[test]
 fn hero_members_with_a_spellable_slot_are_accepted_identically() {
     // Doctrine has no generated rows at all: its spellable members resolve
@@ -332,7 +310,6 @@ fn hero_members_with_a_spellable_slot_are_accepted_identically() {
         .expect("accepted");
     assert!(emitted.contains("enableSecondaryFire: Off"), "{emitted}");
 
-    // A hero with the slot and a reviewed label emits the label.
     let outcome = assert_source(
         "brigitte/Shield Bash",
         &hero_source("brigitte", "Shield Bash: Off"),
@@ -347,8 +324,6 @@ fn hero_members_with_a_spellable_slot_are_accepted_identically() {
     assert!(emitted.contains("Shield Bash: Off"), "{emitted}");
 }
 
-/// Uncatalogued hero members are carried as written — never resolved — so
-/// parse, check, and emit all accept them identically.
 #[test]
 fn uncatalogued_hero_members_are_carried_identically() {
     for member in [
@@ -381,7 +356,6 @@ fn uncatalogued_hero_members_are_carried_identically() {
 /// uncatalogued-key spellings take the same pipeline verdict.
 #[test]
 fn carried_blocks_treat_catalogued_and_uncatalogued_keys_consistently() {
-    // (position, catalogued key block, uncatalogued key block)
     let pairs: &[(&str, &str, &str)] = &[
         (
             "lobby",
@@ -442,8 +416,6 @@ fn carried_blocks_treat_catalogued_and_uncatalogued_keys_consistently() {
         );
     }
 
-    // The carried block's leaves emit as written regardless of the key's
-    // catalog status; the catalogued key emits its declared display name.
     for (source, block_header) in [
         (
             "settings {\n    lobby {\n        Map Rotation {\n            a\n            b\n        }\n    }\n}",
@@ -471,31 +443,23 @@ fn carried_blocks_treat_catalogued_and_uncatalogued_keys_consistently() {
     }
 }
 
-/// A block under a catalogued key is only one carried shape; catalogued
-/// keys carrying undeclared scalar values (`Map Rotation: Bogus`) and
-/// declared lists are handled by the same member path in both stages.
 #[test]
 fn catalogued_values_and_lists_agree_across_stages() {
-    // A declared enum member: typed value, accepted by both.
     assert_source(
         "lobby/Map Rotation scalar",
         "settings { lobby { Map Rotation: After Every Game } }",
         Verdict::Accepted,
     );
-    // An undeclared enum value under a catalogued key: carried as written.
     assert_source(
         "lobby/Map Rotation undeclared value",
         "settings { lobby { Map Rotation: Bogus Value } }",
         Verdict::Accepted,
     );
-    // A declared list kind with a declared element: typed list, accepted.
     assert_source(
         "skirmish/enabled maps declared element",
         "settings { modes { Skirmish { enabled maps { Route 66 } } } }",
         Verdict::Accepted,
     );
-    // An undeclared list element: both stages reject through the shared
-    // member path — the list kind is catalogued, its element is not.
     assert_source(
         "skirmish/enabled maps undeclared element",
         "settings { modes { Skirmish { enabled maps { Future Map } } } }",
@@ -513,12 +477,8 @@ fn catalogued_values_and_lists_agree_across_stages() {
     );
 }
 
-/// Rejections agree too: a `Group` at a resolved position that cannot
-/// name-resolve fails check and emit with the same diagnostic, and a
-/// spelling the parser cannot resolve is a uniform parse rejection.
 #[test]
 fn rejected_members_fail_check_and_emit_alike() {
-    // A `Group` under a team is always hero-resolved — catalogued or not.
     for source in [
         "settings { heroes { Team 1 { NotAHero { a } } } }",
         "settings { heroes { Team 1 { Damage Dealt { a } } } }",
@@ -542,8 +502,6 @@ fn rejected_members_fail_check_and_emit_alike() {
         );
     }
 
-    // A team name the catalog does not declare never reaches the model:
-    // rejection happens at parse, so check and emit are unreachable.
     assert_source(
         "unknown team",
         "settings { heroes { Bogus Team { Ana { Ability 1: On } } } }",
@@ -551,13 +509,8 @@ fn rejected_members_fail_check_and_emit_alike() {
     );
 }
 
-/// Producer-facing shapes parsing cannot produce agree too. `RawGroup` is
-/// the pass-through marker: it emits verbatim at any position, while a
-/// `Group` at the same resolved position name-resolves.
 #[test]
 fn producer_trees_agree_on_pass_through_and_resolved_shapes() {
-    // Under a team, a `Group` resolves as a hero (rejected); a `RawGroup`
-    // passes through verbatim at the same position (accepted).
     assert_tree(
         "rawgroup under team",
         heroes(vec![team(
@@ -574,8 +527,6 @@ fn producer_trees_agree_on_pass_through_and_resolved_shapes() {
         )]),
         Verdict::Rejected,
     );
-    // A `RawGroup` named like an unspellable slot key emits verbatim; the
-    // equivalent `Group` resolves the display name and fails.
     assert_tree(
         "rawgroup slot key under doctrine",
         heroes(vec![team(
@@ -598,9 +549,6 @@ fn producer_trees_agree_on_pass_through_and_resolved_shapes() {
         )]),
         Verdict::Rejected,
     );
-    // A `RawGroup` under modes or at top level emits verbatim; an
-    // uncatalogued `Group` under modes emits as an authored mode header —
-    // different renderings, both accepted at both stages.
     for (case, children) in [
         (
             "rawgroup under modes",
@@ -628,9 +576,6 @@ fn producer_trees_agree_on_pass_through_and_resolved_shapes() {
         assert_tree(case, children, Verdict::Accepted);
     }
 
-    // A `Raw` member named like a slot key emits verbatim; the typed
-    // `Bool` form resolves the display name and fails where the hero
-    // lacks the slot.
     assert_tree(
         "raw slot key under doctrine",
         heroes(vec![team(
@@ -647,7 +592,6 @@ fn producer_trees_agree_on_pass_through_and_resolved_shapes() {
         )]),
         Verdict::Rejected,
     );
-    // The same typed member under a hero with the slot is accepted.
     assert_tree(
         "typed slot key under ana",
         heroes(vec![team(
@@ -658,13 +602,8 @@ fn producer_trees_agree_on_pass_through_and_resolved_shapes() {
     );
 }
 
-/// Members that have no written form at their position fail identically:
-/// a typed leaf inside a carried block never name-resolves, and non-group
-/// shapes at group positions fail the structural check in both stages.
 #[test]
 fn producer_trees_agree_on_unwritable_shapes() {
-    // A typed leaf inside a carried block (either marker) has no written
-    // form: only `Raw`/`RawValue` leaves carry inside opaque members.
     for marker in [group, raw_group] {
         assert_tree(
             "typed leaf in carried block",
@@ -675,8 +614,6 @@ fn producer_trees_agree_on_unwritable_shapes() {
             Verdict::Rejected,
         );
     }
-    // A declared leaf key inside a carried block still fails: the opaque
-    // path never consults the member table for its children.
     assert_tree(
         "list leaf in carried block",
         vec![group(
@@ -692,9 +629,6 @@ fn producer_trees_agree_on_unwritable_shapes() {
         )],
         Verdict::Rejected,
     );
-    // `Workshop` is opaque namespace data; a typed member inside it has no
-    // written form, and a `Workshop` node at a member position is not a
-    // table member at all.
     assert_tree(
         "workshop with typed member",
         vec![SettingsNode::Workshop {
@@ -714,15 +648,12 @@ fn producer_trees_agree_on_unwritable_shapes() {
         )],
         Verdict::Rejected,
     );
-    // Settings block children must be groups: stray leaf shapes reject.
     for (case, node) in [
         ("raw at top level", raw("stray", "1")),
         ("number at top level", number("x", 5.0)),
     ] {
         assert_tree(case, vec![node], Verdict::Rejected);
     }
-    // A kind mismatch at a catalogued position fails both stages through
-    // the shared member check.
     assert_tree(
         "kind mismatch at catalogued key",
         vec![group("lobby", vec![number("description", 5.0)])],
@@ -730,8 +661,6 @@ fn producer_trees_agree_on_unwritable_shapes() {
     );
 }
 
-/// A carried member close to exactly one declared spelling is a warning —
-/// an accepted member — and both stages still accept it.
 #[test]
 fn near_miss_carried_members_warn_but_agree() {
     let outcome = run_source("settings { lobby { Map Rotatio { a: 1 } } }");
@@ -747,8 +676,6 @@ fn near_miss_carried_members_warn_but_agree() {
     );
 }
 
-/// For every accepted source, the emitted text itself reparses — the emit
-/// side of the agreement produces text on the accepted surface.
 #[test]
 fn accepted_sources_emit_reparseable_text() {
     for source in [

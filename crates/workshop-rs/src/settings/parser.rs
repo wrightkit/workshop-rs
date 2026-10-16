@@ -236,9 +236,6 @@ impl ParseContext<'_> {
         Ok(children)
     }
 
-    /// Resolve `display` to the settings table entry under `path` (with
-    /// `gamemodes.general` inheritance for mode groups), or None when no
-    /// candidate accepts it.
     fn find_settings_entry(
         &self,
         display: &str,
@@ -338,8 +335,6 @@ impl ParseContext<'_> {
         self.settings_raw_member(fallback_display, start)
     }
 
-    /// Parse the `:`-separated value or `{` block of a member whose `entry`
-    /// already matched the authored name.
     fn settings_typed_member(
         &mut self,
         entry: &'static table::TableEntry,
@@ -473,7 +468,6 @@ impl ParseContext<'_> {
                         value,
                         span: Some(Span::new(self.file(), start, self.previous_span().1)),
                     }),
-                    // A value the catalog does not declare is kept as written.
                     Err(_) => {
                         self.pos = value_start;
                         let value = self.raw_settings_line(colon_line)?;
@@ -540,7 +534,6 @@ impl ParseContext<'_> {
         }
         let end = self.previous_span().1;
         let span = Some(Span::new(self.file(), start, end));
-        // `name:` with nothing after the colon keeps its colon.
         if value.is_empty() && colon.is_some() {
             return Ok(SettingsNode::RawValue { name, value, span });
         }
@@ -574,18 +567,14 @@ impl ParseContext<'_> {
         Ok((join_as_written(&parts), start, end))
     }
 
-    /// Read the tokens of a raw settings value on `line`. A bare `name:`
-    /// must not consume the following line, so the accepted line is the
-    /// colon's own line, not the first token after it.
-    pub(crate) fn raw_settings_line(&mut self, line: u32) -> Result<String> {
+    pub(crate) fn raw_settings_line(&mut self, colon_line: u32) -> Result<String> {
         let mut text = String::new();
         let mut previous_end = None;
         while let Some(token) = self.peek() {
-            if token.start.line != line || matches!(token.kind, TokenKind::RBrace) {
+            if token.start.line != colon_line || matches!(token.kind, TokenKind::RBrace) {
                 break;
             }
             self.pos += 1;
-            // Keep the authored spacing: `500%` stays one word.
             if previous_end.is_some_and(|end| end != token.start) {
                 text.push(' ');
             }
@@ -769,9 +758,6 @@ impl ParseContext<'_> {
             })
     }
 
-    /// The nearest accepted settings-name spellings for a rejected display
-    /// name: the localized (or English, when unmapped) form of every `names`
-    /// entry the parse surface accepts under `section`.
     fn settings_name_candidates<'b>(
         &'b self,
         names: impl IntoIterator<Item = &'b str>,

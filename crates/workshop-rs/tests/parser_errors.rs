@@ -37,16 +37,12 @@ fn an_action_call_used_as_a_condition_reports_the_action_at_its_call() {
     };
     assert_eq!(message, "action 'Wait' cannot be used as a condition");
     let span = span.expect("the misused action call carries a span");
-    // `Wait` starts at column 9 of the conditions entry and the diagnostic
-    // covers the whole `Wait(1, Ignore Condition)` call.
     assert_eq!((span.start.line, span.start.col), (6, 9));
     assert_eq!((span.end.line, span.end.col), (6, 34));
 }
 
 #[test]
 fn action_statements_used_as_conditions_name_the_construct() {
-    // `Set Global Variable` is a structural action spelling rather than a
-    // catalog action; it still cannot be a condition.
     let error = parse_error(&program_with_condition("Set Global Variable(x, 1);"));
     let WorkshopError::Malformed { message, .. } = error else {
         panic!("an action used as a condition is a malformed diagnostic");
@@ -56,8 +52,6 @@ fn action_statements_used_as_conditions_name_the_construct() {
         "action 'Set Global Variable' cannot be used as a condition"
     );
 
-    // Nested inside another expression the same construct reports a value
-    // position instead.
     let error = parse_error(&program_with_condition(
         "Compare(Wait(1, Ignore Condition), ==, 1);",
     ));
@@ -66,7 +60,6 @@ fn action_statements_used_as_conditions_name_the_construct() {
     };
     assert_eq!(message, "action 'Wait' cannot be used as a value");
 
-    // An infix operand is likewise a value slot inside the condition.
     let error = parse_error(&program_with_condition("x == Wait(1, Ignore Condition);"));
     let WorkshopError::Malformed { message, .. } = error else {
         panic!("an action operand inside a condition is malformed");
@@ -76,8 +69,6 @@ fn action_statements_used_as_conditions_name_the_construct() {
 
 #[test]
 fn action_misuse_is_reported_from_control_flow_condition_positions() {
-    // `If`/`Else If`/`While` headers are the same condition position as a
-    // `conditions {}` entry.
     for statements in [
         "If(Wait(1, Ignore Condition));\n        End;",
         "While(Wait(1, Ignore Condition));\n        End;",
@@ -96,15 +87,12 @@ fn action_misuse_is_reported_from_control_flow_condition_positions() {
 
 #[test]
 fn bare_and_non_enum_actions_as_conditions_still_name_the_action() {
-    // A bare action spelling reaches the diagnostic through the member path.
     let error = parse_error(&program_with_condition("Wait;"));
     let WorkshopError::Malformed { message, .. } = error else {
         panic!("a bare action used as a condition is a malformed diagnostic");
     };
     assert_eq!(message, "action 'Wait' cannot be used as a condition");
 
-    // An action that is not also an enum domain is rejected before its
-    // argument list is examined.
     let error = parse_error(&program_with_condition("Kill(1, 2);"));
     let WorkshopError::Malformed { message, .. } = error else {
         panic!("a non-enum action used as a condition is a malformed diagnostic");
@@ -141,8 +129,6 @@ fn localized_action_spellings_report_the_action_as_well() {
 
 #[test]
 fn a_variable_named_like_an_action_is_still_a_value() {
-    // Declared names resolve before the action diagnostic, so a global
-    // variable called `Wait` remains usable in a condition.
     let source = concat!(
         "variables {\n",
         "    global:\n",
@@ -164,8 +150,6 @@ fn a_variable_named_like_an_action_is_still_a_value() {
 
 #[test]
 fn an_enum_call_sharing_an_action_name_still_parses_as_a_condition() {
-    // `Wait` is both the Wait action and the Wait enum domain; a well-formed
-    // enum member call keeps its value reading.
     let catalog = Catalog::builtin().expect("catalog");
     parser::parse(
         &program_with_condition("Wait(Ignore Condition);"),
@@ -192,8 +176,6 @@ fn a_missing_statement_semicolon_reports_the_end_of_the_statement() {
         panic!("a missing semicolon is a malformed diagnostic");
     };
     assert_eq!(message, "expected ';'");
-    // The `}` closing `actions` sits on line 7; the missing `;` belongs at
-    // the end of the `Set Global Variable(x, 1)` statement on line 6.
     let span = span.expect("source span");
     assert_eq!(span.start.line, 6);
     assert_eq!(span.end.line, 6);

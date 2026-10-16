@@ -1,25 +1,10 @@
-//! Tokenizer for localized vanilla Workshop text.
-//!
-//! Tokens carry 1-based line/column spans so parser diagnostics and the
-//! produced WIR preserve source locations. Workshop identifiers are
-//! multi-word phrases; the tokenizer emits single [`Word`] tokens and the
-//! parser groups them, which keeps locale spellings data-driven.
-
 use crate::core::source::Position;
 
-/// A lexical token kind.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) enum TokenKind {
-    /// A run of identifier characters (`[A-Za-z_][A-Za-z0-9_]*`).
     Word(String),
-    /// A numeric literal with its source spelling.
-    Number {
-        value: f64,
-        text: String,
-    },
-    /// A string literal (content, unescaped).
+    Number { value: f64, text: String },
     String(String),
-    /// An operator token: `= == != < <= > >= && || ! + - * / %`.
     Op(String),
     LParen,
     RParen,
@@ -34,7 +19,6 @@ pub(crate) enum TokenKind {
     Eof,
 }
 
-/// A token with its source span.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Token {
     pub(crate) kind: TokenKind,
@@ -42,7 +26,6 @@ pub(crate) struct Token {
     pub(crate) end: Position,
 }
 
-/// A lexing error with a source position.
 #[derive(Debug, Clone, PartialEq)]
 pub(crate) struct LexError {
     pub(crate) message: String,
@@ -90,7 +73,6 @@ impl<'a> Cursor<'a> {
     }
 }
 
-/// Tokenize Workshop text.
 pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
     let mut cursor = Cursor::new(input);
     let mut tokens = Vec::new();
@@ -128,9 +110,6 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                 let mut content = String::new();
                 let mut closed = false;
                 while let Some(c) = cursor.peek() {
-                    // Decode the escape spellings the emitter produces so a
-                    // settings/value string round-trips byte-identically
-                    // (`\"`, `\\`, `\n`, `\r`, `\t`; #87).
                     if c == '\\' {
                         if let Some(escaped) = cursor.peek_at(1) {
                             let decoded = match escaped {
@@ -353,8 +332,6 @@ fn take_word(cursor: &mut Cursor) -> Token {
     while let Some(c) = cursor.peek() {
         if c == '<' {
             if let Some(len) = markup_tag_len(cursor.rest) {
-                // Tag bytes are all ASCII, so the byte length is also the
-                // character count.
                 for _ in 0..len {
                     word.push(cursor.advance().unwrap());
                 }

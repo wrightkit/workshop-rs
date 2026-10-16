@@ -1,18 +1,3 @@
-//! The Workshop IR model.
-//!
-//! Workshop IR models the lower-level workshop program structure: variables
-//! with indexes, subroutines with indexes, and rules with events, conditions,
-//! actions, and values. It is locale-independent (canonical catalog ids only,
-//! never localized spellings) and protocol-agnostic.
-//!
-//! Name policy: call/value `name` fields keep the canonical catalog ids
-//! (`countOf`, `wait`, `createBeamEffect`); mapping those to localized
-//! Workshop presentation spellings is an emission concern.
-//!
-//! Extracted from the Wright-authored `wright-ir` crate (the `wir`,
-//! `settings`, and `source` modules); see
-//! [`docs/provenance.md`](https://github.com/wrightkit/workshop-rs/blob/main/docs/provenance.md).
-
 mod action;
 mod dump;
 mod event;
@@ -32,17 +17,11 @@ use crate::core::arena::Arena;
 use crate::core::ids::Id;
 use crate::core::source::SourceFile;
 
-/// A typed ID referencing a [`WorkshopVariable`] in the global table.
 pub(crate) type GlobalVarId = Id<WorkshopVariable>;
-/// A typed ID referencing a [`WorkshopVariable`] in the player table.
 pub(crate) type PlayerVarId = Id<WorkshopVariable>;
-/// A typed ID referencing a [`WorkshopSubroutine`].
 pub(crate) type SubroutineId = Id<WorkshopSubroutine>;
-/// A typed ID referencing a [`Rule`].
 pub(crate) type RuleId = Id<Rule>;
-/// A typed ID referencing an [`Action`] in the action arena.
 pub(crate) type ActionId = Id<Action>;
-/// A typed ID referencing a [`ValueNode`] in the value arena.
 pub(crate) type ValueId = Id<ValueNode>;
 
 pub(crate) const AMBIGUOUS_ENUM_CALL: &str = "__ambiguous_enum";
@@ -78,14 +57,9 @@ pub(crate) fn is_comparison_operator(name: &str) -> bool {
     matches!(name, "==" | "!=" | "<" | "<=" | ">" | ">=")
 }
 
-/// The Workshop IR program: tables and arenas produced by lowering.
 #[derive(Debug, Clone)]
 pub(crate) struct Program {
-    /// The source-file registry, copied from the source HIR so spans remain
-    /// resolvable for diagnostics.
     pub(crate) files: Arena<SourceFile>,
-    /// The custom-game-settings carrier, copied inertly from the source HIR
-    /// (emitted verbatim, never lowered, #86).
     pub(crate) settings: Option<crate::settings::Settings>,
     pub(crate) global_variables: Arena<WorkshopVariable>,
     pub(crate) player_variables: Arena<WorkshopVariable>,
@@ -111,8 +85,6 @@ impl Default for Program {
 }
 
 impl Program {
-    /// Add a source file and bind its optional source metadata to the returned
-    /// file ID.
     pub(crate) fn add_file(&mut self, file: SourceFile) -> crate::source::FileId {
         let id = self.files.push(file);
         self.files.get_mut(id).unwrap().bind_file(id);
@@ -135,15 +107,10 @@ impl Program {
         crate::analysis::semantic::inspect_wir(self, catalog)
     }
 
-    /// Validate structural invariants: every ID resolves and every span is
-    /// valid. Returns the first violation as a structured [`IrError`].
-    ///
-    /// [`IrError`]: crate::wir::error::IrError
     pub(crate) fn validate(&self) -> Result<(), error::IrError> {
         validate::validate(self)
     }
 
-    /// Render a deterministic debug dump of the workshop program.
     pub(crate) fn dump(&self) -> String {
         dump::dump(self)
     }

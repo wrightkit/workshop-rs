@@ -98,7 +98,6 @@ mod tests {
         let id = arena.push(vec![1, 2]);
         arena.get_mut(id).unwrap().push(3);
         assert_eq!(arena.get(id), Some(&vec![1, 2, 3]));
-        // The ID is still valid after mutation.
         assert_eq!(arena.get(id).unwrap().len(), 3);
     }
 

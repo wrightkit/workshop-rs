@@ -110,10 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn distinct_id_types_are_distinct() {
-        // Compile-time proof: a `File` id cannot be passed where a `Rule` id
-        // is expected. (No runtime assertion; the code below would not
-        // compile if `Id<T>` were not parameterized.)
+    fn id_types_are_not_interchangeable() {
         let _file: Id<File> = Id::from_index(0);
         let _rule: Id<Rule> = Id::from_index(0);
         let _ = _file;
