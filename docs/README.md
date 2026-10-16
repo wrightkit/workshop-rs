@@ -19,6 +19,10 @@ An accepted ADR is not current-reality proof. For implementation work, start
 from [`architecture/README.md`](architecture/README.md), then inspect the
 relevant code/tests/data and current Issue contract.
 
+## Engineering principles
+
+- [Principles](principles/README.md): repository-local engineering judgment, promoted from recurring review findings.
+
 ## Current architecture
 
 - [Architecture routing](architecture/README.md): current contract index and
