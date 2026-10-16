@@ -16,6 +16,8 @@ manual evidence step and is **not** asserted anywhere in this repository.
 | --- | --- | --- | --- | --- | --- |
 | `control-minimal.ws` | paste mechanics sanity | 4 | 4 | 2 | 3 nodes |
 | `arg-array-wide.ws` | one wide flat argument (500-item `Array`) | 1004 | 1004 | 1002 | 4 nodes |
+| `arg-binder-lambda.ws` | one binder call inside another binder's per-element argument | 17 | 17 | 15 | 8 nodes |
+| `arg-binder-source.ws` | same two binder calls chained through the source argument (control) | 14 | 14 | 12 | 7 nodes |
 | `arg-depth-deep.ws` | one deep argument (48-deep `If-Then-Else` chain) | 436 | 436 | 434 | 52 nodes |
 | `arg-line-bytes.ws` | one action whose serialized argument line is ~4.2 kB at a 66-node subtree | 164 | 164 | 162 | 5 nodes |
 | `arg-nodes-large.ws` | one action whose argument is a 511-node balanced `And` tree | 513 | 513 | 511 | 11 nodes |
@@ -46,6 +48,12 @@ manual evidence step and is **not** asserted anywhere in this repository.
   `createInWorldText` statement (slot 0) from the same build artifact.
   Fixture SHA-256:
   `b14749af54e35a84a828dd22d887d968194b0f7af82eed47cf1575f2b6cdb04f`.
+- `arg-binder-lambda.ws` and `arg-binder-source.ws` — hand-written,
+  authored for the nested-binder signature recorded in
+  `docs/import-limits.md` (binder call inside an enclosing binder's
+  per-element argument versus the same call pair chained through the
+  source argument). They are minimal, not parametric; widen them by hand
+  if a client result needs a ladder.
 - All other files are generated deterministically by
   [`tools/import-limits/generate_probes.py`](../../../../../tools/import-limits/generate_probes.py).
   The tool accepts `--actions`, `--rules`, `--array-len`, `--depth`,
