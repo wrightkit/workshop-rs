@@ -1,6 +1,6 @@
 # Lessons
 
-Short review queue of reusable failure classes from merged workshop-rs work. Each entry names a prevention action and the evidence behind it. Promote an entry into a regression test, an owner contract, or an existing engineering standard, then remove it here. The procedure is the `wrightkit-merged-work-retrospective` skill in `wrightkit/.agents`.
+Short review queue of reusable failure classes from merged workshop-rs work. Each entry names a prevention action and the evidence behind it. Promote an entry into a regression test, an owner contract, or an existing engineering standard, then remove it here. The procedure is the `wrightkit-retro` skill in `wrightkit/.agents`.
 
 ### A sibling path must not enforce a weaker subset of the same contract
 - **Rule:** When adding a second path that faces the same contract — a tolerant carry, a new validation entry point, `source_edit` beside `write`, CLI beside library, a scoped beside an unscoped query — reuse the established path's check or enumerate its obligations. A new path must not accept what its sibling rejects, nor produce what its sibling cannot consume.
