@@ -25,7 +25,6 @@ fn committed_catalog_digest_is_pinned() {
          `cargo run -p workshop-rs --bin workshop-catalog-gen -- build` and \
          update this pin deliberately with the data change"
     );
-    // The digest is deterministic: recomputing from the data yields the pin.
     let data = include_str!("../src/catalog/data/catalog.json");
     assert_eq!(
         workshop_rs::catalog::content_digest(data).expect("digest computes"),
@@ -61,7 +60,7 @@ fn identity_serializes_with_the_adr_kebab_case_names() {
     assert!(json.get("catalog-version").is_some());
     assert!(json.get("catalog-digest").is_some());
     assert!(json.get("locale-coverage").is_some());
-    assert!(json.get("target-evidence").is_none()); // target is the source record
+    assert!(json.get("target-evidence").is_none());
     assert!(json.get("target").is_some());
     assert!(json.get("provenance").is_some());
 }

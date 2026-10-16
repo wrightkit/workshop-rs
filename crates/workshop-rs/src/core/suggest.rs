@@ -183,7 +183,6 @@ mod tests {
     fn distant_and_ambiguous_spellings_suggest_nothing() {
         let candidates = ["Château Guillard", "King's Row"];
         assert_eq!(suggest("Nepal", candidates.into_iter()), None);
-        // Two candidates at the same small distance tie, yielding none.
         assert_eq!(suggest("Team X", ["Team 1", "Team 2"].into_iter()), None);
     }
 
@@ -194,12 +193,10 @@ mod tests {
             nearest("Create HUD Txt", candidates.into_iter(), 3),
             vec!["Create HUD Text".to_string()]
         );
-        // Candidates at the same distance keep input order.
         assert_eq!(
             nearest("Team X", ["Team 1", "Team 2"].into_iter(), 3),
             vec!["Team 1".to_string(), "Team 2".to_string()]
         );
-        // Fold-equal candidates count once.
         assert_eq!(
             nearest("Team 1", ["Team 1", "team 1", "Team 2"].into_iter(), 3),
             vec!["Team 1".to_string(), "Team 2".to_string()]

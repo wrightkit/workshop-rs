@@ -48,13 +48,10 @@ use workshop_rs::settings;
 /// the documented pipeline commands run); `--file` overrides it.
 const DEFAULT_FILE: &str = "crates/workshop-rs/src/catalog/data/catalog.json";
 
-/// The default corpus manifest output directory.
 const DEFAULT_OUT_DIR: &str = "tools/corpus";
 
-/// The default settings locale corpus output file.
 const DEFAULT_SETTINGS_OUT: &str = "crates/workshop-rs/src/settings/data/locales.json";
 
-/// The environment variable naming the Workshop data export path.
 const EXPORT_ENV: &str = "WORKSHOP_DATA_EXPORT";
 
 fn usage() -> &'static str {

@@ -13,22 +13,11 @@ pub(crate) fn validate_action(
     };
     match action {
         wir::Action::Call { name, args, span } => {
-            let Some(entry) = catalog.entry(Kind::Action, name) else {
-                // A catalog-unknown call is a completeness residual reported
-                // by `semantic_issues`; its signature is unknowable, but its
-                // argument values are still validated so a nested known
-                // violation is not masked.
-                if tolerate_residuals {
-                    for arg in args {
-                        crate::values::validate::validate_value(
-                            program,
-                            catalog,
-                            *arg,
-                            tolerate_residuals,
-                        )?;
-                    }
-                    return Ok(());
-                }
+            if let Some(entry) = catalog.entry(Kind::Action, name) {
+                crate::values::validate::validate_call_signature(
+                    entry, args, *span, program, catalog,
+                )?;
+            } else if !tolerate_residuals {
                 return Err(WorkshopError::unknown(
                     "action",
                     name.clone(),
@@ -40,8 +29,7 @@ pub(crate) fn validate_action(
                     catalog.canonical_spellings(Kind::Action, catalog.primary_locale()),
                     crate::core::suggest::CANDIDATE_LIMIT,
                 )));
-            };
-            crate::values::validate::validate_call_signature(entry, args, *span, program, catalog)?;
+            }
             for arg in args {
                 crate::values::validate::validate_value(
                     program,

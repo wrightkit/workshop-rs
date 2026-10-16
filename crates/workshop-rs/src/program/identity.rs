@@ -1,16 +1,3 @@
-//! Node identity digests for positional provenance records.
-//!
-//! A record's identity is a process-local digest of the public node's
-//! content. For condition, action, and value records the content is the
-//! node's whole subtree — its own scalar fields plus the deep identity of
-//! every value argument or child — because the node's authored span covers
-//! the whole expression text. Rules and declarations keep the digest at
-//! their own scalar fields: their conditions and actions live in positional
-//! tables screened by count, the same way the public model exposes them.
-//!
-//! Identities are never serialized, so the digest format needs no stability
-//! beyond a single process.
-
 use std::collections::hash_map::DefaultHasher;
 use std::fmt::Debug;
 use std::hash::Hasher;
@@ -20,15 +7,8 @@ use super::{
     action_argument_values, value_children,
 };
 
-/// The identity of a public node: a digest of the content a provenance
-/// record describes. A record's own fields are returned only while the node
-/// at its position still has the recorded identity; descending into a
-/// record's positional child table only requires the table count to match.
 pub(super) type NodeIdentity = u64;
 
-/// A rule's identity is its own declared content — name, disabled flag, and
-/// event. Conditions and actions are positional child tables screened by
-/// count and are not part of it.
 pub(super) fn rule_identity(rule: &Rule) -> NodeIdentity {
     scalar_identity(&(&rule.name, rule.disabled, &rule.event))
 }
@@ -40,9 +20,6 @@ pub(super) fn condition_identity(condition: &Condition) -> NodeIdentity {
     hasher.finish()
 }
 
-/// An action's identity is its own scalar fields plus the deep identity of
-/// every direct value argument: `Wait(1)` and `Wait(2)` are different
-/// actions, and mutating an argument makes the whole action record stale.
 pub(super) fn action_identity(action: &Action) -> NodeIdentity {
     let mut hasher = DefaultHasher::new();
     feed_action(&mut hasher, action);
@@ -52,8 +29,6 @@ pub(super) fn action_identity(action: &Action) -> NodeIdentity {
     hasher.finish()
 }
 
-/// A value's identity is its own scalar fields plus the deep identity of
-/// every child, covering the expression's whole subtree.
 pub(super) fn value_identity(value: &Value) -> NodeIdentity {
     let mut hasher = DefaultHasher::new();
     feed_value(&mut hasher, value);
@@ -63,13 +38,10 @@ pub(super) fn value_identity(value: &Value) -> NodeIdentity {
     hasher.finish()
 }
 
-/// The identity of a declaration node, which has no positional children.
 pub(super) fn declaration_identity(node: &impl Debug) -> NodeIdentity {
     scalar_identity(node)
 }
 
-/// Record every attached mapping's node identity so records are only
-/// returned for the node content they were attached to.
 pub(super) fn record_identities(provenance: &mut ProgramProvenance, program: &Program) {
     for (record, variable) in provenance
         .global_variables
@@ -137,8 +109,6 @@ fn feed_str(hasher: &mut impl Hasher, text: &str) {
     hasher.write(text.as_bytes());
 }
 
-/// The action's own scalar fields; its argument values are added by
-/// [`action_identity`] as deep child digests.
 fn feed_action(hasher: &mut impl Hasher, action: &Action) {
     match action {
         Action::SetGlobalVariable { variable, .. } => {
@@ -198,8 +168,6 @@ fn feed_op(hasher: &mut impl Hasher, op: ModifyOp) {
     std::hash::Hash::hash(&std::mem::discriminant(&op), hasher);
 }
 
-/// The value's own scalar fields; its children are added by
-/// [`value_identity`] as deep child digests.
 fn feed_value(hasher: &mut impl Hasher, value: &Value) {
     match value {
         Value::Number(number) => {

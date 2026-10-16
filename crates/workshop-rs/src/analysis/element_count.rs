@@ -164,11 +164,6 @@ impl fmt::Display for ElementCountError {
 impl std::error::Error for ElementCountError {}
 
 impl Program {
-    /// Count the canonical Workshop target represented by this WIR program.
-    ///
-    /// The catalog is used to reject unknown action/value identities before a
-    /// report is produced. Native display actions are represented by their
-    /// canonical catalog-backed action calls.
     pub(crate) fn element_count(
         &self,
         catalog: &Catalog,
@@ -189,7 +184,7 @@ impl Program {
             values: HashMap::new(),
             actions: HashMap::new(),
             next_node_id: 0,
-            name_slot: false,
+            variable_name_arg: false,
         };
         let mut rules = Vec::with_capacity(self.rules.len());
         for rule in self.rules.iter() {
@@ -256,8 +251,7 @@ struct Counter<'a> {
     values: HashMap<usize, usize>,
     actions: HashMap<usize, usize>,
     next_node_id: usize,
-    /// Set while counting an argument that names a variable rather than reads it.
-    name_slot: bool,
+    variable_name_arg: bool,
 }
 
 impl Counter<'_> {
@@ -466,7 +460,7 @@ impl Counter<'_> {
                 }
                 name = action_name.as_str();
                 for (index, argument) in args.iter().enumerate() {
-                    self.name_slot = variable_slot(
+                    self.variable_name_arg = variable_slot(
                         self.program,
                         self.catalog,
                         Kind::Action,
@@ -517,7 +511,7 @@ impl Counter<'_> {
     }
 
     fn value(&mut self, id: ValueId, top_level: bool) -> Result<Counted, ElementCountError> {
-        let name_slot = std::mem::take(&mut self.name_slot);
+        let variable_name_arg = std::mem::take(&mut self.variable_name_arg);
         let node_id = self.next_node_id();
         if let Some(&active_id) = self.values.get(&id.index()) {
             return Err(ElementCountError::Cycle {
@@ -552,12 +546,12 @@ impl Counter<'_> {
                 self.value_node(node_id, value_type, span, base, vec![], heroes)
             }
             Value::GlobalVariable(_) => {
-                let base = if name_slot { 1 } else { 2 };
+                let base = if variable_name_arg { 1 } else { 2 };
                 self.value_node(node_id, "global variable", span, base, vec![], 0)
             }
             Value::PlayerVariable { player, .. } => {
                 // A named player variable is two direct arguments (player, name).
-                let base = if name_slot { 0 } else { 2 };
+                let base = if variable_name_arg { 0 } else { 2 };
                 self.value_children(node_id, "player variable", span, base, &[*player], None)
             }
             Value::Subroutine(_) => self.value_node(node_id, "subroutine", span, 1, vec![], 0),
@@ -662,7 +656,7 @@ impl Counter<'_> {
         let mut children = Vec::with_capacity(ids.len());
         let mut heroes = 0;
         for (index, child) in ids.iter().enumerate() {
-            self.name_slot = owner.is_some_and(|(kind, name)| {
+            self.variable_name_arg = owner.is_some_and(|(kind, name)| {
                 variable_slot(self.program, self.catalog, kind, name, ids, index)
             });
             let counted = self.value(*child, false)?;
@@ -677,7 +671,6 @@ fn pair_surcharge(heroes: usize) -> isize {
     (heroes / 2) as isize
 }
 
-/// The cost of the defaults filled in for arguments a call leaves out.
 fn omitted_default_cost(
     program: &wir::Program,
     catalog: &Catalog,
@@ -689,8 +682,6 @@ fn omitted_default_cost(
     let Some(entry) = catalog.entry(kind, name) else {
         return 0;
     };
-    // `args` counts supplied WIR arguments; a folded `(player, variable)`
-    // pair covers one extra declared surface position.
     let given = args.len() + usize::from(entry.wir_args_folded(program, args));
     (given..entry.param_count())
         .filter_map(|index| entry.param_default(index))

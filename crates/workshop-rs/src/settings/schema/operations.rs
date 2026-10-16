@@ -51,8 +51,6 @@ impl SettingDefinition {
         &self.path
     }
 
-    /// The canonical path as typed segments: literal keys and the `<team>`
-    /// / `<hero>` template slots a concrete path fills.
     pub(crate) fn path_parts(&self) -> &[PathPart<'static>] {
         self.path_parts
     }
@@ -321,17 +319,11 @@ impl SettingDefinition {
                 target: target.clone(),
             }
         })?;
-        // Same leaf gate as `read`/`source_edit`: refuse a group or
-        // pass-through occurrence before judging the supplied value.
         if !is_typed_leaf(node) {
             return Err(not_typed_leaf(node, &id));
         }
         let span = node.span();
         validate_value(&self.domain, &id, &value, span)?;
-        // Same unsupported-value gate `source_edit` applies before
-        // spelling: writing a value the carrier cannot emit — a
-        // boolean-enum leaf has no authored `false` form — must fail here
-        // rather than produce an unemittable occurrence.
         let kind = table::lookup(self.path_parts)
             .expect("settings definition must retain its table entry")
             .kind;
@@ -363,9 +355,6 @@ impl SettingDefinition {
             }
         })?;
         let span = node.span();
-        // Same leaf gate as `read`/`write`: a group or pass-through
-        // occurrence has no scalar value bytes to edit, and
-        // `source_value_range` would carve the range out of the block.
         let Some(authored) = typed_leaf_value(node, &self.domain) else {
             return Err(not_typed_leaf(node, &id));
         };
@@ -374,11 +363,6 @@ impl SettingDefinition {
             .expect("settings definition must retain its table entry")
             .kind;
         ensure_supported_value(kind, &id, &value, span)?;
-        // Same carrier-shape agreement `write` reaches through
-        // `apply_value`: the leaf's authored value kind must be the
-        // domain's before the edit may replace the member's value bytes.
-        // The authored value itself is replaced wholesale, so only its
-        // kind is checked — never the value.
         if authored.kind() != self.domain.kind() {
             return Err(SettingOperationError::WrongValueKind {
                 setting: id.clone(),
@@ -447,8 +431,6 @@ impl SettingDefinition {
             })
     }
 
-    /// For `gamemodes.general` definitions, the leaf key whose occurrences
-    /// live under each inheriting mode.
     fn inherited_general_key(&self) -> Option<&'static str> {
         match self.path_parts {
             [
@@ -722,9 +704,6 @@ fn not_typed_leaf(node: &SettingsNode, id: &SettingId) -> SettingOperationError 
     }
 }
 
-/// The typed value a leaf occurrence carries for `domain` — the shared
-/// carrier-shape mapping behind `value_from_node` and the `source_edit`
-/// leaf gate. `None` for a group or pass-through occurrence.
 fn typed_leaf_value(node: &SettingsNode, domain: &SettingValueDomain) -> Option<SettingValue> {
     let value = match node {
         SettingsNode::Bool { value, .. } => SettingValue::Boolean(*value),

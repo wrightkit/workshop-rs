@@ -97,11 +97,8 @@ fn benchmark_audit_optimizations() {
 
     println!("\n=== AUDIT OPTIMIZATION & ABLATION MEASUREMENTS ===");
 
-    // ==========================================
     // 2. Catalog Query & Ablation (Issue #213)
-    // ==========================================
     let lookup_iters = 100_000;
-    // Warmup
     for _ in 0..10_000 {
         let _ = catalog.entry(Kind::Action, "chaseOverTime");
         let _ = catalog.resolve(Kind::Action, &en, "Chase Global Variable Over Time");
@@ -155,9 +152,7 @@ fn benchmark_audit_optimizations() {
             * 100.0
     );
 
-    // ==========================================
     // 3. Bare Member Index & Ablation (Issue #213)
-    // ==========================================
     let bare_iters = 50_000;
     // Optimized: O(1) bare_member_index lookup
     let start = Instant::now();
@@ -206,9 +201,7 @@ fn benchmark_audit_optimizations() {
         bare_abl_dur.as_nanos() as f64 / bare_opt_dur.as_nanos() as f64
     );
 
-    // ==========================================
     // 5. Implicit Variable Monotonic Indexing & Ablation (Issue #213)
-    // ==========================================
     let var_count = 1_000u32;
     let var_iters = 100;
 
@@ -261,9 +254,7 @@ fn benchmark_audit_optimizations() {
         var_abl_dur.as_nanos() as f64 / var_opt_dur.as_nanos() as f64
     );
 
-    // ==========================================
     // 6. Emitter Allocations & Ablation (Issue #215)
-    // ==========================================
     let parsed_bastion = internal::parse_in(bastion_text, &en);
     let emit_iters = 500;
     // Optimized: Borrowed &'a str spelling returns
@@ -305,9 +296,7 @@ fn benchmark_audit_optimizations() {
             * 100.0
     );
 
-    // ==========================================
     // 7. Validation Short-circuit & Ablation (Issue #212)
-    // ==========================================
     let multi_error = r#"rule ("multi-error") {
         event { Ongoing - Global; }
         actions {

@@ -1,7 +1,3 @@
-//! Language detection and locale-override tests: representative
-//! supported-language fixtures are detected with confidence, ambiguous input
-//! fails explicitly, and an explicit locale override always wins.
-
 use super::common::{self, catalog, en};
 use super::internal;
 use workshop_rs::catalog::{Catalog, Kind, Locale};
@@ -40,8 +36,6 @@ fn resolve_locale_auto_detects_supported_input() {
 
 #[test]
 fn explicit_locale_override_bypasses_detection() {
-    // The explicit locale wins even for input that would not auto-detect
-    // confidently (garbage), because override skips detection.
     let garbage = "not workshop at all";
     let error = detect::resolve_locale(garbage, &catalog(), None).expect_err("no detection");
     assert!(error.to_string().contains("language"), "{error}");
@@ -86,7 +80,6 @@ fn detection_is_deterministic() {
 
 #[test]
 fn detected_locale_parses_the_input() {
-    // The full loop: detect, then parse with the detected locale.
     let text = common::corpus_text("control-flow");
     let locale = detect::resolve_locale(&text, &catalog(), None).expect("detected");
     let program = internal::parse_in(&text, &locale);
@@ -94,7 +87,6 @@ fn detected_locale_parses_the_input() {
 }
 
 // Pre-index detector retained as a differential oracle for the detection contract.
-/// Count distinct catalog aliases of `locale` that appear in the input.
 fn reference_alias_matches(input: &str, catalog: &Catalog, locale: &Locale) -> usize {
     let mut matches = 0usize;
     for kind in [
@@ -117,7 +109,6 @@ fn reference_alias_matches(input: &str, catalog: &Catalog, locale: &Locale) -> u
             }
         }
     }
-    // Enum member spellings (e.g. "Grapple Beam", "Ignore Condition").
     for domain in catalog.enum_domains() {
         for member in &domain.members {
             if let Some(spelling) = member.spelling(locale) {
@@ -135,7 +126,6 @@ fn reference_alias_matches(input: &str, catalog: &Catalog, locale: &Locale) -> u
     matches
 }
 
-/// Whether `needle` appears in `haystack` bounded by non-word characters.
 fn contains_word(haystack: &str, needle: &str) -> bool {
     if needle.is_empty() {
         return false;

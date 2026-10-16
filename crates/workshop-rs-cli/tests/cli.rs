@@ -1,7 +1,3 @@
-//! CLI surface tests: parse/emit/convert a file, list locales, report the
-//! machine-readable catalog identity, and fail explicitly on missing
-//! target-locale mappings (with opt-in fallback).
-
 use std::path::PathBuf;
 use std::process::Command;
 

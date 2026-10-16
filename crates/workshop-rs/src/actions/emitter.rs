@@ -310,9 +310,6 @@ impl EmitContext<'_> {
                 if args.is_empty() {
                     self.line(level, &format!("{spelling};"))?;
                 } else {
-                    // When the leading `player, name` pair is merged into one
-                    // player-variable value, arg 0 splits back into two textual
-                    // arguments — arg 1 is then the index, not the name slot.
                     let player_pair_merged = matches!(
                         name.as_str(),
                         "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex"
@@ -327,16 +324,11 @@ impl EmitContext<'_> {
                         if index > 0 {
                             args_text.push_str(", ");
                         }
-                        // The frontend merges the leading `player, name` pair of
-                        // the indexed player-variable actions into one
-                        // player-variable value; split it back.
                         if index == 0 && player_pair_merged {
                             if let Some(wir::Value::PlayerVariable { player, variable }) =
                                 self.program.values.get(*arg).map(|node| &node.value)
                             {
-                                self.value(*player, &mut args_text)?;
-                                args_text.push_str(", ");
-                                args_text.push_str(self.player_name(*variable)?);
+                                self.emit_variable_pair(*player, *variable, &mut args_text)?;
                                 continue;
                             }
                         }
@@ -399,6 +391,19 @@ impl EmitContext<'_> {
         }
         Ok(())
     }
+
+    fn emit_variable_pair(
+        &mut self,
+        player: wir::ValueId,
+        variable: wir::PlayerVarId,
+        out: &mut String,
+    ) -> Result<()> {
+        self.value(player, out)?;
+        out.push_str(", ");
+        out.push_str(self.player_name(variable)?);
+        Ok(())
+    }
+
     pub(crate) fn args(&mut self, args: &[wir::ValueId], out: &mut String) -> Result<()> {
         for (index, arg) in args.iter().enumerate() {
             if index > 0 {

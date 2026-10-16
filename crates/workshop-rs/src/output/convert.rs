@@ -1,13 +1,3 @@
-//! Raw Workshop locale conversion: parse -> canonical semantics -> emit.
-//!
-//! [`convert`] parses raw Workshop text in a source locale into
-//! locale-independent `Program`, then emits it in a target locale. Canonical
-//! identities are locale-independent; only the spellings change. Missing
-//! target-locale mappings fail explicitly by default (an error, never a
-//! guess and never a silent passthrough of another locale's spelling);
-//! fallback is opt-in via [`ConvertOptions`] and recorded in
-//! [`Conversion::fallback_ids`].
-
 use crate::catalog::{Catalog, Locale};
 use crate::core::error::Result;
 use crate::core::signatures::ExpectedDomain;

@@ -189,9 +189,7 @@ impl<'a> EmitContext<'a> {
                 } else {
                     self.spelling(Kind::Value, name)?
                 };
-                // `format` (frontend) and `customString` (parsed ws text) are
-                // the same node.
-                let is_custom_string = canonical == Some("customString") || name == "customString";
+                let is_custom_string = matches!(name.as_str(), "format" | "customString");
                 if name == "string" {
                     out.push_str(spelling);
                     out.push('(');
@@ -276,8 +274,6 @@ impl<'a> EmitContext<'a> {
         Ok(())
     }
 
-    /// Fold a `Custom String` call whose text argument and constant numeric
-    /// arguments are all literals into the substituted text (the oracle's
     /// Canonicalize a `Custom String`/`.format()` call (#87): constant
     /// numeric arguments fold into the substituted text (the oracle's
     /// spelling), implicit `{}` placeholders renumber positionally to the
@@ -352,9 +348,6 @@ impl<'a> EmitContext<'a> {
         if !has_implicit && !any_constant {
             return Ok(None);
         }
-        // Canonicalize: fold constants inline at their placeholder, renumber
-        // variable placeholders positionally, keep variable arguments in
-        // placeholder order.
         let mut canonical = String::with_capacity(text.len());
         let mut variable_args = Vec::new();
         let mut variable_index = 0usize;
@@ -412,8 +405,6 @@ impl<'a> EmitContext<'a> {
         Ok(Some((canonical, variable_args)))
     }
 
-    /// The localized spelling of a modify operator, resolved through the
-    /// catalog (fallback-aware).
     pub(crate) fn modify_op_spelling(&mut self, op: wir::ModifyOp) -> Result<&'a str> {
         self.spelling(Kind::Operator, op.catalog_id())
     }
@@ -525,8 +516,6 @@ impl<'a> EmitContext<'a> {
         self.spelling(Kind::Structural, id)
     }
 
-    /// The localized spelling of a canonical enum member, resolving through
-    /// the catalog (fallback-aware; see [`EmitContext::spelling`]).
     pub(crate) fn enum_spelling(&mut self, domain: &str, member: &str) -> Result<&'a str> {
         let Some(domain_entry) = self.catalog.enum_domain(domain) else {
             return Err(WorkshopError::unknown(
@@ -694,8 +683,6 @@ impl<'a> EmitContext<'a> {
         emit_string_chain(spelling, &segments, out);
         Ok(())
     }
-    /// Render one value to a fresh `String` — the common
-    /// `let mut text = String::new(); self.value(id, &mut text)?` idiom.
     pub(crate) fn value_text(&mut self, id: wir::ValueId) -> Result<String> {
         let mut text = String::new();
         self.value(id, &mut text)?;

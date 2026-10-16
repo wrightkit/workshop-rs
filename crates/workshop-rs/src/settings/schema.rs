@@ -1,9 +1,3 @@
-//! Canonical typed facts for Workshop custom-game settings.
-//!
-//! Definitions are a semantic projection of the reviewed settings table. The
-//! table remains the parser/emitter lookup source, while [`Settings`] and
-//! [`SettingsNode`] remain the source-preserving authored-value carrier.
-
 use std::fmt;
 
 use crate::gameplay::{AbilityVariant, HeroId, LogicalSlot};

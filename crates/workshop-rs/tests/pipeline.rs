@@ -1,7 +1,3 @@
-//! Pipeline tests: catalog data is regenerable deterministically, validation
-//! rejects collisions/missing primary aliases, the committed catalog is
-//! already canonical, and the content digest is maintained and verified.
-
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -21,7 +17,6 @@ fn canonicalize_is_deterministic_and_idempotent() {
     let first = canonicalize(&source).expect("source canonicalizes");
     let second = canonicalize(&first).expect("canonical form canonicalizes");
     assert_eq!(first, second, "canonicalize must be idempotent");
-    // The canonical form still loads and validates (digest included).
     Catalog::load(&first).expect("canonical form validates");
 }
 
@@ -41,7 +36,6 @@ fn build_recomputes_and_stabilizes_the_digest() {
     let first = build_canonical(&source).expect("source builds");
     let second = build_canonical(&first).expect("built form builds");
     assert_eq!(first, second, "build must be byte-idempotent");
-    // The rebuilt form declares the digest of its own content.
     Catalog::load(&first).expect("rebuilt form validates with its digest");
     assert!(content_digest(&first).is_ok());
 }
@@ -49,7 +43,6 @@ fn build_recomputes_and_stabilizes_the_digest() {
 #[test]
 fn stale_digest_is_rejected_at_load() {
     let mut stale = read_data();
-    // Tamper with a spelling without updating the digest.
     let pos = stale.find("Disable Inspector Recording").unwrap();
     stale.replace_range(
         pos..pos + "Disable Inspector Recording".len(),
@@ -57,7 +50,6 @@ fn stale_digest_is_rejected_at_load() {
     );
     let error = Catalog::load(&stale).expect_err("stale digest must fail");
     assert!(error.to_string().contains("digest mismatch"), "{error}");
-    // The pipeline can repair it: build recomputes the digest.
     let repaired = build_canonical(&stale).expect("build repairs the digest");
     Catalog::load(&repaired).expect("repaired catalog loads");
 }

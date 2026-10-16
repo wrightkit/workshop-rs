@@ -39,27 +39,20 @@ struct ProgramProvenance {
 struct DeclarationProvenance {
     span: Option<Span>,
     name_span: Option<Span>,
-    /// The identity of the declaration this record was attached to.
     identity: NodeIdentity,
 }
 
 #[derive(Debug, Clone, Default)]
 struct RuleProvenance {
     span: Option<crate::source::Span>,
-    /// The recorded span of the rule's quoted name in `rule("name")`.
     name: Option<Span>,
-    /// The recorded span of the subroutine name a `Subroutine` event binds.
     event_name: Option<Span>,
-    /// The identity of the public rule this record was attached to.
     identity: NodeIdentity,
     conditions: Vec<ValueProvenance>,
     actions: Vec<ActionProvenance>,
 }
 
 impl RuleProvenance {
-    /// Prepare the record for a setter write: attaching to a position whose
-    /// node diverged from the record discards its own fields, while the
-    /// condition and action tables keep their independently screened records.
     fn reseat(&mut self, identity: NodeIdentity) {
         if self.identity != identity {
             self.span = None;
@@ -73,21 +66,13 @@ impl RuleProvenance {
 #[derive(Debug, Clone, Default)]
 struct ActionProvenance {
     span: Option<Span>,
-    /// The recorded span of the variable or subroutine the action names: a
-    /// set/modify/for target or a `Call Subroutine` callee.
     identifier: Option<Span>,
-    /// The identity of the public action this record was attached to.
     identity: NodeIdentity,
     arguments: Vec<ValueProvenance>,
 }
 
-/// A provenance node carrying an authored span; shared by the child-slot
-/// writer used by the condition/action span setters.
 trait SpanSlot {
     fn span_slot(&mut self) -> &mut Option<Span>;
-    /// Prepare the record for a setter write: attaching to a position whose
-    /// node diverged from the record discards its own fields, while child
-    /// tables keep their independently screened records.
     fn reseat(&mut self, identity: NodeIdentity);
 }
 
@@ -117,12 +102,6 @@ impl SpanSlot for ActionProvenance {
     }
 }
 
-/// Clear every recorded span in `provenance` that belongs to `file` and does
-/// not resolve inside `document`. A span in another file is not stale: its
-/// own source has not been attached yet, so it cannot be judged against this
-/// document — `SourceDocument::byte_range` already rejects both a file
-/// mismatch and an out-of-bounds extent, so the span's own file gate is what
-/// keeps foreign-file spans alive until their source arrives.
 fn prune_spans_outside(
     provenance: &mut ProgramProvenance,
     file: FileId,
@@ -171,10 +150,7 @@ fn prune_spans_outside(
 #[derive(Debug, Clone, Default)]
 struct ValueProvenance {
     span: Option<Span>,
-    /// The recorded span of the variable or subroutine identifier the value
-    /// names, when the value is such a reference.
     identifier: Option<Span>,
-    /// The identity of the public node this record was attached to.
     identity: NodeIdentity,
     children: Vec<ValueProvenance>,
 }
@@ -360,11 +336,6 @@ impl Program {
         )
     }
 
-    /// Shared span setter for condition/action provenance slots: validates the
-    /// span, bounds-checks the child index against the public rule shape, then
-    /// resizes the table and writes the slot with the node's current identity.
-    /// The identity closure runs only after the bounds check because it
-    /// indexes the public child list.
     #[allow(clippy::too_many_arguments)]
     fn set_child_span<T: SpanSlot + Default>(
         &mut self,
@@ -601,10 +572,6 @@ impl Program {
         record.identifier.or(record.span)
     }
 
-    /// The provenance record of a value nested inside a public rule
-    /// condition, while the node at `path` still has the recorded identity.
-    /// Unlike [`condition_value_span`](Self::condition_value_span) callers can
-    /// read the node's own span independently of its identifier span.
     fn condition_value_record(
         &self,
         rule: usize,
@@ -617,10 +584,6 @@ impl Program {
         value_provenance_at(record, value, path, identity)
     }
 
-    /// The authored node span of a value nested inside a public rule
-    /// condition, without the identifier-span substitution
-    /// [`condition_value_span`](Self::condition_value_span) performs for
-    /// variable and subroutine references.
     pub(crate) fn condition_value_node_span(
         &self,
         rule: usize,
@@ -650,9 +613,6 @@ impl Program {
         record.identifier.or(record.span)
     }
 
-    /// The provenance record of a value nested inside a direct value argument
-    /// of a public action, while the node at `path` still has the recorded
-    /// identity.
     fn action_argument_value_record(
         &self,
         rule: usize,
@@ -665,10 +625,6 @@ impl Program {
         value_provenance_at(record, value, path, value_identity(value))
     }
 
-    /// The authored node span of a value nested inside a direct value
-    /// argument of a public action, without the identifier-span substitution
-    /// [`action_argument_value_span`](Self::action_argument_value_span)
-    /// performs for variable and subroutine references.
     pub(crate) fn action_argument_value_node_span(
         &self,
         rule: usize,
@@ -749,11 +705,6 @@ impl Program {
         )
     }
 
-    /// The recorded provenance row for a rule, while the rule table still
-    /// matches the public rule count. Used both for the record's own fields
-    /// — [`rule_provenance`] adds the identity check — and for descending
-    /// into its condition and action tables, which carry records of their
-    /// own.
     fn rule_record(&self, rule: usize) -> Option<&RuleProvenance> {
         let recorded = &self.provenance.as_deref()?.rules;
         if recorded.len() != self.rules.len() {
@@ -762,9 +713,6 @@ impl Program {
         recorded.get(rule)
     }
 
-    /// The recorded provenance of a rule's own fields: the record is
-    /// returned only while the rule at that position still has the recorded
-    /// identity.
     fn rule_provenance(&self, rule: usize) -> Option<&RuleProvenance> {
         self.rule_record(rule)
             .filter(|record| record.identity == rule_identity(&self.rules[rule]))
@@ -778,9 +726,6 @@ impl Program {
         recorded.actions.get(action)
     }
 
-    /// The recorded provenance of an action's own fields: the record is
-    /// returned only while the action at that position still has the
-    /// recorded identity.
     fn action_provenance(&self, rule: usize, action: usize) -> Option<&ActionProvenance> {
         self.action_record(rule, action)
             .filter(|record| record.identity == action_identity(&self.rules[rule].actions[action]))
@@ -800,9 +745,6 @@ impl Program {
         recorded.arguments.get(argument)
     }
 
-    /// The recorded provenance of an action argument's own fields: the
-    /// record is returned only while the argument value at that position
-    /// still has the recorded identity.
     fn action_argument_provenance(
         &self,
         rule: usize,
@@ -822,9 +764,6 @@ impl Program {
         recorded.conditions.get(condition)
     }
 
-    /// The recorded provenance of a condition's own fields: the record is
-    /// returned only while the condition at that position still has the
-    /// recorded identity.
     fn condition_provenance(&self, rule: usize, condition: usize) -> Option<&ValueProvenance> {
         self.condition_record(rule, condition).filter(|record| {
             record.identity == condition_identity(&self.rules[rule].conditions[condition])
@@ -876,9 +815,6 @@ impl Program {
             .as_mut()
     }
 
-    /// Mutable provenance access for the span setters: the addressed record
-    /// is reseated for the current node so attaching a span never lets a
-    /// record displaced by mutation resurface on a different node.
     fn rule_provenance_mut(
         &mut self,
         rule: usize,
@@ -916,9 +852,6 @@ impl Program {
         Ok(record)
     }
 
-    /// Record the identity of the public node every attached provenance record
-    /// describes, so records are only returned for the content they were
-    /// attached to. Called once after parsing or applying a [`SourceMap`].
     fn record_identities(&mut self) {
         let Some(mut provenance) = self.provenance.take() else {
             return;
@@ -928,12 +861,6 @@ impl Program {
     }
 }
 
-/// Walk the provenance tree of `value` along `path`. Descending only
-/// requires each level's child table to match the public child count, so a
-/// node that went stale does not hide unaffected siblings; the record at the
-/// path's end is returned only while the node there still has the recorded
-/// identity — `root_identity` for the starting record, its own
-/// [`value_identity`] for every record reached by path.
 fn value_provenance_at<'a>(
     record: &'a ValueProvenance,
     value: &'a Value,
@@ -960,8 +887,6 @@ fn fit<T: Default>(items: &mut Vec<T>, len: usize) {
     items.resize_with(len, T::default);
 }
 
-/// Selects one declaration-provenance table so the three span setters share
-/// their validate-bounds-fit-assign skeleton.
 #[derive(Copy, Clone)]
 enum DeclarationTable {
     GlobalVariables,
@@ -1114,8 +1039,6 @@ impl From<Value> for Condition {
     }
 }
 
-/// The direct value arguments of a public action, in their mapped order.
-/// Provenance rows pair these positionally with `wir::Action::value_args`.
 pub(crate) fn action_argument_values(action: &Action) -> Vec<&Value> {
     match action {
         Action::SetGlobalVariable { value, .. } | Action::ModifyGlobalVariable { value, .. } => {
@@ -1143,8 +1066,6 @@ pub(crate) fn action_argument_values(action: &Action) -> Vec<&Value> {
     }
 }
 
-/// The children a public value exposes to provenance addressing, in the order
-/// [`Program::condition_value_span`] documents.
 pub(crate) fn value_children(value: &Value) -> Vec<&Value> {
     match value {
         Value::Array(values) => values.iter().collect(),

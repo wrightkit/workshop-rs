@@ -143,12 +143,6 @@ impl SettingsListElement {
 }
 
 impl Settings {
-    /// Drop every span recorded on the block and its members.
-    ///
-    /// Called when the program's file table is rebound to a different
-    /// coordinate space (`SourceMap::apply`): the map carries no settings
-    /// entries, so the spans parsed against the previous text cannot be
-    /// re-anchored and must not survive as stale positions.
     pub(crate) fn clear_spans(&mut self) {
         self.span = None;
         for node in &mut self.children {
@@ -174,7 +168,6 @@ impl SettingsNode {
         }
     }
 
-    /// Drop this node's span and, for containers, every descendant span.
     fn clear_spans(&mut self) {
         match self {
             SettingsNode::Workshop { children, span }

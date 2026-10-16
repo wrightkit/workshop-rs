@@ -22,8 +22,6 @@ fn bin() -> &'static str {
     env!("CARGO_BIN_EXE_workshop-rs-cli")
 }
 
-/// One program under test: `actions` is placed inside an `Ongoing - Global`
-/// rule; `accepted` is the shared accept/reject contract.
 struct Case {
     id: &'static str,
     actions: &'static str,
@@ -31,7 +29,6 @@ struct Case {
 }
 
 const CASES: &[Case] = &[
-    // A fully canonical program: every entry point must accept it.
     Case {
         id: "valid",
         actions: "Wait(1);",
@@ -45,7 +42,6 @@ const CASES: &[Case] = &[
         actions: "Wait(1, 2, 3, 4, 5);",
         accepted: false,
     },
-    // A call missing every required argument.
     Case {
         id: "missing-args",
         actions: "Wait();",
@@ -58,30 +54,21 @@ const CASES: &[Case] = &[
         actions: "Big Message(All Players(All Teams));",
         accepted: false,
     },
-    // An unknown action spelling is rejected while parsing; both entry
-    // points must agree on that rejection.
     Case {
         id: "unknown-action",
         actions: "Totally Unknown Thing(1);",
         accepted: false,
     },
-    // An unresolved value call is preserved by the parser and rejected only
-    // by canonical-ID validation.
     Case {
         id: "unknown-value",
         actions: "Wait(Totally Bogus Value(1));",
         accepted: false,
     },
-    // An unresolved enum member is preserved by the parser for canonical
-    // validation, which rejects it.
     Case {
         id: "unknown-enum-member",
         actions: "Set Player Allowed Heroes(All Players(All Teams), Hero(Not A Hero));",
         accepted: false,
     },
-    // A literal overflowing to a non-finite number is rejected by
-    // `Program::validate` (WIR invariants), not by canonical-ID
-    // validation — so this leg is guarded in both entry points too.
     Case {
         id: "non-finite-number",
         actions: "Wait(1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890);",
@@ -100,8 +87,6 @@ fn sha256(text: &str) -> String {
     format!("{:x}", Sha256::digest(text.as_bytes()))
 }
 
-/// The library validation path as the corpus runner applies it: parse, then
-/// WIR structural validation, then canonical-ID validation.
 fn library_accepts(source: &str, catalog: &Catalog, locale: &Locale) -> bool {
     let Ok(program) = parser::parse_with_context(source, catalog, locale, catalog) else {
         return false;
@@ -109,9 +94,6 @@ fn library_accepts(source: &str, catalog: &Catalog, locale: &Locale) -> bool {
     program.validate().is_ok() && validate::validate_canonical_ids(&program, catalog).is_ok()
 }
 
-/// Write one fixture file per case and a schema-2 corpus manifest pinning
-/// every fixture's digest, then run the `corpus` command on it. Returns the
-/// per-case conformance status reported by the runner.
 fn corpus_statuses(dir: &Path, cases: &[(&Case, String)]) -> HashMap<String, String> {
     let case_entries: Vec<serde_json::Value> = cases
         .iter()
@@ -186,8 +168,6 @@ fn corpus_accepts(status: &str) -> bool {
     }
 }
 
-/// The CLI `parse` entry point as a user runs it: exit 0 accepts the
-/// program, exit 1 rejects it (exit 2 would be a usage error).
 fn cli_accepts(file: &Path) -> (bool, String) {
     let output = Command::new(bin())
         .args(["parse", "--locale", "en-US", file.to_str().unwrap()])

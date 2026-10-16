@@ -1,11 +1,8 @@
-//! Canonical Workshop action forms.
-
 use crate::core::source::Span;
 use crate::program::shared::ModifyOp;
 
 use super::{ActionId, GlobalVarId, PlayerVarId, SubroutineId, ValueId};
 
-/// A workshop action.
 #[derive(Debug, Clone)]
 pub(crate) enum Action {
     SetGlobalVariable {
@@ -36,9 +33,6 @@ pub(crate) enum Action {
         span: Option<Span>,
         target_span: Option<Span>,
     },
-    /// Assignment to a canonical Workshop member-access target, optionally
-    /// indexed. This is not a builtin catalog action; the emitter preserves
-    /// the native member-assignment syntax.
     AssignMember {
         target: ValueId,
         op: Option<ModifyOp>,
@@ -69,10 +63,6 @@ pub(crate) enum Action {
         span: Option<Span>,
         target_span: Option<Span>,
     },
-    /// `For Player Variable(player, name, start, stop, step)`: the
-    /// per-player loop form (frontend-neutral; parsed from reference
-    /// evidence, not emitted by Wright's own lowering, which models
-    /// foreach counters as globals under the declared #119 contract).
     ForPlayerVariable {
         player: ValueId,
         variable: PlayerVarId,
@@ -90,7 +80,6 @@ pub(crate) enum Action {
         action: ActionId,
         span: Option<Span>,
     },
-    /// Any other action call with side effects.
     Call {
         name: String,
         args: Vec<ValueId>,
@@ -99,7 +88,6 @@ pub(crate) enum Action {
 }
 
 impl Action {
-    /// The source span of this action, if any.
     pub(crate) fn span(&self) -> Option<Span> {
         match self {
             Action::SetGlobalVariable { span, .. }
@@ -117,10 +105,6 @@ impl Action {
         }
     }
 
-    /// The source span of the variable or subroutine this action names: the
-    /// target of set/modify and for-variable actions, or the callee of a
-    /// `Call Subroutine` action. `None` for variants without an identifier
-    /// field.
     pub(crate) fn identifier_span(&self) -> Option<Span> {
         match self {
             Action::SetGlobalVariable { target_span, .. }
@@ -134,7 +118,6 @@ impl Action {
         }
     }
 
-    /// Mutable access to this action's source span field.
     pub(crate) fn span_mut(&mut self) -> &mut Option<Span> {
         match self {
             Action::SetGlobalVariable { span, .. }
@@ -152,8 +135,6 @@ impl Action {
         }
     }
 
-    /// Mutable access to this action's identifier span field, when the
-    /// variant carries one (see [`identifier_span`](Self::identifier_span)).
     pub(crate) fn identifier_span_mut(&mut self) -> Option<&mut Option<Span>> {
         match self {
             Action::SetGlobalVariable { target_span, .. }
@@ -167,10 +148,6 @@ impl Action {
         }
     }
 
-    /// The direct value arguments of this action, in canonical order. Block
-    /// bodies are separate actions and are not included. Provenance rows pair
-    /// these positionally with `program::action_argument_values`, so the two
-    /// tables must stay consistent.
     pub(crate) fn value_args(&self) -> Vec<ValueId> {
         match self {
             Action::SetGlobalVariable { value, .. }
@@ -197,8 +174,6 @@ impl Action {
         }
     }
 
-    /// The modify operation for `Modify*`/`AssignMember` actions; `None` for
-    /// plain sets and non-assignment actions.
     pub(crate) fn modify_op(&self) -> Option<ModifyOp> {
         match self {
             Action::ModifyGlobalVariable { op, .. } | Action::ModifyPlayerVariable { op, .. } => {
@@ -210,7 +185,6 @@ impl Action {
     }
 }
 
-/// One condition/body pair of an `If` action.
 #[derive(Debug, Clone)]
 pub(crate) struct IfBranch {
     pub(crate) condition: ValueId,

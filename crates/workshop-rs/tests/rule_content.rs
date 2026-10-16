@@ -554,8 +554,6 @@ fn every_value_variant_has_a_node_form() {
 
 #[test]
 fn every_action_variant_has_a_node_form() {
-    // Exhaustive over the public `Action` enum for the same reason as the
-    // `Value` coverage above.
     let forms = |action: &Action| match action {
         Action::SetGlobalVariable { .. } | Action::SetPlayerVariable { .. } => "set",
         Action::ModifyGlobalVariable { .. } | Action::ModifyPlayerVariable { .. } => "modify",

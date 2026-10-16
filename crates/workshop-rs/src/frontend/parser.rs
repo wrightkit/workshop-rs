@@ -1,11 +1,3 @@
-//! Native localized Workshop parser.
-//!
-//! Parses vanilla Workshop text directly into validated, locale-independent
-//! the canonical public [`Program`]. Localized actions, values, events, enums, and structural
-//! keywords resolve through the canonical catalog; malformed input,
-//! unknown spellings, and recognized-but-unsupported constructs are reported
-//! as distinct structured diagnostics with source spans.
-
 pub(crate) use std::collections::HashMap;
 use std::sync::OnceLock;
 
@@ -23,16 +15,11 @@ pub(crate) use super::lexer::{Token, TokenKind, tokenize};
 pub(crate) use crate::catalog::{Catalog, Kind, Locale};
 pub(crate) use crate::core::error::{Result, WorkshopError};
 
-/// Where action parsing stopped.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Stop {
-    /// The enclosing `}` was consumed.
     SectionClosed,
-    /// The `End` keyword is next (not consumed).
     End,
-    /// The `Else If` keyword is next (not consumed).
     ElseIf,
-    /// The `Else` keyword is next (not consumed).
     Else,
 }
 
@@ -104,7 +91,6 @@ pub(crate) fn parse_wir_with_context(
     .program()
 }
 
-/// A synthetic single-position span (used before a file registry exists).
 pub(crate) fn synthetic_span(position: Position) -> Span {
     Span::new(crate::core::ids::Id::from_index(0), position, position)
 }
@@ -115,18 +101,9 @@ pub(crate) struct ParseContext<'a> {
     pub(crate) source: &'a str,
     pub(crate) catalog: &'a Catalog,
     pub(crate) locale: Locale,
-    /// Canonical signature context (#111): supplies the expected enum domain
-    /// for the call argument currently being parsed.
     pub(crate) context: &'a dyn ExpectedDomain,
-    /// The expected enum domain for the value currently being parsed, set by
-    /// [`ParseContext::value_args`] from the enclosing call's signature.
     pub(crate) expected_domain: Option<&'a str>,
-    /// Marks the next [`ParseContext::value`] call as a rule-level condition
-    /// (`conditions` entries, `If`/`Else If`/`While` conditions) so an action
-    /// call there is diagnosed as an action used as a condition (#340).
     pub(crate) condition_pending: bool,
-    /// Whether the value currently being parsed is that top-level condition
-    /// expression; nested arguments always parse as ordinary values.
     pub(crate) in_condition: bool,
     pub(crate) call_stack: Vec<String>,
     pub(crate) target: wir::Program,
@@ -138,8 +115,6 @@ pub(crate) struct ParseContext<'a> {
 }
 
 impl<'a> ParseContext<'a> {
-    /// Run `f` with the signature-pinned expected domain temporarily replaced,
-    /// restoring the enclosing domain afterwards (#111).
     pub(crate) fn with_domain<T>(
         &mut self,
         domain: Option<&'a str>,
@@ -152,8 +127,6 @@ impl<'a> ParseContext<'a> {
         result
     }
 
-    /// Parse a value while `domain` is in effect (or `None` for value
-    /// positions a signature must not pin).
     pub(crate) fn value_in_domain(&mut self, domain: Option<&'a str>) -> Result<wir::ValueId> {
         self.with_domain(domain, |p| p.value())
     }
@@ -262,8 +235,6 @@ impl<'a> ParseContext<'a> {
         Ok((join_as_written(&parts), start, end))
     }
 
-    /// Read a single-line phrase (stops at a line boundary). Used for names
-    /// that are structurally one per line, such as variable declarations.
     pub(crate) fn phrase_on_line(&mut self) -> Result<(String, Position, Position)> {
         self.phrase_on_line_impl(false)
     }
@@ -545,8 +516,6 @@ impl<'a> ParseContext<'a> {
         None
     }
 
-    /// `extend_catalog_spelling` specialized to catalog entry aliases of
-    /// `kinds`, honoring the `resolve_entry` primary-locale fallback (#448).
     pub(crate) fn extend_entry_spelling(
         &mut self,
         phrase: &str,
@@ -565,7 +534,6 @@ impl<'a> ParseContext<'a> {
         })
     }
 
-    /// Consume a known keyword phrase, verifying its spelling.
     pub(crate) fn consume_phrase(&mut self, expected: &str) -> Result<()> {
         let (phrase, _, _) = self.phrase()?;
         if phrase != expected {
@@ -574,9 +542,6 @@ impl<'a> ParseContext<'a> {
         Ok(())
     }
 
-    /// The spellings a structural keyword accepts here: catalog aliases for
-    /// the active and primary locales, plus the hardcoded fallback keys that
-    /// resolve to the same id in the primary locale.
     fn structural_spellings(&self, id: &str) -> Vec<String> {
         let mut spellings = Vec::new();
         if let Some(entry) = self.catalog.entry(Kind::Structural, id) {
@@ -598,8 +563,6 @@ impl<'a> ParseContext<'a> {
         spellings
     }
 
-    /// How many tokens a structural spelling spans at the cursor: words and
-    /// numbers compare case-insensitively, a trailing `.` needs a Dot token.
     fn match_spelling_tokens(&self, spelling: &str) -> Option<usize> {
         let mut offset = 0;
         for piece in spelling.split(' ') {
@@ -648,7 +611,6 @@ impl<'a> ParseContext<'a> {
         }
     }
 
-    /// Consume one structural keyword by canonical id, verifying spelling.
     pub(crate) fn consume_keyword(&mut self, id: &str) -> Result<()> {
         if self.keyword_prefix(&[id]).is_some() {
             return Ok(());
@@ -678,10 +640,6 @@ impl<'a> ParseContext<'a> {
         }
     }
 
-    /// Expect the `;` terminating a statement. When the token found instead
-    /// sits on a later line, the missing `;` is reported at the end of the
-    /// statement it should have closed rather than at that unrelated token
-    /// (#340); a same-line offender keeps pointing at the token itself.
     pub(crate) fn expect_semi(&mut self, message: &str) -> Result<()> {
         match self.peek() {
             Some(Token {
@@ -725,8 +683,6 @@ impl<'a> ParseContext<'a> {
         WorkshopError::unknown(kind, spelling.to_string(), self.locale.clone(), None)
     }
 
-    /// `unknown` carrying the span of the rejected spelling (#448: settings
-    /// diagnostics must locate their token).
     pub(crate) fn unknown_at(
         &self,
         kind: &'static str,
@@ -742,9 +698,6 @@ impl<'a> ParseContext<'a> {
         )
     }
 
-    /// Spellings of `kind` the parse surface accepts under `self.locale`:
-    /// the locale's own spellings plus, when `include_primary`, the primary
-    /// locale's (the fallback [`ParseContext::resolve_entry`] accepts).
     pub(crate) fn accepted_spellings(
         &self,
         kind: Kind,
@@ -764,9 +717,6 @@ impl<'a> ParseContext<'a> {
         })
     }
 
-    /// Member spellings of `domain` accepted under `self.locale`: the
-    /// locale's own spellings plus, when `include_primary`, the primary
-    /// locale's (the fallback `resolve_enum_member_mixed` accepts).
     pub(crate) fn accepted_member_spellings<'b>(
         &'b self,
         domain: &'b str,
@@ -791,7 +741,6 @@ impl<'a> ParseContext<'a> {
             })
     }
 
-    /// The nearest accepted `kind` spellings for a rejected parse spelling.
     pub(crate) fn spelling_candidates(
         &self,
         kind: Kind,
@@ -805,8 +754,6 @@ impl<'a> ParseContext<'a> {
         )
     }
 
-    /// The nearest accepted `domain` member spellings for a rejected parse
-    /// spelling.
     pub(crate) fn member_candidates(
         &self,
         domain: &str,
@@ -902,9 +849,6 @@ pub(crate) fn raw_token_text(kind: &TokenKind) -> String {
             "\"{}\"",
             crate::output::emitter::escape_settings_string(value)
         ),
-        // The lexer canonicalizes the operator spellings `!`, `&&`, `||`
-        // to `not`/`and`/`or`; the written spelling is the sigil form, so
-        // reconstruct it for source text (#448).
         TokenKind::Op(value) => match value.as_str() {
             "not" => "!".to_string(),
             "and" => "&&".to_string(),

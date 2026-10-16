@@ -1,7 +1,3 @@
-//! Native parser tests: the en-US corpus Workshop text parses directly
-//! into validated, locale-independent WIR, and diagnostics distinguish
-//! malformed, unknown, and unsupported input.
-
 use workshop_rs::convert;
 use workshop_rs::emitter;
 use workshop_rs::parser;
@@ -508,7 +504,6 @@ fn parsed_conditions_resolve_infix_operators() {
         .find(|rule| rule.name == "player starts")
         .expect("rule");
     assert_eq!(rule.conditions.len(), 1, "one condition");
-    // The condition is `==(hasSpawned(eventPlayer), true)`.
     let condition = program.values.get(rule.conditions[0].value).unwrap();
     match &condition.value {
         wir::Value::Call { name, args } => {
@@ -527,7 +522,6 @@ fn spans_are_preserved() {
     let rule_span = rule.span.expect("rule span");
     assert_eq!(rule.name, "setup");
     assert!(rule_span.start.line >= 1);
-    // The disable-inspector action carries its own span.
     let action = program.actions.get(rule.actions[0]).expect("action");
     assert!(action.span().is_some());
 }
@@ -852,8 +846,6 @@ fn player_typed_values_validate_uniformly_across_wir_kinds() {
                 .contains("must have semantic type 'Number|Boolean|Vector'"),
             "{call}: {error}"
         );
-        // `X Component Of` still declares `Vector` only: both node kinds get
-        // the same rejection.
         let source = format!(
             r#"rule ("component") {{ event {{ Ongoing - Global; }} actions {{ Set Global Variable(probe, X Component Of({player})); }} }}"#
         );
@@ -873,7 +865,6 @@ fn player_typed_values_validate_uniformly_across_wir_kinds() {
 #[test]
 fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
     let catalog = catalog();
-    // Test 1: Action with multiple invalid arguments must report the first argument error
     let multi_arg_source = r#"rule ("multi-arg-error") {
         event { Ongoing - Global; }
         actions {
@@ -888,7 +879,6 @@ fn canonical_validation_preserves_first_error_ordering_on_multi_error_input() {
         "expected error for argument 1 (first argument), got: {error}"
     );
 
-    // Test 2: Rule with multiple invalid actions must report the first action's error
     let multi_action_source = r#"rule ("multi-action-error") {
         event { Ongoing - Global; }
         actions {
@@ -928,7 +918,6 @@ fn current_loop_action_resolves_to_canonical_generic_wir() {
 
 #[test]
 fn unsupported_construct_is_distinct_from_malformed() {
-    // A non-default eachPlayer sub-parameter is recognized but unsupported.
     let text = "rule (\"x\") { event { Ongoing - Each Player; Team 1; } actions { } }";
     let error = internal::try_parse(text).unwrap_err();
     assert!(
@@ -1016,14 +1005,12 @@ rule ("chase reevaluation enums") {
 
 #[test]
 fn explicit_locale_is_honored() {
-    // en-US parsing is deterministic; the parser never guesses a locale.
     let text = common::corpus_text("basic-rule");
     let program = internal::parse(&text);
     let dump = program.dump();
     assert!(!dump.is_empty());
 }
 
-/// The last argument value of the first call action of a parsed program.
 fn enum_value_of_first_action(program: &wir::Program, action_index: usize) -> &wir::Value {
     let action = program.actions.iter().nth(action_index).expect("action");
     let wir::Action::Call { args, .. } = action else {
@@ -1146,23 +1133,17 @@ fn expected_domain_resolution_tracks_the_catalog_declared_domains() {
     // parameter domains.
     use workshop_rs::signatures::ExpectedDomain;
     let catalog = catalog();
-    // chaseOverTime: [variable, destination, duration, reevaluation].
     assert_eq!(
         catalog.expected_domain("chaseOverTime", 3),
         Some("ChaseTimeReeval")
     );
     assert_eq!(catalog.expected_domain("chaseOverTime", 2), None);
-    // chaseAtRate pins the rate form's reevaluation domain.
     assert_eq!(
         catalog.expected_domain("chaseAtRate", 3),
         Some("ChaseRateReeval")
     );
-    // setInvisibility: member action; arg 1 is the pinned param.
     assert_eq!(catalog.expected_domain("setInvisibility", 0), None);
     assert_eq!(catalog.expected_domain("setInvisibility", 1), Some("Invis"));
-    // The player chase forms pin the reevaluation domain at the shifted
-    // workshop-text position (player, name, destination, duration/rate,
-    // reevaluation).
     assert_eq!(
         catalog.expected_domain("chasePlayerVariableOverTime", 4),
         Some("ChaseTimeReeval")
@@ -1171,7 +1152,6 @@ fn expected_domain_resolution_tracks_the_catalog_declared_domains() {
         catalog.expected_domain("chasePlayerVariableAtRate", 4),
         Some("ChaseRateReeval")
     );
-    // Unknown catalog ids and out-of-range indexes answer None.
     assert_eq!(catalog.expected_domain("noSuchAction", 0), None);
     assert_eq!(catalog.expected_domain("chaseOverTime", 4), None);
 }
@@ -1419,10 +1399,6 @@ fn unsupported_named_assignment_operator_is_rejected() {
 
 #[test]
 fn cross_domain_member_spelling_collisions_are_the_documented_inventory() {
-    // Systematic collision check: scan the declared catalog for member
-    // spellings shared by more than one enum domain (en-US) and assert the
-    // inventory is exactly the documented one. A new collision fails this
-    // test, forcing an explicit resolution decision for it.
     use std::collections::BTreeMap;
     let mut spelling_to_domains: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for domain in catalog().enum_domains() {
@@ -1542,7 +1518,6 @@ fn implicit_variables_allocate_monotonically_above_explicit_sparse_indices() {
             Global.implicit_twelve = 2;
             (Event Player).implicit_nine = 3;
             (Event Player).implicit_ten = 4;
-            // Existing variable reference does not allocate a new index
             Global.implicit_eleven = 10;
         }
     }"#;

@@ -1,13 +1,9 @@
-//! Structural validation of the Workshop IR model.
-
 use crate::core::source::Span;
 use crate::settings::{Settings as IrSettings, SettingsNode as IrSettingsNode};
 use crate::wir::error::IrError;
 
 use super::{Action, Event, EventTarget, Program, Rule, Value};
 
-/// Validate every ID resolves and every span is valid, returning the first
-/// violation.
 pub(crate) fn validate(program: &Program) -> Result<(), IrError> {
     if let Some(settings) = &program.settings {
         check_settings(settings, program)?;
@@ -283,8 +279,6 @@ fn check_span(span: Option<Span>, program: &Program) -> Result<(), IrError> {
     Ok(())
 }
 
-/// Recursive span checks for the settings carrier (structural only; the
-/// settings tree is emitted verbatim, #86).
 fn check_settings(settings: &IrSettings, program: &Program) -> Result<(), IrError> {
     check_span(settings.span, program)?;
     for node in &settings.children {

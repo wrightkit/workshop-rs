@@ -214,8 +214,6 @@ impl LiveCapture {
 
                     if previous.status != current.status {
                         if is_runtime_uncertain(previous) {
-                            // The baseline was never comparable, so a status
-                            // drift cannot be attributed to a real change.
                             runtime_uncertainty.push(DiffEntry::result(
                                 DiffCategory::RuntimeUncertainty,
                                 current,
@@ -660,8 +658,6 @@ mod tests {
         assert!(categories.contains(&DiffCategory::Catalog));
         assert!(categories.contains(&DiffCategory::Content));
         assert!(categories.contains(&DiffCategory::SemanticSchema));
-        // A `Matched` baseline that drifts to any other status is a real
-        // change, not a runtime uncertainty.
         assert!(
             diff.changes
                 .iter()

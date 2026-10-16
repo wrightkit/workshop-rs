@@ -120,10 +120,6 @@ fn provider_program(files: &[&str], spans: serde_json::Value) -> Program {
 fn attaching_sources_in_any_order_keeps_every_files_provenance() {
     const FILES: [&str; 3] = ["src/main.opy", "src/hud.opy", "src/generated.opy"];
     const AUTHORED: [&str; 3] = [MAIN_OPY, HUD_OPY, GENERATED_OPY];
-    // Provenance spread across all three files and every mapped slot kind:
-    // declaration and name spans, rule/name/event-name spans, condition and
-    // action spans with identifiers, and nested value children — including
-    // children attributed to a different file than their node.
     let spans = serde_json::json!([
         {"node": "global_variable", "index": 0, "span": wire(0, 2, 1, 21), "name_span": wire(0, 2, 14, 21)},
         {"node": "player_variable", "index": 0, "span": wire(1, 2, 1, 19), "name_span": wire(1, 2, 14, 19)},
@@ -224,8 +220,6 @@ fn spans_outside_the_attached_text_survive_until_their_own_files_audit() {
             );
             if file == GENERATED {
                 generated_attached = true;
-                // The span's own audit: it does not resolve inside
-                // generated.opy's text, so it is pruned — and nothing else.
                 assert_eq!(program.action_span(1, 0), None);
                 assert_eq!(SourceMap::extract(&program), pruned_map);
             } else {
@@ -248,8 +242,6 @@ fn spans_outside_the_attached_text_survive_until_their_own_files_audit() {
                     FILES[file]
                 );
             }
-            // late.opy's text never arrives, so its spans are never judged:
-            // they survive every attach unchanged.
             assert_eq!(
                 program.action_identifier_span(0, 1),
                 Some(at(2, 2, 5, 9)),

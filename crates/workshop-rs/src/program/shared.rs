@@ -33,7 +33,6 @@ pub enum PlayerEventKind {
 }
 
 impl PlayerEventKind {
-    /// The inverse of [`catalog_id`](Self::catalog_id).
     pub(crate) fn from_catalog_id(id: &str) -> Option<Self> {
         Some(match id {
             "playerDealtDamage" => Self::DealtDamage,
@@ -92,7 +91,6 @@ pub enum ModifyOp {
 }
 
 impl ModifyOp {
-    /// The inverse of [`catalog_id`](Self::catalog_id).
     pub(crate) fn from_catalog_id(id: &str) -> Option<Self> {
         Some(match id {
             "add" => Self::Add,

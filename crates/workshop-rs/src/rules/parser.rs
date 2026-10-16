@@ -1,8 +1,6 @@
 use crate::frontend::parser::*;
 
-/// The structural keywords a top-level keyword may resolve to.
 const TOP_LEVEL_SECTIONS: &[&str] = &["settings", "variables", "subroutines", "rule", "disabled"];
-/// The structural keywords a rule-body keyword may resolve to.
 const RULE_SECTIONS: &[&str] = &["event", "conditions", "actions"];
 
 impl ParseContext<'_> {
@@ -77,10 +75,8 @@ impl ParseContext<'_> {
                         self.next_global_index =
                             self.next_global_index.max(variable.index.saturating_add(1));
                         if let Some(id) = self.globals.get(&variable.name).copied() {
-                            // A spanless declaration was fabricated by a
-                            // forward reference: rebind it to the declared
-                            // index so earlier references keep their ID.
-                            if self.target.global_variables.get(id).unwrap().span.is_none() {
+                            if is_forward_declaration(self.target.global_variables.get(id).unwrap())
+                            {
                                 *self.target.global_variables.get_mut(id).unwrap() = variable;
                                 continue;
                             }
@@ -114,7 +110,8 @@ impl ParseContext<'_> {
                         self.next_player_index =
                             self.next_player_index.max(variable.index.saturating_add(1));
                         if let Some(id) = self.players.get(&variable.name).copied() {
-                            if self.target.player_variables.get(id).unwrap().span.is_none() {
+                            if is_forward_declaration(self.target.player_variables.get(id).unwrap())
+                            {
                                 *self.target.player_variables.get_mut(id).unwrap() = variable;
                                 continue;
                             }
@@ -163,9 +160,7 @@ impl ParseContext<'_> {
         }
     }
 
-    /// A declaration name must be expressible as a reference: `phrase_on_line`
-    /// joins `.`/`%`/`:`/spaced `-`, none of which `phrase` can parse back.
-    fn check_decl_name(&mut self, name: &str) -> Result<()> {
+    fn check_referenceable_name(&mut self, name: &str) -> Result<()> {
         if name.contains('.') || name.contains('%') || name.contains(':') || name.contains(" - ") {
             return Err(self.malformed(
                 &format!("declaration name '{name}' cannot be referenced"),
@@ -179,7 +174,7 @@ impl ParseContext<'_> {
         let index = self.declaration_index()?;
         self.expect(TokenKind::Colon, "expected ':' after variable index")?;
         let (name, name_start, name_end) = self.phrase_on_line()?;
-        self.check_decl_name(&name)?;
+        self.check_referenceable_name(&name)?;
         let name_span = Span::new(self.file(), name_start, name_end);
         Ok(wir::WorkshopVariable {
             name,
@@ -200,7 +195,7 @@ impl ParseContext<'_> {
             let index = self.declaration_index()?;
             self.expect(TokenKind::Colon, "expected ':' after subroutine index")?;
             let (name, start, end) = self.phrase_on_line()?;
-            self.check_decl_name(&name)?;
+            self.check_referenceable_name(&name)?;
             let id = self.target.subroutines.push(wir::WorkshopSubroutine {
                 name,
                 index,
@@ -214,22 +209,24 @@ impl ParseContext<'_> {
         Ok(())
     }
 
+    fn string_contents_span(&self, start: Position, end: Position) -> Span {
+        if start.line == end.line && end.col > start.col + 1 {
+            Span::new(
+                self.file(),
+                Position::new(start.line, start.col + 1),
+                Position::new(end.line, end.col - 1),
+            )
+        } else {
+            Span::new(self.file(), start, end)
+        }
+    }
+
     pub(crate) fn rule(&mut self, disabled: bool, rule_start: Position) -> Result<()> {
         self.expect_keyword("rule")?;
         self.expect(TokenKind::LParen, "expected '(' after 'rule'")?;
         let name = self.expect_string("expected a rule name string")?;
         let (name_start, name_end) = self.previous_span();
-        // The name sits inside the quotes of its string token; a quoted name
-        // spanning lines keeps the whole token extent instead.
-        let name_span = if name_start.line == name_end.line && name_end.col > name_start.col + 1 {
-            Span::new(
-                self.file(),
-                Position::new(name_start.line, name_start.col + 1),
-                Position::new(name_end.line, name_end.col - 1),
-            )
-        } else {
-            Span::new(self.file(), name_start, name_end)
-        };
+        let name_span = self.string_contents_span(name_start, name_end);
         self.expect(TokenKind::RParen, "expected ')' after rule name")?;
         self.expect(TokenKind::LBrace, "expected '{' after rule header")?;
 
@@ -343,9 +340,6 @@ impl ParseContext<'_> {
         }
     }
 
-    /// The nearest accepted section-keyword spellings for a rejected parse
-    /// word: the localized spellings and canonical ids of the structural
-    /// entries named by `ids`.
     fn section_candidates(&self, spelling: &str, ids: &[&str]) -> Vec<String> {
         let catalog = self.catalog;
         let primary = catalog.primary_locale();
@@ -386,4 +380,8 @@ impl ParseContext<'_> {
                 ))
         })
     }
+}
+
+fn is_forward_declaration(variable: &wir::WorkshopVariable) -> bool {
+    variable.span.is_none()
 }

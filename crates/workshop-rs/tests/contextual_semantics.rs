@@ -1,5 +1,3 @@
-//! Executable witnesses for contextual Workshop literal semantics.
-
 use super::common::{catalog, en, zh};
 use super::internal;
 use workshop_rs::emitter;
