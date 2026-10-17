@@ -69,6 +69,42 @@ blocks (606 elements / 500 nodes) than any statement in the rejected build,
 which is why only the value-tree measure of a single statement remains
 open.
 
+## Nested binder scopes
+
+A structural — not scalar — candidate added after `wrightkit/wright#713`.
+The element-binding values (`Filtered Array`, `Sorted Array`,
+`Mapped Array`, `Is True For All`, `Is True For Any`) evaluate every
+argument after the array source once per element, binding
+`Current Array Element`/`Current Array Index` inside that argument. A
+binder call appearing inside an enclosing binder's per-element argument
+creates a nested binding scope.
+
+Measured on canonical programs (binder occurrences inside an enclosing
+binder's argument ≥ 1):
+
+| Artifact | Client outcome | Nested binders |
+| --- | --- | ---: |
+| `OWBastion/Bastion` `798b81d`-era build (reported rejected, `wrightkit/wright#713`) | reported rejected | 1 (`isTrueForAll` inside `filteredArray`) |
+| `OWBastion/Bastion` `e7d59ca` build (`OWBastion/Bastion#405` flattening fix) | accepted | 0 |
+| `reproducer-bastion-prophet.ws` (verbatim `8a4b594` rule, reported rejected) | reported rejected | 16 (`filteredArray` inside `filteredArray`) |
+| `ai-pve.ow`, `defend.ow`, `illari.ow`, `rework.ow` (vendored) | accepted | 0 |
+
+The vendored `bastion.ow` could not be measured: it does not parse (the
+zh-CN `Symmetra` event-player spelling is not in the catalog — an unrelated
+parser gap).
+
+The signature discriminates every measured artifact: both rejected builds
+carry it, no accepted build does. It is still a correlation over a small
+corpus — not an established limit — and it does not imply the client
+rejects the shape rather than some correlated property of these builds.
+`wright`'s `nested-binder-lambda` lint rule reports it as a
+`static-indicator` warning. The `arg-binder-lambda.ws` /
+`arg-binder-source.ws` probe pair isolates it at minimal scale for the
+client test protocol: if the lambda probe is rejected while the
+source-position control imports, nested binder scope is the trigger;
+if both import, the signature is falsified and the correlation was
+incidental.
+
 ## Real-world mitigations observed
 
 Bastion's history contains two independent "flatten the giant nested
@@ -123,7 +159,9 @@ while the protocol below is required to establish any boundary.
 
 `crates/workshop-rs/tests/fixtures/import-limits/` holds the offline probe
 programs: a verbatim extraction of the reported-rejected rule, a single
-verbatim statement, a shape-matched flat control, and parametric probes that
+verbatim statement, a shape-matched flat control, a hand-written pair
+isolating the nested-binder signature (`arg-binder-lambda.ws` versus
+`arg-binder-source.ws`), and parametric probes that
 isolate per-rule totals, per-action argument-tree size, argument width,
 argument depth, serialized statement bytes, and per-rule aggregate
 value-tree load. Each probe stays
@@ -152,6 +190,11 @@ The probes pin the discriminating experiment:
   is rejected, the trigger is content-specific — the `createInWorldText`
   action kind, its player-set filter values, or its localized string
   arguments — rather than aggregate shape.
+- `arg-binder-lambda.ws` carries one binder inside another binder's
+  per-element argument; `arg-binder-source.ws` carries the same two binder
+  calls through the source argument instead. The pair isolates nested
+  binder scope at minimal scale — if it separates accept from reject,
+  the nested-binder signature is the trigger.
 
 ## Client test protocol
 

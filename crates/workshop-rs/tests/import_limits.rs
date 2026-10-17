@@ -20,6 +20,8 @@ const GLOBAL_ELEMENT_BUDGET: usize = 32768;
 const PROBES: &[&str] = &[
     "control-minimal.ws",
     "arg-array-wide.ws",
+    "arg-binder-lambda.ws",
+    "arg-binder-source.ws",
     "arg-depth-deep.ws",
     "arg-line-bytes.ws",
     "arg-nodes-large.ws",
@@ -137,6 +139,8 @@ fn probe_metrics_match_the_recorded_structure() {
         // file, total, max rule count, max action count, max nodes, height
         ("control-minimal.ws", 4, 4, 2, 5, 3),
         ("arg-array-wide.ws", 1004, 1004, 1002, 505, 4),
+        ("arg-binder-lambda.ws", 17, 17, 15, 16, 8),
+        ("arg-binder-source.ws", 14, 14, 12, 14, 7),
         ("arg-depth-deep.ws", 436, 436, 434, 245, 52),
         ("arg-line-bytes.ws", 164, 164, 162, 69, 5),
         ("arg-nodes-large.ws", 513, 513, 511, 515, 11),
@@ -231,6 +235,56 @@ fn height_and_node_count_measure_plain_subtree_shape() {
     assert_eq!(action.node_count(), 6);
     assert_eq!(rule.height(), 5);
     assert_eq!(rule.node_count(), 7);
+}
+
+/// The binder pair isolates scope position, not call multiset: both probes
+/// use two element-binding calls in one statement; `arg-binder-lambda.ws`
+/// puts one binder inside the other's per-element argument while
+/// `arg-binder-source.ws` chains the inner binder through the source
+/// (index-0) argument. That position is the signature shared by both
+/// reported-rejected builds and absent from the measured accepted ones —
+/// see `docs/import-limits.md`.
+#[test]
+fn binder_probes_differ_only_in_scope_position() {
+    fn call_name(value: &Value) -> &str {
+        match value {
+            Value::Call { name, .. } => name.as_str(),
+            _ => panic!("probe statement carries a call chain: {value:?}"),
+        }
+    }
+    let arg1_of_filter = |name: &str| {
+        let text = fixture_text("import-limits", name);
+        let program = parser::parse(&text, &catalog(), &en())
+            .unwrap_or_else(|error| panic!("{name} must parse: {error}"));
+        let Action::SetGlobalVariable { value, .. } = &program.rules[0].actions[0] else {
+            panic!("{name}: one assignment statement");
+        };
+        let Value::Call { name: outer, args } = value else {
+            panic!("{name}: the assigned value is a call")
+        };
+        assert_eq!(outer, "countOf");
+        let Value::Call { name: filter, args } = &args[0] else {
+            panic!("{name}: countOf's argument is the outer filter")
+        };
+        assert_eq!(filter, "filteredArray");
+        (args[0].clone(), args[1].clone())
+    };
+
+    let (source, lambda) = arg1_of_filter("arg-binder-lambda.ws");
+    assert_eq!(call_name(&source), "allPlayers");
+    assert_eq!(
+        call_name(&lambda),
+        "isTrueForAll",
+        "the nested binder sits in the per-element argument"
+    );
+
+    let (source, lambda) = arg1_of_filter("arg-binder-source.ws");
+    assert_eq!(
+        call_name(&source),
+        "filteredArray",
+        "the control chains the same binder through the source argument"
+    );
+    assert_eq!(call_name(&lambda), "!=");
 }
 
 /// `arg-line-bytes.ws` isolates serialized statement bytes from node count:
