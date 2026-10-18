@@ -600,3 +600,20 @@ fn current_settings_inventory_resolves_extensions_and_hero_keys() {
     }
     assert_no_raw(&program.settings.expect("settings").children);
 }
+
+/// The zh-CN client writes `禁用` for the secondary-fire switch; the spelling is
+/// accepted only at that key, not as a general boolean.
+#[test]
+fn zh_cn_secondary_fire_accepts_disabled_only_at_that_key() {
+    let catalog = catalog();
+    let locale = zh();
+    let settings = |line: &str| {
+        format!(
+            "设置\n{{\n\t英雄\n\t{{\n\t\t队伍1\n\t\t{{\n\t\t\t索杰恩\n\t\t\t{{\n\t\t\t\t{line}\n\t\t\t}}\n\t\t}}\n\t}}\n}}\n"
+        )
+    };
+    parser::parse(&settings("辅助攻击模式: 禁用"), &catalog, &locale)
+        .expect("禁用 is accepted at the secondary-fire key");
+    parser::parse(&settings("无需装弹: 禁用"), &catalog, &locale)
+        .expect_err("禁用 is not a general boolean spelling");
+}
