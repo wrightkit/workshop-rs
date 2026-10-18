@@ -5,7 +5,7 @@ the workspace-level `AGENTS.md` when available, then follow this file.
 
 `workshop-rs` is WrightKit's standalone Rust implementation of raw Overwatch
 Workshop and the canonical Workshop semantic core shared by the ecosystem. It
-is not an internal Wright backend repository: Wright, `opy-rs`, and `del-rs`
+is not an internal Wright backend repository: Wright, `opy-rs`, and `deltin-rs`
 consume its reviewed public contracts while `workshop-rs` remains independently
 usable as a library and CLI.
 
@@ -26,7 +26,7 @@ This repository does **not** own:
 
 - OverPy syntax, preprocessing, macros, source semantics, or reconstruction
   (`opy-rs`);
-- DEL/OSTW syntax, project/runtime semantics, or reconstruction (`del-rs`);
+- DEL/OSTW syntax, project/runtime semantics, or reconstruction (`deltin-rs`);
 - Wright lint/analyze/agent/CI/LSP/orchestration behavior (`wright`);
 - LPP protocol semantics (`language-provider-protocol`).
 
@@ -34,7 +34,7 @@ The durable dependency direction is consumer → Workshop core:
 
 ```text
 opy-rs ─────► workshop-rs
-del-rs ─────► workshop-rs
+deltin-rs ──► workshop-rs
 wright  ─────► workshop-rs
 ```
 
@@ -42,7 +42,7 @@ Do not introduce dependencies from `workshop-rs` back to source-language
 implementations or Wright tooling internals merely to make one integration
 simpler.
 
-A request from `opy-rs` or `del-rs` becomes `workshop-rs` work only when the
+A request from `opy-rs` or `deltin-rs` becomes `workshop-rs` work only when the
 missing capability is genuinely canonical Workshop behavior. Do not add
 provider-shaped nodes, aliases, runtime layouts, or source-language semantics to
 WIR/catalog contracts unless they are independently justified as Workshop
@@ -71,7 +71,7 @@ least one of:
 
 1. raw Workshop behavior and source provenance;
 2. seasonal/client/catalog tests;
-3. a real `opy-rs` or `del-rs` integration blocker demonstrating a missing
+3. a real `opy-rs` or `deltin-rs` integration blocker demonstrating a missing
    canonical Workshop capability;
 4. a Wright tooling blocker that cannot be solved correctly above the Workshop
    layer.
