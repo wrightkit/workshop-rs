@@ -108,22 +108,6 @@ impl ModifyOp {
         })
     }
 
-    pub(crate) fn as_str(self) -> &'static str {
-        match self {
-            Self::Add => "Add",
-            Self::Subtract => "Subtract",
-            Self::Multiply => "Multiply",
-            Self::Divide => "Divide",
-            Self::Modulo => "Modulo",
-            Self::Min => "Min",
-            Self::Max => "Max",
-            Self::RaiseToPower => "RaiseToPower",
-            Self::AppendToArray => "AppendToArray",
-            Self::RemoveFromArrayByValue => "RemoveFromArrayByValue",
-            Self::RemoveFromArrayByIndex => "RemoveFromArrayByIndex",
-        }
-    }
-
     /// The canonical catalog operator id (`add`, `removeFromArrayByIndex`)
     /// the Workshop modify-operator position resolves this operation from.
     /// Public since `rule-content-v1` names modify operands by this id.

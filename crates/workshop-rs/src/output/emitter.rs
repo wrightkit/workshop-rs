@@ -163,6 +163,10 @@ impl EmitContext<'_> {
     }
 }
 
+/// Re-escape a decoded settings string the way the pinned oracle does: every
+/// decode the JSONC parser performed is re-escaped, so decoded values
+/// round-trip to the oracle's spelling (a `\n` in the inputhud description is
+/// emitted as the literal two-character sequence `\n`).
 pub(crate) fn escape_string(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {
@@ -221,26 +225,6 @@ pub(crate) fn split_string(value: &str) -> Vec<String> {
         segments.push(escape_value_string(rest));
     }
     segments
-}
-
-/// Escape a settings string value the way the pinned oracle does: every
-/// decode the JSONC parser performed is re-escaped, so decoded values
-/// round-trip to the oracle's spelling. Evidence: the inputhud description
-/// (`\n` in the source block) is emitted by the oracle as the literal
-/// two-character sequence `\n` in the Workshop settings section.
-pub(crate) fn escape_settings_string(value: &str) -> String {
-    let mut out = String::with_capacity(value.len());
-    for ch in value.chars() {
-        match ch {
-            '\\' => out.push_str("\\\\"),
-            '"' => out.push_str("\\\""),
-            '\n' => out.push_str("\\n"),
-            '\t' => out.push_str("\\t"),
-            '\r' => out.push_str("\\r"),
-            other => out.push(other),
-        }
-    }
-    out
 }
 
 /// Emit the nested continuation chain

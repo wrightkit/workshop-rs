@@ -33,7 +33,7 @@ impl ParseContext<'_> {
         };
         let name_line = name_line.trim();
         let entry = self.resolve_entry(Kind::Event, name_line).ok_or_else(|| {
-            WorkshopError::unknown("event", name_line.to_string(), self.locale.clone(), None)
+            self.unknown("event", name_line)
                 .with_candidates(self.spelling_candidates(Kind::Event, name_line, false))
         })?;
         match entry.id.as_str() {

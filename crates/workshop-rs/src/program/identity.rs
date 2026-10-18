@@ -10,7 +10,7 @@ use super::{
 pub(super) type NodeIdentity = u64;
 
 pub(super) fn rule_identity(rule: &Rule) -> NodeIdentity {
-    scalar_identity(&(&rule.name, rule.disabled, &rule.event))
+    declaration_identity(&(&rule.name, rule.disabled, &rule.event))
 }
 
 pub(super) fn condition_identity(condition: &Condition) -> NodeIdentity {
@@ -36,10 +36,6 @@ pub(super) fn value_identity(value: &Value) -> NodeIdentity {
         hasher.write_u64(value_identity(child));
     }
     hasher.finish()
-}
-
-pub(super) fn declaration_identity(node: &impl Debug) -> NodeIdentity {
-    scalar_identity(node)
 }
 
 pub(super) fn record_identities(provenance: &mut ProgramProvenance, program: &Program) {
@@ -90,7 +86,7 @@ fn refresh_children(record: &mut ValueProvenance, value: &Value) {
     }
 }
 
-fn scalar_identity(node: &impl Debug) -> NodeIdentity {
+pub(super) fn declaration_identity(node: &impl Debug) -> NodeIdentity {
     struct Sink<'a>(&'a mut DefaultHasher);
     impl std::fmt::Write for Sink<'_> {
         fn write_str(&mut self, text: &str) -> std::fmt::Result {

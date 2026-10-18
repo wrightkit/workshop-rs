@@ -442,12 +442,27 @@ impl<'a> EmitContext<'a> {
         fallback_id: String,
         resolve: impl Fn(&Locale) -> Option<&'a str>,
     ) -> Result<&'a str> {
+        self.localized_with(kind, id, fallback_id, false, resolve)
+    }
+
+    /// [`Self::localized`] for any resolved type; `dedup` records `fallback_id`
+    /// only once.
+    pub(crate) fn localized_with<T>(
+        &mut self,
+        kind: &'static str,
+        id: &str,
+        fallback_id: String,
+        dedup: bool,
+        resolve: impl Fn(&Locale) -> Option<T>,
+    ) -> Result<T> {
         if let Some(spelling) = resolve(&self.locale) {
             return Ok(spelling);
         }
         if let Some(fallback) = &self.fallback {
             if let Some(spelling) = resolve(fallback) {
-                self.fallback_ids.push(fallback_id);
+                if !dedup || !self.fallback_ids.contains(&fallback_id) {
+                    self.fallback_ids.push(fallback_id);
+                }
                 return Ok(spelling);
             }
         }
@@ -643,20 +658,13 @@ impl<'a> EmitContext<'a> {
             })
         };
 
-        if let Some(mapped) = common_spelling(&self.locale) {
-            return Ok(mapped);
-        }
-        if let Some(fallback) = &self.fallback.clone() {
-            if let Some(mapped) = common_spelling(fallback) {
-                self.fallback_ids.push(format!("enumMember:{spelling}"));
-                return Ok(mapped);
-            }
-        }
-        Err(WorkshopError::MissingMapping {
-            kind: "ambiguous enum member",
-            id: spelling.to_string(),
-            locale: self.locale.clone(),
-        })
+        self.localized_with(
+            "ambiguous enum member",
+            spelling,
+            format!("enumMember:{spelling}"),
+            false,
+            common_spelling,
+        )
     }
 
     /// Render a value that must stay a bare string (the `Custom String` text

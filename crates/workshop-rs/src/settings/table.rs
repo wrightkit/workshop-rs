@@ -634,9 +634,7 @@ pub(crate) fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
 }
 
 fn exact_entry(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
-    entries().find(|entry| {
-        entry.path.len() == path.len() && entry.path.iter().zip(path.iter()).all(|(a, b)| a == b)
-    })
+    entries().find(|entry| entry.path == path)
 }
 
 /// The `gamemodes.general` leaf keys `elimination` inherits (the pinned
@@ -932,10 +930,7 @@ pub(crate) fn key_spellings(parent: &[PathPart<'_>]) -> Vec<&'static str> {
     let mut spellings: Vec<&'static str> = entries()
         .filter(|entry| {
             entry.path.len() == parent.len() + 1
-                && entry.path[..parent.len()]
-                    .iter()
-                    .zip(parent.iter())
-                    .all(|(a, b)| a == b)
+                && entry.path[..parent.len()] == *parent
                 // `%1$s` placeholder names are emission templates, not
                 // spellings a source could carry.
                 && !entry.workshop_name.contains("%1$s")
