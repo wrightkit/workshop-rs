@@ -1,8 +1,9 @@
 use std::collections::{BTreeMap, HashMap};
+use std::sync::OnceLock;
 
 use serde::Deserialize;
 
-use crate::core::error::{CatalogError, Result};
+use crate::core::error::{CatalogError, Result, WorkshopError};
 
 use super::{
     CATALOG_DATA, Catalog, CatalogEntry, EnumDomain, EnumMember, Kind, Locale,
@@ -227,7 +228,16 @@ impl Catalog {
 
     /// The built-in catalog data.
     pub fn builtin() -> Result<Catalog> {
-        Self::load(CATALOG_DATA)
+        Self::builtin_ref().cloned().map_err(Clone::clone)
+    }
+
+    /// The built-in catalog, parsed and indexed once per process.
+    pub fn builtin_ref() -> std::result::Result<&'static Catalog, &'static WorkshopError> {
+        static DATA: OnceLock<Result<Catalog>> = OnceLock::new();
+        match DATA.get_or_init(|| Self::load(CATALOG_DATA)) {
+            Ok(catalog) => Ok(catalog),
+            Err(error) => Err(error),
+        }
     }
     /// Mirror the verbatim spelling indexes under whitespace-collapsed
     /// keys (#448). A normalized key claimed by distinct targets is poisoned
