@@ -1,6 +1,6 @@
 use crate::core::source::Span;
 
-use super::{Action, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Program, Value};
+use super::{Action, Event, EventTarget, EventTeam, ModifyOp, Program, Value};
 
 pub(crate) fn dump(program: &Program) -> String {
     let mut out = String::new();
@@ -92,7 +92,7 @@ fn render_event(program: &Program, event: &Event, out: &mut String, level: usize
         Event::Player { kind, team, target } => out.push_str(&format!(
             "{}event {} team={} target={}\n",
             indent(level),
-            player_event_name(*kind),
+            pascal(kind.catalog_id()),
             event_team_name(*team),
             event_target_name(target)
         )),
@@ -127,26 +127,19 @@ fn event_target_name(target: &EventTarget) -> String {
     }
 }
 
-fn player_event_name(kind: PlayerEventKind) -> &'static str {
-    match kind {
-        PlayerEventKind::DealtDamage => "PlayerDealtDamage",
-        PlayerEventKind::DealtFinalBlow => "PlayerDealtFinalBlow",
-        PlayerEventKind::DealtHealing => "PlayerDealtHealing",
-        PlayerEventKind::DealtKnockback => "PlayerDealtKnockback",
-        PlayerEventKind::Died => "PlayerDied",
-        PlayerEventKind::EarnedElimination => "PlayerEarnedElimination",
-        PlayerEventKind::Joined => "PlayerJoined",
-        PlayerEventKind::Left => "PlayerLeft",
-        PlayerEventKind::ReceivedHealing => "PlayerReceivedHealing",
-        PlayerEventKind::ReceivedKnockback => "PlayerReceivedKnockback",
-        PlayerEventKind::TookDamage => "PlayerTookDamage",
-    }
+/// PascalCase spelling of a camelCase catalog id (`playerDied` -> `PlayerDied`).
+fn pascal(id: &str) -> String {
+    let mut chars = id.chars();
+    chars
+        .next()
+        .map(|first| first.to_uppercase().chain(chars).collect())
+        .unwrap_or_default()
 }
 
 fn op_separator(action: &Action) -> String {
     action
         .modify_op()
-        .map(|op| format!(" {} ", op.as_str()))
+        .map(|op| format!(" {} ", pascal(op.catalog_id())))
         .unwrap_or_else(|| " = ".to_string())
 }
 

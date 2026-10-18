@@ -579,7 +579,7 @@ fn source_value_spelling(
         }
         (SettingValueDomain::String, KeyKind::String, SettingValue::String(value)) => Ok(format!(
             "\"{}\"",
-            crate::output::emitter::escape_settings_string(&value)
+            crate::output::emitter::escape_string(&value)
         )),
         (SettingValueDomain::Enum { domain }, KeyKind::Enum(_), SettingValue::Enum(member)) => {
             let english = table::enum_name(domain, &member).ok_or_else(|| {

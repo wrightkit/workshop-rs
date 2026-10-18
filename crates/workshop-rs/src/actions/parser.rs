@@ -885,13 +885,9 @@ impl ParseContext<'_> {
                     .or_else(|| self.resolve_entry(Kind::Action, &format!("{phrase} ")))
                 else {
                     let candidates = self.spelling_candidates(Kind::Action, &phrase, true);
-                    return Err(WorkshopError::unknown(
-                        "action",
-                        phrase,
-                        self.locale.clone(),
-                        Some(Span::new(self.file(), start, end)),
-                    )
-                    .with_candidates(candidates));
+                    return Err(self
+                        .unknown_at("action", &phrase, start, end)
+                        .with_candidates(candidates));
                 };
                 // The player-variable chase forms lay the variable out as
                 // `player, name` leading arguments (the pinned oracle's
@@ -1023,13 +1019,8 @@ impl ParseContext<'_> {
             .extend_entry_spelling(&phrase, end, &[Kind::Operator])
             .unwrap_or((phrase, end));
         let entry = self.resolve_entry(Kind::Operator, &phrase).ok_or_else(|| {
-            WorkshopError::unknown(
-                "modify operator",
-                phrase.clone(),
-                self.locale.clone(),
-                Some(Span::new(self.file(), start, end)),
-            )
-            .with_candidates(self.spelling_candidates(Kind::Operator, &phrase, false))
+            self.unknown_at("modify operator", &phrase, start, end)
+                .with_candidates(self.spelling_candidates(Kind::Operator, &phrase, false))
         })?;
         ModifyOp::from_catalog_id(&entry.id).ok_or_else(|| {
             WorkshopError::unsupported(

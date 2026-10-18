@@ -290,6 +290,20 @@ impl std::fmt::Display for CooldownError {
 }
 impl std::error::Error for CooldownError {}
 
+enum SlotMiss<'a> {
+    Missing,
+    Ambiguous(Vec<&'a Ability>),
+}
+
+fn match_slot<'a>(hero: &'a Hero, slot: &LogicalSlot) -> Result<&'a Ability, SlotMiss<'a>> {
+    let mut matches = hero.abilities_in_slot(slot);
+    match matches.len() {
+        0 => Err(SlotMiss::Missing),
+        1 => Ok(matches.pop().expect("length checked")),
+        _ => Err(SlotMiss::Ambiguous(matches)),
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct GameplayQuery<'a> {
     catalog: &'a GameplayCatalog,
@@ -306,10 +320,8 @@ impl<'a> GameplayQuery<'a> {
     }
 
     pub fn hero(&self, hero: impl AsRef<str>) -> Result<&'a Hero, GameplayQueryError> {
-        let id = HeroId::new(hero.as_ref());
-        self.catalog
-            .hero(&id)
-            .ok_or(GameplayQueryError::MissingHero { hero: id })
+        self.find_hero(hero.as_ref())
+            .map_err(|hero| GameplayQueryError::MissingHero { hero })
     }
 
     pub fn kit(&self, hero: impl AsRef<str>) -> Result<Vec<&'a Ability>, GameplayQueryError> {
@@ -436,12 +448,7 @@ impl<'a> GameplayQuery<'a> {
         stat: impl AsRef<str>,
     ) -> Result<&'a Fact<StatValue>, GameplayQueryError> {
         let reference = self.reference(hero, slot, variant)?;
-        let ability = self.ability_ref(&reference)?;
-        let stat = StatKey::new(stat.as_ref());
-        ability.stat(&stat).ok_or(GameplayQueryError::MissingStat {
-            owner: StatOwner::Ability { reference },
-            stat,
-        })
+        self.ability_stat(&reference, StatKey::new(stat.as_ref()))
     }
 
     pub fn quantity_stat(
@@ -453,12 +460,7 @@ impl<'a> GameplayQuery<'a> {
     ) -> Result<&'a Quantity, GameplayQueryError> {
         let reference = self.reference(hero, slot, variant)?;
         let stat_key = StatKey::new(stat.as_ref());
-        let fact = self.stat(
-            reference.hero().as_str(),
-            reference.slot().as_str(),
-            reference.variant(),
-            stat_key.as_str(),
-        )?;
+        let fact = self.ability_stat(&reference, stat_key.clone())?;
         match fact.value() {
             StatValue::Quantity(quantity) => Ok(quantity),
             _ => Err(GameplayQueryError::WrongStatType {
@@ -591,19 +593,39 @@ impl<'a> GameplayQuery<'a> {
             .map_err(CooldownError::InvalidPercentage)
     }
 
+    fn find_hero(&self, hero: &str) -> Result<&'a Hero, HeroId> {
+        let id = HeroId::new(hero);
+        self.catalog.hero(&id).ok_or(id)
+    }
+
+    fn ability_stat(
+        &self,
+        reference: &AbilityRef,
+        stat: StatKey,
+    ) -> Result<&'a Fact<StatValue>, GameplayQueryError> {
+        let ability = self.ability_ref(reference)?;
+        ability
+            .stat(&stat)
+            .ok_or_else(|| GameplayQueryError::MissingStat {
+                owner: StatOwner::Ability {
+                    reference: reference.clone(),
+                },
+                stat,
+            })
+    }
+
     fn unique_slot(
         &self,
         hero: &'a Hero,
         slot: LogicalSlot,
     ) -> Result<&'a Ability, GameplayQueryError> {
-        let mut matches = hero.abilities_in_slot(&slot);
-        match matches.len() {
-            0 => Err(GameplayQueryError::MissingSlot {
+        match match_slot(hero, &slot) {
+            Ok(ability) => Ok(ability),
+            Err(SlotMiss::Missing) => Err(GameplayQueryError::MissingSlot {
                 hero: hero.id().clone(),
                 slot,
             }),
-            1 => Ok(matches.pop().expect("length checked")),
-            _ => {
+            Err(SlotMiss::Ambiguous(mut matches)) => {
                 matches.sort_by(|left, right| ability_order(left, right));
                 Err(GameplayQueryError::AmbiguousSlot {
                     hero: hero.id().clone(),
@@ -639,10 +661,8 @@ impl<'a> GameplayQuery<'a> {
         &self,
         hero: impl AsRef<str>,
     ) -> Result<&'a Hero, AbilityNameResolutionError> {
-        let id = HeroId::new(hero.as_ref());
-        self.catalog
-            .hero(&id)
-            .ok_or(AbilityNameResolutionError::MissingHero { hero: id })
+        self.find_hero(hero.as_ref())
+            .map_err(|hero| AbilityNameResolutionError::MissingHero { hero })
     }
 
     fn reference_for_names(
@@ -659,24 +679,23 @@ impl<'a> GameplayQuery<'a> {
                 slot,
                 Some(variant.clone()),
             )),
-            None => {
-                let mut matches = hero.abilities_in_slot(&slot);
-                match matches.len() {
-                    0 => Err(AbilityNameResolutionError::MissingSlot {
-                        hero: hero.id().clone(),
-                        slot,
-                    }),
-                    1 => Ok(matches.pop().expect("length checked").reference(hero.id())),
-                    _ => Err(AbilityNameResolutionError::AmbiguousSlot {
+            None => match match_slot(hero, &slot) {
+                Ok(ability) => Ok(ability.reference(hero.id())),
+                Err(SlotMiss::Missing) => Err(AbilityNameResolutionError::MissingSlot {
+                    hero: hero.id().clone(),
+                    slot,
+                }),
+                Err(SlotMiss::Ambiguous(matches)) => {
+                    Err(AbilityNameResolutionError::AmbiguousSlot {
                         hero: hero.id().clone(),
                         slot,
                         candidates: matches
                             .into_iter()
                             .map(|ability| ability.reference(hero.id()))
                             .collect(),
-                    }),
+                    })
                 }
-            }
+            },
         }
     }
 

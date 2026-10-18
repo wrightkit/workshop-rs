@@ -21,6 +21,7 @@
 
 pub mod detect;
 
+use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap};
 
 use serde::{Deserialize, Deserializer, Serialize};
@@ -218,7 +219,7 @@ impl CatalogEntry {
     /// Resolve a canonical or reviewed localized parameter spelling to its
     /// unambiguous declared position.
     pub fn resolve_param(&self, locale: &Locale, spelling: &str) -> Option<usize> {
-        let matches = self
+        let mut matches = self
             .params
             .iter()
             .enumerate()
@@ -230,9 +231,9 @@ impl CatalogEntry {
                         .and_then(|aliases| aliases.get(locale))
                         .is_some_and(|aliases| aliases.iter().any(|alias| alias == spelling))
             })
-            .map(|(index, _)| index)
-            .collect::<Vec<_>>();
-        (matches.len() == 1).then(|| matches[0])
+            .map(|(index, _)| index);
+        let first = matches.next()?;
+        matches.next().is_none().then_some(first)
     }
 
     /// The canonical parameter names in declaration order.
@@ -495,8 +496,21 @@ pub(crate) struct NormalizedIndex {
 
 /// The whitespace-collapsed comparison form of a catalog spelling: all
 /// Unicode whitespace removed, characters otherwise unchanged (#448).
-pub(crate) fn normalize_spelling(spelling: &str) -> String {
-    spelling.chars().filter(|c| !c.is_whitespace()).collect()
+pub(crate) fn normalize_spelling(spelling: &str) -> Cow<'_, str> {
+    if spelling.chars().any(char::is_whitespace) {
+        Cow::Owned(spelling.chars().filter(|c| !c.is_whitespace()).collect())
+    } else {
+        Cow::Borrowed(spelling)
+    }
+}
+
+/// The unambiguous target of `spelling` in a normalized index: a key shared
+/// by distinct targets is stored as `None` and resolves nothing.
+fn lookup_normalized<'a, V>(
+    index: &'a HashMap<String, Option<V>>,
+    spelling: &str,
+) -> Option<&'a V> {
+    index.get(normalize_spelling(spelling).as_ref())?.as_ref()
 }
 
 /// The validated canonical Workshop catalog.
@@ -643,11 +657,8 @@ impl Catalog {
             .and_then(|by_kind| by_kind[kind.as_index()].get(spelling))
             .map(|i| &self.entries[*i])
             .or_else(|| {
-                self.normalized.alias_to_entry.get(locale)?[kind.as_index()]
-                    .get(&normalize_spelling(spelling))
-                    .copied()
-                    .flatten()
-                    .map(|i| &self.entries[i])
+                let index = &self.normalized.alias_to_entry.get(locale)?[kind.as_index()];
+                lookup_normalized(index, spelling).map(|i| &self.entries[*i])
             })
     }
 
@@ -672,13 +683,8 @@ impl Catalog {
             .and_then(|map| map.get(spelling))
             .map(|index| &self.localized_strings[*index])
             .or_else(|| {
-                self.normalized
-                    .localized_string_alias
-                    .get(locale)?
-                    .get(&normalize_spelling(spelling))
-                    .copied()
-                    .flatten()
-                    .map(|index| &self.localized_strings[index])
+                let index = self.normalized.localized_string_alias.get(locale)?;
+                lookup_normalized(index, spelling).map(|i| &self.localized_strings[*i])
             })
     }
 
@@ -722,11 +728,8 @@ impl Catalog {
                     .map(String::as_str)
             })
             .or_else(|| {
-                self.normalized
-                    .enum_alias_to_domain
-                    .get(locale)?
-                    .get(&normalize_spelling(spelling))?
-                    .as_deref()
+                let index = self.normalized.enum_alias_to_domain.get(locale)?;
+                lookup_normalized(index, spelling).map(String::as_str)
             })
     }
 
@@ -749,13 +752,12 @@ impl Catalog {
             .get(spelling)
             .copied()
             .or_else(|| {
-                self.normalized
+                let index = self
+                    .normalized
                     .enum_alias_to_member
                     .get(locale)?
-                    .get(domain)?
-                    .get(&normalize_spelling(spelling))
-                    .copied()
-                    .flatten()
+                    .get(domain)?;
+                lookup_normalized(index, spelling).copied()
             })?;
         let (domain_index, member_index) = indexes;
         Some((
@@ -821,7 +823,7 @@ impl Catalog {
         self.normalized
             .bare_member
             .get(locale)
-            .and_then(|map| map.get(&normalize_spelling(spelling)))
+            .and_then(|map| map.get(normalize_spelling(spelling).as_ref()))
             .cloned()
             .unwrap_or_default()
     }

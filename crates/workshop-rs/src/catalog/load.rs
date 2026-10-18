@@ -258,8 +258,8 @@ impl Catalog {
             for (kind_index, map) in by_kind.iter().enumerate() {
                 for (spelling, &entry_index) in map {
                     let key = normalize_spelling(spelling);
-                    if &key != spelling {
-                        insert(&mut by_kind_norm[kind_index], key, entry_index);
+                    if key != spelling.as_str() {
+                        insert(&mut by_kind_norm[kind_index], key.into_owned(), entry_index);
                     }
                 }
             }
@@ -271,8 +271,8 @@ impl Catalog {
                 .or_default();
             for (spelling, &string_index) in map {
                 let key = normalize_spelling(spelling);
-                if &key != spelling {
-                    insert(norm, key, string_index);
+                if key != spelling.as_str() {
+                    insert(norm, key.into_owned(), string_index);
                 }
             }
         }
@@ -283,8 +283,8 @@ impl Catalog {
                 .or_default();
             for (spelling, domain) in map {
                 let key = normalize_spelling(spelling);
-                if &key != spelling {
-                    insert(norm, key, domain.clone());
+                if key != spelling.as_str() {
+                    insert(norm, key.into_owned(), domain.clone());
                 }
             }
         }
@@ -297,8 +297,8 @@ impl Catalog {
                 let norm_map = norm.entry(domain.clone()).or_default();
                 for (spelling, &indexes) in map {
                     let key = normalize_spelling(spelling);
-                    if &key != spelling {
-                        insert(norm_map, key, indexes);
+                    if key != spelling.as_str() {
+                        insert(norm_map, key.into_owned(), indexes);
                     }
                 }
             }
@@ -307,8 +307,8 @@ impl Catalog {
             let norm = normalized.bare_member.entry(locale.clone()).or_default();
             for (spelling, matches) in map {
                 let key = normalize_spelling(spelling);
-                if &key != spelling {
-                    let merged = norm.entry(key).or_default();
+                if key != spelling.as_str() {
+                    let merged = norm.entry(key.into_owned()).or_default();
                     for pair in matches {
                         if !merged.contains(pair) {
                             merged.push(pair.clone());

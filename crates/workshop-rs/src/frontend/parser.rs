@@ -87,6 +87,7 @@ pub(crate) fn parse_wir_with_context(
         subroutines: HashMap::new(),
         next_global_index: 0,
         next_player_index: 0,
+        structural_spellings: HashMap::new(),
     }
     .program()
 }
@@ -112,6 +113,7 @@ pub(crate) struct ParseContext<'a> {
     pub(crate) subroutines: HashMap<String, wir::SubroutineId>,
     pub(crate) next_global_index: u32,
     pub(crate) next_player_index: u32,
+    structural_spellings: HashMap<String, Vec<String>>,
 }
 
 impl<'a> ParseContext<'a> {
@@ -208,7 +210,7 @@ impl<'a> ParseContext<'a> {
                     end: word_end,
                 } => {
                     if matches!(
-                        self.peek_at(1).map(|token| token.kind),
+                        self.peek_kind_at(1),
                         Some(TokenKind::Op(equal)) if equal == "="
                     ) {
                         break;
@@ -435,7 +437,7 @@ impl<'a> ParseContext<'a> {
         pos: usize,
         attaches_to: Option<Position>,
     ) -> Vec<(usize, String, Position)> {
-        let mut candidates = Vec::new();
+        let mut ends = Vec::new();
         let mut text = String::new();
         let mut index = pos;
         let mut prev_end = attaches_to;
@@ -466,10 +468,13 @@ impl<'a> ParseContext<'a> {
             text.push_str(fragment);
             prev_end = Some(token.end);
             index += 1;
-            candidates.push((index - pos, text.clone(), token.end));
+            ends.push((text.len(), token.end));
         }
-        candidates.reverse();
-        candidates
+        ends.into_iter()
+            .enumerate()
+            .rev()
+            .map(|(i, (len, end))| (i + 1, text[..len].to_string(), end))
+            .collect()
     }
 
     /// Consume the longest catalog spelling at the cursor accepted by
@@ -525,7 +530,6 @@ impl<'a> ParseContext<'a> {
         let catalog = self.catalog;
         let locale = self.locale.clone();
         let primary = catalog.primary_locale();
-        let kinds = kinds.to_vec();
         self.extend_catalog_spelling(phrase, phrase_end, |spelling| {
             kinds.iter().any(|kind| {
                 catalog.resolve(*kind, &locale, spelling).is_some()
@@ -542,7 +546,7 @@ impl<'a> ParseContext<'a> {
         Ok(())
     }
 
-    fn structural_spellings(&self, id: &str) -> Vec<String> {
+    fn compute_structural_spellings(&self, id: &str) -> Vec<String> {
         let mut spellings = Vec::new();
         if let Some(entry) = self.catalog.entry(Kind::Structural, id) {
             spellings.extend(entry.spellings(&self.locale).iter().cloned());
@@ -571,15 +575,15 @@ impl<'a> ParseContext<'a> {
                 None => (piece, false),
             };
             if !word.is_empty() {
-                match self.peek_at(offset).map(|token| token.kind) {
-                    Some(TokenKind::Word(ref candidate)) if table::names_eq(candidate, word) => {}
-                    Some(TokenKind::Number { ref text, .. }) if text == word => {}
+                match self.peek_kind_at(offset) {
+                    Some(TokenKind::Word(candidate)) if table::names_eq(candidate, word) => {}
+                    Some(TokenKind::Number { text, .. }) if text == word => {}
                     _ => return None,
                 }
                 offset += 1;
             }
             if dotted {
-                match self.peek_at(offset).map(|token| token.kind) {
+                match self.peek_kind_at(offset) {
                     Some(TokenKind::Dot) => offset += 1,
                     _ => return None,
                 }
@@ -595,8 +599,13 @@ impl<'a> ParseContext<'a> {
     pub(crate) fn keyword_prefix(&mut self, ids: &[&str]) -> Option<String> {
         let mut best: Option<(String, usize)> = None;
         for id in ids {
-            for spelling in self.structural_spellings(id) {
-                if let Some(len) = self.match_spelling_tokens(&spelling) {
+            if !self.structural_spellings.contains_key(*id) {
+                let spellings = self.compute_structural_spellings(id);
+                self.structural_spellings
+                    .insert((*id).to_string(), spellings);
+            }
+            for spelling in &self.structural_spellings[*id] {
+                if let Some(len) = self.match_spelling_tokens(spelling) {
                     if best.as_ref().is_none_or(|(_, length)| len > *length) {
                         best = Some(((*id).to_string(), len));
                     }
@@ -775,6 +784,10 @@ impl<'a> ParseContext<'a> {
         self.tokens.get(self.pos + offset).cloned()
     }
 
+    pub(crate) fn peek_kind_at(&self, offset: usize) -> Option<&TokenKind> {
+        self.tokens.get(self.pos + offset).map(|token| &token.kind)
+    }
+
     pub(crate) fn next(&mut self) -> Option<Token> {
         let token = self.tokens.get(self.pos).cloned();
         if token.is_some() {
@@ -845,10 +858,7 @@ pub(crate) fn raw_token_text(kind: &TokenKind) -> String {
     match kind {
         TokenKind::Word(value) => value.clone(),
         TokenKind::Number { text, .. } => text.clone(),
-        TokenKind::String(value) => format!(
-            "\"{}\"",
-            crate::output::emitter::escape_settings_string(value)
-        ),
+        TokenKind::String(value) => format!("\"{}\"", crate::output::emitter::escape_string(value)),
         TokenKind::Op(value) => match value.as_str() {
             "not" => "!".to_string(),
             "and" => "&&".to_string(),

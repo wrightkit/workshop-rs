@@ -245,10 +245,7 @@ impl ParseContext<'_> {
         table::entries()
             .find(|candidate| {
                 candidate.path.len() == path.len() + 1
-                    && candidate.path[..path.len()]
-                        .iter()
-                        .zip(path.iter())
-                        .all(|(left, right)| left == right)
+                    && candidate.path[..path.len()] == *path
                     && self.settings_name_matches_for_path(candidate, display, hero)
             })
             // A declared mode group inherits the `gamemodes.general` leaf set

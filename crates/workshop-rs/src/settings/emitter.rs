@@ -264,7 +264,7 @@ impl EmitContext<'_> {
             Member::Flag => self.line(level, &display_name)?,
             Member::String(value) => self.line(
                 level,
-                &format!("{}: \"{}\"", display_name, escape_settings_string(value)),
+                &format!("{}: \"{}\"", display_name, escape_string(value)),
             )?,
             Member::Enum {
                 domain,
@@ -408,22 +408,7 @@ impl EmitContext<'_> {
                         .map(str::to_string)
                 })
         };
-        if let Some(name) = resolve(&self.locale) {
-            return Ok(name);
-        }
-        if let Some(fallback) = &self.fallback {
-            if let Some(name) = resolve(fallback) {
-                if !self.fallback_ids.iter().any(|value| value == "settings") {
-                    self.fallback_ids.push("settings".to_string());
-                }
-                return Ok(name);
-            }
-        }
-        Err(WorkshopError::MissingMapping {
-            kind: "setting",
-            id: id.to_string(),
-            locale: self.locale.clone(),
-        })
+        self.localized_with("setting", id, "settings".to_string(), true, resolve)
     }
     pub(crate) fn setting_name(
         &mut self,
@@ -435,26 +420,12 @@ impl EmitContext<'_> {
         if self.locale == en_us {
             return Ok(english.to_string());
         }
-        if let Some(spelling) = table::localized_name(self.locale.as_str(), section, english) {
-            return Ok(spelling.to_string());
-        }
-        if let Some(fallback) = &self.fallback {
-            let spelling = if *fallback == en_us {
-                Some(english)
+        self.localized_with("setting", id, "settings".to_string(), true, |locale| {
+            if *locale == en_us {
+                Some(english.to_string())
             } else {
-                table::localized_name(fallback.as_str(), section, english)
-            };
-            if let Some(spelling) = spelling {
-                if !self.fallback_ids.iter().any(|value| value == "settings") {
-                    self.fallback_ids.push("settings".to_string());
-                }
-                return Ok(spelling.to_string());
+                table::localized_name(locale.as_str(), section, english).map(str::to_string)
             }
-        }
-        Err(WorkshopError::MissingMapping {
-            kind: "setting",
-            id: id.to_string(),
-            locale: self.locale.clone(),
         })
     }
 }
