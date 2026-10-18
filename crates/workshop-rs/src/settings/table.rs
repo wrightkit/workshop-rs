@@ -881,6 +881,24 @@ pub(crate) fn hero_setting_alias(hero: &str, key: &str, locale: &str, display: &
     })
 }
 
+/// Boolean value spellings the Workshop client localizes inconsistently for
+/// one specific key: zh-CN writes `禁用` ("disabled") where the setting is an
+/// off switch. Position-specific on purpose; `禁用` is not a boolean spelling
+/// elsewhere.
+const BOOL_VALUE_ALIASES: &[(&str, &str, &str, bool)] =
+    &[("enableSecondaryFire", "zh-CN", "禁用", false)];
+
+pub(crate) fn bool_value_alias(key: &str, locale: &str, display: &str) -> Option<bool> {
+    BOOL_VALUE_ALIASES
+        .iter()
+        .find(|(alias_key, alias_locale, spelling, _)| {
+            *alias_key == key
+                && alias_locale.eq_ignore_ascii_case(locale)
+                && names_eq(spelling, display)
+        })
+        .map(|(_, _, _, value)| *value)
+}
+
 fn name_in(maps: &[NameMap], key: &str) -> Option<&'static str> {
     maps.iter().find(|m| m.key == key).map(|m| m.name)
 }

@@ -442,7 +442,7 @@ impl ParseContext<'_> {
                 })
             }
             KeyKind::Bool | KeyKind::YesNo => {
-                let value = self.settings_bool()?;
+                let value = self.settings_bool_for(entry.path.last())?;
                 Ok(SettingsNode::Bool {
                     name: name.to_string(),
                     value,
@@ -604,6 +604,24 @@ impl ParseContext<'_> {
             self.pos += 1;
         }
         Ok(value)
+    }
+
+    /// `settings_bool`, first accepting the reviewed per-key value aliases.
+    fn settings_bool_for(&mut self, key: Option<&PathPart>) -> Result<bool> {
+        if let Some(PathPart::Part(key)) = key {
+            let locale = self.locale.as_str();
+            let alias =
+                self.spelling_run(self.pos, None)
+                    .into_iter()
+                    .find_map(|(count, display, _)| {
+                        table::bool_value_alias(key, locale, &display).map(|value| (count, value))
+                    });
+            if let Some((count, value)) = alias {
+                self.pos += count;
+                return Ok(value);
+            }
+        }
+        self.settings_bool()
     }
 
     /// A settings boolean spelled in the page locale: the whole value run
