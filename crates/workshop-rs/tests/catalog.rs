@@ -29,6 +29,13 @@ fn builtin_catalog_loads_and_declares_the_pinned_workshop_locales() {
 }
 
 #[test]
+fn builtin_ref_returns_the_same_cached_instance() {
+    let first = Catalog::builtin_ref().expect("built-in catalog loads");
+    let second = Catalog::builtin_ref().expect("built-in catalog loads");
+    assert!(std::ptr::eq(first, second));
+}
+
+#[test]
 fn localized_spelling_resolves_to_canonical_id_and_back() {
     let catalog = catalog();
 
