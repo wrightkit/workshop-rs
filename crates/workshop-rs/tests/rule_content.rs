@@ -5,7 +5,12 @@
 //! `Action` variant is added without a node form.
 
 use serde_json::{Value as JsonValue, json};
-use workshop_rs::rules::content::{RULE_CONTENT_V1, RULE_CONTENT_V1_SCHEMA, rule_content};
+use workshop_rs::lookup::LookupMatch;
+use workshop_rs::rules::content::{
+    ASSIGN_MEMBER_CALL, GLOBAL_VARIABLE_CALL, MEMBER_ACCESS_CALL, MODIFY_MEMBER_CALL,
+    PLAYER_VARIABLE_CALL, RAW_WORKSHOP_ACTION_CALL, RULE_CONTENT_V1, RULE_CONTENT_V1_SCHEMA,
+    rule_content,
+};
 use workshop_rs::{
     Action, Condition, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Program, Rule,
     Subroutine, Value, emitter, parser,
@@ -54,9 +59,9 @@ fn assert_rejects(document: &JsonValue) {
     );
 }
 
-#[test]
-fn every_node_form_appears_in_a_rendered_rule() {
-    let rule = Rule::new("node forms", Event::Global)
+/// One condition per `Value` node form the schema defines.
+fn node_forms_rule() -> Rule {
+    Rule::new("node forms", Event::Global)
         .condition(Condition::new(Value::from(1.5)))
         .condition(Condition::new(Value::Bool(true)))
         .condition(Condition::new(Value::Null))
@@ -79,8 +84,12 @@ fn every_node_form_appears_in_a_rendered_rule() {
         .condition(Condition::new(Value::call(
             "compare",
             [Value::from(1.0), Value::from(2.0)],
-        )));
+        )))
+}
 
+#[test]
+fn every_node_form_appears_in_a_rendered_rule() {
+    let rule = node_forms_rule();
     let content = content_of(&rule);
     let conditions = content["conditions"].as_array().expect("conditions");
     let values: Vec<&JsonValue> = conditions.iter().map(|entry| &entry["value"]).collect();
@@ -124,9 +133,9 @@ fn variable_and_subroutine_names_use_tagged_nodes() {
     );
 }
 
-#[test]
-fn every_action_form_appears_in_a_rendered_rule() {
-    let rule = Rule::new("action forms", Event::Global)
+/// One action per `Action` node form the schema defines.
+fn action_forms_rule() -> Rule {
+    Rule::new("action forms", Event::Global)
         .action(Action::SetGlobalVariable {
             variable: "score".to_string(),
             value: Value::from(7.0),
@@ -194,8 +203,12 @@ fn every_action_form_appears_in_a_rendered_rule() {
         })
         .action(Action::End)
         .action(Action::call("wait", [Value::from(0.016)]))
-        .action(Action::disabled(Action::call("abort", [])));
+        .action(Action::disabled(Action::call("abort", [])))
+}
 
+#[test]
+fn every_action_form_appears_in_a_rendered_rule() {
+    let rule = action_forms_rule();
     let content = content_of(&rule);
     let actions = content["actions"].as_array().expect("actions");
     assert_eq!(actions.len(), 19);
@@ -400,9 +413,9 @@ fn modify_op_and_event_kind_catalog_ids_are_public() {
     );
 }
 
-#[test]
-fn variable_reads_render_as_reserved_calls() {
-    let rule = Rule::new("reads", Event::Global).condition(Condition::new(Value::call(
+/// Both variable-read forms inside a comparison call.
+fn variable_reads_rule() -> Rule {
+    Rule::new("reads", Event::Global).condition(Condition::new(Value::call(
         "==",
         [
             Value::GlobalVariable("score".to_string()),
@@ -411,8 +424,12 @@ fn variable_reads_render_as_reserved_calls() {
                 variable: "streak".to_string(),
             },
         ],
-    )));
-    let content = content_of(&rule);
+    )))
+}
+
+#[test]
+fn variable_reads_render_as_reserved_calls() {
+    let content = content_of(&variable_reads_rule());
     assert_eq!(
         content["conditions"][0]["value"],
         json!({
@@ -428,10 +445,8 @@ fn variable_reads_render_as_reserved_calls() {
     );
 }
 
-#[test]
-fn proximity_repel_actions_match_the_acceptance_examples() {
-    let rule = parse_rule(
-        r#"rule ("repel") {
+/// A parsed rule covering receiver-call values, enum domains, and `Null`.
+const REPEL_SOURCE: &str = r#"rule ("repel") {
     event {
         Ongoing - Each Player;
         All;
@@ -442,8 +457,11 @@ fn proximity_repel_actions_match_the_acceptance_examples() {
         Set Status(Event Player, Null, Stunned, 0.75);
     }
 }
-"#,
-    );
+"#;
+
+#[test]
+fn proximity_repel_actions_match_the_acceptance_examples() {
+    let rule = parse_rule(REPEL_SOURCE);
     let content = content_of(&rule);
     let actions = content["actions"].as_array().expect("actions");
 
@@ -635,12 +653,10 @@ fn parsed_program_rules_render_through_the_public_api() {
     );
 }
 
-#[test]
-fn documented_reserved_ids_render_for_member_access_and_opaque_residuals() {
-    // `receiver.member[i]` renders as `memberAccess` — the target an
-    // `assignMember`/`modifyMember` action carries, and any member read
-    // position. `rawWorkshopAction` is the parser-preserved opaque action.
-    // An operator token used as a call renders as an arithmetic helper call.
+/// The schema's reserved call ids: `memberAccess` as an `assignMember`
+/// target, the parser-preserved `rawWorkshopAction` residual, and an
+/// operator token used as a call.
+fn reserved_ids_rule() -> Rule {
     let member = Value::call(
         "memberAccess",
         [
@@ -649,7 +665,7 @@ fn documented_reserved_ids_render_for_member_access_and_opaque_residuals() {
             Value::from(0.0),
         ],
     );
-    let rule = Rule::new("reserved ids", Event::Global)
+    Rule::new("reserved ids", Event::Global)
         .action(Action::AssignMember {
             target: member,
             op: None,
@@ -659,8 +675,16 @@ fn documented_reserved_ids_render_for_member_access_and_opaque_residuals() {
         .condition(Condition::new(Value::call(
             "+",
             [Value::from(1.0), Value::from(2.0)],
-        )));
-    let content = content_of(&rule);
+        )))
+}
+
+#[test]
+fn documented_reserved_ids_render_for_member_access_and_opaque_residuals() {
+    // `receiver.member[i]` renders as `memberAccess` — the target an
+    // `assignMember`/`modifyMember` action carries, and any member read
+    // position. `rawWorkshopAction` is the parser-preserved opaque action.
+    // An operator token used as a call renders as an arithmetic helper call.
+    let content = content_of(&reserved_ids_rule());
     assert_eq!(
         content["conditions"][0]["value"],
         json!({"call": "+", "args": [1.0, 2.0]})
@@ -709,4 +733,150 @@ fn internal_sentinels_never_reach_the_document() {
     }));
     let error = rule_content(&program.rules[0]).expect_err("sentinel is rejected");
     assert!(error.to_string().contains("__ambiguous_enum"), "{error}");
+}
+
+/// All four chase actions: the player forms fold the `(player, variable)`
+/// pair into a `PlayerVariable` first argument under the global WIR name.
+const CHASE_SOURCE: &str = r#"variables {
+    global:
+        0: probe_g
+    player:
+        0: probe_p
+}
+
+rule ("chase") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Chase Global Variable At Rate(probe_g, 0, 1, None);
+        Chase Global Variable Over Time(probe_g, 0, 1, None);
+        Chase Player Variable At Rate(Event Player, probe_p, 0, 1, None);
+        Chase Player Variable Over Time(Event Player, probe_p, 0, 1, None);
+    }
+}
+"#;
+
+#[test]
+fn player_variable_chases_emit_their_catalog_call_ids() {
+    // A chase whose target is a player variable is named by its own catalog
+    // id, like `setPlayerVariableAtIndex`; the folded `playerVariable`
+    // target stays the first argument. Global chases keep their ids.
+    let catalog = catalog();
+    let english = parser::parse(CHASE_SOURCE, &catalog, &en()).expect("en-US parses");
+    let content = content_of(&english.rules[0]);
+    let actions = content["actions"].as_array().expect("actions");
+
+    let global_target = json!({"call": "globalVariable", "args": [{"variable": "probe_g"}]});
+    let player_target = json!({"call": "playerVariable", "args": [
+        {"call": "eventPlayer", "args": []},
+        {"variable": "probe_p"}
+    ]});
+    assert_eq!(
+        actions[0],
+        json!({"call": "chaseAtRate", "args": [
+            global_target, 0.0, 1.0, {"enum": "ChaseRateReeval", "member": "NONE"}
+        ]})
+    );
+    assert_eq!(
+        actions[1],
+        json!({"call": "chaseOverTime", "args": [
+            global_target, 0.0, 1.0, {"enum": "ChaseTimeReeval", "member": "NONE"}
+        ]})
+    );
+    assert_eq!(
+        actions[2],
+        json!({"call": "chasePlayerVariableAtRate", "args": [
+            player_target, 0.0, 1.0, {"enum": "ChaseRateReeval", "member": "NONE"}
+        ]})
+    );
+    assert_eq!(
+        actions[3],
+        json!({"call": "chasePlayerVariableOverTime", "args": [
+            player_target, 0.0, 1.0, {"enum": "ChaseTimeReeval", "member": "NONE"}
+        ]})
+    );
+
+    let chinese_source = emitter::emit(&english, &catalog, &zh()).expect("zh-CN emission");
+    let chinese = parser::parse(&chinese_source, &catalog, &zh()).expect("zh-CN parses");
+    assert_eq!(content_of(&chinese.rules[0]), content);
+}
+
+/// Every `call` id in the document, in traversal order.
+fn call_ids(node: &JsonValue, calls: &mut Vec<String>) {
+    match node {
+        JsonValue::Object(map) => {
+            if let Some(JsonValue::String(call)) = map.get("call") {
+                calls.push(call.clone());
+            }
+            for value in map.values() {
+                call_ids(value, calls);
+            }
+        }
+        JsonValue::Array(items) => {
+            for item in items {
+                call_ids(item, calls);
+            }
+        }
+        _ => {}
+    }
+}
+
+/// The call ids the schema's `CallId` description reserves for constructs
+/// the catalog does not name.
+const RESERVED_CALL_IDS: &[&str] = &[
+    GLOBAL_VARIABLE_CALL,
+    PLAYER_VARIABLE_CALL,
+    ASSIGN_MEMBER_CALL,
+    MODIFY_MEMBER_CALL,
+    MEMBER_ACCESS_CALL,
+    RAW_WORKSHOP_ACTION_CALL,
+    "+",
+    "-",
+    "*",
+    "/",
+    "%",
+];
+
+#[test]
+fn every_emitted_call_id_resolves_to_its_catalog_entry() {
+    // ADR-0024: every content call id is a public catalog id — a consumer
+    // labels a call by looking its id up. An id that resolves through
+    // `Catalog::lookup` to a different entry, or to nothing, means an
+    // internal name leaked into the document.
+    let catalog = catalog();
+    let english = en();
+    let mut calls = Vec::new();
+    for rule in [
+        action_forms_rule(),
+        node_forms_rule(),
+        variable_reads_rule(),
+        reserved_ids_rule(),
+        parse_rule(REPEL_SOURCE),
+        parse_rule(CHASE_SOURCE),
+    ] {
+        call_ids(&content_of(&rule), &mut calls);
+    }
+    calls.sort_unstable();
+    calls.dedup();
+    for call in calls {
+        if RESERVED_CALL_IDS.contains(&call.as_str()) {
+            continue;
+        }
+        let matches = catalog
+            .lookup(&english, &call)
+            .expect("lookup of a declared locale");
+        let first = matches
+            .first()
+            .unwrap_or_else(|| panic!("call id '{call}' resolves to nothing"));
+        let LookupMatch::Builtin { id, .. } = first else {
+            panic!("call id '{call}' resolves to a non-builtin match: {first:?}");
+        };
+        assert_eq!(
+            id, &call,
+            "call id '{call}' resolves through lookup to a different catalog entry"
+        );
+    }
 }
