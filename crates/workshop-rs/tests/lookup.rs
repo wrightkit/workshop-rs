@@ -669,3 +669,137 @@ fn scoped_lookup_reports_an_unknown_scope() {
         "unknown scope is an Unknown diagnostic: {error:?}"
     );
 }
+
+#[test]
+fn listing_entries_keeps_catalog_order_for_each_builtin_kind() {
+    let catalog = catalog();
+    for kind in [Kind::Action, Kind::Value, Kind::Event] {
+        let listed = catalog
+            .lookup_entries(&en(), kind)
+            .expect("a builtin kind is listable");
+        let ids: Vec<&str> = listed
+            .iter()
+            .map(|entry| match entry {
+                LookupMatch::Builtin {
+                    kind: listed_kind,
+                    id,
+                    ..
+                } => {
+                    assert_eq!(*listed_kind, kind);
+                    id.as_str()
+                }
+                other => panic!("a builtin kind lists builtins: {other:?}"),
+            })
+            .collect();
+        let expected: Vec<&str> = catalog
+            .entries_of(kind)
+            .map(|entry| entry.id.as_str())
+            .collect();
+        assert_eq!(ids, expected, "{kind:?} listing keeps catalog order");
+        let unique: std::collections::HashSet<&str> = ids.iter().copied().collect();
+        assert_eq!(
+            unique.len(),
+            ids.len(),
+            "{kind:?} listing has no duplicates"
+        );
+    }
+}
+
+#[test]
+fn listing_entries_keeps_catalog_order_for_enum_domains() {
+    let catalog = catalog();
+    let listed = catalog
+        .lookup_entries(&en(), Kind::Enum)
+        .expect("enum domains are listable");
+    let domains: Vec<&str> = listed
+        .iter()
+        .map(|entry| match entry {
+            LookupMatch::EnumDomain { domain, .. } => domain.as_str(),
+            other => panic!("Kind::Enum lists enum domains: {other:?}"),
+        })
+        .collect();
+    let expected: Vec<&str> = catalog
+        .enum_domains()
+        .map(|domain| domain.domain.as_str())
+        .collect();
+    assert_eq!(domains, expected);
+}
+
+#[test]
+fn listed_entries_are_the_matches_lookup_returns() {
+    let catalog = catalog();
+    for locale in [en(), zh()] {
+        for kind in [Kind::Action, Kind::Value, Kind::Event] {
+            for listed in catalog
+                .lookup_entries(&locale, kind)
+                .expect("a builtin kind is listable")
+            {
+                let LookupMatch::Builtin {
+                    kind: listed_kind,
+                    id,
+                    ..
+                } = &listed
+                else {
+                    panic!("a builtin kind lists builtins: {listed:?}");
+                };
+                // A query of the exact id can return another Builtin first:
+                // `modifyGlobalVariable` is declared under both Structural
+                // and Action. Compare against the Builtin match of the same
+                // kind and id rather than the top-ranked match.
+                let from_lookup = catalog
+                    .lookup(&locale, id)
+                    .expect("lookup answers")
+                    .into_iter()
+                    .find(|entry| {
+                        matches!(entry, LookupMatch::Builtin {
+                            kind: found_kind,
+                            id: found,
+                            ..
+                        } if found == id && found_kind == listed_kind)
+                    })
+                    .unwrap_or_else(|| panic!("lookup finds {listed_kind:?} '{id}'"));
+                assert_eq!(listed, from_lookup, "{locale} {kind:?} '{id}'");
+            }
+        }
+        for listed in catalog
+            .lookup_entries(&locale, Kind::Enum)
+            .expect("enum domains are listable")
+        {
+            let LookupMatch::EnumDomain { domain, .. } = &listed else {
+                panic!("Kind::Enum lists enum domains: {listed:?}");
+            };
+            let from_lookup = catalog
+                .lookup(&locale, domain)
+                .expect("lookup answers")
+                .into_iter()
+                .find(|entry| {
+                    matches!(entry, LookupMatch::EnumDomain { domain: found, .. } if found == domain)
+                })
+                .unwrap_or_else(|| panic!("lookup finds domain '{domain}'"));
+            assert_eq!(listed, from_lookup, "{locale} domain '{domain}'");
+        }
+    }
+}
+
+#[test]
+fn listing_entries_rejects_undeclared_locales_and_unlistable_kinds() {
+    let catalog = catalog();
+    for kind in [Kind::Action, Kind::Value, Kind::Event, Kind::Enum] {
+        let error = catalog
+            .lookup_entries(&Locale::new("es-CL"), kind)
+            .expect_err("an undeclared locale is unsupported");
+        assert!(
+            matches!(error, WorkshopError::Unsupported { .. }),
+            "{kind:?}: {error:?}"
+        );
+    }
+    for kind in [Kind::Structural, Kind::Operator, Kind::Setting] {
+        let error = catalog
+            .lookup_entries(&en(), kind)
+            .expect_err("a kind with no listing surface is unsupported");
+        assert!(
+            matches!(error, WorkshopError::Unsupported { .. }),
+            "{kind:?}: {error:?}"
+        );
+    }
+}

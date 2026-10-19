@@ -11,7 +11,7 @@
 //! vocabulary. Consumers compose and present the matches; this module owns
 //! no data of its own.
 
-use crate::catalog::{Catalog, CatalogEntry, Kind, Locale};
+use crate::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
 use crate::core::error::{Result, WorkshopError};
 use crate::core::suggest;
 use crate::settings::{self, PathPart, SettingDefinition, SettingValueDomain, table};
@@ -178,15 +178,7 @@ impl Catalog {
     /// )));
     /// ```
     pub fn lookup(&self, locale: &Locale, query: &str) -> Result<Vec<LookupMatch>> {
-        if !self.supports(locale) {
-            return Err(WorkshopError::unsupported(
-                format!(
-                    "lookup for locale '{locale}' is not supported: \
-                     the catalog does not declare it"
-                ),
-                None,
-            ));
-        }
+        self.check_locale(locale)?;
         let primary = self.primary_locale();
         let distinct_locale = locale != primary;
         let prepared = PreparedQuery::new(query);
@@ -204,15 +196,7 @@ impl Catalog {
                 .filter_map(|text| prepared.name_score(text))
                 .min();
             if let Some(score) = score {
-                matches.push((
-                    score,
-                    LookupMatch::Builtin {
-                        kind: entry.kind,
-                        id: entry.id.clone(),
-                        display_name: entry.spelling(locale).map(String::from),
-                        signature: signature(self, entry, locale),
-                    },
-                ));
+                matches.push((score, self.builtin_match(entry, locale)));
             }
         }
         for domain in self.enum_domains() {
@@ -222,14 +206,7 @@ impl Catalog {
                 .filter_map(|text| prepared.name_score(text))
                 .min();
             if let Some(score) = score {
-                matches.push((
-                    score,
-                    LookupMatch::EnumDomain {
-                        domain: domain.domain.clone(),
-                        display_name: domain.spelling(locale).map(String::from),
-                        members: self.enum_members(&domain.domain, locale),
-                    },
-                ));
+                matches.push((score, self.enum_domain_match(domain, locale)));
             }
         }
         for domain in self.enum_domains() {
@@ -332,15 +309,7 @@ impl Catalog {
         within: &str,
         query: Option<&str>,
     ) -> Result<Vec<LookupMatch>> {
-        if !self.supports(locale) {
-            return Err(WorkshopError::unsupported(
-                format!(
-                    "lookup for locale '{locale}' is not supported: \
-                     the catalog does not declare it"
-                ),
-                None,
-            ));
-        }
+        self.check_locale(locale)?;
         let prepared = query
             .filter(|query| !query.is_empty())
             .map(PreparedQuery::new);
@@ -355,6 +324,88 @@ impl Catalog {
             scored.sort_by_key(|(score, _)| *score);
         }
         Ok(scored.into_iter().map(|(_, lookup)| lookup).collect())
+    }
+
+    /// Every entry of a listable `kind` under `locale` — one
+    /// [`LookupMatch`] per catalog entry of the kind, in catalog order,
+    /// with no query, matching, or ranking.
+    ///
+    /// `Kind::Action`, `Kind::Value`, and `Kind::Event` list one
+    /// [`LookupMatch::Builtin`] per entry — the same match
+    /// [`Catalog::lookup`] builds for that entry, signature included.
+    /// `Kind::Enum` lists one [`LookupMatch::EnumDomain`] per declared
+    /// enum domain, in [`Catalog::enum_domains`] order. Enum members and
+    /// call parameters are scoped children that already list through
+    /// [`Catalog::lookup_within`]; the other kinds have no listing
+    /// surface, and naming one is an `Err`.
+    ///
+    /// `Err` reports a locale the catalog does not declare or a `kind`
+    /// with no listing surface. The result is the complete listable
+    /// vocabulary of the kind: paging and presentation belong to the
+    /// consumer.
+    ///
+    /// ```
+    /// use workshop_rs::catalog::{Catalog, Kind, Locale};
+    /// use workshop_rs::lookup::LookupMatch;
+    ///
+    /// let catalog = Catalog::builtin().unwrap();
+    /// let events = catalog
+    ///     .lookup_entries(&Locale::new("en-US"), Kind::Event)
+    ///     .unwrap();
+    /// assert!(events.iter().all(
+    ///     |m| matches!(m, LookupMatch::Builtin { kind: Kind::Event, .. })
+    /// ));
+    /// ```
+    pub fn lookup_entries(&self, locale: &Locale, kind: Kind) -> Result<Vec<LookupMatch>> {
+        self.check_locale(locale)?;
+        match kind {
+            Kind::Action | Kind::Value | Kind::Event => Ok(self
+                .entries_of(kind)
+                .map(|entry| self.builtin_match(entry, locale))
+                .collect()),
+            Kind::Enum => Ok(self
+                .enum_domains()
+                .map(|domain| self.enum_domain_match(domain, locale))
+                .collect()),
+            Kind::Structural | Kind::Operator | Kind::Setting => Err(WorkshopError::unsupported(
+                format!(
+                    "listing kind '{}' is not supported: \
+                     the listable kinds are action, value, event, and enum",
+                    kind.as_str()
+                ),
+                None,
+            )),
+        }
+    }
+
+    fn check_locale(&self, locale: &Locale) -> Result<()> {
+        if self.supports(locale) {
+            return Ok(());
+        }
+        Err(WorkshopError::unsupported(
+            format!(
+                "lookup for locale '{locale}' is not supported: \
+                 the catalog does not declare it"
+            ),
+            None,
+        ))
+    }
+
+    fn builtin_match(&self, entry: &CatalogEntry, locale: &Locale) -> LookupMatch {
+        LookupMatch::Builtin {
+            kind: entry.kind,
+            id: entry.id.clone(),
+            display_name: entry.spelling(locale).map(String::from),
+            signature: signature(self, entry, locale),
+        }
+    }
+
+    fn enum_domain_match(&self, domain: &EnumDomain, locale: &Locale) -> LookupMatch {
+        LookupMatch::EnumDomain {
+            domain: domain.domain.clone(),
+            display_name: domain.spelling(locale).map(String::from),
+            members: self.enum_members(&domain.domain, locale),
+        }
     }
 
     fn within_enum_domain(
