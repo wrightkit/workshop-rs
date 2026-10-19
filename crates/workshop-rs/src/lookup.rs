@@ -1,6 +1,6 @@
 //! Canonical Workshop name lookup: display names, near spellings, and
-//! settings paths resolve to the catalog entries, enum members, and settings
-//! definitions the parser and emitter accept.
+//! settings paths resolve to the catalog entries, preset strings, enum
+//! members, and settings definitions the parser and emitter accept.
 //!
 //! [`Catalog::lookup`] answers in canonical Workshop terms: which identity a
 //! display name or guess refers to, which parameters and argument domains an
@@ -60,6 +60,16 @@ pub enum LookupMatch {
         /// The display name in the requested locale, or the English name
         /// when the locale has no mapping.
         display_name: String,
+    },
+    /// A preset localized string identity from the catalog's
+    /// `localizedStrings` table — the id a `{"localizedString": id}`
+    /// rule-content node or a `Value::LocalizedString` carries.
+    LocalizedString {
+        /// The canonical id (`hello`, `goodbye`).
+        id: String,
+        /// The display name in the requested locale, when mapped — the
+        /// spelling the emitter writes for that locale.
+        display_name: Option<String>,
     },
     /// A parameter of a scoped callable, in call order. Returned only by
     /// [`Catalog::lookup_within`]; an unscoped [`Catalog::lookup`] never
@@ -211,6 +221,27 @@ impl Catalog {
                         id: entry.id.clone(),
                         display_name: entry.spelling(locale).map(String::from),
                         signature: signature(self, entry, locale),
+                    },
+                ));
+            }
+        }
+        for entry in &self.localized_strings {
+            let primary_spellings: &[String] = if distinct_locale {
+                entry.spellings(primary)
+            } else {
+                &[]
+            };
+            let score = std::iter::once(entry.id.as_str())
+                .chain(entry.spellings(locale).iter().map(String::as_str))
+                .chain(primary_spellings.iter().map(String::as_str))
+                .filter_map(|text| prepared.name_score(text))
+                .min();
+            if let Some(score) = score {
+                matches.push((
+                    score,
+                    LookupMatch::LocalizedString {
+                        id: entry.id.clone(),
+                        display_name: entry.spelling(locale).map(String::from),
                     },
                 ));
             }

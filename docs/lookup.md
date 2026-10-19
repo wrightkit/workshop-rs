@@ -36,6 +36,11 @@ Each match is a canonical construct the parser and emitter accept:
 - `LookupMatch::Setting` — a `settings::SettingDefinition` projected from the
   reviewed settings table, carrying the valid key, path, scope, and value
   forms.
+- `LookupMatch::LocalizedString` — a preset string identity from the
+  catalog's `localizedStrings` table, with the requested locale's display
+  name when mapped. This is the id a `{"localizedString": id}` rule-content
+  node or a `Value::LocalizedString` carries, so the literal's display
+  spelling resolves like any other catalog identity.
 
 A locale the catalog does not declare is an explicit `WorkshopError::Unsupported`;
 the catalog never answers localized names it cannot attest.
