@@ -8484,7 +8484,7 @@
       }
     }
   ],
-  "digest": "61452c110de5a0c47acaf18233cf6b9a865ff7ce0b2e602d521ae64cedaece99",
+  "digest": "89a865c62170d9e23997c98a991067678f56072fa3edf6169429a0b589d591d3",
   "enums": [
     {
       "domain": "Impulse",
@@ -21910,7 +21910,8 @@
       "Create Dummy Bot's hero parameter accepts a single Hero or a Hero array: Workshop behavior selects randomly when multiple heroes are provided, and pinned OverPy 9.7.10 texture-tag setup emits getAllHeroes() into Create Dummy Bot (workshop-rs#238).",
       "Map enum member GRIMSVOTN (Grímsvötn) is reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d; the export declares no guid or non-en-US spellings for it yet",
       "Map.GRIMSVOTN localized aliases are transcribed from the official localized Blizzard Season 5 announcement pages (overwatch.blizzard.com/<locale>/news/24303008/) and the official Overwatch China announcement (ow.blizzard.cn/news/24303008/, zh-CN 格里姆火山), accessed 2026-10-10; the ja-JP page names the map 「WATCHPOINT: GRÍMSVÖTN」, matching the ja-JP all-caps map convention, while the ru-RU, th-TH, and tr-TR pages fall back to English and stay absent; the export carries only its en-US spelling, so its non-en-US locales have no export match in tools/corpus/zh-cn-corpus.json",
-      "Hero.DOCTRINE (Doctrine) and its aliases are transcribed from the official Blizzard hero-detail pages (accessed 2026-10-08); the hero is absent from the pinned workshop-data export, so the member carries no export match in tools/corpus/zh-cn-corpus.json"
+      "Hero.DOCTRINE (Doctrine) and its aliases are transcribed from the official Blizzard hero-detail pages (accessed 2026-10-08); the hero is absent from the pinned workshop-data export, so the member carries no export match in tools/corpus/zh-cn-corpus.json",
+      "structural call signatures for the rule-content-v1 constructs (setGlobalVariable, modifyGlobalVariable, setPlayerVariable, modifyPlayerVariable, forGlobalVariable, forPlayerVariable, if, elseIf, while, callSubroutine, and the zero-argument else/end) are transcribed from the pinned workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d; parameter order follows the emitted call's argument order, and Variable/Subroutine parameter types name the format's tagged {\"variable\"}/{\"subroutine\"} nodes"
     ]
   },
   "schemaVersion": 1,
@@ -22156,7 +22157,28 @@
         "zh-CN": "For 玩家变量",
         "zh-TW": "For Player Variable"
       },
-      "id": "forPlayerVariable"
+      "id": "forPlayerVariable",
+      "paramNames": [
+        "controlPlayer",
+        "controlVariable",
+        "rangeStart",
+        "rangeStop",
+        "step"
+      ],
+      "paramTypes": [
+        "Player",
+        "Variable",
+        "Number",
+        "Number",
+        "Number"
+      ],
+      "params": [
+        "ControlPlayer",
+        "ControlVariable",
+        "RangeStart",
+        "RangeStop",
+        "Step"
+      ]
     },
     {
       "aliases": {
@@ -22176,7 +22198,16 @@
         "zh-CN": "If",
         "zh-TW": "If"
       },
-      "id": "if"
+      "id": "if",
+      "paramNames": [
+        "condition"
+      ],
+      "paramTypes": [
+        "Boolean"
+      ],
+      "params": [
+        "Condition"
+      ]
     },
     {
       "aliases": {
@@ -22196,7 +22227,16 @@
         "zh-CN": "Else If",
         "zh-TW": "Else If"
       },
-      "id": "elseIf"
+      "id": "elseIf",
+      "paramNames": [
+        "condition"
+      ],
+      "paramTypes": [
+        "Boolean"
+      ],
+      "params": [
+        "Condition"
+      ]
     },
     {
       "aliases": {
@@ -22216,7 +22256,8 @@
         "zh-CN": "Else",
         "zh-TW": "Else"
       },
-      "id": "else"
+      "id": "else",
+      "params": []
     },
     {
       "aliases": {
@@ -22236,7 +22277,8 @@
         "zh-CN": "End",
         "zh-TW": "End"
       },
-      "id": "end"
+      "id": "end",
+      "params": []
     },
     {
       "aliases": {
@@ -22256,7 +22298,25 @@
         "zh-CN": "For 全局变量",
         "zh-TW": "For Global Variable"
       },
-      "id": "forGlobalVariable"
+      "id": "forGlobalVariable",
+      "paramNames": [
+        "controlVariable",
+        "rangeStart",
+        "rangeStop",
+        "step"
+      ],
+      "paramTypes": [
+        "Variable",
+        "Number",
+        "Number",
+        "Number"
+      ],
+      "params": [
+        "ControlVariable",
+        "RangeStart",
+        "RangeStop",
+        "Step"
+      ]
     },
     {
       "aliases": {
@@ -22276,7 +22336,16 @@
         "zh-CN": "While",
         "zh-TW": "While"
       },
-      "id": "while"
+      "id": "while",
+      "paramNames": [
+        "condition"
+      ],
+      "paramTypes": [
+        "Boolean"
+      ],
+      "params": [
+        "Condition"
+      ]
     },
     {
       "aliases": {
@@ -22296,7 +22365,19 @@
         "zh-CN": "设置全局变量",
         "zh-TW": "Set Global Variable"
       },
-      "id": "setGlobalVariable"
+      "id": "setGlobalVariable",
+      "paramNames": [
+        "variable",
+        "value"
+      ],
+      "paramTypes": [
+        "Variable",
+        "Object|Array"
+      ],
+      "params": [
+        "Variable",
+        "Value"
+      ]
     },
     {
       "aliases": {
@@ -22316,7 +22397,27 @@
         "zh-CN": "修改全局变量",
         "zh-TW": "Modify Global Variable"
       },
-      "id": "modifyGlobalVariable"
+      "id": "modifyGlobalVariable",
+      "paramDomains": [
+        null,
+        "Operation",
+        null
+      ],
+      "paramNames": [
+        "variable",
+        "operation",
+        "value"
+      ],
+      "paramTypes": [
+        "Variable",
+        "Operation",
+        "Object|Array"
+      ],
+      "params": [
+        "Variable",
+        "Operation",
+        "Value"
+      ]
     },
     {
       "aliases": {
@@ -22336,7 +22437,22 @@
         "zh-CN": "设置玩家变量",
         "zh-TW": "Set Player Variable"
       },
-      "id": "setPlayerVariable"
+      "id": "setPlayerVariable",
+      "paramNames": [
+        "player",
+        "variable",
+        "value"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Variable",
+        "Object|Array"
+      ],
+      "params": [
+        "Player",
+        "Variable",
+        "Value"
+      ]
     },
     {
       "aliases": {
@@ -22356,7 +22472,31 @@
         "zh-CN": "修改玩家变量",
         "zh-TW": "Modify Player Variable"
       },
-      "id": "modifyPlayerVariable"
+      "id": "modifyPlayerVariable",
+      "paramDomains": [
+        null,
+        null,
+        "Operation",
+        null
+      ],
+      "paramNames": [
+        "player",
+        "variable",
+        "operation",
+        "value"
+      ],
+      "paramTypes": [
+        "Player|Array",
+        "Variable",
+        "Operation",
+        "Object|Array"
+      ],
+      "params": [
+        "Player",
+        "Variable",
+        "Operation",
+        "Value"
+      ]
     },
     {
       "aliases": {
@@ -22376,7 +22516,16 @@
         "zh-CN": "调用子程序",
         "zh-TW": "Call Subroutine"
       },
-      "id": "callSubroutine"
+      "id": "callSubroutine",
+      "paramNames": [
+        "subroutine"
+      ],
+      "paramTypes": [
+        "Subroutine"
+      ],
+      "params": [
+        "Subroutine"
+      ]
     }
   ],
   "target": {

@@ -1,7 +1,7 @@
 use crate::common::{catalog, en, zh};
 use workshop_rs::WorkshopError;
-use workshop_rs::catalog::{Kind, Locale};
-use workshop_rs::lookup::LookupMatch;
+use workshop_rs::catalog::{Catalog, Kind, Locale};
+use workshop_rs::lookup::{LookupMatch, Signature};
 use workshop_rs::settings::SettingValueDomain;
 use workshop_rs::{parser, settings};
 
@@ -10,6 +10,23 @@ fn builtin_id<'m>(matches: &'m [LookupMatch], id: &str) -> &'m LookupMatch {
         .iter()
         .find(|lookup| matches!(lookup, LookupMatch::Builtin { id: found, .. } if found == id))
         .unwrap_or_else(|| panic!("lookup should match builtin '{id}': {matches:?}"))
+}
+
+/// The signature lookup reports for the structural entry `id`.
+fn structural_signature(catalog: &Catalog, locale: &Locale, id: &str) -> Signature {
+    let matches = catalog.lookup(locale, id).expect("lookup answers");
+    matches
+        .iter()
+        .find_map(|lookup| match lookup {
+            LookupMatch::Builtin {
+                kind,
+                id: found,
+                signature,
+                ..
+            } if *kind == Kind::Structural && found == id => signature.clone(),
+            _ => None,
+        })
+        .unwrap_or_else(|| panic!("'{id}' must report a structural signature: {matches:?}"))
 }
 
 fn parse_error(source: &str) -> WorkshopError {
@@ -133,6 +150,152 @@ fn indexed_player_variable_signature_lists_the_surface_parameters() {
     );
     assert_eq!(signature.params.len(), 4);
     assert_eq!(signature.required_params, 4);
+}
+
+#[test]
+fn structural_constructs_report_their_call_signatures() {
+    // workshop-rs#496: the structural constructs that take arguments
+    // declare the signature of their `rule-content-v1` call, in argument
+    // order — `setGlobalVariable(variable, value)`,
+    // `forGlobalVariable(controlVariable, rangeStart, rangeStop, step)`,
+    // `if(condition)`.
+    let catalog = catalog();
+    let cases: &[(&str, &[(&str, &str)])] = &[
+        (
+            "setGlobalVariable",
+            &[("variable", "Variable"), ("value", "Object|Array")],
+        ),
+        (
+            "forGlobalVariable",
+            &[
+                ("controlVariable", "Variable"),
+                ("rangeStart", "Number"),
+                ("rangeStop", "Number"),
+                ("step", "Number"),
+            ],
+        ),
+        ("if", &[("condition", "Boolean")]),
+    ];
+    for &(id, expected) in cases {
+        let signature = structural_signature(&catalog, &zh(), id);
+        let params: Vec<(&str, Option<&str>)> = signature
+            .params
+            .iter()
+            .map(|param| (param.name.as_str(), param.param_type.as_deref()))
+            .collect();
+        let expected: Vec<(&str, Option<&str>)> = expected
+            .iter()
+            .map(|(name, param_type)| (*name, Some(*param_type)))
+            .collect();
+        assert_eq!(params, expected, "'{id}' signature params");
+        assert_eq!(signature.required_params, expected.len());
+        assert!(!signature.variadic);
+    }
+    // The localized display name renders the signature's call head.
+    let signature = structural_signature(&catalog, &zh(), "setGlobalVariable");
+    assert_eq!(
+        signature.text,
+        "设置全局变量(variable: Variable, value: Object|Array)"
+    );
+}
+
+#[test]
+fn zero_argument_constructs_report_empty_signatures_and_keywords_none() {
+    let catalog = catalog();
+    for id in ["else", "end"] {
+        let signature = structural_signature(&catalog, &en(), id);
+        assert!(signature.params.is_empty(), "'{id}' has no arguments");
+        assert_eq!(signature.required_params, 0);
+    }
+    for id in [
+        "rule",
+        "event",
+        "actions",
+        "conditions",
+        "settings",
+        "variables",
+        "subroutines",
+        "workshop",
+        "global",
+        "player",
+        "disabled",
+    ] {
+        let matches = catalog.lookup(&en(), id).expect("lookup answers");
+        let LookupMatch::Builtin { signature, .. } = builtin_id(&matches, id) else {
+            unreachable!("builtin_id only matches builtins");
+        };
+        assert!(
+            signature.is_none(),
+            "section keyword '{id}' stays without a signature"
+        );
+        let error = catalog
+            .lookup_within(&en(), id, None)
+            .expect_err("a signature-less entry is not a scope");
+        assert!(
+            matches!(
+                error,
+                WorkshopError::Unknown {
+                    kind: "lookup scope",
+                    ..
+                } | WorkshopError::UnknownWithCandidates {
+                    kind: "lookup scope",
+                    ..
+                }
+            ),
+            "'{id}': {error:?}"
+        );
+    }
+}
+
+#[test]
+fn scoped_lookup_lists_a_structural_constructs_parameters() {
+    // workshop-rs#496: `lookup_within` scopes to a structural call construct
+    // the same way it scopes to an action.
+    let catalog = catalog();
+    let params = catalog
+        .lookup_within(&zh(), "setGlobalVariable", None)
+        .expect("a structural construct is a scope");
+    let mut positions = Vec::with_capacity(params.len());
+    let names: Vec<&str> = params
+        .iter()
+        .map(|param| match param {
+            LookupMatch::Parameter {
+                callable,
+                position,
+                required,
+                param,
+                ..
+            } => {
+                assert_eq!(callable, "setGlobalVariable");
+                positions.push(*position);
+                assert!(required, "every parameter is required: {param:?}");
+                param.name.as_str()
+            }
+            other => panic!("a structural scope lists parameters: {other:?}"),
+        })
+        .collect();
+    assert_eq!(names, ["variable", "value"]);
+    assert_eq!(positions, [0, 1]);
+
+    // `modifyGlobalVariable` is catalogued both as an action and as the
+    // `rule-content-v1` structural call; the established action scope wins,
+    // observable by its `value` parameter type (`Any`, where the structural
+    // entry declares `Object|Array`).
+    let params = catalog
+        .lookup_within(&en(), "modifyGlobalVariable", None)
+        .expect("a scope");
+    let types: Vec<Option<&str>> = params
+        .iter()
+        .map(|param| match param {
+            LookupMatch::Parameter { param, .. } => param.param_type.as_deref(),
+            other => panic!("a scope lists parameters: {other:?}"),
+        })
+        .collect();
+    assert_eq!(
+        types,
+        [Some("Variable"), Some("Operation"), Some("Any")],
+        "the action entry keeps the scope"
+    );
 }
 
 #[test]

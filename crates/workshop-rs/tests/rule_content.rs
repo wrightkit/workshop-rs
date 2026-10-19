@@ -5,6 +5,7 @@
 //! `Action` variant is added without a node form.
 
 use serde_json::{Value as JsonValue, json};
+use workshop_rs::catalog::Kind;
 use workshop_rs::lookup::LookupMatch;
 use workshop_rs::rules::content::{
     ASSIGN_MEMBER_CALL, GLOBAL_VARIABLE_CALL, MEMBER_ACCESS_CALL, MODIFY_MEMBER_CALL,
@@ -306,6 +307,67 @@ fn every_action_form_appears_in_a_rendered_rule() {
     assert_eq!(
         actions[18],
         json!({"call": "abort", "args": [], "disabled": true})
+    );
+}
+
+/// The structural catalog ids a `rule-content-v1` document can emit as a
+/// `{"call": id, "args": [...]}` node.
+const STRUCTURAL_CALL_IDS: &[&str] = &[
+    "setGlobalVariable",
+    "modifyGlobalVariable",
+    "setPlayerVariable",
+    "modifyPlayerVariable",
+    "forGlobalVariable",
+    "forPlayerVariable",
+    "if",
+    "elseIf",
+    "else",
+    "while",
+    "end",
+    "callSubroutine",
+];
+
+#[test]
+fn every_emitted_structural_call_matches_its_lookup_signature_arity() {
+    // workshop-rs#496: `Catalog::lookup` names the argument at each position
+    // of a `rule-content-v1` call, so a structural signature must declare
+    // exactly one parameter per emitted argument.
+    let catalog = catalog();
+    let content = content_of(&action_forms_rule());
+    let mut covered = std::collections::BTreeSet::new();
+    for action in content["actions"].as_array().expect("actions") {
+        let call = action["call"].as_str().expect("a call id");
+        if !STRUCTURAL_CALL_IDS.contains(&call) {
+            continue;
+        }
+        covered.insert(call);
+        let arg_count = action["args"].as_array().expect("args").len();
+        let matches = catalog.lookup(&en(), call).expect("lookup answers");
+        let signature = matches
+            .iter()
+            .find_map(|lookup| match lookup {
+                LookupMatch::Builtin {
+                    kind,
+                    id,
+                    signature,
+                    ..
+                } if *kind == Kind::Structural && id == call => signature.as_ref(),
+                _ => None,
+            })
+            .unwrap_or_else(|| {
+                panic!("'{call}' must resolve to a structural signature: {matches:?}")
+            });
+        assert_eq!(
+            signature.params.len(),
+            arg_count,
+            "'{call}' declares {} parameter(s) for an emitted {arg_count}-argument call",
+            signature.params.len()
+        );
+    }
+    assert_eq!(
+        covered.len(),
+        STRUCTURAL_CALL_IDS.len(),
+        "the fixture must emit every structural call id: {covered:?}"
     );
 }
 

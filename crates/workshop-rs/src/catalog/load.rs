@@ -45,8 +45,11 @@ struct CatalogFile {
 struct EntryFile {
     id: String,
     aliases: HashMap<String, AliasFile>,
+    /// The declared parameter list. `None` means the entry declares no
+    /// signature at all; `Some` — even empty, as on the zero-argument
+    /// `else`/`end` constructs — declares a call signature.
     #[serde(default)]
-    params: Vec<String>,
+    params: Option<Vec<String>>,
     /// Reviewed semantic parameter names, parallel to `params`.
     #[serde(default)]
     param_names: Vec<String>,
@@ -360,18 +363,25 @@ impl Catalog {
         // primary-locale alias. Additional declared locales may be partially
         // covered; missing target-locale mappings fail explicitly at
         // conversion/emission time (ADR-0001 Decision 7).
+        // A signature-bearing entry is any action or value, or a structural
+        // entry that declares its parameter list — `"params": []` marks a
+        // zero-argument construct such as `else`/`end`, while section
+        // keywords declare no `params` field and stay without a signature.
+        let callable = matches!(kind, Kind::Action | Kind::Value)
+            || (kind == Kind::Structural && item.params.is_some());
+        let params = item.params.unwrap_or_default();
         let param_names = match item.param_names {
             names if names.is_empty() => None,
-            names if names.len() != item.params.len() => {
+            names if names.len() != params.len() => {
                 return Err(CatalogError::validation(format!(
                     "{} '{}' declares {} param names for {} params",
                     kind.as_str(),
                     item.id,
                     names.len(),
-                    item.params.len()
+                    params.len()
                 )));
             }
-            names if names == item.params => None,
+            names if names == params => None,
             names => Some(names),
         };
         self.by_id[kind.as_index()].insert(item.id.clone(), index);
@@ -379,7 +389,8 @@ impl Catalog {
         self.entries.push(CatalogEntry {
             id: item.id,
             kind,
-            params: item.params,
+            callable,
+            params,
             param_names,
             param_aliases: item
                 .param_aliases

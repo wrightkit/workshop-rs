@@ -31,7 +31,8 @@ pub enum LookupMatch {
         id: String,
         /// The display name in the requested locale, when mapped.
         display_name: Option<String>,
-        /// The call signature, for actions and values.
+        /// The call signature, for callable builtins: actions, values, and
+        /// the structural constructs that declare a parameter list.
         signature: Option<Signature>,
     },
     /// A member of a canonical enum domain (`Team.ALL`, `Hero.SOLDIER_76`).
@@ -109,7 +110,9 @@ pub struct SignatureDomain {
     pub members: Vec<LookupEnumMember>,
 }
 
-/// A compact signature for a catalog action or value.
+/// A compact signature for a catalog callable: an action, a value, or a
+/// structural construct that declares a parameter list (a zero-argument
+/// construct such as `else` reports an empty `params`).
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
 pub struct Signature {
@@ -161,7 +164,9 @@ impl Catalog {
     /// exact spellings first, then near spellings, token prefixes, and
     /// substring guesses; ties keep catalog and table order. All matches are
     /// canonical constructs the parser and emitter accept, with the display
-    /// name in `locale` and, for actions and values, the compact signature.
+    /// name in `locale` and, for callable builtins (actions, values, and
+    /// structural constructs that declare a parameter list), the compact
+    /// signature.
     ///
     /// An empty result reports that nothing matched. `Err` reports a query
     /// the catalog cannot answer: a locale the catalog does not declare.
@@ -301,8 +306,9 @@ impl Catalog {
     /// uses.
     ///
     /// `within` resolves in a fixed order: an enum domain (catalog or
-    /// settings-table), an action or value id or `locale` spelling, then
-    /// a settings path prefix. Template segments (`<team>`, `<hero>`)
+    /// settings-table), a callable — an action, a value, or a structural
+    /// construct — by id or `locale` spelling, then a settings path prefix.
+    /// Template segments (`<team>`, `<hero>`)
     /// accept their own template spelling or a canonical team/hero key
     /// the settings table recognizes — never an arbitrary value — so a
     /// literal path stays literal (`heroes.general` lists only the
@@ -447,11 +453,19 @@ impl Catalog {
         value: &str,
         prepared: Option<&PreparedQuery>,
     ) -> Option<Vec<(u32, LookupMatch)>> {
-        let entry = [Kind::Action, Kind::Value].into_iter().find_map(|kind| {
-            self.entry(kind, value)
-                .or_else(|| self.resolve(kind, locale, value))
-        })?;
-        let signature = signature(self, entry, locale)?;
+        // Actions and values keep the established resolution order; a
+        // structural construct scopes when no action or value does —
+        // `modifyGlobalVariable` exists in both tables and keeps the
+        // action's signature. A structural match without a signature (a
+        // section keyword) yields to the next kind rather than ending the
+        // search.
+        let (entry, signature) = [Kind::Action, Kind::Value, Kind::Structural]
+            .into_iter()
+            .filter_map(|kind| {
+                self.entry(kind, value)
+                    .or_else(|| self.resolve(kind, locale, value))
+            })
+            .find_map(|entry| signature(self, entry, locale).map(|signature| (entry, signature)))?;
         Some(
             signature
                 .params
@@ -502,7 +516,7 @@ impl Catalog {
 }
 
 fn signature(catalog: &Catalog, entry: &CatalogEntry, locale: &Locale) -> Option<Signature> {
-    if !matches!(entry.kind, Kind::Action | Kind::Value) {
+    if !entry.callable {
         return None;
     }
     let params: Vec<SignatureParam> = (0..entry.param_count())

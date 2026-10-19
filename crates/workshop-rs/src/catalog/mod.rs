@@ -134,6 +134,12 @@ pub struct ParamCoercions {
 pub struct CatalogEntry {
     pub id: String,
     pub kind: Kind,
+    /// Whether `lookup` reports the entry's call signature and
+    /// `lookup_within` scopes to its parameters. Every action and value is
+    /// callable; a structural entry is callable only when the data declares
+    /// its parameter list (`"params": []` on the zero-argument `else`/`end`
+    /// constructs). Events, operators, and section keywords are not.
+    pub(crate) callable: bool,
     /// Parameter names, when the catalog documents them.
     pub(crate) params: Vec<String>,
     /// Reviewed semantic names when they differ from the catalog parameters.
