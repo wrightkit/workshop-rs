@@ -743,12 +743,26 @@ struct PreparedQuery {
     folded_chars: Vec<char>,
     tokens: Vec<String>,
     max_distance: usize,
+    /// The folded length at which token-prefix and substring matching
+    /// start. A script without word spacing carries a whole word in two
+    /// characters (`阈值`, `スロットル`), so its queries match loosely at
+    /// two; word-spaced queries keep three, so a two-letter ASCII query
+    /// does not flood the results.
+    loose_min_chars: usize,
 }
 
 impl PreparedQuery {
     fn new(query: &str) -> Self {
         let folded = suggest::fold_loose(query);
         let folded_chars: Vec<char> = folded.chars().collect();
+        let loose_min_chars = if folded_chars
+            .iter()
+            .any(|&character| is_unspaced_script(character))
+        {
+            2
+        } else {
+            3
+        };
         Self {
             raw: query.to_string(),
             max_distance: suggest::max_distance(folded_chars.len()),
@@ -759,6 +773,7 @@ impl PreparedQuery {
                 .map(suggest::fold_loose)
                 .filter(|token| !token.is_empty())
                 .collect(),
+            loose_min_chars,
         }
     }
 
@@ -786,7 +801,7 @@ impl PreparedQuery {
                 return Some(2 + distance as u32);
             }
         }
-        if self.folded_chars.len() >= 3 {
+        if self.folded_chars.len() >= self.loose_min_chars {
             if self.token_prefix_match(candidate) {
                 return Some(6);
             }
@@ -809,6 +824,23 @@ impl PreparedQuery {
                     .any(|candidate| candidate.starts_with(token))
             })
     }
+}
+
+/// Whether `character` belongs to a CJK script written without word
+/// spacing — unified ideographs, kana, or hangul — where two characters
+/// already carry a complete word.
+fn is_unspaced_script(character: char) -> bool {
+    matches!(
+        character,
+        '\u{1100}'..='\u{11FF}'   // Hangul Jamo
+            | '\u{3040}'..='\u{309F}' // Hiragana
+            | '\u{30A0}'..='\u{30FF}' // Katakana
+            | '\u{3400}'..='\u{4DBF}' // CJK Unified Ideographs Extension A
+            | '\u{4E00}'..='\u{9FFF}' // CJK Unified Ideographs
+            | '\u{AC00}'..='\u{D7AF}' // Hangul Syllables
+            | '\u{F900}'..='\u{FAFF}' // CJK Compatibility Ideographs
+            | '\u{FF66}'..='\u{FF9D}' // Halfwidth katakana
+    )
 }
 
 fn fold_candidate(candidate: &str) -> String {
