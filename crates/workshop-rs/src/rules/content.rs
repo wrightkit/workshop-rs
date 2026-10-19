@@ -218,7 +218,7 @@ fn action_node(action: &Action, disabled: bool) -> Result<JsonValue> {
         Action::End => ("end", Vec::new()),
         Action::Disabled { action } => return action_node(action, true),
         Action::Call { name, args } => (
-            name.as_str(),
+            chase_call_id(name, args),
             args.iter().map(value_node).collect::<Result<_>>()?,
         ),
     };
@@ -271,6 +271,19 @@ fn value_node(value: &Value) -> Result<JsonValue> {
             call_node(name, args.iter().map(value_node).collect::<Result<_>>()?)
         }
     })
+}
+
+/// The catalog id a `Call` action is named by. The parser stores a
+/// player-variable chase under the global chase's WIR name; the document
+/// names it by its own catalog id, like the other folded player-variable
+/// actions (`setPlayerVariableAtIndex`, `stopChasingPlayerVariable`). The
+/// folded `playerVariable` target stays the first argument.
+fn chase_call_id<'a>(name: &'a str, args: &[Value]) -> &'a str {
+    match (name, args.first()) {
+        ("chaseAtRate", Some(Value::PlayerVariable { .. })) => "chasePlayerVariableAtRate",
+        ("chaseOverTime", Some(Value::PlayerVariable { .. })) => "chasePlayerVariableOverTime",
+        _ => name,
+    }
 }
 
 fn call_node(call: &str, args: Vec<JsonValue>) -> JsonValue {
