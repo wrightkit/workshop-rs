@@ -156,7 +156,7 @@ pub(crate) fn equivalent_wir(a: &wir::Program, b: &wir::Program) -> bool {
     true
 }
 
-fn settings_equivalent(
+pub(crate) fn settings_equivalent(
     left: Option<&crate::settings::Settings>,
     right: Option<&crate::settings::Settings>,
 ) -> bool {
@@ -702,7 +702,7 @@ fn value_equivalent(
     }
 }
 
-fn ambiguous_enum_equivalent(
+pub(crate) fn ambiguous_enum_equivalent(
     a: &wir::Program,
     b: &wir::Program,
     left: &[wir::ValueId],
@@ -717,7 +717,7 @@ fn ambiguous_enum_equivalent(
     left_candidates == right_candidates
 }
 
-fn canonical_value_name(name: &str) -> &str {
+pub(crate) fn canonical_value_name(name: &str) -> &str {
     match name {
         "+" => "add",
         "-" => "subtract",

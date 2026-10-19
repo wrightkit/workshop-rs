@@ -16,8 +16,8 @@
 //! * [`actions`], [`events`], [`rules`], [`values`], [`settings`], and
 //!   [`gameplay`] — the discoverable Workshop domains;
 //! * [`program`] — the canonical public Workshop program model;
-//! * [`parser`], [`validate`], [`convert`], [`roundtrip`], and [`emitter`] —
-//!   the public Workshop operations over that model;
+//! * [`parser`], [`validate`], [`convert`], [`roundtrip`], [`compare`], and
+//!   [`emitter`] — the public Workshop operations over that model;
 //!
 //! The catalog is locale-independent at the identity layer: analyzer and
 //! APIs never need locale-specific strings to identify a builtin. Locale
@@ -27,6 +27,7 @@
 pub mod actions;
 mod analysis;
 pub mod catalog;
+pub mod compare;
 pub mod convert;
 mod core;
 pub mod detect;

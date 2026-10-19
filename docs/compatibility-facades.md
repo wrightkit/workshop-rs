@@ -18,7 +18,7 @@ remains the item-level reference for symbols nested under those modules.
 | Workshop domains | `actions`, `catalog`, `events`, `gameplay`, `rules`, `settings`, `values` |
 | Source and provenance | `source` |
 | Canonical lookup | `lookup` |
-| Workshop operations | `convert`, `detect`, `emitter`, `format`, `parser`, `roundtrip`, `validate` |
+| Workshop operations | `compare`, `convert`, `detect`, `emitter`, `format`, `parser`, `roundtrip`, `validate` |
 | Parse-context contract | `signatures` |
 | Public errors | `CatalogError`, `WorkshopError` |
 
@@ -51,6 +51,17 @@ canonical validation (`validate_canonical_ids`,
 `validate_canonical_ids_tolerating_residuals`) is public only from
 `validate`. `settings::schema` is an internal module; its types and functions
 (including `validate_catalog`) are public only from `settings` directly.
+
+The two program comparators serve different contracts. `roundtrip::equivalent`
+is strict structural identity for emission round trips. `compare` is the
+behavioral comparator used by source-language reconstruction contracts such
+as Workshop→OPY (`compare::equivalent`, `compare::difference`): it allows the
+differences that cannot change execution — rule, variable, and subroutine
+names, declaration table order, the relative order of subroutine-event rules,
+the `Set x = x <op> v` / `Modify x <op> v` spelling pair, `EachPlayer` versus
+`All`/`All` filters, disabled or actionless rules and disabled elements, and
+source spans or layout — and reports the first behavior-relevant difference
+otherwise. The full contract is the `compare` module's rustdoc.
 
 ## Structured rule content
 

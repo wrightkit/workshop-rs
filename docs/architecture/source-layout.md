@@ -34,8 +34,9 @@ shared home:
 - `analysis/` owns complete-program inspection and resource counting;
 - `rules/validate.rs` orchestrates canonical validation while delegating event,
   action, and value checks to their owning domains;
-- `output/` owns deterministic emission, locale conversion, and round-trip
-  comparison;
+- `output/` owns deterministic emission, locale conversion, round-trip
+  structural comparison, and the behavioral program comparator exposed as
+  `compare`;
 - `core/` owns storage, typed IDs, source spans, formatting, and shared errors;
 - `workshop-rs-cli/src/` owns census execution, conformance report schemas,
   capture comparison, and corpus tooling;
