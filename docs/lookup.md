@@ -33,7 +33,12 @@ Each match is a canonical construct the parser and emitter accept:
 
 - `LookupMatch::Builtin` — a structural keyword, action, value, event, or
   operator, with its catalog `Kind`, canonical id, the requested locale's
-  display name when mapped, and, for actions and values, a `Signature`.
+  display name when mapped, and, for callable builtins, a `Signature`.
+  Actions and values are always callable; a structural construct is callable
+  when it declares a parameter list (`setGlobalVariable`, `if`,
+  `forPlayerVariable`, `callSubroutine`, … — `else` and `end` declare an
+  empty one), while section keywords such as `rule`, `event`, and `actions`
+  stay without a signature.
 - `LookupMatch::EnumDomain` — an enum domain and every member it accepts;
   this is the follow-up query for a parameter whose domain is too large to
   list inline in a signature.
@@ -68,8 +73,9 @@ assert!(members.iter().all(|m| matches!(m, LookupMatch::EnumMember { domain, .. 
 ```
 
 `within` resolves in a fixed order — a catalog enum domain, a
-settings-table enum domain, an action or value id or spelling, then a
-settings path prefix. `<team>`/`<hero>` template segments accept their
+settings-table enum domain, a callable by id or spelling (an action, a
+value, or a structural construct), then a settings path prefix.
+`<team>`/`<hero>` template segments accept their
 own template spelling or a canonical team/hero key (`heroes.team1`,
 `heroes.<team>`), never an arbitrary value, so a literal path stays
 literal and `heroes.not-a-team` is an unknown scope. Children keep the
@@ -125,6 +131,13 @@ an enum-typed parameter shows its domain, listing members inline once per
 signature when the domain has at most 32 members and reporting the member
 count for a larger domain. `Signature::params`, `required_params`,
 `variadic`, `return_type`, and `domains` expose the same facts structurally.
+
+Structural construct signatures name the arguments of the construct's
+`rule-content-v1` call in argument order (`setGlobalVariable` reports
+`variable`, `value`); a variable or subroutine parameter's type names the
+format's tagged `{"variable"}`/`{"subroutine"}` node (`Variable`,
+`Subroutine`). Zero-argument constructs (`else`, `end`) report an empty
+`params`.
 
 ## Settings vocabulary
 
