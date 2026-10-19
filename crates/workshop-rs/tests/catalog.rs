@@ -647,3 +647,47 @@ fn reevaluation_coverage_is_per_parameter() {
     }
     assert_eq!(reeval_actions, 19);
 }
+
+/// workshop-rs#505: an enum-typed parameter declares its `paramDomains`
+/// entry so `lookup` attaches the domain's members and validation rejects
+/// enum literals from another domain at that position (ADR-0014). The
+/// declared semantic type's leading `paramTypes` alternative names the
+/// domain — `Hero|Array` is a Hero position, while `Vector` positions take
+/// any vector value (not just the direction constants) and unions led by a
+/// non-enum type such as `String|Array|EntityId|Color` are not enum
+/// positions, so neither kind names a `paramDomains` entry.
+#[test]
+fn enum_typed_parameters_declare_their_param_domain() {
+    let catalog = catalog();
+    for entry in catalog
+        .entries_of(Kind::Action)
+        .chain(catalog.entries_of(Kind::Value))
+    {
+        for index in 0..entry.param_count() {
+            let Some(domain) = entry
+                .param_type(index)
+                .and_then(|param_type| param_type.split('|').next())
+                .filter(|domain| catalog.enum_domain(domain).is_some())
+            else {
+                continue;
+            };
+            if domain == "Vector" {
+                continue;
+            }
+            assert_eq!(
+                entry.param_domain(index),
+                Some(domain),
+                "{} '{}' parameter {} declares type '{domain}' but no paramDomains entry",
+                entry.kind.as_str(),
+                entry.id,
+                index + 1
+            );
+            assert!(
+                !catalog.enum_domain(domain).unwrap().members.is_empty(),
+                "enum domain '{domain}' for '{}' parameter {} has no members",
+                entry.id,
+                index + 1
+            );
+        }
+    }
+}

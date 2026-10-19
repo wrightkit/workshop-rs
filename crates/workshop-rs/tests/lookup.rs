@@ -603,6 +603,62 @@ fn scoped_lookup_lists_callable_parameters_in_call_order() {
     assert!(names.len() > 1);
 }
 
+/// workshop-rs#505: a parameter declared with an enum domain reports the
+/// domain and its accepted members through scoped lookup.
+#[test]
+fn scoped_lookup_reports_a_parameters_enum_domain_and_members() {
+    let catalog = catalog();
+    let params = catalog
+        .lookup_within(&en(), "createDummyBot", None)
+        .expect("a callable is a scope");
+    let domain_of = |name: &str| {
+        params
+            .iter()
+            .find_map(|param| match param {
+                LookupMatch::Parameter { param, domain, .. } if param.name == name => {
+                    Some(domain.as_ref().expect("the parameter names a domain"))
+                }
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("createDummyBot has a '{name}' parameter"))
+    };
+    let team = domain_of("team");
+    assert_eq!(team.domain, "Team");
+    assert!(
+        ["ALL", "TEAM_1", "TEAM_2"]
+            .iter()
+            .all(|member| team.members.iter().any(|m| m.id == *member)),
+        "Team members attach to the parameter: {:?}",
+        team.members
+    );
+    let hero = domain_of("hero");
+    assert_eq!(hero.domain, "Hero");
+    assert!(hero.members.iter().any(|member| member.id == "DVA"));
+    let slot = params
+        .iter()
+        .find_map(|param| match param {
+            LookupMatch::Parameter { param, domain, .. } if param.name == "slot" => Some(domain),
+            _ => None,
+        })
+        .expect("createDummyBot has a 'slot' parameter");
+    assert!(slot.is_none(), "a non-enum parameter names no domain");
+
+    let params = catalog
+        .lookup_within(&en(), "getPlayersInRadius", None)
+        .expect("a callable is a scope");
+    let los_check = params
+        .iter()
+        .find_map(|param| match param {
+            LookupMatch::Parameter { param, domain, .. } if param.name == "losCheck" => {
+                Some(domain.as_ref().expect("losCheck names a domain"))
+            }
+            _ => None,
+        })
+        .expect("getPlayersInRadius has a 'losCheck' parameter");
+    assert_eq!(los_check.domain, "LosCheck");
+    assert!(los_check.members.iter().any(|member| member.id == "OFF"));
+}
+
 #[test]
 fn scoped_query_filters_and_ranks_children_with_the_shared_matcher() {
     let catalog = catalog();
