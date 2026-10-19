@@ -61,16 +61,6 @@ pub enum LookupMatch {
         /// when the locale has no mapping.
         display_name: String,
     },
-    /// A preset localized string identity from the catalog's
-    /// `localizedStrings` table — the id a `{"localizedString": id}`
-    /// rule-content node or a `Value::LocalizedString` carries.
-    LocalizedString {
-        /// The canonical id (`hello`, `goodbye`).
-        id: String,
-        /// The display name in the requested locale, when mapped — the
-        /// spelling the emitter writes for that locale.
-        display_name: Option<String>,
-    },
     /// A parameter of a scoped callable, in call order. Returned only by
     /// [`Catalog::lookup_within`]; an unscoped [`Catalog::lookup`] never
     /// answers parameters.
@@ -95,6 +85,16 @@ pub enum LookupMatch {
         path: String,
         /// The segment text (`<team>`, `general`).
         segment: String,
+    },
+    /// A preset localized string identity from the catalog's
+    /// `localizedStrings` table — the id a `{"localizedString": id}`
+    /// rule-content node or a `Value::LocalizedString` carries.
+    LocalizedString {
+        /// The canonical id (`hello`, `goodbye`).
+        id: String,
+        /// The display name in the requested locale, when mapped — the
+        /// spelling the emitter writes for that locale.
+        display_name: Option<String>,
     },
 }
 
