@@ -8484,7 +8484,7 @@
       }
     }
   ],
-  "digest": "61452c110de5a0c47acaf18233cf6b9a865ff7ce0b2e602d521ae64cedaece99",
+  "digest": "0048c03209910d7d3791a97da6c202799f1b2d437ebc1ea557d3d6200544e74e",
   "enums": [
     {
       "domain": "Impulse",
@@ -21910,7 +21910,8 @@
       "Create Dummy Bot's hero parameter accepts a single Hero or a Hero array: Workshop behavior selects randomly when multiple heroes are provided, and pinned OverPy 9.7.10 texture-tag setup emits getAllHeroes() into Create Dummy Bot (workshop-rs#238).",
       "Map enum member GRIMSVOTN (Grímsvötn) is reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d; the export declares no guid or non-en-US spellings for it yet",
       "Map.GRIMSVOTN localized aliases are transcribed from the official localized Blizzard Season 5 announcement pages (overwatch.blizzard.com/<locale>/news/24303008/) and the official Overwatch China announcement (ow.blizzard.cn/news/24303008/, zh-CN 格里姆火山), accessed 2026-10-10; the ja-JP page names the map 「WATCHPOINT: GRÍMSVÖTN」, matching the ja-JP all-caps map convention, while the ru-RU, th-TH, and tr-TR pages fall back to English and stay absent; the export carries only its en-US spelling, so its non-en-US locales have no export match in tools/corpus/zh-cn-corpus.json",
-      "Hero.DOCTRINE (Doctrine) and its aliases are transcribed from the official Blizzard hero-detail pages (accessed 2026-10-08); the hero is absent from the pinned workshop-data export, so the member carries no export match in tools/corpus/zh-cn-corpus.json"
+      "Hero.DOCTRINE (Doctrine) and its aliases are transcribed from the official Blizzard hero-detail pages (accessed 2026-10-08); the hero is absent from the pinned workshop-data export, so the member carries no export match in tools/corpus/zh-cn-corpus.json",
+      "the six direction value return types (up, down, left, right, forward, backward) are reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d, which gives Vector.UP and the other direction constants a Direction (vector) return; the direction parameters they fill (for example startThrottleInDirection.direction) are typed Vector"
     ]
   },
   "schemaVersion": 1,
@@ -26099,7 +26100,7 @@
       "id": "forward",
       "paramTypes": [],
       "params": [],
-      "returnType": "Array"
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -30445,7 +30446,7 @@
       "id": "backward",
       "paramTypes": [],
       "params": [],
-      "returnType": "Array"
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -30468,7 +30469,7 @@
       "id": "down",
       "paramTypes": [],
       "params": [],
-      "returnType": "Array"
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -30491,7 +30492,7 @@
       "id": "left",
       "paramTypes": [],
       "params": [],
-      "returnType": "Array"
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -30514,7 +30515,7 @@
       "id": "right",
       "paramTypes": [],
       "params": [],
-      "returnType": "Array"
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -30537,7 +30538,7 @@
       "id": "up",
       "paramTypes": [],
       "params": [],
-      "returnType": "Array"
+      "returnType": "Vector"
     },
     {
       "aliases": {
@@ -30618,5 +30619,5 @@
       "returnType": "Number"
     }
   ],
-  "version": "0.1.10"
+  "version": "0.1.11"
 }

@@ -363,6 +363,25 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
 }
 
 #[test]
+fn direction_values_declare_the_vector_return_type() {
+    // #495: the six unit-direction values are vectors, not arrays — the
+    // pinned workshop-data export types `Vector.UP` and the other direction
+    // constants as Direction (vector) returns, and the direction parameters
+    // they fill are typed `Vector`.
+    let catalog = catalog();
+    for id in ["up", "down", "left", "right", "forward", "backward"] {
+        let entry = catalog
+            .entry(Kind::Value, id)
+            .unwrap_or_else(|| panic!("{id} is in the catalog"));
+        assert_eq!(
+            entry.return_type(),
+            Some("Vector"),
+            "{id} must declare the vector return type"
+        );
+    }
+}
+
+#[test]
 fn evidence_backed_signature_types_are_exposed() {
     let catalog = catalog();
     let max_health = catalog

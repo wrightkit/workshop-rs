@@ -39,7 +39,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Array Slice` | ✅ Supported | Returns: `Array`; Parameters: (Array: Array, Start Index: Number|Boolean, Count: Number|Boolean). |
 | `Assist Count` | ✅ Supported | Returns: `Number`. |
 | `Attacker` | ✅ Supported | Returns: `Player`. |
-| `Backward` | ✅ Supported | Returns: `Array`. |
+| `Backward` | ✅ Supported | Returns: `Vector`. |
 | `Char In String` | ✅ Supported | Returns: `String`; Parameters: (String: Any, Index: Any). |
 | `Closest Player To` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector|Player, Team: Team). |
 | `Compare` | ✅ Supported | Returns: `Boolean`; Parameters: (a: Any, operator: __Operator__, b: Any). |
@@ -62,7 +62,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Distance Between` | ✅ Supported | Returns: `Number`; Parameters: (Position: Vector|Player|Array, Position: Vector|Player|Array). |
 | `Divide` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector, b: Number|Boolean|Vector). |
 | `Dot Product` | ✅ Supported | Returns: `Number`; Parameters: (Value: Vector, Value: Vector). |
-| `Down` | ✅ Supported | Returns: `Array`. |
+| `Down` | ✅ Supported | Returns: `Vector`. |
 | `Empty Array` | ✅ Supported | Returns: `Array`. |
 | `Entity Count` | ✅ Supported | Returns: `Number`. |
 | `Entity Exists` | ✅ Supported | Returns: `Boolean`; Parameters: (Entity: Player|EntityId). |
@@ -82,7 +82,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Filtered Array` | ✅ Supported | Returns: `Array`; Parameters: (Array: Player|Array, Condition: Boolean). |
 | `First Of` | ✅ Supported | Returns: `Object|Array`; Parameters: (Array: Any). |
 | `Flag Position` | ✅ Supported | Returns: `Vector`; Parameters: (Team: Team). |
-| `Forward` | ✅ Supported | Returns: `Array`. |
+| `Forward` | ✅ Supported | Returns: `Vector`. |
 | `Game Mode` | ✅ Supported | Returns: `Gamemode`; Parameters: (Gamemode: Gamemode). |
 | `Has Spawned` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player|Array). |
 | `Has Status` | ✅ Supported | Returns: `Boolean`; Parameters: (Player: Player, Status: Status). |
@@ -161,7 +161,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Last Healing Modification ID` | ✅ Supported | Returns: `HealingModificationId`. |
 | `Last Of` | ✅ Supported | Returns: `Any`; Parameters: (Array: Array). |
 | `Last Text ID` | ✅ Supported | Returns: `TextId`. |
-| `Left` | ✅ Supported | Returns: `Array`. |
+| `Left` | ✅ Supported | Returns: `Vector`. |
 | `Local Player` | ✅ Supported | Returns: `Player`. |
 | `Local Vector Of` | ✅ Supported | Returns: `Vector`; Parameters: (Vector: Vector, Player: Player, Transform: Transform). |
 | `Magnitude Of` | ✅ Supported | Returns: `Number`; Parameters: (Vector: Vector). |
@@ -214,7 +214,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Ray Cast Hit Player` | ✅ Supported | Returns: `Player`; Parameters: (Position: Vector, Position: Vector, Player: Array, Player: Player|Array, Boolean: Boolean). |
 | `Ray Cast Hit Position` | ✅ Supported | Returns: `Vector`; Parameters: (Start Position: Vector, End Position: Vector, Players To Include: Array, Players To Exclude: Player|Array, Include Player Owned Objects: Boolean). |
 | `Remove From Array` | ✅ Supported | Returns: `Array`; Parameters: (Array: Array, Value: Object|Array). |
-| `Right` | ✅ Supported | Returns: `Array`. |
+| `Right` | ✅ Supported | Returns: `Vector`. |
 | `Round To Integer` | ✅ Supported | Returns: `Number`; Parameters: (Value: Number, Rounding: Rounding). |
 | `Score Of` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player). |
 | `Server Load` | ✅ Supported | Returns: `Number`. |
@@ -244,7 +244,7 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Total Time Elapsed` | ✅ Supported | Returns: `Number`. |
 | `True` | ✅ Supported | Returns: `BoolLiteral`. |
 | `Ultimate Charge Percent` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player). |
-| `Up` | ✅ Supported | Returns: `Array`. |
+| `Up` | ✅ Supported | Returns: `Vector`. |
 | `Update Every Frame` | ✅ Supported | Returns: `Object|Array`; Parameters: (Value: Object|Array). |
 | `Value In Array` | ✅ Supported | Returns: `Any`; Parameters: (array: Any, index: Any). |
 | `Vector` | ✅ Supported | Returns: `Vector`; Parameters: (X: Number|Boolean, Y: Number|Boolean, Z: Number|Boolean). |
