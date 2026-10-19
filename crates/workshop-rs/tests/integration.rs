@@ -6,6 +6,8 @@ mod action_layout;
 mod canonical_residuals;
 #[path = "catalog.rs"]
 mod catalog;
+#[path = "compare.rs"]
+mod compare;
 #[path = "corpus.rs"]
 mod corpus;
 #[path = "element_count.rs"]

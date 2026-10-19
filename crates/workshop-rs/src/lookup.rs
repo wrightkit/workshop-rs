@@ -1,6 +1,6 @@
 //! Canonical Workshop name lookup: display names, near spellings, and
-//! settings paths resolve to the catalog entries, enum members, and settings
-//! definitions the parser and emitter accept.
+//! settings paths resolve to the catalog entries, preset strings, enum
+//! members, and settings definitions the parser and emitter accept.
 //!
 //! [`Catalog::lookup`] answers in canonical Workshop terms: which identity a
 //! display name or guess refers to, which parameters and argument domains an
@@ -11,7 +11,7 @@
 //! vocabulary. Consumers compose and present the matches; this module owns
 //! no data of its own.
 
-use crate::catalog::{Catalog, CatalogEntry, Kind, Locale};
+use crate::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
 use crate::core::error::{Result, WorkshopError};
 use crate::core::suggest;
 use crate::settings::{self, PathPart, SettingDefinition, SettingValueDomain, table};
@@ -86,6 +86,16 @@ pub enum LookupMatch {
         path: String,
         /// The segment text (`<team>`, `general`).
         segment: String,
+    },
+    /// A preset localized string identity from the catalog's
+    /// `localizedStrings` table — the id a `{"localizedString": id}`
+    /// rule-content node or a `Value::LocalizedString` carries.
+    LocalizedString {
+        /// The canonical id (`hello`, `goodbye`).
+        id: String,
+        /// The display name in the requested locale, when mapped — the
+        /// spelling the emitter writes for that locale.
+        display_name: Option<String>,
     },
 }
 
@@ -183,15 +193,7 @@ impl Catalog {
     /// )));
     /// ```
     pub fn lookup(&self, locale: &Locale, query: &str) -> Result<Vec<LookupMatch>> {
-        if !self.supports(locale) {
-            return Err(WorkshopError::unsupported(
-                format!(
-                    "lookup for locale '{locale}' is not supported: \
-                     the catalog does not declare it"
-                ),
-                None,
-            ));
-        }
+        self.check_locale(locale)?;
         let primary = self.primary_locale();
         let distinct_locale = locale != primary;
         let prepared = PreparedQuery::new(query);
@@ -209,13 +211,26 @@ impl Catalog {
                 .filter_map(|text| prepared.name_score(text))
                 .min();
             if let Some(score) = score {
+                matches.push((score, self.builtin_match(entry, locale)));
+            }
+        }
+        for entry in &self.localized_strings {
+            let primary_spellings: &[String] = if distinct_locale {
+                entry.spellings(primary)
+            } else {
+                &[]
+            };
+            let score = std::iter::once(entry.id.as_str())
+                .chain(entry.spellings(locale).iter().map(String::as_str))
+                .chain(primary_spellings.iter().map(String::as_str))
+                .filter_map(|text| prepared.name_score(text))
+                .min();
+            if let Some(score) = score {
                 matches.push((
                     score,
-                    LookupMatch::Builtin {
-                        kind: entry.kind,
+                    LookupMatch::LocalizedString {
                         id: entry.id.clone(),
                         display_name: entry.spelling(locale).map(String::from),
-                        signature: signature(self, entry, locale),
                     },
                 ));
             }
@@ -227,14 +242,7 @@ impl Catalog {
                 .filter_map(|text| prepared.name_score(text))
                 .min();
             if let Some(score) = score {
-                matches.push((
-                    score,
-                    LookupMatch::EnumDomain {
-                        domain: domain.domain.clone(),
-                        display_name: domain.spelling(locale).map(String::from),
-                        members: self.enum_members(&domain.domain, locale),
-                    },
-                ));
+                matches.push((score, self.enum_domain_match(domain, locale)));
             }
         }
         for domain in self.enum_domains() {
@@ -338,15 +346,7 @@ impl Catalog {
         within: &str,
         query: Option<&str>,
     ) -> Result<Vec<LookupMatch>> {
-        if !self.supports(locale) {
-            return Err(WorkshopError::unsupported(
-                format!(
-                    "lookup for locale '{locale}' is not supported: \
-                     the catalog does not declare it"
-                ),
-                None,
-            ));
-        }
+        self.check_locale(locale)?;
         let prepared = query
             .filter(|query| !query.is_empty())
             .map(PreparedQuery::new);
@@ -361,6 +361,88 @@ impl Catalog {
             scored.sort_by_key(|(score, _)| *score);
         }
         Ok(scored.into_iter().map(|(_, lookup)| lookup).collect())
+    }
+
+    /// Every entry of a listable `kind` under `locale` — one
+    /// [`LookupMatch`] per catalog entry of the kind, in catalog order,
+    /// with no query, matching, or ranking.
+    ///
+    /// `Kind::Action`, `Kind::Value`, and `Kind::Event` list one
+    /// [`LookupMatch::Builtin`] per entry — the same match
+    /// [`Catalog::lookup`] builds for that entry, signature included.
+    /// `Kind::Enum` lists one [`LookupMatch::EnumDomain`] per declared
+    /// enum domain, in [`Catalog::enum_domains`] order. Enum members and
+    /// call parameters are scoped children that already list through
+    /// [`Catalog::lookup_within`]; the other kinds have no listing
+    /// surface, and naming one is an `Err`.
+    ///
+    /// `Err` reports a locale the catalog does not declare or a `kind`
+    /// with no listing surface. The result is the complete listable
+    /// vocabulary of the kind: paging and presentation belong to the
+    /// consumer.
+    ///
+    /// ```
+    /// use workshop_rs::catalog::{Catalog, Kind, Locale};
+    /// use workshop_rs::lookup::LookupMatch;
+    ///
+    /// let catalog = Catalog::builtin().unwrap();
+    /// let events = catalog
+    ///     .lookup_entries(&Locale::new("en-US"), Kind::Event)
+    ///     .unwrap();
+    /// assert!(events.iter().all(
+    ///     |m| matches!(m, LookupMatch::Builtin { kind: Kind::Event, .. })
+    /// ));
+    /// ```
+    pub fn lookup_entries(&self, locale: &Locale, kind: Kind) -> Result<Vec<LookupMatch>> {
+        self.check_locale(locale)?;
+        match kind {
+            Kind::Action | Kind::Value | Kind::Event => Ok(self
+                .entries_of(kind)
+                .map(|entry| self.builtin_match(entry, locale))
+                .collect()),
+            Kind::Enum => Ok(self
+                .enum_domains()
+                .map(|domain| self.enum_domain_match(domain, locale))
+                .collect()),
+            Kind::Structural | Kind::Operator | Kind::Setting => Err(WorkshopError::unsupported(
+                format!(
+                    "listing kind '{}' is not supported: \
+                     the listable kinds are action, value, event, and enum",
+                    kind.as_str()
+                ),
+                None,
+            )),
+        }
+    }
+
+    fn check_locale(&self, locale: &Locale) -> Result<()> {
+        if self.supports(locale) {
+            return Ok(());
+        }
+        Err(WorkshopError::unsupported(
+            format!(
+                "lookup for locale '{locale}' is not supported: \
+                 the catalog does not declare it"
+            ),
+            None,
+        ))
+    }
+
+    fn builtin_match(&self, entry: &CatalogEntry, locale: &Locale) -> LookupMatch {
+        LookupMatch::Builtin {
+            kind: entry.kind,
+            id: entry.id.clone(),
+            display_name: entry.spelling(locale).map(String::from),
+            signature: signature(self, entry, locale),
+        }
+    }
+
+    fn enum_domain_match(&self, domain: &EnumDomain, locale: &Locale) -> LookupMatch {
+        LookupMatch::EnumDomain {
+            domain: domain.domain.clone(),
+            display_name: domain.spelling(locale).map(String::from),
+            members: self.enum_members(&domain.domain, locale),
+        }
     }
 
     fn within_enum_domain(
@@ -726,12 +808,26 @@ struct PreparedQuery {
     folded_chars: Vec<char>,
     tokens: Vec<String>,
     max_distance: usize,
+    /// The folded length at which token-prefix and substring matching
+    /// start. A script without word spacing carries a whole word in two
+    /// characters (`阈值`, `スロットル`), so its queries match loosely at
+    /// two; word-spaced queries keep three, so a two-letter ASCII query
+    /// does not flood the results.
+    loose_min_chars: usize,
 }
 
 impl PreparedQuery {
     fn new(query: &str) -> Self {
         let folded = suggest::fold_loose(query);
         let folded_chars: Vec<char> = folded.chars().collect();
+        let loose_min_chars = if folded_chars
+            .iter()
+            .any(|&character| is_unspaced_script(character))
+        {
+            2
+        } else {
+            3
+        };
         Self {
             raw: query.to_string(),
             max_distance: suggest::max_distance(folded_chars.len()),
@@ -742,6 +838,7 @@ impl PreparedQuery {
                 .map(suggest::fold_loose)
                 .filter(|token| !token.is_empty())
                 .collect(),
+            loose_min_chars,
         }
     }
 
@@ -769,7 +866,7 @@ impl PreparedQuery {
                 return Some(2 + distance as u32);
             }
         }
-        if self.folded_chars.len() >= 3 {
+        if self.folded_chars.len() >= self.loose_min_chars {
             if self.token_prefix_match(candidate) {
                 return Some(6);
             }
@@ -792,6 +889,23 @@ impl PreparedQuery {
                     .any(|candidate| candidate.starts_with(token))
             })
     }
+}
+
+/// Whether `character` belongs to a CJK script written without word
+/// spacing — unified ideographs, kana, or hangul — where two characters
+/// already carry a complete word.
+fn is_unspaced_script(character: char) -> bool {
+    matches!(
+        character,
+        '\u{1100}'..='\u{11FF}'   // Hangul Jamo
+            | '\u{3040}'..='\u{309F}' // Hiragana
+            | '\u{30A0}'..='\u{30FF}' // Katakana
+            | '\u{3400}'..='\u{4DBF}' // CJK Unified Ideographs Extension A
+            | '\u{4E00}'..='\u{9FFF}' // CJK Unified Ideographs
+            | '\u{AC00}'..='\u{D7AF}' // Hangul Syllables
+            | '\u{F900}'..='\u{FAFF}' // CJK Compatibility Ideographs
+            | '\u{FF66}'..='\u{FF9D}' // Halfwidth katakana
+    )
 }
 
 fn fold_candidate(candidate: &str) -> String {

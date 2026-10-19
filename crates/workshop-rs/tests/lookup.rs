@@ -454,6 +454,85 @@ fn every_parser_accepted_construct_is_reachable_through_lookup() {
 }
 
 #[test]
+fn preset_string_ids_resolve_to_localized_string_matches() {
+    let catalog = catalog();
+    let matches = catalog.lookup(&zh(), "goodbye").expect("lookup answers");
+    let preset = matches.first().expect("a match exists");
+    let LookupMatch::LocalizedString { id, display_name } = preset else {
+        panic!("'goodbye' should match a preset string first: {matches:?}");
+    };
+    assert_eq!(id, "goodbye");
+    assert_eq!(display_name.as_deref(), Some("再见"));
+    // The coincidental enum member still matches; the preset-string match
+    // is added alongside it.
+    assert!(
+        matches.iter().any(|lookup| matches!(
+            lookup,
+            LookupMatch::EnumMember {
+                domain, member, ..
+            } if domain == "Comms" && member == "GOODBYE"
+        )),
+        "the Comms.GOODBYE match is unchanged: {matches:?}"
+    );
+
+    let matches = catalog.lookup(&en(), "Hello").expect("lookup answers");
+    assert!(
+        matches.iter().any(|lookup| matches!(
+            lookup,
+            LookupMatch::LocalizedString { id, display_name }
+                if id == "hello" && display_name.as_deref() == Some("Hello")
+        )),
+        "the en-US display spelling resolves to 'hello': {matches:?}"
+    );
+}
+
+#[test]
+fn every_preset_string_is_reachable_in_every_declared_locale() {
+    let catalog = catalog();
+    for locale in catalog.locales() {
+        for entry in catalog.localized_strings() {
+            // An id lookup ranks the preset string first: nothing else can
+            // beat the exact canonical id.
+            let matches = catalog
+                .lookup(locale, &entry.id)
+                .expect("a declared locale answers");
+            let first = matches.first().unwrap_or_else(|| {
+                panic!(
+                    "preset string '{}' must be lookup-reachable in {locale}",
+                    entry.id
+                )
+            });
+            let LookupMatch::LocalizedString { id, display_name } = first else {
+                panic!(
+                    "'{}' must rank its preset string first in {locale}: {matches:?}",
+                    entry.id
+                );
+            };
+            assert_eq!(id, &entry.id);
+            assert_eq!(
+                display_name.as_deref(),
+                entry.spelling(locale),
+                "the display name is the spelling the emitter writes in {locale}"
+            );
+
+            // Every reviewed spelling the parser accepts resolves back to
+            // the same identity.
+            for spelling in entry.spellings(locale) {
+                let matches = catalog.lookup(locale, spelling).expect("lookup answers");
+                assert!(
+                    matches.iter().any(|lookup| matches!(
+                        lookup,
+                        LookupMatch::LocalizedString { id, .. } if id == &entry.id
+                    )),
+                    "spelling '{spelling}' must resolve to '{}' in {locale}: {matches:?}",
+                    entry.id
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn a_query_the_catalog_cannot_answer_is_explicitly_unsupported() {
     let catalog = catalog();
     let error = catalog
@@ -687,6 +766,62 @@ fn scoped_lookup_lists_callable_parameters_in_call_order() {
     assert!(names.len() > 1);
 }
 
+/// workshop-rs#505: a parameter declared with an enum domain reports the
+/// domain and its accepted members through scoped lookup.
+#[test]
+fn scoped_lookup_reports_a_parameters_enum_domain_and_members() {
+    let catalog = catalog();
+    let params = catalog
+        .lookup_within(&en(), "createDummyBot", None)
+        .expect("a callable is a scope");
+    let domain_of = |name: &str| {
+        params
+            .iter()
+            .find_map(|param| match param {
+                LookupMatch::Parameter { param, domain, .. } if param.name == name => {
+                    Some(domain.as_ref().expect("the parameter names a domain"))
+                }
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("createDummyBot has a '{name}' parameter"))
+    };
+    let team = domain_of("team");
+    assert_eq!(team.domain, "Team");
+    assert!(
+        ["ALL", "TEAM_1", "TEAM_2"]
+            .iter()
+            .all(|member| team.members.iter().any(|m| m.id == *member)),
+        "Team members attach to the parameter: {:?}",
+        team.members
+    );
+    let hero = domain_of("hero");
+    assert_eq!(hero.domain, "Hero");
+    assert!(hero.members.iter().any(|member| member.id == "DVA"));
+    let slot = params
+        .iter()
+        .find_map(|param| match param {
+            LookupMatch::Parameter { param, domain, .. } if param.name == "slot" => Some(domain),
+            _ => None,
+        })
+        .expect("createDummyBot has a 'slot' parameter");
+    assert!(slot.is_none(), "a non-enum parameter names no domain");
+
+    let params = catalog
+        .lookup_within(&en(), "getPlayersInRadius", None)
+        .expect("a callable is a scope");
+    let los_check = params
+        .iter()
+        .find_map(|param| match param {
+            LookupMatch::Parameter { param, domain, .. } if param.name == "losCheck" => {
+                Some(domain.as_ref().expect("losCheck names a domain"))
+            }
+            _ => None,
+        })
+        .expect("getPlayersInRadius has a 'losCheck' parameter");
+    assert_eq!(los_check.domain, "LosCheck");
+    assert!(los_check.members.iter().any(|member| member.id == "OFF"));
+}
+
 #[test]
 fn scoped_query_filters_and_ranks_children_with_the_shared_matcher() {
     let catalog = catalog();
@@ -813,6 +948,66 @@ fn scoped_lookup_rejects_unrecognized_template_values() {
 }
 
 #[test]
+fn two_character_cjk_queries_substring_match_zh_display_names() {
+    // workshop-rs#497: scripts without word spacing carry a whole word in
+    // two characters, so token-prefix and substring matching start at two
+    // folded characters there instead of three.
+    let catalog = catalog();
+    let matches = catalog.lookup(&zh(), "阈值").expect("lookup answers");
+    for expected in [
+        "startThrottleInDirection",
+        "stopThrottleInDirection",
+        "startForcingThrottle",
+    ] {
+        builtin_id(&matches, expected);
+    }
+    // The exact zh-CN spelling and near spellings still outrank the
+    // substring guesses.
+    let position = |id: &str| {
+        matches
+            .iter()
+            .position(
+                |lookup| matches!(lookup, LookupMatch::Builtin { id: found, .. } if found == id),
+            )
+            .unwrap_or_else(|| panic!("'{id}' should match: {matches:?}"))
+    };
+    assert_eq!(position("getThrottle"), 0, "exact match first: {matches:?}");
+    assert!(
+        position("magnitude") < position("startThrottleInDirection"),
+        "a near spelling outranks substring matches: {matches:?}"
+    );
+
+    let matches = catalog.lookup(&zh(), "变量").expect("lookup answers");
+    builtin_id(&matches, "setGlobalVariableAtIndex");
+}
+
+#[test]
+fn short_queries_keep_their_previous_minimum_lengths() {
+    // workshop-rs#497: only the folded length floor differs by script — a
+    // one-character CJK query still resolves nothing below the near-match
+    // tier, and a two-letter ASCII query keeps the three-character minimum.
+    let catalog = catalog();
+    let matches = catalog.lookup(&zh(), "阈").expect("lookup answers");
+    builtin_id(&matches, "getThrottle");
+    assert!(
+        matches.iter().all(|lookup| !matches!(
+            lookup,
+            LookupMatch::Builtin { id, .. }
+                if id == "startThrottleInDirection"
+                    || id == "stopThrottleInDirection"
+                    || id == "startForcingThrottle"
+        )),
+        "a one-character query must not substring-match: {matches:?}"
+    );
+
+    let matches = catalog.lookup(&en(), "hu").expect("lookup answers");
+    assert!(
+        matches.is_empty(),
+        "'hu' sits inside 'createHudText' but stays under the ASCII minimum: {matches:?}"
+    );
+}
+
+#[test]
 fn scoped_lookup_reports_an_unknown_scope() {
     let catalog = catalog();
     let error = catalog
@@ -831,4 +1026,138 @@ fn scoped_lookup_reports_an_unknown_scope() {
         ),
         "unknown scope is an Unknown diagnostic: {error:?}"
     );
+}
+
+#[test]
+fn listing_entries_keeps_catalog_order_for_each_builtin_kind() {
+    let catalog = catalog();
+    for kind in [Kind::Action, Kind::Value, Kind::Event] {
+        let listed = catalog
+            .lookup_entries(&en(), kind)
+            .expect("a builtin kind is listable");
+        let ids: Vec<&str> = listed
+            .iter()
+            .map(|entry| match entry {
+                LookupMatch::Builtin {
+                    kind: listed_kind,
+                    id,
+                    ..
+                } => {
+                    assert_eq!(*listed_kind, kind);
+                    id.as_str()
+                }
+                other => panic!("a builtin kind lists builtins: {other:?}"),
+            })
+            .collect();
+        let expected: Vec<&str> = catalog
+            .entries_of(kind)
+            .map(|entry| entry.id.as_str())
+            .collect();
+        assert_eq!(ids, expected, "{kind:?} listing keeps catalog order");
+        let unique: std::collections::HashSet<&str> = ids.iter().copied().collect();
+        assert_eq!(
+            unique.len(),
+            ids.len(),
+            "{kind:?} listing has no duplicates"
+        );
+    }
+}
+
+#[test]
+fn listing_entries_keeps_catalog_order_for_enum_domains() {
+    let catalog = catalog();
+    let listed = catalog
+        .lookup_entries(&en(), Kind::Enum)
+        .expect("enum domains are listable");
+    let domains: Vec<&str> = listed
+        .iter()
+        .map(|entry| match entry {
+            LookupMatch::EnumDomain { domain, .. } => domain.as_str(),
+            other => panic!("Kind::Enum lists enum domains: {other:?}"),
+        })
+        .collect();
+    let expected: Vec<&str> = catalog
+        .enum_domains()
+        .map(|domain| domain.domain.as_str())
+        .collect();
+    assert_eq!(domains, expected);
+}
+
+#[test]
+fn listed_entries_are_the_matches_lookup_returns() {
+    let catalog = catalog();
+    for locale in [en(), zh()] {
+        for kind in [Kind::Action, Kind::Value, Kind::Event] {
+            for listed in catalog
+                .lookup_entries(&locale, kind)
+                .expect("a builtin kind is listable")
+            {
+                let LookupMatch::Builtin {
+                    kind: listed_kind,
+                    id,
+                    ..
+                } = &listed
+                else {
+                    panic!("a builtin kind lists builtins: {listed:?}");
+                };
+                // A query of the exact id can return another Builtin first:
+                // `modifyGlobalVariable` is declared under both Structural
+                // and Action. Compare against the Builtin match of the same
+                // kind and id rather than the top-ranked match.
+                let from_lookup = catalog
+                    .lookup(&locale, id)
+                    .expect("lookup answers")
+                    .into_iter()
+                    .find(|entry| {
+                        matches!(entry, LookupMatch::Builtin {
+                            kind: found_kind,
+                            id: found,
+                            ..
+                        } if found == id && found_kind == listed_kind)
+                    })
+                    .unwrap_or_else(|| panic!("lookup finds {listed_kind:?} '{id}'"));
+                assert_eq!(listed, from_lookup, "{locale} {kind:?} '{id}'");
+            }
+        }
+        for listed in catalog
+            .lookup_entries(&locale, Kind::Enum)
+            .expect("enum domains are listable")
+        {
+            let LookupMatch::EnumDomain { domain, .. } = &listed else {
+                panic!("Kind::Enum lists enum domains: {listed:?}");
+            };
+            let from_lookup = catalog
+                .lookup(&locale, domain)
+                .expect("lookup answers")
+                .into_iter()
+                .find(|entry| {
+                    matches!(entry, LookupMatch::EnumDomain { domain: found, .. } if found == domain)
+                })
+                .unwrap_or_else(|| panic!("lookup finds domain '{domain}'"));
+            assert_eq!(listed, from_lookup, "{locale} domain '{domain}'");
+        }
+    }
+}
+
+#[test]
+fn listing_entries_rejects_undeclared_locales_and_unlistable_kinds() {
+    let catalog = catalog();
+    for kind in [Kind::Action, Kind::Value, Kind::Event, Kind::Enum] {
+        let error = catalog
+            .lookup_entries(&Locale::new("es-CL"), kind)
+            .expect_err("an undeclared locale is unsupported");
+        assert!(
+            matches!(error, WorkshopError::Unsupported { .. }),
+            "{kind:?}: {error:?}"
+        );
+    }
+    for kind in [Kind::Structural, Kind::Operator, Kind::Setting] {
+        let error = catalog
+            .lookup_entries(&en(), kind)
+            .expect_err("a kind with no listing surface is unsupported");
+        assert!(
+            matches!(error, WorkshopError::Unsupported { .. }),
+            "{kind:?}: {error:?}"
+        );
+    }
 }

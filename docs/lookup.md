@@ -21,7 +21,13 @@ A query may be a display name in the requested locale, a primary-locale
 display name, a canonical id, a near spelling or guess, or a settings path
 prefix. Matches are ranked: exact spellings first, then folded-equal
 spellings, near spellings, token prefixes, and substrings; ties keep catalog
-and table order. An empty result reports that nothing matched.
+and table order. Token-prefix and substring guesses apply only once the
+folded query is long enough to be selective: three characters for
+word-spaced scripts, two for scripts written without word spacing (CJK
+ideographs, kana, hangul), where two characters already carry a whole word —
+the zh-CN query `阈值` finds `开始定向阈值` and the other throttle names,
+while a two-letter ASCII query still does not flood the results. An empty
+result reports that nothing matched.
 
 Each match is a canonical construct the parser and emitter accept:
 
@@ -41,6 +47,11 @@ Each match is a canonical construct the parser and emitter accept:
 - `LookupMatch::Setting` — a `settings::SettingDefinition` projected from the
   reviewed settings table, carrying the valid key, path, scope, and value
   forms.
+- `LookupMatch::LocalizedString` — a preset string identity from the
+  catalog's `localizedStrings` table, with the requested locale's display
+  name when mapped. This is the id a `{"localizedString": id}` rule-content
+  node or a `Value::LocalizedString` carries, so the literal's display
+  spelling resolves like any other catalog identity.
 
 A locale the catalog does not declare is an explicit `WorkshopError::Unsupported`;
 the catalog never answers localized names it cannot attest.
@@ -82,6 +93,34 @@ the next path segment below a settings prefix (`heroes.<team>`,
 `heroes.general`) where the prefix is not yet a leaf key. A `within`
 naming no known scope is an explicit
 `WorkshopError::Unknown` with `kind: "lookup scope"`.
+
+## Listing entries
+
+`Catalog::lookup_entries` enumerates the whole listable vocabulary of a
+kind under `locale` — no query, matching, or ranking; the result keeps
+catalog order. Each element is the same `LookupMatch` a `lookup` query
+builds for that entry, signature included, so a consumer paging through
+the list sees the entry a query would have returned.
+
+```rust
+use workshop_rs::catalog::{Catalog, Kind, Locale};
+use workshop_rs::lookup::LookupMatch;
+
+let catalog = Catalog::builtin()?;
+let values = catalog.lookup_entries(&Locale::new("en-US"), Kind::Value)?;
+assert!(values.iter().all(|m| matches!(m, LookupMatch::Builtin { kind: Kind::Value, .. })));
+# Ok::<(), workshop_rs::WorkshopError>(())
+```
+
+`Kind::Action`, `Kind::Value`, and `Kind::Event` list
+`LookupMatch::Builtin` matches in `entries_of` order; `Kind::Enum`
+lists one `LookupMatch::EnumDomain` per declared domain in
+`enum_domains` order. A domain's members and a callable's parameters
+are scoped children that already list through `lookup_within`.
+Structural keywords, operators, and settings have no listing surface —
+naming such a kind is a `WorkshopError::Unsupported`, as is a locale
+the catalog does not declare. The result is the complete vocabulary of
+the kind — paging, cursors, and presentation belong to the consumer.
 
 ## Signature form
 
