@@ -88,6 +88,34 @@ the next path segment below a settings prefix (`heroes.<team>`,
 naming no known scope is an explicit
 `WorkshopError::Unknown` with `kind: "lookup scope"`.
 
+## Listing entries
+
+`Catalog::lookup_entries` enumerates the whole listable vocabulary of a
+kind under `locale` — no query, matching, or ranking; the result keeps
+catalog order. Each element is the same `LookupMatch` a `lookup` query
+builds for that entry, signature included, so a consumer paging through
+the list sees the entry a query would have returned.
+
+```rust
+use workshop_rs::catalog::{Catalog, Kind, Locale};
+use workshop_rs::lookup::LookupMatch;
+
+let catalog = Catalog::builtin()?;
+let values = catalog.lookup_entries(&Locale::new("en-US"), Kind::Value)?;
+assert!(values.iter().all(|m| matches!(m, LookupMatch::Builtin { kind: Kind::Value, .. })));
+# Ok::<(), workshop_rs::WorkshopError>(())
+```
+
+`Kind::Action`, `Kind::Value`, and `Kind::Event` list
+`LookupMatch::Builtin` matches in `entries_of` order; `Kind::Enum`
+lists one `LookupMatch::EnumDomain` per declared domain in
+`enum_domains` order. A domain's members and a callable's parameters
+are scoped children that already list through `lookup_within`.
+Structural keywords, operators, and settings have no listing surface —
+naming such a kind is a `WorkshopError::Unsupported`, as is a locale
+the catalog does not declare. The result is the complete vocabulary of
+the kind — paging, cursors, and presentation belong to the consumer.
+
 ## Signature form
 
 `Signature::text` renders the call syntax in the requested locale: parameters
