@@ -1893,7 +1893,7 @@
       "id": "preloadHero",
       "paramDomains": [
         null,
-        null
+        "Hero"
       ],
       "paramNames": [
         "player",
@@ -3156,6 +3156,13 @@
         {
           "nullVectorAsNull": true
         }
+      ],
+      "paramDomains": [
+        "Hero",
+        "Team",
+        null,
+        null,
+        null
       ],
       "paramNames": [
         "hero",
@@ -6109,6 +6116,10 @@
         "zh-TW": "Set Player Allowed Heroes"
       },
       "id": "setAllowedHeroes",
+      "paramDomains": [
+        null,
+        "Hero"
+      ],
       "paramNames": [
         "player",
         "hero"
@@ -8484,7 +8495,7 @@
       }
     }
   ],
-  "digest": "0048c03209910d7d3791a97da6c202799f1b2d437ebc1ea557d3d6200544e74e",
+  "digest": "bd778a0133e0fd257b2c2a5f04051f412f159b34177e0e34224f2ab192eebae5",
   "enums": [
     {
       "domain": "Impulse",
@@ -21911,7 +21922,8 @@
       "Map enum member GRIMSVOTN (Grímsvötn) is reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d; the export declares no guid or non-en-US spellings for it yet",
       "Map.GRIMSVOTN localized aliases are transcribed from the official localized Blizzard Season 5 announcement pages (overwatch.blizzard.com/<locale>/news/24303008/) and the official Overwatch China announcement (ow.blizzard.cn/news/24303008/, zh-CN 格里姆火山), accessed 2026-10-10; the ja-JP page names the map 「WATCHPOINT: GRÍMSVÖTN」, matching the ja-JP all-caps map convention, while the ru-RU, th-TH, and tr-TR pages fall back to English and stay absent; the export carries only its en-US spelling, so its non-en-US locales have no export match in tools/corpus/zh-cn-corpus.json",
       "Hero.DOCTRINE (Doctrine) and its aliases are transcribed from the official Blizzard hero-detail pages (accessed 2026-10-08); the hero is absent from the pinned workshop-data export, so the member carries no export match in tools/corpus/zh-cn-corpus.json",
-      "the six direction value return types (up, down, left, right, forward, backward) are reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d, which gives Vector.UP and the other direction constants a Direction (vector) return; the direction parameters they fill (for example startThrottleInDirection.direction) are typed Vector"
+      "the six direction value return types (up, down, left, right, forward, backward) are reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d, which gives Vector.UP and the other direction constants a Direction (vector) return; the direction parameters they fill (for example startThrottleInDirection.direction) are typed Vector",
+      "the 23 enum parameter domains declared for the enum-typed `paramTypes` positions — the `Team` parameters on `createDummyBot`, `allPlayers`, `getPlayersInRadius`, `oppositeTeamOf`, `numberOfPlayers`, `getPlayersOnHero`, `getSpawnPoints`, `isTeamOnOffense`, and `getPlayersInViewAngle`, the `Hero` parameters on `preloadHero`, `createDummyBot`, `setAllowedHeroes`, `hero`, `getPlayersOnHero`, and `createWorkshopSettingHero`, the `Button` parameters on `getAbilityCooldown`, `getAbilityResource`, and `getAbilityCharge`, and `hasStatus.status` (`Status`), `getPlayersInRadius.losCheck` (`LosCheck`), `worldVector.transformation` (`Transform`), `getHealthOfType.health` (`Health`), and `isCommunicating.type` (`Comms`) — are reconciled from the pinned workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d argument types; `Vector` positions accept any vector value and stay undeclared (workshop-rs#505)"
     ]
   },
   "schemaVersion": 1,
@@ -24507,6 +24519,9 @@
       "paramDefaults": [
         "Team.ALL"
       ],
+      "paramDomains": [
+        "Team"
+      ],
       "paramNames": [
         "array"
       ],
@@ -24910,6 +24925,9 @@
         "zh-TW": "Hero"
       },
       "id": "hero",
+      "paramDomains": [
+        "Hero"
+      ],
       "paramNames": [
         "hero"
       ],
@@ -24963,6 +24981,10 @@
         "zh-TW": "Has Status"
       },
       "id": "hasStatus",
+      "paramDomains": [
+        null,
+        "Status"
+      ],
       "paramNames": [
         "player",
         "status"
@@ -25132,6 +25154,12 @@
         "zh-TW": "Players Within Radius"
       },
       "id": "getPlayersInRadius",
+      "paramDomains": [
+        null,
+        null,
+        "Team",
+        "LosCheck"
+      ],
       "paramNames": [
         "center",
         "radius",
@@ -25193,6 +25221,11 @@
         "zh-TW": "World Vector Of"
       },
       "id": "worldVector",
+      "paramDomains": [
+        null,
+        null,
+        "Transform"
+      ],
       "paramNames": [
         "localVector",
         "relativePlayer",
@@ -25553,6 +25586,9 @@
         "zh-TW": "Opposite Team Of"
       },
       "id": "oppositeTeamOf",
+      "paramDomains": [
+        "Team"
+      ],
       "paramNames": [
         "team"
       ],
@@ -25583,6 +25619,9 @@
         "zh-TW": "Number Of Players"
       },
       "id": "numberOfPlayers",
+      "paramDomains": [
+        "Team"
+      ],
       "paramNames": [
         "team"
       ],
@@ -26582,6 +26621,10 @@
         "zh-TW": "Ability Cooldown"
       },
       "id": "getAbilityCooldown",
+      "paramDomains": [
+        null,
+        "Button"
+      ],
       "paramNames": [
         "player",
         "button"
@@ -26880,6 +26923,10 @@
         "zh-TW": "Ability Resource"
       },
       "id": "getAbilityResource",
+      "paramDomains": [
+        null,
+        "Button"
+      ],
       "paramNames": [
         "player",
         "button"
@@ -27242,6 +27289,10 @@
         "zh-TW": "Players On Hero"
       },
       "id": "getPlayersOnHero",
+      "paramDomains": [
+        "Hero",
+        "Team"
+      ],
       "paramNames": [
         "hero",
         "team"
@@ -27437,6 +27488,10 @@
         "zh-TW": "Ability Charge"
       },
       "id": "getAbilityCharge",
+      "paramDomains": [
+        null,
+        "Button"
+      ],
       "paramNames": [
         "player",
         "button"
@@ -27470,6 +27525,10 @@
         "zh-TW": "Health Of Type"
       },
       "id": "getHealthOfType",
+      "paramDomains": [
+        null,
+        "Health"
+      ],
       "paramNames": [
         "player",
         "health"
@@ -27503,6 +27562,10 @@
         "zh-TW": "Is Communicating"
       },
       "id": "isCommunicating",
+      "paramDomains": [
+        null,
+        "Comms"
+      ],
       "paramNames": [
         "player",
         "type"
@@ -27566,6 +27629,9 @@
         "zh-TW": "Spawn Points"
       },
       "id": "getSpawnPoints",
+      "paramDomains": [
+        "Team"
+      ],
       "paramNames": [
         "team"
       ],
@@ -27678,6 +27744,9 @@
         "zh-TW": "Is Team On Offense"
       },
       "id": "isTeamOnOffense",
+      "paramDomains": [
+        "Team"
+      ],
       "paramNames": [
         "team"
       ],
@@ -27708,6 +27777,11 @@
         "zh-TW": "Players in View Angle"
       },
       "id": "getPlayersInViewAngle",
+      "paramDomains": [
+        null,
+        "Team",
+        null
+      ],
       "paramNames": [
         "player",
         "team",
@@ -28480,7 +28554,7 @@
       "paramDomains": [
         null,
         null,
-        null,
+        "Hero",
         null
       ],
       "paramNames": [
@@ -30619,5 +30693,5 @@
       "returnType": "Number"
     }
   ],
-  "version": "0.1.11"
+  "version": "0.1.12"
 }
