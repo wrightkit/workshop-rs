@@ -650,6 +650,66 @@ fn scoped_lookup_rejects_unrecognized_template_values() {
 }
 
 #[test]
+fn two_character_cjk_queries_substring_match_zh_display_names() {
+    // workshop-rs#497: scripts without word spacing carry a whole word in
+    // two characters, so token-prefix and substring matching start at two
+    // folded characters there instead of three.
+    let catalog = catalog();
+    let matches = catalog.lookup(&zh(), "阈值").expect("lookup answers");
+    for expected in [
+        "startThrottleInDirection",
+        "stopThrottleInDirection",
+        "startForcingThrottle",
+    ] {
+        builtin_id(&matches, expected);
+    }
+    // The exact zh-CN spelling and near spellings still outrank the
+    // substring guesses.
+    let position = |id: &str| {
+        matches
+            .iter()
+            .position(
+                |lookup| matches!(lookup, LookupMatch::Builtin { id: found, .. } if found == id),
+            )
+            .unwrap_or_else(|| panic!("'{id}' should match: {matches:?}"))
+    };
+    assert_eq!(position("getThrottle"), 0, "exact match first: {matches:?}");
+    assert!(
+        position("magnitude") < position("startThrottleInDirection"),
+        "a near spelling outranks substring matches: {matches:?}"
+    );
+
+    let matches = catalog.lookup(&zh(), "变量").expect("lookup answers");
+    builtin_id(&matches, "setGlobalVariableAtIndex");
+}
+
+#[test]
+fn short_queries_keep_their_previous_minimum_lengths() {
+    // workshop-rs#497: only the folded length floor differs by script — a
+    // one-character CJK query still resolves nothing below the near-match
+    // tier, and a two-letter ASCII query keeps the three-character minimum.
+    let catalog = catalog();
+    let matches = catalog.lookup(&zh(), "阈").expect("lookup answers");
+    builtin_id(&matches, "getThrottle");
+    assert!(
+        matches.iter().all(|lookup| !matches!(
+            lookup,
+            LookupMatch::Builtin { id, .. }
+                if id == "startThrottleInDirection"
+                    || id == "stopThrottleInDirection"
+                    || id == "startForcingThrottle"
+        )),
+        "a one-character query must not substring-match: {matches:?}"
+    );
+
+    let matches = catalog.lookup(&en(), "hu").expect("lookup answers");
+    assert!(
+        matches.is_empty(),
+        "'hu' sits inside 'createHudText' but stays under the ASCII minimum: {matches:?}"
+    );
+}
+
+#[test]
 fn scoped_lookup_reports_an_unknown_scope() {
     let catalog = catalog();
     let error = catalog

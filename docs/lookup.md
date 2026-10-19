@@ -21,7 +21,13 @@ A query may be a display name in the requested locale, a primary-locale
 display name, a canonical id, a near spelling or guess, or a settings path
 prefix. Matches are ranked: exact spellings first, then folded-equal
 spellings, near spellings, token prefixes, and substrings; ties keep catalog
-and table order. An empty result reports that nothing matched.
+and table order. Token-prefix and substring guesses apply only once the
+folded query is long enough to be selective: three characters for
+word-spaced scripts, two for scripts written without word spacing (CJK
+ideographs, kana, hangul), where two characters already carry a whole word —
+the zh-CN query `阈值` finds `开始定向阈值` and the other throttle names,
+while a two-letter ASCII query still does not flood the results. An empty
+result reports that nothing matched.
 
 Each match is a canonical construct the parser and emitter accept:
 
