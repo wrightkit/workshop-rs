@@ -242,12 +242,9 @@ impl ParseContext<'_> {
         path: &[PathPart<'static>],
         hero: Option<&str>,
     ) -> Option<&'static table::TableEntry> {
-        table::entries()
-            .find(|candidate| {
-                candidate.path.len() == path.len() + 1
-                    && candidate.path[..path.len()] == *path
-                    && self.settings_name_matches_for_path(candidate, display, hero)
-            })
+        table::child_entries(path)
+            .into_iter()
+            .find(|candidate| self.settings_name_matches_for_path(candidate, display, hero))
             // A declared mode group inherits the `gamemodes.general` leaf set
             // (the same fallback `table::lookup` applies); resolve the authored
             // spelling against the shared general entry so an inherited member
@@ -256,21 +253,18 @@ impl ParseContext<'_> {
                 let [PathPart::Part("gamemodes"), PathPart::Part(mode)] = path else {
                     return None;
                 };
-                table::entries()
+                table::child_entries(&[PathPart::Part("gamemodes"), PathPart::Part("general")])
+                    .into_iter()
                     .filter(|candidate| {
-                        matches!(
-                            candidate.path,
-                            [
-                                PathPart::Part("gamemodes"),
-                                PathPart::Part("general"),
-                                PathPart::Part(key)
-                            ] if table::mode_inherited_entry(&[
-                                PathPart::Part("gamemodes"),
-                                PathPart::Part(mode),
-                                PathPart::Part(key),
-                            ])
-                            .is_some()
-                        )
+                        let Some(PathPart::Part(key)) = candidate.path.last().copied() else {
+                            return false;
+                        };
+                        table::mode_inherited_entry(&[
+                            PathPart::Part("gamemodes"),
+                            PathPart::Part(mode),
+                            PathPart::Part(key),
+                        ])
+                        .is_some()
                     })
                     .find(|candidate| self.settings_name_matches_for_path(candidate, display, hero))
             })

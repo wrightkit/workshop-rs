@@ -634,7 +634,86 @@ pub(crate) fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
 }
 
 fn exact_entry(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
-    entries().find(|entry| entry.path == path)
+    // Hash-bucket index over `entries()`: a path resolves to a small bucket
+    // verified by full slice equality instead of scanning the whole table.
+    entry_bucket(path).find(|entry| entry.path == path)
+}
+
+/// The hash bucket entries sharing `path`'s hash occupy. The table is
+/// deduplicated by `path_string`, so distinct entries in one bucket differ
+/// in path and equality resolves to at most one entry.
+fn entry_bucket(path: &[PathPart<'_>]) -> impl Iterator<Item = &'static TableEntry> {
+    static INDEX: OnceLock<std::collections::HashMap<u64, Vec<&'static TableEntry>>> =
+        OnceLock::new();
+    let index = INDEX.get_or_init(|| {
+        let mut index: std::collections::HashMap<u64, Vec<&'static TableEntry>> =
+            std::collections::HashMap::new();
+        for entry in entries() {
+            index.entry(path_hash(entry.path)).or_default().push(entry);
+        }
+        index
+    });
+    index
+        .get(&path_hash(path))
+        .into_iter()
+        .flat_map(|bucket| bucket.iter().copied())
+}
+
+fn path_hash(path: &[PathPart<'_>]) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    path.hash(&mut hasher);
+    hasher.finish()
+}
+
+/// Mode keys with declared `gamemodes.<mode>` entries — the reviewed mode
+/// slots that inherit the `gamemodes.general` leaf set.
+fn declared_modes() -> &'static std::collections::HashSet<&'static str> {
+    static MODES: OnceLock<std::collections::HashSet<&'static str>> = OnceLock::new();
+    MODES.get_or_init(|| {
+        entries()
+            .filter_map(|entry| {
+                let [PathPart::Part("gamemodes"), PathPart::Part(mode), ..] = entry.path else {
+                    return None;
+                };
+                Some(*mode)
+            })
+            .collect()
+    })
+}
+
+/// Table entries that are direct children of `parent` — a parent-path hash
+/// bucket verified by prefix equality. Callers that previously scanned
+/// `entries()` for `path.len() == parent.len() + 1 && prefix == parent`
+/// share this index.
+pub(crate) fn child_entries(parent: &[PathPart<'_>]) -> Vec<&'static TableEntry> {
+    static CHILDREN: OnceLock<std::collections::HashMap<u64, Vec<(usize, &'static TableEntry)>>> =
+        OnceLock::new();
+    let children = CHILDREN.get_or_init(|| {
+        let mut children: std::collections::HashMap<u64, Vec<(usize, &'static TableEntry)>> =
+            std::collections::HashMap::new();
+        for entry in entries() {
+            if let Some((_, parent)) = entry.path.split_last() {
+                children
+                    .entry(path_hash(parent))
+                    .or_default()
+                    .push((entry.path.len() - 1, entry));
+            }
+        }
+        children
+    });
+    children
+        .get(&path_hash(parent))
+        .map(|bucket| {
+            bucket
+                .iter()
+                .filter(|(parent_len, entry)| {
+                    *parent_len == parent.len() && entry.path[..parent.len()] == *parent
+                })
+                .map(|(_, entry)| *entry)
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 /// The `gamemodes.general` leaf keys `elimination` inherits (the pinned
@@ -672,12 +751,7 @@ pub(crate) fn mode_inherited_entry(path: &[PathPart<'_>]) -> Option<&'static Tab
     } else {
         // A mode with declared entries is a reviewed mode slot and inherits
         // the general leaf set.
-        entries().any(|entry| {
-            matches!(
-                entry.path,
-                [PathPart::Part("gamemodes"), PathPart::Part(declared), ..] if *declared == *mode
-            )
-        })
+        declared_modes().contains(mode)
     };
     if !inherits {
         return None;
@@ -945,13 +1019,12 @@ pub(crate) fn enum_spellings(domain: &str) -> impl Iterator<Item = &'static str>
 /// [`ELIMINATION_GENERAL_KEYS`], other modes inherit the full set only when
 /// they have declared entries, and `general` itself has no fallback.
 pub(crate) fn key_spellings(parent: &[PathPart<'_>]) -> Vec<&'static str> {
-    let mut spellings: Vec<&'static str> = entries()
+    let mut spellings: Vec<&'static str> = child_entries(parent)
+        .iter()
         .filter(|entry| {
-            entry.path.len() == parent.len() + 1
-                && entry.path[..parent.len()] == *parent
-                // `%1$s` placeholder names are emission templates, not
-                // spellings a source could carry.
-                && !entry.workshop_name.contains("%1$s")
+            // `%1$s` placeholder names are emission templates, not
+            // spellings a source could carry.
+            !entry.workshop_name.contains("%1$s")
         })
         .map(|entry| entry.workshop_name)
         .collect();
@@ -962,37 +1035,26 @@ pub(crate) fn key_spellings(parent: &[PathPart<'_>]) -> Vec<&'static str> {
         return spellings;
     }
     if *mode == "elimination" {
-        spellings.extend(entries().filter_map(|entry| {
-            let [
-                PathPart::Part("gamemodes"),
-                PathPart::Part("general"),
-                PathPart::Part(key),
-            ] = entry.path
-            else {
-                return None;
-            };
-            ELIMINATION_GENERAL_KEYS
-                .contains(key)
-                .then_some(entry.workshop_name)
-        }));
-    } else if entries().any(|entry| {
-        matches!(
-            entry.path,
-            [PathPart::Part("gamemodes"), PathPart::Part(declared), ..]
-                if *declared == *mode
-        )
-    }) {
-        spellings.extend(entries().filter_map(|entry| {
-            let [
-                PathPart::Part("gamemodes"),
-                PathPart::Part("general"),
-                PathPart::Part(_),
-            ] = entry.path
-            else {
-                return None;
-            };
-            (!entry.workshop_name.contains("%1$s")).then_some(entry.workshop_name)
-        }));
+        spellings.extend(
+            child_entries(&[PathPart::Part("gamemodes"), PathPart::Part("general")])
+                .iter()
+                .filter_map(|entry| {
+                    let PathPart::Part(key) = entry.path.last()? else {
+                        return None;
+                    };
+                    ELIMINATION_GENERAL_KEYS
+                        .contains(key)
+                        .then_some(entry.workshop_name)
+                }),
+        );
+    } else if declared_modes().contains(mode) {
+        spellings.extend(
+            child_entries(&[PathPart::Part("gamemodes"), PathPart::Part("general")])
+                .iter()
+                .filter_map(|entry| {
+                    (!entry.workshop_name.contains("%1$s")).then_some(entry.workshop_name)
+                }),
+        );
     }
     spellings
 }
@@ -1042,4 +1104,225 @@ pub(crate) fn path_string(path: &[PathPart<'_>]) -> String {
         })
         .collect::<Vec<_>>()
         .join(".")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The pre-index linear scan kept as the resolution oracle: a path
+    /// resolves to the first deduplicated entry whose path equals it, with
+    /// the `gamemodes.<mode>` → `gamemodes.general` inheritance fallback.
+    fn scan_exact(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
+        entries().find(|entry| entry.path == path)
+    }
+
+    fn scan_mode_inherited(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
+        let [
+            PathPart::Part("gamemodes"),
+            PathPart::Part(mode),
+            PathPart::Part(key),
+        ] = path
+        else {
+            return None;
+        };
+        if *mode == "general" {
+            return None;
+        }
+        let inherits = if *mode == "elimination" {
+            ELIMINATION_GENERAL_KEYS.contains(key)
+        } else {
+            entries().any(|entry| {
+                matches!(
+                    entry.path,
+                    [PathPart::Part("gamemodes"), PathPart::Part(declared), ..]
+                        if *declared == *mode
+                )
+            })
+        };
+        if !inherits {
+            return None;
+        }
+        scan_exact(&[
+            PathPart::Part("gamemodes"),
+            PathPart::Part("general"),
+            PathPart::Part(key),
+        ])
+    }
+
+    fn scan_lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
+        scan_exact(path).or_else(|| scan_mode_inherited(path))
+    }
+
+    /// Every path the table itself declares — exact and inherited-mode
+    /// paths — plus paths that must not resolve agree with the scan oracle.
+    #[test]
+    fn index_matches_scan_for_every_table_path() {
+        let mut checked = 0usize;
+        for entry in entries() {
+            assert_eq!(
+                scan_lookup(entry.path).map(std::ptr::from_ref),
+                lookup(entry.path).map(std::ptr::from_ref),
+                "path {}",
+                path_string(entry.path),
+            );
+            checked += 1;
+            // Inherited-mode projection: swap a `gamemodes.<mode>` segment
+            // for every other declared mode and for `elimination`.
+            if let [
+                PathPart::Part("gamemodes"),
+                PathPart::Part(_),
+                PathPart::Part(key),
+            ] = entry.path
+            {
+                for mode in declared_modes().iter().copied().chain(["elimination"]) {
+                    let path = [
+                        PathPart::Part("gamemodes"),
+                        PathPart::Part(mode),
+                        PathPart::Part(key),
+                    ];
+                    assert_eq!(
+                        scan_lookup(&path).map(std::ptr::from_ref),
+                        lookup(&path).map(std::ptr::from_ref),
+                        "path {}",
+                        path_string(&path),
+                    );
+                    checked += 1;
+                }
+            }
+        }
+
+        // Paths that must not resolve: truncation, extension, unknown
+        // namespaces/keys, wrong slot kinds, and undeclared modes.
+        let non_resolving: &[&[PathPart<'_>]] = &[
+            &[],
+            &[PathPart::Part("main")],
+            &[PathPart::Part("lobby")],
+            &[PathPart::Part("unknownNamespace"), PathPart::Part("key")],
+            &[PathPart::Part("lobby"), PathPart::Part("unknownKey")],
+            &[PathPart::Part("gamemodes"), PathPart::Part("general")],
+            &[
+                PathPart::Part("gamemodes"),
+                PathPart::Part("undeclaredMode"),
+                PathPart::Part("enabledMaps"),
+            ],
+            &[
+                PathPart::Part("gamemodes"),
+                PathPart::Part("elimination"),
+                PathPart::Part("healthPackRespawnTime"),
+            ],
+            &[PathPart::Part("heroes"), PathPart::Team],
+        ];
+        for path in non_resolving {
+            assert_eq!(
+                scan_lookup(path).map(std::ptr::from_ref),
+                lookup(path).map(std::ptr::from_ref),
+                "path {}",
+                path_string(path),
+            );
+            checked += 1;
+        }
+        // Slot-kind mismatch: a table `heroes` path queried with `Part`
+        // where the table declares `Hero`/`Team` slots must not resolve.
+        for entry in entries() {
+            let mismatched: Vec<PathPart<'_>> = entry
+                .path
+                .iter()
+                .map(|part| match part {
+                    PathPart::Part(_) | PathPart::Team => PathPart::Hero,
+                    PathPart::Hero => PathPart::Team,
+                })
+                .collect();
+            if mismatched == *entry.path {
+                continue;
+            }
+            assert_eq!(
+                scan_lookup(&mismatched).map(std::ptr::from_ref),
+                lookup(&mismatched).map(std::ptr::from_ref),
+                "path {}",
+                path_string(&mismatched),
+            );
+            checked += 1;
+        }
+        assert!(checked > 500, "derived coverage was thin: {checked} paths");
+    }
+
+    /// `key_spellings` keeps the scan's results for every table parent —
+    /// every proper prefix of every declared path, plus unrelated parents.
+    #[test]
+    fn key_spellings_match_scan_for_every_table_parent() {
+        fn scan_key_spellings(parent: &[PathPart<'_>]) -> Vec<&'static str> {
+            let mut spellings: Vec<&'static str> = entries()
+                .filter(|entry| {
+                    entry.path.len() == parent.len() + 1
+                        && entry.path[..parent.len()] == *parent
+                        && !entry.workshop_name.contains("%1$s")
+                })
+                .map(|entry| entry.workshop_name)
+                .collect();
+            let [PathPart::Part("gamemodes"), PathPart::Part(mode)] = parent else {
+                return spellings;
+            };
+            if *mode == "general" {
+                return spellings;
+            }
+            if *mode == "elimination" {
+                spellings.extend(entries().filter_map(|entry| {
+                    let [
+                        PathPart::Part("gamemodes"),
+                        PathPart::Part("general"),
+                        PathPart::Part(key),
+                    ] = entry.path
+                    else {
+                        return None;
+                    };
+                    ELIMINATION_GENERAL_KEYS
+                        .contains(key)
+                        .then_some(entry.workshop_name)
+                }));
+            } else if entries().any(|entry| {
+                matches!(
+                    entry.path,
+                    [PathPart::Part("gamemodes"), PathPart::Part(declared), ..]
+                        if *declared == *mode
+                )
+            }) {
+                spellings.extend(entries().filter_map(|entry| {
+                    let [
+                        PathPart::Part("gamemodes"),
+                        PathPart::Part("general"),
+                        PathPart::Part(_),
+                    ] = entry.path
+                    else {
+                        return None;
+                    };
+                    (!entry.workshop_name.contains("%1$s")).then_some(entry.workshop_name)
+                }));
+            }
+            spellings
+        }
+
+        let mut parents: Vec<Vec<PathPart<'_>>> = Vec::new();
+        for entry in entries() {
+            for len in 0..entry.path.len() {
+                let parent = entry.path[..len].to_vec();
+                if !parents.contains(&parent) {
+                    parents.push(parent);
+                }
+            }
+        }
+        parents.push(vec![PathPart::Part("unknownNamespace")]);
+        parents.push(vec![
+            PathPart::Part("gamemodes"),
+            PathPart::Part("undeclaredMode"),
+        ]);
+        for parent in &parents {
+            assert_eq!(
+                scan_key_spellings(parent),
+                key_spellings(parent),
+                "parent {}",
+                path_string(parent),
+            );
+        }
+    }
 }
