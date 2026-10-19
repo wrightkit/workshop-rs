@@ -1,6 +1,6 @@
 use std::collections::BTreeSet;
 
-use workshop_rs::gameplay::data::{GAMEPLAY_DATA, builtin, content_digest, load};
+use workshop_rs::gameplay::data::{GAMEPLAY_DATA, builtin, builtin_ref, content_digest, load};
 use workshop_rs::gameplay::{
     Ability, AbilityVariant, Fact, GameplayCatalog, GameplayDataError, GameplayDatasetIdentity,
     Hero, HeroId, LocalizedText, LogicalSlot, Quantity, SourceReference, StatKey, StatValue, Unit,
@@ -48,6 +48,13 @@ fn ability(name: &str, slot: &str, variant: Option<&str>) -> Ability {
         names(name, "data.heroes.test.ability1"),
         vec![source_reference("data.heroes.test.ability1")],
     )
+}
+
+#[test]
+fn builtin_ref_returns_the_same_cached_instance() {
+    let first = builtin_ref().expect("built-in gameplay data loads");
+    let second = builtin_ref().expect("built-in gameplay data loads");
+    assert!(std::ptr::eq(first, second));
 }
 
 #[test]

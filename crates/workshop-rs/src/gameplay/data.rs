@@ -63,8 +63,8 @@ pub fn builtin() -> Result<GameplayCatalog, GameplayDataError> {
     builtin_ref().cloned().map_err(Clone::clone)
 }
 
-/// Borrow the cached checked-in gameplay dataset without cloning it.
-pub(crate) fn builtin_ref() -> Result<&'static GameplayCatalog, &'static GameplayDataError> {
+/// The checked-in gameplay dataset, loaded and validated once per process.
+pub fn builtin_ref() -> Result<&'static GameplayCatalog, &'static GameplayDataError> {
     static DATA: OnceLock<Result<GameplayCatalog, GameplayDataError>> = OnceLock::new();
     match DATA.get_or_init(|| load(GAMEPLAY_DATA)) {
         Ok(catalog) => Ok(catalog),

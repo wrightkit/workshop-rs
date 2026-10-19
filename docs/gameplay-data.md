@@ -1,9 +1,10 @@
 # Hero gameplay dataset
 
 `crates/workshop-rs/src/gameplay/gameplay.json` is the embedded gameplay dataset
-for the `workshop-rs` hero domain. `workshop_rs::gameplay::data::builtin()`
-loads it through the same validation path as external JSON and verifies its
-content digest before constructing a `GameplayCatalog`.
+for the `workshop-rs` hero domain. `workshop_rs::gameplay::data::builtin_ref()`
+returns it loaded and validated once per process; `builtin()` returns an owned
+clone instead. Both go through the same validation path as external JSON and
+verify the content digest before constructing a `GameplayCatalog`.
 
 ## Schema and identity
 
