@@ -291,6 +291,85 @@ fn every_parser_accepted_construct_is_reachable_through_lookup() {
 }
 
 #[test]
+fn preset_string_ids_resolve_to_localized_string_matches() {
+    let catalog = catalog();
+    let matches = catalog.lookup(&zh(), "goodbye").expect("lookup answers");
+    let preset = matches.first().expect("a match exists");
+    let LookupMatch::LocalizedString { id, display_name } = preset else {
+        panic!("'goodbye' should match a preset string first: {matches:?}");
+    };
+    assert_eq!(id, "goodbye");
+    assert_eq!(display_name.as_deref(), Some("再见"));
+    // The coincidental enum member still matches; the preset-string match
+    // is added alongside it.
+    assert!(
+        matches.iter().any(|lookup| matches!(
+            lookup,
+            LookupMatch::EnumMember {
+                domain, member, ..
+            } if domain == "Comms" && member == "GOODBYE"
+        )),
+        "the Comms.GOODBYE match is unchanged: {matches:?}"
+    );
+
+    let matches = catalog.lookup(&en(), "Hello").expect("lookup answers");
+    assert!(
+        matches.iter().any(|lookup| matches!(
+            lookup,
+            LookupMatch::LocalizedString { id, display_name }
+                if id == "hello" && display_name.as_deref() == Some("Hello")
+        )),
+        "the en-US display spelling resolves to 'hello': {matches:?}"
+    );
+}
+
+#[test]
+fn every_preset_string_is_reachable_in_every_declared_locale() {
+    let catalog = catalog();
+    for locale in catalog.locales() {
+        for entry in catalog.localized_strings() {
+            // An id lookup ranks the preset string first: nothing else can
+            // beat the exact canonical id.
+            let matches = catalog
+                .lookup(locale, &entry.id)
+                .expect("a declared locale answers");
+            let first = matches.first().unwrap_or_else(|| {
+                panic!(
+                    "preset string '{}' must be lookup-reachable in {locale}",
+                    entry.id
+                )
+            });
+            let LookupMatch::LocalizedString { id, display_name } = first else {
+                panic!(
+                    "'{}' must rank its preset string first in {locale}: {matches:?}",
+                    entry.id
+                );
+            };
+            assert_eq!(id, &entry.id);
+            assert_eq!(
+                display_name.as_deref(),
+                entry.spelling(locale),
+                "the display name is the spelling the emitter writes in {locale}"
+            );
+
+            // Every reviewed spelling the parser accepts resolves back to
+            // the same identity.
+            for spelling in entry.spellings(locale) {
+                let matches = catalog.lookup(locale, spelling).expect("lookup answers");
+                assert!(
+                    matches.iter().any(|lookup| matches!(
+                        lookup,
+                        LookupMatch::LocalizedString { id, .. } if id == &entry.id
+                    )),
+                    "spelling '{spelling}' must resolve to '{}' in {locale}: {matches:?}",
+                    entry.id
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn a_query_the_catalog_cannot_answer_is_explicitly_unsupported() {
     let catalog = catalog();
     let error = catalog
