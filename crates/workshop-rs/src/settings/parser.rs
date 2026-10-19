@@ -844,7 +844,7 @@ impl ParseContext<'_> {
                     // (`Tempo de recarga de %1$s`), and mixed-locale
                     // sources may carry the en-US form.
                     let ability_name = |locale: &str| {
-                        crate::gameplay::data::builtin()
+                        crate::gameplay::data::builtin_ref()
                             .ok()?
                             .query()
                             .ability_name(hero, slot, None, locale)

@@ -1235,7 +1235,7 @@ fn settings_probe_hero(definition: &SettingDefinition, english: &str) -> Option<
     if !definition.path().contains(".<hero>.") && !definition.path().ends_with(".<hero>") {
         return Some(None);
     }
-    let data = gameplay::data::builtin().ok()?;
+    let data = gameplay::data::builtin_ref().ok()?;
     let heroes = data.query().heroes().to_vec();
     let hero_ids: Vec<String> = match definition.target_kind() {
         SettingTargetKind::HeroAbility { slot, variant } => heroes
@@ -1299,7 +1299,7 @@ fn substitute_template(
     let SettingTargetKind::HeroAbility { slot, variant } = definition.target_kind() else {
         return None;
     };
-    let ability = gameplay::data::builtin()
+    let ability = gameplay::data::builtin_ref()
         .ok()?
         .query()
         .ability_name(hero?, slot.as_str(), variant.as_ref(), locale)
@@ -1318,7 +1318,7 @@ fn localized_settings_context(
 ) -> String {
     let hero_name = hero
         .and_then(|id| {
-            gameplay::data::builtin()
+            gameplay::data::builtin_ref()
                 .ok()?
                 .query()
                 .heroes()
