@@ -40,3 +40,5 @@ mod public_api;
 mod real_projects;
 #[path = "rule_content.rs"]
 mod rule_content;
+#[path = "statement_from_content.rs"]
+mod statement_from_content;

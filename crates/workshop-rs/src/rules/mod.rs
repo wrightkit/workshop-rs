@@ -8,6 +8,7 @@
 pub mod content;
 pub(crate) mod emitter;
 pub(crate) mod parser;
+pub mod statement;
 pub(crate) mod validate;
 
 pub use crate::analysis::semantic::{
