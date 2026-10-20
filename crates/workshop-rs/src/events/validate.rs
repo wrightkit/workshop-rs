@@ -76,25 +76,23 @@ pub(crate) fn validate_event(
             None
         }
     };
-    if let Some(target_member) = target_member {
-        if catalog
+    if let Some(target_member) = target_member
+        && catalog
             .enum_spelling("EventPlayer", &en, &target_member)
             .is_none()
-        {
-            return Err(
-                WorkshopError::unknown("event player", target_member.clone(), en, span)
-                    .with_candidates(crate::core::suggest::nearest(
-                        &target_member,
-                        catalog
-                            .canonical_member_spellings("EventPlayer", catalog.primary_locale())
-                            .chain(
-                                catalog
-                                    .canonical_member_spellings("Hero", catalog.primary_locale()),
-                            ),
-                        crate::core::suggest::CANDIDATE_LIMIT,
-                    )),
-            );
-        }
+    {
+        return Err(
+            WorkshopError::unknown("event player", target_member.clone(), en, span)
+                .with_candidates(crate::core::suggest::nearest(
+                    &target_member,
+                    catalog
+                        .canonical_member_spellings("EventPlayer", catalog.primary_locale())
+                        .chain(
+                            catalog.canonical_member_spellings("Hero", catalog.primary_locale()),
+                        ),
+                    crate::core::suggest::CANDIDATE_LIMIT,
+                )),
+        );
     }
     Ok(())
 }

@@ -242,38 +242,34 @@ pub(crate) fn assert_target_locale_spellings(
         if let (Some(source_spelling), Some(target_spelling)) = (
             domain.spelling(source_locale),
             domain.spelling(target_locale),
-        ) {
-            if source_spelling != target_spelling
-                && canonical_uses(&domain.domain)
-                && source.contains(source_spelling)
-            {
-                assert!(
-                    target.contains(target_spelling),
-                    "{name} target locale omitted enum domain '{}' spelling '{}', source spelling '{}' remains the only evidence",
-                    domain.domain,
-                    target_spelling,
-                    source_spelling
-                );
-            }
+        ) && source_spelling != target_spelling
+            && canonical_uses(&domain.domain)
+            && source.contains(source_spelling)
+        {
+            assert!(
+                target.contains(target_spelling),
+                "{name} target locale omitted enum domain '{}' spelling '{}', source spelling '{}' remains the only evidence",
+                domain.domain,
+                target_spelling,
+                source_spelling
+            );
         }
         for member in &domain.members {
             if let (Some(source_spelling), Some(target_spelling)) = (
                 member.spelling(source_locale),
                 member.spelling(target_locale),
-            ) {
-                if source_spelling != target_spelling
-                    && canonical_uses(&member.member)
-                    && source.contains(source_spelling)
-                {
-                    assert!(
-                        target.contains(target_spelling),
-                        "{name} target locale omitted enum member '{}.{}' spelling '{}', source spelling '{}' remains the only evidence",
-                        domain.domain,
-                        member.member,
-                        target_spelling,
-                        source_spelling
-                    );
-                }
+            ) && source_spelling != target_spelling
+                && canonical_uses(&member.member)
+                && source.contains(source_spelling)
+            {
+                assert!(
+                    target.contains(target_spelling),
+                    "{name} target locale omitted enum member '{}.{}' spelling '{}', source spelling '{}' remains the only evidence",
+                    domain.domain,
+                    member.member,
+                    target_spelling,
+                    source_spelling
+                );
             }
         }
     }

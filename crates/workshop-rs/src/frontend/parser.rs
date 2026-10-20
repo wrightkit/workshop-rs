@@ -605,10 +605,10 @@ impl<'a> ParseContext<'a> {
                     .insert((*id).to_string(), spellings);
             }
             for spelling in &self.structural_spellings[*id] {
-                if let Some(len) = self.match_spelling_tokens(spelling) {
-                    if best.as_ref().is_none_or(|(_, length)| len > *length) {
-                        best = Some(((*id).to_string(), len));
-                    }
+                if let Some(len) = self.match_spelling_tokens(spelling)
+                    && best.as_ref().is_none_or(|(_, length)| len > *length)
+                {
+                    best = Some(((*id).to_string(), len));
                 }
             }
         }

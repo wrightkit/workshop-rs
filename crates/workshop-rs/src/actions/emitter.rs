@@ -323,13 +323,13 @@ impl EmitContext<'_> {
                         if index > 0 {
                             args_text.push_str(", ");
                         }
-                        if index == 0 && player_pair_merged {
-                            if let Some(wir::Value::PlayerVariable { player, variable }) =
+                        if index == 0
+                            && player_pair_merged
+                            && let Some(wir::Value::PlayerVariable { player, variable }) =
                                 self.program.values.get(*arg).map(|node| &node.value)
-                            {
-                                self.emit_variable_pair(*player, *variable, &mut args_text)?;
-                                continue;
-                            }
+                        {
+                            self.emit_variable_pair(*player, *variable, &mut args_text)?;
+                            continue;
                         }
                         let variable_position = match name.as_str() {
                             "setGlobalVariableAtIndex" | "modifyGlobalVariableAtIndex" => {
@@ -340,19 +340,17 @@ impl EmitContext<'_> {
                             }
                             _ => false,
                         };
-                        if variable_position {
-                            if let Some(node) = self.program.values.get(*arg) {
-                                match &node.value {
-                                    wir::Value::GlobalVariable(variable) => {
-                                        args_text.push_str(self.global_name(*variable)?);
-                                        continue;
-                                    }
-                                    wir::Value::PlayerVariable { variable, .. } => {
-                                        args_text.push_str(self.player_name(*variable)?);
-                                        continue;
-                                    }
-                                    _ => {}
+                        if variable_position && let Some(node) = self.program.values.get(*arg) {
+                            match &node.value {
+                                wir::Value::GlobalVariable(variable) => {
+                                    args_text.push_str(self.global_name(*variable)?);
+                                    continue;
                                 }
+                                wir::Value::PlayerVariable { variable, .. } => {
+                                    args_text.push_str(self.player_name(*variable)?);
+                                    continue;
+                                }
+                                _ => {}
                             }
                         }
                         let operation_name = if matches!(
@@ -372,15 +370,14 @@ impl EmitContext<'_> {
                         } else {
                             None
                         };
-                        if let Some(operation_name) = operation_name {
-                            if self
+                        if let Some(operation_name) = operation_name
+                            && self
                                 .catalog
                                 .entry(Kind::Operator, &operation_name)
                                 .is_some()
-                            {
-                                args_text.push_str(self.spelling(Kind::Operator, &operation_name)?);
-                                continue;
-                            }
+                        {
+                            args_text.push_str(self.spelling(Kind::Operator, &operation_name)?);
+                            continue;
                         }
                         self.value(*arg, &mut args_text)?;
                     }

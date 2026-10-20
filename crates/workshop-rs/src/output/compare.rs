@@ -1201,23 +1201,23 @@ fn self_modify_inner(pair: SelfModify<'_>, path: &mut Vec<PathStep>) -> Option<D
             second,
         });
     }
-    if let ModifyTarget::Player { player, .. } = pair.target {
-        if let Some(read_player) = read_player {
-            // The operand's player receiver must be the action's player.
-            path.push(PathStep::Value(0));
-            let difference = argument_difference(
-                pair.set_program,
-                pair.set_program,
-                path,
-                0,
-                read_player,
-                player,
-            );
-            match difference {
-                Some(difference) => return Some(difference),
-                None => {
-                    path.pop();
-                }
+    if let ModifyTarget::Player { player, .. } = pair.target
+        && let Some(read_player) = read_player
+    {
+        // The operand's player receiver must be the action's player.
+        path.push(PathStep::Value(0));
+        let difference = argument_difference(
+            pair.set_program,
+            pair.set_program,
+            path,
+            0,
+            read_player,
+            player,
+        );
+        match difference {
+            Some(difference) => return Some(difference),
+            None => {
+                path.pop();
             }
         }
     }

@@ -199,18 +199,17 @@ impl SourceMap {
             &mut spans,
         );
         for (rule, public) in program.rules.iter().enumerate() {
-            if let Some(provenance) = program.rule_provenance(rule) {
-                if provenance.span.is_some()
+            if let Some(provenance) = program.rule_provenance(rule)
+                && (provenance.span.is_some()
                     || provenance.name.is_some()
-                    || provenance.event_name.is_some()
-                {
-                    spans.push(MappedNode::Rule {
-                        rule,
-                        span: provenance.span.map(WireSpan::from),
-                        name_span: provenance.name.map(WireSpan::from),
-                        event_name_span: provenance.event_name.map(WireSpan::from),
-                    });
-                }
+                    || provenance.event_name.is_some())
+            {
+                spans.push(MappedNode::Rule {
+                    rule,
+                    span: provenance.span.map(WireSpan::from),
+                    name_span: provenance.name.map(WireSpan::from),
+                    event_name_span: provenance.event_name.map(WireSpan::from),
+                });
             }
             for (condition, public_condition) in public.conditions.iter().enumerate() {
                 let Some(record) = program.condition_record(rule, condition) else {
@@ -235,15 +234,15 @@ impl SourceMap {
                 }
             }
             for (action, public_action) in public.actions.iter().enumerate() {
-                if let Some(provenance) = program.action_provenance(rule, action) {
-                    if provenance.span.is_some() || provenance.identifier.is_some() {
-                        spans.push(MappedNode::Action {
-                            rule,
-                            action,
-                            span: provenance.span.map(WireSpan::from),
-                            identifier_span: provenance.identifier.map(WireSpan::from),
-                        });
-                    }
+                if let Some(provenance) = program.action_provenance(rule, action)
+                    && (provenance.span.is_some() || provenance.identifier.is_some())
+                {
+                    spans.push(MappedNode::Action {
+                        rule,
+                        action,
+                        span: provenance.span.map(WireSpan::from),
+                        identifier_span: provenance.identifier.map(WireSpan::from),
+                    });
                 }
                 for (argument, value) in action_argument_values(public_action)
                     .iter()

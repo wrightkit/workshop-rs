@@ -618,10 +618,10 @@ fn call_program_source_variant(
     if entry.id == "string" {
         args[0] = "\"Hello\"".to_string();
     }
-    if let Some((index, argument)) = override_argument {
-        if let Some(slot) = args.get_mut(index) {
-            *slot = argument;
-        }
+    if let Some((index, argument)) = override_argument
+        && let Some(slot) = args.get_mut(index)
+    {
+        *slot = argument;
     }
     if extra_argument {
         args.push("True".to_string());
@@ -1047,13 +1047,13 @@ fn assert_documented_contract(
                 entry.params().get(index)
             ));
         }
-        if let Some(value_type) = parameter.value_type.as_deref() {
-            if entry.param_type(index) != Some(value_type) {
-                failures.push(format!(
+        if let Some(value_type) = parameter.value_type.as_deref()
+            && entry.param_type(index) != Some(value_type)
+        {
+            failures.push(format!(
                     "{case_id}: documented parameter {index} type {value_type:?} differs from catalog {:?}",
                     entry.param_type(index)
                 ));
-            }
         }
     }
     match kind {

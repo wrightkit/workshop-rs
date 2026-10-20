@@ -43,14 +43,14 @@ fn check_rule(program: &Program, rule: &Rule) -> Result<(), IrError> {
         Event::EachPlayerWithFilters { target, .. } | Event::Player { target, .. } => Some(target),
         _ => None,
     };
-    if let Some(EventTarget::Slot(slot)) = target {
-        if *slot > 11 {
-            return Err(IrError::Invalid {
-                code: "invalid-event-slot",
-                message: format!("event slot {slot} is outside the canonical 0..=11 range"),
-                span: rule.span,
-            });
-        }
+    if let Some(EventTarget::Slot(slot)) = target
+        && *slot > 11
+    {
+        return Err(IrError::Invalid {
+            code: "invalid-event-slot",
+            message: format!("event slot {slot} is outside the canonical 0..=11 range"),
+            span: rule.span,
+        });
     }
     for condition in &rule.conditions {
         check_value(program, condition.value)?;
@@ -267,14 +267,14 @@ fn check_span(span: Option<Span>, program: &Program) -> Result<(), IrError> {
             span: Some(span),
         });
     }
-    if let Some(source) = program.files.get(span.file).and_then(|file| file.source()) {
-        if source.byte_range(span).is_none() {
-            return Err(IrError::Invalid {
-                code: "invalid-span",
-                message: "span is outside its retained source document".into(),
-                span: Some(span),
-            });
-        }
+    if let Some(source) = program.files.get(span.file).and_then(|file| file.source())
+        && source.byte_range(span).is_none()
+    {
+        return Err(IrError::Invalid {
+            code: "invalid-span",
+            message: "span is outside its retained source document".into(),
+            span: Some(span),
+        });
     }
     Ok(())
 }

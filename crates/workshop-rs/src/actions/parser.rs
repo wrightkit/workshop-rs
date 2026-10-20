@@ -270,11 +270,10 @@ impl ParseContext<'_> {
             kind: TokenKind::Word(word),
             ..
         }) = self.peek()
+            && self.settings_name_matches("tokens", "disabled", &word)
         {
-            if self.settings_name_matches("tokens", "disabled", &word) {
-                self.pos += 1;
-                return true;
-            }
+            self.pos += 1;
+            return true;
         }
         false
     }
