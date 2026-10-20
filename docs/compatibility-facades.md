@@ -72,10 +72,14 @@ document the published schema
 defines, `RULE_CONTENT_V1` is the format id, and `RULE_CONTENT_V1_SCHEMA`
 carries the schema text. The catalog ids the format names are public:
 `Event::catalog_id`, `PlayerEventKind::catalog_id`, and
-`ModifyOp::catalog_id`. The document shape itself is versioned by its format
-id, not by Rust API stability: an incompatible content change needs a new
-format id, and the JSON output is a data contract consumers may hold across
-versions.
+`ModifyOp::catalog_id`. A preserved ambiguous enum member renders as the
+`{"ambiguous": spelling, "candidates": [{"enum": ..., "member": ...}, ...]}`
+node — the authored spelling plus every candidate's canonical identity, with
+no domain invented; the spelling is the one locale-dependent field in the
+document.
+The document shape itself is versioned by its format id, not by Rust API
+stability: an incompatible content change needs a new format id, and the JSON
+output is a data contract consumers may hold across versions.
 
 ## Catalog-backed actions and values
 
