@@ -81,6 +81,17 @@ The document shape itself is versioned by its format id, not by Rust API
 stability: an incompatible content change needs a new format id, and the JSON
 output is a data contract consumers may hold across versions.
 
+`rules::statement` is the input direction of the same format.
+`statement_from_content(catalog, node)` converts one condition
+(`{"value": node}`) or action (`{"call": id, "args": [...]}`) list item, with
+optional `"disabled": true`, into a `Statement`. A node read from
+`Rule::content` is valid input unchanged, and the format id and schema do not
+change. The call refuses, with a distinct `StatementContentError` that names
+the node by JSON pointer, an unknown id, a wrong argument count, an internal
+sentinel, a node that forms no statement (including a preserved ambiguous enum
+member and an opaque raw action), and a node carrying spans, which are
+output-only. It produces no model value on error.
+
 ## Catalog-backed actions and values
 
 Catalog actions and values are built with `Action::call` and `Value::call`,

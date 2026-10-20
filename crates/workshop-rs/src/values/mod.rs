@@ -4,6 +4,7 @@
 //! The shared parser and output boundaries preserve their locale-independent
 //! identities.
 
+mod arity;
 pub(crate) mod emitter;
 pub(crate) mod parser;
 pub(crate) mod validate;
