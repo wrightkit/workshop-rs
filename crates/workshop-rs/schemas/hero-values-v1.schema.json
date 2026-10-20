@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wrightkit/workshop-rs/schemas/hero-values-v1.schema.json",
+  "title": "workshop-rs/hero-values-v1",
+  "description": "Hero base values (health pools, ability cooldowns, ultimate cost) for one game client version.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "balanceVersion",
+    "heroes"
+  ],
+  "properties": {
+    "format": {
+      "const": "workshop-rs/hero-values-v1"
+    },
+    "balanceVersion": {
+      "description": "The game client version these values belong to. One file holds one version.",
+      "type": "string",
+      "minLength": 1
+    },
+    "heroes": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/hero"
+      }
+    }
+  },
+  "$defs": {
+    "hero": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "values"
+      ],
+      "properties": {
+        "id": {
+          "description": "A hero id from the gameplay dataset.",
+          "type": "string",
+          "minLength": 1
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/value"
+          }
+        }
+      }
+    },
+    "value": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/healthValue"
+        },
+        {
+          "$ref": "#/$defs/cooldownValue"
+        },
+        {
+          "$ref": "#/$defs/ultimateCostValue"
+        }
+      ]
+    },
+    "healthValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "pool",
+        "amount"
+      ],
+      "properties": {
+        "kind": {
+          "const": "health"
+        },
+        "pool": {
+          "enum": [
+            "health",
+            "shield",
+            "armor"
+          ]
+        },
+        "amount": {
+          "$ref": "#/$defs/positiveNumber"
+        }
+      }
+    },
+    "cooldownValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "slot",
+        "seconds"
+      ],
+      "properties": {
+        "kind": {
+          "const": "cooldown"
+        },
+        "slot": {
+          "$ref": "#/$defs/abilitySlot"
+        },
+        "variant": {
+          "type": "string",
+          "minLength": 1
+        },
+        "seconds": {
+          "$ref": "#/$defs/positiveNumber"
+        }
+      }
+    },
+    "ultimateCostValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "points"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ultimateCost"
+        },
+        "points": {
+          "$ref": "#/$defs/positiveNumber"
+        }
+      }
+    },
+    "abilitySlot": {
+      "description": "A logical slot id from the gameplay dataset.",
+      "type": "string",
+      "minLength": 1
+    },
+    "positiveNumber": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  }
+}

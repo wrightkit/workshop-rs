@@ -1,0 +1,35 @@
+{
+  "format": "workshop-rs/hero-values-v1",
+  "balanceVersion": "2.25.0.0 - 154461.1",
+  "heroes": [
+    {
+      "id": "exampleHero",
+      "values": [
+        {
+          "kind": "damage",
+          "pool": "health",
+          "amount": 111
+        },
+        {
+          "kind": "health",
+          "pool": "shield",
+          "amount": 22
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 33
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 4.4
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 555
+        }
+      ]
+    }
+  ]
+}
