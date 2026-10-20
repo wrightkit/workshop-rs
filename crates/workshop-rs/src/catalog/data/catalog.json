@@ -1104,6 +1104,23 @@
         null,
         null
       ],
+      "paramContent": [
+        {
+          "fold": {
+            "arg": 0,
+            "call": "playerVariable"
+          }
+        },
+        {
+          "fold": {
+            "arg": 1,
+            "call": "playerVariable"
+          }
+        },
+        null,
+        null,
+        null
+      ],
       "paramDomains": [
         null,
         null,
@@ -1362,6 +1379,17 @@
           "falseAsNumber": true,
           "trueAsNumber": true
         },
+        null,
+        null
+      ],
+      "paramContent": [
+        {
+          "fold": {
+            "arg": 0,
+            "call": "globalVariable"
+          }
+        },
+        null,
         null,
         null
       ],
@@ -1826,6 +1854,14 @@
         "zh-TW": "Stop Chasing Global Variable"
       },
       "id": "stopChasingGlobalVariable",
+      "paramContent": [
+        {
+          "fold": {
+            "arg": 0,
+            "call": "globalVariable"
+          }
+        }
+      ],
       "paramNames": [
         "variable"
       ],
@@ -2981,6 +3017,20 @@
         "zh-TW": "Stop Chasing Player Variable"
       },
       "id": "stopChasingPlayerVariable",
+      "paramContent": [
+        {
+          "fold": {
+            "arg": 0,
+            "call": "playerVariable"
+          }
+        },
+        {
+          "fold": {
+            "arg": 1,
+            "call": "playerVariable"
+          }
+        }
+      ],
       "paramNames": [
         "player",
         "variable"
@@ -3263,6 +3313,22 @@
           "falseAsNumber": true,
           "trueAsNumber": true
         },
+        null
+      ],
+      "paramContent": [
+        {
+          "fold": {
+            "arg": 0,
+            "call": "playerVariable"
+          }
+        },
+        {
+          "fold": {
+            "arg": 1,
+            "call": "playerVariable"
+          }
+        },
+        null,
         null
       ],
       "paramNames": [
@@ -3859,6 +3925,16 @@
           "falseAsNumber": true,
           "trueAsNumber": true
         },
+        null
+      ],
+      "paramContent": [
+        {
+          "fold": {
+            "arg": 0,
+            "call": "globalVariable"
+          }
+        },
+        null,
         null
       ],
       "paramNames": [
@@ -5078,6 +5154,17 @@
         },
         null
       ],
+      "paramContent": [
+        {
+          "fold": {
+            "arg": 0,
+            "call": "globalVariable"
+          }
+        },
+        null,
+        null,
+        null
+      ],
       "paramDomains": [
         null,
         null,
@@ -5141,6 +5228,17 @@
         },
         null
       ],
+      "paramContent": [
+        {
+          "fold": {
+            "arg": 0,
+            "call": "globalVariable"
+          }
+        },
+        null,
+        null,
+        null
+      ],
       "paramDomains": [
         null,
         null,
@@ -5192,6 +5290,23 @@
         "zh-TW": "Chase Player Variable At Rate"
       },
       "id": "chasePlayerVariableAtRate",
+      "paramContent": [
+        {
+          "fold": {
+            "arg": 0,
+            "call": "playerVariable"
+          }
+        },
+        {
+          "fold": {
+            "arg": 1,
+            "call": "playerVariable"
+          }
+        },
+        null,
+        null,
+        null
+      ],
       "paramDomains": [
         null,
         null,
@@ -5247,6 +5362,23 @@
         "zh-TW": "Chase Player Variable Over Time"
       },
       "id": "chasePlayerVariableOverTime",
+      "paramContent": [
+        {
+          "fold": {
+            "arg": 0,
+            "call": "playerVariable"
+          }
+        },
+        {
+          "fold": {
+            "arg": 1,
+            "call": "playerVariable"
+          }
+        },
+        null,
+        null,
+        null
+      ],
       "paramDomains": [
         null,
         null,
@@ -8495,7 +8627,7 @@
       }
     }
   ],
-  "digest": "527994710eef65038f25cb08b3962d33179d18dfa0ee1feebfbe491ff0540d9a",
+  "digest": "574c62349be26943ca7d5cc8aab6f0ab68d4d412cc84e1791d21684df361fd3a",
   "enums": [
     {
       "domain": "Impulse",
@@ -21895,6 +22027,7 @@
     "reviewed": true,
     "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); rule-event identities and EventTeam/EventPlayer filter aliases are transcribed from the user-provided workshop-data export and its Workshop event annotations, cross-checked against documented raw Workshop event forms; migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; declared-locale action/value/event/enum aliases for the 15-locale Workshop set are generated from the user-provided workshop-data JSON, while the separately declared Wait parameter labels are documented below; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; the exact-match corpus and its exclusions are pinned separately in tools/corpus/zh-cn-corpus.json",
     "sourceNotes": [
+      "per-parameter rule-content-v1 facts (paramContent) describe the structured document layout where a surface parameter list folds into fewer content arguments: fold names the reserved globalVariable/playerVariable target call and the argument index the parameter supplies; the member's node form follows its declared parameter type (a Variable parameter supplies the tagged {\"variable\"} node); the shapes match the rule-content-v1 schema's reserved calls and the emitter contract in rules/content.rs (workshop-rs#503)",
       "The generic localized_enum_spelling fallback for Color.WHITE covers the additional Workshop locales required by the pinned OverPy 9.7.10 translation marker output; OverPy language-code to Workshop-locale mapping remains outside this catalog owner.",
       "stringSplit accepts Color as a source-backed string-coercible value because the pinned OverPy translation setup uses Color.WHITE.split([]) for its language marker.",
       "Contextual literal substitutions are audited from the reviewed OverPy replacement metadata at https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/types.d.ts and its position-sensitive Workshop emission path at https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/compiler/astToWorkshop.ts; Wait Until's numeric-condition exception is retained from https://github.com/Zezombye/overpy/blob/2002431649cbdd7ddc3aa70bd184b598ec2820e5/src/compiler/functions/waitUntil.ts and no global coercion hierarchy is inferred",
@@ -30842,5 +30975,5 @@
       "returnType": "Number"
     }
   ],
-  "version": "0.1.12"
+  "version": "0.1.13"
 }

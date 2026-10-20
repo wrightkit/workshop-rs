@@ -130,6 +130,45 @@ pub struct ParamCoercions {
     pub empty_array_as_string: bool,
 }
 
+/// `rule-content-v1` facts for one parameter position, declared when the
+/// surface parameter list and the structured document's argument list
+/// differ. Absent elements and entries without the array map their
+/// parameters one-to-one to plain content arguments.
+///
+/// These are deliberately per-parameter facts describing the emitted
+/// document's layout; they do not change the surface signature, which
+/// follows the Workshop call syntax.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[non_exhaustive]
+pub struct ParamContent {
+    /// The folded variable-target call this parameter contributes to, when
+    /// the call's variable target folds surface parameters into one
+    /// `globalVariable`/`playerVariable` content argument.
+    #[serde(default)]
+    pub fold: Option<ParamContentFold>,
+}
+
+/// Membership in a folded variable-target call: this surface parameter
+/// supplies one argument of the `globalVariable`/`playerVariable` call the
+/// `rule-content-v1` target renders as. All members of a fold group share
+/// the same `call` and are contiguous surface parameters; the folded call
+/// occupies the content-argument position of the group's first member.
+///
+/// The member's node form follows its declared parameter type: a
+/// `Variable`-typed parameter supplies the tagged `{"variable": "<name>"}`
+/// node bound to the declared variable name, and any other parameter
+/// supplies a normal value node.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[non_exhaustive]
+pub struct ParamContentFold {
+    /// The reserved target call id (`globalVariable` or `playerVariable`).
+    pub call: String,
+    /// The argument index inside the folded call this parameter supplies.
+    pub arg: usize,
+}
+
 /// One catalog builtin.
 #[derive(Debug, Clone)]
 pub struct CatalogEntry {
@@ -164,6 +203,11 @@ pub struct CatalogEntry {
     pub(crate) param_types: Vec<Option<String>>,
     /// Contextual literal substitutions per parameter position.
     pub(crate) param_coercions: Vec<Option<ParamCoercions>>,
+    /// `rule-content-v1` argument facts per parameter position (parallel to
+    /// `params`), declared where the surface parameter list and the content
+    /// argument list differ — folded variable targets and modify-operator
+    /// positions.
+    pub(crate) param_content: Vec<Option<ParamContent>>,
     /// Source-backed return type for Value entries. Actions must leave this
     /// unset; an absent value remains unresolved.
     pub(crate) return_type: Option<String>,
@@ -318,6 +362,13 @@ impl CatalogEntry {
     /// The contextual literal substitutions for an argument position.
     pub fn param_coercions(&self, index: usize) -> Option<&ParamCoercions> {
         param_at(&self.param_coercions, index, self.variadic).and_then(Option::as_ref)
+    }
+
+    /// The `rule-content-v1` facts for an argument position: how the
+    /// parameter appears in the structured document when the surface
+    /// signature and the content layout differ.
+    pub fn param_content(&self, index: usize) -> Option<&ParamContent> {
+        param_at(&self.param_content, index, self.variadic).and_then(Option::as_ref)
     }
 
     /// The source-backed return type of a Value, when available.

@@ -7,7 +7,7 @@
 use serde_json::{Value as JsonValue, json};
 use sha2::{Digest, Sha256};
 use workshop_rs::catalog::Kind;
-use workshop_rs::lookup::LookupMatch;
+use workshop_rs::lookup::{LookupMatch, Signature};
 use workshop_rs::rules::content::{
     ASSIGN_MEMBER_CALL, GLOBAL_VARIABLE_CALL, MEMBER_ACCESS_CALL, MODIFY_MEMBER_CALL,
     PLAYER_VARIABLE_CALL, RAW_WORKSHOP_ACTION_CALL, RULE_CONTENT_V1, RULE_CONTENT_V1_SCHEMA,
@@ -409,6 +409,177 @@ fn every_emitted_structural_call_matches_its_lookup_signature_arity() {
         STRUCTURAL_CALL_IDS.len(),
         "the fixture must emit every structural call id: {covered:?}"
     );
+}
+
+/// One hand-written en-US surface call per catalog action whose lookup
+/// signature folds surface parameters into a single `rule-content-v1`
+/// variable-target argument (workshop-rs#503).
+const FOLDED_TARGET_SOURCE: &str = r#"variables {
+    global:
+        0: probe_g
+    player:
+        0: probe_p
+}
+
+rule ("fold") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Set Global Variable At Index(probe_g, 0, 5);
+        Set Player Variable At Index(Event Player, probe_p, 0, 5);
+        Modify Global Variable At Index(probe_g, 0, Add, 5);
+        Modify Player Variable At Index(Event Player, probe_p, 0, Add, 5);
+        Stop Chasing Global Variable(probe_g);
+        Stop Chasing Player Variable(Event Player, probe_p);
+        Chase Global Variable At Rate(probe_g, 0, 1, None);
+        Chase Global Variable Over Time(probe_g, 0, 1, None);
+        Chase Player Variable At Rate(Event Player, probe_p, 0, 1, None);
+        Chase Player Variable Over Time(Event Player, probe_p, 0, 1, None);
+    }
+}
+"#;
+
+/// `(catalog id, emitted call id, emitted arg count)` in
+/// `FOLDED_TARGET_SOURCE` order — the arg counts are what the signature's
+/// fold facts must predict: each fold group contributes one argument where
+/// its first member sits.
+const FOLDED_TARGET_CALLS: &[(&str, &str, usize)] = &[
+    ("setGlobalVariableAtIndex", "setGlobalVariableAtIndex", 3),
+    ("setPlayerVariableAtIndex", "setPlayerVariableAtIndex", 3),
+    (
+        "modifyGlobalVariableAtIndex",
+        "modifyGlobalVariableAtIndex",
+        4,
+    ),
+    (
+        "modifyPlayerVariableAtIndex",
+        "modifyPlayerVariableAtIndex",
+        4,
+    ),
+    ("stopChasingGlobalVariable", "stopChasingGlobalVariable", 1),
+    ("stopChasingPlayerVariable", "stopChasingPlayerVariable", 1),
+    ("chaseAtRate", "chaseAtRate", 4),
+    ("chaseOverTime", "chaseOverTime", 4),
+    ("chasePlayerVariableAtRate", "chasePlayerVariableAtRate", 4),
+    (
+        "chasePlayerVariableOverTime",
+        "chasePlayerVariableOverTime",
+        4,
+    ),
+];
+
+/// The `globalVariable`/`playerVariable` node a signature's fold facts
+/// describe, built from the signature alone: every parameter declaring a
+/// `fold` supplies `args[arg]` of the folded call — a `Variable`-typed
+/// parameter as the tagged `{"variable": name}` node bound to the declared
+/// variable name, any other parameter as a value node (the fixture's
+/// `Event Player` renders as the `eventPlayer` call).
+fn folded_target(signature: &Signature) -> Option<JsonValue> {
+    let mut call = None;
+    let mut args: Vec<JsonValue> = Vec::new();
+    for param in &signature.params {
+        let Some(fold) = param
+            .content
+            .as_ref()
+            .and_then(|content| content.fold.as_ref())
+        else {
+            continue;
+        };
+        match call {
+            Some(call) => assert_eq!(
+                call, fold.call,
+                "folded parameters must share one target call"
+            ),
+            None => call = Some(fold.call.as_str()),
+        }
+        let node = if matches!(
+            param.param_type.as_deref(),
+            Some("Variable") | Some("Global Variable")
+        ) {
+            let variable = if fold.call == "globalVariable" {
+                "probe_g"
+            } else {
+                "probe_p"
+            };
+            json!({ "variable": variable })
+        } else {
+            json!({"call": "eventPlayer", "args": []})
+        };
+        if args.len() <= fold.arg {
+            args.resize(fold.arg + 1, JsonValue::Null);
+        }
+        args[fold.arg] = node;
+    }
+    call.map(|call| json!({"call": call, "args": args}))
+}
+
+#[test]
+fn folded_variable_target_signatures_describe_the_content_layout() {
+    // workshop-rs#503: `paramContent` fold facts must name every action
+    // whose surface parameters fold into one `rule-content-v1` variable
+    // target, and the folded argument must be derivable from the lookup
+    // signature alone — a consumer reconstructing the content argument
+    // layout needs no parse-path knowledge.
+    let catalog = catalog();
+    let mut folded: Vec<&str> = catalog
+        .entries_of(Kind::Action)
+        .filter(|entry| {
+            (0..entry.param_count())
+                .any(|index| entry.param_content(index).is_some_and(|c| c.fold.is_some()))
+        })
+        .map(|entry| entry.id.as_str())
+        .collect();
+    folded.sort_unstable();
+    let mut covered: Vec<&str> = FOLDED_TARGET_CALLS.iter().map(|(id, ..)| *id).collect();
+    covered.sort_unstable();
+    assert_eq!(
+        folded, covered,
+        "the actions declaring a folded variable target must be exactly the \
+         covered set — a new folded action needs coverage"
+    );
+
+    let rule = parse_rule(FOLDED_TARGET_SOURCE);
+    let content = content_of(&rule);
+    let actions = content["actions"].as_array().expect("actions");
+    assert_eq!(actions.len(), FOLDED_TARGET_CALLS.len());
+    for (index, (id, call, arg_count)) in FOLDED_TARGET_CALLS.iter().enumerate() {
+        let matches = catalog.lookup(&en(), id).expect("lookup answers");
+        let signature = matches
+            .iter()
+            .find_map(|lookup| match lookup {
+                LookupMatch::Builtin {
+                    id: matched,
+                    signature,
+                    ..
+                } if matched == id => signature.as_ref(),
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("'{id}' must resolve to its own signature"));
+
+        let target = folded_target(signature)
+            .unwrap_or_else(|| panic!("'{id}' must declare a folded variable target"));
+        let action = &actions[index];
+        assert_eq!(
+            action["call"].as_str(),
+            Some(*call),
+            "{id}: emitted call id"
+        );
+        let args = action["args"].as_array().expect("args");
+        assert_eq!(
+            args.len(),
+            *arg_count,
+            "{id}: the fold facts must predict the emitted argument count"
+        );
+        // The folded target occupies the position of the group's first
+        // member — parameter 0 for every folded action.
+        assert_eq!(
+            args[0], target,
+            "{id}: the signature's fold facts must derive the emitted target node"
+        );
+    }
 }
 
 #[test]
