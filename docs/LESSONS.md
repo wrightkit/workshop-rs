@@ -25,3 +25,9 @@ Short review queue of reusable failure classes from merged workshop-rs work. Eac
 - **Why:** `Catalog::lookup` required a folded query of three characters before substring matching, so two-character CJK words that appear inside many display names (阈值, 变量) returned no entries.
 - **Prevention home:** the two-character CJK regression landed in #508; authoring review of thresholds against multi-script input.
 - **Incidents:** [#508](https://github.com/wrightkit/workshop-rs/pull/508) (fixes [#497](https://github.com/wrightkit/workshop-rs/issues/497)) — observed 2026-10-19
+
+### A second consumer shares the established rule instead of re-deriving it
+- **Rule:** When new code must enforce a rule an existing path already defines — argument-count acceptance, input membership, locale resolution — call or extract the shared authority. A copied subset drifts independently and was the recurring class in `wrightkit/workshop-rs#451`.
+- **Why:** `statement_from_content`'s arity check copied the rule `validate_call_signature` already enforces (undeclared-signature skip, folded player-variable +1, required..total range, variadic); review caught the reimplementation, and the same class recurred in `opy-rs#623` within days.
+- **Prevention home:** existing contract — this repository's `AGENTS.md` "Sibling paths share checks"; the shared `CatalogEntry::rejected_arity` and agreement test landed in #534.
+- **Incidents:** [#534](https://github.com/wrightkit/workshop-rs/pull/534) review finding — observed 2026-10-20
