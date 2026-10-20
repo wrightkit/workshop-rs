@@ -44,6 +44,7 @@ fn display_name_and_near_spelling_lookup_return_canonical_entry() {
             id,
             display_name,
             signature,
+            ..
         } = first
         else {
             panic!("'{query}' should match a builtin first: {matches:?}");

@@ -10,6 +10,8 @@ mod catalog;
 mod compare;
 #[path = "corpus.rs"]
 mod corpus;
+#[path = "descriptions.rs"]
+mod descriptions;
 #[path = "element_count.rs"]
 mod element_count;
 #[path = "gameplay.rs"]

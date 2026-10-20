@@ -33,7 +33,8 @@ Each match is a canonical construct the parser and emitter accept:
 
 - `LookupMatch::Builtin` — a structural keyword, action, value, event, or
   operator, with its catalog `Kind`, canonical id, the requested locale's
-  display name when mapped, and, for callable builtins, a `Signature`.
+  display name when mapped, a localized `description` for actions and
+  values, and, for callable builtins, a `Signature`.
   Actions and values are always callable; a structural construct is callable
   when it declares a parameter list (`setGlobalVariable`, `if`,
   `forPlayerVariable`, `callSubroutine`, … — `else` and `end` declare an
@@ -138,6 +139,35 @@ Structural construct signatures name the arguments of the construct's
 format's tagged `{"variable"}`/`{"subroutine"}` node (`Variable`,
 `Subroutine`). Zero-argument constructs (`else`, `end`) report an empty
 `params`.
+
+## Descriptions
+
+Every action and value carries a localized description — the short
+in-game-documentation text the Workshop editor shows — and every parameter
+position carries its own. `LookupMatch::Builtin.description` and
+`SignatureParam.description` expose them as `Option<Description>` alongside
+the other entry facts; `Catalog::description` and
+`Catalog::param_description` resolve the same texts by kind, id, and
+position.
+
+A `Description` is the resolved `text`, the `locale` that text is actually
+written in, and a `fallback` flag: requesting a declared locale the dataset
+ships no text for returns the primary locale's (`en-US`) text with
+`fallback: true`, so a consumer can render or suppress the marker. A
+position or entry on the dataset's `gaps` list resolves to `None` rather
+than fabricating text — for example `customString`, whose upstream
+documentation carries no real description.
+
+Descriptions are catalog data, not Rust items
+([ADR-0016](adr/0016-catalog-content-outside-rust-api.md)): they live in
+`crates/workshop-rs/src/catalog/data/descriptions.json`, a separate dataset
+indexed by canonical id and parameter position next to `catalog.json`, with
+its own version, content digest, `locales`, `pendingLocales`, `gaps`, and
+`provenance` records, validated against the catalog at load. `en-US` ships;
+`zh-CN` is declared as a pending stage. The dataset cannot drift from the
+catalog: for every shipped locale each action, each value, and each
+parameter position must carry text or name a gap — never both, never
+neither.
 
 ## Settings vocabulary
 

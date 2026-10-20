@@ -110,6 +110,54 @@ Wrecking Ball cooldown labels are pinned from the reacquired AI-PVE and Bastion
 artifacts described by `crates/workshop-rs/tests/fixtures/real-projects/provenance.json`; they are source-preserving
 custom data or producer aliases, not new builtin gameplay identities.
 
+## Description data (`crates/workshop-rs/src/catalog/data/descriptions.json`)
+
+The descriptions dataset is WrightKit-reviewed and holds the localized
+in-game-documentation texts the Workshop editor shows for actions, values,
+and their parameter positions — the content the editor's element inspector
+displays. Its machine-readable `provenance` field records the generator,
+generator version, source, license, and review status like the catalog's.
+
+* `en-US` ships complete-or-gapped coverage: 473 of 474 entries and 770 of
+  774 parameter positions carry text; the remaining five positions are the
+  dataset's explicit `gaps.en-US` list. Texts are imported verbatim from the
+  pinned `workshop-data` export at commit
+  `5a7d0e294b8cad73b9701987bb584d0551d7fa4d` (`data.actions`/`data.values`
+  `description.en-US` fields, matched to catalog ids by exact en-US
+  spelling). Those fields carry the client-rendered Workshop documentation
+  strings — the same class of game-authored text as the en-US spellings the
+  corpus pipeline already imports — not upstream compiler-authored content;
+  the texts still on the 2019 `owws-documentation` in-game dump match
+  verbatim (266 of 474 entries), and post-dump additions arrive through the
+  same export. The license-incompatible upstream compiler is never a data
+  source: upstream annotations that are not the client's documentation text
+  are removed, reduced through the importer's reviewed-text table
+  (`workshop-catalog-gen descriptions`' `REVIEWED_TEXT`, which names
+  canonical Workshop surface forms instead of source-language spellings and
+  drops gameplay advice and markup), or gapped. `customString`'s source
+  field is a contributor credit, not a description, and is gapped
+  (`GAPPED_SOURCE`); `customString.params[0]`, `compare.params[1]`,
+  `string.params[0]`, and `setHealingDealt.params[1]` have empty source
+  text and are gapped rather than invented.
+* `zh-CN` is a declared `pendingLocales` stage with no texts. The documented
+  Chinese Workshop reference at `https://overwatch.huijiwiki.com` (the
+  `地图工坊/动作/…` and `地图工坊/值/…` pages, the same reference cited for
+  the `Wait` `zh-CN` parameter labels above) returned HTTP 403 Cloudflare
+  challenges to every fetch route on 2026-10-20, so no page content could be
+  reviewed for import and no zh-CN text was invented. When the stage ships,
+  this file records the page URL and access date for every covered
+  reference page; uncovered entries and positions go on
+  `gaps."zh-CN"` explicitly.
+* Other declared catalog locales fall back to `en-US` at resolution time
+  with the fallback marked (`Description.fallback`), so partial future
+  locales never need fabricated text.
+
+The import is regenerated, not hand-edited: `workshop-catalog-gen
+descriptions --export <workshop-data.json>` re-derives the dataset,
+`workshop-catalog-gen build` records the digest, and `workshop-catalog-gen
+check` verifies it — source data, provenance, and the generated digest are
+committed together.
+
 ## Catalog identity and pipeline
 
 * `implementation-version`: `workshop-rs` package version (`Cargo.toml`).

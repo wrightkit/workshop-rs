@@ -6,9 +6,10 @@
 //!
 //! Usage:
 //! ```sh
-//! workshop-catalog-gen check [--file catalog.json] [--json]
-//! workshop-catalog-gen build [--file catalog.json]
+//! workshop-catalog-gen check [--file catalog.json] [--descriptions descriptions.json] [--json]
+//! workshop-catalog-gen build [--file catalog.json] [--descriptions descriptions.json]
 //! workshop-catalog-gen corpus [--file catalog.json] [--export PATH] [--out-dir tools/corpus] [--settings-out PATH]
+//! workshop-catalog-gen descriptions [--file catalog.json] [--descriptions descriptions.json] --export PATH
 //! ```
 //!
 //! * `check` validates the catalog (schema, duplicate ids, colliding or
@@ -31,11 +32,22 @@
 //!     Unmatched entries are excluded from the corpus with a recorded reason
 //!     and keep fail-explicit behavior (ADR-0001 Decision 7); no spelling is
 //!     fabricated. Re-running on the merged data is byte-idempotent.
+//! * `descriptions` imports the en-US action/value descriptions from the
+//!   pinned Workshop data export (`--export`, or the `WORKSHOP_DATA_EXPORT`
+//!   environment variable) into `descriptions.json`, matching every catalog
+//!   entry by its exact en-US spelling. Source text violating the description
+//!   content rules is reduced through the importer's reviewed-text table;
+//!   uncovered positions become explicit `gaps` entries. The declared digest
+//!   is left stale for `build` to recompute.
 //!
 //! Updating localization data is a bounded data change: edit the JSON and
 //! re-run the pipeline; no parser or emitter code changes. The full locale
 //! corpus flow is: `corpus` (data merge) -> `build` (fresh digest) ->
-//! `check` (verify); commit data and regenerated files together.
+//! `check` (verify); commit data and regenerated files together. The
+//! description flow is: `descriptions` (import) -> `build` (fresh digests)
+//! -> `check` (verify). `check` validates `descriptions.json` against the
+//! catalog and verifies its declared digest; `build` rewrites it with a
+//! fresh digest alongside `catalog.json`.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -52,10 +64,24 @@ const DEFAULT_OUT_DIR: &str = "tools/corpus";
 
 const DEFAULT_SETTINGS_OUT: &str = "crates/workshop-rs/src/settings/data/locales.json";
 
+/// The committed descriptions dataset, next to `catalog.json`;
+/// `--descriptions` overrides it.
+const DEFAULT_DESCRIPTIONS_FILE: &str = "crates/workshop-rs/src/catalog/data/descriptions.json";
+
 const EXPORT_ENV: &str = "WORKSHOP_DATA_EXPORT";
 
 fn usage() -> &'static str {
-    "usage: workshop-catalog-gen <check|build|corpus> [--file catalog.json] [--json] [--export PATH] [--out-dir tools/corpus] [--settings-out PATH]"
+    "usage: workshop-catalog-gen <check|build|corpus|descriptions> [--file catalog.json] [--descriptions descriptions.json] [--json] [--export PATH] [--out-dir tools/corpus] [--settings-out PATH]"
+}
+
+fn export_path(export: Option<PathBuf>) -> Result<PathBuf, String> {
+    export
+        .or_else(|| std::env::var_os(EXPORT_ENV).map(PathBuf::from))
+        .ok_or_else(|| {
+            format!(
+                "requires the export path via --export or the {EXPORT_ENV} environment variable"
+            )
+        })
 }
 
 fn flag_value(args: &mut impl Iterator<Item = String>, flag: &str) -> PathBuf {
@@ -75,6 +101,7 @@ fn main() -> ExitCode {
         .map(|arg| arg.to_string_lossy().into_owned());
     let command = args.next();
     let mut file = PathBuf::from(DEFAULT_FILE);
+    let mut descriptions_file = PathBuf::from(DEFAULT_DESCRIPTIONS_FILE);
     let mut json = false;
     let mut export: Option<PathBuf> = None;
     let mut out_dir = PathBuf::from(DEFAULT_OUT_DIR);
@@ -82,6 +109,7 @@ fn main() -> ExitCode {
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--file" => file = flag_value(&mut args, "--file"),
+            "--descriptions" => descriptions_file = flag_value(&mut args, "--descriptions"),
             "--export" => export = Some(flag_value(&mut args, "--export")),
             "--out-dir" => out_dir = flag_value(&mut args, "--out-dir"),
             "--settings-out" => settings_out = flag_value(&mut args, "--settings-out"),
@@ -107,7 +135,7 @@ fn main() -> ExitCode {
 
     match command.as_deref() {
         Some("check") => match Catalog::load(&content) {
-            Ok(catalog) => {
+            Ok(mut catalog) => {
                 let identity = catalog.identity();
                 if identity.catalog_digest.is_none() {
                     eprintln!(
@@ -131,6 +159,32 @@ fn main() -> ExitCode {
                     for error in errors {
                         eprintln!("workshop-catalog-gen: settings catalog: {error}");
                     }
+                    return ExitCode::from(1);
+                }
+                let descriptions_text = match std::fs::read_to_string(&descriptions_file) {
+                    Ok(text) => text,
+                    Err(error) => {
+                        eprintln!(
+                            "workshop-catalog-gen: cannot read {}: {error}",
+                            descriptions_file.display()
+                        );
+                        return ExitCode::from(2);
+                    }
+                };
+                if let Err(error) = catalog.load_descriptions(&descriptions_text) {
+                    eprintln!("workshop-catalog-gen: descriptions: {error}");
+                    return ExitCode::from(1);
+                }
+                if catalog.descriptions_digest().is_none() {
+                    eprintln!(
+                        "workshop-catalog-gen: descriptions declare no content digest — run `workshop-catalog-gen build` to record one"
+                    );
+                    return ExitCode::from(1);
+                }
+                if catalog.descriptions_version() == "dev" {
+                    eprintln!(
+                        "workshop-catalog-gen: descriptions declare no version — run `workshop-catalog-gen build`"
+                    );
                     return ExitCode::from(1);
                 }
                 if json {
@@ -159,6 +213,11 @@ fn main() -> ExitCode {
                             coverage.locale, coverage.mapped, coverage.total
                         );
                     }
+                    println!(
+                        "descriptions version {} digest {}",
+                        catalog.descriptions_version(),
+                        catalog.descriptions_digest().unwrap_or("<none>")
+                    );
                 }
                 ExitCode::SUCCESS
             }
@@ -168,36 +227,68 @@ fn main() -> ExitCode {
             }
         },
         Some("build") => match build_canonical(&content) {
-            Ok(output) => match std::fs::write(&file, output) {
-                Ok(()) => {
-                    println!("wrote {}", file.display());
-                    ExitCode::SUCCESS
-                }
-                Err(error) => {
+            Ok(output) => {
+                if let Err(error) = std::fs::write(&file, &output) {
                     eprintln!(
                         "workshop-catalog-gen: cannot write {}: {error}",
                         file.display()
                     );
-                    ExitCode::from(2)
+                    return ExitCode::from(2);
                 }
-            },
+                println!("wrote {}", file.display());
+                let descriptions_text = match std::fs::read_to_string(&descriptions_file) {
+                    Ok(text) => text,
+                    Err(error) => {
+                        eprintln!(
+                            "workshop-catalog-gen: cannot read {}: {error}",
+                            descriptions_file.display()
+                        );
+                        return ExitCode::from(2);
+                    }
+                };
+                let catalog = match Catalog::load(&output) {
+                    Ok(catalog) => catalog,
+                    Err(error) => {
+                        eprintln!("workshop-catalog-gen: {error}");
+                        return ExitCode::from(1);
+                    }
+                };
+                match workshop_rs::catalog::descriptions::build_canonical_descriptions(
+                    &catalog,
+                    &descriptions_text,
+                ) {
+                    Ok(rebuilt) => match std::fs::write(&descriptions_file, rebuilt) {
+                        Ok(()) => {
+                            println!("wrote {}", descriptions_file.display());
+                            ExitCode::SUCCESS
+                        }
+                        Err(error) => {
+                            eprintln!(
+                                "workshop-catalog-gen: cannot write {}: {error}",
+                                descriptions_file.display()
+                            );
+                            ExitCode::from(2)
+                        }
+                    },
+                    Err(error) => {
+                        eprintln!("workshop-catalog-gen: descriptions: {error}");
+                        ExitCode::from(1)
+                    }
+                }
+            }
             Err(error) => {
                 eprintln!("workshop-catalog-gen: {error}");
                 ExitCode::from(1)
             }
         },
         Some("corpus") => {
-            let export_path =
-                match export.or_else(|| std::env::var_os(EXPORT_ENV).map(PathBuf::from)) {
-                    Some(path) => path,
-                    None => {
-                        eprintln!(
-                            "workshop-catalog-gen: corpus requires the export path via --export or \
-                         the {EXPORT_ENV} environment variable"
-                        );
-                        return ExitCode::from(2);
-                    }
-                };
+            let export_path = match export_path(export) {
+                Ok(path) => path,
+                Err(error) => {
+                    eprintln!("workshop-catalog-gen: corpus {error}");
+                    return ExitCode::from(2);
+                }
+            };
             match corpus::generate(&content, &file, &export_path, &out_dir, &settings_out) {
                 Ok(report) => {
                     for line in report {
@@ -207,6 +298,27 @@ fn main() -> ExitCode {
                 }
                 Err(error) => {
                     eprintln!("workshop-catalog-gen: {error}");
+                    ExitCode::from(1)
+                }
+            }
+        }
+        Some("descriptions") => {
+            let export_path = match export_path(export) {
+                Ok(path) => path,
+                Err(error) => {
+                    eprintln!("workshop-catalog-gen: descriptions {error}");
+                    return ExitCode::from(2);
+                }
+            };
+            match descriptions::generate(&content, &descriptions_file, &export_path) {
+                Ok(report) => {
+                    for line in report {
+                        println!("{line}");
+                    }
+                    ExitCode::SUCCESS
+                }
+                Err(error) => {
+                    eprintln!("workshop-catalog-gen: descriptions: {error}");
                     ExitCode::from(1)
                 }
             }
@@ -272,6 +384,8 @@ fn native_spellings(catalog_json: &str) -> Result<(), Vec<String>> {
 
 /// The locale corpus pipeline (ADR-0001 Decision 6).
 mod corpus;
+/// The description import pipeline (issue #517).
+mod descriptions;
 
 #[cfg(test)]
 mod tests {
