@@ -458,13 +458,13 @@ impl<'a> EmitContext<'a> {
         if let Some(spelling) = resolve(&self.locale) {
             return Ok(spelling);
         }
-        if let Some(fallback) = &self.fallback {
-            if let Some(spelling) = resolve(fallback) {
-                if !dedup || !self.fallback_ids.contains(&fallback_id) {
-                    self.fallback_ids.push(fallback_id);
-                }
-                return Ok(spelling);
+        if let Some(fallback) = &self.fallback
+            && let Some(spelling) = resolve(fallback)
+        {
+            if !dedup || !self.fallback_ids.contains(&fallback_id) {
+                self.fallback_ids.push(fallback_id);
             }
+            return Ok(spelling);
         }
         Err(WorkshopError::MissingMapping {
             kind,

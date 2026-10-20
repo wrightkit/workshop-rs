@@ -108,10 +108,11 @@ fn prune_spans_outside(
     document: &SourceDocument,
 ) {
     fn prune_slot(slot: &mut Option<Span>, file: FileId, document: &SourceDocument) {
-        if let Some(span) = slot {
-            if span.file == file && document.byte_range(*span).is_none() {
-                *slot = None;
-            }
+        if let Some(span) = slot
+            && span.file == file
+            && document.byte_range(*span).is_none()
+        {
+            *slot = None;
         }
     }
     fn prune_value(record: &mut ValueProvenance, file: FileId, document: &SourceDocument) {
@@ -657,10 +658,10 @@ impl Program {
         storage
             .validate()
             .map_err(|error| WorkshopError::malformed(error.to_string(), error.span()))?;
-        if let Some(settings) = &self.settings {
-            if let Some(error) = crate::settings::check_emission(settings).into_iter().next() {
-                return Err(error);
-            }
+        if let Some(settings) = &self.settings
+            && let Some(error) = crate::settings::check_emission(settings).into_iter().next()
+        {
+            return Err(error);
         }
         Ok(())
     }

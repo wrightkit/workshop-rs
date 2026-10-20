@@ -806,9 +806,7 @@ fn en_aliases(entry: &Value) -> Result<Vec<&str>, String> {
                 .collect::<Option<Vec<&str>>>()
                 .ok_or_else(|| format!("catalog entry '{entry}' with non-string en-US alias"))?;
             if spellings.is_empty() {
-                return Err(format!(
-                    "catalog entry '{entry}' with empty en-US aliases"
-                ));
+                return Err(format!("catalog entry '{entry}' with empty en-US aliases"));
             }
             Ok(spellings)
         }
@@ -1257,10 +1255,10 @@ fn settings_corpus(
         );
     }
 
-    if let Ok(previous) = std::fs::read_to_string(settings_out) {
-        if let Ok(previous) = serde_json::from_str::<Value>(&previous) {
-            preserve_existing_settings(&mut entries, &previous);
-        }
+    if let Ok(previous) = std::fs::read_to_string(settings_out)
+        && let Ok(previous) = serde_json::from_str::<Value>(&previous)
+    {
+        preserve_existing_settings(&mut entries, &previous);
     }
 
     let mut labels = Map::new();
@@ -1467,10 +1465,10 @@ fn confirmed_settings_identity_match(
     let mut template_locales = template_translations.as_object()?.clone();
     let hero_locales = hero_translations.as_object()?.clone();
     for (locale, value) in &mut template_locales {
-        if let Some(template) = value.as_str() {
-            if let Some(hero_name) = hero_locales.get(locale).and_then(Value::as_str) {
-                *value = Value::String(template.replace("%1$s", hero_name));
-            }
+        if let Some(template) = value.as_str()
+            && let Some(hero_name) = hero_locales.get(locale).and_then(Value::as_str)
+        {
+            *value = Value::String(template.replace("%1$s", hero_name));
         }
     }
     Some(vec![

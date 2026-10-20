@@ -338,10 +338,10 @@ fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<Set
     let name = node.name();
     let mut full = path.to_vec();
     full.push(PathPart::Part(name));
-    if !path.is_empty() {
-        if let Some(spelling) = carried_suggestion(node, path) {
-            errors.push(warn_near_miss(node, path, spelling));
-        }
+    if !path.is_empty()
+        && let Some(spelling) = carried_suggestion(node, path)
+    {
+        errors.push(warn_near_miss(node, path, spelling));
     }
     match (node, table::lookup(&full)) {
         (SettingsNode::Raw { .. } | SettingsNode::RawValue { .. }, _) => return,

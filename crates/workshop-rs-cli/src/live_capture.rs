@@ -68,12 +68,12 @@ impl LiveCapture {
         if normalize_game(&self.catalog.target.game) != normalize_game(&self.game) {
             return Err(invalid("capture game does not match catalog target game"));
         }
-        if let Some(catalog) = catalog {
-            if self.catalog != catalog.identity() {
-                return Err(invalid(
-                    "capture catalog identity does not match the loaded catalog",
-                ));
-            }
+        if let Some(catalog) = catalog
+            && self.catalog != catalog.identity()
+        {
+            return Err(invalid(
+                "capture catalog identity does not match the loaded catalog",
+            ));
         }
         validate_census(&self.census)?;
         validate_artifact("rawArtifact", &self.raw_artifact, true)?;

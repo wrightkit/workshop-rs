@@ -290,18 +290,18 @@ pub fn validate_catalog() -> Result<(), Vec<String>> {
         let target_kind = definition.target_kind();
         let semantic_key = semantic_identity_key(definition.key);
         let collision_key = (id.as_str().to_string(), target_kind.clone());
-        if let Some(previous_key) = concept_keys.insert(collision_key, semantic_key.clone()) {
-            if previous_key != semantic_key {
-                errors.push(format!(
-                    "conflicting settings concepts for {id}: {previous_key} vs {semantic_key}"
-                ));
-            }
+        if let Some(previous_key) = concept_keys.insert(collision_key, semantic_key.clone())
+            && previous_key != semantic_key
+        {
+            errors.push(format!(
+                "conflicting settings concepts for {id}: {previous_key} vs {semantic_key}"
+            ));
         }
         let key = (id.as_str().to_string(), target_kind, semantic_key);
-        if let Some(previous) = concepts.insert(key, definition.domain.clone()) {
-            if previous != definition.domain {
-                errors.push(format!("conflicting settings domains for {id}"));
-            }
+        if let Some(previous) = concepts.insert(key, definition.domain.clone())
+            && previous != definition.domain
+        {
+            errors.push(format!("conflicting settings domains for {id}"));
         }
     }
     if errors.is_empty() {
@@ -320,21 +320,20 @@ pub(super) fn validate_raw_projection(
     let mut paths = HashMap::new();
     for projected in entries {
         let entry = projected.entry;
-        if let Some(previous) = paths.insert(entry.path, projected) {
-            if previous.entry != entry
-                && !reconciled_entry_override(
-                    table::path_string(entry.path).as_str(),
-                    previous,
-                    projected,
-                )
-            {
-                errors.push(format!(
-                    "conflicting duplicate settings path between {} and {}: {}",
-                    previous.source.label(),
-                    projected.source.label(),
-                    table::path_string(entry.path),
-                ));
-            }
+        if let Some(previous) = paths.insert(entry.path, projected)
+            && previous.entry != entry
+            && !reconciled_entry_override(
+                table::path_string(entry.path).as_str(),
+                previous,
+                projected,
+            )
+        {
+            errors.push(format!(
+                "conflicting duplicate settings path between {} and {}: {}",
+                previous.source.label(),
+                projected.source.label(),
+                table::path_string(entry.path),
+            ));
         }
     }
     errors
@@ -403,21 +402,21 @@ pub(super) fn validate_enum_projection(
             errors.push(format!("orphaned settings enum domain: {}", member.domain));
         }
         let key = (member.domain, member.member);
-        if let Some(previous) = members.insert(key, member.name) {
-            if previous != member.name {
-                errors.push(format!(
-                    "conflicting settings enum member {}.{}: {previous:?} vs {:?}",
-                    member.domain, member.member, member.name
-                ));
-            }
+        if let Some(previous) = members.insert(key, member.name)
+            && previous != member.name
+        {
+            errors.push(format!(
+                "conflicting settings enum member {}.{}: {previous:?} vs {:?}",
+                member.domain, member.member, member.name
+            ));
         }
-        if let Some(previous) = names.insert((member.domain, member.name), member.member) {
-            if previous != member.member {
-                errors.push(format!(
-                    "conflicting settings enum display name {}.{:?}: {previous} vs {}",
-                    member.domain, member.name, member.member
-                ));
-            }
+        if let Some(previous) = names.insert((member.domain, member.name), member.member)
+            && previous != member.member
+        {
+            errors.push(format!(
+                "conflicting settings enum display name {}.{:?}: {previous} vs {}",
+                member.domain, member.name, member.member
+            ));
         }
     }
     let fixture_members: HashMap<_, _> = table::ENUM_MEMBERS
@@ -427,13 +426,13 @@ pub(super) fn validate_enum_projection(
     let mut mapped_sources = HashSet::new();
     for member in generated_entries {
         let key = (member.domain, member.member);
-        if let Some(previous) = members.insert(key, member.name) {
-            if previous != member.name {
-                errors.push(format!(
-                    "conflicting settings enum member {}.{}: {previous:?} vs {:?}",
-                    member.domain, member.member, member.name
-                ));
-            }
+        if let Some(previous) = members.insert(key, member.name)
+            && previous != member.name
+        {
+            errors.push(format!(
+                "conflicting settings enum member {}.{}: {previous:?} vs {:?}",
+                member.domain, member.member, member.name
+            ));
         }
         let mapping = mappings.iter().find(|mapping| {
             mapping.source_domain == member.domain && mapping.source_member == member.member
@@ -481,12 +480,12 @@ pub(super) fn validate_enum_projection(
             }
             None => (member.domain, member.member, member.name),
         };
-        if let Some(previous) = names.insert((domain, name), canonical_member) {
-            if previous != canonical_member {
-                errors.push(format!(
+        if let Some(previous) = names.insert((domain, name), canonical_member)
+            && previous != canonical_member
+        {
+            errors.push(format!(
                     "conflicting settings enum display name {domain}.{name:?}: {previous} vs {canonical_member}"
                 ));
-            }
         }
     }
     for mapping in mappings {

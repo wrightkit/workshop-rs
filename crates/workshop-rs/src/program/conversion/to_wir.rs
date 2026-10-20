@@ -467,12 +467,12 @@ fn apply_action_source(
     let Some(source) = source else {
         return;
     };
-    if source.identity == action_identity(public) {
-        if let Some(action) = storage.actions.get_mut(id) {
-            *action.span_mut() = source.span;
-            if let Some(identifier) = action.identifier_span_mut() {
-                *identifier = source.identifier;
-            }
+    if source.identity == action_identity(public)
+        && let Some(action) = storage.actions.get_mut(id)
+    {
+        *action.span_mut() = source.span;
+        if let Some(identifier) = action.identifier_span_mut() {
+            *identifier = source.identifier;
         }
     }
     let value_ids = storage
@@ -500,11 +500,11 @@ fn apply_value_provenance(
     source: &ValueProvenance,
     root_identity: NodeIdentity,
 ) {
-    if source.identity == root_identity {
-        if let Some(node) = storage.values.get_mut(value) {
-            node.span = source.span;
-            node.identifier = source.identifier;
-        }
+    if source.identity == root_identity
+        && let Some(node) = storage.values.get_mut(value)
+    {
+        node.span = source.span;
+        node.identifier = source.identifier;
     }
     let public_children = value_children(public);
     if source.children.len() != public_children.len() {

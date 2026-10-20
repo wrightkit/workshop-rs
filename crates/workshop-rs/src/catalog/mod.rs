@@ -958,10 +958,10 @@ impl Catalog {
 impl ExpectedDomain for Catalog {
     fn expected_domain(&self, catalog_id: &str, arg_index: usize) -> Option<&str> {
         for kind in [Kind::Action, Kind::Value] {
-            if let Some(entry) = self.entry(kind, catalog_id) {
-                if let Some(domain) = entry.param_domain(arg_index) {
-                    return Some(domain);
-                }
+            if let Some(entry) = self.entry(kind, catalog_id)
+                && let Some(domain) = entry.param_domain(arg_index)
+            {
+                return Some(domain);
             }
         }
         None

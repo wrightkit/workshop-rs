@@ -41,10 +41,10 @@ pub(crate) fn validate_value(
                             node.span,
                         ));
                     }
-                } else if !wir::is_canonical_helper_call(name, args.len()) {
-                    if let Some(entry) = catalog.entry(Kind::Value, name) {
-                        validate_call_signature(entry, args, node.span, program, catalog)?;
-                    }
+                } else if !wir::is_canonical_helper_call(name, args.len())
+                    && let Some(entry) = catalog.entry(Kind::Value, name)
+                {
+                    validate_call_signature(entry, args, node.span, program, catalog)?;
                 }
             } else if !tolerate_residuals {
                 return Err(WorkshopError::unknown(
@@ -237,14 +237,14 @@ pub(crate) fn validate_call_signature(
                 program.values.get(*arg_id).and_then(|node| node.span),
             ));
         }
-        if index == 0 && player_pair_folded {
-            if let Some(wir::ValueNode {
+        if index == 0
+            && player_pair_folded
+            && let Some(wir::ValueNode {
                 value: wir::Value::PlayerVariable { player, .. },
                 ..
             }) = program.values.get(*arg_id)
-            {
-                validate_call_argument(entry, 0, *player, program, catalog)?;
-            }
+        {
+            validate_call_argument(entry, 0, *player, program, catalog)?;
         }
         validate_call_argument(
             entry,
@@ -264,23 +264,22 @@ fn validate_call_argument(
     program: &wir::Program,
     catalog: &Catalog,
 ) -> Result<()> {
-    if let Some(expected) = entry.param_type(index) {
-        if !value_matches_type(program, catalog, arg_id, expected)
-            && !contextual_value_matches(entry, index, program, arg_id, expected)
-        {
-            let actual = value_type_name(program, catalog, arg_id);
-            return Err(WorkshopError::unsupported(
-                format!(
-                    "{} '{}' argument {} must have semantic type '{}', got {}",
-                    entry.kind.as_str(),
-                    entry.id,
-                    index + 1,
-                    expected,
-                    actual
-                ),
-                program.values.get(arg_id).and_then(|node| node.span),
-            ));
-        }
+    if let Some(expected) = entry.param_type(index)
+        && !value_matches_type(program, catalog, arg_id, expected)
+        && !contextual_value_matches(entry, index, program, arg_id, expected)
+    {
+        let actual = value_type_name(program, catalog, arg_id);
+        return Err(WorkshopError::unsupported(
+            format!(
+                "{} '{}' argument {} must have semantic type '{}', got {}",
+                entry.kind.as_str(),
+                entry.id,
+                index + 1,
+                expected,
+                actual
+            ),
+            program.values.get(arg_id).and_then(|node| node.span),
+        ));
     }
     let Some(domain) = entry.param_domain(index) else {
         return Ok(());
@@ -413,30 +412,28 @@ fn value_matches_type(
     if expected.split('|').next() == Some("Boolean") {
         return true;
     }
-    if let wir::Value::Call { name, .. } = &node.value {
-        if name == wir::AMBIGUOUS_ENUM_CALL {
-            return expected.split('|').any(|alternative| {
-                matches!(alternative, "Any" | "Unknown" | "Object")
-                    || wir::ambiguous_enum_parts(program, value_id).is_some_and(
-                        |(_, candidate_ids)| {
-                            candidate_ids.iter().any(|candidate_id| {
-                                matches!(
-                                    program.values.get(*candidate_id),
-                                    Some(wir::ValueNode {
-                                        value: wir::Value::Enum { value_type, value },
-                                        ..
-                                    }) if enum_type_matches_domain(
-                                        catalog,
-                                        value_type,
-                                        value,
-                                        alternative,
-                                    )
-                                )
-                            })
-                        },
-                    )
-            });
-        }
+    if let wir::Value::Call { name, .. } = &node.value
+        && name == wir::AMBIGUOUS_ENUM_CALL
+    {
+        return expected.split('|').any(|alternative| {
+            matches!(alternative, "Any" | "Unknown" | "Object")
+                || wir::ambiguous_enum_parts(program, value_id).is_some_and(|(_, candidate_ids)| {
+                    candidate_ids.iter().any(|candidate_id| {
+                        matches!(
+                            program.values.get(*candidate_id),
+                            Some(wir::ValueNode {
+                                value: wir::Value::Enum { value_type, value },
+                                ..
+                            }) if enum_type_matches_domain(
+                                catalog,
+                                value_type,
+                                value,
+                                alternative,
+                            )
+                        )
+                    })
+                })
+        });
     }
     expected
         .split('|')

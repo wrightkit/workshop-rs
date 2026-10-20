@@ -722,10 +722,10 @@ fn signature_text(
 }
 
 fn render_default(catalog: &Catalog, locale: &Locale, default: &str) -> String {
-    if let Some((domain, member)) = default.split_once('.') {
-        if let Some(member_spelling) = catalog.enum_spelling(domain, locale, member) {
-            return catalog.enum_member_form(domain, member_spelling, locale);
-        }
+    if let Some((domain, member)) = default.split_once('.')
+        && let Some(member_spelling) = catalog.enum_spelling(domain, locale, member)
+    {
+        return catalog.enum_member_form(domain, member_spelling, locale);
     }
     catalog
         .spelling(Kind::Value, locale, default)

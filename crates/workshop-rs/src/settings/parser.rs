@@ -86,11 +86,10 @@ impl ParseContext<'_> {
                 kind: TokenKind::Word(word),
                 ..
             }) = self.peek()
+                && self.settings_name_matches("tokens", "disabled", &word)
             {
-                if self.settings_name_matches("tokens", "disabled", &word) {
-                    self.pos += 1;
-                    disabled = true;
-                }
+                self.pos += 1;
+                disabled = true;
             }
             if !disabled {
                 // Multi-token disabled prefixes (`Devre Dışı`,
@@ -818,10 +817,10 @@ impl ParseContext<'_> {
         display: &str,
         hero: Option<&str>,
     ) -> bool {
-        if let Some(PathPart::Part(key)) = candidate.path.last() {
-            if table::names_eq(display, key) {
-                return true;
-            }
+        if let Some(PathPart::Part(key)) = candidate.path.last()
+            && table::names_eq(display, key)
+        {
+            return true;
         }
         if let (Some(hero), Some(PathPart::Part(key))) = (hero, candidate.path.last()) {
             if table::hero_setting_name(hero, key, self.locale.as_str())
@@ -854,40 +853,40 @@ impl ParseContext<'_> {
                 PathPart::Part(key) if !aliased => Some(*key),
                 _ => None,
             });
-            if let Some(key) = unshadowed_key {
-                if let Some(template) = table::hero_key_template(key).or_else(|| {
+            if let Some(key) = unshadowed_key
+                && let Some(template) = table::hero_key_template(key).or_else(|| {
                     candidate
                         .workshop_name
                         .contains("%1$s")
                         .then_some(candidate.workshop_name)
-                }) {
-                    // A `%1$s`-only template substitutes to the bare
-                    // ability name; longer templates (`%1$s Cooldown
-                    // Time`) must not bind it (#448). The producer fills
-                    // the locale's template spelling when one exists
-                    // (`Tempo de recarga de %1$s`), and mixed-locale
-                    // sources may carry the en-US form.
-                    let ability_name = |locale: &str| {
-                        crate::gameplay::data::builtin_ref()
-                            .ok()?
-                            .query()
-                            .ability_name(hero, slot, None, locale)
-                            .ok()
-                            .map(str::to_string)
-                    };
-                    let substitute = |template: &str, name: &str| {
-                        table::names_eq(template.replace("%1$s", name).as_str(), display)
-                    };
-                    let localized_template =
-                        table::localized_name(self.locale.as_str(), "labels", template)
-                            .unwrap_or(template);
-                    let matched = ability_name(self.locale.as_str()).is_some_and(|name| {
-                        substitute(localized_template, &name) || substitute(template, &name)
-                    }) || (self.locale.as_str() != "en-US"
-                        && ability_name("en-US").is_some_and(|name| substitute(template, &name)));
-                    if matched {
-                        return true;
-                    }
+                })
+            {
+                // A `%1$s`-only template substitutes to the bare
+                // ability name; longer templates (`%1$s Cooldown
+                // Time`) must not bind it (#448). The producer fills
+                // the locale's template spelling when one exists
+                // (`Tempo de recarga de %1$s`), and mixed-locale
+                // sources may carry the en-US form.
+                let ability_name = |locale: &str| {
+                    crate::gameplay::data::builtin_ref()
+                        .ok()?
+                        .query()
+                        .ability_name(hero, slot, None, locale)
+                        .ok()
+                        .map(str::to_string)
+                };
+                let substitute = |template: &str, name: &str| {
+                    table::names_eq(template.replace("%1$s", name).as_str(), display)
+                };
+                let localized_template =
+                    table::localized_name(self.locale.as_str(), "labels", template)
+                        .unwrap_or(template);
+                let matched = ability_name(self.locale.as_str()).is_some_and(|name| {
+                    substitute(localized_template, &name) || substitute(template, &name)
+                }) || (self.locale.as_str() != "en-US"
+                    && ability_name("en-US").is_some_and(|name| substitute(template, &name)));
+                if matched {
+                    return true;
                 }
             }
         }

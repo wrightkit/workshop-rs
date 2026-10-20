@@ -110,22 +110,22 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                 let mut content = String::new();
                 let mut closed = false;
                 while let Some(c) = cursor.peek() {
-                    if c == '\\' {
-                        if let Some(escaped) = cursor.peek_at(1) {
-                            let decoded = match escaped {
-                                '"' => Some('"'),
-                                '\\' => Some('\\'),
-                                'n' => Some('\n'),
-                                'r' => Some('\r'),
-                                't' => Some('\t'),
-                                _ => None,
-                            };
-                            if let Some(decoded) = decoded {
-                                cursor.advance();
-                                cursor.advance();
-                                content.push(decoded);
-                                continue;
-                            }
+                    if c == '\\'
+                        && let Some(escaped) = cursor.peek_at(1)
+                    {
+                        let decoded = match escaped {
+                            '"' => Some('"'),
+                            '\\' => Some('\\'),
+                            'n' => Some('\n'),
+                            'r' => Some('\r'),
+                            't' => Some('\t'),
+                            _ => None,
+                        };
+                        if let Some(decoded) = decoded {
+                            cursor.advance();
+                            cursor.advance();
+                            content.push(decoded);
+                            continue;
                         }
                     }
                     if c == '"' {
@@ -330,13 +330,13 @@ fn take_word(cursor: &mut Cursor) -> Token {
     let start = cursor.pos();
     let mut word = String::new();
     while let Some(c) = cursor.peek() {
-        if c == '<' {
-            if let Some(len) = markup_tag_len(cursor.rest) {
-                for _ in 0..len {
-                    word.push(cursor.advance().unwrap());
-                }
-                continue;
+        if c == '<'
+            && let Some(len) = markup_tag_len(cursor.rest)
+        {
+            for _ in 0..len {
+                word.push(cursor.advance().unwrap());
             }
+            continue;
         }
         let interior_dash = c == '-'
             && cursor

@@ -237,22 +237,19 @@ impl ParseContext<'_> {
                     kind: TokenKind::Word(next),
                     ..
                 }) = self.peek()
+                    && (canonical_keyword(&next) == "Variable"
+                        || canonical_keyword(&next) == "variable")
                 {
-                    if canonical_keyword(&next) == "Variable"
-                        || canonical_keyword(&next) == "variable"
-                    {
-                        self.pos += 1;
-                        self.expect(TokenKind::LParen, "expected '(' after 'Global Variable'")?;
-                        let (name, name_start, name_end) = self.phrase()?;
-                        let variable = self.global_by_name(&name)?;
-                        self.expect(TokenKind::RParen, "expected ')' after Global Variable")?;
-                        let span = Some(Span::new(self.file(), start, end));
-                        return Ok(self.target.values.push(
-                            ValueNode::new(Value::GlobalVariable(variable), span).with_identifier(
-                                Some(Span::new(self.file(), name_start, name_end)),
-                            ),
-                        ));
-                    }
+                    self.pos += 1;
+                    self.expect(TokenKind::LParen, "expected '(' after 'Global Variable'")?;
+                    let (name, name_start, name_end) = self.phrase()?;
+                    let variable = self.global_by_name(&name)?;
+                    self.expect(TokenKind::RParen, "expected ')' after Global Variable")?;
+                    let span = Some(Span::new(self.file(), start, end));
+                    return Ok(self.target.values.push(
+                        ValueNode::new(Value::GlobalVariable(variable), span)
+                            .with_identifier(Some(Span::new(self.file(), name_start, name_end))),
+                    ));
                 }
                 self.expect(TokenKind::Dot, "expected '.' after 'Global'")?;
                 let (name, name_start, name_end) = self.phrase()?;
@@ -516,10 +513,8 @@ impl ParseContext<'_> {
         let prefer_enum = self.catalog.enum_domain("Hero").is_some()
             && (canonical_keyword(phrase) == "Hero"
                 || self.resolve_enum_domain_mixed(phrase) == Some("Hero"));
-        if !prefer_enum {
-            if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
-                return self.value_call(entry, phrase, start, end);
-            }
+        if !prefer_enum && let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
+            return self.value_call(entry, phrase, start, end);
         }
         // An action spelling can collide with an enum domain (`Wait` is
         // both). The enum reading only stands when the call actually parses
@@ -545,10 +540,10 @@ impl ParseContext<'_> {
                     // emits `英雄(英雄(D.Va))` for `hero(Hero.DVA)` (#448).
                     if prefer_enum {
                         self.pos = saved;
-                        if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
-                            if let Ok(value) = self.value_call(entry, phrase, start, end) {
-                                return Ok(value);
-                            }
+                        if let Some(entry) = self.resolve_entry(Kind::Value, phrase)
+                            && let Ok(value) = self.value_call(entry, phrase, start, end)
+                        {
+                            return Ok(value);
                         }
                         self.pos = saved;
                     }
@@ -833,22 +828,20 @@ impl ParseContext<'_> {
             .call_stack
             .last()
             .is_some_and(|call| call == "createHudText")
+            && let Some((value_type, value)) = self.resolve_enum_member_mixed("HudPosition", phrase)
         {
-            if let Some((value_type, value)) = self.resolve_enum_member_mixed("HudPosition", phrase)
-            {
-                return Ok(self.target.values.push(ValueNode::new(
-                    Value::Enum { value_type, value },
-                    Some(Span::new(self.file(), start, end)),
-                )));
-            }
+            return Ok(self.target.values.push(ValueNode::new(
+                Value::Enum { value_type, value },
+                Some(Span::new(self.file(), start, end)),
+            )));
         }
-        if matches!(self.expected_domain, Some("Position")) {
-            if let Some((value_type, value)) = self.resolve_enum_member_mixed("Vector", phrase) {
-                return Ok(self.target.values.push(ValueNode::new(
-                    Value::Enum { value_type, value },
-                    Some(Span::new(self.file(), start, end)),
-                )));
-            }
+        if matches!(self.expected_domain, Some("Position"))
+            && let Some((value_type, value)) = self.resolve_enum_member_mixed("Vector", phrase)
+        {
+            return Ok(self.target.values.push(ValueNode::new(
+                Value::Enum { value_type, value },
+                Some(Span::new(self.file(), start, end)),
+            )));
         }
         // Event filter domains are resolved by the event parser and are not
         // value-argument domains. Excluding them here keeps their spellings

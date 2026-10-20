@@ -226,14 +226,14 @@ fn validated(catalog: &Catalog, file: DescriptionsFile) -> Result<Descriptions> 
                         "descriptions gap '{key}' names no catalog action or value"
                     ))
                 })?;
-            if let Gap::Param(_, position) = &gap {
-                if *position >= catalog.entries[index].params.len() {
-                    return Err(CatalogError::validation(format!(
-                        "descriptions gap '{key}' names parameter {position}, \
+            if let Gap::Param(_, position) = &gap
+                && *position >= catalog.entries[index].params.len()
+            {
+                return Err(CatalogError::validation(format!(
+                    "descriptions gap '{key}' names parameter {position}, \
                          out of {} params",
-                        catalog.entries[index].params.len()
-                    )));
-                }
+                    catalog.entries[index].params.len()
+                )));
             }
             parsed.push(gap);
         }

@@ -416,13 +416,13 @@ fn validate_artifact(
             "must identify an immutable revision",
         ));
     }
-    if let Some(digest) = &artifact.sha256 {
-        if !is_sha256_digest(digest) {
-            return Err(ConformanceError::invalid(
-                format!("{field}.sha256"),
-                "must be a 64-character hexadecimal SHA-256 digest",
-            ));
-        }
+    if let Some(digest) = &artifact.sha256
+        && !is_sha256_digest(digest)
+    {
+        return Err(ConformanceError::invalid(
+            format!("{field}.sha256"),
+            "must be a 64-character hexadecimal SHA-256 digest",
+        ));
     }
     if require_digest && artifact.sha256.is_none() {
         return Err(ConformanceError::invalid(

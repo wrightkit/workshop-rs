@@ -414,10 +414,9 @@ fn unknown_enum_member_is_rejected() {
         if let Value::Enum {
             value_type, value, ..
         } = &node.value
+            && value_type == "Color"
         {
-            if value_type == "Color" {
-                let _ = value;
-            }
+            let _ = value;
         }
     }
     let color_id = program
@@ -441,10 +440,10 @@ fn unknown_enum_member_is_rejected() {
 fn unknown_value_id_is_rejected() {
     let mut program = build_surface_program();
     for node in program.values.iter() {
-        if let Value::Call { name, .. } = &node.value {
-            if name == "add" {
-                let _ = name;
-            }
+        if let Value::Call { name, .. } = &node.value
+            && name == "add"
+        {
+            let _ = name;
         }
     }
     let add_id = program
