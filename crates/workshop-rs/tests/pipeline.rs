@@ -7,8 +7,16 @@ fn data_file() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("src/catalog/data/catalog.json")
 }
 
+fn descriptions_file() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("src/catalog/data/descriptions.json")
+}
+
 fn read_data() -> String {
     std::fs::read_to_string(data_file()).expect("catalog data is present")
+}
+
+fn read_descriptions() -> String {
+    std::fs::read_to_string(descriptions_file()).expect("descriptions data is present")
 }
 
 #[test]
@@ -60,6 +68,8 @@ fn generator_check_passes_on_the_committed_catalog() {
     let output = Command::new(bin)
         .args(["check", "--file"])
         .arg(data_file())
+        .arg("--descriptions")
+        .arg(descriptions_file())
         .output()
         .expect("generator runs");
     assert!(
@@ -84,6 +94,8 @@ fn generator_check_json_is_machine_readable_identity() {
     let output = Command::new(bin)
         .args(["check", "--json", "--file"])
         .arg(data_file())
+        .arg("--descriptions")
+        .arg(descriptions_file())
         .output()
         .expect("generator runs");
     assert!(
@@ -108,11 +120,15 @@ fn generator_build_is_byte_deterministic() {
     std::fs::create_dir_all(&dir).expect("temp dir");
     let out = dir.join("catalog.json");
     std::fs::write(&out, read_data()).expect("copy data");
+    let descriptions_out = dir.join("descriptions.json");
+    std::fs::write(&descriptions_out, read_descriptions()).expect("copy descriptions");
 
     let run_build = |path: &Path| {
         let output = Command::new(bin)
             .args(["build", "--file"])
             .arg(path)
+            .arg("--descriptions")
+            .arg(&descriptions_out)
             .output()
             .expect("generator runs");
         assert!(
@@ -126,6 +142,11 @@ fn generator_build_is_byte_deterministic() {
     let first = run_build(&out);
     let second = run_build(&out);
     assert_eq!(first, second, "build must be byte-deterministic");
+    assert_eq!(
+        read_descriptions().as_bytes(),
+        std::fs::read(&descriptions_out).expect("built descriptions exists"),
+        "descriptions.json must round-trip byte-identically"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 
