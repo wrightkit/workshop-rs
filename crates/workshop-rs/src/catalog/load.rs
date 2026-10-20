@@ -7,7 +7,7 @@ use crate::core::error::{CatalogError, Result, WorkshopError};
 
 use super::{
     CATALOG_DATA, Catalog, CatalogEntry, EnumDomain, EnumMember, Kind, Locale,
-    LocalizedStringEntry, NormalizedIndex, ParamCoercions, Provenance, TargetMeta,
+    LocalizedStringEntry, NormalizedIndex, ParamCoercions, ParamContent, Provenance, TargetMeta,
     normalize_spelling,
 };
 
@@ -71,6 +71,11 @@ struct EntryFile {
     param_types: Vec<Option<String>>,
     #[serde(default)]
     param_coercions: Vec<Option<ParamCoercions>>,
+    /// `rule-content-v1` facts per parameter position (parallel to
+    /// `params`), declared where the surface parameter list and the content
+    /// argument list differ.
+    #[serde(default)]
+    param_content: Vec<Option<ParamContent>>,
     #[serde(default)]
     return_type: Option<String>,
     /// Reviewed reevaluation coverage keyed by enum member id (e.g.
@@ -223,6 +228,7 @@ impl Catalog {
         }
         catalog.build_normalized_index();
         catalog.validate_param_domains()?;
+        catalog.validate_param_content()?;
         catalog.detection_index =
             Some(super::detect::AliasIndex::build(&catalog).map_err(|error| {
                 CatalogError::validation(format!("locale detection index: {error}"))
@@ -417,6 +423,7 @@ impl Catalog {
             param_defaults: item.param_defaults,
             param_types: item.param_types,
             param_coercions: item.param_coercions,
+            param_content: item.param_content,
             return_type: item.return_type,
             reevaluation_coverage: item.reevaluation_coverage,
             variadic: item.variadic,
@@ -468,6 +475,7 @@ impl Catalog {
                 ("param defaults", entry.param_defaults.len()),
                 ("param types", entry.param_types.len()),
                 ("param coercions", entry.param_coercions.len()),
+                ("param content facts", entry.param_content.len()),
             ] {
                 if count > entry.params.len() {
                     return Err(CatalogError::validation(format!(
@@ -566,6 +574,112 @@ impl Catalog {
                             locale
                         )));
                     }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// The `rule-content-v1` facts declared per parameter position must
+    /// describe a well-formed content layout: a declared `paramContent`
+    /// element carries at least one fact, every `fold` names a reserved
+    /// variable-target call at a valid argument, and the members of one
+    /// fold group are contiguous parameters covering every argument of the
+    /// folded call exactly once — a `Variable`-typed member at the tagged
+    /// `{"variable"}` position.
+    fn validate_param_content(&self) -> Result<()> {
+        for entry in &self.entries {
+            // `call` -> per-member (surface position, inner `arg`) pairs.
+            let mut groups: BTreeMap<&str, Vec<(usize, usize)>> = BTreeMap::new();
+            for (index, content) in entry.param_content.iter().enumerate() {
+                let Some(content) = content else {
+                    continue;
+                };
+                if content.fold.is_none() && content.operations.is_empty() {
+                    return Err(CatalogError::validation(format!(
+                        "{} '{}' parameter {} declares an empty paramContent fact",
+                        entry.kind.as_str(),
+                        entry.id,
+                        index + 1
+                    )));
+                }
+                for operation in &content.operations {
+                    if !self.by_id[Kind::Operator.as_index()].contains_key(operation) {
+                        return Err(CatalogError::validation(format!(
+                            "{} '{}' parameter {} accepts undeclared operator '{operation}'",
+                            entry.kind.as_str(),
+                            entry.id,
+                            index + 1
+                        )));
+                    }
+                }
+                let Some(fold) = &content.fold else {
+                    continue;
+                };
+                // The reserved variable-target calls fix both their arity
+                // and which argument is the tagged `{"variable"}` node: the
+                // member supplying it must be `Variable`-typed.
+                let (arity, variable_arg) = match fold.call.as_str() {
+                    "globalVariable" => (1, 0),
+                    "playerVariable" => (2, 1),
+                    _ => {
+                        return Err(CatalogError::validation(format!(
+                            "{} '{}' parameter {} declares a fold into unknown \
+                             call '{}'",
+                            entry.kind.as_str(),
+                            entry.id,
+                            index + 1,
+                            fold.call
+                        )));
+                    }
+                };
+                if fold.arg >= arity {
+                    return Err(CatalogError::validation(format!(
+                        "{} '{}' parameter {} declares a fold into '{}' \
+                         argument {}, out of {}",
+                        entry.kind.as_str(),
+                        entry.id,
+                        index + 1,
+                        fold.call,
+                        fold.arg,
+                        arity
+                    )));
+                }
+                let variable_typed = matches!(
+                    entry.param_type(index),
+                    Some("Variable") | Some("Global Variable")
+                );
+                if fold.arg == variable_arg && !variable_typed {
+                    return Err(CatalogError::validation(format!(
+                        "{} '{}' parameter {} supplies '{}' argument {}, the tagged \
+                         variable node, but is not Variable-typed",
+                        entry.kind.as_str(),
+                        entry.id,
+                        index + 1,
+                        fold.call,
+                        fold.arg
+                    )));
+                }
+                groups
+                    .entry(fold.call.as_str())
+                    .or_default()
+                    .push((index, fold.arg));
+            }
+            for (call, members) in groups {
+                let arity = if call == "globalVariable" { 1 } else { 2 };
+                let positions: Vec<usize> = members.iter().map(|(index, _)| *index).collect();
+                let contiguous = positions.windows(2).all(|pair| pair[1] == pair[0] + 1);
+                let mut args: Vec<usize> = members.iter().map(|(_, arg)| *arg).collect();
+                args.sort_unstable();
+                if !contiguous || args != (0..arity).collect::<Vec<_>>() {
+                    return Err(CatalogError::validation(format!(
+                        "{} '{}' declares an incomplete '{}' fold group: members must be \
+                         contiguous parameters covering all {} argument(s)",
+                        entry.kind.as_str(),
+                        entry.id,
+                        call,
+                        arity
+                    )));
                 }
             }
         }

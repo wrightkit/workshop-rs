@@ -169,6 +169,60 @@ catalog: for every shipped locale each action, each value, and each
 parameter position must carry text or name a gap — never both, never
 neither.
 
+## Content-layout facts
+
+The text signature follows the Workshop surface call syntax; several
+variable-target actions lay their `rule-content-v1` arguments out
+differently. `SignatureParam::content` carries the per-parameter content
+facts the catalog declares at those positions (`paramContent`, a
+per-position array parallel to `params`), so the emitted document's
+argument layout is derivable from `lookup` alone. A parameter without a
+`content` fact maps one-to-one to a plain content argument.
+
+`fold` declares membership in a folded variable-target call: the parameter
+supplies `args[arg]` of the reserved `globalVariable`/`playerVariable` call
+named by `call`, and the folded call occupies the content-argument position
+of the fold group's first member. All members of a group share `call`, are
+contiguous parameters, and cover the call's arguments exactly once. The
+member's node form follows its declared parameter type: a `Variable`
+parameter supplies the tagged `{"variable": name}` node bound to the
+declared variable name, and any other parameter supplies a normal value
+node.
+
+`operations` lists the modify-operator call ids the parameter accepts
+(`add`, `subtract`, …, `removeFromArrayByIndex`): in `rule-content-v1` a
+modify operand is a zero-argument call node named by one of these ids, so
+the position declares an operator vocabulary, not an enum domain. The five
+modify parameters carry it — `modifyGlobalVariable`,
+`modifyGlobalVariableAtIndex`, and `modifyPlayerVariableAtIndex` actions
+plus the `modifyGlobalVariable`/`modifyPlayerVariable` structural calls.
+`ModifyOp::from_catalog_id` maps each id to its `ModifyOp`.
+
+```text
+setPlayerVariableAtIndex(player, variable, index, value)
+  paramContent[0] = {"fold": {"call": "playerVariable", "arg": 0}}
+  paramContent[1] = {"fold": {"call": "playerVariable", "arg": 1}}
+  → emits {"call": "playerVariable", "args": [<player>, {"variable": <name>}]}
+    as content argument 0; `index` and `value` follow as arguments 1 and 2.
+
+modifyGlobalVariableAtIndex(variable, index, operation, value)
+  paramContent[0] = {"fold": {"call": "globalVariable", "arg": 0}}
+  paramContent[2] = {"operations": ["add", …, "removeFromArrayByIndex"]}
+  → emits {"call": "modifyGlobalVariableAtIndex", "args": [
+      {"call": "globalVariable", "args": [{"variable": <name>}]},
+      <index>, {"call": "add", "args": []}, <value>]}
+```
+
+The global chase entries (`chaseAtRate`, `chaseOverTime`) and the player
+forms (`chasePlayerVariableAtRate`, `chasePlayerVariableOverTime`,
+`stopChasingPlayerVariable`, `setPlayerVariableAtIndex`,
+`modifyPlayerVariableAtIndex`) declare these facts, as do the global forms
+(`stopChasingGlobalVariable`, `setGlobalVariableAtIndex`,
+`modifyGlobalVariableAtIndex`). Entries whose `rule-content-v1` arguments
+already match their parameter list — including the structural variable
+calls, whose `Variable`/`Subroutine` parameters name the tagged nodes
+directly — declare no `fold`.
+
 ## Settings vocabulary
 
 Settings matches are `SettingDefinition` values from the reviewed settings

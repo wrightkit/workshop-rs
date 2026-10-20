@@ -91,7 +91,11 @@ pub enum ModifyOp {
 }
 
 impl ModifyOp {
-    pub(crate) fn from_catalog_id(id: &str) -> Option<Self> {
+    /// The operation a catalog operator id names (`add`,
+    /// `removeFromArrayByIndex`, …) — the accepted set the `paramContent`
+    /// `operations` fact declares for modify parameters. `None` for any
+    /// other catalog id.
+    pub fn from_catalog_id(id: &str) -> Option<Self> {
         Some(match id {
             "add" => Self::Add,
             "subtract" => Self::Subtract,

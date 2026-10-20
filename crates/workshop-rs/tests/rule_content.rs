@@ -7,7 +7,7 @@
 use serde_json::{Value as JsonValue, json};
 use sha2::{Digest, Sha256};
 use workshop_rs::catalog::Kind;
-use workshop_rs::lookup::LookupMatch;
+use workshop_rs::lookup::{LookupMatch, Signature};
 use workshop_rs::rules::content::{
     ASSIGN_MEMBER_CALL, GLOBAL_VARIABLE_CALL, MEMBER_ACCESS_CALL, MODIFY_MEMBER_CALL,
     PLAYER_VARIABLE_CALL, RAW_WORKSHOP_ACTION_CALL, RULE_CONTENT_V1, RULE_CONTENT_V1_SCHEMA,
@@ -411,6 +411,177 @@ fn every_emitted_structural_call_matches_its_lookup_signature_arity() {
     );
 }
 
+/// One hand-written en-US surface call per catalog action whose lookup
+/// signature folds surface parameters into a single `rule-content-v1`
+/// variable-target argument (workshop-rs#503).
+const FOLDED_TARGET_SOURCE: &str = r#"variables {
+    global:
+        0: probe_g
+    player:
+        0: probe_p
+}
+
+rule ("fold") {
+    event {
+        Ongoing - Each Player;
+        All;
+        All;
+    }
+    actions {
+        Set Global Variable At Index(probe_g, 0, 5);
+        Set Player Variable At Index(Event Player, probe_p, 0, 5);
+        Modify Global Variable At Index(probe_g, 0, Add, 5);
+        Modify Player Variable At Index(Event Player, probe_p, 0, Add, 5);
+        Stop Chasing Global Variable(probe_g);
+        Stop Chasing Player Variable(Event Player, probe_p);
+        Chase Global Variable At Rate(probe_g, 0, 1, None);
+        Chase Global Variable Over Time(probe_g, 0, 1, None);
+        Chase Player Variable At Rate(Event Player, probe_p, 0, 1, None);
+        Chase Player Variable Over Time(Event Player, probe_p, 0, 1, None);
+    }
+}
+"#;
+
+/// `(catalog id, emitted call id, emitted arg count)` in
+/// `FOLDED_TARGET_SOURCE` order — the arg counts are what the signature's
+/// fold facts must predict: each fold group contributes one argument where
+/// its first member sits.
+const FOLDED_TARGET_CALLS: &[(&str, &str, usize)] = &[
+    ("setGlobalVariableAtIndex", "setGlobalVariableAtIndex", 3),
+    ("setPlayerVariableAtIndex", "setPlayerVariableAtIndex", 3),
+    (
+        "modifyGlobalVariableAtIndex",
+        "modifyGlobalVariableAtIndex",
+        4,
+    ),
+    (
+        "modifyPlayerVariableAtIndex",
+        "modifyPlayerVariableAtIndex",
+        4,
+    ),
+    ("stopChasingGlobalVariable", "stopChasingGlobalVariable", 1),
+    ("stopChasingPlayerVariable", "stopChasingPlayerVariable", 1),
+    ("chaseAtRate", "chaseAtRate", 4),
+    ("chaseOverTime", "chaseOverTime", 4),
+    ("chasePlayerVariableAtRate", "chasePlayerVariableAtRate", 4),
+    (
+        "chasePlayerVariableOverTime",
+        "chasePlayerVariableOverTime",
+        4,
+    ),
+];
+
+/// The `globalVariable`/`playerVariable` node a signature's fold facts
+/// describe, built from the signature alone: every parameter declaring a
+/// `fold` supplies `args[arg]` of the folded call — a `Variable`-typed
+/// parameter as the tagged `{"variable": name}` node bound to the declared
+/// variable name, any other parameter as a value node (the fixture's
+/// `Event Player` renders as the `eventPlayer` call).
+fn folded_target(signature: &Signature) -> Option<JsonValue> {
+    let mut call = None;
+    let mut args: Vec<JsonValue> = Vec::new();
+    for param in &signature.params {
+        let Some(fold) = param
+            .content
+            .as_ref()
+            .and_then(|content| content.fold.as_ref())
+        else {
+            continue;
+        };
+        match call {
+            Some(call) => assert_eq!(
+                call, fold.call,
+                "folded parameters must share one target call"
+            ),
+            None => call = Some(fold.call.as_str()),
+        }
+        let node = if matches!(
+            param.param_type.as_deref(),
+            Some("Variable") | Some("Global Variable")
+        ) {
+            let variable = if fold.call == "globalVariable" {
+                "probe_g"
+            } else {
+                "probe_p"
+            };
+            json!({ "variable": variable })
+        } else {
+            json!({"call": "eventPlayer", "args": []})
+        };
+        if args.len() <= fold.arg {
+            args.resize(fold.arg + 1, JsonValue::Null);
+        }
+        args[fold.arg] = node;
+    }
+    call.map(|call| json!({"call": call, "args": args}))
+}
+
+#[test]
+fn folded_variable_target_signatures_describe_the_content_layout() {
+    // workshop-rs#503: `paramContent` fold facts must name every action
+    // whose surface parameters fold into one `rule-content-v1` variable
+    // target, and the folded argument must be derivable from the lookup
+    // signature alone — a consumer reconstructing the content argument
+    // layout needs no parse-path knowledge.
+    let catalog = catalog();
+    let mut folded: Vec<&str> = catalog
+        .entries_of(Kind::Action)
+        .filter(|entry| {
+            (0..entry.param_count())
+                .any(|index| entry.param_content(index).is_some_and(|c| c.fold.is_some()))
+        })
+        .map(|entry| entry.id.as_str())
+        .collect();
+    folded.sort_unstable();
+    let mut covered: Vec<&str> = FOLDED_TARGET_CALLS.iter().map(|(id, ..)| *id).collect();
+    covered.sort_unstable();
+    assert_eq!(
+        folded, covered,
+        "the actions declaring a folded variable target must be exactly the \
+         covered set — a new folded action needs coverage"
+    );
+
+    let rule = parse_rule(FOLDED_TARGET_SOURCE);
+    let content = content_of(&rule);
+    let actions = content["actions"].as_array().expect("actions");
+    assert_eq!(actions.len(), FOLDED_TARGET_CALLS.len());
+    for (index, (id, call, arg_count)) in FOLDED_TARGET_CALLS.iter().enumerate() {
+        let matches = catalog.lookup(&en(), id).expect("lookup answers");
+        let signature = matches
+            .iter()
+            .find_map(|lookup| match lookup {
+                LookupMatch::Builtin {
+                    id: matched,
+                    signature,
+                    ..
+                } if matched == id => signature.as_ref(),
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("'{id}' must resolve to its own signature"));
+
+        let target = folded_target(signature)
+            .unwrap_or_else(|| panic!("'{id}' must declare a folded variable target"));
+        let action = &actions[index];
+        assert_eq!(
+            action["call"].as_str(),
+            Some(*call),
+            "{id}: emitted call id"
+        );
+        let args = action["args"].as_array().expect("args");
+        assert_eq!(
+            args.len(),
+            *arg_count,
+            "{id}: the fold facts must predict the emitted argument count"
+        );
+        // The folded target occupies the position of the group's first
+        // member — parameter 0 for every folded action.
+        assert_eq!(
+            args[0], target,
+            "{id}: the signature's fold facts must derive the emitted target node"
+        );
+    }
+}
+
 #[test]
 fn disabled_marks_wrap_their_nodes() {
     let mut rule = Rule::new("disabled", Event::Global);
@@ -513,6 +684,185 @@ fn modify_op_and_event_kind_catalog_ids_are_public() {
         Event::Subroutine("tick".to_string()).catalog_id(),
         "subroutine"
     );
+}
+
+/// The `(kind, entry id, parameter index)` positions whose `paramContent`
+/// `operations` fact lists the accepted modify-operator call ids —
+/// workshop-rs#504: the operand is a zero-argument `rule-content-v1`
+/// operator call, so these positions declare no enum domain.
+const OPERATION_FACT_POSITIONS: &[(Kind, &str, usize)] = &[
+    (Kind::Action, "modifyGlobalVariable", 1),
+    (Kind::Action, "modifyGlobalVariableAtIndex", 2),
+    (Kind::Action, "modifyPlayerVariableAtIndex", 3),
+    (Kind::Structural, "modifyGlobalVariable", 1),
+    (Kind::Structural, "modifyPlayerVariable", 2),
+];
+
+#[test]
+fn modify_operations_are_operator_call_ids_not_enum_members() {
+    let catalog = catalog();
+    assert!(
+        catalog.enum_domain("Operation").is_none(),
+        "the misleading Operation enum domain must be gone"
+    );
+    let mut declared = Vec::new();
+    for kind in [Kind::Structural, Kind::Action, Kind::Value] {
+        for entry in catalog.entries_of(kind) {
+            for index in 0..entry.param_count() {
+                assert_ne!(
+                    entry.param_domain(index),
+                    Some("Operation"),
+                    "{} '{}': parameter {} still declares the Operation enum domain",
+                    kind.as_str(),
+                    entry.id,
+                    index + 1
+                );
+                if entry
+                    .param_content(index)
+                    .is_some_and(|content| !content.operations.is_empty())
+                {
+                    declared.push((kind, entry.id.as_str(), index));
+                }
+            }
+        }
+    }
+    declared.sort_unstable_by_key(|(kind, id, index)| (kind.as_str(), *id, *index));
+    let mut expected = OPERATION_FACT_POSITIONS.to_vec();
+    expected.sort_unstable_by_key(|(kind, id, index)| (kind.as_str(), *id, *index));
+    assert_eq!(
+        declared, expected,
+        "the operations fact must sit on exactly the modify-operation \
+         parameters — a new operator-typed parameter needs coverage"
+    );
+
+    // Every declared position lists exactly the `ModifyOp` catalog ids —
+    // the modify operators, never a comparison operator or another call.
+    let modify_ops: Vec<&str> = {
+        let mut ids = [
+            ModifyOp::Add,
+            ModifyOp::Subtract,
+            ModifyOp::Multiply,
+            ModifyOp::Divide,
+            ModifyOp::Modulo,
+            ModifyOp::Min,
+            ModifyOp::Max,
+            ModifyOp::RaiseToPower,
+            ModifyOp::AppendToArray,
+            ModifyOp::RemoveFromArrayByValue,
+            ModifyOp::RemoveFromArrayByIndex,
+        ]
+        .map(ModifyOp::catalog_id);
+        ids.sort_unstable();
+        ids.to_vec()
+    };
+    assert_eq!(modify_ops.len(), 11);
+    for (kind, id, index) in OPERATION_FACT_POSITIONS {
+        let entry = catalog
+            .entries_of(*kind)
+            .find(|entry| entry.id == *id)
+            .unwrap_or_else(|| panic!("{id} exists"));
+        let operations = &entry
+            .param_content(*index)
+            .expect("operations fact")
+            .operations;
+        let mut sorted = operations.iter().map(String::as_str).collect::<Vec<_>>();
+        sorted.sort_unstable();
+        assert_eq!(
+            sorted,
+            modify_ops,
+            "{id} parameter {} must accept exactly the ModifyOp set",
+            index + 1
+        );
+        for operation in operations {
+            assert!(
+                ModifyOp::from_catalog_id(operation).is_some(),
+                "{operation} must name a ModifyOp"
+            );
+        }
+    }
+    assert!(
+        ModifyOp::from_catalog_id("==").is_none(),
+        "comparison operators are not modify operations"
+    );
+}
+
+/// Rendered `rule-content-v1` node for one parsed source rule's first
+/// action.
+fn first_action_content(source: &str) -> JsonValue {
+    let rule = parse_rule(source);
+    let content = content_of(&rule);
+    let actions = content["actions"].as_array().expect("actions");
+    actions[0].clone()
+}
+
+#[test]
+fn every_modify_operation_spelling_parses_emits_and_renders_its_call_id() {
+    // workshop-rs#504: the accepted operand spellings come from the lookup
+    // signature's `paramContent` `operations` fact, and every one parses,
+    // emits, reparses, and renders as a zero-argument call named by its
+    // catalog operator id — the consumer needs no enum domain.
+    let catalog = catalog();
+    for (action, surface) in [
+        (
+            "modifyGlobalVariableAtIndex",
+            "Modify Global Variable At Index(probe_g, 0, {}, 5)",
+        ),
+        (
+            "modifyPlayerVariableAtIndex",
+            "Modify Player Variable At Index(Event Player, probe_p, 0, {}, 5)",
+        ),
+    ] {
+        let signature = catalog
+            .lookup(&en(), action)
+            .expect("lookup answers")
+            .into_iter()
+            .find_map(|lookup| match lookup {
+                LookupMatch::Builtin { id, signature, .. } if id == action => signature,
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("'{action}' must resolve to its own signature"));
+        let operations = signature
+            .params
+            .iter()
+            .find_map(|param| {
+                param
+                    .content
+                    .as_ref()
+                    .filter(|content| !content.operations.is_empty())
+            })
+            .unwrap_or_else(|| panic!("'{action}' must expose its operations fact through lookup"));
+        for operation in &operations.operations {
+            let spelling = catalog
+                .spelling(Kind::Operator, &en(), operation)
+                .unwrap_or_else(|| panic!("'{operation}' needs an en-US spelling"));
+            let source = format!(
+                "variables {{\n    global:\n        0: probe_g\n    player:\n        0: probe_p\n}}\n\n\
+                 rule (\"op\") {{\n    event {{\n        Ongoing - Each Player;\n        All;\n        All;\n    }}\n    actions {{\n        {};\n    }}\n}}\n",
+                surface.replace("{}", spelling)
+            );
+            let program = parser::parse(&source, &catalog, &en())
+                .unwrap_or_else(|error| panic!("{action}({spelling}) must parse: {error}"));
+            assert!(
+                program.semantic_issues(&catalog).is_empty(),
+                "{action}({spelling}) must validate cleanly"
+            );
+            let emitted = emitter::emit(&program, &catalog, &en()).expect("emission");
+            let reparsed = parser::parse(&emitted, &catalog, &en())
+                .unwrap_or_else(|error| panic!("emitted {spelling} must reparse: {error}"));
+            assert!(
+                workshop_rs::roundtrip::equivalent(&program, &reparsed),
+                "{action}({spelling}) must round-trip"
+            );
+
+            let action_node = first_action_content(&source);
+            assert_eq!(
+                action_node["args"][2],
+                json!({"call": operation, "args": []}),
+                "{action}({spelling}) must render the operand as the \
+                 zero-argument '{operation}' call"
+            );
+        }
+    }
 }
 
 /// Both variable-read forms inside a comparison call.

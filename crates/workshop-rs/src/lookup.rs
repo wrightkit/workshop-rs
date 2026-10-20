@@ -12,7 +12,7 @@
 //! no data of its own.
 
 use crate::catalog::descriptions::Description;
-use crate::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
+use crate::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale, ParamContent};
 use crate::core::error::{Result, WorkshopError};
 use crate::core::suggest;
 use crate::settings::{self, PathPart, SettingDefinition, SettingValueDomain, table};
@@ -77,7 +77,8 @@ pub enum LookupMatch {
         position: usize,
         /// Whether the position must be supplied.
         required: bool,
-        /// The parameter facts: name, declared type, domain, and default.
+        /// The parameter facts: name, declared type, domain, default, and
+        /// `rule-content-v1` content layout facts.
         param: SignatureParam,
         /// The enum domain this parameter accepts, with the members it
         /// accepts, when the parameter is enum-typed.
@@ -172,6 +173,12 @@ pub struct SignatureParam {
     /// locale's text marked as a fallback when the requested locale has
     /// none. `None` when no description is recorded for the position.
     pub description: Option<Description>,
+    /// The `rule-content-v1` facts for this parameter when the surface
+    /// signature and the content layout differ — the folded variable-target
+    /// call this parameter contributes to, and the modify-operator call ids
+    /// it accepts. `None` means the parameter maps one-to-one to a plain
+    /// content argument.
+    pub content: Option<ParamContent>,
 }
 
 impl Catalog {
@@ -618,6 +625,7 @@ fn signature(catalog: &Catalog, entry: &CatalogEntry, locale: &Locale) -> Option
             domain: entry.param_domain(index).map(String::from),
             default: entry.param_default(index).map(String::from),
             description: catalog.param_description(entry.kind, &entry.id, index, locale),
+            content: entry.param_content(index).cloned(),
         })
         .collect();
     let mut domains = Vec::new();

@@ -829,6 +829,15 @@ fn localized_member(catalog: &Catalog, domain: &str, member: &str, locale: &Loca
 }
 
 fn probe_filler(catalog: &Catalog, locale: &Locale, entry: &CatalogEntry, index: usize) -> String {
+    // A modify-operator parameter takes a zero-argument operator call —
+    // emit the first declared operation's spelling rather than a value
+    // filler (#504).
+    if let Some(operation) = entry
+        .param_content(index)
+        .and_then(|content| content.operations.first())
+    {
+        return localized_spelling(catalog, Kind::Operator, locale, operation).to_string();
+    }
     if let Some(domain) = entry.param_domain(index) {
         let member = catalog
             .enum_domain(domain)
