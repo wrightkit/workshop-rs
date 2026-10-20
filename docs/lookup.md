@@ -133,6 +133,16 @@ signature when the domain has at most 32 members and reporting the member
 count for a larger domain. `Signature::params`, `required_params`,
 `variadic`, `return_type`, and `domains` expose the same facts structurally.
 
+Each `SignatureParam` also reports `display_name`: the label the Workshop
+editor renders for that argument in the requested locale (`时间`,
+`等待行为` under zh-CN for `wait`), kept separate from `name` (the semantic
+parameter name), from the accepted spellings, and from `default` (the value
+applied when the argument is omitted). `display_name` is `None` for
+positions on the catalog's `paramDisplayNameGaps` list — positions whose
+label is not cross-checked in every supported locale — and for every
+position under a gap locale; the catalog's first stage covers en-US and
+zh-CN.
+
 Structural construct signatures name the arguments of the construct's
 `rule-content-v1` call in argument order (`setGlobalVariable` reports
 `variable`, `value`); a variable or subroutine parameter's type names the

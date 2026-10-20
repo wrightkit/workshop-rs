@@ -83,6 +83,52 @@ fn canonical_and_localized_parameter_spellings_resolve_by_position() {
 }
 
 #[test]
+fn parameter_display_names_report_the_localized_editor_label() {
+    // workshop-rs#498: `paramDisplayNames` records the labels the Workshop
+    // editor renders per locale — separate from the semantic `paramNames`,
+    // the parse spellings in `paramAliases`, and `paramDefaults`.
+    let catalog = catalog();
+    let entry = catalog.entry(Kind::Action, "wait").expect("wait action");
+    assert_eq!(entry.param_display_name(&en(), 0), Some("Time"));
+    assert_eq!(entry.param_display_name(&en(), 1), Some("Wait Behavior"));
+    assert_eq!(entry.param_display_name(&zh(), 0), Some("时间"));
+    assert_eq!(entry.param_display_name(&zh(), 1), Some("等待行为"));
+    // Locales on the explicit gap list record no names.
+    assert_eq!(entry.param_display_name(&Locale::new("de-DE"), 0), None);
+    assert_eq!(entry.param_display_name(&zh(), 2), None);
+
+    // The issue's `magnitude` example: `startThrottleInDirection`'s third
+    // parameter is labeled Magnitude / 幅度.
+    let throttle = catalog
+        .entry(Kind::Action, "startThrottleInDirection")
+        .expect("startThrottleInDirection action");
+    assert_eq!(throttle.param_display_name(&en(), 2), Some("Magnitude"));
+    assert_eq!(throttle.param_display_name(&zh(), 2), Some("幅度"));
+}
+
+#[test]
+fn gap_listed_positions_keep_only_their_confirmed_names() {
+    let catalog = catalog();
+    let compare = catalog
+        .entry(Kind::Value, "compare")
+        .expect("compare value");
+    // The zh-CN label for the middle operator dropdown is not documented,
+    // so `compare[1]` is on the gap list; the confirmed en-US name stays
+    // recorded.
+    assert_eq!(compare.param_display_name(&en(), 1), Some("Comparison"));
+    assert_eq!(compare.param_display_name(&zh(), 1), None);
+    assert_eq!(compare.param_display_name(&en(), 0), Some("Value"));
+    assert_eq!(compare.param_display_name(&zh(), 0), Some("值"));
+
+    // `magnitude[0]` is fully gapped: the sources conflict on both labels.
+    let magnitude = catalog
+        .entry(Kind::Value, "magnitude")
+        .expect("magnitude value");
+    assert_eq!(magnitude.param_display_name(&en(), 0), None);
+    assert_eq!(magnitude.param_display_name(&zh(), 0), None);
+}
+
+#[test]
 fn localized_string_presets_resolve_and_translate_by_identity() {
     let catalog = catalog();
     let zh = zh();
@@ -298,6 +344,143 @@ fn undeclared_locale_fails_validation() {
     }"#;
     let error = Catalog::load(bad).expect_err("undeclared locale must fail");
     assert!(error.to_string().contains("undeclared locale"));
+}
+
+/// A minimal catalog fixture declaring `wait` with two parameters, with
+/// the given `paramDisplayNames`/`paramDisplayNameGaps` fragments spliced
+/// in. `locales` declares en-US, zh-CN, and de-DE.
+fn display_name_fixture(names: &str, gaps: &str) -> String {
+    format!(
+        r#"{{
+        "schemaVersion": 1,
+        "locales": ["en-US", "zh-CN", "de-DE"],
+        "target": {{ "game": "g", "format": "f", "surface": "s" }},
+        "provenance": {{ "generator": "g", "generatorVersion": "0", "source": "s", "license": "l", "reviewed": true }},
+        "actions": [
+            {{ "id": "wait", "aliases": {{ "en-US": "Wait" }}, "params": ["Time", "Wait Behavior"] }},
+            {{ "id": "kill", "aliases": {{ "en-US": "Kill" }}, "params": ["Player"] }}
+        ]{names}{gaps}
+    }}"#
+    )
+}
+
+#[test]
+fn param_display_names_require_the_gap_list_to_match_coverage() {
+    // Every supported-locale-covered position stays off the gap list; the
+    // uncovered `kill[0]` and the partially covered `wait[1]` are gapped.
+    let fixture = display_name_fixture(
+        r#",
+        "paramDisplayNames": {
+            "wait": {
+                "0": { "en-US": "Time", "zh-CN": "时间" },
+                "1": { "en-US": "Wait Behavior" }
+            }
+        }"#,
+        r#",
+        "paramDisplayNameGaps": {
+            "locales": ["de-DE"],
+            "positions": ["wait[1]", "kill[0]"]
+        }"#,
+    );
+    let catalog = Catalog::load(&fixture).expect("consistent display names load");
+    let entry = catalog.entry(Kind::Action, "wait").expect("wait");
+    assert_eq!(entry.param_display_name(&zh(), 0), Some("时间"));
+    assert_eq!(entry.param_display_name(&zh(), 1), None);
+    assert_eq!(entry.param_display_name(&en(), 1), Some("Wait Behavior"));
+    let kill = catalog.entry(Kind::Action, "kill").expect("kill");
+    assert_eq!(kill.param_display_name(&en(), 0), None);
+}
+
+#[test]
+fn param_display_names_without_the_gap_section_still_load() {
+    // Synthetic and older catalogs may omit `paramDisplayNameGaps`
+    // entirely; completeness is only enforced when it is declared.
+    let fixture = display_name_fixture(
+        r#",
+        "paramDisplayNames": {
+            "wait": { "0": { "en-US": "Time" } }
+        }"#,
+        "",
+    );
+    let catalog = Catalog::load(&fixture).expect("omitted gap section loads");
+    let entry = catalog.entry(Kind::Action, "wait").expect("wait");
+    assert_eq!(entry.param_display_name(&en(), 0), Some("Time"));
+    assert_eq!(entry.param_display_name(&en(), 1), None);
+}
+
+#[test]
+fn param_display_name_gaps_reject_bad_references() {
+    for gaps in [
+        // An incomplete position missing from the list.
+        r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["kill[0]"] }"#,
+        // A fully covered position must not be listed as a gap.
+        r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["wait[0]", "wait[1]", "kill[0]"] }"#,
+        // Malformed `entryId[index]` syntax.
+        r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["wait1", "wait[1]", "kill[0]"] }"#,
+        r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["wait[x]", "wait[1]", "kill[0]"] }"#,
+        // Undeclared entry and out-of-range index.
+        r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["noop[0]", "wait[1]", "kill[0]"] }"#,
+        r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["wait[9]", "wait[1]", "kill[0]"] }"#,
+        // Duplicate position.
+        r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["wait[1]", "wait[1]", "kill[0]"] }"#,
+        // Undeclared and duplicated gap locales.
+        r#""paramDisplayNameGaps": { "locales": ["fr-FR"], "positions": ["wait[1]", "kill[0]"] }"#,
+        r#""paramDisplayNameGaps": { "locales": ["de-DE", "de-DE"], "positions": ["wait[1]", "kill[0]"] }"#,
+    ] {
+        let fixture = display_name_fixture(
+            r#",
+            "paramDisplayNames": {
+                "wait": {
+                    "0": { "en-US": "Time", "zh-CN": "时间" },
+                    "1": { "en-US": "Wait Behavior" }
+                }
+            }"#,
+            &format!(",\n{gaps}"),
+        );
+        assert!(
+            Catalog::load(&fixture).is_err(),
+            "gap list should be rejected: {gaps}"
+        );
+    }
+}
+
+#[test]
+fn param_display_names_reject_bad_records() {
+    for names in [
+        // Undeclared entry.
+        r#""paramDisplayNames": { "noop": { "0": { "en-US": "X" } } }"#,
+        // Non-numeric and out-of-range positions.
+        r#""paramDisplayNames": { "wait": { "x": { "en-US": "X" } } }"#,
+        r#""paramDisplayNames": { "wait": { "9": { "en-US": "X" } } }"#,
+        // Empty position map, undeclared locale, empty name.
+        r#""paramDisplayNames": { "wait": { "0": {} } }"#,
+        r#""paramDisplayNames": { "wait": { "0": { "fr-FR": "X" } } }"#,
+        r#""paramDisplayNames": { "wait": { "0": { "en-US": "" } } }"#,
+    ] {
+        let fixture = display_name_fixture(&format!(",\n{names}"), "");
+        assert!(
+            Catalog::load(&fixture).is_err(),
+            "name record should be rejected: {names}"
+        );
+    }
+
+    // A name may not be recorded for a locale listed as a gap locale.
+    let fixture = display_name_fixture(
+        r#",
+        "paramDisplayNames": {
+            "wait": {
+                "0": { "en-US": "Time", "zh-CN": "时间", "de-DE": "Warte" },
+                "1": { "en-US": "Wait Behavior", "zh-CN": "等待行为" }
+            }
+        }"#,
+        r#",
+        "paramDisplayNameGaps": {
+            "locales": ["de-DE"],
+            "positions": ["kill[0]"]
+        }"#,
+    );
+    let error = Catalog::load(&fixture).expect_err("a name in a gap locale must fail");
+    assert!(error.to_string().contains("gap locale"), "{error}");
 }
 
 #[test]

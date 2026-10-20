@@ -179,6 +179,15 @@ pub struct SignatureParam {
     /// it accepts. `None` means the parameter maps one-to-one to a plain
     /// content argument.
     pub content: Option<ParamContent>,
+    /// The localized parameter display name the Workshop editor shows for
+    /// this position in the requested locale, when the catalog records one.
+    /// This is an editor-facing label only: it is separate from `name`
+    /// (the semantic parameter name), from the parse spellings in
+    /// `paramAliases`, and from `default` (the value applied when the
+    /// argument is omitted), and it never carries an editor initial value.
+    /// `None` marks a position whose name is on the catalog's explicit
+    /// `paramDisplayNameGaps` list.
+    pub display_name: Option<String>,
 }
 
 impl Catalog {
@@ -626,6 +635,7 @@ fn signature(catalog: &Catalog, entry: &CatalogEntry, locale: &Locale) -> Option
             default: entry.param_default(index).map(String::from),
             description: catalog.param_description(entry.kind, &entry.id, index, locale),
             content: entry.param_content(index).cloned(),
+            display_name: entry.param_display_name(locale, index).map(String::from),
         })
         .collect();
     let mut domains = Vec::new();
