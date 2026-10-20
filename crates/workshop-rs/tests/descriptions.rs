@@ -76,18 +76,95 @@ fn every_action_and_value_resolves_en_us_description_or_names_a_gap() {
 }
 
 #[test]
-fn gapped_positions_return_none_for_every_requested_locale() {
+fn every_action_and_value_resolves_zh_cn_description_or_names_a_gap() {
     let catalog = catalog();
+    let (en_entry_gaps, en_param_gaps) = gaps("en-US");
+    let (entry_gaps, param_gaps) = gaps("zh-CN");
+    let mut described = 0usize;
+    let mut fallen_back = 0usize;
+    // zh-CN text stands alone: a position covered in zh-CN resolves zh-CN
+    // even where en-US is gapped. A zh-CN gap falls back to en-US when en-US
+    // text exists, and resolves to None only when neither locale has text.
+    for kind in [Kind::Action, Kind::Value] {
+        for entry in catalog.entries_of(kind) {
+            let zh_gapped = entry_gaps.contains(&entry.id);
+            let resolved = catalog.description(kind, &entry.id, &zh());
+            match (zh_gapped, en_entry_gaps.contains(&entry.id), resolved) {
+                (false, _, Some(description)) => {
+                    described += 1;
+                    assert!(
+                        !description.fallback,
+                        "{} '{}': covered zh-CN text must not be marked fallback",
+                        kind.as_str(),
+                        entry.id
+                    );
+                    assert_eq!(description.locale, zh());
+                }
+                (true, false, Some(description)) => {
+                    fallen_back += 1;
+                    assert!(
+                        description.fallback,
+                        "{} '{}': a zh-CN gap falls back visibly",
+                        kind.as_str(),
+                        entry.id
+                    );
+                    assert_eq!(description.locale, en());
+                }
+                (true, true, None) => {}
+                (zh_gapped, en_gapped, resolved) => panic!(
+                    "{} '{}': zh gap {zh_gapped}, en gap {en_gapped}, resolved {resolved:?}",
+                    kind.as_str(),
+                    entry.id
+                ),
+            }
+            for position in 0..entry.param_count() {
+                let key = (entry.id.clone(), position);
+                let zh_gapped = param_gaps.contains(&key);
+                let en_gapped = en_param_gaps.contains(&key);
+                let resolved = catalog.param_description(kind, &entry.id, position, &zh());
+                match (zh_gapped, en_gapped, resolved) {
+                    (false, _, Some(description)) => {
+                        assert!(
+                            !description.fallback,
+                            "{} '{}' parameter {position}: covered zh-CN text must not \
+                             be marked fallback",
+                            kind.as_str(),
+                            entry.id
+                        );
+                        assert_eq!(description.locale, zh());
+                    }
+                    (true, false, Some(description)) => {
+                        assert!(
+                            description.fallback,
+                            "{} '{}' parameter {position}: a zh-CN gap falls back visibly",
+                            kind.as_str(),
+                            entry.id
+                        );
+                        assert_eq!(description.locale, en());
+                    }
+                    (true, true, None) => {}
+                    (zh_gapped, en_gapped, resolved) => panic!(
+                        "{} '{}' parameter {position}: zh gap {zh_gapped}, en gap \
+                         {en_gapped}, resolved {resolved:?}",
+                        kind.as_str(),
+                        entry.id
+                    ),
+                }
+            }
+        }
+    }
+    assert!(described > 0);
+    assert!(fallen_back > 0, "the zh-CN gap list is exercised");
+}
+
+#[test]
+fn positions_without_text_never_fabricate_a_description() {
+    let catalog = catalog();
+    // en-US gaps resolve to None in en-US.
     assert!(
         catalog
             .description(Kind::Value, "customString", &en())
             .is_none()
-    );
-    assert!(
-        catalog
-            .description(Kind::Value, "customString", &zh())
-            .is_none(),
-        "a gapped entry has no en-US text to fall back to"
     );
     for (kind, id, position) in [
         (Kind::Value, "customString", 0),
@@ -102,6 +179,26 @@ fn gapped_positions_return_none_for_every_requested_locale() {
             "{id} parameter {position}"
         );
     }
+    // `compare.params[1]` is gapped in both locales: zh-CN has no en-US text
+    // to fall back to and resolves to None.
+    assert!(
+        catalog
+            .param_description(Kind::Value, "compare", 1, &zh())
+            .is_none()
+    );
+    // A position uncovered in en-US but covered in zh-CN still resolves the
+    // zh-CN text: an en-US gap never hides another locale's text.
+    let zh_text = catalog
+        .description(Kind::Value, "customString", &zh())
+        .expect("customString carries zh-CN text");
+    assert_eq!(zh_text.locale, zh());
+    assert!(!zh_text.fallback);
+    assert!(
+        catalog
+            .param_description(Kind::Action, "setHealingDealt", 1, &zh())
+            .is_some_and(|description| description.locale == zh()),
+        "setHealingDealt parameter 1 resolves its zh-CN text"
+    );
     // `customString`'s remaining positions carry text.
     assert!(
         catalog
@@ -111,21 +208,22 @@ fn gapped_positions_return_none_for_every_requested_locale() {
 }
 
 #[test]
-fn missing_locale_falls_back_to_primary_marked() {
+fn gapped_locale_falls_back_to_primary_marked() {
     let catalog = catalog();
+    // `getSpawnPoints` carries en-US text while zh-CN is an explicit gap.
     let direct = catalog
-        .description(Kind::Action, "createHudText", &en())
+        .description(Kind::Value, "getSpawnPoints", &en())
         .expect("en-US text exists");
     assert!(!direct.fallback);
     assert_eq!(direct.locale, en());
     let fallen_back = catalog
-        .description(Kind::Action, "createHudText", &zh())
+        .description(Kind::Value, "getSpawnPoints", &zh())
         .expect("zh-CN falls back to en-US");
     assert!(fallen_back.fallback, "the fallback is visibly marked");
     assert_eq!(fallen_back.locale, en(), "the returned text is en-US");
     assert_eq!(fallen_back.text, direct.text);
     let param = catalog
-        .param_description(Kind::Action, "createHudText", 0, &zh())
+        .param_description(Kind::Value, "getSpawnPoints", 0, &zh())
         .expect("parameter zh-CN falls back to en-US");
     assert!(param.fallback);
     assert_eq!(param.locale, en());
@@ -159,7 +257,7 @@ fn lookup_surfaces_entry_and_parameter_descriptions() {
 }
 
 #[test]
-fn lookup_in_another_declared_locale_marks_the_fallback() {
+fn lookup_in_another_shipped_locale_surfaces_text() {
     let catalog = catalog();
     let matches = catalog
         .lookup(&zh(), "创建HUD文本")
@@ -173,8 +271,8 @@ fn lookup_in_another_declared_locale_marks_the_fallback() {
             _ => None,
         })
         .expect("zh-CN lookup resolves the entry");
-    assert!(description.fallback);
-    assert_eq!(description.locale, en());
+    assert!(!description.fallback);
+    assert_eq!(description.locale, zh());
     let signature = matches
         .iter()
         .find_map(|lookup| match lookup {
@@ -188,16 +286,35 @@ fn lookup_in_another_declared_locale_marks_the_fallback() {
         signature
             .params
             .iter()
-            .all(|param| param.description.as_ref().is_some_and(|d| d.fallback)),
-        "parameter descriptions fall back marked as well"
+            .all(|param| param.description.as_ref().is_some_and(|d| !d.fallback)),
+        "parameter descriptions resolve zh-CN text as well"
     );
+}
+
+#[test]
+fn lookup_in_a_shipped_locale_marks_gapped_fallback() {
+    let catalog = catalog();
+    // `getSpawnPoints` is a zh-CN gap: lookup still answers, with the en-US
+    // text visibly marked as a fallback.
+    let matches = catalog.lookup(&zh(), "重生点").expect("lookup answers");
+    let description = matches
+        .iter()
+        .find_map(|lookup| match lookup {
+            LookupMatch::Builtin {
+                id, description, ..
+            } if id == "getSpawnPoints" => description.as_ref(),
+            _ => None,
+        })
+        .expect("zh-CN lookup resolves the entry");
+    assert!(description.fallback);
+    assert_eq!(description.locale, en());
 }
 
 #[test]
 fn descriptions_dataset_reports_version_digest_and_stages() {
     let catalog = catalog();
-    assert_eq!(catalog.description_locales(), &[en()]);
-    assert_eq!(catalog.pending_description_locales(), &[zh()]);
+    assert_eq!(catalog.description_locales(), &[en(), zh()]);
+    assert!(catalog.pending_description_locales().is_empty());
     assert!(catalog.descriptions_digest().is_some());
     assert_ne!(catalog.descriptions_version(), "dev");
 }
@@ -297,10 +414,19 @@ fn entry_with_no_text_is_rejected() {
 }
 
 #[test]
-fn pending_locale_ships_no_gaps() {
+fn pending_locale_ships_neither_text_nor_gaps() {
     rejected(
         |raw| {
-            raw["gaps"]["zh-CN"] = Value::Array(vec![Value::String("compare".to_string())]);
+            raw["pendingLocales"] = Value::Array(vec![Value::String("ko-KR".to_string())]);
+            raw["entries"]["actions"]["createHudText"]["description"]["ko-KR"] =
+                Value::String("HUD 텍스트를 만든다.".to_string());
+        },
+        "which the dataset does not ship",
+    );
+    rejected(
+        |raw| {
+            raw["pendingLocales"] = Value::Array(vec![Value::String("ko-KR".to_string())]);
+            raw["gaps"]["ko-KR"] = Value::Array(vec![Value::String("compare".to_string())]);
         },
         "which the dataset does not ship",
     );

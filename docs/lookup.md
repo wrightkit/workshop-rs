@@ -173,8 +173,9 @@ Descriptions are catalog data, not Rust items
 `crates/workshop-rs/src/catalog/data/descriptions.json`, a separate dataset
 indexed by canonical id and parameter position next to `catalog.json`, with
 its own version, content digest, `locales`, `pendingLocales`, `gaps`, and
-`provenance` records, validated against the catalog at load. `en-US` ships;
-`zh-CN` is declared as a pending stage. The dataset cannot drift from the
+`provenance` records, validated against the catalog at load. `en-US` and
+`zh-CN` ship; uncovered `zh-CN` positions are explicit `gaps` that fall back
+to `en-US` marked. The dataset cannot drift from the
 catalog: for every shipped locale each action, each value, and each
 parameter position must carry text or name a gap — never both, never
 neither.

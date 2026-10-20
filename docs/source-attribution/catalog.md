@@ -141,15 +141,30 @@ generator version, source, license, and review status like the catalog's.
   (`GAPPED_SOURCE`); `customString.params[0]`, `compare.params[1]`,
   `string.params[0]`, and `setHealingDealt.params[1]` have empty source
   text and are gapped rather than invented.
-* `zh-CN` is a declared `pendingLocales` stage with no texts. The documented
-  Chinese Workshop reference at `https://overwatch.huijiwiki.com` (the
-  `地图工坊/动作/…` and `地图工坊/值/…` pages, the same reference cited for
-  the `Wait` `zh-CN` parameter labels above) returned HTTP 403 Cloudflare
-  challenges to every fetch route on 2026-10-20, so no page content could be
-  reviewed for import and no zh-CN text was invented. When the stage ships,
-  this file records the page URL and access date for every covered
-  reference page; uncovered entries and positions go on
-  `gaps."zh-CN"` explicitly.
+* `zh-CN` is shipped from the two reviewed zh-CN community sources already
+  used for `paramAliases` above: the zh-CN Workshop client strings in the
+  owl-CN editor extension (`qaz075115961/owl-CN` `client/owl.js` at commit
+  `b169fef2fd0f77b43d2b1c320242afd1279e924d`, sha256 recorded in
+  `tools/descriptions/zh-source.json`) and the docs.owmod.net Chinese manual
+  (`GKD-OW/docs` `manual/documents` at commit
+  `9f399dab26f4d4800703b46ad2bcd1b4bbb4c085`). The owner-named reference,
+  `overwatch.huijiwiki.com`, returned HTTP 403 Cloudflare challenges to every
+  fetch route (page, `api.php`, `Special:Export`, raw `index.php`) when
+  retried on 2026-10-21, so it contributes no text; the substitution is
+  recorded here and flagged in the stage-2 PR for owner review.
+  `tools/descriptions/extract_zh_source.py` merges both checkouts into
+  `tools/descriptions/zh-source.json` (normalized per-entry records with each
+  source's repository, commit, path, and sha256), which
+  `workshop-catalog-gen descriptions --zh-source` consumes. Where the two
+  sources agree the text ships verbatim; where they disagree owl-CN
+  arbitrates by default — it is the client's own zh-CN string table — except
+  for the positions the importer's `ZH_USE_OWMOD` table names, and a small
+  `ZH_REVIEWED_TEXT` table records reviewed reductions (for example owl-CN's
+  `数列` where every other zh-CN text and the catalog's zh-CN names use
+  `数组`). Coverage is 468 of 474 entry descriptions and 760 of 774
+  parameter descriptions; the 20 uncovered positions are explicit
+  `gaps."zh-CN"` entries and fall back to en-US marked
+  (`Description.fallback`) rather than carrying invented text.
 * Other declared catalog locales fall back to `en-US` at resolution time
   with the fallback marked (`Description.fallback`), so partial future
   locales never need fabricated text.
