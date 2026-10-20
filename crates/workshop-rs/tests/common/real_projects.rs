@@ -133,6 +133,28 @@ pub(crate) struct RealProjectExpectation {
 
 const NO_RESIDUALS: &[RealProjectResidualExpectation] = &[];
 const NO_GAPS: &[RealProjectGapExpectation] = &[];
+// Producer spellings the ai-pve input's pinned OverPy 9.7.13 wrote and the
+// pinned 9.7.17 hero settings table no longer writes (workshop-rs#540): the
+// Sojourn zh-CN name is now `充能速度 Charged Shot`, and Hazard's zh-CN
+// secondary-fire scalar labels carry the 倍率 suffix the generated table
+// already declares.
+const AI_PVE_RESIDUALS: &[RealProjectResidualExpectation] = &[
+    RealProjectResidualExpectation {
+        kind: IncompletenessKind::RawSetting,
+        identity: "充能速度 充能射击",
+        classification: ResidualClassification::ProjectDefinedConstruct,
+    },
+    RealProjectResidualExpectation {
+        kind: IncompletenessKind::RawSetting,
+        identity: "尖刺护体资源恢复",
+        classification: ResidualClassification::ProjectDefinedConstruct,
+    },
+    RealProjectResidualExpectation {
+        kind: IncompletenessKind::RawSetting,
+        identity: "尖刺护体资源消耗",
+        classification: ResidualClassification::ProjectDefinedConstruct,
+    },
+];
 const DEFEND_RESIDUALS: &[RealProjectResidualExpectation] = &[RealProjectResidualExpectation {
     kind: IncompletenessKind::OpaqueAction,
     identity: "rawWorkshopAction",
@@ -169,7 +191,7 @@ pub(crate) const REAL_PROJECT_EXPECTATION: RealProjectExpectation = RealProjectE
             locale: "zh-CN",
             source_fixture: "tests/fixtures/real-projects/ai-pve.ow",
             source_sha256: "d9c6460ca550e40083efcc2b57de16360088631970824599a22c0aa2cb7f11f9",
-            residuals: NO_RESIDUALS,
+            residuals: AI_PVE_RESIDUALS,
             gaps: NO_GAPS,
         },
         RealProjectCaseExpectation {

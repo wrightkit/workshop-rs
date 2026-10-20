@@ -26,6 +26,8 @@ mod perf_large_project;
 mod roundtrip;
 #[path = "../tests/rule_events.rs"]
 mod rule_events;
+#[path = "../tests/settings_aliases.rs"]
+mod settings_aliases;
 #[path = "../tests/settings_pipeline.rs"]
 mod settings_pipeline;
 #[path = "../tests/source_map.rs"]
