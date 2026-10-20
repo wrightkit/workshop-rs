@@ -37,14 +37,18 @@ unimplemented = "deny"
 
 # Reduce dependency artifact volume while retaining line-table diagnostics for
 # WrightKit code. See wrightkit/.github docs/rust-build-artifacts.md.
+# opt-level 1: the census and corpus tests are runtime-bound; at opt-level 0
+# `census --json` takes 282s, at 1 it takes 39s.
 [profile.dev]
 debug = 1
+opt-level = 1
 
 [profile.dev.package."*"]
 debug = false
 
 [profile.test]
 debug = 1
+opt-level = 1
 
 [profile.test.package."*"]
 debug = false
