@@ -1,3 +1,5 @@
+pub(crate) use super::conversion::{wir_action, wir_value};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EventTeam {
     All,

@@ -540,7 +540,7 @@ fn require_end(actions: &[Action], position: &mut usize) -> Result<()> {
     Ok(())
 }
 
-fn wir_action(
+pub(crate) fn wir_action(
     action: &Action,
     storage: &mut wir::Program,
     globals: &HashMap<String, wir::GlobalVarId>,
@@ -634,7 +634,7 @@ fn wir_action(
     Ok(storage.actions.push(action))
 }
 
-fn wir_value(
+pub(crate) fn wir_value(
     value: &Value,
     storage: &mut wir::Program,
     globals: &HashMap<String, wir::GlobalVarId>,

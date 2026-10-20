@@ -40,5 +40,9 @@ mod public_api;
 mod real_projects;
 #[path = "rule_content.rs"]
 mod rule_content;
+#[path = "statement_edit.rs"]
+mod statement_edit;
+#[path = "statement_edit_layout.rs"]
+mod statement_edit_layout;
 #[path = "statement_from_content.rs"]
 mod statement_from_content;

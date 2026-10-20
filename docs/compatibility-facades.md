@@ -92,6 +92,34 @@ sentinel, a node that forms no statement (including a preserved ambiguous enum
 member and an opaque raw action), and a node carrying spans, which are
 output-only. It produces no model value on error.
 
+`rules::statement_edit` is the write direction over parsed source.
+`Program::edit_statements(catalog, locale, address, edit)` returns the checked
+`SourceEdit` that inserts statements before an index (`index` equal to the
+list length appends), replaces one statement, or deletes one, in a rule's
+`conditions` or `actions` list. `StatementAddress` names the rule, the list,
+and the index in the public `Rule` model, which is the order the export uses.
+Inserted and replacement statements come from `statement_from_content` and are
+emitted canonically in `locale`, so their spelling can differ from the replaced
+statement; bytes outside the edit range are unchanged. The call fails closed,
+with a `StatementEditError` and no edit, for an unknown or out-of-range
+address, a stale address (the public model no longer matches the retained
+source at that position, including replace or delete of an `End` the parser
+added to close an unclosed `If`, which has no source text; `insert` at or past
+the end of such a list appends after the last source statement), a node of the wrong kind for the list, an empty insert, a node
+`statement_from_content` refuses, a variable or subroutine the program does
+not declare, a spelling missing in `locale`, or a program with no retained
+source. Other statements of the rule do not need to be
+expressible in the export.
+
+A statement comment is a `"…"` string directly before a statement. `replace`
+keeps it, `delete` removes the statement with its comments and a `//` comment
+on its last line, and `insert` writes none. Inserted lines take the indentation
+of the statement they precede, or of the last statement for an append. Inserting
+into a rule with no `conditions` section creates the section before `actions`;
+a rule with no `actions` section gets one before its closing brace. Deleting
+the last statement leaves the empty section in place. A non-comparison
+condition value is emitted as `value == True`, as in whole-program emission.
+
 ## Catalog-backed actions and values
 
 Catalog actions and values are built with `Action::call` and `Value::call`,
