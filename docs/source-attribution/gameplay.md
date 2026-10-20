@@ -45,3 +45,16 @@ healing, ammo, durations, ranges, projectile speeds, resources, and balance
 values remain absent unless supported by a current explicit source. The
 loader verifies the separate gameplay dataset identity and deterministic
 SHA-256 digest; it does not alter the Workshop catalog identity.
+
+## Hero values (`crates/workshop-rs/src/gameplay/values/`)
+
+Hero base values (health pools, ability cooldowns, ultimate cost) are
+workshop-rs-owned data pinned to a game client version, one file per version
+(`docs/hero-values.md`). A file name and its `balanceVersion` are the client
+version string recorded by the `wrightkit/athena` probe captures
+(`client.version`, for example `2.25.0.0 - 154461.1`); the pin carries no hero
+values by itself. The pinned `workshop-data` export records only
+percentage-based custom-game modifiers, not absolute values, and the official
+hero-detail pages name abilities without listing their numbers, so neither is a
+source for this data. A value lands only when a reviewed source records the
+number for the pinned version.

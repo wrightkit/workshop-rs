@@ -27,6 +27,18 @@ fn example_file_validates() {
 }
 
 #[test]
+fn builtin_file_validates() {
+    let document = read(&format!(
+        "src/gameplay/values/{}.json",
+        workshop_rs::hero_values::CURRENT_VERSION
+    ));
+    if let Err(errors) = validator().validate(&document) {
+        let errors = errors.map(|error| error.to_string()).collect::<Vec<_>>();
+        panic!("builtin data file does not validate: {errors:?}");
+    }
+}
+
+#[test]
 fn invalid_examples_are_rejected() {
     let validator = validator();
     for name in [

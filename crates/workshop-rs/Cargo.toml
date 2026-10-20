@@ -48,3 +48,7 @@ path = "tests/edit_path_agreement.rs"
 [[test]]
 name = "hero_values_schema"
 path = "tests/hero_values_schema.rs"
+
+[[test]]
+name = "hero_values"
+path = "tests/hero_values.rs"
