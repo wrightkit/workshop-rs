@@ -453,6 +453,7 @@ fn list(name: &str, elements: &[&str]) -> SettingsNode {
             .iter()
             .map(|value| SettingsListElement {
                 value: value.to_string(),
+                variant: None,
                 span: None,
             })
             .collect(),

@@ -128,6 +128,23 @@ the first relevant error. Locale mapping and hero ability display-name
 resolution remain emission concerns and can fail before value acceptance,
 so first-error parity does not apply universally across output locales.
 
+## Variant-qualified map elements
+
+A map list element can carry the game client's variant spelling `<map name>
+<variant id>` (`Workshop Chamber 972777519512064577`); a multi-variant
+selection repeats the id (`Map <id> <id>`). The parser resolves the map part
+to its canonical key and keeps the qualifier on
+`SettingsListElement::variant` (`variant_ids()` iterates the ids), so
+`check_emission` accepts the element and canonical emission writes the
+resolved map name followed by the authored qualifier, byte-identically.
+Unqualified elements carry `variant: None` and behave as before.
+
+An element whose map part resolves to nothing stays opaque and is rejected
+as an unknown map. A qualifier that is not space-separated digit ids — only
+constructible by producers, the parser splits out well-formed qualifiers
+only — is rejected as a malformed map variant id, and a qualifier on a hero
+list element is rejected as well.
+
 ## Members outside the catalog
 
 Members the catalog does not declare are carried as written rather than

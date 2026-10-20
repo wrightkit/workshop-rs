@@ -265,7 +265,9 @@ fn nodes_equivalent(
                         && left_elements
                             .iter()
                             .zip(right_elements)
-                            .all(|(left, right)| left.value == right.value)
+                            .all(|(left, right)| {
+                                left.value == right.value && left.variant == right.variant
+                            })
                 }
                 (
                     crate::settings::SettingsNode::Raw {
