@@ -5,6 +5,7 @@
 //! `Action` variant is added without a node form.
 
 use serde_json::{Value as JsonValue, json};
+use sha2::{Digest, Sha256};
 use workshop_rs::catalog::Kind;
 use workshop_rs::lookup::LookupMatch;
 use workshop_rs::rules::content::{
@@ -17,7 +18,7 @@ use workshop_rs::{
     Subroutine, Value, emitter, parser,
 };
 
-use crate::common::{catalog, en, zh};
+use crate::common::{catalog, en, fixture, locale, zh};
 
 fn schema() -> jsonschema::JSONSchema {
     let document: JsonValue =
@@ -60,6 +61,28 @@ fn assert_rejects(document: &JsonValue) {
     );
 }
 
+/// The `Value` shape the parser stores for a bare member spelling that
+/// matched more than one enum domain and no signature pinned: a
+/// `__ambiguous_enum` call carrying the authored spelling and every
+/// candidate's `Enum` identity.
+fn ambiguous_value(spelling: &str, candidates: &[(&str, &str)]) -> Value {
+    Value::call(
+        "__ambiguous_enum",
+        [
+            Value::string(spelling),
+            Value::Array(
+                candidates
+                    .iter()
+                    .map(|(value_type, value)| Value::Enum {
+                        value_type: value_type.to_string(),
+                        value: value.to_string(),
+                    })
+                    .collect(),
+            ),
+        ],
+    )
+}
+
 /// One condition per `Value` node form the schema defines.
 fn node_forms_rule() -> Rule {
     Rule::new("node forms", Event::Global)
@@ -72,6 +95,10 @@ fn node_forms_rule() -> Rule {
             value_type: "Status".to_string(),
             value: "STUNNED".to_string(),
         }))
+        .condition(Condition::new(ambiguous_value(
+            "Up",
+            &[("Vector", "UP"), ("Rounding", "UP")],
+        )))
         .condition(Condition::new(Value::EventPlayer))
         .condition(Condition::new(Value::Array(vec![
             Value::from(1.0),
@@ -100,13 +127,26 @@ fn every_node_form_appears_in_a_rendered_rule() {
     assert_eq!(values[3], &json!({ "string": "custom {0}" }));
     assert_eq!(values[4], &json!({ "localizedString": "hello" }));
     assert_eq!(values[5], &json!({ "enum": "Status", "member": "STUNNED" }));
-    assert_eq!(values[6], &json!({ "call": "eventPlayer", "args": [] }));
-    assert_eq!(values[7], &json!({ "call": "array", "args": [1.0, 2.0] }));
     assert_eq!(
-        values[8],
+        values[6],
+        &json!({
+            "ambiguous": "Up",
+            "candidates": [
+                {"enum": "Vector", "member": "UP"},
+                {"enum": "Rounding", "member": "UP"}
+            ]
+        })
+    );
+    assert_eq!(values[7], &json!({ "call": "eventPlayer", "args": [] }));
+    assert_eq!(values[8], &json!({ "call": "array", "args": [1.0, 2.0] }));
+    assert_eq!(
+        values[9],
         &json!({ "call": "vector", "args": [1.0, 2.0, 3.0] })
     );
-    assert_eq!(values[9], &json!({ "call": "compare", "args": [1.0, 2.0] }));
+    assert_eq!(
+        values[10],
+        &json!({ "call": "compare", "args": [1.0, 2.0] })
+    );
 }
 
 #[test]
@@ -598,6 +638,7 @@ fn every_value_variant_has_a_node_form() {
         Value::GlobalVariable(_) | Value::PlayerVariable { .. } => "variable read",
         Value::Subroutine(_) => "subroutine",
         Value::EventPlayer => "eventPlayer",
+        Value::Call { name, .. } if name == "__ambiguous_enum" => "ambiguous member",
         Value::Call { .. } => "call",
     };
     for value in [
@@ -627,6 +668,7 @@ fn every_value_variant_has_a_node_form() {
             "vector",
             [Value::from(1.0), Value::from(2.0), Value::from(3.0)],
         ),
+        ambiguous_value("Up", &[("Vector", "UP"), ("Rounding", "UP")]),
     ] {
         let _ = forms(&value);
     }
@@ -797,6 +839,152 @@ fn internal_sentinels_never_reach_the_document() {
     assert!(error.to_string().contains("__ambiguous_enum"), "{error}");
 }
 
+/// The ambiguous spellings of `practice-range` rules "Cover values 74" and
+/// "Cover enums 83", minimized (source: wrightkit/practice-range revision
+/// `6e5ecc6`, `generated/en-US/practice-range.ow`). `Set Global Variable`
+/// and `createIcon` pin no domain at these positions, so the bare `Up` and
+/// `Left` spellings stay ambiguous (#124, #201).
+const AMBIGUOUS_MEMBERS_SOURCE: &str = r#"variables {
+    global:
+        0: probe
+}
+
+rule ("ambiguous members") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        Set Global Variable(probe, Up);
+        Create Icon(Event Player, Left, No, Visible To and Position, Color(Yellow), True);
+    }
+}
+"#;
+
+#[test]
+fn a_preserved_ambiguous_member_renders_its_spelling_and_candidates() {
+    let rule = parse_rule(AMBIGUOUS_MEMBERS_SOURCE);
+    let content = content_of(&rule);
+    assert_eq!(
+        content["actions"][0],
+        json!({
+            "call": "setGlobalVariable",
+            "args": [
+                {"variable": "probe"},
+                {
+                    "ambiguous": "Up",
+                    "candidates": [
+                        {"enum": "Vector", "member": "UP"},
+                        {"enum": "Rounding", "member": "UP"}
+                    ]
+                }
+            ]
+        })
+    );
+    assert_eq!(
+        content["actions"][1]["args"][1],
+        json!({
+            "ambiguous": "Left",
+            "candidates": [
+                {"enum": "Vector", "member": "LEFT"},
+                {"enum": "HudPosition", "member": "LEFT"}
+            ]
+        })
+    );
+}
+
+#[test]
+fn a_context_pinned_ambiguous_member_renders_a_plain_enum_node() {
+    // The same `Left` spelling inside `Create Progress Bar HUD Text`
+    // resolves to `HudPosition.LEFT` because the signature pins the position
+    // parameter to the HudPosition domain (#124).
+    let source = r#"rule ("pinned member") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        Create Progress Bar HUD Text(Event Player, 1, 0, Left, 1, Color(Yellow), Color(Yellow), Color, Default Visibility);
+    }
+}
+"#;
+    let content = content_of(&parse_rule(source));
+    assert_eq!(
+        content["actions"][0]["args"][3],
+        json!({"enum": "HudPosition", "member": "LEFT"})
+    );
+}
+
+/// Replace every `ambiguous` spelling with `null` so two locale documents
+/// compare on their canonical content alone.
+fn strip_ambiguous_spelling(node: &mut JsonValue) {
+    match node {
+        JsonValue::Object(map) => {
+            if let Some(spelling) = map.get_mut("ambiguous") {
+                *spelling = JsonValue::Null;
+            }
+            for value in map.values_mut() {
+                strip_ambiguous_spelling(value);
+            }
+        }
+        JsonValue::Array(items) => {
+            for item in items {
+                strip_ambiguous_spelling(item);
+            }
+        }
+        _ => {}
+    }
+}
+
+#[test]
+fn ambiguous_member_content_is_identical_across_locales_except_the_spelling() {
+    let catalog = catalog();
+    let english = parser::parse(AMBIGUOUS_MEMBERS_SOURCE, &catalog, &en()).expect("en-US parses");
+    let chinese_source = emitter::emit(&english, &catalog, &zh()).expect("zh-CN emission");
+    let chinese = parser::parse(&chinese_source, &catalog, &zh()).expect("zh-CN parses");
+
+    let english_content = content_of(&english.rules[0]);
+    let chinese_content = content_of(&chinese.rules[0]);
+    // The authored spelling is the one locale-dependent field: every
+    // candidate identity stays canonical.
+    assert_eq!(
+        english_content["actions"][0]["args"][1]["ambiguous"],
+        json!("Up")
+    );
+    assert_eq!(
+        chinese_content["actions"][0]["args"][1]["ambiguous"],
+        json!("上")
+    );
+    assert_eq!(
+        english_content["actions"][1]["args"][1]["ambiguous"],
+        json!("Left")
+    );
+    assert_eq!(
+        chinese_content["actions"][1]["args"][1]["ambiguous"],
+        json!("左")
+    );
+
+    let mut stripped_english = english_content.clone();
+    let mut stripped_chinese = chinese_content.clone();
+    strip_ambiguous_spelling(&mut stripped_english);
+    strip_ambiguous_spelling(&mut stripped_chinese);
+    assert_eq!(stripped_english, stripped_chinese);
+}
+
+#[test]
+fn malformed_ambiguous_sentinels_fail_the_render() {
+    for args in [
+        Vec::new(),
+        vec![Value::from(1.0), Value::Array(vec![])],
+        vec![Value::string("Up"), Value::Array(vec![])],
+        vec![Value::string("Up"), Value::Array(vec![Value::from(1.0)])],
+    ] {
+        let rule = Rule::new("malformed", Event::Global).condition(Condition::new(Value::Call {
+            name: "__ambiguous_enum".to_string(),
+            args,
+        }));
+        rule_content(&rule).expect_err("malformed ambiguous sentinel is rejected");
+    }
+}
+
 /// All four chase actions: the player forms fold the `(player, variable)`
 /// pair into a `PlayerVariable` first argument under the global WIR name.
 const CHASE_SOURCE: &str = r#"variables {
@@ -940,5 +1128,90 @@ fn every_emitted_call_id_resolves_to_its_catalog_entry() {
             id, &call,
             "call id '{call}' resolves through lookup to a different catalog entry"
         );
+    }
+}
+
+/// The pinned `practice-range` modes (provenance in
+/// `fixtures/practice-range/README.md`): generated coverage of every catalog
+/// action, value, operator, enum member, and event, so every `Value`/`Action`
+/// shape a real `Program` produces must reach a document.
+const PRACTICE_RANGE_MODES: &[(&str, &str, &str)] = &[
+    (
+        "en-US",
+        "en-US.ow",
+        "9f1ef1328e923f205f09a8a006d40be47defac2c7c92416e8091134925fca07a",
+    ),
+    (
+        "zh-CN",
+        "zh-CN.ow",
+        "b6e099c29068b7b2e0664c67ddd17d4dec51d1b2b2084acb50a30a96e1e3b98c",
+    ),
+];
+
+/// Every `ambiguous` node key in a rendered document.
+fn count_ambiguous_nodes(node: &JsonValue) -> usize {
+    match node {
+        JsonValue::Object(map) => {
+            usize::from(map.contains_key("ambiguous"))
+                + map.values().map(count_ambiguous_nodes).sum::<usize>()
+        }
+        JsonValue::Array(items) => items.iter().map(count_ambiguous_nodes).sum(),
+        _ => 0,
+    }
+}
+
+#[test]
+fn every_practice_range_rule_renders_a_valid_document() {
+    // `Rule::content` succeeds on every rule of a `Program` that parses and
+    // validates: rules "Cover values 74" and "Cover enums 83" carry the bare
+    // `Up`/`Down`/`Left`/`Right` members that previously failed the render.
+    let validator = schema();
+    for (locale_tag, file, sha256) in PRACTICE_RANGE_MODES {
+        let path = fixture("practice-range", file);
+        let bytes = std::fs::read(&path).expect("practice-range fixture reads");
+        assert_eq!(
+            format!("{:x}", Sha256::digest(&bytes)),
+            *sha256,
+            "pinned digest mismatch for {file}"
+        );
+        let source = String::from_utf8(bytes).expect("fixture is UTF-8 Workshop text");
+        let catalog = catalog();
+        let program = parser::parse(&source, &catalog, &locale(locale_tag))
+            .unwrap_or_else(|error| panic!("{file} parses: {error}"));
+        program
+            .validate()
+            .unwrap_or_else(|error| panic!("{file} validates: {error}"));
+        let mut ambiguous_nodes = 0;
+        for rule in &program.rules {
+            let content = rule
+                .content()
+                .unwrap_or_else(|error| panic!("{file} rule '{}': {error}", rule.name));
+            if let Err(errors) = validator.validate(&content) {
+                let errors = errors.map(|error| error.to_string()).collect::<Vec<_>>();
+                panic!(
+                    "{file} rule '{}' does not validate: {errors:?}\n{content}",
+                    rule.name
+                );
+            }
+            ambiguous_nodes += count_ambiguous_nodes(&content);
+        }
+        assert!(
+            ambiguous_nodes > 0,
+            "{file} must exercise the ambiguous node form"
+        );
+        // The rules the Issue names: the bare `Up`/`Down`/`Left`/`Right`
+        // members that failed the render before this node form.
+        for name in ["Cover values 74", "Cover enums 83"] {
+            let rule = program
+                .rules
+                .iter()
+                .find(|rule| rule.name == name)
+                .unwrap_or_else(|| panic!("{file} must contain rule '{name}'"));
+            let content = rule.content().expect("rule content renders");
+            assert!(
+                count_ambiguous_nodes(&content) > 0,
+                "{file} rule '{name}' must render ambiguous member nodes"
+            );
+        }
     }
 }

@@ -93,7 +93,7 @@
       "description": "A public catalog structural, action, value, or operator id, or a documented reserved id. Reserved ids for constructs the catalog does not name: `globalVariable` (a global variable read, args = [variable]), `playerVariable` (a player variable read, args = [player, variable]), `assignMember` (a plain member assignment, args = [target, value]), `modifyMember` (a compound member assignment, args = [target, operation, value]), `memberAccess` (a receiver member read `receiver.member` or `receiver.member[index]`, args = [receiver, {\"string\": member}] or [receiver, {\"string\": member}, index]), `rawWorkshopAction` (an opaque action the parser preserved without canonical content, args = []), and the arithmetic helper calls `+`, `-`, `*`, `/`, `%` (an operator token used as a call, e.g. `Compare(1, +, 2)`). A modify operation is a zero-argument operator call such as `{\"call\":\"add\",\"args\":[]}`; comparison operators likewise appear as call ids (`==`, `!=`, `<`, `<=`, `>`, `>=`)."
     },
     "Node": {
-      "description": "A value node: a JSON literal, a tagged string/enum/name, or a call.",
+      "description": "A value node: a JSON literal, a tagged string/enum/name, a preserved ambiguous enum member, or a call.",
       "oneOf": [
         { "type": "number" },
         { "type": "boolean" },
@@ -101,6 +101,7 @@
         { "$ref": "#/$defs/StringNode" },
         { "$ref": "#/$defs/LocalizedStringNode" },
         { "$ref": "#/$defs/EnumNode" },
+        { "$ref": "#/$defs/AmbiguousEnumNode" },
         { "$ref": "#/$defs/VariableNode" },
         { "$ref": "#/$defs/SubroutineNode" },
         { "$ref": "#/$defs/CallNode" }
@@ -140,6 +141,24 @@
         "member": {
           "type": "string",
           "description": "The canonical enum member id, e.g. `STUNNED`."
+        }
+      }
+    },
+    "AmbiguousEnumNode": {
+      "type": "object",
+      "required": ["ambiguous", "candidates"],
+      "additionalProperties": false,
+      "description": "An enum member the parser preserved as ambiguous: the authored spelling matched members of more than one enum domain and no signature pinned one, so the node carries the spelling and every candidate's canonical identity instead of choosing a domain.",
+      "properties": {
+        "ambiguous": {
+          "type": "string",
+          "description": "The authored member spelling, e.g. `Up`. This is the one locale-dependent field in a document: the same canonical rule keeps its authored spelling per locale."
+        },
+        "candidates": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/EnumNode" },
+          "description": "The canonical identity of every enum member the authored spelling matched, e.g. `Vector.UP` and `Rounding.UP`."
         }
       }
     },

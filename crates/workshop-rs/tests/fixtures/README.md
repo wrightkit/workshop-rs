@@ -57,6 +57,11 @@ inputs, not acceptance reports; residual classifications and pass/fail results
 are emitted by CI. The acquisition procedure is recorded in
 [`real-projects/README.md`](real-projects/README.md).
 
+The `practice-range/` directory pins the generated `practice-range.ow` modes
+of the WrightKit `practice-range` repository as a catalog-coverage corpus for
+the `rule-content-v1` export; its source revision, paths, and digests are
+recorded in [`practice-range/README.md`](practice-range/README.md).
+
 ## Real-project admission
 
 `corpus/real-projects.json` is the executable real-project manifest. It keeps the

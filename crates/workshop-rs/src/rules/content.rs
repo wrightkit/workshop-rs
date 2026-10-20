@@ -4,8 +4,11 @@
 //! [`rule_content`] renders one [`Rule`] as the canonical call tree defined
 //! by [`RULE_CONTENT_V1_SCHEMA`]. Every value and action is a call node named
 //! by its catalog id; literals, strings, enum members, and declared variable
-//! or subroutine names use the tagged forms the schema defines. Output is
-//! deterministic for a given rule and independent of the source locale.
+//! or subroutine names use the tagged forms the schema defines. A preserved
+//! ambiguous enum member renders as the `ambiguous` node, which carries the
+//! authored spelling — the one locale-dependent field — and the canonical
+//! identity of every candidate. Output is otherwise deterministic for a given
+//! rule and independent of the source locale.
 //!
 //! Constructs the canonical model specializes but the catalog does not name
 //! use the reserved ids declared in the schema: `globalVariable` and
@@ -45,9 +48,11 @@ impl Rule {
     /// Render this rule in the [`RULE_CONTENT_V1`] format.
     ///
     /// The result is deterministic: it depends only on the rule's canonical
-    /// content, never on source spelling or locale. An internal sentinel
-    /// that has no form in the format, such as an unresolved ambiguous enum,
-    /// fails the whole render rather than leaking into the document.
+    /// content, never on source spelling or locale, except that a preserved
+    /// ambiguous enum member carries its authored spelling in the
+    /// `ambiguous` node. An internal sentinel in a position the format has
+    /// no node for fails the whole render rather than leaking into the
+    /// document.
     pub fn content(&self) -> Result<JsonValue> {
         rule_content(self)
     }
@@ -266,11 +271,41 @@ fn value_node(value: &Value) -> Result<JsonValue> {
             "vector",
             vec![value_node(x)?, value_node(y)?, value_node(z)?],
         ),
+        Value::Call { name, args } if name == AMBIGUOUS_ENUM_CALL => ambiguous_enum_node(args)?,
         Value::Call { name, args } => {
-            reject_sentinel(name)?;
             call_node(name, args.iter().map(value_node).collect::<Result<_>>()?)
         }
     })
+}
+
+/// A preserved ambiguous enum member renders as the `ambiguous` node: the
+/// authored spelling plus the canonical `{enum, member}` identity of every
+/// candidate. The parser only preserves a member that matched more than one
+/// domain without a signature pin, so no domain is invented here.
+fn ambiguous_enum_node(args: &[Value]) -> Result<JsonValue> {
+    let [Value::String(spelling), Value::Array(candidates)] = args else {
+        return Err(WorkshopError::malformed(
+            "ambiguous enum value expects spelling and candidates",
+            None,
+        ));
+    };
+    if candidates.is_empty() {
+        return Err(WorkshopError::malformed(
+            "ambiguous enum value has no candidates",
+            None,
+        ));
+    }
+    let candidates = candidates
+        .iter()
+        .map(|candidate| match candidate {
+            Value::Enum { value_type, value } => Ok(json!({ "enum": value_type, "member": value })),
+            _ => Err(WorkshopError::malformed(
+                "ambiguous enum candidate must be an enum value",
+                None,
+            )),
+        })
+        .collect::<Result<Vec<JsonValue>>>()?;
+    Ok(json!({ "ambiguous": spelling, "candidates": candidates }))
 }
 
 /// The catalog id a `Call` action is named by. The parser stores a
@@ -307,8 +342,10 @@ fn modify_op_node(op: ModifyOp) -> JsonValue {
     call_node(op.catalog_id(), Vec::new())
 }
 
-/// Internal sentinels such as `__ambiguous_enum` have no form in
-/// `rule-content-v1`; reject them instead of leaking them into the document.
+/// The `__ambiguous_enum` sentinel is a value construct; a call action can
+/// never legitimately carry it. An internal name in the action position has
+/// no form in `rule-content-v1`, so reject it instead of leaking it into the
+/// document.
 fn reject_sentinel(call: &str) -> Result<()> {
     if call == AMBIGUOUS_ENUM_CALL {
         return Err(WorkshopError::unsupported(
