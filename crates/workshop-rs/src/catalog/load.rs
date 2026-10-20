@@ -185,6 +185,7 @@ impl Catalog {
             enum_alias_to_member: HashMap::new(),
             bare_member_index: HashMap::new(),
             normalized: NormalizedIndex::default(),
+            descriptions: Default::default(),
         };
 
         for (kind, items) in [
@@ -234,10 +235,16 @@ impl Catalog {
         Self::builtin_ref().cloned().map_err(Clone::clone)
     }
 
-    /// The built-in catalog, parsed and indexed once per process.
+    /// The built-in catalog, parsed and indexed once per process. The
+    /// embedded description dataset (`descriptions.json`) is attached and
+    /// verified with it.
     pub fn builtin_ref() -> std::result::Result<&'static Catalog, &'static WorkshopError> {
         static DATA: OnceLock<Result<Catalog>> = OnceLock::new();
-        match DATA.get_or_init(|| Self::load(CATALOG_DATA)) {
+        match DATA.get_or_init(|| {
+            let mut catalog = Self::load(CATALOG_DATA)?;
+            catalog.load_descriptions(super::descriptions::DESCRIPTIONS_DATA)?;
+            Ok(catalog)
+        }) {
             Ok(catalog) => Ok(catalog),
             Err(error) => Err(error),
         }
@@ -717,7 +724,7 @@ pub fn content_digest(json: &str) -> Result<String> {
     Ok(format!("{:x}", hasher.finalize()))
 }
 
-fn pretty_json(value: &serde_json::Value) -> Result<String> {
+pub(crate) fn pretty_json(value: &serde_json::Value) -> Result<String> {
     serde_json::to_string_pretty(value)
         .map(|mut out| {
             out.push('\n');

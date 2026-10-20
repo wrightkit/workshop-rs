@@ -19,6 +19,7 @@
 //! (`workshop-catalog-gen build`); [`Catalog::load`] rejects a digest
 //! mismatch, so dataset changes are deliberate and reproducible.
 
+pub mod descriptions;
 pub mod detect;
 
 use std::borrow::Cow;
@@ -548,6 +549,9 @@ pub struct Catalog {
     /// Whitespace-collapsed mirrors of the verbatim indexes; see
     /// [`NormalizedIndex`].
     pub(crate) normalized: NormalizedIndex,
+    /// The attached localized description dataset (`descriptions.json`),
+    /// empty until [`Catalog::load_descriptions`] attaches one.
+    pub(crate) descriptions: descriptions::Descriptions,
 }
 
 mod load;

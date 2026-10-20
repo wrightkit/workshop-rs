@@ -11,6 +11,7 @@
 //! vocabulary. Consumers compose and present the matches; this module owns
 //! no data of its own.
 
+use crate::catalog::descriptions::Description;
 use crate::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
 use crate::core::error::{Result, WorkshopError};
 use crate::core::suggest;
@@ -34,6 +35,10 @@ pub enum LookupMatch {
         /// The call signature, for callable builtins: actions, values, and
         /// the structural constructs that declare a parameter list.
         signature: Option<Signature>,
+        /// The entry's description in the requested locale, or the primary
+        /// locale's text marked as a fallback when the requested locale
+        /// has none. `None` when no description is recorded.
+        description: Option<Description>,
     },
     /// A member of a canonical enum domain (`Team.ALL`, `Hero.SOLDIER_76`).
     EnumMember {
@@ -163,6 +168,10 @@ pub struct SignatureParam {
     /// another required position does not make this position omittable (see
     /// [`Signature::required_params`]).
     pub default: Option<String>,
+    /// The parameter's description in the requested locale, or the primary
+    /// locale's text marked as a fallback when the requested locale has
+    /// none. `None` when no description is recorded for the position.
+    pub description: Option<Description>,
 }
 
 impl Catalog {
@@ -434,6 +443,7 @@ impl Catalog {
             id: entry.id.clone(),
             display_name: entry.spelling(locale).map(String::from),
             signature: signature(self, entry, locale),
+            description: self.description(entry.kind, &entry.id, locale),
         }
     }
 
@@ -607,6 +617,7 @@ fn signature(catalog: &Catalog, entry: &CatalogEntry, locale: &Locale) -> Option
             param_type: entry.param_type(index).map(String::from),
             domain: entry.param_domain(index).map(String::from),
             default: entry.param_default(index).map(String::from),
+            description: catalog.param_description(entry.kind, &entry.id, index, locale),
         })
         .collect();
     let mut domains = Vec::new();
