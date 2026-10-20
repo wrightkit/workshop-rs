@@ -72,6 +72,22 @@ jobs:
       - name: Catalog check
         run: cargo run --locked -p workshop-rs --bin workshop-catalog-gen -- check
 
+  wasm-check:
+    name: WebAssembly build
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Rust
+        uses: wrightkit/.github/.github/actions/setup-rust@main
+        with:
+          toolchain: 1.88.0
+          targets: wasm32-unknown-unknown
+          cache-shared-key: quality
+      - name: Check the parser and catalog library for WebAssembly
+        run: cargo check --locked -p workshop-rs --lib --target wasm32-unknown-unknown
+
   real-project-scenarios:
     name: five real-project scenarios
     needs: check
