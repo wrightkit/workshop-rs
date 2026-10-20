@@ -179,8 +179,7 @@ impl EmitContext<'_> {
                 self.line(
                     level,
                     &format!(
-                        "{}({player_text}, {name}, {start_text}, {stop_text}, {step_text});",
-                        keyword
+                        "{keyword}({player_text}, {name}, {start_text}, {stop_text}, {step_text});"
                     ),
                 )?;
                 for action in body {

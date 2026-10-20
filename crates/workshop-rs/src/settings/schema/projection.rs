@@ -484,8 +484,7 @@ pub(super) fn validate_enum_projection(
         if let Some(previous) = names.insert((domain, name), canonical_member) {
             if previous != canonical_member {
                 errors.push(format!(
-                    "conflicting settings enum display name {}.{name:?}: {previous} vs {canonical_member}",
-                    domain
+                    "conflicting settings enum display name {domain}.{name:?}: {previous} vs {canonical_member}"
                 ));
             }
         }

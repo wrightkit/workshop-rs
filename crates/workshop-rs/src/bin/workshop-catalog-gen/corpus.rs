@@ -330,7 +330,7 @@ fn settings_surface(catalog: &Catalog) -> SettingsSurface {
             } else {
                 enum_spelling(catalog, "Gamemode", &key, &locale).unwrap_or_else(|| key.clone())
             };
-            (format!("mode.{}.name", key), name)
+            (format!("mode.{key}.name"), name)
         })
         .collect();
     let mut maps = catalog_name_surface(catalog, "Map", "map", &locale);
@@ -796,7 +796,7 @@ fn en_aliases(entry: &Value) -> Result<Vec<&str>, String> {
     let alias = entry
         .get("aliases")
         .and_then(|aliases| aliases.get("en-US"))
-        .ok_or_else(|| format!("catalog entry '{}' without en-US alias", entry))?;
+        .ok_or_else(|| format!("catalog entry '{entry}' without en-US alias"))?;
     match alias {
         Value::String(spelling) => Ok(vec![spelling.as_str()]),
         Value::Array(spellings) => {
@@ -804,18 +804,16 @@ fn en_aliases(entry: &Value) -> Result<Vec<&str>, String> {
                 .iter()
                 .map(Value::as_str)
                 .collect::<Option<Vec<&str>>>()
-                .ok_or_else(|| format!("catalog entry '{}' with non-string en-US alias", entry))?;
+                .ok_or_else(|| format!("catalog entry '{entry}' with non-string en-US alias"))?;
             if spellings.is_empty() {
                 return Err(format!(
-                    "catalog entry '{}' with empty en-US aliases",
-                    entry
+                    "catalog entry '{entry}' with empty en-US aliases"
                 ));
             }
             Ok(spellings)
         }
         _ => Err(format!(
-            "catalog entry '{}' with non-string en-US alias",
-            entry
+            "catalog entry '{entry}' with non-string en-US alias"
         )),
     }
 }
