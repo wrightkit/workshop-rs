@@ -8674,7 +8674,7 @@
       }
     }
   ],
-  "digest": "266991c80ead6d04dad8210c6a01314d371f98ce70ac2ee638f649643117ca87",
+  "digest": "eb7519fe02784d5163ba42e5fc0925be7f4ff955a2143070c53528bfc8d9711b",
   "enums": [
     {
       "domain": "Impulse",
@@ -22002,6 +22002,4088 @@
       "id": "removeFromArrayByValue"
     }
   ],
+  "paramDisplayNameGaps": {
+    "locales": [
+      "de-DE",
+      "es-ES",
+      "es-MX",
+      "fr-FR",
+      "it-IT",
+      "ja-JP",
+      "ko-KR",
+      "pl-PL",
+      "pt-BR",
+      "ru-RU",
+      "th-TH",
+      "tr-TR",
+      "zh-TW"
+    ],
+    "positions": [
+      "compare[1]",
+      "magnitude[0]"
+    ]
+  },
+  "paramDisplayNames": {
+    "__forPlayerVariable__": {
+      "0": {
+        "en-US": "Control Player",
+        "zh-CN": "控制玩家"
+      },
+      "1": {
+        "en-US": "Control Variable",
+        "zh-CN": "控制变量"
+      },
+      "2": {
+        "en-US": "Range Start",
+        "zh-CN": "起始值"
+      },
+      "3": {
+        "en-US": "Range Stop",
+        "zh-CN": "终止值"
+      },
+      "4": {
+        "en-US": "Step",
+        "zh-CN": "步长"
+      }
+    },
+    "__xComponentOf__": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "__yComponentOf__": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "__zComponentOf__": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "abilityIconString": {
+      "0": {
+        "en-US": "Hero",
+        "zh-CN": "英雄"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      }
+    },
+    "abortIf": {
+      "0": {
+        "en-US": "Condition",
+        "zh-CN": "条件"
+      }
+    },
+    "absoluteValue": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "acos": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "acosDeg": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "add": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "addHealthPool": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Health Type",
+        "zh-CN": "生命值类型"
+      },
+      "2": {
+        "en-US": "Max Health",
+        "zh-CN": "最大生命值"
+      },
+      "3": {
+        "en-US": "Recoverable",
+        "zh-CN": "可恢复"
+      },
+      "4": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "addToScore": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Score",
+        "zh-CN": "得分"
+      }
+    },
+    "addToTeamScore": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Score",
+        "zh-CN": "得分"
+      }
+    },
+    "allPlayers": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "allowButton": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      }
+    },
+    "allowedHeroes": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "and": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "angleBetweenVectors": {
+      "0": {
+        "en-US": "Vector",
+        "zh-CN": "矢量"
+      },
+      "1": {
+        "en-US": "Vector",
+        "zh-CN": "矢量"
+      }
+    },
+    "angleDifference": {
+      "0": {
+        "en-US": "Angle",
+        "zh-CN": "角度"
+      },
+      "1": {
+        "en-US": "Angle",
+        "zh-CN": "角度"
+      }
+    },
+    "appendToArray": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "applyImpulse": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Direction",
+        "zh-CN": "方向"
+      },
+      "2": {
+        "en-US": "Speed",
+        "zh-CN": "速度"
+      },
+      "3": {
+        "en-US": "Relative",
+        "zh-CN": "相对"
+      },
+      "4": {
+        "en-US": "Motion",
+        "zh-CN": "运动"
+      }
+    },
+    "array": {
+      "0": {
+        "en-US": "[0]",
+        "zh-CN": "[0]"
+      }
+    },
+    "arrayContains": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "asin": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "asinDeg": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "atan2": {
+      "0": {
+        "en-US": "Numerator",
+        "zh-CN": "分子"
+      },
+      "1": {
+        "en-US": "Denominator",
+        "zh-CN": "分母"
+      }
+    },
+    "atan2Deg": {
+      "0": {
+        "en-US": "Numerator",
+        "zh-CN": "分子"
+      },
+      "1": {
+        "en-US": "Denominator",
+        "zh-CN": "分母"
+      }
+    },
+    "attachTo": {
+      "0": {
+        "en-US": "Child",
+        "zh-CN": "子玩家"
+      },
+      "1": {
+        "en-US": "Parent",
+        "zh-CN": "父玩家"
+      },
+      "2": {
+        "en-US": "Offset",
+        "zh-CN": "偏移"
+      }
+    },
+    "bigMessage": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Header",
+        "zh-CN": "标题"
+      }
+    },
+    "callSubroutine": {
+      "0": {
+        "en-US": "Subroutine",
+        "zh-CN": "子程序"
+      }
+    },
+    "cancelPrimaryAction": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "charAt": {
+      "0": {
+        "en-US": "String",
+        "zh-CN": "字符串"
+      },
+      "1": {
+        "en-US": "Index",
+        "zh-CN": "索引"
+      }
+    },
+    "chaseAtRate": {
+      "0": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "1": {
+        "en-US": "Destination",
+        "zh-CN": "最终值"
+      },
+      "2": {
+        "en-US": "Rate",
+        "zh-CN": "频率"
+      },
+      "3": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "chaseOverTime": {
+      "0": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "1": {
+        "en-US": "Destination",
+        "zh-CN": "最终值"
+      },
+      "2": {
+        "en-US": "Duration",
+        "zh-CN": "持续时间"
+      },
+      "3": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "chasePlayerVariableAtRate": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "2": {
+        "en-US": "Destination",
+        "zh-CN": "最终值"
+      },
+      "3": {
+        "en-US": "Rate",
+        "zh-CN": "频率"
+      },
+      "4": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "chasePlayerVariableOverTime": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "2": {
+        "en-US": "Destination",
+        "zh-CN": "最终值"
+      },
+      "3": {
+        "en-US": "Duration",
+        "zh-CN": "持续时间"
+      },
+      "4": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "clearStatusEffect": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Status",
+        "zh-CN": "状态"
+      }
+    },
+    "communicate": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Type",
+        "zh-CN": "类型"
+      }
+    },
+    "compare": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Comparison"
+      },
+      "2": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "cos": {
+      "0": {
+        "en-US": "Angle",
+        "zh-CN": "角度"
+      }
+    },
+    "cosDeg": {
+      "0": {
+        "en-US": "Angle",
+        "zh-CN": "角度"
+      }
+    },
+    "countOf": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      }
+    },
+    "createBeamEffect": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Type",
+        "zh-CN": "类型"
+      },
+      "2": {
+        "en-US": "Start Position",
+        "zh-CN": "开始位置"
+      },
+      "3": {
+        "en-US": "End Position",
+        "zh-CN": "结束位置"
+      },
+      "4": {
+        "en-US": "Color",
+        "zh-CN": "颜色"
+      },
+      "5": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "createDummyBot": {
+      "0": {
+        "en-US": "Hero",
+        "zh-CN": "英雄"
+      },
+      "1": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "2": {
+        "en-US": "Slot",
+        "zh-CN": "栏位"
+      },
+      "3": {
+        "en-US": "Position",
+        "zh-CN": "位置"
+      },
+      "4": {
+        "en-US": "Facing",
+        "zh-CN": "方向"
+      }
+    },
+    "createEffect": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Type",
+        "zh-CN": "类型"
+      },
+      "2": {
+        "en-US": "Color",
+        "zh-CN": "颜色"
+      },
+      "3": {
+        "en-US": "Position",
+        "zh-CN": "位置"
+      },
+      "4": {
+        "en-US": "Radius",
+        "zh-CN": "半径"
+      },
+      "5": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "createHomingProjectile": {
+      "0": {
+        "en-US": "Projectile Type",
+        "zh-CN": "弹道类型"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "10": {
+        "en-US": "Explosion Effect",
+        "zh-CN": "爆炸效果"
+      },
+      "11": {
+        "en-US": "Explosion Sound Effect",
+        "zh-CN": "爆炸声音效果"
+      },
+      "12": {
+        "en-US": "Oversize",
+        "zh-CN": "尺寸增幅"
+      },
+      "13": {
+        "en-US": "Speed",
+        "zh-CN": "速度"
+      },
+      "14": {
+        "en-US": "Lifetime",
+        "zh-CN": "存在时间"
+      },
+      "15": {
+        "en-US": "Impulse",
+        "zh-CN": "推力"
+      },
+      "16": {
+        "en-US": "Homing Target",
+        "zh-CN": "追踪目标"
+      },
+      "17": {
+        "en-US": "Homing Strength",
+        "zh-CN": "追踪强度"
+      },
+      "2": {
+        "en-US": "Start Position",
+        "zh-CN": "开始位置"
+      },
+      "3": {
+        "en-US": "Direction",
+        "zh-CN": "方向"
+      },
+      "4": {
+        "en-US": "Relative",
+        "zh-CN": "相对"
+      },
+      "5": {
+        "en-US": "Modify Health Type",
+        "zh-CN": "修改生命效果类型"
+      },
+      "6": {
+        "en-US": "Affected Team",
+        "zh-CN": "受影响的队伍"
+      },
+      "7": {
+        "en-US": "Amount",
+        "zh-CN": "数值"
+      },
+      "8": {
+        "en-US": "Amount Scalar",
+        "zh-CN": "数值缩放"
+      },
+      "9": {
+        "en-US": "Explosion Radius",
+        "zh-CN": "爆炸范围"
+      }
+    },
+    "createHudText": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Header",
+        "zh-CN": "标题"
+      },
+      "10": {
+        "en-US": "Spectators",
+        "zh-CN": "无队伍观战者"
+      },
+      "2": {
+        "en-US": "Subheader",
+        "zh-CN": "子标题"
+      },
+      "3": {
+        "en-US": "Text",
+        "zh-CN": "文本"
+      },
+      "4": {
+        "en-US": "Location",
+        "zh-CN": "坐标"
+      },
+      "5": {
+        "en-US": "SORT ORDER",
+        "zh-CN": "排序"
+      },
+      "6": {
+        "en-US": "Header Color",
+        "zh-CN": "标题颜色"
+      },
+      "7": {
+        "en-US": "Subheader Color",
+        "zh-CN": "子标题颜色"
+      },
+      "8": {
+        "en-US": "Text Color",
+        "zh-CN": "文本颜色"
+      },
+      "9": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "createIcon": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Position",
+        "zh-CN": "位置"
+      },
+      "2": {
+        "en-US": "Icon",
+        "zh-CN": "图标"
+      },
+      "3": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      },
+      "4": {
+        "en-US": "Icon Color",
+        "zh-CN": "图标颜色"
+      },
+      "5": {
+        "en-US": "Show When Offscreen",
+        "zh-CN": "离开屏幕后显示"
+      }
+    },
+    "createInWorldText": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Header",
+        "zh-CN": "标题"
+      },
+      "2": {
+        "en-US": "Position",
+        "zh-CN": "位置"
+      },
+      "3": {
+        "en-US": "Scale",
+        "zh-CN": "大小"
+      },
+      "4": {
+        "en-US": "Clipping",
+        "zh-CN": "截取"
+      },
+      "5": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      },
+      "6": {
+        "en-US": "Text Color",
+        "zh-CN": "文本颜色"
+      },
+      "7": {
+        "en-US": "Spectators",
+        "zh-CN": "无队伍观战者"
+      }
+    },
+    "createProgressBarInWorldText": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "2": {
+        "en-US": "Text",
+        "zh-CN": "文本"
+      },
+      "3": {
+        "en-US": "Position",
+        "zh-CN": "位置"
+      },
+      "4": {
+        "en-US": "Scale",
+        "zh-CN": "大小"
+      },
+      "5": {
+        "en-US": "Clipping",
+        "zh-CN": "截取"
+      },
+      "6": {
+        "en-US": "Progress Bar Color",
+        "zh-CN": "进度条颜色"
+      },
+      "7": {
+        "en-US": "Text Color",
+        "zh-CN": "文本颜色"
+      },
+      "8": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      },
+      "9": {
+        "en-US": "Non-Team Spectators",
+        "zh-CN": "无队伍观战者"
+      }
+    },
+    "createProjectile": {
+      "0": {
+        "en-US": "Projectile Type",
+        "zh-CN": "弹道类型"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "10": {
+        "en-US": "Explosion Effect",
+        "zh-CN": "爆炸效果"
+      },
+      "11": {
+        "en-US": "Explosion Sound Effect",
+        "zh-CN": "爆炸声音效果"
+      },
+      "12": {
+        "en-US": "Oversize",
+        "zh-CN": "尺寸增幅"
+      },
+      "13": {
+        "en-US": "Speed",
+        "zh-CN": "速度"
+      },
+      "14": {
+        "en-US": "Lifetime",
+        "zh-CN": "存在时间"
+      },
+      "15": {
+        "en-US": "Impulse",
+        "zh-CN": "推力"
+      },
+      "16": {
+        "en-US": "Ricochet Count",
+        "zh-CN": "弹射次数"
+      },
+      "17": {
+        "en-US": "Gravity",
+        "zh-CN": "引力"
+      },
+      "2": {
+        "en-US": "Start Position",
+        "zh-CN": "开始位置"
+      },
+      "3": {
+        "en-US": "Direction",
+        "zh-CN": "方向"
+      },
+      "4": {
+        "en-US": "Relative",
+        "zh-CN": "相对"
+      },
+      "5": {
+        "en-US": "Modify Health Type",
+        "zh-CN": "修改生命效果类型"
+      },
+      "6": {
+        "en-US": "Affected Team",
+        "zh-CN": "受影响的队伍"
+      },
+      "7": {
+        "en-US": "Amount",
+        "zh-CN": "数值"
+      },
+      "8": {
+        "en-US": "Amount Scalar",
+        "zh-CN": "数值缩放"
+      },
+      "9": {
+        "en-US": "Explosion Radius",
+        "zh-CN": "爆炸范围"
+      }
+    },
+    "createProjectileEffect": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Projectile Type",
+        "zh-CN": "弹道类型"
+      },
+      "2": {
+        "en-US": "Friendly To",
+        "zh-CN": "友善"
+      },
+      "3": {
+        "en-US": "Position",
+        "zh-CN": "位置"
+      },
+      "4": {
+        "en-US": "Direction",
+        "zh-CN": "方向"
+      },
+      "5": {
+        "en-US": "Oversize",
+        "zh-CN": "尺寸增幅"
+      },
+      "6": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "createWorkshopSettingFloat": {
+      "0": {
+        "en-US": "Category",
+        "zh-CN": "类别"
+      },
+      "1": {
+        "en-US": "Name",
+        "zh-CN": "名称"
+      },
+      "2": {
+        "en-US": "Default",
+        "zh-CN": "默认"
+      },
+      "3": {
+        "en-US": "Min",
+        "zh-CN": "最小"
+      },
+      "4": {
+        "en-US": "Max",
+        "zh-CN": "最大"
+      },
+      "5": {
+        "en-US": "Sort Order",
+        "zh-CN": "排序"
+      }
+    },
+    "createWorkshopSettingHero": {
+      "0": {
+        "en-US": "Category",
+        "zh-CN": "类别"
+      },
+      "1": {
+        "en-US": "Name",
+        "zh-CN": "名称"
+      },
+      "2": {
+        "en-US": "Default",
+        "zh-CN": "默认"
+      },
+      "3": {
+        "en-US": "Sort Order",
+        "zh-CN": "排序"
+      }
+    },
+    "crossProduct": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "customColor": {
+      "0": {
+        "en-US": "Red",
+        "zh-CN": "红色"
+      },
+      "1": {
+        "en-US": "Green",
+        "zh-CN": "绿色"
+      },
+      "2": {
+        "en-US": "Blue",
+        "zh-CN": "蓝色"
+      },
+      "3": {
+        "en-US": "Alpha",
+        "zh-CN": "不透明度"
+      }
+    },
+    "customString": {
+      "0": {
+        "en-US": "String",
+        "zh-CN": "字符串"
+      },
+      "1": {
+        "en-US": "{0}",
+        "zh-CN": "{0}"
+      },
+      "2": {
+        "en-US": "{1}",
+        "zh-CN": "{1}"
+      },
+      "3": {
+        "en-US": "{2}",
+        "zh-CN": "{2}"
+      }
+    },
+    "damage": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Damager",
+        "zh-CN": "伤害者"
+      },
+      "2": {
+        "en-US": "Amount",
+        "zh-CN": "伤害量"
+      }
+    },
+    "declarePlayerVictory": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "declareRoundVictory": {
+      "0": {
+        "en-US": "Round Winning Team",
+        "zh-CN": "本回合获胜队伍"
+      }
+    },
+    "declareTeamVictory": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "destroyDummy": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Slot",
+        "zh-CN": "栏位"
+      }
+    },
+    "destroyEffect": {
+      "0": {
+        "en-US": "Entity",
+        "zh-CN": "实体"
+      }
+    },
+    "destroyHudText": {
+      "0": {
+        "en-US": "Text ID",
+        "zh-CN": "文本ID"
+      }
+    },
+    "destroyIcon": {
+      "0": {
+        "en-US": "Entity",
+        "zh-CN": "实体"
+      }
+    },
+    "destroyInWorldText": {
+      "0": {
+        "en-US": "Text ID",
+        "zh-CN": "文本ID"
+      }
+    },
+    "destroyProgressBarHud": {
+      "0": {
+        "en-US": "Text ID",
+        "zh-CN": "文本ID"
+      }
+    },
+    "destroyProgressBarInWorldText": {
+      "0": {
+        "en-US": "Text ID",
+        "zh-CN": "文本ID"
+      }
+    },
+    "detach": {
+      "0": {
+        "en-US": "CHILDREN",
+        "zh-CN": "子玩家"
+      }
+    },
+    "directionFromAngles": {
+      "0": {
+        "en-US": "Horizontal Angle",
+        "zh-CN": "水平角度"
+      },
+      "1": {
+        "en-US": "Vectical Angle",
+        "zh-CN": "垂直角度"
+      }
+    },
+    "directionTowards": {
+      "0": {
+        "en-US": "Start Pos",
+        "zh-CN": "开始位置"
+      },
+      "1": {
+        "en-US": "End Pos",
+        "zh-CN": "结束位置"
+      }
+    },
+    "disableDeathSpectateAllPlayers": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "disableDeathSpectateTargetHud": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "disableGameModeHud": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "disableGameModeInworldUI": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "disableHeroHud": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "disableKillFeed": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "disableMessages": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "disableMovementCollisionWithEnvironment": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Include Floors",
+        "zh-CN": "包括地面"
+      }
+    },
+    "disableMovementCollisionWithPlayers": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "disableNameplatesFor": {
+      "0": {
+        "en-US": "Viewed Players",
+        "zh-CN": "被观察的玩家"
+      },
+      "1": {
+        "en-US": "Viewing Players",
+        "zh-CN": "观察玩家"
+      }
+    },
+    "disableRespawn": {
+      "0": {
+        "en-US": "PlayerS",
+        "zh-CN": "玩家"
+      }
+    },
+    "disableScoreboard": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "disableTextChat": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "disableVoiceChat": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Team Voice Chat",
+        "zh-CN": "队伍语音聊天"
+      },
+      "2": {
+        "en-US": "Match Voice Chat",
+        "zh-CN": "比赛语音聊天"
+      },
+      "3": {
+        "en-US": "Group Voice Chat",
+        "zh-CN": "小队语音聊天"
+      }
+    },
+    "disallowButton": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      }
+    },
+    "distance": {
+      "0": {
+        "en-US": "Start Pos",
+        "zh-CN": "开始位置"
+      },
+      "1": {
+        "en-US": "End Pos",
+        "zh-CN": "结束位置"
+      }
+    },
+    "divide": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "dotProduct": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "eachPlayer": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "elseIf": {
+      "0": {
+        "en-US": "Condition",
+        "zh-CN": "条件"
+      }
+    },
+    "enableDeathSpectateAllPlayers": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableDeathSpectateTargetHud": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableGameModeHud": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableGameModeInworldUI": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableHeroHud": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableKillFeed": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableMessages": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableMovementCollisionWithEnvironment": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableMovementCollisionWithPlayers": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableNameplatesFor": {
+      "0": {
+        "en-US": "Viewed Players",
+        "zh-CN": "被观察的玩家"
+      },
+      "1": {
+        "en-US": "Viewing Players",
+        "zh-CN": "观察玩家"
+      }
+    },
+    "enableRespawn": {
+      "0": {
+        "en-US": "PlayerS",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableScoreboard": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableTextChat": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "enableVoiceChat": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "entityExists": {
+      "0": {
+        "en-US": "Entity",
+        "zh-CN": "实体"
+      }
+    },
+    "evaluateOnce": {
+      "0": {
+        "en-US": "Input Value",
+        "zh-CN": "输入值"
+      }
+    },
+    "filteredArray": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      },
+      "1": {
+        "en-US": "Condition",
+        "zh-CN": "条件"
+      }
+    },
+    "firstOf": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      }
+    },
+    "forGlobalVariable": {
+      "0": {
+        "en-US": "Control Variable",
+        "zh-CN": "控制变量"
+      },
+      "1": {
+        "en-US": "Range Start",
+        "zh-CN": "起始值"
+      },
+      "2": {
+        "en-US": "Range Stop",
+        "zh-CN": "终止值"
+      },
+      "3": {
+        "en-US": "Step",
+        "zh-CN": "步长"
+      }
+    },
+    "forPlayerVariable": {
+      "0": {
+        "en-US": "Control Player",
+        "zh-CN": "控制玩家"
+      },
+      "1": {
+        "en-US": "Control Variable",
+        "zh-CN": "控制变量"
+      },
+      "2": {
+        "en-US": "Range Start",
+        "zh-CN": "起始值"
+      },
+      "3": {
+        "en-US": "Range Stop",
+        "zh-CN": "终止值"
+      },
+      "4": {
+        "en-US": "Step",
+        "zh-CN": "步长"
+      }
+    },
+    "forceButtonPress": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      }
+    },
+    "gameMode": {
+      "0": {
+        "en-US": "Game Mode",
+        "zh-CN": "游戏模式"
+      }
+    },
+    "getAbilityCharge": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      }
+    },
+    "getAbilityCooldown": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      }
+    },
+    "getAbilityResource": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      }
+    },
+    "getAltitude": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getAmmo": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Clip",
+        "zh-CN": "弹夹"
+      }
+    },
+    "getClosestPlayer": {
+      "0": {
+        "en-US": "Center",
+        "zh-CN": "中心点"
+      },
+      "1": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getControlScorePercentage": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getCurrentWeapon": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getDeadPlayers": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getEyePosition": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "位置"
+      }
+    },
+    "getFacingDirection": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getFarthestPlayer": {
+      "0": {
+        "en-US": "Center",
+        "zh-CN": "中心点"
+      },
+      "1": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getFlagCarrier": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getFlagPosition": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getHealth": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getHealthOfType": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Health",
+        "zh-CN": "生命值"
+      }
+    },
+    "getHero": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getHeroOfDuplication": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getHeroStatistic": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Hero",
+        "zh-CN": "英雄"
+      },
+      "2": {
+        "en-US": "Stat",
+        "zh-CN": "数据"
+      }
+    },
+    "getHorizontalFacingAngle": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getHorizontalSpeed": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getLivingPlayers": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getMaxAmmo": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Clip",
+        "zh-CN": "弹夹"
+      }
+    },
+    "getMaxHealth": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getMaxHealthOfType": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Health",
+        "zh-CN": "生命值"
+      }
+    },
+    "getNormalizedHealth": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getNumberOfDeadPlayers": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getNumberOfDeaths": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getNumberOfElims": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getNumberOfFinalBlows": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getNumberOfHeroes": {
+      "0": {
+        "en-US": "Hero",
+        "zh-CN": "英雄"
+      },
+      "1": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getNumberOfLivingPlayers": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getNumberOfPlayersOnObjective": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getNumberOfSlots": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getObjectivePosition": {
+      "0": {
+        "en-US": "Number",
+        "zh-CN": "目标点索引"
+      }
+    },
+    "getPlayerClosestToReticle": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getPlayersInRadius": {
+      "0": {
+        "en-US": "Center",
+        "zh-CN": "中间"
+      },
+      "1": {
+        "en-US": "Radius",
+        "zh-CN": "半径"
+      },
+      "2": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "3": {
+        "en-US": "LOS Check",
+        "zh-CN": "视线检测"
+      }
+    },
+    "getPlayersInSlot": {
+      "0": {
+        "en-US": "Slot",
+        "zh-CN": "栏位"
+      },
+      "1": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getPlayersInViewAngle": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "2": {
+        "en-US": "View Angle",
+        "zh-CN": "视角"
+      }
+    },
+    "getPlayersNotOnObjective": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getPlayersOnHero": {
+      "0": {
+        "en-US": "Hero",
+        "zh-CN": "英雄"
+      },
+      "1": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getPlayersOnObjective": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getPosition": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getScore": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getSlot": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getSpawnPoints": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "getSpeed": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getSpeedInDirection": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Direction",
+        "zh-CN": "方向"
+      }
+    },
+    "getStatistic": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Stat",
+        "zh-CN": "数据"
+      }
+    },
+    "getThrottle": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getUltCharge": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getVelocity": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getVerticalFacingAngle": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "getVerticalSpeed": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "hasSpawned": {
+      "0": {
+        "en-US": "Entity",
+        "zh-CN": "实体"
+      }
+    },
+    "hasStatus": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Status",
+        "zh-CN": "状态"
+      }
+    },
+    "heal": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Healer",
+        "zh-CN": "治疗者"
+      },
+      "2": {
+        "en-US": "Amount",
+        "zh-CN": "治疗量"
+      }
+    },
+    "hero": {
+      "0": {
+        "en-US": "Hero",
+        "zh-CN": "英雄"
+      }
+    },
+    "heroIconString": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "horizontalAngleFromDirection": {
+      "0": {
+        "en-US": "Direction",
+        "zh-CN": "方向"
+      }
+    },
+    "horizontalAngleTowards": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Position",
+        "zh-CN": "位置"
+      }
+    },
+    "iconString": {
+      "0": {
+        "en-US": "Icon",
+        "zh-CN": "图标"
+      }
+    },
+    "if": {
+      "0": {
+        "en-US": "Condition",
+        "zh-CN": "条件"
+      }
+    },
+    "ifThenElse": {
+      "0": {
+        "en-US": "If",
+        "zh-CN": "If"
+      },
+      "1": {
+        "en-US": "Then",
+        "zh-CN": "Then"
+      },
+      "2": {
+        "en-US": "Else",
+        "zh-CN": "Else"
+      }
+    },
+    "indexOfArrayValue": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "inputBindingString": {
+      "0": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      }
+    },
+    "isAlive": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isButtonHeld": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      }
+    },
+    "isCommunicating": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Type",
+        "zh-CN": "类型"
+      }
+    },
+    "isCommunicatingAnything": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isCommunicatingEmote": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isCommunicatingSpray": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isCommunicatingVoiceline": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isCrouching": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isDead": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isDummy": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isDuplicatingAHero": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isFiringPrimaryFire": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isFiringSecondary": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isFlagAtBase": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "isFlagBeingCarried": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "isHeroBeingPlayed": {
+      "0": {
+        "en-US": "Hero",
+        "zh-CN": "英雄"
+      },
+      "1": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "isInAir": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isInAlternateForm": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isInLoS": {
+      "0": {
+        "en-US": "Start Pos",
+        "zh-CN": "开始位置"
+      },
+      "1": {
+        "en-US": "End Pos",
+        "zh-CN": "结束位置"
+      },
+      "2": {
+        "en-US": "Barriers",
+        "zh-CN": "屏障"
+      }
+    },
+    "isInSpawnRoom": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isInViewAngle": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Location",
+        "zh-CN": "坐标"
+      },
+      "2": {
+        "en-US": "View Angle",
+        "zh-CN": "视角"
+      }
+    },
+    "isJumping": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isMeleeing": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isMoving": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isObjectiveComplete": {
+      "0": {
+        "en-US": "Number",
+        "zh-CN": "数字"
+      }
+    },
+    "isOnFire": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isOnGround": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isOnObjective": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isOnWall": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isReloading": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isStanding": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isTeamOnDefense": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "isTeamOnOffense": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "isTrueForAll": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      },
+      "1": {
+        "en-US": "Condition",
+        "zh-CN": "条件"
+      }
+    },
+    "isTrueForAny": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      },
+      "1": {
+        "en-US": "Condition",
+        "zh-CN": "条件"
+      }
+    },
+    "isUsingAbility1": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isUsingAbility2": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "isUsingUltimate": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "kill": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Killer",
+        "zh-CN": "击杀者"
+      }
+    },
+    "lastOf": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      }
+    },
+    "localVector": {
+      "0": {
+        "en-US": "World Vector",
+        "zh-CN": "地图矢量"
+      },
+      "1": {
+        "en-US": "Relative Player",
+        "zh-CN": "相对玩家"
+      },
+      "2": {
+        "en-US": "Transformation",
+        "zh-CN": "转换"
+      }
+    },
+    "logToInspector": {
+      "0": {
+        "en-US": "Text",
+        "zh-CN": "文本"
+      }
+    },
+    "loopIf": {
+      "0": {
+        "en-US": "Condition",
+        "zh-CN": "条件"
+      }
+    },
+    "mappedArray": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      },
+      "1": {
+        "en-US": "Mapping expression",
+        "zh-CN": "映射表达式"
+      }
+    },
+    "max": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "min": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "modifyGlobalVariable": {
+      "0": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "1": {
+        "en-US": "Operation",
+        "zh-CN": "操作"
+      },
+      "2": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "modifyGlobalVariableAtIndex": {
+      "0": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "1": {
+        "en-US": "Index",
+        "zh-CN": "索引"
+      },
+      "2": {
+        "en-US": "Operation",
+        "zh-CN": "操作"
+      },
+      "3": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "modifyPlayerVariable": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "2": {
+        "en-US": "Operation",
+        "zh-CN": "操作"
+      },
+      "3": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "modifyPlayerVariableAtIndex": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "2": {
+        "en-US": "Index",
+        "zh-CN": "索引"
+      },
+      "3": {
+        "en-US": "Operation",
+        "zh-CN": "操作"
+      },
+      "4": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "modulo": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "moveToTeam": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "2": {
+        "en-US": "Slot",
+        "zh-CN": "栏位"
+      }
+    },
+    "multiply": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "nearestWalkablePosition": {
+      "0": {
+        "en-US": "Position",
+        "zh-CN": "玩家"
+      }
+    },
+    "normalize": {
+      "0": {
+        "en-US": "Vector",
+        "zh-CN": "矢量"
+      }
+    },
+    "not": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "numberOfPlayers": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "oppositeTeamOf": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "or": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "playEffect": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Type",
+        "zh-CN": "类型"
+      },
+      "2": {
+        "en-US": "Color",
+        "zh-CN": "颜色"
+      },
+      "3": {
+        "en-US": "Position",
+        "zh-CN": "位置"
+      },
+      "4": {
+        "en-US": "Radius",
+        "zh-CN": "半径"
+      }
+    },
+    "playerDealtDamage": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "playerDealtFinalBlow": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "playerDealtHealing": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "playerDealtKnockback": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "playerDied": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "playerEarnedElimination": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "playerJoined": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "playerLeft": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "playerReceivedHealing": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "playerReceivedKnockback": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "playerTookDamage": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "preloadHero": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Hero",
+        "zh-CN": "英雄"
+      }
+    },
+    "progressBarHud": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "2": {
+        "en-US": "Text",
+        "zh-CN": "文本"
+      },
+      "3": {
+        "en-US": "Location",
+        "zh-CN": "坐标"
+      },
+      "4": {
+        "en-US": "Sort Order",
+        "zh-CN": "排序"
+      },
+      "5": {
+        "en-US": "Progress Bar Color",
+        "zh-CN": "进度条颜色"
+      },
+      "6": {
+        "en-US": "Text Color",
+        "zh-CN": "文本颜色"
+      },
+      "7": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      },
+      "8": {
+        "en-US": "Non-Team Spectators",
+        "zh-CN": "无队伍观战者"
+      }
+    },
+    "raiseToPower": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "randomInteger": {
+      "0": {
+        "en-US": "Min",
+        "zh-CN": "最小"
+      },
+      "1": {
+        "en-US": "Max",
+        "zh-CN": "最大"
+      }
+    },
+    "randomReal": {
+      "0": {
+        "en-US": "Min",
+        "zh-CN": "最小"
+      },
+      "1": {
+        "en-US": "Max",
+        "zh-CN": "最大"
+      }
+    },
+    "randomValueInArray": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      }
+    },
+    "randomizedArray": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      }
+    },
+    "raycastHitNormal": {
+      "0": {
+        "en-US": "Start Pos",
+        "zh-CN": "开始位置"
+      },
+      "1": {
+        "en-US": "End Pos",
+        "zh-CN": "结束位置"
+      },
+      "2": {
+        "en-US": "Players To Include",
+        "zh-CN": "包括玩家"
+      },
+      "3": {
+        "en-US": "Players To Exclude",
+        "zh-CN": "不包括玩家"
+      },
+      "4": {
+        "en-US": "Include Player Owned Objects",
+        "zh-CN": "包括玩家拥有的物体"
+      }
+    },
+    "raycastHitPlayer": {
+      "0": {
+        "en-US": "Start Pos",
+        "zh-CN": "开始位置"
+      },
+      "1": {
+        "en-US": "End Pos",
+        "zh-CN": "结束位置"
+      },
+      "2": {
+        "en-US": "Players To Include",
+        "zh-CN": "包括玩家"
+      },
+      "3": {
+        "en-US": "Players To Exclude",
+        "zh-CN": "不包括玩家"
+      },
+      "4": {
+        "en-US": "Include Player Owned Objects",
+        "zh-CN": "包括玩家拥有的物体"
+      }
+    },
+    "raycastHitPosition": {
+      "0": {
+        "en-US": "Start Pos",
+        "zh-CN": "开始位置"
+      },
+      "1": {
+        "en-US": "End Pos",
+        "zh-CN": "结束位置"
+      },
+      "2": {
+        "en-US": "Players To Include",
+        "zh-CN": "包括玩家"
+      },
+      "3": {
+        "en-US": "Players To Exclude",
+        "zh-CN": "不包括玩家"
+      },
+      "4": {
+        "en-US": "Include Player Owned Objects",
+        "zh-CN": "包括玩家拥有的物体"
+      }
+    },
+    "removeAllHealthPoolsFromPlayer": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "removeFromArray": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "removeFromGame": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "removeHealthPool": {
+      "0": {
+        "en-US": "Health Pool ID",
+        "zh-CN": "生命池ID"
+      }
+    },
+    "resetHeroAvailability": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "respawn": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "resurrect": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "roundToInteger": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Rounding Type",
+        "zh-CN": "取整方式"
+      }
+    },
+    "setAbility1Enabled": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Enabled",
+        "zh-CN": "启用"
+      }
+    },
+    "setAbility2Enabled": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Enabled",
+        "zh-CN": "启用"
+      }
+    },
+    "setAbilityCharge": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      },
+      "2": {
+        "en-US": "Charge Count",
+        "zh-CN": "充能计数"
+      }
+    },
+    "setAbilityCooldown": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      },
+      "2": {
+        "en-US": "COOLDOWN",
+        "zh-CN": "冷却时间"
+      }
+    },
+    "setAbilityResource": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      },
+      "2": {
+        "en-US": "Resource Percent",
+        "zh-CN": "资源百分比"
+      }
+    },
+    "setAimSpeed": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Turn Speed Percent",
+        "zh-CN": "转向速度百分比"
+      }
+    },
+    "setAllowedHeroes": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Hero",
+        "zh-CN": "英雄"
+      }
+    },
+    "setAmmo": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Clip",
+        "zh-CN": "弹夹"
+      },
+      "2": {
+        "en-US": "Ammo",
+        "zh-CN": "弹药"
+      }
+    },
+    "setCrouchEnabled": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Enabled",
+        "zh-CN": "启用"
+      }
+    },
+    "setDamageDealt": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Damage Dealt Percent",
+        "zh-CN": "造成伤害百分比"
+      }
+    },
+    "setDamageReceived": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Damage Received Percent",
+        "zh-CN": "受到伤害百分比"
+      }
+    },
+    "setEnvironmentCreditPlayer": {
+      "0": {
+        "en-US": "Target",
+        "zh-CN": "目标"
+      },
+      "1": {
+        "en-US": "Environment Credit Player",
+        "zh-CN": "地形消灭者玩家"
+      }
+    },
+    "setFacing": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Direction",
+        "zh-CN": "方向"
+      },
+      "2": {
+        "en-US": "Relative",
+        "zh-CN": "相对"
+      }
+    },
+    "setGlobalVariable": {
+      "0": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "setGlobalVariableAtIndex": {
+      "0": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "1": {
+        "en-US": "Index",
+        "zh-CN": "索引"
+      },
+      "2": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "setGravity": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Gravity Percent",
+        "zh-CN": "引力百分比"
+      }
+    },
+    "setHealingDealt": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Healing Dealt Percent",
+        "zh-CN": "造成治疗百分比"
+      }
+    },
+    "setHealingReceived": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Healing Received Percent",
+        "zh-CN": "受到治疗百分比"
+      }
+    },
+    "setHealth": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Amount",
+        "zh-CN": "生命值"
+      }
+    },
+    "setInvisibility": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Invisible To",
+        "zh-CN": "不可见"
+      }
+    },
+    "setJumpEnabled": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Enabled",
+        "zh-CN": "启用"
+      }
+    },
+    "setJumpVerticalSpeed": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Jump Vertical Speed Percent",
+        "zh-CN": "垂直跳跃速度百分比"
+      }
+    },
+    "setKnockbackDealt": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Knockback Dealt Percent",
+        "zh-CN": "造成击退百分比"
+      }
+    },
+    "setKnockbackReceived": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Knockback Received Percent",
+        "zh-CN": "受到击退百分比"
+      }
+    },
+    "setMatchTime": {
+      "0": {
+        "en-US": "Time",
+        "zh-CN": "时间"
+      }
+    },
+    "setMaxAmmo": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Clip",
+        "zh-CN": "弹夹"
+      },
+      "2": {
+        "en-US": "Ammo",
+        "zh-CN": "弹药"
+      }
+    },
+    "setMaxHealth": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Health Percent",
+        "zh-CN": "生命百分比"
+      }
+    },
+    "setMeleeEnabled": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Enabled",
+        "zh-CN": "启用"
+      }
+    },
+    "setMoveSpeed": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Move Speed Percent",
+        "zh-CN": "移动速度百分比"
+      }
+    },
+    "setObjectiveDescription": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Header",
+        "zh-CN": "标题"
+      },
+      "2": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "setPlayerVariable": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "2": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "setPlayerVariableAtIndex": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      },
+      "2": {
+        "en-US": "Index",
+        "zh-CN": "索引"
+      },
+      "3": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "setPrimaryFireEnabled": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Enabled",
+        "zh-CN": "启用"
+      }
+    },
+    "setProjectileGravity": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Projectile Gravity Percent",
+        "zh-CN": "弹道引力百分比"
+      }
+    },
+    "setProjectileSpeed": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Projectile Speed Percent",
+        "zh-CN": "弹道速度百分比"
+      }
+    },
+    "setReloadEnabled": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Enabled",
+        "zh-CN": "启用"
+      }
+    },
+    "setRespawnTime": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Time",
+        "zh-CN": "时间"
+      }
+    },
+    "setScore": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Score",
+        "zh-CN": "得分"
+      }
+    },
+    "setSecondaryFireEnabled": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Enabled",
+        "zh-CN": "启用"
+      }
+    },
+    "setSlowMotion": {
+      "0": {
+        "en-US": "Speed Percent",
+        "zh-CN": "速度百分比"
+      }
+    },
+    "setStatusEffect": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Assister",
+        "zh-CN": "助攻者"
+      },
+      "2": {
+        "en-US": "Status",
+        "zh-CN": "状态"
+      },
+      "3": {
+        "en-US": "Duration",
+        "zh-CN": "持续时间"
+      }
+    },
+    "setTeamScore": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Score",
+        "zh-CN": "得分"
+      }
+    },
+    "setUltCharge": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Charge Percent",
+        "zh-CN": "充能百分比"
+      }
+    },
+    "setUltEnabled": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Enabled",
+        "zh-CN": "启用"
+      }
+    },
+    "setWeapon": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Weapon",
+        "zh-CN": "武器"
+      }
+    },
+    "sin": {
+      "0": {
+        "en-US": "Angle",
+        "zh-CN": "角度"
+      }
+    },
+    "sinDeg": {
+      "0": {
+        "en-US": "Angle",
+        "zh-CN": "角度"
+      }
+    },
+    "skip": {
+      "0": {
+        "en-US": "Number OF Actions",
+        "zh-CN": "动作数量"
+      }
+    },
+    "skipIf": {
+      "0": {
+        "en-US": "Condition",
+        "zh-CN": "条件"
+      },
+      "1": {
+        "en-US": "Number OF Actions",
+        "zh-CN": "动作数量"
+      }
+    },
+    "slice": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      },
+      "1": {
+        "en-US": "Start Index",
+        "zh-CN": "开始索引"
+      },
+      "2": {
+        "en-US": "Count",
+        "zh-CN": "计数"
+      }
+    },
+    "smallMessage": {
+      "0": {
+        "en-US": "Visible To",
+        "zh-CN": "可见"
+      },
+      "1": {
+        "en-US": "Header",
+        "zh-CN": "标题"
+      }
+    },
+    "sortedArray": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      },
+      "1": {
+        "en-US": "Value Rank",
+        "zh-CN": "条件"
+      }
+    },
+    "squareRoot": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "startAcceleration": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Direction",
+        "zh-CN": "方向"
+      },
+      "2": {
+        "en-US": "Rate",
+        "zh-CN": "速率"
+      },
+      "3": {
+        "en-US": "Max Speed",
+        "zh-CN": "最大速度"
+      },
+      "4": {
+        "en-US": "Relative",
+        "zh-CN": "相对"
+      },
+      "5": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "startCamera": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Eye Position",
+        "zh-CN": "眼睛位置"
+      },
+      "2": {
+        "en-US": "Look At Position",
+        "zh-CN": "望向位置"
+      },
+      "3": {
+        "en-US": "Blend Speed",
+        "zh-CN": "转动速度"
+      }
+    },
+    "startDamageModification": {
+      "0": {
+        "en-US": "Receivers",
+        "zh-CN": "受伤害者"
+      },
+      "1": {
+        "en-US": "Damagers",
+        "zh-CN": "伤害者"
+      },
+      "2": {
+        "en-US": "Damage Percent",
+        "zh-CN": "伤害百分比"
+      },
+      "3": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "startDamageOverTime": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Damager",
+        "zh-CN": "伤害者"
+      },
+      "2": {
+        "en-US": "Duration",
+        "zh-CN": "持续时间"
+      },
+      "3": {
+        "en-US": "Damage Per Second",
+        "zh-CN": "每秒伤害"
+      }
+    },
+    "startFacing": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Direction",
+        "zh-CN": "方向"
+      },
+      "2": {
+        "en-US": "Turn Rate",
+        "zh-CN": "角速率"
+      },
+      "3": {
+        "en-US": "Relative",
+        "zh-CN": "相对"
+      },
+      "4": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "startForcingButton": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      }
+    },
+    "startForcingHero": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Hero",
+        "zh-CN": "英雄"
+      }
+    },
+    "startForcingName": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Name",
+        "zh-CN": "名称"
+      }
+    },
+    "startForcingOutlineFor": {
+      "0": {
+        "en-US": "Viewed Players",
+        "zh-CN": "被观察的玩家"
+      },
+      "1": {
+        "en-US": "Viewing Players",
+        "zh-CN": "观察玩家"
+      },
+      "2": {
+        "en-US": "Visible",
+        "zh-CN": "可见"
+      },
+      "3": {
+        "en-US": "Color",
+        "zh-CN": "颜色"
+      },
+      "4": {
+        "en-US": "Type",
+        "zh-CN": "类型"
+      }
+    },
+    "startForcingPosition": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Position",
+        "zh-CN": "位置"
+      },
+      "2": {
+        "en-US": "REEVALUATE",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "startForcingSpawn": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      },
+      "1": {
+        "en-US": "Room",
+        "zh-CN": "重生室"
+      }
+    },
+    "startForcingThrottle": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Min Forward",
+        "zh-CN": "向前最小"
+      },
+      "2": {
+        "en-US": "Max Forward",
+        "zh-CN": "向前最大"
+      },
+      "3": {
+        "en-US": "Min Backward",
+        "zh-CN": "向后最小"
+      },
+      "4": {
+        "en-US": "Max Backward",
+        "zh-CN": "向后最大"
+      },
+      "5": {
+        "en-US": "Min Sideways",
+        "zh-CN": "侧向最小"
+      },
+      "6": {
+        "en-US": "Max Sideways",
+        "zh-CN": "侧向最大"
+      }
+    },
+    "startGrantingAssistFor": {
+      "0": {
+        "en-US": "Assisters",
+        "zh-CN": "助攻者"
+      },
+      "1": {
+        "en-US": "Targets",
+        "zh-CN": "目标"
+      },
+      "2": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "startHealingModification": {
+      "0": {
+        "en-US": "Receivers",
+        "zh-CN": "受治疗者"
+      },
+      "1": {
+        "en-US": "Healers",
+        "zh-CN": "治疗者"
+      },
+      "2": {
+        "en-US": "Healing Percent",
+        "zh-CN": "治疗百分比"
+      },
+      "3": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "startHealingOverTime": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Healer",
+        "zh-CN": "治疗者"
+      },
+      "2": {
+        "en-US": "Duration",
+        "zh-CN": "持续时间"
+      },
+      "3": {
+        "en-US": "Healing Per Second",
+        "zh-CN": "每秒治疗"
+      }
+    },
+    "startModifyingVoicelinePitch": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Pitch Scalar",
+        "zh-CN": "音调调整"
+      },
+      "2": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "startRule": {
+      "0": {
+        "en-US": "Subroutine",
+        "zh-CN": "子程序"
+      },
+      "1": {
+        "en-US": "If ALREADY EXECUTING",
+        "zh-CN": "是否正在执行"
+      }
+    },
+    "startScalingBarriers": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Scale",
+        "zh-CN": "大小"
+      },
+      "2": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "startScalingSize": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Scale",
+        "zh-CN": "大小"
+      },
+      "2": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "startThrottleInDirection": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Direction",
+        "zh-CN": "方向"
+      },
+      "2": {
+        "en-US": "Magnitude",
+        "zh-CN": "幅度"
+      },
+      "3": {
+        "en-US": "Relative",
+        "zh-CN": "相对"
+      },
+      "4": {
+        "en-US": "Behavior",
+        "zh-CN": "行为"
+      },
+      "5": {
+        "en-US": "Reevaluation",
+        "zh-CN": "重新赋值"
+      }
+    },
+    "startTransformingThrottle": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "X Axis Scalar",
+        "zh-CN": "X轴缩放"
+      },
+      "2": {
+        "en-US": "Y Axis Scalar",
+        "zh-CN": "Y轴缩放"
+      },
+      "3": {
+        "en-US": "Relative Direction",
+        "zh-CN": "相对方向"
+      }
+    },
+    "stopAcceleration": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopAllDamageOverTime": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopAllHealingOverTime": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopAssist": {
+      "0": {
+        "en-US": "Assist ID",
+        "zh-CN": "助攻ID"
+      }
+    },
+    "stopCamera": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopChasingGlobalVariable": {
+      "0": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      }
+    },
+    "stopChasingPlayerVariable": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Variable",
+        "zh-CN": "变量"
+      }
+    },
+    "stopDamageModification": {
+      "0": {
+        "en-US": "Damage Modification",
+        "zh-CN": "伤害调整ID"
+      }
+    },
+    "stopDamageOverTime": {
+      "0": {
+        "en-US": "Damage Over Time ID",
+        "zh-CN": "持续伤害ID"
+      }
+    },
+    "stopFacing": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopForcingButton": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Button",
+        "zh-CN": "按钮"
+      }
+    },
+    "stopForcingCurrentHero": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopForcingName": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopForcingOutlineFor": {
+      "0": {
+        "en-US": "Viewed Players",
+        "zh-CN": "被观察的玩家"
+      },
+      "1": {
+        "en-US": "Viewing Players",
+        "zh-CN": "观察玩家"
+      }
+    },
+    "stopForcingPosition": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopForcingSpawn": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "stopForcingThrottle": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopHealingModification": {
+      "0": {
+        "en-US": "Healing Modification ID",
+        "zh-CN": "治疗调整ID"
+      }
+    },
+    "stopHealingOverTime": {
+      "0": {
+        "en-US": "HEAL Over Time ID",
+        "zh-CN": "持续治疗ID"
+      }
+    },
+    "stopModifyingVoicelinePitch": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopScalingBarriers": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopScalingSize": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopThrottleInDirection": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "stopTransformingThrottle": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "strContains": {
+      "0": {
+        "en-US": "String",
+        "zh-CN": "字符串"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "字符串"
+      }
+    },
+    "strIndex": {
+      "0": {
+        "en-US": "String",
+        "zh-CN": "字符串"
+      },
+      "1": {
+        "en-US": "Character",
+        "zh-CN": "字符"
+      }
+    },
+    "strLen": {
+      "0": {
+        "en-US": "String",
+        "zh-CN": "字符串"
+      }
+    },
+    "string": {
+      "0": {
+        "en-US": "String",
+        "zh-CN": "字符串"
+      },
+      "1": {
+        "en-US": "{0}",
+        "zh-CN": "{0}"
+      },
+      "2": {
+        "en-US": "{1}",
+        "zh-CN": "{1}"
+      },
+      "3": {
+        "en-US": "{2}",
+        "zh-CN": "{2}"
+      }
+    },
+    "stringReplace": {
+      "0": {
+        "en-US": "String",
+        "zh-CN": "字符串"
+      },
+      "1": {
+        "en-US": "Pattern",
+        "zh-CN": "模式"
+      },
+      "2": {
+        "en-US": "Replacement",
+        "zh-CN": "替换"
+      }
+    },
+    "stringSlice": {
+      "0": {
+        "en-US": "String",
+        "zh-CN": "字符串"
+      },
+      "1": {
+        "en-US": "Start Character Index",
+        "zh-CN": "开始字符索引"
+      },
+      "2": {
+        "en-US": "Character Count",
+        "zh-CN": "字符串长度"
+      }
+    },
+    "stringSplit": {
+      "0": {
+        "en-US": "String",
+        "zh-CN": "字符串"
+      },
+      "1": {
+        "en-US": "Separator",
+        "zh-CN": "分隔符"
+      }
+    },
+    "subtract": {
+      "0": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      },
+      "1": {
+        "en-US": "Value",
+        "zh-CN": "值"
+      }
+    },
+    "tan": {
+      "0": {
+        "en-US": "Angle",
+        "zh-CN": "角度"
+      }
+    },
+    "tanDeg": {
+      "0": {
+        "en-US": "Angle",
+        "zh-CN": "角度"
+      }
+    },
+    "teamOf": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      }
+    },
+    "teamScore": {
+      "0": {
+        "en-US": "Team",
+        "zh-CN": "队伍"
+      }
+    },
+    "teleport": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Position",
+        "zh-CN": "位置"
+      }
+    },
+    "updateEveryFrame": {
+      "0": {
+        "en-US": "Input Value",
+        "zh-CN": "值"
+      }
+    },
+    "valueInArray": {
+      "0": {
+        "en-US": "Array",
+        "zh-CN": "数组"
+      },
+      "1": {
+        "en-US": "Index",
+        "zh-CN": "索引"
+      }
+    },
+    "vector": {
+      "0": {
+        "en-US": "X",
+        "zh-CN": "X"
+      },
+      "1": {
+        "en-US": "Y",
+        "zh-CN": "Y"
+      },
+      "2": {
+        "en-US": "Z",
+        "zh-CN": "Z"
+      }
+    },
+    "vectorTowards": {
+      "0": {
+        "en-US": "Start Pos",
+        "zh-CN": "开始位置"
+      },
+      "1": {
+        "en-US": "End Pos",
+        "zh-CN": "结束位置"
+      }
+    },
+    "verticalAngleFromDirection": {
+      "0": {
+        "en-US": "Direction",
+        "zh-CN": "方向"
+      }
+    },
+    "verticalAngleTowards": {
+      "0": {
+        "en-US": "Player",
+        "zh-CN": "玩家"
+      },
+      "1": {
+        "en-US": "Position",
+        "zh-CN": "位置"
+      }
+    },
+    "wait": {
+      "0": {
+        "en-US": "Time",
+        "zh-CN": "时间"
+      },
+      "1": {
+        "en-US": "Wait Behavior",
+        "zh-CN": "等待行为"
+      }
+    },
+    "waitUntil": {
+      "0": {
+        "en-US": "Continue Condition",
+        "zh-CN": "继续条件"
+      },
+      "1": {
+        "en-US": "Timeout",
+        "zh-CN": "超时"
+      }
+    },
+    "while": {
+      "0": {
+        "en-US": "Condition",
+        "zh-CN": "条件"
+      }
+    },
+    "workshopSettingCombo": {
+      "0": {
+        "en-US": "Category",
+        "zh-CN": "类别"
+      },
+      "1": {
+        "en-US": "Name",
+        "zh-CN": "名称"
+      },
+      "2": {
+        "en-US": "Default",
+        "zh-CN": "默认"
+      },
+      "3": {
+        "en-US": "Options",
+        "zh-CN": "选项"
+      },
+      "4": {
+        "en-US": "Sort Order",
+        "zh-CN": "排序"
+      }
+    },
+    "workshopSettingInteger": {
+      "0": {
+        "en-US": "Category",
+        "zh-CN": "类别"
+      },
+      "1": {
+        "en-US": "Name",
+        "zh-CN": "名称"
+      },
+      "2": {
+        "en-US": "Default",
+        "zh-CN": "默认"
+      },
+      "3": {
+        "en-US": "Min",
+        "zh-CN": "最小"
+      },
+      "4": {
+        "en-US": "Max",
+        "zh-CN": "最大"
+      },
+      "5": {
+        "en-US": "Sort Order",
+        "zh-CN": "排序"
+      }
+    },
+    "workshopSettingToggle": {
+      "0": {
+        "en-US": "Category",
+        "zh-CN": "类别"
+      },
+      "1": {
+        "en-US": "Name",
+        "zh-CN": "名称"
+      },
+      "2": {
+        "en-US": "Default",
+        "zh-CN": "默认"
+      },
+      "3": {
+        "en-US": "Sort Order",
+        "zh-CN": "排序"
+      }
+    },
+    "worldVector": {
+      "0": {
+        "en-US": "Local Vector",
+        "zh-CN": "本地矢量"
+      },
+      "1": {
+        "en-US": "Relative Player",
+        "zh-CN": "相对玩家"
+      },
+      "2": {
+        "en-US": "Transformation",
+        "zh-CN": "转换"
+      }
+    }
+  },
   "provenance": {
     "generator": "workshop-catalog-gen",
     "generatorVersion": "0.1.0",
@@ -22040,7 +26122,8 @@
       "Hero.DOCTRINE (Doctrine) and its aliases are transcribed from the official Blizzard hero-detail pages (accessed 2026-10-08); the hero is absent from the pinned workshop-data export, so the member carries no export match in tools/corpus/zh-cn-corpus.json",
       "structural call signatures for the rule-content-v1 constructs (setGlobalVariable, modifyGlobalVariable, setPlayerVariable, modifyPlayerVariable, forGlobalVariable, forPlayerVariable, if, elseIf, while, callSubroutine, and the zero-argument else/end) are transcribed from the pinned workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d; parameter order follows the emitted call's argument order, and Variable/Subroutine parameter types name the format's tagged {\"variable\"}/{\"subroutine\"} nodes",
       "the six direction value return types (up, down, left, right, forward, backward) are reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d, which gives Vector.UP and the other direction constants a Direction (vector) return; the direction parameters they fill (for example startThrottleInDirection.direction) are typed Vector",
-      "the 23 enum parameter domains declared for the enum-typed `paramTypes` positions — the `Team` parameters on `createDummyBot`, `allPlayers`, `getPlayersInRadius`, `oppositeTeamOf`, `numberOfPlayers`, `getPlayersOnHero`, `getSpawnPoints`, `isTeamOnOffense`, and `getPlayersInViewAngle`, the `Hero` parameters on `preloadHero`, `createDummyBot`, `setAllowedHeroes`, `hero`, `getPlayersOnHero`, and `createWorkshopSettingHero`, the `Button` parameters on `getAbilityCooldown`, `getAbilityResource`, and `getAbilityCharge`, and `hasStatus.status` (`Status`), `getPlayersInRadius.losCheck` (`LosCheck`), `worldVector.transformation` (`Transform`), `getHealthOfType.health` (`Health`), and `isCommunicating.type` (`Comms`) — are reconciled from the pinned workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d argument types; `Vector` positions accept any vector value and stay undeclared (workshop-rs#505)"
+      "the 23 enum parameter domains declared for the enum-typed `paramTypes` positions — the `Team` parameters on `createDummyBot`, `allPlayers`, `getPlayersInRadius`, `oppositeTeamOf`, `numberOfPlayers`, `getPlayersOnHero`, `getSpawnPoints`, `isTeamOnOffense`, and `getPlayersInViewAngle`, the `Hero` parameters on `preloadHero`, `createDummyBot`, `setAllowedHeroes`, `hero`, `getPlayersOnHero`, and `createWorkshopSettingHero`, the `Button` parameters on `getAbilityCooldown`, `getAbilityResource`, and `getAbilityCharge`, and `hasStatus.status` (`Status`), `getPlayersInRadius.losCheck` (`LosCheck`), `worldVector.transformation` (`Transform`), `getHealthOfType.health` (`Health`), and `isCommunicating.type` (`Comms`) — are reconciled from the pinned workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d argument types; `Vector` positions accept any vector value and stay undeclared (workshop-rs#505)",
+      "paramDisplayNames record the parameter labels the Workshop editor shows, first stage covering en-US and zh-CN: en-US labels are transcribed from the structured Workshop.codes wiki articles (https://workshop.codes/wiki/articles/, accessed 2026-10), zh-CN labels are reconciled from the zh-CN Workshop client strings in the reviewed owl-CN data (https://github.com/qaz075115961/owl-CN, client/owl.js) and the docs.owmod.net Chinese manual, cross-checked against the per-entry parameter tables at https://overwatch.huijiwiki.com which pair each zh-CN label with its en-US label; positions whose labels conflict across sources or are not covered are listed in paramDisplayNameGaps (compare[1] zh-CN label not documented, magnitude[0] conflicting labels across sources) rather than guessed (wrightkit/workshop-rs#498); editor initial argument values are out of scope"
     ]
   },
   "schemaVersion": 1,

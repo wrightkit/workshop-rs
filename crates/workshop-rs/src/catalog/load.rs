@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::OnceLock;
 
 use serde::Deserialize;
@@ -38,6 +38,38 @@ struct CatalogFile {
     localized_strings: Vec<LocalizedStringFile>,
     #[serde(default)]
     enums: Vec<EnumFile>,
+    /// The localized parameter display names the Workshop editor shows,
+    /// keyed by entry id then parameter position — their own catalog data
+    /// section, separate from `paramAliases` (additional accepted parse
+    /// spellings) and `paramDefaults` (the value applied when an argument
+    /// is omitted). Only source-confirmed positions and locales are
+    /// recorded; everything else is listed in `paramDisplayNameGaps`.
+    #[serde(default)]
+    param_display_names: BTreeMap<String, BTreeMap<String, BTreeMap<String, String>>>,
+    /// The explicit coverage gap list for parameter display names: the
+    /// declared locales with no recorded names at all, and every parameter
+    /// position (`entryId[index]`) that does not record a name in every
+    /// supported (non-gap) locale. A gapped position may still carry the
+    /// names that are confirmed. When the section is declared, a position
+    /// must appear on the gap list exactly when its recorded names do not
+    /// cover every supported locale.
+    param_display_name_gaps: Option<ParamDisplayNameGapsFile>,
+}
+
+/// The `paramDisplayNameGaps` section: the catalog's explicit record of
+/// where localized parameter display names are *not* recorded.
+#[derive(Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct ParamDisplayNameGapsFile {
+    /// Declared locales with no parameter display names recorded.
+    #[serde(default)]
+    locales: Vec<String>,
+    /// Parameter positions lacking a source-confirmed name in at least one
+    /// supported locale, each written `entryId[position]` with `position` a
+    /// zero-based index into the entry's declared `params`. A listed
+    /// position may still record names for the locales that are confirmed.
+    #[serde(default)]
+    positions: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -211,6 +243,8 @@ impl Catalog {
         for domain in file.enums {
             catalog.insert_enum(domain)?;
         }
+        catalog
+            .insert_param_display_names(file.param_display_names, file.param_display_name_gaps)?;
         for domain in &catalog.enums {
             for member in &domain.members {
                 for (locale, spellings) in &member.aliases {
@@ -420,6 +454,7 @@ impl Catalog {
                 })
                 .collect::<Result<Vec<_>>>()?,
             param_domains: item.param_domains,
+            param_display_names: Vec::new(),
             param_defaults: item.param_defaults,
             param_types: item.param_types,
             param_coercions: item.param_coercions,
@@ -759,6 +794,169 @@ impl Catalog {
             aliases: domain_aliases,
             members,
         });
+        Ok(())
+    }
+
+    /// Distribute the top-level `paramDisplayNames` section onto the
+    /// entries it names and validate it against `paramDisplayNameGaps`.
+    /// Recorded locales must be declared and not on the gap-locale list;
+    /// when the gap section is declared, a parameter position must be on
+    /// the gap list exactly when it lacks a recorded name in at least one
+    /// supported (non-gap) locale, so the explicit gaps stay honest as the
+    /// data changes.
+    fn insert_param_display_names(
+        &mut self,
+        names: BTreeMap<String, BTreeMap<String, BTreeMap<String, String>>>,
+        gaps: Option<ParamDisplayNameGapsFile>,
+    ) -> Result<()> {
+        let mut gap_locales = BTreeSet::new();
+        let mut gap_positions = BTreeSet::new();
+        if let Some(gaps) = &gaps {
+            for gap_locale in &gaps.locales {
+                let locale = Locale::new(gap_locale);
+                if !self.locales.contains(&locale) {
+                    return Err(CatalogError::validation(format!(
+                        "param display name gap locale '{locale}' is not a declared locale"
+                    )));
+                }
+                if !gap_locales.insert(locale) {
+                    return Err(CatalogError::validation(format!(
+                        "duplicate param display name gap locale '{gap_locale}'"
+                    )));
+                }
+            }
+            for position in &gaps.positions {
+                let (id, index) = position
+                    .strip_suffix(']')
+                    .and_then(|text| text.split_once('['))
+                    .ok_or_else(|| {
+                        CatalogError::validation(format!(
+                            "param display name gap '{position}' is not written 'entryId[index]'"
+                        ))
+                    })?;
+                let index: usize = index.parse().map_err(|_| {
+                    CatalogError::validation(format!(
+                        "param display name gap '{position}' has a non-numeric index"
+                    ))
+                })?;
+                let param_counts = self
+                    .by_id
+                    .iter()
+                    .filter_map(|by_id| by_id.get(id))
+                    .map(|&entry_index| self.entries[entry_index].params.len())
+                    .collect::<Vec<_>>();
+                if param_counts.is_empty() {
+                    return Err(CatalogError::validation(format!(
+                        "param display name gap '{position}' names undeclared entry '{id}'"
+                    )));
+                }
+                if !param_counts.iter().any(|&len| index < len) {
+                    return Err(CatalogError::validation(format!(
+                        "param display name gap '{position}' exceeds the parameters of '{id}'"
+                    )));
+                }
+                if !gap_positions.insert((id.to_string(), index)) {
+                    return Err(CatalogError::validation(format!(
+                        "duplicate param display name gap '{position}'"
+                    )));
+                }
+            }
+        }
+
+        for (id, positions) in names {
+            // An id can name more than one kind — for example
+            // `modifyGlobalVariable` is declared under both `structural`
+            // and `actions` with the same parameters — so display names
+            // distribute onto every entry the id resolves to.
+            let entry_indices = self
+                .by_id
+                .iter()
+                .filter_map(|by_id| by_id.get(&id))
+                .copied()
+                .collect::<Vec<_>>();
+            if entry_indices.is_empty() {
+                return Err(CatalogError::validation(format!(
+                    "param display names name undeclared entry '{id}'"
+                )));
+            }
+            for (position, map) in positions {
+                let index: usize = position.parse().map_err(|_| {
+                    CatalogError::validation(format!(
+                        "'{id}' param display name position '{position}' is not a zero-based index"
+                    ))
+                })?;
+                let mut recorded = HashMap::new();
+                for (name_locale, name) in map {
+                    let locale = Locale::new(&name_locale);
+                    if !self.locales.contains(&locale) {
+                        return Err(CatalogError::validation(format!(
+                            "'{id}' declares a parameter display name for undeclared locale '{locale}'"
+                        )));
+                    }
+                    if gap_locales.contains(&locale) {
+                        return Err(CatalogError::validation(format!(
+                            "'{id}' declares a parameter display name for gap locale '{locale}'"
+                        )));
+                    }
+                    if name.is_empty() {
+                        return Err(CatalogError::validation(format!(
+                            "'{id}' declares an empty parameter display name for locale '{locale}'"
+                        )));
+                    }
+                    recorded.insert(locale, name);
+                }
+                if recorded.is_empty() {
+                    return Err(CatalogError::validation(format!(
+                        "'{id}' declares no display names for parameter {index}"
+                    )));
+                }
+                // The position names every entry under the id that declares
+                // it; entries without the parameter (a same-id `operators`
+                // or parameterless sibling) are not display-name carriers.
+                let mut applied = false;
+                for &entry_index in &entry_indices {
+                    let entry = &mut self.entries[entry_index];
+                    if index >= entry.params.len() {
+                        continue;
+                    }
+                    entry.param_display_names.resize(entry.params.len(), None);
+                    entry.param_display_names[index] = Some(recorded.clone());
+                    applied = true;
+                }
+                if !applied {
+                    return Err(CatalogError::validation(format!(
+                        "'{id}' declares a display name for parameter {index}, which no entry of that id has"
+                    )));
+                }
+            }
+        }
+
+        if gaps.is_some() {
+            let supported = self
+                .locales
+                .iter()
+                .filter(|locale| !gap_locales.contains(*locale))
+                .collect::<Vec<_>>();
+            for entry in &self.entries {
+                for index in 0..entry.params.len() {
+                    let names = entry
+                        .param_display_names
+                        .get(index)
+                        .and_then(Option::as_ref);
+                    let complete = supported
+                        .iter()
+                        .all(|locale| names.is_some_and(|map| map.contains_key(*locale)));
+                    let gapped = gap_positions.contains(&(entry.id.clone(), index));
+                    if complete == gapped {
+                        return Err(CatalogError::validation(format!(
+                            "{} '{}' parameter {index} must be listed in paramDisplayNameGaps exactly when it lacks a display name in a supported locale",
+                            entry.kind.as_str(),
+                            entry.id
+                        )));
+                    }
+                }
+            }
+        }
         Ok(())
     }
 

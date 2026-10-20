@@ -13,7 +13,7 @@ use workshop_rs::catalog::{Catalog, Locale};
 /// (`workshop-catalog-gen build`) recomputes it and the pin is updated
 /// deliberately together with the data.
 const PINNED_CATALOG_DIGEST: &str =
-    "266991c80ead6d04dad8210c6a01314d371f98ce70ac2ee638f649643117ca87";
+    "eb7519fe02784d5163ba42e5fc0925be7f4ff955a2143070c53528bfc8d9711b";
 
 #[test]
 fn committed_catalog_digest_is_pinned() {

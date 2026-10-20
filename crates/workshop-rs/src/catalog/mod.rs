@@ -192,6 +192,14 @@ pub struct CatalogEntry {
     pub(crate) param_names: Option<Vec<String>>,
     /// Reviewed localized spellings for each parameter, parallel to `params`.
     pub(crate) param_aliases: Vec<HashMap<Locale, Vec<String>>>,
+    /// The localized parameter display name the Workshop editor shows for
+    /// each position, parallel to `params` — the catalog's own
+    /// `paramDisplayNames` section, separate from `paramAliases` (accepted
+    /// parse spellings) and `paramDefaults` (the value applied when an
+    /// argument is omitted). `None` at an index marks a position without a
+    /// source-confirmed name; such positions are recorded explicitly in
+    /// the catalog's `paramDisplayNameGaps` list.
+    pub(crate) param_display_names: Vec<Option<HashMap<Locale, String>>>,
     /// The canonical enum domain expected at each parameter position, when
     /// the parameter takes an enumerated value (parallel to `params`).
     /// `None` for non-enum parameters and for parameters whose accepted
@@ -307,6 +315,20 @@ impl CatalogEntry {
     pub fn param_name(&self, index: usize) -> Option<&str> {
         let names = self.param_names.as_deref().unwrap_or(&self.params);
         param_at(names, index, self.variadic).map(String::as_str)
+    }
+
+    /// The localized parameter display name the Workshop editor shows for
+    /// the argument at `index` in `locale`, when the catalog records one.
+    /// This is a reviewed editor-presentation fact only — it does not
+    /// affect parsing or emission — and it stays separate from
+    /// [`param_name`], `paramAliases`, and `paramDefaults`.
+    ///
+    /// [`param_name`]: Self::param_name
+    pub fn param_display_name(&self, locale: &Locale, index: usize) -> Option<&str> {
+        param_at(&self.param_display_names, index, self.variadic)
+            .and_then(Option::as_ref)
+            .and_then(|names| names.get(locale))
+            .map(String::as_str)
     }
 
     /// The number of arguments that must be present when trailing defaults

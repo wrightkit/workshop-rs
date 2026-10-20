@@ -130,6 +130,68 @@ fn signature_lists_params_defaults_and_inline_enum_members_once() {
 }
 
 #[test]
+fn signature_params_report_localized_editor_display_names() {
+    // workshop-rs#498: `SignatureParam.display_name` carries the label the
+    // Workshop editor shows in the requested locale — the existing `wait`
+    // zh-CN labels 时间 / 等待行为 — while `name` keeps the semantic name
+    // and `default` keeps the omission default.
+    let catalog = catalog();
+    let matches = catalog.lookup(&zh(), "Wait").expect("lookup");
+    let LookupMatch::Builtin {
+        signature: Some(signature),
+        ..
+    } = builtin_id(&matches, "wait")
+    else {
+        panic!("wait is an action with a signature");
+    };
+    assert_eq!(signature.params.len(), 2);
+    assert_eq!(signature.params[0].name, "time");
+    assert_eq!(signature.params[0].display_name.as_deref(), Some("时间"));
+    assert_eq!(signature.params[1].name, "waitBehavior");
+    assert_eq!(
+        signature.params[1].display_name.as_deref(),
+        Some("等待行为")
+    );
+    assert_eq!(
+        signature.params[1].default.as_deref(),
+        Some("Wait.IGNORE_CONDITION")
+    );
+    // Signature text keeps rendering the semantic names, unchanged.
+    assert!(
+        signature.text.starts_with("等待(time:"),
+        "{}",
+        signature.text
+    );
+
+    // The en-US lookup reports the en-US labels on the same positions.
+    let matches = catalog.lookup(&en(), "Wait").expect("lookup");
+    let LookupMatch::Builtin {
+        signature: Some(signature),
+        ..
+    } = builtin_id(&matches, "wait")
+    else {
+        panic!("wait is an action with a signature");
+    };
+    assert_eq!(signature.params[0].display_name.as_deref(), Some("Time"));
+    assert_eq!(
+        signature.params[1].display_name.as_deref(),
+        Some("Wait Behavior")
+    );
+
+    // A locale on the explicit gap list reports no display names.
+    let de = Locale::new("de-DE");
+    let matches = catalog.lookup(&de, "Wait").expect("lookup");
+    let LookupMatch::Builtin {
+        signature: Some(signature),
+        ..
+    } = builtin_id(&matches, "wait")
+    else {
+        panic!("wait is an action with a signature");
+    };
+    assert!(signature.params.iter().all(|p| p.display_name.is_none()));
+}
+
+#[test]
 fn indexed_player_variable_signature_lists_the_surface_parameters() {
     // workshop-rs#442: the player-variable index actions declare their
     // surface signature — including the `player` argument the source syntax
