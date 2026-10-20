@@ -13,7 +13,7 @@ Scope follows principle 9 of the goal document: technical facts about the Worksh
 3. **No per-value source or verification state.** A value is its kind and its number. The owner judged per-value evidence unnecessary overhead. Principle 9 is updated to match in wrightkit/.github#117.
 4. **One file per version.** A new version is a new file. Old files stay unchanged.
 5. **Location.** `crates/workshop-rs/src/gameplay/values/<version>.json`, next to the hero dataset. `catalog.json` is the language catalog and holds no hero data.
-6. **athena reads the data through the public Rust API** of `workshop-rs`, not the raw file. See "Reading the data".
+6. **athena reads the data through a new public Rust module, `hero_values`**, not the raw file and not the gameplay catalog. The gameplay catalog requires a source on every stat. See "Reading the data".
 
 ## Data shape
 
@@ -60,14 +60,27 @@ A consumer names the version it wants. The loader returns an error for an unknow
 
 ## Reading the data
 
-Proposed smallest API: the values load into the existing gameplay catalog as stats.
+The values have their own small read path. They are not loaded into the gameplay catalog. Every stat in that catalog carries a source list, and loading rejects a stat without one (`gameplay-data.md`). Hero values have no source, so they do not fit that type. The gameplay catalog, its `Fact` type and `gameplay-data.md` stay unchanged.
 
-- `health` pools become hero stats (`health`, `shield`, `armor`).
-- `cooldown` becomes the existing ability stat `cooldown`. The existing `query().cooldown(...)` works unchanged.
-- `ultimateCost` becomes the ability stat `ultimateCost` in the `ultimate` slot.
-- One new function loads a catalog for a named version, for example `gameplay::values::builtin(version)`.
+Proposed smallest public API, a new module `workshop_rs::hero_values`:
 
-athena#9 (state table) and athena#11 (settings modifiers) then use the same query calls as for other hero data. The existing `Fact` type is not changed.
+```rust
+hero_values::CURRENT_VERSION: &str                       // "2.25.0.0 - 154461.1"
+hero_values::builtin(version: &str) -> Result<&'static HeroValues, HeroValuesError>
+
+HeroValues::version(&self) -> &str
+HeroValues::health(&self, hero: &str, pool: HealthPool) -> Option<f64>
+HeroValues::cooldown(&self, hero: &str, slot: &str, variant: Option<&str>) -> Option<f64>  // seconds
+HeroValues::ultimate_cost(&self, hero: &str) -> Option<f64>                                 // points
+```
+
+- `HealthPool` is `Health`, `Shield` or `Armor`.
+- `builtin` returns an error for an unknown version.
+- A lookup returns `None` when the file has no such value. The toolchain then reports the behavior as not modeled. It never uses a default.
+- The loader validates the file against the schema. It also checks that every hero, slot and variant exists in the gameplay dataset, and rejects duplicate values.
+- Custom-game cooldown percentages are not part of this API. The existing gameplay cooldown calculation applies to catalog stats only; athena#11 applies settings modifiers to the numbers it reads here.
+
+athena#9 (state table) and athena#11 (settings modifiers) read hero values only through these calls.
 
 ## Out of scope
 
