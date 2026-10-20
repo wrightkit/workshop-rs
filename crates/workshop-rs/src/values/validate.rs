@@ -199,25 +199,17 @@ pub(crate) fn validate_call_signature(
     program: &wir::Program,
     catalog: &Catalog,
 ) -> Result<()> {
-    // An empty signature in the current inventory means that arity is not
-    // declared, not that the builtin is a zero-argument function. This is
-    // important for documented variadic calls such as Custom String.
-    if entry.param_count() == 0 && entry.required_param_count() == 0 {
-        return Ok(());
-    }
     let player_pair_folded = entry.wir_args_folded(program, args);
     let supplied = args.len() + usize::from(player_pair_folded);
-    if supplied < entry.required_param_count()
-        || (!entry.is_variadic() && supplied > entry.param_count())
-    {
+    if let Some((min, max)) = entry.rejected_arity(supplied) {
         return Err(WorkshopError::unsupported(
             format!(
                 "{} '{}' expects {}..{}{} argument(s), got {}",
                 entry.kind.as_str(),
                 entry.id,
-                entry.required_param_count(),
+                min,
                 entry.param_count(),
-                if entry.is_variadic() { "+" } else { "" },
+                if max.is_none() { "+" } else { "" },
                 supplied
             ),
             span,

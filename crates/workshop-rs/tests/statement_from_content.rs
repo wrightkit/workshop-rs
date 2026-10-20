@@ -251,3 +251,75 @@ fn disabled_statements_keep_their_modifier() {
         assert_eq!(content_of(convert(&node).expect("converts")), node);
     }
 }
+
+/// Conversion and canonical validation share one argument-count rule
+/// (AGENTS.md "Sibling paths share checks"): for a folded player-variable
+/// pair, a variadic entry and an undeclared-signature entry, both accept and
+/// reject the same argument counts.
+#[test]
+fn conversion_and_validation_agree_on_argument_counts() {
+    use workshop_rs::catalog::Kind;
+    use workshop_rs::{Action, Condition, Program, Value, Variable};
+
+    let catalog = catalog();
+    let all = || {
+        catalog
+            .entries_of(Kind::Action)
+            .chain(catalog.entries_of(Kind::Value))
+    };
+    let folded = all()
+        .find(|e| e.param_type(0) == Some("Player|Array") && e.param_type(1) == Some("Variable"))
+        .expect("a folded player-variable entry");
+    let variadic = all().find(|e| e.is_variadic()).expect("a variadic entry");
+    let undeclared = all()
+        .find(|e| e.param_count() == 0 && e.required_param_count() == 0)
+        .expect("an undeclared-signature entry");
+
+    let player_target = json!({"call": "playerVariable", "args": [
+        {"call": "eventPlayer", "args": []}, {"variable": "v"}
+    ]});
+    for (entry, fold) in [(folded, true), (variadic, false), (undeclared, false)] {
+        for count in 0..=entry.param_count() + 3 {
+            let (mut args, mut values) = (Vec::new(), Vec::new());
+            for index in 0..count {
+                if fold && index == 0 {
+                    args.push(player_target.clone());
+                    values.push(Value::player_variable(Value::EventPlayer, "v"));
+                } else {
+                    args.push(json!(0.0));
+                    values.push(Value::from(0.0));
+                }
+            }
+            let call = json!({"call": entry.id, "args": args});
+            let (node, rule) = if entry.kind == Kind::Action {
+                (
+                    call,
+                    Rule::new("agreement", Event::Global)
+                        .action(Action::call(entry.id.clone(), values)),
+                )
+            } else {
+                (
+                    json!({"value": call}),
+                    Rule::new("agreement", Event::Global)
+                        .condition(Condition::new(Value::call(entry.id.clone(), values))),
+                )
+            };
+            let converted = statement_from_content(&catalog, &node);
+            let converter_rejects =
+                matches!(converted, Err(StatementContentError::ArgumentCount { .. }));
+
+            let mut program = Program::new();
+            program.player_variable(Variable::new("v"));
+            program.rule(rule);
+            let validator_rejects =
+                workshop_rs::validate::validate_canonical_ids(&program, &catalog)
+                    .is_err_and(|error| error.to_string().contains("argument(s)"));
+
+            assert_eq!(
+                converter_rejects, validator_rejects,
+                "'{}' with {count} argument(s)",
+                entry.id
+            );
+        }
+    }
+}

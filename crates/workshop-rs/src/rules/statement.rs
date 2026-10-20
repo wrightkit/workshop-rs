@@ -490,18 +490,10 @@ impl Converter<'_> {
         node: &JsonValue,
         path: &str,
     ) -> Result<()> {
-        // An empty signature means the arity is not declared.
-        if entry.param_count() == 0 && entry.required_param_count() == 0 {
-            return Ok(());
-        }
         let folded = entry.folds_player_variable_pair()
             && matches!(values.first(), Some(Value::PlayerVariable { .. }));
         let supplied = values.len() + usize::from(folded);
-        let (min, max) = (
-            entry.required_param_count(),
-            (!entry.is_variadic()).then_some(entry.param_count()),
-        );
-        if supplied < min || max.is_some_and(|max| supplied > max) {
+        if let Some((min, max)) = entry.rejected_arity(supplied) {
             return Err(StatementContentError::ArgumentCount {
                 id: entry.id.clone(),
                 min,
