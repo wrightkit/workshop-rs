@@ -347,38 +347,10 @@ impl ParseContext<'_> {
             let mut elements = Vec::new();
             while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
                 let (value, value_start, value_end) = self.settings_list_name()?;
-                let canonical = match entry.kind {
-                    KeyKind::ListMap => self
-                        .resolve_settings_name_extended(
-                            table::MAP_NAMES,
-                            table::GENERATED_MAP_NAMES,
-                            "maps",
-                            &value,
-                            value_start,
-                            value_end,
-                        )
-                        .or_else(|_| {
-                            value
-                                .split_whitespace()
-                                .next()
-                                .and_then(|name| {
-                                    self.resolve_settings_name_extended(
-                                        table::MAP_NAMES,
-                                        table::GENERATED_MAP_NAMES,
-                                        "maps",
-                                        name,
-                                        value_start,
-                                        value_end,
-                                    )
-                                    .ok()
-                                })
-                                .ok_or_else(|| {
-                                    self.unknown_at("setting", &value, value_start, value_end)
-                                })
-                        })
-                        .unwrap_or(value.as_str()),
-                    KeyKind::ListHero => self
-                        .resolve_settings_name_extended(
+                let (canonical, variant) = match entry.kind {
+                    KeyKind::ListMap => self.map_element_parts(&value, value_start, value_end),
+                    KeyKind::ListHero => (
+                        self.resolve_settings_name_extended(
                             table::HERO_NAMES,
                             table::GENERATED_HERO_NAMES,
                             "heroes",
@@ -386,11 +358,15 @@ impl ParseContext<'_> {
                             value_start,
                             value_end,
                         )
-                        .unwrap_or(value.as_str()),
+                        .unwrap_or(value.as_str())
+                        .to_string(),
+                        None,
+                    ),
                     _ => unreachable!("non-list kinds return an opaque group above"),
                 };
                 elements.push(SettingsListElement {
-                    value: canonical.to_string(),
+                    value: canonical,
+                    variant,
                     span: Some(Span::new(self.file(), value_start, value_end)),
                 });
             }
@@ -474,6 +450,60 @@ impl ParseContext<'_> {
                 Err(self.malformed("settings list requires a brace block", self.previous()))
             }
         }
+    }
+
+    /// Resolve a map-list element to its map key and variant qualifier.
+    ///
+    /// The client qualifies a map variant as `<map name> <variant id>` and
+    /// repeats the id for multi-variant selections, so trailing all-digit
+    /// tokens peel off until the remaining name resolves to a map. A name
+    /// that itself ends in a digit (`Route 66`) resolves whole first and
+    /// never reaches the peel. Anything left unresolvable stays opaque for
+    /// `check_emission` to reject as an unknown map.
+    fn map_element_parts(
+        &self,
+        value: &str,
+        start: Position,
+        end: Position,
+    ) -> (String, Option<String>) {
+        let resolve = |name: &str| {
+            self.resolve_settings_name_extended(
+                table::MAP_NAMES,
+                table::GENERATED_MAP_NAMES,
+                "maps",
+                name,
+                start,
+                end,
+            )
+            .ok()
+        };
+        if let Some(key) = resolve(value) {
+            return (key.to_string(), None);
+        }
+        let mut prefix = value;
+        let mut variant = String::new();
+        while let Some((head, id)) = prefix.rsplit_once(char::is_whitespace) {
+            if id.is_empty() || id.bytes().any(|byte| !byte.is_ascii_digit()) {
+                break;
+            }
+            variant = if variant.is_empty() {
+                id.to_string()
+            } else {
+                format!("{id} {variant}")
+            };
+            prefix = head;
+            if let Some(key) = resolve(prefix) {
+                return (key.to_string(), Some(variant));
+            }
+        }
+        // A single-word map still resolves when trailing text follows it;
+        // anything else stays opaque.
+        let canonical = value
+            .split_whitespace()
+            .next()
+            .and_then(resolve)
+            .unwrap_or(value);
+        (canonical.to_string(), None)
     }
 
     pub(crate) fn settings_opaque_group(

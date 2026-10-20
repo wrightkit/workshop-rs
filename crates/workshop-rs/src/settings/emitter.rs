@@ -316,7 +316,10 @@ impl EmitContext<'_> {
                         english,
                         &format!("{}.{}.name", kind.label(), element.value),
                     )?;
-                    self.line(level + 1, &display)?;
+                    match &element.variant {
+                        Some(variant) => self.line(level + 1, &format!("{display} {variant}"))?,
+                        None => self.line(level + 1, &display)?,
+                    }
                 }
                 self.line(level, "}")?;
             }

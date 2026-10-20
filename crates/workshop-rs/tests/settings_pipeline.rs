@@ -179,6 +179,188 @@ fn map_lists_preserve_spaced_colons_in_map_names() {
     }
 }
 
+/// The pinned OverPy decompiler input `customGameSettings.txt` carries
+/// `Workshop Chamber 972777519512064577` under `enabled maps`: a
+/// variant-qualified element resolves to its map key plus the authored
+/// variant ids and emits the qualified spelling back.
+#[test]
+fn variant_qualified_map_list_elements_round_trip() {
+    let catalog = catalog();
+    let zh = zh();
+    let source = "settings { modes { Skirmish { enabled maps {\nWorkshop Chamber 972777519512064577\nRoute 66\nRoute 66 972777519512064577\nWorkshop Chamber 972777519512064577 972777519512068153\n} } } }";
+    let program = internal::parse(source);
+    let elements = program
+        .settings
+        .as_ref()
+        .and_then(|settings| {
+            fn find(
+                nodes: &[workshop_rs::settings::SettingsNode],
+            ) -> Option<&[workshop_rs::settings::SettingsListElement]> {
+                nodes.iter().find_map(|node| match node {
+                    workshop_rs::settings::SettingsNode::List { elements, .. } => {
+                        Some(elements.as_slice())
+                    }
+                    workshop_rs::settings::SettingsNode::Group { children, .. }
+                    | workshop_rs::settings::SettingsNode::RawGroup { children, .. }
+                    | workshop_rs::settings::SettingsNode::Workshop { children, .. } => {
+                        find(children)
+                    }
+                    _ => None,
+                })
+            }
+            find(&settings.children)
+        })
+        .expect("enabled maps list");
+    assert_eq!(
+        elements
+            .iter()
+            .map(|element| (element.value.as_str(), element.variant.as_deref()))
+            .collect::<Vec<_>>(),
+        vec![
+            ("workshopChamber", Some("972777519512064577")),
+            ("route66", None),
+            ("route66", Some("972777519512064577")),
+            (
+                "workshopChamber",
+                Some("972777519512064577 972777519512068153")
+            ),
+        ]
+    );
+    assert_eq!(
+        elements[0].variant_ids().collect::<Vec<_>>(),
+        vec!["972777519512064577"]
+    );
+    assert_eq!(
+        elements[3].variant_ids().collect::<Vec<_>>(),
+        vec!["972777519512064577", "972777519512068153"]
+    );
+    let settings = program.settings.as_ref().expect("settings");
+    assert!(
+        workshop_rs::settings::check_emission(settings).is_empty(),
+        "variant-qualified elements pass emission check"
+    );
+    assert!(program.validate().is_ok());
+    assert!(
+        program
+            .semantic_issues(&catalog)
+            .iter()
+            .all(|issue| issue.kind != workshop_rs::rules::IncompletenessKind::RawSetting),
+        "resolved variant elements are not raw residuals"
+    );
+
+    let emitted = internal::emit(&program);
+    assert!(emitted.contains("Workshop Chamber 972777519512064577\n"));
+    assert!(
+        emitted.contains("Route 66\n"),
+        "unqualified stays unqualified: {emitted}"
+    );
+    assert!(emitted.contains("Route 66 972777519512064577"));
+    assert!(emitted.contains("Workshop Chamber 972777519512064577 972777519512068153"));
+    internal::assert_reparse_equivalent(&program, &emitted);
+
+    // Localized emission keeps the authored qualifier: the zh-CN spelling
+    // resolves back to the same key and variant ids.
+    let localized = emitter::emit_wir(&program, &catalog, &zh).expect("zh-CN map list");
+    assert!(localized.contains("地图工坊室内 972777519512064577"));
+    let reparsed = parser::parse_wir(&localized, &catalog, &zh).expect("zh-CN reparses");
+    assert!(roundtrip::equivalent_wir(&program, &reparsed));
+}
+
+/// An element whose map part resolves to nothing stays an unknown map,
+/// qualifier or not; a malformed variant qualifier on a resolved map and a
+/// qualifier on a hero list each carry their own precise diagnostic.
+#[test]
+fn map_list_variant_diagnostics_are_precise() {
+    use workshop_rs::settings::{Settings, SettingsListElement, SettingsNode, check_emission};
+
+    for element in [
+        "Future Map 123",
+        "Workshop Chamber abc",
+        "972777519512064577",
+    ] {
+        let source =
+            format!("settings {{ modes {{ Skirmish {{ enabled maps {{ {element} }} }} }} }}");
+        let program = internal::parse(&source);
+        let errors = check_emission(program.settings.as_ref().expect("settings"));
+        assert_eq!(errors.len(), 1, "{element}: {errors:?}");
+        assert!(
+            errors[0]
+                .to_string()
+                .contains(&format!("unknown map '{element}'")),
+            "{element}: {errors:?}"
+        );
+    }
+
+    let element = |value: &str, variant: Option<&str>| SettingsListElement {
+        value: value.into(),
+        variant: variant.map(str::to_string),
+        span: None,
+    };
+    let list = |name: &str, elements: Vec<SettingsListElement>| SettingsNode::List {
+        name: name.into(),
+        elements,
+        span: None,
+    };
+    let group = |name: &str, children: Vec<SettingsNode>| SettingsNode::Group {
+        name: name.into(),
+        children,
+        span: None,
+    };
+
+    for variant in ["abc", "", "123a", "972777519512064577 "] {
+        let settings = Settings {
+            span: None,
+            children: vec![group(
+                "gamemodes",
+                vec![group(
+                    "ffa",
+                    vec![list(
+                        "enabledMaps",
+                        vec![element("workshopChamber", Some(variant))],
+                    )],
+                )],
+            )],
+        };
+        let errors = check_emission(&settings);
+        assert_eq!(errors.len(), 1, "{variant:?}: {errors:?}");
+        assert!(
+            errors[0]
+                .to_string()
+                .contains(&format!("malformed map variant id '{variant}'")),
+            "{variant:?}: {errors:?}"
+        );
+        // Emission fails the same way (sibling-path agreement).
+        let mut program = workshop_rs::Program::new();
+        program.settings = Some(settings);
+        let emitted = emitter::emit(&program, &catalog(), &en())
+            .expect_err("malformed variant fails emission");
+        assert!(
+            emitted.to_string().contains("malformed map variant id"),
+            "{variant:?}: {emitted}"
+        );
+    }
+
+    let settings = Settings {
+        span: None,
+        children: vec![group(
+            "heroes",
+            vec![group(
+                "allTeams",
+                vec![list(
+                    "enabledHeroes",
+                    vec![element("ana", Some("972777519512064577"))],
+                )],
+            )],
+        )],
+    };
+    let errors = check_emission(&settings);
+    assert_eq!(errors.len(), 1, "{errors:?}");
+    assert!(
+        errors[0].to_string().contains("cannot carry a variant id"),
+        "{errors:?}"
+    );
+}
+
 #[test]
 fn supported_apostrophe_map_name_parses() {
     let _catalog = catalog();
@@ -1176,6 +1358,7 @@ fn declared_modes_inherit_general_settings_entries() {
             .iter()
             .map(|value| SettingsListElement {
                 value: value.to_string(),
+                variant: None,
                 span: None,
             })
             .collect(),
@@ -1913,6 +2096,7 @@ fn typed_member_diagnostics_preserve_messages_spans_suggestions_and_order() {
             .iter()
             .map(|(value, line)| SettingsListElement {
                 value: (*value).into(),
+                variant: None,
                 span: span(*line),
             })
             .collect(),

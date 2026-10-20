@@ -54,7 +54,7 @@ impl ListKind {
             Self::Map => table::map_name(&element.value),
             Self::Hero => table::hero_name(&element.value),
         };
-        english.ok_or_else(|| {
+        let english = english.ok_or_else(|| {
             let suggestion = match self {
                 Self::Map => suggest::suggest(&element.value, table::map_spellings()),
                 Self::Hero => suggest::suggest(&element.value, table::hero_spellings()),
@@ -68,7 +68,34 @@ impl ListKind {
                 ),
                 suggestion,
             ))
-        })
+        })?;
+        if let Some(variant) = &element.variant {
+            match self {
+                Self::Hero => {
+                    return Err(Box::new(rejected(
+                        element.span,
+                        format!(
+                            "hero '{}' in settings list '{name}' cannot carry a variant id",
+                            element.value
+                        ),
+                        None,
+                    )));
+                }
+                Self::Map
+                    if !variant
+                        .split(' ')
+                        .all(|id| !id.is_empty() && id.bytes().all(|b| b.is_ascii_digit())) =>
+                {
+                    return Err(Box::new(rejected(
+                        element.span,
+                        format!("malformed map variant id '{variant}' in settings list '{name}'"),
+                        None,
+                    )));
+                }
+                Self::Map => {}
+            }
+        }
+        Ok(english)
     }
 }
 

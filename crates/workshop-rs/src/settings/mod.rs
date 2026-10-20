@@ -132,11 +132,24 @@ pub enum SettingsNode {
 /// One element of a settings list (corpus lists are all strings).
 #[derive(Debug, Clone)]
 pub struct SettingsListElement {
+    /// The element value: the resolved catalog key for a declared element
+    /// (`workshopChamber`), or the authored text when nothing resolves.
     pub value: String,
+    /// The variant qualifier a `<map name> <variant id>` element carries:
+    /// the authored space-separated variant ids (`"972777519512064577"`).
+    /// `None` on an unqualified element. Only map lists take a variant
+    /// qualifier.
+    pub variant: Option<String>,
     pub span: Option<Span>,
 }
 
 impl SettingsListElement {
+    /// The variant ids of a variant-qualified element, in authored order —
+    /// one id per qualifier token. Empty for an unqualified element.
+    pub fn variant_ids(&self) -> impl Iterator<Item = &str> {
+        self.variant.iter().flat_map(|variant| variant.split(' '))
+    }
+
     fn clear_span(&mut self) {
         self.span = None;
     }

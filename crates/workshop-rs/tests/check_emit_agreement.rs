@@ -461,8 +461,18 @@ fn catalogued_values_and_lists_agree_across_stages() {
         Verdict::Accepted,
     );
     assert_source(
+        "skirmish/enabled maps variant-qualified element",
+        "settings { modes { Skirmish { enabled maps { Workshop Chamber 972777519512064577 } } } }",
+        Verdict::Accepted,
+    );
+    assert_source(
         "skirmish/enabled maps undeclared element",
         "settings { modes { Skirmish { enabled maps { Future Map } } } }",
+        Verdict::Rejected,
+    );
+    assert_source(
+        "skirmish/enabled maps undeclared qualified element",
+        "settings { modes { Skirmish { enabled maps { Future Map 123 } } } }",
         Verdict::Rejected,
     );
     assert_source(
@@ -683,6 +693,7 @@ fn accepted_sources_emit_reparseable_text() {
         "settings { lobby { customRotation { a b } } }",
         "settings { heroes { General { Doctrine { ability1Cooldown%: 50% } } } }",
         "settings { modes { Skirmish { enabled maps { Route 66 } } } }",
+        "settings { modes { Skirmish { enabled maps { Workshop Chamber 972777519512064577 } } } }",
         "settings { customNs { a: 1 } }",
         "settings { workshop { Custom { a: 1 } } }",
     ] {
