@@ -103,8 +103,9 @@ emitted canonically in `locale`, so their spelling can differ from the replaced
 statement; bytes outside the edit range are unchanged. The call fails closed,
 with a `StatementEditError` and no edit, for an unknown or out-of-range
 address, a stale address (the public model no longer matches the retained
-source at that position, including an `End` the parser added to close an
-unclosed `If`), a node of the wrong kind for the list, an empty insert, a node
+source at that position, including replace or delete of an `End` the parser
+added to close an unclosed `If`, which has no source text; `insert` at or past
+the end of such a list appends after the last source statement), a node of the wrong kind for the list, an empty insert, a node
 `statement_from_content` refuses, a variable or subroutine the program does
 not declare, a spelling missing in `locale`, or a program with no retained
 source. Other statements of the rule do not need to be

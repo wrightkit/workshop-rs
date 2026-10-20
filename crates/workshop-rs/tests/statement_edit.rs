@@ -11,7 +11,7 @@ use workshop_rs::{Program, emitter, parser};
 
 use crate::common::{catalog, corpus_text, fixture, locale};
 
-const BASE: &str = r#"rule ("r") {
+pub(crate) const BASE: &str = r#"rule ("r") {
     event {
         Ongoing - Global;
     }
@@ -28,11 +28,11 @@ const BASE: &str = r#"rule ("r") {
 }
 "#;
 
-fn parse(source: &str, tag: &str) -> Program {
+pub(crate) fn parse(source: &str, tag: &str) -> Program {
     parser::parse(source, &catalog(), &locale(tag)).expect("source parses")
 }
 
-fn edit(
+pub(crate) fn edit(
     source: &str,
     tag: &str,
     list: StatementList,
@@ -49,16 +49,16 @@ fn edit(
     Ok(result.apply(source).expect("edit applies to its source"))
 }
 
-fn ok(source: &str, list: StatementList, index: usize, e: StatementEdit<'_>) -> String {
+pub(crate) fn ok(source: &str, list: StatementList, index: usize, e: StatementEdit<'_>) -> String {
     edit(source, "en-US", list, index, e).expect("edit succeeds")
 }
 
-fn lists(source: &str, tag: &str) -> JsonValue {
+pub(crate) fn lists(source: &str, tag: &str) -> JsonValue {
     let program = parse(source, tag);
     rule_content(&program.rules[0]).expect("content renders")
 }
 
-fn wait(seconds: f64) -> JsonValue {
+pub(crate) fn wait(seconds: f64) -> JsonValue {
     json!({"call": "wait", "args": [seconds, {"enum": "Wait", "member": "IGNORE_CONDITION"}]})
 }
 
@@ -67,11 +67,11 @@ fn cond(n: f64) -> JsonValue {
 }
 
 /// A condition that names no variable, for sources that declare none.
-fn plain_cond() -> JsonValue {
+pub(crate) fn plain_cond() -> JsonValue {
     json!({"value": {"call": "==", "args": [{"call": "isGameInProgress", "args": []}, true]}})
 }
 
-fn waits(content: &JsonValue) -> Vec<f64> {
+pub(crate) fn waits(content: &JsonValue) -> Vec<f64> {
     content["actions"]
         .as_array()
         .unwrap()
@@ -629,148 +629,10 @@ fn real_project_statements_round_trip_and_edit_in_place() {
     assert!(checked > 500, "checked {checked}");
 }
 
-#[test]
-fn layout_conventions_are_kept() {
-    let a = StatementList::Actions;
-    let node = wait(9.0);
-
-    // Tab indentation and CRLF line endings.
-    let crlf = BASE.replace("    ", "\t").replace('\n', "\r\n");
-    let out = ok(
-        &crlf,
-        a,
-        1,
-        StatementEdit::Insert(std::slice::from_ref(&node)),
-    );
-    assert!(
-        out.contains("\t\tWait(9, Ignore Condition);\r\n\t\tWait(2"),
-        "{out:?}"
-    );
-    assert!(!out.contains("9, Ignore Condition);\n\t\tWait(2"));
-    let out = ok(&crlf, a, 1, StatementEdit::Delete);
-    assert_eq!(
-        out,
-        crlf.replace("\t\tWait(2, Ignore Condition); // tail\r\n", "")
-    );
-
-    // Disabled statements: replace swaps the whole statement, modifier
-    // included; the export spells a disabled statement with "disabled".
-    let source = BASE.replace(
-        "Wait(2, Ignore Condition);",
-        "Disabled Wait(2, Ignore Condition);",
-    );
-    let content = lists(&source, "en-US");
-    assert_eq!(content["actions"][1]["disabled"], true);
-    let out = ok(&source, a, 1, StatementEdit::Replace(&node));
-    assert_eq!(waits(&lists(&out, "en-US")), [1.0, 9.0, 3.0]);
-    assert!(lists(&out, "en-US")["actions"][1].get("disabled").is_none());
-    let mut disabled = node.clone();
-    disabled["disabled"] = json!(true);
-    let out = ok(BASE, a, 1, StatementEdit::Replace(&disabled));
-    assert_eq!(lists(&out, "en-US")["actions"][1], disabled);
-
-    // Control flow: a balanced group inserted before an existing statement.
-    let group = [
-        json!({"call": "if", "args": [true]}),
-        wait(1.0),
-        json!({"call": "end", "args": []}),
-    ];
-    let out = ok(BASE, a, 1, StatementEdit::Insert(&group));
-    let actions = lists(&out, "en-US")["actions"].clone();
-    assert_eq!(actions[1], group[0]);
-    assert_eq!(actions[3], group[2]);
-    assert_eq!(actions.as_array().unwrap().len(), 6);
-    assert!(
-        out.contains(
-            "        If(True);\n        Wait(1, Ignore Condition);\n        End;\n        Wait(2"
-        ),
-        "{out}"
-    );
-}
-
-fn actions_source(body: &str) -> String {
+pub(crate) fn actions_source(body: &str) -> String {
     format!(
         "rule (\"r\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{\n{body}    }}\n}}\n"
     )
-}
-
-#[test]
-fn delete_on_a_shared_line_takes_only_its_own_bytes() {
-    let a = StatementList::Actions;
-    let w = |n: u8| format!("Wait({n}, Ignore Condition);");
-    let src = actions_source(&format!(
-        "        {} {} // t\n        {}\n",
-        w(1),
-        w(2),
-        w(3)
-    ));
-    let out = ok(&src, a, 1, StatementEdit::Delete);
-    assert_eq!(
-        out,
-        actions_source(&format!("        {} // t\n        {}\n", w(1), w(3)))
-    );
-    let out = ok(&src, a, 0, StatementEdit::Delete);
-    assert_eq!(
-        out,
-        actions_source(&format!("        {} // t\n        {}\n", w(2), w(3)))
-    );
-
-    let src = actions_source(&format!("        {} \"next\" {}\n", w(1), w(2)));
-    let out = ok(&src, a, 1, StatementEdit::Delete);
-    assert_eq!(out, actions_source(&format!("        {}\n", w(1))));
-    let out = ok(&src, a, 0, StatementEdit::Delete);
-    assert_eq!(out, actions_source(&format!("        \"next\" {}\n", w(2))));
-
-    // The section's closing brace keeps its line and indentation.
-    let src = format!(
-        "rule (\"r\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{ {}\n        {} }}\n}}\n",
-        w(1),
-        w(2)
-    );
-    let out = ok(&src, a, 1, StatementEdit::Delete);
-    assert!(
-        out.contains("\n        }\n}\n") || out.contains("\n    }\n}\n"),
-        "{out}"
-    );
-    assert_eq!(waits(&lists(&out, "en-US")), [1.0]);
-
-    // CRLF
-    let src = src.replace('\n', "\r\n");
-    let out = ok(&src, a, 0, StatementEdit::Delete);
-    assert_eq!(waits(&lists(&out, "en-US")), [2.0]);
-    assert!(!out.contains("\r\r") && !out.replace("\r\n", "").contains('\r'));
-}
-
-#[test]
-fn insert_at_the_end_skips_a_dangling_annotation() {
-    let src = actions_source("        Wait(1, Ignore Condition);\n        \"dangling\"\n");
-    let out = ok(
-        &src,
-        StatementList::Actions,
-        1,
-        StatementEdit::Insert(&[wait(7.0)]),
-    );
-    assert!(
-        out.contains("Wait(7, Ignore Condition);\n        \"dangling\""),
-        "{out}"
-    );
-    assert_eq!(waits(&lists(&out, "en-US")), [1.0, 7.0]);
-}
-
-#[test]
-fn inserted_lines_follow_the_line_ending_of_their_anchor() {
-    let src = BASE.replacen('\n', "\r\n", 1);
-    let out = ok(
-        &src,
-        StatementList::Actions,
-        1,
-        StatementEdit::Insert(&[wait(7.0)]),
-    );
-    assert!(
-        out.contains("Wait(7, Ignore Condition);\n        Wait(2"),
-        "{out:?}"
-    );
-    assert!(!out.contains("Wait(7, Ignore Condition);\r"));
 }
 
 #[test]

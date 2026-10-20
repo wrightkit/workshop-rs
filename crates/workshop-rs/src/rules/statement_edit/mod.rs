@@ -53,8 +53,8 @@ mod layout;
 use crate::rules::statement::{Statement, StatementContentError, statement_from_content};
 use emit::{emit_section_keyword, emit_statement_rows};
 use layout::{
-    RuleLayout, StatementChunk, StatementSection, byte_is_whitespace, is_whitespace, line_prefix,
-    newline_of,
+    RuleLayout, StatementChunk, StatementSection, byte_is_whitespace, indent_unit, is_whitespace,
+    line_prefix, newline_of,
 };
 
 /// The rule statement list a statement edit addresses.
@@ -336,8 +336,9 @@ impl Program {
             .iter()
             .find(|section| section.id == address.list.section_id());
         let Some(section) = section else {
+            let unit = indent_unit(text, &tokens, &layout, rule_span);
             return self.insert_created_section(
-                catalog, locale, address, list_len, &rows, &tokens, &layout, text, rule_span,
+                catalog, locale, address, list_len, &rows, &unit, &tokens, &layout, text, rule_span,
             );
         };
 
@@ -359,17 +360,9 @@ impl Program {
 
         match edit {
             StatementEdit::Insert(_) => {
-                // With synthesized `End` entries the position
-                // `index >= chunks.len()` lands inside a control-flow body
-                // rather than at the section end; the source cannot express
-                // that address.
-                if section.chunks.len() < list_len && address.index >= section.chunks.len() {
-                    return Err(StatementEditError::IndexOutOfRange {
-                        rule: address.rule,
-                        list: address.list,
-                        index: address.index,
-                    });
-                }
+                // Past the last source chunk is the end of the section. With a
+                // synthesized trailing `End` that covers `index == len` and the
+                // `End`'s own index: both append after the last chunk.
                 if let Some(chunk) = section.chunks.get(address.index) {
                     self.verify_statement(
                         address,
@@ -381,7 +374,8 @@ impl Program {
                     )?;
                     self.insert_before_chunk(address, &rows, *chunk, &tokens, text, rule_span)
                 } else {
-                    self.insert_at_close(address, &rows, section, &tokens, text, rule_span)
+                    let unit = indent_unit(text, &tokens, &layout, rule_span);
+                    self.insert_at_close(address, &rows, &unit, section, &tokens, text, rule_span)
                 }
             }
             StatementEdit::Replace(_) => {
@@ -508,10 +502,12 @@ impl Program {
 
     /// Append `rows` at the end of an existing (possibly empty) section,
     /// before its closing `}`.
+    #[allow(clippy::too_many_arguments)]
     fn insert_at_close(
         &self,
         address: StatementAddress,
         rows: &[String],
+        unit: &str,
         section: &StatementSection,
         tokens: &[Token],
         text: &str,
@@ -529,7 +525,7 @@ impl Program {
                 .map(|chunk| line_prefix(text, tokens[chunk.first].start))
                 .filter(|prefix| is_whitespace(prefix))
                 .map(str::to_string)
-                .unwrap_or_else(|| format!("{close_indent}    "));
+                .unwrap_or_else(|| format!("{close_indent}{unit}"));
             let mut replacement = String::new();
             for row in rows {
                 replacement.push_str(&indent);
@@ -561,6 +557,7 @@ impl Program {
         address: StatementAddress,
         list_len: usize,
         rows: &[String],
+        unit: &str,
         tokens: &[Token],
         layout: &RuleLayout,
         text: &str,
@@ -601,8 +598,8 @@ impl Program {
             .map(str::to_string);
         let anchor_indent = line_prefix(text, anchor);
         let (position, replacement) = if is_whitespace(anchor_indent) {
-            let indent = section_indent.unwrap_or_else(|| format!("{anchor_indent}    "));
-            let statement_indent = format!("{indent}    ");
+            let indent = section_indent.unwrap_or_else(|| format!("{anchor_indent}{unit}"));
+            let statement_indent = format!("{indent}{unit}");
             let mut replacement = format!("{indent}{keyword} {{{newline}");
             for row in rows {
                 replacement.push_str(&statement_indent);

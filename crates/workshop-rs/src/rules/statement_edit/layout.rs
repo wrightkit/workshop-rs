@@ -198,3 +198,39 @@ pub(super) fn byte_is_whitespace(text: &str, position: Position) -> bool {
         .and_then(|offset| text[..offset].chars().next_back())
         .is_none_or(|character| character.is_whitespace())
 }
+
+/// One level of indentation, learned from the source: a section's first
+/// statement against its keyword, else the first section against the rule
+/// header. Four spaces when the rule has no nesting to learn from.
+pub(super) fn indent_unit(
+    text: &str,
+    tokens: &[Token],
+    layout: &RuleLayout,
+    rule_span: Span,
+) -> String {
+    let unit_of = |outer: &str, inner: &str| {
+        (is_whitespace(outer)
+            && is_whitespace(inner)
+            && inner.len() > outer.len()
+            && inner.starts_with(outer))
+        .then(|| inner[outer.len()..].to_string())
+    };
+    layout
+        .sections
+        .iter()
+        .find_map(|section| {
+            let chunk = section.chunks.first()?;
+            unit_of(
+                line_prefix(text, section.name_start),
+                line_prefix(text, tokens[chunk.first].start),
+            )
+        })
+        .or_else(|| {
+            let section = layout.sections.first()?;
+            unit_of(
+                line_prefix(text, rule_span.start),
+                line_prefix(text, section.name_start),
+            )
+        })
+        .unwrap_or_else(|| "    ".to_string())
+}
