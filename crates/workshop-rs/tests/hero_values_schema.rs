@@ -30,8 +30,8 @@ fn example_file_validates() {
 fn invalid_examples_are_rejected() {
     let validator = validator();
     for name in [
-        "invalid-missing-source",
-        "invalid-unknown-verification",
+        "invalid-non-positive-amount",
+        "invalid-unknown-pool",
         "invalid-unknown-kind",
     ] {
         assert!(

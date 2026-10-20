@@ -1,6 +1,6 @@
 {
   "format": "workshop-rs/hero-values-v1",
-  "balanceVersion": "EXAMPLE-ONLY",
+  "balanceVersion": "2.25.0.0 - 154461.1",
   "heroes": [
     {
       "id": "exampleHero",
@@ -8,36 +8,26 @@
         {
           "kind": "health",
           "pool": "health",
-          "amount": 111,
-          "source": { "reference": "example-patch-notes", "locator": "section 1", "note": "EXAMPLE ONLY: not a real value" },
-          "verification": "patchNotes"
+          "amount": 111
         },
         {
           "kind": "health",
           "pool": "shield",
-          "amount": 22,
-          "source": { "reference": "example-probe-capture", "locator": "capture 1", "note": "EXAMPLE ONLY: not a real value" },
-          "verification": "measuredInClient"
+          "amount": 22
         },
         {
           "kind": "health",
           "pool": "armor",
-          "amount": 33,
-          "source": { "reference": "example-model", "locator": "model 1", "note": "EXAMPLE ONLY: not a real value" },
-          "verification": "modeled"
+          "amount": 33
         },
         {
           "kind": "cooldown",
           "slot": "ability1",
-          "seconds": 4.4,
-          "source": { "reference": "example-hero-page", "locator": "ability 1", "note": "EXAMPLE ONLY: not a real value" },
-          "verification": "statedSource"
+          "seconds": 4.4
         },
         {
           "kind": "ultimateCost",
-          "points": 555,
-          "source": { "reference": "example-patch-notes", "locator": "section 2", "note": "EXAMPLE ONLY: not a real value" },
-          "verification": "patchNotes"
+          "points": 555
         }
       ]
     }

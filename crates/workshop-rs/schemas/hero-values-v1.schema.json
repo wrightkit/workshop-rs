@@ -2,27 +2,38 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/wrightkit/workshop-rs/schemas/hero-values-v1.schema.json",
   "title": "workshop-rs/hero-values-v1",
-  "description": "Hero base values (health pools, ability cooldowns, ultimate cost) for one balance version. Every value records a source and a verification state.",
+  "description": "Hero base values (health pools, ability cooldowns, ultimate cost) for one game client version.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["format", "balanceVersion", "heroes"],
+  "required": [
+    "format",
+    "balanceVersion",
+    "heroes"
+  ],
   "properties": {
-    "format": { "const": "workshop-rs/hero-values-v1" },
+    "format": {
+      "const": "workshop-rs/hero-values-v1"
+    },
     "balanceVersion": {
-      "description": "The game balance version these values belong to. One file holds one version.",
+      "description": "The game client version these values belong to. One file holds one version.",
       "type": "string",
       "minLength": 1
     },
     "heroes": {
       "type": "array",
-      "items": { "$ref": "#/$defs/hero" }
+      "items": {
+        "$ref": "#/$defs/hero"
+      }
     }
   },
   "$defs": {
     "hero": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "values"],
+      "required": [
+        "id",
+        "values"
+      ],
       "properties": {
         "id": {
           "description": "A hero id from the gameplay dataset.",
@@ -31,51 +42,87 @@
         },
         "values": {
           "type": "array",
-          "items": { "$ref": "#/$defs/value" }
+          "items": {
+            "$ref": "#/$defs/value"
+          }
         }
       }
     },
     "value": {
       "oneOf": [
-        { "$ref": "#/$defs/healthValue" },
-        { "$ref": "#/$defs/cooldownValue" },
-        { "$ref": "#/$defs/ultimateCostValue" }
+        {
+          "$ref": "#/$defs/healthValue"
+        },
+        {
+          "$ref": "#/$defs/cooldownValue"
+        },
+        {
+          "$ref": "#/$defs/ultimateCostValue"
+        }
       ]
     },
     "healthValue": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "pool", "amount", "source", "verification"],
+      "required": [
+        "kind",
+        "pool",
+        "amount"
+      ],
       "properties": {
-        "kind": { "const": "health" },
-        "pool": { "enum": ["health", "shield", "armor"] },
-        "amount": { "$ref": "#/$defs/positiveNumber" },
-        "source": { "$ref": "#/$defs/source" },
-        "verification": { "$ref": "#/$defs/verification" }
+        "kind": {
+          "const": "health"
+        },
+        "pool": {
+          "enum": [
+            "health",
+            "shield",
+            "armor"
+          ]
+        },
+        "amount": {
+          "$ref": "#/$defs/positiveNumber"
+        }
       }
     },
     "cooldownValue": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "slot", "seconds", "source", "verification"],
+      "required": [
+        "kind",
+        "slot",
+        "seconds"
+      ],
       "properties": {
-        "kind": { "const": "cooldown" },
-        "slot": { "$ref": "#/$defs/abilitySlot" },
-        "variant": { "type": "string", "minLength": 1 },
-        "seconds": { "$ref": "#/$defs/positiveNumber" },
-        "source": { "$ref": "#/$defs/source" },
-        "verification": { "$ref": "#/$defs/verification" }
+        "kind": {
+          "const": "cooldown"
+        },
+        "slot": {
+          "$ref": "#/$defs/abilitySlot"
+        },
+        "variant": {
+          "type": "string",
+          "minLength": 1
+        },
+        "seconds": {
+          "$ref": "#/$defs/positiveNumber"
+        }
       }
     },
     "ultimateCostValue": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "points", "source", "verification"],
+      "required": [
+        "kind",
+        "points"
+      ],
       "properties": {
-        "kind": { "const": "ultimateCost" },
-        "points": { "$ref": "#/$defs/positiveNumber" },
-        "source": { "$ref": "#/$defs/source" },
-        "verification": { "$ref": "#/$defs/verification" }
+        "kind": {
+          "const": "ultimateCost"
+        },
+        "points": {
+          "$ref": "#/$defs/positiveNumber"
+        }
       }
     },
     "abilitySlot": {
@@ -86,21 +133,6 @@
     "positiveNumber": {
       "type": "number",
       "exclusiveMinimum": 0
-    },
-    "source": {
-      "description": "Where the value comes from. For a client measurement, the probe capture that backs it.",
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["reference", "locator"],
-      "properties": {
-        "reference": { "type": "string", "minLength": 1 },
-        "locator": { "type": "string", "minLength": 1 },
-        "note": { "type": "string" }
-      }
-    },
-    "verification": {
-      "description": "How the value was established. Principle 9 of the goal document.",
-      "enum": ["measuredInClient", "modeled", "patchNotes", "statedSource"]
     }
   }
 }
