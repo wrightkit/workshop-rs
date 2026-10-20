@@ -147,6 +147,12 @@ pub struct ParamContent {
     /// `globalVariable`/`playerVariable` content argument.
     #[serde(default)]
     pub fold: Option<ParamContentFold>,
+    /// The modify-operator call ids accepted at this position (`add`,
+    /// `removeFromArrayByIndex`, …). In `rule-content-v1` the operand is a
+    /// zero-argument call node named by one of these ids — not an enum
+    /// member, so the position declares no enum domain.
+    #[serde(default)]
+    pub operations: Vec<String>,
 }
 
 /// Membership in a folded variable-target call: this surface parameter

@@ -189,12 +189,28 @@ parameter supplies the tagged `{"variable": name}` node bound to the
 declared variable name, and any other parameter supplies a normal value
 node.
 
+`operations` lists the modify-operator call ids the parameter accepts
+(`add`, `subtract`, …, `removeFromArrayByIndex`): in `rule-content-v1` a
+modify operand is a zero-argument call node named by one of these ids, so
+the position declares an operator vocabulary, not an enum domain. The five
+modify parameters carry it — `modifyGlobalVariable`,
+`modifyGlobalVariableAtIndex`, and `modifyPlayerVariableAtIndex` actions
+plus the `modifyGlobalVariable`/`modifyPlayerVariable` structural calls.
+`ModifyOp::from_catalog_id` maps each id to its `ModifyOp`.
+
 ```text
 setPlayerVariableAtIndex(player, variable, index, value)
   paramContent[0] = {"fold": {"call": "playerVariable", "arg": 0}}
   paramContent[1] = {"fold": {"call": "playerVariable", "arg": 1}}
   → emits {"call": "playerVariable", "args": [<player>, {"variable": <name>}]}
     as content argument 0; `index` and `value` follow as arguments 1 and 2.
+
+modifyGlobalVariableAtIndex(variable, index, operation, value)
+  paramContent[0] = {"fold": {"call": "globalVariable", "arg": 0}}
+  paramContent[2] = {"operations": ["add", …, "removeFromArrayByIndex"]}
+  → emits {"call": "modifyGlobalVariableAtIndex", "args": [
+      {"call": "globalVariable", "args": [{"variable": <name>}]},
+      <index>, {"call": "add", "args": []}, <value>]}
 ```
 
 The global chase entries (`chaseAtRate`, `chaseOverTime`) and the player

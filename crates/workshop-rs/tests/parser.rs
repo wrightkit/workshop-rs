@@ -757,7 +757,10 @@ fn indexed_player_variable_actions_use_their_declared_surface_signature() {
         let spelling = entry.spelling(&en()).expect("en-US spelling");
         let args: Vec<&str> = (0..entry.param_count())
             .map(|index| {
-                if entry.param_domain(index) == Some("Operation") {
+                if entry
+                    .param_content(index)
+                    .is_some_and(|content| !content.operations.is_empty())
+                {
                     return "Add";
                 }
                 match entry.param_type(index).and_then(|ty| ty.split('|').next()) {

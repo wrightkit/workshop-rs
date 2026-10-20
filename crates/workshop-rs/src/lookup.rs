@@ -175,8 +175,9 @@ pub struct SignatureParam {
     pub description: Option<Description>,
     /// The `rule-content-v1` facts for this parameter when the surface
     /// signature and the content layout differ — the folded variable-target
-    /// call this parameter contributes to. `None` means the parameter maps
-    /// one-to-one to a plain content argument.
+    /// call this parameter contributes to, and the modify-operator call ids
+    /// it accepts. `None` means the parameter maps one-to-one to a plain
+    /// content argument.
     pub content: Option<ParamContent>,
 }
 

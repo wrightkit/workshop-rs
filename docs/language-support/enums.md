@@ -38,7 +38,6 @@ This document inventories the canonical Workshop enumerated domains supported by
 | `LosCheck` | ✅ Supported | Examples include `Off`, `Surfaces`, `Surfaces And All Barriers`, `Surfaces And Enemy Barriers`. |
 | `Map` | ✅ Supported | Examples include `Ayutthaya`, `Black Forest`, `Castillo`, `Château Guillard`, … |
 | `ModifyHealth` | ✅ Supported | Examples include `Damage`, `Heal`. |
-| `Operation` | ✅ Supported | Examples include `Append To Array`, `Remove From Array By Value`, `Remove From Array By Index`. |
 | `OutlineVisibility` | ✅ Supported | Examples include `Always`, `Default`, `Occluded`. |
 | `ProgressBarWorldReeval` | ✅ Supported | Example: `Visible To And Values`. |
 | `ProgressHudReeval` | ✅ Supported | Examples include `Color`, `None`, `Values`, `Values and Color`, … |

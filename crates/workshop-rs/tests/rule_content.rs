@@ -686,6 +686,185 @@ fn modify_op_and_event_kind_catalog_ids_are_public() {
     );
 }
 
+/// The `(kind, entry id, parameter index)` positions whose `paramContent`
+/// `operations` fact lists the accepted modify-operator call ids —
+/// workshop-rs#504: the operand is a zero-argument `rule-content-v1`
+/// operator call, so these positions declare no enum domain.
+const OPERATION_FACT_POSITIONS: &[(Kind, &str, usize)] = &[
+    (Kind::Action, "modifyGlobalVariable", 1),
+    (Kind::Action, "modifyGlobalVariableAtIndex", 2),
+    (Kind::Action, "modifyPlayerVariableAtIndex", 3),
+    (Kind::Structural, "modifyGlobalVariable", 1),
+    (Kind::Structural, "modifyPlayerVariable", 2),
+];
+
+#[test]
+fn modify_operations_are_operator_call_ids_not_enum_members() {
+    let catalog = catalog();
+    assert!(
+        catalog.enum_domain("Operation").is_none(),
+        "the misleading Operation enum domain must be gone"
+    );
+    let mut declared = Vec::new();
+    for kind in [Kind::Structural, Kind::Action, Kind::Value] {
+        for entry in catalog.entries_of(kind) {
+            for index in 0..entry.param_count() {
+                assert_ne!(
+                    entry.param_domain(index),
+                    Some("Operation"),
+                    "{} '{}': parameter {} still declares the Operation enum domain",
+                    kind.as_str(),
+                    entry.id,
+                    index + 1
+                );
+                if entry
+                    .param_content(index)
+                    .is_some_and(|content| !content.operations.is_empty())
+                {
+                    declared.push((kind, entry.id.as_str(), index));
+                }
+            }
+        }
+    }
+    declared.sort_unstable_by_key(|(kind, id, index)| (kind.as_str(), *id, *index));
+    let mut expected = OPERATION_FACT_POSITIONS.to_vec();
+    expected.sort_unstable_by_key(|(kind, id, index)| (kind.as_str(), *id, *index));
+    assert_eq!(
+        declared, expected,
+        "the operations fact must sit on exactly the modify-operation \
+         parameters — a new operator-typed parameter needs coverage"
+    );
+
+    // Every declared position lists exactly the `ModifyOp` catalog ids —
+    // the modify operators, never a comparison operator or another call.
+    let modify_ops: Vec<&str> = {
+        let mut ids = [
+            ModifyOp::Add,
+            ModifyOp::Subtract,
+            ModifyOp::Multiply,
+            ModifyOp::Divide,
+            ModifyOp::Modulo,
+            ModifyOp::Min,
+            ModifyOp::Max,
+            ModifyOp::RaiseToPower,
+            ModifyOp::AppendToArray,
+            ModifyOp::RemoveFromArrayByValue,
+            ModifyOp::RemoveFromArrayByIndex,
+        ]
+        .map(ModifyOp::catalog_id);
+        ids.sort_unstable();
+        ids.to_vec()
+    };
+    assert_eq!(modify_ops.len(), 11);
+    for (kind, id, index) in OPERATION_FACT_POSITIONS {
+        let entry = catalog
+            .entries_of(*kind)
+            .find(|entry| entry.id == *id)
+            .unwrap_or_else(|| panic!("{id} exists"));
+        let operations = &entry
+            .param_content(*index)
+            .expect("operations fact")
+            .operations;
+        let mut sorted = operations.iter().map(String::as_str).collect::<Vec<_>>();
+        sorted.sort_unstable();
+        assert_eq!(
+            sorted,
+            modify_ops,
+            "{id} parameter {} must accept exactly the ModifyOp set",
+            index + 1
+        );
+        for operation in operations {
+            assert!(
+                ModifyOp::from_catalog_id(operation).is_some(),
+                "{operation} must name a ModifyOp"
+            );
+        }
+    }
+    assert!(
+        ModifyOp::from_catalog_id("==").is_none(),
+        "comparison operators are not modify operations"
+    );
+}
+
+/// Rendered `rule-content-v1` node for one parsed source rule's first
+/// action.
+fn first_action_content(source: &str) -> JsonValue {
+    let rule = parse_rule(source);
+    let content = content_of(&rule);
+    let actions = content["actions"].as_array().expect("actions");
+    actions[0].clone()
+}
+
+#[test]
+fn every_modify_operation_spelling_parses_emits_and_renders_its_call_id() {
+    // workshop-rs#504: the accepted operand spellings come from the lookup
+    // signature's `paramContent` `operations` fact, and every one parses,
+    // emits, reparses, and renders as a zero-argument call named by its
+    // catalog operator id — the consumer needs no enum domain.
+    let catalog = catalog();
+    for (action, surface) in [
+        (
+            "modifyGlobalVariableAtIndex",
+            "Modify Global Variable At Index(probe_g, 0, {}, 5)",
+        ),
+        (
+            "modifyPlayerVariableAtIndex",
+            "Modify Player Variable At Index(Event Player, probe_p, 0, {}, 5)",
+        ),
+    ] {
+        let signature = catalog
+            .lookup(&en(), action)
+            .expect("lookup answers")
+            .into_iter()
+            .find_map(|lookup| match lookup {
+                LookupMatch::Builtin { id, signature, .. } if id == action => signature,
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("'{action}' must resolve to its own signature"));
+        let operations = signature
+            .params
+            .iter()
+            .find_map(|param| {
+                param
+                    .content
+                    .as_ref()
+                    .filter(|content| !content.operations.is_empty())
+            })
+            .unwrap_or_else(|| panic!("'{action}' must expose its operations fact through lookup"));
+        for operation in &operations.operations {
+            let spelling = catalog
+                .spelling(Kind::Operator, &en(), operation)
+                .unwrap_or_else(|| panic!("'{operation}' needs an en-US spelling"));
+            let source = format!(
+                "variables {{\n    global:\n        0: probe_g\n    player:\n        0: probe_p\n}}\n\n\
+                 rule (\"op\") {{\n    event {{\n        Ongoing - Each Player;\n        All;\n        All;\n    }}\n    actions {{\n        {};\n    }}\n}}\n",
+                surface.replace("{}", spelling)
+            );
+            let program = parser::parse(&source, &catalog, &en())
+                .unwrap_or_else(|error| panic!("{action}({spelling}) must parse: {error}"));
+            assert!(
+                program.semantic_issues(&catalog).is_empty(),
+                "{action}({spelling}) must validate cleanly"
+            );
+            let emitted = emitter::emit(&program, &catalog, &en()).expect("emission");
+            let reparsed = parser::parse(&emitted, &catalog, &en())
+                .unwrap_or_else(|error| panic!("emitted {spelling} must reparse: {error}"));
+            assert!(
+                workshop_rs::roundtrip::equivalent(&program, &reparsed),
+                "{action}({spelling}) must round-trip"
+            );
+
+            let action_node = first_action_content(&source);
+            assert_eq!(
+                action_node["args"][2],
+                json!({"call": operation, "args": []}),
+                "{action}({spelling}) must render the operand as the \
+                 zero-argument '{operation}' call"
+            );
+        }
+    }
+}
+
 /// Both variable-read forms inside a comparison call.
 fn variable_reads_rule() -> Rule {
     Rule::new("reads", Event::Global).condition(Condition::new(Value::call(

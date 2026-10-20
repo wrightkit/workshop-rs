@@ -5,13 +5,17 @@ not generated at test runtime and the test never reads `catalog.json` to build
 the expected set.
 
 Provenance: the #86 language-support audit records 52 supported domains and
-their member counts/examples. The 52-domain, 728-leaf expected set was
-reconciled against the pinned external Workshop-data export at revision
+their member counts/examples. The expected set was reconciled against the
+pinned external Workshop-data export at revision
 `5a7d0e294b8cad73b9701987bb584d0551d7fa4d` (which adds `Map.GRIMSVOTN`),
 and earlier revisions it supersedes; the pin is also recorded in the catalog
-provenance. The fixture is the durable reviewed snapshot; the conformance
-test compares the implementation catalog against it and reports missing or
-extra canonical members.
+provenance. The former `Operation` domain is removed by workshop-rs#504: a
+modify operand is a zero-argument operator call (`add`,
+`removeFromArrayByIndex`, …), not an enum member, so the domain listed the
+wrong vocabulary — the accepted operator ids are the `paramContent`
+`operations` facts on the modify parameters. The fixture is the durable
+reviewed snapshot; the conformance test compares the implementation catalog
+against it and reports missing or extra canonical members.
 
 | Domain | Member |
 | --- | --- |
@@ -83,9 +87,6 @@ extra canonical members.
 | `Throttle` | `REPLACE_EXISTING` |
 | `ThrottleReeval` | `DIRECTION_AND_MAGNITUDE` |
 | `ThrottleReeval` | `NONE` |
-| `Operation` | `APPEND_TO_ARRAY` |
-| `Operation` | `REMOVE_FROM_ARRAY_BY_INDEX` |
-| `Operation` | `REMOVE_FROM_ARRAY_BY_VALUE` |
 | `OutlineVisibility` | `ALWAYS` |
 | `OutlineVisibility` | `DEFAULT` |
 | `OutlineVisibility` | `OCCLUDED` |

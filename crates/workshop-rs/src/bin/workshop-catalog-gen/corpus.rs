@@ -501,7 +501,6 @@ pub(crate) fn generate(
             "Button" => "ButtonLiteral",
             "Clipping" => "Clip",
             "InworldTextReeval" => "WorldTextReeval",
-            "Operation" => "__Operation__",
             "Rounding" => "__Rounding__",
             other => other,
         };

@@ -595,13 +595,26 @@ impl Catalog {
                 let Some(content) = content else {
                     continue;
                 };
-                let Some(fold) = &content.fold else {
+                if content.fold.is_none() && content.operations.is_empty() {
                     return Err(CatalogError::validation(format!(
                         "{} '{}' parameter {} declares an empty paramContent fact",
                         entry.kind.as_str(),
                         entry.id,
                         index + 1
                     )));
+                }
+                for operation in &content.operations {
+                    if !self.by_id[Kind::Operator.as_index()].contains_key(operation) {
+                        return Err(CatalogError::validation(format!(
+                            "{} '{}' parameter {} accepts undeclared operator '{operation}'",
+                            entry.kind.as_str(),
+                            entry.id,
+                            index + 1
+                        )));
+                    }
+                }
+                let Some(fold) = &content.fold else {
+                    continue;
                 };
                 // The reserved variable-target calls fix both their arity
                 // and which argument is the tagged `{"variable"}` node: the
