@@ -1,0 +1,20 @@
+# Human review is required for what defines "passing": CI and release gates,
+# public contracts, compatibility references, and agent instructions.
+# Ordinary code, tests, and docs stay unowned, so agents may review and merge them.
+/.github/ @Teakowa
+/AGENTS.md @Teakowa
+/docs/adr/ @Teakowa
+/docs/spec/ @Teakowa
+/docs/provenance.md @Teakowa
+/docs/source-attribution/ @Teakowa
+
+# Public schema
+/crates/workshop-rs/schemas/ @Teakowa
+
+# Corpus that gates compatibility
+/tools/corpus/ @Teakowa
+/crates/workshop-rs/tests/fixtures/corpus/ @Teakowa
+
+# Release
+/release-plz.toml @Teakowa
+/docs/release.md @Teakowa
