@@ -128,8 +128,7 @@ impl AliasFile {
         };
         if spellings.is_empty() || spellings.iter().any(String::is_empty) {
             return Err(CatalogError::validation(format!(
-                "catalog entry '{}' declares an empty alias for locale '{}'",
-                id, locale
+                "catalog entry '{id}' declares an empty alias for locale '{locale}'"
             )));
         }
         Ok(spellings)

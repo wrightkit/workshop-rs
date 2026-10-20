@@ -117,10 +117,10 @@ cargo run -p workshop-rs --bin workshop-catalog-gen -- check
 git diff --check
 ```
 
-The workspace declares `rust-version = "1.85.0"`. Before pushing, also run
-`cargo +1.85.0 clippy --workspace --all-targets -- -D warnings` and
-`cargo +1.85.0 test --workspace --all-targets`; newer syntax such as
-let-chains passes on stable and is caught only by the `Rust (1.85.0)` CI job.
+The workspace declares `rust-version = "1.88.0"`. Before pushing, also run
+`cargo +1.88.0 clippy --workspace --all-targets -- -D warnings` and
+`cargo +1.88.0 test --workspace --all-targets`; newer syntax such as
+let-chains passes on stable and is caught only by the `Rust (1.88.0)` CI job.
 
 A local pass is not proof of live-client behavior. Claims about current
 Workshop acceptance or seasonal behavior require the corresponding client or
