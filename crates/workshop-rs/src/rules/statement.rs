@@ -155,7 +155,7 @@ type Result<T> = std::result::Result<T, StatementContentError>;
 /// let catalog = Catalog::builtin().unwrap();
 /// let statement = statement_from_content(
 ///     &catalog,
-///     &json!({"call": "wait", "args": [0.5, {"enum": "WaitBehavior", "member": "IGNORE_CONDITION"}]}),
+///     &json!({"call": "wait", "args": [0.5, {"enum": "Wait", "member": "IGNORE_CONDITION"}]}),
 /// )
 /// .unwrap();
 /// assert!(matches!(statement, Statement::Action(_)));

@@ -32,6 +32,9 @@ new document with comments reindexed; consumers reparse its text to obtain new
 semantic spans. Bytes outside an explicit edit are unchanged, so unrelated
 comments, whitespace, and mixed source structure are preserved.
 
+`Program::edit_statements` builds statement-level edits on `Program::edit_source`;
+its contract is in [`compatibility-facades.md`](compatibility-facades.md).
+
 Parsed programs expose rule, condition, action, and direct action-argument
 spans through `Program::rule_span`, `Program::condition_span`,
 `Program::action_span`, and `Program::action_argument_span`. Identifier and

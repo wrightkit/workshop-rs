@@ -11,6 +11,7 @@ pub(crate) use crate::wir::{
     self, Action, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Value, ValueNode,
 };
 
+use super::keywords::{canonical_structural_id, spelling_token_len, structural_spellings};
 pub(crate) use super::lexer::{Token, TokenKind, tokenize};
 pub(crate) use crate::catalog::{Catalog, Kind, Locale};
 pub(crate) use crate::core::error::{Result, WorkshopError};
@@ -151,16 +152,7 @@ impl<'a> ParseContext<'a> {
     }
 
     pub(crate) fn canonical_keyword(&self, spelling: &str) -> String {
-        self.catalog
-            .resolve(Kind::Structural, &self.locale, spelling)
-            .or_else(|| {
-                (self.locale != *self.catalog.primary_locale()).then(|| {
-                    self.catalog
-                        .resolve(Kind::Structural, self.catalog.primary_locale(), spelling)
-                })?
-            })
-            .map(|entry| entry.id.clone())
-            .unwrap_or_else(|| canonical_keyword(spelling).to_string())
+        canonical_structural_id(self.catalog, &self.locale, spelling)
     }
 
     pub(crate) fn line_has_assignment(&self) -> bool {
@@ -547,49 +539,11 @@ impl<'a> ParseContext<'a> {
     }
 
     fn compute_structural_spellings(&self, id: &str) -> Vec<String> {
-        let mut spellings = Vec::new();
-        if let Some(entry) = self.catalog.entry(Kind::Structural, id) {
-            spellings.extend(entry.spellings(&self.locale).iter().cloned());
-            let primary = self.catalog.primary_locale();
-            if self.locale != *primary {
-                spellings.extend(entry.spellings(primary).iter().cloned());
-            }
-        }
-        for (spelling, english) in structural_keyword_map() {
-            if self
-                .catalog
-                .resolve(Kind::Structural, self.catalog.primary_locale(), english)
-                .is_some_and(|entry| entry.id == id)
-            {
-                spellings.push(spelling.clone());
-            }
-        }
-        spellings
+        structural_spellings(self.catalog, &self.locale, id)
     }
 
     fn match_spelling_tokens(&self, spelling: &str) -> Option<usize> {
-        let mut offset = 0;
-        for piece in spelling.split(' ') {
-            let (word, dotted) = match piece.strip_suffix('.') {
-                Some(word) => (word, true),
-                None => (piece, false),
-            };
-            if !word.is_empty() {
-                match self.peek_kind_at(offset) {
-                    Some(TokenKind::Word(candidate)) if table::names_eq(candidate, word) => {}
-                    Some(TokenKind::Number { text, .. }) if text == word => {}
-                    _ => return None,
-                }
-                offset += 1;
-            }
-            if dotted {
-                match self.peek_kind_at(offset) {
-                    Some(TokenKind::Dot) => offset += 1,
-                    _ => return None,
-                }
-            }
-        }
-        (offset > 0).then_some(offset)
+        spelling_token_len(&self.tokens, self.pos, spelling)
     }
 
     /// Consume the longest structural keyword prefix among `ids` at the
@@ -823,7 +777,7 @@ impl<'a> ParseContext<'a> {
     }
 }
 
-fn structural_keyword_map() -> &'static HashMap<String, String> {
+pub(super) fn structural_keyword_map() -> &'static HashMap<String, String> {
     static KEYWORDS: OnceLock<HashMap<String, String>> = OnceLock::new();
     KEYWORDS.get_or_init(|| {
         serde_json::from_str(include_str!("structural_keywords.json"))

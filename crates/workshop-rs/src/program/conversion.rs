@@ -1,6 +1,8 @@
 mod from_wir;
 mod to_wir;
 
+pub(crate) use to_wir::{wir_action, wir_value};
+
 use crate::core::error::WorkshopError;
 use crate::wir;
 
