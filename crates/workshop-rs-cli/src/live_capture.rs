@@ -372,9 +372,6 @@ fn validate_name(field: &str, value: &str) -> Result<(), LiveCaptureError> {
 
 fn validate_timestamp(value: &str) -> Result<(), LiveCaptureError> {
     validate_name("capturedAt", value)?;
-    // RFC-3339 requires a `T` separator and either `Z`/`z` or a `+HH:MM`/
-    // `-HH:MM` offset — a `-` inside the date part must not count, so only
-    // the portion after `T` is inspected for the offset sign.
     let Some(time) = value.split_once('T').map(|(_, time)| time) else {
         return Err(invalid(
             "capturedAt must use an ISO-8601 timestamp with a timezone",
@@ -677,8 +674,6 @@ mod tests {
         assert!(document["runtimeUncertainty"].is_array());
     }
 
-    /// C2 companion: drift *from* an uncertain baseline is unverifiable and
-    /// lands in `runtime_uncertainty`, not `changes`.
     #[test]
     fn diff_reports_uncertainty_when_baseline_not_comparable() {
         let prior = make_capture(
@@ -712,8 +707,6 @@ mod tests {
         );
     }
 
-    /// C3: RFC-3339 offsets other than `Z`/`+` must validate, and a `+`
-    /// anywhere outside the time part must not count as an offset.
     #[test]
     fn timestamp_accepts_rfc3339_offsets() {
         for valid in [

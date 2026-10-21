@@ -1,15 +1,3 @@
-//! Validation-entry agreement tests (workshop-rs#460).
-//!
-//! The CLI `parse` command, the `corpus` runner's per-case validation path,
-//! and the library validation entry point are three ways the same program is
-//! validated. For every input they must accept or reject identically: the
-//! canonical-identity check, WIR structural validation, and parsing itself
-//! are one contract, not three weaker subsets (workshop-rs#439).
-//!
-//! Both CLI surfaces are driven through the compiled binary, so a check
-//! dropped from either entry point — not only from the library calls —
-//! surfaces as a disagreement here.
-
 use std::collections::HashMap;
 use std::path::Path;
 use std::process::Command;
@@ -34,9 +22,6 @@ const CASES: &[Case] = &[
         actions: "Wait(1);",
         accepted: true,
     },
-    // Surplus arguments past the declared signature: parse and WIR
-    // validation accept this; only canonical-ID validation rejects it
-    // (the workshop-rs#439 defect class).
     Case {
         id: "surplus-args",
         actions: "Wait(1, 2, 3, 4, 5);",
@@ -47,8 +32,6 @@ const CASES: &[Case] = &[
         actions: "Wait();",
         accepted: false,
     },
-    // A partially supplied signature is a missing argument too
-    // (workshop-rs#341).
     Case {
         id: "partial-args",
         actions: "Big Message(All Players(All Teams));",
@@ -157,9 +140,6 @@ fn corpus_statuses(dir: &Path, cases: &[(&Case, String)]) -> HashMap<String, Str
         .collect()
 }
 
-/// The `corpus` runner reports a validated case as `inconclusive` (the
-/// pinned reference comparison cannot run offline) and a rejected case as
-/// `unexpected-regression`.
 fn corpus_accepts(status: &str) -> bool {
     match status {
         "inconclusive" => true,

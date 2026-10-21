@@ -1,5 +1,3 @@
-//! The hero-values-v1 schema accepts the example file and rejects each invalid example.
-
 use serde_json::Value;
 
 fn read(path: &str) -> Value {
@@ -23,6 +21,18 @@ fn example_file_validates() {
     if let Err(errors) = validator().validate(&document) {
         let errors = errors.map(|error| error.to_string()).collect::<Vec<_>>();
         panic!("example does not validate: {errors:?}");
+    }
+}
+
+#[test]
+fn builtin_file_validates() {
+    let document = read(&format!(
+        "src/gameplay/values/{}.json",
+        workshop_rs::hero_values::CURRENT_VERSION
+    ));
+    if let Err(errors) = validator().validate(&document) {
+        let errors = errors.map(|error| error.to_string()).collect::<Vec<_>>();
+        panic!("builtin data file does not validate: {errors:?}");
     }
 }
 

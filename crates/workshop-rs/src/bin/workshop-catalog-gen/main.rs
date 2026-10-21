@@ -1,54 +1,3 @@
-//! `workshop-catalog-gen` — the reproducible Workshop catalog data pipeline.
-//!
-//! Validates and deterministically canonicalizes the catalog data file, and
-//! maintains the dataset's machine-readable identity (version + content
-//! digest, ADR-0001).
-//!
-//! Usage:
-//! ```sh
-//! workshop-catalog-gen check [--file catalog.json] [--descriptions descriptions.json] [--json]
-//! workshop-catalog-gen build [--file catalog.json] [--descriptions descriptions.json]
-//! workshop-catalog-gen corpus [--file catalog.json] [--export PATH] [--zh-source PATH] [--out-dir tools/corpus] [--settings-out PATH]
-//! workshop-catalog-gen descriptions [--file catalog.json] [--descriptions descriptions.json] --export PATH [--zh-source PATH]
-//! ```
-//!
-//! * `check` validates the catalog (schema, duplicate ids, colliding or
-//!   missing primary-locale aliases, undeclared locales, param arity) and
-//!   verifies the declared content digest, printing the machine-readable
-//!   identity (with `--json` as a JSON document).
-//! * `build` validates, canonicalizes, and (re)writes the file with a fresh
-//!   content digest. Re-running is byte-idempotent.
-//! * `corpus` applies locale corpus evidence to the catalog data (ADR-0001
-//!   Decision 6): it reads the user-provided Workshop data export (`--export`,
-//!   or the `WORKSHOP_DATA_EXPORT` environment variable), matches every
-//!   catalog entry and enum member by its exact en-US spelling against the
-//!   export's localized index, and writes
-//!   - the merged catalog data file (reviewed locale aliases added; data
-//!     change only, the declared digest is left stale for `build` to
-//!     recompute),
-//!   - the machine-readable corpus manifest with every match, every exclusion
-//!     and its reason, and per-category match statistics, and
-//!   - the settings locale corpus for the declared settings surface.
-//!     Unmatched entries are excluded from the corpus with a recorded reason
-//!     and keep fail-explicit behavior (ADR-0001 Decision 7); no spelling is
-//!     fabricated. Re-running on the merged data is byte-idempotent.
-//! * `descriptions` imports the en-US action/value descriptions from the
-//!   pinned Workshop data export (`--export`, or the `WORKSHOP_DATA_EXPORT`
-//!   environment variable) into `descriptions.json`, matching every catalog
-//!   entry by its exact en-US spelling. Source text violating the description
-//!   content rules is reduced through the importer's reviewed-text table;
-//!   uncovered positions become explicit `gaps` entries. The declared digest
-//!   is left stale for `build` to recompute.
-//!
-//! Updating localization data is a bounded data change: edit the JSON and
-//! re-run the pipeline; no parser or emitter code changes. The full locale
-//! corpus flow is: `corpus` (data merge) -> `build` (fresh digest) ->
-//! `check` (verify); commit data and regenerated files together. The
-//! description flow is: `descriptions` (import) -> `build` (fresh digests)
-//! -> `check` (verify). `check` validates `descriptions.json` against the
-//! catalog and verifies its declared digest; `build` rewrites it with a
-//! fresh digest alongside `catalog.json`.
-
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -56,16 +5,12 @@ use std::process::ExitCode;
 use workshop_rs::catalog::{Catalog, Locale, build_canonical};
 use workshop_rs::settings;
 
-/// The committed catalog data, relative to the workspace root (where CI and
-/// the documented pipeline commands run); `--file` overrides it.
 const DEFAULT_FILE: &str = "crates/workshop-rs/src/catalog/data/catalog.json";
 
 const DEFAULT_OUT_DIR: &str = "tools/corpus";
 
 const DEFAULT_SETTINGS_OUT: &str = "crates/workshop-rs/src/settings/data/locales.json";
 
-/// The committed descriptions dataset, next to `catalog.json`;
-/// `--descriptions` overrides it.
 const DEFAULT_DESCRIPTIONS_FILE: &str = "crates/workshop-rs/src/catalog/data/descriptions.json";
 
 const EXPORT_ENV: &str = "WORKSHOP_DATA_EXPORT";
@@ -332,13 +277,8 @@ fn main() -> ExitCode {
     }
 }
 
-/// The Workshop.codes wiki article titles of every native action and value.
 const WIKI_INVENTORY: &str = include_str!("../../catalog/data/wiki-inventory.json");
 
-/// Every action and value en-US spelling must be a native Workshop name from
-/// the wiki inventory (compared case-insensitively, since the wiki
-/// capitalizes some connecting words differently). A spelling outside it is a
-/// non-native identity or alias, which the catalog does not hold.
 fn native_spellings(catalog_json: &str) -> Result<(), Vec<String>> {
     let inventory: serde_json::Value =
         serde_json::from_str(WIKI_INVENTORY).map_err(|error| vec![error.to_string()])?;
@@ -384,9 +324,7 @@ fn native_spellings(catalog_json: &str) -> Result<(), Vec<String>> {
     }
 }
 
-/// The locale corpus pipeline (ADR-0001 Decision 6).
 mod corpus;
-/// The description import pipeline (issue #517).
 mod descriptions;
 
 #[cfg(test)]

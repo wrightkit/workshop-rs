@@ -1,44 +1,7 @@
-//! `descriptions` — imports en-US action/value descriptions from the pinned
-//! `workshop-data` export into `descriptions.json`, and zh-CN descriptions
-//! from the zh-CN source artifact.
-//!
-//! The export's `data.actions`/`data.values` entries carry an en-US
-//! `description` map on the entry and on each `args` position — the
-//! in-game Workshop documentation text — matched to catalog entries by
-//! their exact en-US spelling through the export's `localized` index.
-//! Source text that violates the content rules (gameplay advice,
-//! source-language names, markup) is reduced to the reviewed text in
-//! [`REVIEWED_TEXT`]; positions with no usable source text become
-//! explicit `gaps` entries.
-//!
-//! zh-CN text comes from the `tools/descriptions/zh-source.json`
-//! artifact's two cross-checked records: `byZhName` — the primary
-//! record — matched by the entry's zh-CN spelling, and `byEnName` — the
-//! secondary record — matched by its en-US name.
-//!
-//! Both records are cleaned to the factual sentences they carry
-//! ([`clean_zh_source`]). Where they disagree, the primary record
-//! arbitrates by default; positions where it contradicts the en-US
-//! semantics (wrong direction, unit, or element) are arbitrated to the
-//! secondary record through [`ZH_USE_SECONDARY`], and source defects in
-//! the chosen text are reduced through [`ZH_REVIEWED_TEXT`]. Source
-//! parameter lists that do not align 1:1 with the catalog's are bound
-//! explicitly through
-//! [`ZH_PRIMARY_PARAM_MAP`]/[`ZH_SECONDARY_PARAM_MAP`] — positional
-//! matching across a count mismatch is never assumed. Positions with no
-//! usable source text become explicit `gaps."zh-CN"` entries; no zh-CN
-//! text is translated or inferred.
-
 use serde_json::{Map, Value};
 
 use super::*;
 
-/// Reviewed replacements for source text that violates the description
-/// content rules — `(catalog id, parameter position or entry-level, text)`.
-/// Each entry names the canonical Workshop surface form instead of the
-/// source's source-language spelling, or drops gameplay advice and
-/// markup from an otherwise factual text. Every rule must apply at
-/// generation time; an unused rule reports as stale.
 const REVIEWED_TEXT: &[(&str, Option<usize>, &str)] = &[
     (
         "createHudText",
@@ -165,17 +128,8 @@ const REVIEWED_TEXT: &[(&str, Option<usize>, &str)] = &[
     ),
 ];
 
-/// Source texts that are not descriptions at all and must become explicit
-/// gaps rather than imported text — `(catalog id, parameter position or
-/// entry-level)`. `customString`'s source description is a contributor
-/// credit (`"ty magzie for adding that"`), not a description of the value.
 const GAPPED_SOURCE: &[(&str, Option<usize>)] = &[("customString", None)];
 
-/// Reviewed zh-CN texts — reductions of chosen source text that carries
-/// source defects (unbalanced markup, a mistyped word) — `(catalog id,
-/// parameter position or entry-level, text)`. Each text is a reduction of
-/// the source's own wording, never an invented translation. Every rule
-/// must apply at generation time; an unused rule reports as stale.
 const ZH_REVIEWED_TEXT: &[(&str, Option<usize>, &str)] = &[
     (
         "isObjectiveComplete",
@@ -194,13 +148,6 @@ const ZH_REVIEWED_TEXT: &[(&str, Option<usize>, &str)] = &[
     ),
 ];
 
-/// Positions where the two zh-CN source records disagree and the
-/// secondary record's text is chosen because the primary record's text
-/// contradicts the en-US semantics (a mistyped direction, unit, or
-/// element name, or a text belonging to a different element) —
-/// `(catalog id, parameter position or entry-level)`. Every rule must
-/// apply at generation time; an unused rule reports as stale. Every
-/// other disagreement resolves to the primary record.
 const ZH_USE_SECONDARY: &[(&str, Option<usize>)] = &[
     // The primary record describes the kill feed ("消灭提示") here instead of the
     // scoreboard.
@@ -273,12 +220,6 @@ const ZH_USE_SECONDARY: &[(&str, Option<usize>)] = &[
     ("getHorizontalFacingAngle", Some(0)),
 ];
 
-/// Primary-record parameter lists that do not align 1:1 with
-/// the catalog's — per catalog position, the primary parameter index it
-/// draws from, or `None` for a position the source does not cover.
-/// Records with an empty parameter list contribute nothing and need no
-/// entry; a record with a nonzero count mismatch and no entry is an
-/// explicit error — positional guessing is never allowed.
 const ZH_PRIMARY_PARAM_MAP: &[(&str, &[Option<usize>])] = &[
     // The primary record lists the two operand descriptions under the shared 值
     // label; the middle `comparison` position has no source text.
@@ -288,8 +229,6 @@ const ZH_PRIMARY_PARAM_MAP: &[(&str, &[Option<usize>])] = &[
     ("isCommunicating", &[None, Some(0)]),
 ];
 
-/// Secondary-record parameter lists that do not align 1:1 with the
-/// catalog's, same contract as [`ZH_PRIMARY_PARAM_MAP`].
 const ZH_SECONDARY_PARAM_MAP: &[(&str, &[Option<usize>])] = &[
     ("compare", &[Some(0), None, Some(1)]),
     // The secondary record's single parameter text is a generic "function input" note
@@ -342,13 +281,8 @@ const ZH_SECONDARY_PARAM_MAP: &[(&str, &[Option<usize>])] = &[
     ("roundToInteger", &[None, Some(0)]),
 ];
 
-/// The default zh-CN source artifact; `--zh-source` overrides it.
 pub(crate) const DEFAULT_ZH_SOURCE: &str = "tools/descriptions/zh-source.json";
 
-/// Import en-US descriptions from the pinned `workshop-data` export and
-/// zh-CN descriptions from the zh-CN source artifact, then
-/// write the canonical descriptions dataset (without a digest; `build`
-/// records it). Returns the report lines.
 pub(crate) fn generate(
     catalog_data: &str,
     out_path: &Path,
@@ -370,8 +304,6 @@ pub(crate) fn generate(
         .to_string();
     let zh_source = load_zh_source(zh_path)?;
 
-    // en-US spelling -> "section\0export id", over the actions/values
-    // localized rows.
     let mut by_en: HashMap<String, Vec<String>> = HashMap::new();
     for (key, entry) in export
         .get("localized")
@@ -497,9 +429,6 @@ pub(crate) fn generate(
                 .and_then(Value::as_array)
                 .map_or(0, Vec::len);
 
-            // zh-CN source records: `byZhName` by zh-CN spelling,
-            // `byEnName` by en-US name. Both indexes are normalized
-            // (whitespace and punctuation-free respectively).
             let primary_record = zh_source.primary_by_name.get(&normalize_zh_name(&zh_name));
             let secondary_record = zh_source.secondary_by_name.get(&normalize_en_name(&en));
             if primary_record.is_none() && secondary_record.is_none() {
@@ -782,9 +711,6 @@ pub(crate) fn generate(
     Ok(report)
 }
 
-/// The dataset version to write: keep the existing file's version across
-/// regenerations so a deliberate version bump survives the pipeline;
-/// `"0.1.0"` when the file does not declare one yet.
 fn dataset_version(out_path: &Path) -> String {
     std::fs::read_to_string(out_path)
         .ok()
@@ -797,17 +723,10 @@ fn dataset_version(out_path: &Path) -> String {
         })
         .unwrap_or_else(|| "0.1.0".to_string())
 }
-
-/// The zh-CN source artifact (`tools/descriptions/zh-source.json`):
-/// the `byZhName` record indexed by normalized zh-CN name and the
-/// `byEnName` record indexed by normalized en-US name.
 struct ZhSource {
     primary_by_name: HashMap<String, ZhRecord>,
     secondary_by_name: HashMap<String, ZhRecord>,
 }
-
-/// One source record: the element description plus its parameter
-/// descriptions in the source's own order.
 struct ZhRecord {
     description: Option<String>,
     params: Vec<ZhParam>,
@@ -816,10 +735,6 @@ struct ZhRecord {
 struct ZhParam {
     description: String,
 }
-
-/// Parse the zh-CN source artifact into normalized lookup
-/// indexes. A source name that collides with an index key is an error —
-/// silently merging would lose text.
 fn load_zh_source(path: &Path) -> Result<ZhSource, String> {
     let text = std::fs::read_to_string(path)
         .map_err(|error| format!("cannot read zh-CN source {}: {error}", path.display()))?;
@@ -877,12 +792,6 @@ fn load_zh_source(path: &Path) -> Result<ZhSource, String> {
         secondary_by_name: records("byEnName", normalize_en_name)?,
     })
 }
-
-/// A catalog position's index into a source's parameter list, resolved
-/// through `map` when the source's parameter count does not match the
-/// catalog's. An empty source parameter list contributes nothing; a
-/// nonzero count mismatch with no `map` entry is an explicit error so no
-/// position is ever bound positionally by guesswork.
 fn zh_param_indexes(
     id: &str,
     params_len: usize,
@@ -917,10 +826,6 @@ fn zh_param_indexes(
     }
     Ok((0..params_len).map(Some).collect())
 }
-
-/// Every source parameter map entry must be consulted at generation time;
-/// an entry whose source record is absent or whose counts now align is
-/// stale.
 fn check_stale_param_maps(source: &ZhSource, catalog_json: &Value) -> Result<(), String> {
     let catalog_entry = |id: &str| -> Option<&Value> {
         ["actions", "values"].iter().find_map(|section| {
@@ -971,8 +876,6 @@ fn check_stale_param_maps(source: &ZhSource, catalog_json: &Value) -> Result<(),
     )?;
     Ok(())
 }
-
-/// The first declared spelling of a catalog entry in `locale`.
 fn first_alias(entry: &Value, locale: &str) -> String {
     entry
         .get("aliases")
@@ -988,39 +891,21 @@ fn first_alias(entry: &Value, locale: &str) -> String {
         })
         .unwrap_or_default()
 }
-
-/// `byZhName` record names occasionally carry spaces or full-width
-/// spaces; drop every whitespace character for matching.
 fn normalize_zh_name(name: &str) -> String {
     name.chars().filter(|c| !c.is_whitespace()).collect()
 }
-
-/// `byEnName` record headings carry the en-US element name; fold to
-/// ASCII alphanumerics so spelling style ("Create HUD Text" vs
-/// "createHudText") does not matter.
 fn normalize_en_name(name: &str) -> String {
     name.chars()
         .filter(|c| c.is_ascii_alphanumeric())
         .flat_map(char::to_lowercase)
         .collect()
 }
-
-/// The cross-source agreement form of a zh-CN text: lowercase
-/// alphanumerics and CJK ideographs only, so punctuation, quote, and
-/// spacing style differences do not count as disagreements.
 fn canon_zh_text(text: &str) -> String {
     text.chars()
         .flat_map(char::to_lowercase)
         .filter(|c| c.is_alphanumeric())
         .collect()
 }
-
-/// Reduce a zh-CN source text to the factual sentence(s) it carries:
-/// drop `~~struck~~` spans and `*` emphasis markers, repair the primary
-/// record's systematically swapped curly quotes (`”文本“` → `“文本”`),
-/// drop the secondary record's editor aside and leading source-bullet
-/// colon, and collapse whitespace. `"无"`/`"无描述"` markers and empty
-/// results yield no text.
 fn clean_zh_source(text: &str) -> String {
     let mut unstruck = String::with_capacity(text.len());
     let mut keep = true;

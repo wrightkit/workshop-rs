@@ -50,8 +50,6 @@ rule("colonated enum")
 
 #[test]
 fn bare_colon_enum_members_resolve_without_a_signature_domain() {
-    // #441: members whose canonical spelling contains a colon resolve in bare
-    // positions even when the enclosing signature does not pin an enum domain.
     for (spelling, domain, member) in [
         (
             "Soldier: 76 Sprint Start Sound",
@@ -123,10 +121,6 @@ rule ("t") { event { Ongoing - Global; } actions {
 
 #[test]
 fn colon_enum_members_round_trip_through_every_declared_locale() {
-    // #441: each localized member spelling, including the locale-specific
-    // colon spacings (fr-FR `Soldat : 76`, ja-JP `矢印:下`, zh-CN `箭头：向下`),
-    // emits and reparses in its own locale and still emits the canonical
-    // en-US spelling.
     let catalog = catalog();
     let en = en();
     for (domain, member) in [
@@ -191,10 +185,6 @@ fn evidenced_uppercase_hex_literal_matches_decimal_program() {
 
 #[test]
 fn non_finite_spellings_stay_outside_the_canonical_grammar() {
-    // #358: pinned OverPy emission alone does not evidence Workshop client
-    // acceptance, so these spellings stay outside the canonical number
-    // grammar. Bare words parse as calls and fail catalog validation;
-    // operator-prefixed forms are malformed at the value parser.
     let declared = |literal: &str| {
         format!(
             "variables {{\n    global:\n        0: v\n}}\n\nrule (\"x\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{\n        Set Global Variable(v, {literal});\n    }}\n}}\n"
@@ -225,8 +215,6 @@ fn non_finite_spellings_stay_outside_the_canonical_grammar() {
 
 #[test]
 fn non_finite_number_values_fail_wir_validation() {
-    // A digit literal of 300+ digits overflows f64 to ±inf at parse; with no
-    // client-acceptance evidence the canonical model rejects the value (#358).
     let literal = "9".repeat(400);
     let source = format!(
         "variables {{\n    global:\n        0: v\n}}\n\nrule (\"x\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{\n        Set Global Variable(v, {literal});\n    }}\n}}\n"
@@ -365,13 +353,6 @@ const CORPUS_FIXTURES: &[&str] = &[
 
 #[test]
 fn every_corpus_workshop_text_parses_to_valid_wir() {
-    // The corpus Workshop text parses directly against the catalog context,
-    // which pins the expected enum domains from the canonical catalog
-    // signatures (e.g. Create HUD Text's Reevaluation argument is
-    // `HudReeval`, Create Beam Effect's is `EffectReeval`), resolving bare
-    // members that are ambiguous across the catalog's enum domains (e.g.
-    // `Visible To and String`). Unpinned members retain all catalog-backed
-    // candidates instead of fabricating a domain.
     for fixture_id in CORPUS_FIXTURES {
         let text = common::corpus_text(fixture_id);
         let catalog = catalog();
@@ -528,8 +509,6 @@ fn spans_are_preserved() {
 
 #[test]
 fn malformed_input_is_reported_as_malformed() {
-    // A rule-final If without `End;` is the oracle's valid spelling; an If
-    // whose body never closes at all stays malformed.
     let text = "rule (\"broken\") { actions { If(True);";
     let error = internal::try_parse(text).unwrap_err();
     assert!(
@@ -574,8 +553,6 @@ fn canonical_validation_enforces_declared_arity_and_enum_domain() {
             .contains("action 'wait' expects 1..2 argument(s), got 0")
     );
 
-    // Surplus arguments past the non-variadic signature are rejected with
-    // the same named-arity diagnostic the CLI reports (workshop-rs#430).
     let surplus =
         r#"rule ("surplus") { event { Ongoing - Global; } actions { Wait(1, 2, 3, 4, 5); } }"#;
     let program = internal::parse(surplus);
@@ -587,8 +564,6 @@ fn canonical_validation_enforces_declared_arity_and_enum_domain() {
             .contains("action 'wait' expects 1..2 argument(s), got 5")
     );
 
-    // A partially supplied signature is rejected with a source-located
-    // diagnostic, not only an empty argument list (workshop-rs#341).
     let partial = r#"rule ("partial") { event { Ongoing - Global; } actions { Big Message(All Players(All Teams)); } }"#;
     let program = internal::parse(partial);
     let error = validate::validate_canonical_ids_wir(&program, &catalog)
@@ -620,18 +595,12 @@ fn canonical_validation_enforces_declared_arity_and_enum_domain() {
 #[test]
 fn canonical_validation_records_issue_341_owner_decisions() {
     let catalog = catalog();
-    // workshop-rs#341: `Wait(1)` is accepted — the catalog declares a default
-    // (`Wait.IGNORE_CONDITION`) for `wait`'s trailing `waitBehavior`
-    // parameter, so one argument is the canonical form.
     let program =
         internal::parse(r#"rule ("r") { event { Ongoing - Global; } actions { Wait(1); } }"#);
     validate::validate_canonical_ids_wir(&program, &catalog)
         .expect("Wait(1) is canonical: waitBehavior carries a declared default");
     program.validate().expect("Wait(1) is structurally valid");
 
-    // workshop-rs#341: `Set Global Variable(nope, 1)` is accepted — raw
-    // Workshop binds variable names to slots, so an undeclared name allocates
-    // an implicit variable on first use rather than failing validation.
     let program = internal::parse(
         r#"variables { global: 0: x } rule ("r") { event { Ongoing - Global; } actions { Set Global Variable(nope, 1); } }"#,
     );
@@ -744,11 +713,6 @@ rule ("type") { event { Ongoing - Global; } actions {
 
 #[test]
 fn indexed_player_variable_actions_use_their_declared_surface_signature() {
-    // workshop-rs#442: the catalog declares the surface signature of the
-    // player-variable index actions, so a call built parameter-by-parameter
-    // from the declaration must parse, validate, and emit in the same
-    // surface form — the `(player, variable)` pair folds into one
-    // `PlayerVariable` WIR argument internally.
     let catalog = catalog();
     for id in ["setPlayerVariableAtIndex", "modifyPlayerVariableAtIndex"] {
         let entry = catalog
@@ -789,14 +753,6 @@ fn indexed_player_variable_actions_use_their_declared_surface_signature() {
 
 #[test]
 fn player_typed_values_validate_uniformly_across_wir_kinds() {
-    // workshop-rs#336: `Event Player` and calls whose catalog return type is
-    // `Player` share one static type, so every parameter position must give
-    // them the same verdict. Client-accepted real projects evidence Player
-    // arguments in the positions exercised here (`bastion`, `defend`,
-    // `ai-pve`); positions without such evidence reject every Player value.
-    // Note: the `defend` corpus gaps here are masked in the real-project
-    // suite by an earlier admitted `rawWorkshopAction` gap, so these cases
-    // are the direct guard for `Closest Player To`/`Filtered Array`.
     let catalog = catalog();
     let players = [
         "Event Player",
@@ -931,9 +887,6 @@ fn unsupported_construct_is_distinct_from_malformed() {
 
 #[test]
 fn bare_chase_reevaluation_none_is_ambiguous_across_domains() {
-    // Both reference reevaluation domains spell their NONE member "None".
-    // Without a signature pin the catalog-backed parser retains all matching
-    // canonical candidates instead of choosing a domain.
     let text = "variables { global: 0: g }\nrule (\"x\") { event { Ongoing - Global; } actions { Set Global Variable(g, None); } }";
     let program = internal::parse(text);
     let value_id = match program.actions.iter().next().expect("action") {
@@ -1026,11 +979,6 @@ fn enum_value_of_first_action(program: &wir::Program, action_index: usize) -> &w
 
 #[test]
 fn context_pinned_ambiguous_none_resolves_via_canonical_signature() {
-    // The emitter-produced `Chase Global Variable Over Time(..., None)`
-    // (bare `None` shared by ChaseTimeReeval/ChaseRateReeval/Invis) reparses
-    // to ChaseTimeReeval.NONE because the canonical chaseOverTime signature
-    // pins argument 3 to the ChaseTimeReeval domain (catalog data, migrated
-    // from the Wright-authored manifest probes).
     let text = "variables { global: 0: g }\nrule (\"x\") { event { Ongoing - Global; } actions { Chase Global Variable Over Time(Global.g, 0, 30, None); } }";
     let program = internal::parse(text);
     let value = enum_value_of_first_action(&program, 0);
@@ -1043,9 +991,6 @@ fn context_pinned_ambiguous_none_resolves_via_canonical_signature() {
 
 #[test]
 fn context_pinned_ambiguous_none_resolves_for_set_invisible() {
-    // `Set Invisible(Event Player, None)` reparses to Invis.NONE: the
-    // canonical setInvisibility signature pins argument 1 to the Invis
-    // domain (member-action receiver offset).
     let text = "rule (\"x\") { event { Ongoing - Each Player; } actions { Set Invisible(Event Player, None); } }";
     let program = internal::parse(text);
     let value = enum_value_of_first_action(&program, 0);
@@ -1117,10 +1062,6 @@ rule ("chase and condition") {
 
 #[test]
 fn wrong_domain_context_keeps_the_ambiguity_preserved() {
-    // A signature pinning a *different* domain than the ambiguous member's
-    // candidates must not resolve it: `Wait(...)` expects `Wait` (which has
-    // no `None` member), so the bare `None` stays ambiguous — no guessing,
-    // no arbitrary precedence.
     let text = "rule (\"x\") { event { Ongoing - Global; } actions { Wait(0.016, None); } }";
     let program = internal::parse(text);
     assert!(matches!(
@@ -1131,9 +1072,6 @@ fn wrong_domain_context_keeps_the_ambiguity_preserved() {
 
 #[test]
 fn expected_domain_resolution_tracks_the_catalog_declared_domains() {
-    // The catalog is the single source of expected domains for the surface
-    // it documents: canonical signatures answer exactly their declared
-    // parameter domains.
     use workshop_rs::signatures::ExpectedDomain;
     let catalog = catalog();
     assert_eq!(
@@ -1316,8 +1254,6 @@ fn raw_indexed_assignment_lowers_to_explicit_wir_call() {
 
 #[test]
 fn min_max_modifications_lower_for_global_player_and_indexed_forms() {
-    // OverPy's canonical min=/max= forms and the raw Workshop actions both
-    // denote the same Workshop modification operation (workshop-rs#95).
     let text = r#"
         variables {
             global: 0: g

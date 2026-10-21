@@ -1,7 +1,3 @@
-//! Canonical emission of statement rows: each statement is lowered into
-//! scratch WIR storage seeded with the program's declarations and emitted by
-//! the same code path whole-program emission uses.
-
 use std::collections::HashMap;
 
 use super::{Result, StatementEditError, StatementList};
@@ -13,25 +9,14 @@ use crate::program::{Action, Program};
 use crate::rules::statement::Statement;
 use crate::wir::{self, GlobalVarId, PlayerVarId, SubroutineId};
 
-// --- Emission ---------------------------------------------------------
-
-/// A statement lowered into scratch WIR storage for emission.
 enum LoweredStatement {
-    /// A full condition, emitted by the same code path whole-rule emission uses.
     Condition(wir::Condition),
-    /// An executable leaf action, emitted through `EmitContext::action`.
     Leaf(wir::ActionId),
-    /// A control-flow header or marker the public model spells as one
-    /// statement (`If(…);`, `Else;`, `End;`, `While(…);`, `For …;`); WIR
-    /// groups these with their bodies, so the header line emits directly.
     Header {
         keyword: &'static str,
         args: Vec<wir::ValueId>,
-        /// The variable name `For … Variable` spells; empty otherwise.
         name: String,
     },
-    /// A `disabled` wrapper: the inner statement emits, then the localized
-    /// `disabled` modifier prefixes its line.
     Disabled(Box<LoweredStatement>),
 }
 
@@ -134,8 +119,6 @@ fn lower_action(
 ) -> WorkshopResult<LoweredStatement> {
     Ok(match action {
         Action::Disabled { action: inner } => {
-            // The same refusal `lower_actions` applies to the shared
-            // public→WIR lowering.
             if matches!(
                 inner.as_ref(),
                 Action::ElseIf { .. } | Action::Else | Action::End | Action::Disabled { .. }

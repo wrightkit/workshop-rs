@@ -1,6 +1,3 @@
-//! Regression coverage for #448: every declared localized catalog spelling
-//! must parse back in its own locale. One test per shape that previously
-//! failed to parse or misresolved.
 use crate::common;
 use workshop_rs::catalog::Locale;
 use workshop_rs::parser;
@@ -48,9 +45,6 @@ fn leaf_names(children: &[SettingsNode]) -> Vec<&str> {
     names
 }
 
-/// tr-TR catalog data marks untranslated hero names as `<en>Name<en>`; the
-/// closing tag may sit directly after a digit (`Soldier: 76<en>`), which the
-/// lexer previously read as a `<` operator.
 #[test]
 fn untranslated_markup_hero_names_parse() {
     let tr = common::locale("tr-TR");
@@ -59,10 +53,6 @@ fn untranslated_markup_hero_names_parse() {
     }
 }
 
-/// `Hero` is both an enum domain and a value name. `enum_member_phrase` must
-/// not swallow a `(` into the member spelling, and a failed enum-literal
-/// reading must fall back to the value call — zh-CN emits
-/// `英雄(英雄(D.Va))` for `hero(Hero.DVA)`.
 #[test]
 fn hero_value_call_with_enum_constructor_argument_parses() {
     for (locale, source) in [
@@ -80,9 +70,6 @@ fn hero_value_call_with_enum_constructor_argument_parses() {
     }
 }
 
-/// ru-RU hero ability labels contain ` : ` inside the label itself
-/// (`Время восстановления: Удар щитом`); the member-name prefix must extend
-/// past a first colon that fails to resolve.
 #[test]
 fn settings_labels_containing_colons_parse() {
     let ru = common::locale("ru-RU");
@@ -104,9 +91,6 @@ fn settings_labels_containing_colons_parse() {
     );
 }
 
-/// `Shield Bash` is Brigitte's ability-3 display name. It must bind
-/// `enableAbility3`, not the `ability3Cooldown%` template — a bare `%1$s`
-/// template name must not swallow the whole label.
 #[test]
 fn ability_display_name_binds_the_enable_key() {
     let en = common::en();
@@ -119,8 +103,6 @@ fn ability_display_name_binds_the_enable_key() {
     );
 }
 
-/// `%1$s` ability templates substitute the hero's localized ability name in
-/// the hero's *localized* template as well, not only the English one.
 #[test]
 fn localized_ability_templates_resolve() {
     let pt = common::locale("pt-BR");
@@ -128,15 +110,9 @@ fn localized_ability_templates_resolve() {
         &hero_setting("Ana", "Tempo de recarga de Dardos Tranquilizantes: 100%"),
         &pt,
     );
-    // The generic fixture label ("Ability 1" -> pt "Habilidade 1") must still
-    // reach its own labels fallback after template substitution runs.
     parse_in(&hero_setting("Ana", "Habilidade 1: On"), &pt);
 }
 
-/// Enum-member spellings written with punctuation the lexer must keep:
-/// a digit-led member (`1. Kabiliyet`), a ` : `-spaced member
-/// (`Observatoire : Gibraltar`), and a spaced-dash member
-/// (`Spray - Baixo`) (#448).
 #[test]
 fn punctuated_enum_member_spellings_parse() {
     for (locale, expr) in [
@@ -152,10 +128,6 @@ fn punctuated_enum_member_spellings_parse() {
     }
 }
 
-/// Action/operator spellings carrying `.` or a trailing `:` must resolve as
-/// whole spellings, not split at the punctuation (`Forcer le nom de l’I.A.`,
-/// `Resurrección:`, `Bekle:`, `Élévation à une puissance `,
-/// `เพิ่มเข้าในอาร์เรย์`, #448).
 #[test]
 fn punctuated_action_and_operator_spellings_parse() {
     for (locale, action) in [
@@ -172,9 +144,6 @@ fn punctuated_action_and_operator_spellings_parse() {
     }
 }
 
-/// Markup sequences inside declared spellings stay inside the word
-/// (`Meis Schneeball<hy>schlacht`, `ジャンケン<br>シュタインの<br>復讐`,
-/// #448): the lexer joins `<tag>` runs rather than reading `<` operators.
 #[test]
 fn markup_inside_member_spellings_parses() {
     for (locale, expr) in [
@@ -188,8 +157,6 @@ fn markup_inside_member_spellings_parses() {
     }
 }
 
-/// Locale punctuation outside ASCII stays word content (`¡Alto!`,
-/// `「FALSE」`, `・`), so a declared name containing it parses (#448).
 #[test]
 fn locale_punctuation_inside_spellings_parses() {
     for (locale, expr) in [
@@ -204,8 +171,6 @@ fn locale_punctuation_inside_spellings_parses() {
     }
 }
 
-/// Settings booleans can end with a period (`Wł.`, `Вкл.`) — the bounded
-/// spelling run must keep it instead of dropping to `unknown` (#448).
 #[test]
 fn dotted_settings_booleans_parse() {
     for (locale, boolean) in [("pl-PL", "Wł."), ("ru-RU", "Вкл."), ("ko-KR", "켜기")] {
@@ -214,8 +179,6 @@ fn dotted_settings_booleans_parse() {
     }
 }
 
-/// Team names carry a leading digit and period (`1. Takım`) or inner
-/// whitespace (`1 팀`); both resolve to the same canonical team (#448).
 #[test]
 fn digit_and_spaced_team_names_parse() {
     for (locale, team) in [("tr-TR", "1. Takım"), ("ko-KR", "1 팀")] {
@@ -226,8 +189,6 @@ fn digit_and_spaced_team_names_parse() {
     }
 }
 
-/// Settings name errors must carry the rejected spelling's span so tooling
-/// can point at the offending line (#448).
 #[test]
 fn settings_name_errors_carry_a_span() {
     let catalog = common::catalog();
@@ -247,8 +208,6 @@ fn settings_name_errors_carry_a_span() {
     assert_eq!(span.start.line, 3);
 }
 
-/// Localized `disabled` mode prefixes can be multi-word (`Devre Dışı`,
-/// `No permitir`) or punctuated (`Откл.`); a single-token peek missed them.
 #[test]
 fn localized_disabled_mode_prefixes_parse() {
     for (locale, source) in [

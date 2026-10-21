@@ -279,9 +279,6 @@ fn validate_call_argument(
     let Some(node) = program.values.get(arg_id) else {
         return Ok(());
     };
-    // A declared enum domain constrains enum literals. Dynamic values,
-    // Null, and defaults remain valid expressions for the same position;
-    // their runtime value cannot be proven from WIR alone.
     let valid = match &node.value {
         wir::Value::Enum {
             value_type, value, ..
@@ -470,9 +467,6 @@ fn value_matches_single_type(catalog: &Catalog, value: &wir::Value, expected: &s
         (wir::Value::Null, _) => true,
         (wir::Value::GlobalVariable(_), "Global Variable") => true,
         (wir::Value::Subroutine(_), "Subroutine") => true,
-        // Event Player is statically Player-typed, so it validates like any
-        // other Player-returning expression rather than as an opaque runtime
-        // expression (workshop-rs#336).
         (wir::Value::EventPlayer, expected) => semantic_types_compatible("Player", expected),
         (
             wir::Value::GlobalVariable(_)

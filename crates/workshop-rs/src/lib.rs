@@ -13,8 +13,8 @@
 //! * [`mod@format`] — canonical number formatting for computed Workshop values;
 //! * [`lookup`] — canonical name lookup: display names, near spellings, and
 //!   settings paths resolve to the accepted catalog and settings vocabulary;
-//! * [`actions`], [`events`], [`rules`], [`values`], [`settings`], and
-//!   [`gameplay`] — the discoverable Workshop domains;
+//! * [`actions`], [`events`], [`rules`], [`values`], [`settings`],
+//!   [`gameplay`], and [`hero_values`] — the discoverable Workshop domains;
 //! * [`program`] — the canonical public Workshop program model;
 //! * [`parser`], [`validate`], [`convert`], [`roundtrip`], [`compare`], and
 //!   [`emitter`] — the public Workshop operations over that model;
@@ -37,6 +37,7 @@ pub mod events;
 pub mod format;
 mod frontend;
 pub mod gameplay;
+pub mod hero_values;
 pub mod lookup;
 mod output;
 pub mod parser;

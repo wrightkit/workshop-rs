@@ -1,8 +1,3 @@
-//! Stage-level timing for the pinned large real-project input.
-//!
-//! Run with:
-//! `cargo test -p workshop-rs --release --lib perf_large_project -- --ignored --nocapture`
-
 use super::common::en;
 use super::internal;
 use std::hint::black_box;
@@ -63,8 +58,6 @@ fn action_argument_values(action: &Action) -> Vec<&Value> {
     }
 }
 
-/// Traverse every public value node the way a consumer resolving every node's
-/// span does: one root-to-node lookup per node.
 fn span_traversal(program: &Program) -> usize {
     let mut lookups = 0;
     for (rule_index, rule) in program.rules.iter().enumerate() {

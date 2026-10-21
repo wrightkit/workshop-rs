@@ -1,39 +1,3 @@
-//! Behavioral comparison of canonical Workshop programs.
-//!
-//! [`equivalent`] reports whether two [`Program`](crate::Program)s behave the
-//! same; [`difference`] returns the first behavior-relevant difference with
-//! enough location to debug it. The comparison is the canonical equivalence
-//! used by source-language round trips such as Workshop→OPY reconstruction.
-//!
-//! Compared, in order: settings; the declared global-variable,
-//! player-variable, and subroutine index sets; non-subroutine rules in
-//! program order; and subroutine-event rules paired by the subroutine index
-//! they bind. Rules compare their event including team/hero/slot filters,
-//! enabled conditions in order, and enabled actions and values recursively,
-//! with variable and subroutine references resolved to declaration indices.
-//!
-//! Differences that cannot change behavior are allowed:
-//!
-//! - rule names — display metadata; nothing dispatches on them;
-//! - variable and subroutine names — identity is the declaration index;
-//! - declaration table order — only the name → index binding matters;
-//! - the relative order of subroutine-event rules — they run only when
-//!   called, never by program position;
-//! - `Set x = x <op> v` in place of `Modify x <op> v` on the same variable —
-//!   the same canonical effect;
-//! - an `EachPlayer` event vs `EachPlayer` with `All`/`All` filters — the
-//!   same player selection;
-//! - the presence or absence of disabled rules, conditions, and actions —
-//!   disabled constructs never execute;
-//! - the presence or absence of rules with no actions — they have no effect;
-//! - source spans, file identities, and text layout — not program semantics.
-//!
-//! Everything else is a difference — in particular algebraic identities,
-//! reordering independent `Set`s, and relocating non-subroutine rules
-//! (initializer rules keep their position). [`crate::roundtrip::equivalent`]
-//! remains the strict structural identity check; every program pair it
-//! accepts is also accepted here.
-
 use crate::ModifyOp;
 use crate::core::format::format_number;
 use crate::wir;
@@ -98,31 +62,23 @@ pub enum DifferenceKind {
     /// A program could not be materialized into canonical form, so the
     /// comparison is undefined for it.
     Malformed {
-        /// Which program failed to materialize.
         program: ProgramSide,
-        /// The materialization error's message.
         message: String,
     },
     /// The programs' `settings` differ.
     Settings,
     /// A declaration table declares a different index set.
     DeclarationTable {
-        /// The declaration table that differs.
         table: DeclarationTable,
-        /// The sorted indices the first program declares.
         first: Vec<u32>,
-        /// The sorted indices the second program declares.
         second: Vec<u32>,
     },
     /// Compared element counts differ; `element` names the compared list —
     /// `"rules"`, `"subroutine rules"`, `"conditions"`, `"actions"`,
     /// `"branches"`, `"arguments"`, or `"elements"`.
     Count {
-        /// The compared list.
         element: &'static str,
-        /// The count in the first program.
         first: usize,
-        /// The count in the second program.
         second: usize,
     },
     /// The compared rules' events differ; `first` and `second` describe the
@@ -131,19 +87,14 @@ pub enum DifferenceKind {
     /// The compared nodes have different kinds, e.g. `"setGlobalVariable"`
     /// vs `"modifyGlobalVariable"` or `"number"` vs `"call"`.
     Shape {
-        /// The first program's node kind.
         first: &'static str,
-        /// The second program's node kind.
         second: &'static str,
     },
     /// Variable or subroutine references resolve to different declaration
     /// indices.
     Reference {
-        /// The declaration table the reference resolves through.
         table: DeclarationTable,
-        /// The index the first program's reference resolves to.
         first: u32,
-        /// The index the second program's reference resolves to.
         second: u32,
     },
     /// Modify operations differ (`"add"`, `"subtract"`, …).
@@ -283,13 +234,8 @@ fn index_set(indices: impl Iterator<Item = u32>) -> Vec<u32> {
     indices
 }
 
-/// The behavior-bearing rules of one program: rules that are enabled and
-/// carry at least one enabled action.
 struct EffectiveRules<'p> {
-    /// Non-subroutine rules in program order, with their `rules` positions.
     ordered: Vec<(usize, &'p wir::Rule)>,
-    /// Subroutine-event rules keyed by the subroutine index they bind, with
-    /// their `rules` positions, sorted by key.
     subroutines: Vec<(u32, usize, &'p wir::Rule)>,
 }
 
@@ -1048,37 +994,20 @@ fn argument_difference(
     difference
 }
 
-/// A `Set x = x <op> v` ↔ `Modify x <op> v` pair: `set_value` must be the
-/// call `<assigned variable> <op> <operand>` over the same variable, and the
-/// operand must match `modify_value`.
 struct SelfModify<'p> {
-    /// The program whose action is the `Set`.
     set_program: &'p wir::Program,
-    /// The program whose action is the `Modify`.
     modify_program: &'p wir::Program,
-    /// Whether `set_program` is the comparison's first program.
     set_is_first: bool,
-    /// The assigned variable, already compared equal across both programs.
     target: ModifyTarget,
-    /// The `Set` action's value.
     set_value: wir::ValueId,
-    /// The `Modify` action's operation.
     op: ModifyOp,
-    /// The `Modify` action's value.
     modify_value: wir::ValueId,
 }
 
 #[derive(Clone, Copy)]
 enum ModifyTarget {
-    Global {
-        index: u32,
-    },
-    /// The variable index plus the `Set` action's player operand in
-    /// `set_program`.
-    Player {
-        index: u32,
-        player: wir::ValueId,
-    },
+    Global { index: u32 },
+    Player { index: u32, player: wir::ValueId },
 }
 
 impl ModifyTarget {
@@ -1110,8 +1039,6 @@ impl ModifyTarget {
     }
 }
 
-/// When `value` reads a variable of `target`'s table, the index it resolves
-/// to plus its player operand (player variables only).
 fn variable_read(
     program: &wir::Program,
     value: wir::ValueId,
@@ -1130,8 +1057,6 @@ fn variable_read(
         (ModifyTarget::Player { .. }, Some(wir::Value::Call { name, args }))
             if name == "memberAccess" && args.len() == 2 =>
         {
-            // The member spelling binds the variable by name in its own
-            // program's table.
             let Some(wir::Value::String(member)) =
                 program.values.get(args[1]).map(|node| &node.value)
             else {
@@ -1180,7 +1105,6 @@ fn self_modify_inner(pair: SelfModify<'_>, path: &mut Vec<PathStep>) -> Option<D
         });
     }
     path.push(PathStep::Value(pair.target.value_step()));
-    // The first operand must read the assigned variable itself.
     let Some((found, read_player)) = variable_read(pair.set_program, args[0], pair.target) else {
         path.pop();
         return Some(DifferenceKind::Shape {
@@ -1204,7 +1128,6 @@ fn self_modify_inner(pair: SelfModify<'_>, path: &mut Vec<PathStep>) -> Option<D
     if let ModifyTarget::Player { player, .. } = pair.target
         && let Some(read_player) = read_player
     {
-        // The operand's player receiver must be the action's player.
         path.push(PathStep::Value(0));
         let difference = argument_difference(
             pair.set_program,
@@ -1470,9 +1393,6 @@ fn value_difference(
     }
 }
 
-/// The `PlayerVariable` ↔ `memberAccess(player, "name")` pair accepted by the
-/// strict comparator: the memberAccess member names a player variable in its
-/// own program's table, and the resolved indices must match.
 fn member_access_difference(
     a: &wir::Program,
     b: &wir::Program,
@@ -1510,8 +1430,6 @@ fn member_access_inner(
     }
     let member_node = member_program.values.get(args[1]).map(|node| &node.value);
     let Some(wir::Value::String(member)) = member_node else {
-        // The member operand is not a name string, so the memberAccess is
-        // not a variable spelling at all.
         let (first, second) = if variable_is_first {
             ("playerVariable", "call")
         } else {
@@ -1530,8 +1448,6 @@ fn member_access_inner(
     reference_difference(first, second, DeclarationTable::PlayerVariables)
 }
 
-/// The player-variable index a `memberAccess` member names in its own
-/// program's declaration table, or `u32::MAX` when the member names nothing.
 fn member_binding(program: &wir::Program, member: &str) -> u32 {
     program
         .player_variables
@@ -1540,9 +1456,6 @@ fn member_binding(program: &wir::Program, member: &str) -> u32 {
         .map_or(u32::MAX, |variable| variable.index)
 }
 
-/// A `memberAccess` ↔ `memberAccess` pair: each member names a player
-/// variable in its own program's table, so differing spellings are still
-/// equal when they resolve to the same index.
 fn member_access_pair_difference(
     a: &wir::Program,
     b: &wir::Program,
@@ -1574,8 +1487,6 @@ fn member_access_pair_inner(
     );
     let (Some(wir::Value::String(first_member)), Some(wir::Value::String(second_member))) = members
     else {
-        // A member operand that is not a name string is not a variable
-        // spelling; compare the operands as values.
         return argument_difference(a, b, path, 1, first_args[1], second_args[1]);
     };
     path.push(PathStep::Value(1));
@@ -1589,7 +1500,6 @@ fn member_access_pair_inner(
         });
     }
     if first_index == u32::MAX && first_member != second_member {
-        // Both members name nothing; the spellings are their only identity.
         return Some(DifferenceKind::Scalar {
             first: first_member.clone(),
             second: second_member.clone(),

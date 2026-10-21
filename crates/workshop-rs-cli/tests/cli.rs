@@ -25,8 +25,6 @@ fn run(args: &[&str]) -> std::process::Output {
     Command::new(bin()).args(args).output().expect("cli runs")
 }
 
-// Synthetic schema/diff input only. This helper deliberately creates no
-// client artifact.
 fn synthetic_capture(id: &str) -> String {
     let catalog = Catalog::builtin().unwrap();
     let locale = Locale::new("en-US");
@@ -165,9 +163,6 @@ fn parse_reports_unknown_spellings_with_failure_exit() {
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-/// C6: canonical-identity validation gates the CLI — a call with the wrong
-/// arity for its declared signature must fail, not parse and re-emit
-/// verbatim.
 #[test]
 fn parse_rejects_noncanonical_call_arity() {
     let dir = std::env::temp_dir().join("workshop-rs-cli-arity");

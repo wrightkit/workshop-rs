@@ -57,7 +57,6 @@ def array_of(n: int) -> str:
 
 
 def and_tree(leaves: int) -> str:
-    """A balanced `And` tree: many value nodes at low depth."""
     level = ["True"] * leaves
     while len(level) > 1:
         pairs = [f"And({a}, {b})" for a, b in zip(level[::2], level[1::2])]
@@ -68,7 +67,6 @@ def and_tree(leaves: int) -> str:
 
 
 def if_chain(depth: int) -> str:
-    """A right-nested `If-Then-Else` chain: high depth at low node count."""
     value = "0"
     for _ in range(depth):
         value = f"If-Then-Else(Compare(1, <, 2), {value}, 0)"
@@ -76,7 +74,6 @@ def if_chain(depth: int) -> str:
 
 
 def prophet_flat_action() -> str:
-    """Same action call and arity as the extracted reproducer, with flat args."""
     return (
         "Create In-World Text(All Players(Team 2), Null, Event Player, 1, "
         "Do Not Clip, Visible To Position String and Color, "

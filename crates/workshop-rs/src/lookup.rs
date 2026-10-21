@@ -26,81 +26,49 @@ pub enum LookupMatch {
     /// A catalog builtin: structural keyword, action, value, event, or
     /// operator.
     Builtin {
-        /// The entry's catalog kind.
         kind: Kind,
-        /// The canonical identity (`createHudText`, `global`).
         id: String,
-        /// The display name in the requested locale, when mapped.
         display_name: Option<String>,
-        /// The call signature, for callable builtins: actions, values, and
-        /// the structural constructs that declare a parameter list.
         signature: Option<Signature>,
-        /// The entry's description in the requested locale, or the primary
-        /// locale's text marked as a fallback when the requested locale
-        /// has none. `None` when no description is recorded.
         description: Option<Description>,
     },
     /// A member of a canonical enum domain (`Team.ALL`, `Hero.SOLDIER_76`).
     EnumMember {
-        /// The canonical domain name.
         domain: String,
-        /// The canonical member id.
         member: String,
-        /// The member's display name in the requested locale, when mapped.
         display_name: Option<String>,
     },
     /// A canonical enum domain and the members it accepts.
     EnumDomain {
-        /// The canonical domain name.
         domain: String,
-        /// The domain's display name in the requested locale, when mapped.
         display_name: Option<String>,
-        /// Every member the domain accepts.
         members: Vec<LookupEnumMember>,
     },
     /// A reviewed settings-table definition: a valid key with its path,
     /// kind, and value forms.
     Setting {
-        /// The canonical semantic definition.
         definition: SettingDefinition,
-        /// The display name in the requested locale, or the English name
-        /// when the locale has no mapping.
         display_name: String,
     },
     /// A parameter of a scoped callable, in call order. Returned only by
     /// [`Catalog::lookup_within`]; an unscoped [`Catalog::lookup`] never
     /// answers parameters.
     Parameter {
-        /// The callable's canonical id.
         callable: String,
-        /// The parameter's position in call order.
         position: usize,
-        /// Whether the position must be supplied.
         required: bool,
-        /// The parameter facts: name, declared type, domain, default, and
-        /// `rule-content-v1` content layout facts.
         param: SignatureParam,
-        /// The enum domain this parameter accepts, with the members it
-        /// accepts, when the parameter is enum-typed.
         domain: Option<SignatureDomain>,
     },
     /// The next path segment below a scoped settings prefix — an
     /// intermediate selector such as `<team>` or `general`, not a leaf
     /// key. Returned only by [`Catalog::lookup_within`].
-    SettingPath {
-        /// The full child path under the scoped prefix (`heroes.<team>`).
-        path: String,
-        /// The segment text (`<team>`, `general`).
-        segment: String,
-    },
+    SettingPath { path: String, segment: String },
     /// A preset localized string identity from the catalog's
     /// `localizedStrings` table — the id a `{"localizedString": id}`
     /// rule-content node or a `Value::LocalizedString` carries.
     LocalizedString {
-        /// The canonical id (`hello`, `goodbye`).
         id: String,
-        /// The display name in the requested locale, when mapped — the
-        /// spelling the emitter writes for that locale.
         display_name: Option<String>,
     },
 }
@@ -561,12 +529,6 @@ impl Catalog {
         value: &str,
         prepared: Option<&PreparedQuery>,
     ) -> Option<Vec<(u32, LookupMatch)>> {
-        // Actions and values keep the established resolution order; a
-        // structural construct scopes when no action or value does —
-        // `modifyGlobalVariable` exists in both tables and keeps the
-        // action's signature. A structural match without a signature (a
-        // section keyword) yields to the next kind rather than ending the
-        // search.
         let (entry, signature) = [Kind::Action, Kind::Value, Kind::Structural]
             .into_iter()
             .filter_map(|kind| {
@@ -837,11 +799,6 @@ struct PreparedQuery {
     folded_chars: Vec<char>,
     tokens: Vec<String>,
     max_distance: usize,
-    /// The folded length at which token-prefix and substring matching
-    /// start. A script without word spacing carries a whole word in two
-    /// characters (`阈值`, `スロットル`), so its queries match loosely at
-    /// two; word-spaced queries keep three, so a two-letter ASCII query
-    /// does not flood the results.
     loose_min_chars: usize,
 }
 
@@ -920,20 +877,17 @@ impl PreparedQuery {
     }
 }
 
-/// Whether `character` belongs to a CJK script written without word
-/// spacing — unified ideographs, kana, or hangul — where two characters
-/// already carry a complete word.
 fn is_unspaced_script(character: char) -> bool {
     matches!(
         character,
-        '\u{1100}'..='\u{11FF}'   // Hangul Jamo
-            | '\u{3040}'..='\u{309F}' // Hiragana
-            | '\u{30A0}'..='\u{30FF}' // Katakana
-            | '\u{3400}'..='\u{4DBF}' // CJK Unified Ideographs Extension A
-            | '\u{4E00}'..='\u{9FFF}' // CJK Unified Ideographs
-            | '\u{AC00}'..='\u{D7AF}' // Hangul Syllables
-            | '\u{F900}'..='\u{FAFF}' // CJK Compatibility Ideographs
-            | '\u{FF66}'..='\u{FF9D}' // Halfwidth katakana
+        '\u{1100}'..='\u{11FF}'
+            | '\u{3040}'..='\u{309F}'
+            | '\u{30A0}'..='\u{30FF}'
+            | '\u{3400}'..='\u{4DBF}'
+            | '\u{4E00}'..='\u{9FFF}'
+            | '\u{AC00}'..='\u{D7AF}'
+            | '\u{F900}'..='\u{FAFF}'
+            | '\u{FF66}'..='\u{FF9D}'
     )
 }
 

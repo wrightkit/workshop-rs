@@ -1,22 +1,3 @@
-//! `SettingDefinition::write` and `SettingDefinition::source_edit` are
-//! sibling edit paths over the same typed settings occurrence. For the same
-//! target and input they must reach the same accept/reject outcome (#458):
-//! every check `write` enforces — target applicability, occurrence
-//! presence, the typed-leaf gate, supplied-value domain validation, the
-//! source-supported value surface, and carrier shape — has to refuse the
-//! same inputs before `source_edit` produces a replacement range, so a gate
-//! dropped on either side fails here.
-//!
-//! `source_edit` additionally requires what `write` never needs: a
-//! source-backed occurrence and a scalar `key: value` member spelling.
-//! Where no scalar value bytes exist (brace-block lists, presence-only
-//! flags) or no source location was recorded, it must fail closed without
-//! producing a range — pinned below as its own contract, not shared
-//! validation. The first gate `write` applies — `operation_id`, a
-//! definition with no reviewed canonical identity — is unreachable through
-//! the public schema (`validate_catalog` rejects identity-less
-//! definitions), so no test input can exercise it here.
-
 mod common;
 
 use workshop_rs::gameplay::{HeroId, hero_ids};
@@ -306,11 +287,6 @@ fn rejects_missing_occurrences_identically() {
     );
 }
 
-/// The shared typed-leaf gate (the #435 fix): every non-leaf variant that
-/// can sit at the leaf's path — a parsed `Group`, a `RawValue` left by an
-/// undeclared enum spelling, a programmatically carried `Raw`/`RawGroup` —
-/// is refused with the identical `InvalidValue` on both paths instead of
-/// yielding a range carved out of the block's interior.
 #[test]
 fn rejects_non_leaf_occurrences_identically() {
     let description = definition("main.description");
@@ -487,11 +463,6 @@ fn rejects_invalid_values_identically() {
     );
 }
 
-/// The boolean-enum gate: `Match Voice Chat` renders `true` through a
-/// source-supported enabled-member token; `false` has no authored spelling
-/// and the emitter rejects the carrier. Both edit paths must refuse it
-/// with the identical `InvalidValue` — `write` must not accept a value its
-/// carrier cannot emit.
 #[test]
 fn rejects_unsupported_boolean_enum_false_identically() {
     let source = "settings { lobby { Match Voice Chat: Enabled } }";
@@ -543,10 +514,6 @@ fn rejects_mismatched_leaf_shape_identically() {
     }
 }
 
-/// The occurrence's current value is replaced wholesale, so neither path
-/// judges it: a leaf holding a value its domain does not declare — the
-/// carrier can only reach that state programmatically, since parsing falls
-/// back to `RawValue` — is repaired identically by both paths.
 #[test]
 fn repairs_a_leaf_holding_an_undeclared_value_identically() {
     let source = "settings { lobby { Map Rotation: After A Game } }";
@@ -662,12 +629,6 @@ fn accepts_the_same_scalar_edits() {
     }
 }
 
-/// `write`'s `apply_value` also refuses a list write that changes the
-/// element count; `source_edit` fails the same input closed — a list
-/// member is a brace block with no `key: value` value bytes, so it has no
-/// scalar edit to make at all (`SourceUnavailable`). Both paths reject;
-/// the diagnostics differ because the refusal is the shared list-length
-/// rule on one side and the scalar-edit boundary on the other.
 #[test]
 fn rejects_list_length_changes() {
     let source = "settings { modes { Skirmish { enabled maps { King's Row Winter } } } }";
@@ -693,11 +654,6 @@ fn rejects_list_length_changes() {
     );
 }
 
-/// `source_edit`'s own contract — never fabricate a range where no scalar
-/// `key: value` bytes exist — is not a check `write` shares: mutating the
-/// carrier in place is legal for lists and presence-only flags, and a
-/// carrier without recorded spans has no source to edit. These pins keep
-/// the boundary explicit.
 #[test]
 fn source_edit_fails_closed_where_no_scalar_edit_exists() {
     let maps_source = "settings { modes { Skirmish { enabled maps { King's Row Winter } } } }";

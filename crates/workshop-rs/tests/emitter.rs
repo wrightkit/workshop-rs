@@ -292,9 +292,6 @@ fn ambiguous_enum_emission_preserves_a_shared_source_locale_alias() {
 
 #[test]
 fn every_corpus_program_round_trips_to_equivalent_wir() {
-    // Corpus text parses against the catalog context (expected enum domains
-    // come from the canonical catalog signatures). Unpinned shared members
-    // retain all catalog-backed candidates through emission and reparse.
     for fixture_id in [
         "basic-rule",
         "control-flow",
@@ -461,8 +458,6 @@ fn list(name: &str, elements: &[&str]) -> SettingsNode {
     }
 }
 
-/// The pixelart settings tree (source order: assault, control, escort,
-/// hybrid, skirmish).
 fn pixelart_settings() -> Settings {
     let mode = |name: &str| {
         group(
@@ -485,7 +480,6 @@ fn pixelart_settings() -> Settings {
     )])
 }
 
-/// The santa settings tree (source order).
 fn santa_settings() -> Settings {
     settings(vec![
         group("lobby", vec![number("ffaSlots", 6.0)]),
@@ -555,8 +549,6 @@ fn settings_section(text: &str) -> String {
     text[start..end].to_string()
 }
 
-/// Collapse all whitespace for structural equality (string contents are
-/// compared collapsed too; both sides render the same values).
 fn collapse(text: &str) -> String {
     text.chars().filter(|c| !c.is_whitespace()).collect()
 }
@@ -692,9 +684,6 @@ fn string_values_are_escaped() {
 
 #[test]
 fn settings_strings_re_escape_decoded_escapes() {
-    // A decoded `\n` (and other JSONC escapes) must round-trip to the
-    // oracle's literal two-character spelling, not a raw byte (evidence: the
-    // inputhud description).
     let program = program_with_settings(settings(vec![group(
         "main",
         vec![string("description", "line one\nline two\t\"quoted\"\\end")],
@@ -713,10 +702,6 @@ fn settings_strings_re_escape_decoded_escapes() {
 
 #[test]
 fn rule_final_if_omits_the_trailing_end_and_round_trips() {
-    // A rule-final if/if-else closes with the `}` (no trailing `End;`),
-    // byte-equal to the oracle's spelling; the ws parser accepts it and
-    // re-emission is a byte-identical fixed point. The middle-of-rule if
-    // keeps `End;`.
     let oracle_spelling = r#"variables {
     global:
         0: x
@@ -774,9 +759,6 @@ rule ("r") {
 
 #[test]
 fn constant_format_calls_fold_to_the_substituted_text() {
-    // All-constant `.format()` calls fold into the substituted Custom String
-    // text (oracle spelling), including the two-decimal float rendering;
-    // variable arguments stay as format nodes.
     let mut program = wir::Program::default();
     let file = program
         .files
@@ -836,7 +818,6 @@ fn constant_format_calls_fold_to_the_substituted_text() {
 
 #[test]
 fn constant_float_format_arguments_use_two_decimals() {
-    // The oracle folds 0.5 to `0.50` and 0.125 to `0.13` (JS toFixed(2)).
     let mut program = wir::Program::default();
     let file = program
         .files
@@ -955,10 +936,6 @@ fn split_and_reescaped_value_strings_round_trip_byte_identically() {
 
 #[test]
 fn implicit_format_placeholders_renumber_to_the_oracle_form() {
-    // Implicit `{}` placeholders renumber positionally to the oracle's
-    // explicit form (`"v: {}".format(x)` -> `Custom String("v: {0}",
-    // Global.x)`), and constant arguments fold into the text with the
-    // remaining placeholders renumbered.
     let mut program = wir::Program::default();
     let file = program
         .files
@@ -1021,9 +998,6 @@ fn implicit_format_placeholders_renumber_to_the_oracle_form() {
 
 #[test]
 fn partial_constant_format_folds_and_renumbers() {
-    // The oracle folds the constant into the text and renumbers the
-    // remaining placeholder: `"{} {}".format(3, x)` ->
-    // `Custom String("3 {0}", Global.x)` (byte-quoted pin).
     let mut program = wir::Program::default();
     let file = program
         .files
@@ -1087,9 +1061,6 @@ fn partial_constant_format_folds_and_renumbers() {
 
 #[test]
 fn playervar_reads_parenthesize_the_receiver() {
-    // `g = eventPlayer.p` emits `Set Global Variable(g, (Event Player).p)`
-    // (byte-quoted oracle pin) and the spelling round-trips through the ws
-    // parser.
     let mut program = wir::Program::default();
     let file = program
         .files

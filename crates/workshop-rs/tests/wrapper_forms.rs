@@ -1,5 +1,3 @@
-//! Constant wrapper and settings-boolean forms (docs/wrapper-forms.md).
-
 use std::collections::BTreeSet;
 
 use workshop_rs::catalog::{Catalog, Locale};

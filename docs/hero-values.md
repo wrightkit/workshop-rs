@@ -1,8 +1,8 @@
 # Hero values catalog (design)
 
-Status: design proposal for [#541](https://github.com/wrightkit/workshop-rs/issues/541). Nothing here is implemented
-except the schema, one example file and the test that checks them. The example
-file uses an invented hero and invented numbers. It shows the shape only.
+Status: implemented for [#541](https://github.com/wrightkit/workshop-rs/issues/541)
+as the public module `workshop_rs::hero_values`. The example file uses an
+invented hero and invented numbers. It shows the shape only.
 
 Scope follows principle 9 of the goal document: technical facts about the Workshop environment. The catalog does not judge balance or game design.
 
@@ -18,8 +18,9 @@ Scope follows principle 9 of the goal document: technical facts about the Worksh
 ## Data shape
 
 The schema is
-[`schemas/hero-values-v1.schema.json`](../crates/workshop-rs/schemas/hero-values-v1.schema.json).
-One file holds one client version.
+[`schemas/hero-values-v1.schema.json`](../crates/workshop-rs/schemas/hero-values-v1.schema.json);
+a test validates the checked-in files against it. One file holds one client
+version.
 
 ```json
 {
@@ -62,7 +63,7 @@ A consumer names the version it wants. The loader returns an error for an unknow
 
 The values have their own small read path. They are not loaded into the gameplay catalog. Every stat in that catalog carries a source list, and loading rejects a stat without one (`gameplay-data.md`). Hero values have no source, so they do not fit that type. The gameplay catalog, its `Fact` type and `gameplay-data.md` stay unchanged.
 
-Proposed smallest public API, a new module `workshop_rs::hero_values`:
+The smallest public API is the module `workshop_rs::hero_values`:
 
 ```rust
 hero_values::CURRENT_VERSION: &str                       // "2.25.0.0 - 154461.1"
@@ -87,4 +88,3 @@ athena#9 (state table) and athena#11 (settings modifiers) read hero values only 
 - Damage, healing, and other ability numbers.
 - Judgement of balance.
 - `deltin-rs`.
-- The loader and query code. They follow in the implementation issue after the owner accepts this design.

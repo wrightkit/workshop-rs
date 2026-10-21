@@ -40,6 +40,8 @@ mod public_api;
 mod real_projects;
 #[path = "rule_content.rs"]
 mod rule_content;
+#[path = "rule_content_call_ids.rs"]
+mod rule_content_call_ids;
 #[path = "statement_edit.rs"]
 mod statement_edit;
 #[path = "statement_edit_layout.rs"]

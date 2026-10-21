@@ -126,9 +126,6 @@ impl SettingDefinition {
             (TargetPattern::Global, SettingTarget::Global) => Applicability::Applicable,
             (TargetPattern::Mode(expected), SettingTarget::Mode(actual)) => {
                 let applies = match self.inherited_general_key() {
-                    // A `gamemodes.general` leaf applies to a mode only when
-                    // the mode inherits it (`elimination` copies a subset);
-                    // `general` itself is the literal authored group.
                     Some(key) => {
                         actual == "general"
                             || table::mode_inherited_entry(&[
@@ -451,8 +448,6 @@ impl SettingDefinition {
             .iter()
             .enumerate()
             .map(|(index, part)| match part {
-                // An inherited `gamemodes.general` leaf occurs under the
-                // requested mode's group.
                 PathPart::Part("general")
                     if index == 1 && self.inherited_general_key().is_some() && mode.is_some() =>
                 {
@@ -731,11 +726,6 @@ fn typed_leaf_value(node: &SettingsNode, domain: &SettingValueDomain) -> Option<
     Some(value)
 }
 
-/// The supplied value must have an authored form for this key kind — the
-/// check `write` and `source_edit` share before mutating or editing. A
-/// boolean-enum leaf renders `true` through its enabled-member token only;
-/// `false` has no authored spelling and the emitter rejects the carrier,
-/// so both paths refuse it identically.
 fn ensure_supported_value(
     kind: KeyKind,
     id: &SettingId,

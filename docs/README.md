@@ -73,8 +73,8 @@ Support prose is not a substitute for current executable tests.
   guard, canonical artifact formats, and mixed-source boundaries.
 - [Hero gameplay dataset](gameplay-data.md): embedded data model and validation
   boundaries.
-- [Hero values catalog design](hero-values.md): proposed design for balance-versioned
-  health pools, ability cooldowns, and ultimate cost (not yet implemented).
+- [Hero values catalog](hero-values.md): balance-versioned health pools,
+  ability cooldowns, and ultimate cost behind `workshop_rs::hero_values`.
 - [Gameplay query API](gameplay-query.md): read-only semantic queries and
   locale-aware ability resolution.
 - [Canonical Workshop lookup](lookup.md): `Catalog::lookup` name, signature,

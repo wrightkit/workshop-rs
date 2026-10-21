@@ -1,17 +1,3 @@
-//! Canonical signature context for ambiguous enum member resolution.
-//!
-//! The canonical catalog pins the expected enum domain of selected call
-//! argument positions (e.g. `createHudText` argument 9 is `HudReeval`). The
-//! Workshop parse path uses those expected domains to resolve a bare enum
-//! member spelling that is ambiguous across domains (e.g. the shared `None`
-//! member of `ChaseTimeReeval` / `ChaseRateReeval` / `Invis`).
-//!
-//! This module defines the minimal parse-context contract between the
-//! catalog owner and the Workshop frontend. It deliberately carries no
-//! signature data: the catalog data file remains the only domain table.
-//! (Extracted from the Wright-authored `wright_core::signatures` module;
-//! see [`docs/provenance.md`](https://github.com/wrightkit/workshop-rs/blob/main/docs/provenance.md).)
-
 /// Supplies the expected enum domain for a call argument during parsing.
 ///
 /// The parser asks for the expected domain of argument `arg_index` (0-based)

@@ -92,10 +92,6 @@ impl ParseContext<'_> {
                 disabled = true;
             }
             if !disabled {
-                // Multi-token disabled prefixes (`Devre Dışı`,
-                // `No permitir`, `Откл.`) sit on the same line as the mode
-                // name, so the run must stop at the longest declared
-                // spelling rather than consuming the mode name (#448).
                 let mut accepted = vec!["disabled", "Disabled"];
                 if let Some(localized) =
                     table::localized_name(self.locale.as_str(), "tokens", "disabled")
@@ -244,10 +240,6 @@ impl ParseContext<'_> {
         table::child_entries(path)
             .into_iter()
             .find(|candidate| self.settings_name_matches_for_path(candidate, display, hero))
-            // A declared mode group inherits the `gamemodes.general` leaf set
-            // (the same fallback `table::lookup` applies); resolve the authored
-            // spelling against the shared general entry so an inherited member
-            // stays typed instead of demoting to a carried raw member.
             .or_else(|| {
                 let [PathPart::Part("gamemodes"), PathPart::Part(mode)] = path else {
                     return None;
@@ -277,10 +269,6 @@ impl ParseContext<'_> {
         path: &[PathPart<'static>],
         hero: Option<&str>,
     ) -> Result<SettingsNode> {
-        // Localized labels can embed a colon (`Время восстановления: Удар
-        // щитом`, #448): candidates are tried shortest-prefix first, and a
-        // prefix that resolves but whose value fails — or that resolves to
-        // nothing — is extended across the next colon and retried.
         let fallback_pos = self.pos;
         let fallback_display = display.clone();
         let mut first_error = None;
@@ -335,9 +323,6 @@ impl ParseContext<'_> {
             _ => return Err(self.malformed("settings entry has no leaf key", self.previous())),
         };
         if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace)) {
-            // A block under a catalogued non-list key carries an undeclared
-            // value: the pinned source compilers write it as an opaque
-            // block, so it parses like an uncatalogued-key block (#412).
             if !matches!(entry.kind, KeyKind::ListMap | KeyKind::ListHero) {
                 self.pos += 1;
                 return self.settings_opaque_group(name, start);
@@ -451,14 +436,6 @@ impl ParseContext<'_> {
         }
     }
 
-    /// Resolve a map-list element to its map key and variant qualifier.
-    ///
-    /// The client qualifies a map variant as `<map name> <variant id>` and
-    /// repeats the id for multi-variant selections, so trailing all-digit
-    /// tokens peel off until the remaining name resolves to a map. A name
-    /// that itself ends in a digit (`Route 66`) resolves whole first and
-    /// never reaches the peel. Anything left unresolvable stays opaque for
-    /// `check_emission` to reject as an unknown map.
     fn map_element_parts(
         &self,
         value: &str,
@@ -495,8 +472,6 @@ impl ParseContext<'_> {
                 return (key.to_string(), Some(variant));
             }
         }
-        // A single-word map still resolves when trailing text follows it;
-        // anything else stays opaque.
         let canonical = value
             .split_whitespace()
             .next()
@@ -629,7 +604,6 @@ impl ParseContext<'_> {
         Ok(value)
     }
 
-    /// `settings_bool`, first accepting the reviewed per-key value aliases.
     fn settings_bool_for(&mut self, key: Option<&PathPart>) -> Result<bool> {
         if let Some(PathPart::Part(key)) = key {
             let locale = self.locale.as_str();
@@ -647,9 +621,6 @@ impl ParseContext<'_> {
         self.settings_bool()
     }
 
-    /// A settings boolean spelled in the page locale: the whole value run
-    /// so dotted abbreviations (`Wł.`, `Вкл.`, #448) resolve like full
-    /// words, with the diagnostic pointing at the spelled value.
     pub(crate) fn settings_bool(&mut self) -> Result<bool> {
         let token = self
             .peek()
@@ -714,9 +685,6 @@ impl ParseContext<'_> {
             .peek()
             .ok_or_else(|| self.malformed("expected a settings enum member", self.eof()))?;
         let start = token.start;
-        // Same bounded match as `settings_bool`: the next member can follow
-        // on the same line, so only the longest run prefix resolving to a
-        // member of this domain is consumed (#448).
         let run = self.spelling_run(self.pos, None);
         for (count, display, _) in &run {
             let member = table::ENUM_MEMBERS
@@ -828,8 +796,6 @@ impl ParseContext<'_> {
             {
                 return true;
             }
-            // Duplicate upstream rows carry additional reviewed spellings the
-            // first-row `hero_setting_name` lookup never returns.
             if table::hero_setting_display_matches(hero, key, self.locale.as_str(), display) {
                 return true;
             }
@@ -838,9 +804,6 @@ impl ParseContext<'_> {
             }
         }
         if let (Some(hero), Some(slot)) = (hero, table::ability_slot_for_path(candidate.path)) {
-            // A producer alias is the spelling emission prefers; the export's
-            // generated label and `%1$s` template are shadowed and must not
-            // bind a display the emitter cannot reproduce.
             let aliased = candidate
                 .path
                 .last()
@@ -861,12 +824,6 @@ impl ParseContext<'_> {
                         .then_some(candidate.workshop_name)
                 })
             {
-                // A `%1$s`-only template substitutes to the bare
-                // ability name; longer templates (`%1$s Cooldown
-                // Time`) must not bind it (#448). The producer fills
-                // the locale's template spelling when one exists
-                // (`Tempo de recarga de %1$s`), and mixed-locale
-                // sources may carry the en-US form.
                 let ability_name = |locale: &str| {
                     crate::gameplay::data::builtin_ref()
                         .ok()?

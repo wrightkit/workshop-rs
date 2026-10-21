@@ -1,20 +1,3 @@
-//! Hand-written surface calls for catalog actions whose declared signature
-//! diverges from the WIR call shape (workshop-rs#461).
-//!
-//! `docs/language-support/actions.md` is generated from the catalog, so
-//! conformance cases derived from it cannot notice a signature that declares
-//! the WIR shape instead of the source syntax — #445 shipped exactly that
-//! defect when `Set/Modify Player Variable At Index` declared
-//! `(Variable, Index, [Operation,] Value)` and omitted the leading `player`
-//! argument the surface form requires.
-//!
-//! The calls below are written by hand from Workshop syntax, not derived
-//! from catalog-generated docs. Each entry's leading `(player, variable)`
-//! parameters fold into a single `PlayerVariable` WIR argument (the chase
-//! calls additionally store under the canonical `chaseAtRate`/`chaseOverTime`
-//! call ids); the same calls with the player argument omitted must be
-//! rejected.
-
 mod common;
 
 use workshop_rs::catalog::{Catalog, Kind};
@@ -23,16 +6,6 @@ use workshop_rs::{WorkshopError, emitter, parser, validate};
 
 use crate::common::{catalog, en};
 
-/// One hand-written en-US surface call per catalog action whose declared
-/// signature diverges from the stored WIR call:
-/// `(catalog id, surface call, surface arg count, stored call id, stored arg
-/// count)`.
-///
-/// The stored shape is what `parser::parse` produces: the folded
-/// `PlayerVariable` argument replaces the surface's `player, variable`
-/// pair, so the stored arg count is the surface arg count minus one. The
-/// surface arg count pins the declared signature: dropping any one of its
-/// parameters makes this table disagree with `param_count`.
 const DIVERGENT_SURFACE_CALLS: &[(&str, &str, usize, &str, usize)] = &[
     (
         "setPlayerVariableAtIndex",
@@ -71,8 +44,6 @@ const DIVERGENT_SURFACE_CALLS: &[(&str, &str, usize, &str, usize)] = &[
     ),
 ];
 
-/// The same calls with the leading `player` argument omitted — the WIR-shaped
-/// signatures these entries wrongly declared before #445.
 const OMITTED_PLAYER_CALLS: &[(&str, &str)] = &[
     (
         "setPlayerVariableAtIndex",
@@ -107,10 +78,6 @@ fn parse_and_validate(source: &str, catalog: &Catalog) -> Result<Program, Worksh
         .and_then(|program| validate::validate_canonical_ids(&program, catalog).map(|()| program))
 }
 
-/// The coverage above must name every catalog action whose declared surface
-/// signature folds the `(player, variable)` pair — the predicate
-/// `CatalogEntry::folds_player_variable_pair` applies internally. A newly
-/// divergent entry fails here until a hand-written call covers it.
 #[test]
 fn every_fold_divergent_action_has_hand_written_surface_coverage() {
     let catalog = catalog();

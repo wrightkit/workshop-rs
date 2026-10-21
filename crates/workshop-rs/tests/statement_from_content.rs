@@ -1,6 +1,3 @@
-//! Contract tests for `rules::statement::statement_from_content`, the input
-//! direction of `workshop-rs/rule-content-v1` (workshop-rs#531).
-
 use serde_json::{Value as JsonValue, json};
 use workshop_rs::rules::content::rule_content;
 use workshop_rs::rules::statement::{Statement, StatementContentError, statement_from_content};
@@ -12,7 +9,6 @@ fn convert(node: &JsonValue) -> Result<Statement, StatementContentError> {
     statement_from_content(&catalog(), node)
 }
 
-/// The statement's content as the export renders it inside a rule.
 fn content_of(statement: Statement) -> JsonValue {
     let rule = Rule::new("statement", Event::Global);
     match statement {
@@ -49,13 +45,10 @@ struct Tally {
     locales: std::collections::BTreeSet<String>,
 }
 
-/// Round-trip every statement of `source` in every catalog locale.
 fn assert_round_trip(source: &str, source_locale: &str, tally: &mut Tally) {
     let catalog = catalog();
     let program = parser::parse(source, &catalog, &locale(source_locale)).expect("source parses");
     for target in catalog.locales() {
-        // A locale without every spelling the program needs cannot render
-        // it; the statement content does not depend on the locale otherwise.
         let Ok(text) = emitter::emit(&program, &catalog, target) else {
             continue;
         };
@@ -99,8 +92,6 @@ fn practice_range_statements_round_trip_in_every_locale() {
     }
     assert!(tally.converted > 1000, "converted {}", tally.converted);
     assert!(tally.refused_ambiguous > 0);
-    // The locales with complete spellings for the corpus; emission skips
-    // any locale that lacks a mapping the program needs.
     assert!(tally.locales.contains("en-us") && tally.locales.contains("zh-cn"));
 }
 
@@ -236,8 +227,6 @@ fn spans_are_refused_wherever_they_appear() {
 
 #[test]
 fn a_refusal_produces_no_model_value() {
-    // The result type is `Result`: an `Err` carries no statement. A partly
-    // valid statement is refused as a whole.
     let node = json!({"call": "wait", "args": [1.0, {"call": "noSuchValue", "args": []}]});
     assert!(convert(&node).is_err());
 }
@@ -252,10 +241,6 @@ fn disabled_statements_keep_their_modifier() {
     }
 }
 
-/// Conversion and canonical validation share one argument-count rule
-/// (AGENTS.md "Sibling paths share checks"): for a folded player-variable
-/// pair, a variadic entry and an undeclared-signature entry, both accept and
-/// reject the same argument counts.
 #[test]
 fn conversion_and_validation_agree_on_argument_counts() {
     use workshop_rs::catalog::Kind;

@@ -38,36 +38,16 @@ struct CatalogFile {
     localized_strings: Vec<LocalizedStringFile>,
     #[serde(default)]
     enums: Vec<EnumFile>,
-    /// The localized parameter display names the Workshop editor shows,
-    /// keyed by entry id then parameter position — their own catalog data
-    /// section, separate from `paramAliases` (additional accepted parse
-    /// spellings) and `paramDefaults` (the value applied when an argument
-    /// is omitted). Only source-confirmed positions and locales are
-    /// recorded; everything else is listed in `paramDisplayNameGaps`.
     #[serde(default)]
     param_display_names: BTreeMap<String, BTreeMap<String, BTreeMap<String, String>>>,
-    /// The explicit coverage gap list for parameter display names: the
-    /// declared locales with no recorded names at all, and every parameter
-    /// position (`entryId[index]`) that does not record a name in every
-    /// supported (non-gap) locale. A gapped position may still carry the
-    /// names that are confirmed. When the section is declared, a position
-    /// must appear on the gap list exactly when its recorded names do not
-    /// cover every supported locale.
     param_display_name_gaps: Option<ParamDisplayNameGapsFile>,
 }
 
-/// The `paramDisplayNameGaps` section: the catalog's explicit record of
-/// where localized parameter display names are *not* recorded.
 #[derive(Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct ParamDisplayNameGapsFile {
-    /// Declared locales with no parameter display names recorded.
     #[serde(default)]
     locales: Vec<String>,
-    /// Parameter positions lacking a source-confirmed name in at least one
-    /// supported locale, each written `entryId[position]` with `position` a
-    /// zero-based index into the entry's declared `params`. A listed
-    /// position may still record names for the locales that are confirmed.
     #[serde(default)]
     positions: Vec<String>,
 }
@@ -77,44 +57,24 @@ struct ParamDisplayNameGapsFile {
 struct EntryFile {
     id: String,
     aliases: HashMap<String, AliasFile>,
-    /// The declared parameter list. `None` means the entry declares no
-    /// signature at all; `Some` — even empty, as on the zero-argument
-    /// `else`/`end` constructs — declares a call signature.
     #[serde(default)]
     params: Option<Vec<String>>,
-    /// Reviewed semantic parameter names, parallel to `params`.
     #[serde(default)]
     param_names: Vec<String>,
     #[serde(default)]
     param_aliases: Vec<HashMap<String, AliasFile>>,
-    /// Canonical enum domain per parameter position (parallel to `params`);
-    /// empty when no parameter domains are documented.
     #[serde(default)]
     param_domains: Vec<Option<String>>,
-    /// Default value per parameter position (parallel to `params`),
-    /// resolved when a call omits the argument. `None` means no default is
-    /// declared. Default value syntax: `null`, a numeric literal, localized
-    /// string text, `Domain.MEMBER` (builtin enum member), or a catalog value
-    /// id resolved as a zero-argument call. Every default is pinned-reference
-    /// probe evidence, never copied from upstream game data.
     #[serde(default)]
     param_defaults: Vec<Option<String>>,
     #[serde(default)]
     param_types: Vec<Option<String>>,
     #[serde(default)]
     param_coercions: Vec<Option<ParamCoercions>>,
-    /// `rule-content-v1` facts per parameter position (parallel to
-    /// `params`), declared where the surface parameter list and the content
-    /// argument list differ.
     #[serde(default)]
     param_content: Vec<Option<ParamContent>>,
     #[serde(default)]
     return_type: Option<String>,
-    /// Reviewed reevaluation coverage keyed by enum member id (e.g.
-    /// `COLOR`), listing the parameter positions each member keeps
-    /// re-evaluating. Declared only on actions whose `*Reeval` parameter
-    /// selects the reevaluation mode; validated against that domain's
-    /// members and the parameter arity.
     #[serde(default)]
     reevaluation_coverage: Option<BTreeMap<String, Vec<usize>>>,
     #[serde(default)]
@@ -141,10 +101,6 @@ struct MemberFile {
     aliases: HashMap<String, AliasFile>,
 }
 
-/// A locale may have one canonical emitter spelling or several reviewed
-/// spellings observed across current Workshop producers. The string form is
-/// retained for the common case; the array form makes conflicts explicit in
-/// the data instead of forcing parser branches or silently choosing one.
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum AliasFile {
@@ -288,11 +244,6 @@ impl Catalog {
             Err(error) => Err(error),
         }
     }
-    /// Mirror the verbatim spelling indexes under whitespace-collapsed
-    /// keys (#448). A normalized key claimed by distinct targets is poisoned
-    /// (`None`) so it resolves nothing rather than guessing; identical
-    /// targets (two declared spellings that differ only in whitespace, such
-    /// as zh-CN `66号公路`/`66 号公路`) keep their single meaning.
     fn build_normalized_index(&mut self) {
         fn insert<T: PartialEq + Clone>(
             map: &mut HashMap<String, Option<T>>,
@@ -405,14 +356,6 @@ impl Catalog {
                 item.id
             )));
         }
-        // The primary locale's surface is complete: every builtin carries a
-        // primary-locale alias. Additional declared locales may be partially
-        // covered; missing target-locale mappings fail explicitly at
-        // conversion/emission time (ADR-0001 Decision 7).
-        // A signature-bearing entry is any action or value, or a structural
-        // entry that declares its parameter list — `"params": []` marks a
-        // zero-argument construct such as `else`/`end`, while section
-        // keywords declare no `params` field and stay without a signature.
         let callable = matches!(kind, Kind::Action | Kind::Value)
             || (kind == Kind::Structural && item.params.is_some());
         let params = item.params.unwrap_or_default();
@@ -614,16 +557,8 @@ impl Catalog {
         Ok(())
     }
 
-    /// The `rule-content-v1` facts declared per parameter position must
-    /// describe a well-formed content layout: a declared `paramContent`
-    /// element carries at least one fact, every `fold` names a reserved
-    /// variable-target call at a valid argument, and the members of one
-    /// fold group are contiguous parameters covering every argument of the
-    /// folded call exactly once — a `Variable`-typed member at the tagged
-    /// `{"variable"}` position.
     fn validate_param_content(&self) -> Result<()> {
         for entry in &self.entries {
-            // `call` -> per-member (surface position, inner `arg`) pairs.
             let mut groups: BTreeMap<&str, Vec<(usize, usize)>> = BTreeMap::new();
             for (index, content) in entry.param_content.iter().enumerate() {
                 let Some(content) = content else {
@@ -650,9 +585,6 @@ impl Catalog {
                 let Some(fold) = &content.fold else {
                     continue;
                 };
-                // The reserved variable-target calls fix both their arity
-                // and which argument is the tagged `{"variable"}` node: the
-                // member supplying it must be `Variable`-typed.
                 let (arity, variable_arg) = match fold.call.as_str() {
                     "globalVariable" => (1, 0),
                     "playerVariable" => (2, 1),
@@ -796,13 +728,6 @@ impl Catalog {
         Ok(())
     }
 
-    /// Distribute the top-level `paramDisplayNames` section onto the
-    /// entries it names and validate it against `paramDisplayNameGaps`.
-    /// Recorded locales must be declared and not on the gap-locale list;
-    /// when the gap section is declared, a parameter position must be on
-    /// the gap list exactly when it lacks a recorded name in at least one
-    /// supported (non-gap) locale, so the explicit gaps stay honest as the
-    /// data changes.
     fn insert_param_display_names(
         &mut self,
         names: BTreeMap<String, BTreeMap<String, BTreeMap<String, String>>>,
@@ -863,10 +788,6 @@ impl Catalog {
         }
 
         for (id, positions) in names {
-            // An id can name more than one kind — for example
-            // `modifyGlobalVariable` is declared under both `structural`
-            // and `actions` with the same parameters — so display names
-            // distribute onto every entry the id resolves to.
             let entry_indices = self
                 .by_id
                 .iter()
@@ -909,9 +830,6 @@ impl Catalog {
                         "'{id}' declares no display names for parameter {index}"
                     )));
                 }
-                // The position names every entry under the id that declares
-                // it; entries without the parameter (a same-id `operators`
-                // or parameterless sibling) are not display-name carriers.
                 let mut applied = false;
                 for &entry_index in &entry_indices {
                     let entry = &mut self.entries[entry_index];

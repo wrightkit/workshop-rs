@@ -97,14 +97,12 @@ fn benchmark_audit_optimizations() {
 
     println!("\n=== AUDIT OPTIMIZATION & ABLATION MEASUREMENTS ===");
 
-    // 2. Catalog Query & Ablation (Issue #213)
     let lookup_iters = 100_000;
     for _ in 0..10_000 {
         let _ = catalog.entry(Kind::Action, "chaseOverTime");
         let _ = catalog.resolve(Kind::Action, &en, "Chase Global Variable Over Time");
     }
 
-    // Optimized: Borrowed &str / &Locale lookup
     let start = Instant::now();
     for _ in 0..lookup_iters {
         let _ = catalog.entry(Kind::Action, "chaseOverTime");
@@ -114,7 +112,6 @@ fn benchmark_audit_optimizations() {
     }
     let query_opt_dur = start.elapsed();
 
-    // Ablated Baseline: owned String/Locale tuple allocation on every query
     let start = Instant::now();
     for _ in 0..lookup_iters {
         let _k1 = (Kind::Action, "chaseOverTime".to_string());
@@ -152,9 +149,7 @@ fn benchmark_audit_optimizations() {
             * 100.0
     );
 
-    // 3. Bare Member Index & Ablation (Issue #213)
     let bare_iters = 50_000;
-    // Optimized: O(1) bare_member_index lookup
     let start = Instant::now();
     for _ in 0..bare_iters {
         let _ = catalog.bare_member_matches(&en, "Yellow");
@@ -162,7 +157,6 @@ fn benchmark_audit_optimizations() {
     }
     let bare_opt_dur = start.elapsed();
 
-    // Ablated Baseline: Linear scan across all 52 enum domains and members
     let start = Instant::now();
     for _ in 0..bare_iters {
         let mut matches_en = Vec::new();
@@ -201,11 +195,9 @@ fn benchmark_audit_optimizations() {
         bare_abl_dur.as_nanos() as f64 / bare_opt_dur.as_nanos() as f64
     );
 
-    // 5. Implicit Variable Monotonic Indexing & Ablation (Issue #213)
     let var_count = 1_000u32;
     let var_iters = 100;
 
-    // Optimized: O(1) monotonic counter increment
     let start = Instant::now();
     for _ in 0..var_iters {
         let mut tracker = 0u32;
@@ -218,7 +210,6 @@ fn benchmark_audit_optimizations() {
     }
     let var_opt_dur = start.elapsed();
 
-    // Ablated Baseline: O(N) full arena scan for max index on each insertion (O(N^2) total)
     let start = Instant::now();
     for _ in 0..var_iters {
         let mut existing_indices = Vec::with_capacity(var_count as usize);
@@ -254,21 +245,17 @@ fn benchmark_audit_optimizations() {
         var_abl_dur.as_nanos() as f64 / var_opt_dur.as_nanos() as f64
     );
 
-    // 6. Emitter Allocations & Ablation (Issue #215)
     let parsed_bastion = internal::parse_in(bastion_text, &en);
     let emit_iters = 500;
-    // Optimized: Borrowed &'a str spelling returns
     let start = Instant::now();
     for _ in 0..emit_iters {
         let _ = internal::emit_in(&parsed_bastion, &en);
     }
     let emit_opt_dur = start.elapsed();
 
-    // Ablated Baseline: simulate owned String allocations for each emitted keyword/name
     let start = Instant::now();
     for _ in 0..emit_iters {
         let out = internal::emit_in(&parsed_bastion, &en);
-        // Simulate the previous per-identifier String clone overhead (~1,500 identifier strings per bastion.ow emission)
         let _cloned_identifiers: Vec<String> = out
             .split_whitespace()
             .take(1500)
@@ -296,7 +283,6 @@ fn benchmark_audit_optimizations() {
             * 100.0
     );
 
-    // 7. Validation Short-circuit & Ablation (Issue #212)
     let multi_error = r#"rule ("multi-error") {
         event { Ongoing - Global; }
         actions {
@@ -308,7 +294,6 @@ fn benchmark_audit_optimizations() {
     }"#;
     let parsed_err = internal::parse_in(multi_error, &en);
     let val_iters = 20_000;
-    // Optimized: Early short-circuit on first error
     let start = Instant::now();
     for _ in 0..val_iters {
         let _ = validate::validate_canonical_ids_wir(&parsed_err, &catalog);

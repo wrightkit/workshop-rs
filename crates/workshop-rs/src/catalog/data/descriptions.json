@@ -1,5 +1,5 @@
 {
-  "digest": "63fc85e667d38e864aa3233f4b3275e30f68ce14e97c27cb29f10883d5b95fd9",
+  "digest": "04967d619bb17a8626dacf84c1b49c0aafe8496e1c6f15f739828948b8038448",
   "entries": {
     "actions": {
       "__abortIfConditionIsFalse__": {
@@ -6702,7 +6702,7 @@
   "pendingLocales": [],
   "provenance": {
     "generator": "workshop-catalog-gen",
-    "generatorVersion": "1.23.1",
+    "generatorVersion": "1.24.0",
     "license": "MIT (in-game Workshop documentation text and community zh-CN reference text; provenance in docs/source-attribution/catalog.md)",
     "reviewed": true,
     "source": "en-US action/value and parameter descriptions imported from the pinned workshop-data export at commit 5a7d0e294b8cad73b9701987bb584d0551d7fa4d (in-game Workshop documentation text); reviewed reductions for source text violating the content rules are recorded in the importer's REVIEWED_TEXT table; zh-CN action/value and parameter descriptions cross-checked from the two records of the zh-CN source artifact; source disagreements arbitrate to the zh-name-keyed record except the importer's ZH_USE_SECONDARY table, cleaned texts are recorded verbatim and uncovered positions are explicit gaps"
