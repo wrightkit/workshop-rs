@@ -1,6 +1,6 @@
 //! `descriptions` — imports en-US action/value descriptions from the pinned
 //! `workshop-data` export into `descriptions.json`, and zh-CN descriptions
-//! from the extracted zh-CN source artifact.
+//! from the zh-CN source artifact.
 //!
 //! The export's `data.actions`/`data.values` entries carry an en-US
 //! `description` map on the entry and on each `args` position — the
@@ -11,10 +11,8 @@
 //! [`REVIEWED_TEXT`]; positions with no usable source text become
 //! explicit `gaps` entries.
 //!
-//! zh-CN text comes from two cross-checked community sources, extracted to
-//! `tools/descriptions/zh-source.json` by
-//! `tools/descriptions/extract_zh_source.py` (the Huiji Chinese Workshop
-//! reference is unreachable behind Cloudflare anti-bot checks):
+//! zh-CN text comes from two cross-checked community sources, normalized
+//! in the `tools/descriptions/zh-source.json` artifact:
 //! - `owlCN`: the zh-CN Workshop client strings of the owl-CN editor
 //!   extension (`qaz075115961/owl-CN` `client/owl.js`), matched by the
 //!   entry's zh-CN spelling;
@@ -345,13 +343,12 @@ const ZH_OWMOD_PARAM_MAP: &[(&str, &[Option<usize>])] = &[
     ("roundToInteger", &[None, Some(0)]),
 ];
 
-/// The default merged zh-CN source artifact, produced from the pinned
-/// source checkouts by `tools/descriptions/extract_zh_source.py`;
-/// `--zh-source` overrides it.
+/// The default zh-CN source artifact, normalized from the pinned source
+/// checkouts; `--zh-source` overrides it.
 pub(crate) const DEFAULT_ZH_SOURCE: &str = "tools/descriptions/zh-source.json";
 
 /// Import en-US descriptions from the pinned `workshop-data` export and
-/// zh-CN descriptions from the extracted zh-CN source artifact, then
+/// zh-CN descriptions from the zh-CN source artifact, then
 /// write the canonical descriptions dataset (without a digest; `build`
 /// records it). Returns the report lines.
 pub(crate) fn generate(
@@ -736,12 +733,9 @@ pub(crate) fn generate(
                  parameter descriptions cross-checked from the owl-CN zh-CN Workshop client \
                  strings ({owl_repo} client/owl.js at commit {owl_commit}) and the \
                  docs.owmod.net Chinese manual ({owmod_repo} manual/documents at commit \
-                 {owmod_commit}), merged to tools/descriptions/zh-source.json by \
-                 tools/descriptions/extract_zh_source.py; source disagreements arbitrate to \
+                 {owmod_commit}); source disagreements arbitrate to \
                  owl-CN except the importer's ZH_USE_OWMOD table, cleaned texts are recorded \
-                 verbatim and uncovered positions are explicit gaps; the Huiji Chinese \
-                 Workshop reference (overwatch.huijiwiki.com) is unreachable behind \
-                 Cloudflare anti-bot checks (HTTP 403), so it contributes no text",
+                 verbatim and uncovered positions are explicit gaps",
                 owl_repo = zh_source.owl_repo,
                 owl_commit = zh_source.owl_commit,
                 owmod_repo = zh_source.owmod_repo,
@@ -804,7 +798,7 @@ fn dataset_version(out_path: &Path) -> String {
         .unwrap_or_else(|| "0.1.0".to_string())
 }
 
-/// The merged zh-CN source artifact (`tools/descriptions/zh-source.json`):
+/// The zh-CN source artifact (`tools/descriptions/zh-source.json`):
 /// owl-CN keyword records indexed by normalized zh-CN name, docs.owmod.net
 /// manual records indexed by normalized en-US name, and each source's
 /// pinned repository and commit for provenance.
@@ -828,7 +822,7 @@ struct ZhParam {
     description: String,
 }
 
-/// Parse the extracted zh-CN source artifact into normalized lookup
+/// Parse the zh-CN source artifact into normalized lookup
 /// indexes. A source name that collides with an index key is an error —
 /// silently merging would lose text.
 fn load_zh_source(path: &Path) -> Result<ZhSource, String> {

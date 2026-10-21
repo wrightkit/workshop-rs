@@ -1,5 +1,5 @@
 {
-  "digest": "5f849db029c29b98dd6d5343e26f8a468ac27ae989ce042e11545b5e59926533",
+  "digest": "9a4030ccb2384b1d4c313957208b05e59156a2f3b75fd9d8db8b04c6f1bdc23c",
   "entries": {
     "actions": {
       "__abortIfConditionIsFalse__": {
@@ -6705,7 +6705,7 @@
     "generatorVersion": "1.23.1",
     "license": "MIT (in-game Workshop documentation text and community zh-CN reference text; provenance in docs/source-attribution/catalog.md)",
     "reviewed": true,
-    "source": "en-US action/value and parameter descriptions imported from the pinned workshop-data export at commit 5a7d0e294b8cad73b9701987bb584d0551d7fa4d (in-game Workshop documentation text); reviewed reductions for source text violating the content rules are recorded in the importer's REVIEWED_TEXT table; zh-CN action/value and parameter descriptions cross-checked from the owl-CN zh-CN Workshop client strings (https://github.com/qaz075115961/owl-CN client/owl.js at commit b169fef2fd0f77b43d2b1c320242afd1279e924d) and the docs.owmod.net Chinese manual (https://github.com/GKD-OW/docs manual/documents at commit 9f399dab26f4d4800703b46ad2bcd1b4bbb4c085), merged to tools/descriptions/zh-source.json by tools/descriptions/extract_zh_source.py; source disagreements arbitrate to owl-CN except the importer's ZH_USE_OWMOD table, cleaned texts are recorded verbatim and uncovered positions are explicit gaps; the Huiji Chinese Workshop reference (overwatch.huijiwiki.com) is unreachable behind Cloudflare anti-bot checks (HTTP 403), so it contributes no text"
+    "source": "en-US action/value and parameter descriptions imported from the pinned workshop-data export at commit 5a7d0e294b8cad73b9701987bb584d0551d7fa4d (in-game Workshop documentation text); reviewed reductions for source text violating the content rules are recorded in the importer's REVIEWED_TEXT table; zh-CN action/value and parameter descriptions cross-checked from the owl-CN zh-CN Workshop client strings (https://github.com/qaz075115961/owl-CN client/owl.js at commit b169fef2fd0f77b43d2b1c320242afd1279e924d) and the docs.owmod.net Chinese manual (https://github.com/GKD-OW/docs manual/documents at commit 9f399dab26f4d4800703b46ad2bcd1b4bbb4c085); source disagreements arbitrate to owl-CN except the importer's ZH_USE_OWMOD table, cleaned texts are recorded verbatim and uncovered positions are explicit gaps"
   },
   "schemaVersion": 1,
   "version": "0.1.0"
