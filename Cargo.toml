@@ -18,6 +18,7 @@ unicode-ident = "1"
 unicode-normalization = "0.1"
 
 [workspace.lints.rust]
+unsafe_code = "forbid"
 unsafe_op_in_unsafe_fn = "deny"
 unreachable_pub = "deny"
 
