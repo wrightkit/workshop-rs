@@ -30,10 +30,12 @@ fn builtin_rejects_an_unknown_version() {
 #[test]
 fn absent_values_read_as_none_not_a_default() {
     let values = hero_values::builtin(hero_values::CURRENT_VERSION).expect("pinned version loads");
-    assert_eq!(values.health("ana", HealthPool::Health), None);
+    // A pool the hero does not have and a recorded slot with no cooldown value
+    // read as `None`, never as a default.
     assert_eq!(values.health("ana", HealthPool::Shield), None);
-    assert_eq!(values.cooldown("ana", "ability1", None), None);
-    assert_eq!(values.ultimate_cost("ana"), None);
+    assert_eq!(values.health("soldier", HealthPool::Armor), None);
+    assert_eq!(values.cooldown("soldier", "ability1", None), None);
+    assert_eq!(values.ultimate_cost("notAHero"), None);
     assert_eq!(values.health("notAHero", HealthPool::Health), None);
 }
 

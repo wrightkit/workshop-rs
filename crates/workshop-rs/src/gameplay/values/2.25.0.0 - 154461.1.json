@@ -1,5 +1,53 @@
 {
   "format": "workshop-rs/hero-values-v1",
   "balanceVersion": "2.25.0.0 - 154461.1",
-  "heroes": []
+  "heroes": [
+    {
+      "id": "ana",
+      "values": [
+        { "kind": "health", "pool": "health", "amount": 250 },
+        { "kind": "cooldown", "slot": "ability1", "seconds": 14 },
+        { "kind": "cooldown", "slot": "ability2", "seconds": 12 },
+        { "kind": "ultimateCost", "points": 2300 }
+      ]
+    },
+    {
+      "id": "reinhardt",
+      "values": [
+        { "kind": "health", "pool": "health", "amount": 250 },
+        { "kind": "health", "pool": "armor", "amount": 300 },
+        { "kind": "cooldown", "slot": "ability1", "seconds": 7 },
+        { "kind": "cooldown", "slot": "ability2", "seconds": 6 },
+        { "kind": "ultimateCost", "points": 1960 }
+      ]
+    },
+    {
+      "id": "soldier",
+      "values": [
+        { "kind": "health", "pool": "health", "amount": 250 },
+        { "kind": "cooldown", "slot": "secondaryFire", "seconds": 6 },
+        { "kind": "cooldown", "slot": "ability2", "seconds": 15 },
+        { "kind": "ultimateCost", "points": 2750 }
+      ]
+    },
+    {
+      "id": "mercy",
+      "values": [
+        { "kind": "health", "pool": "health", "amount": 225 },
+        { "kind": "cooldown", "slot": "ability1", "seconds": 1.5 },
+        { "kind": "cooldown", "slot": "ability2", "seconds": 30 },
+        { "kind": "ultimateCost", "points": 2150 }
+      ]
+    },
+    {
+      "id": "junkerQueen",
+      "values": [
+        { "kind": "health", "pool": "health", "amount": 375 },
+        { "kind": "cooldown", "slot": "secondaryFire", "seconds": 6 },
+        { "kind": "cooldown", "slot": "ability1", "seconds": 10 },
+        { "kind": "cooldown", "slot": "ability2", "seconds": 9 },
+        { "kind": "ultimateCost", "points": 2700 }
+      ]
+    }
+  ]
 }
