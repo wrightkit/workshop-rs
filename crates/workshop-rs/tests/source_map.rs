@@ -10,12 +10,6 @@ fn span(file: FileId, line: u32, start: u32, end: u32) -> Span {
     Span::new(file, Position::new(line, start), Position::new(line, end))
 }
 
-/// Every mapped position of `program` in a stable order.
-///
-/// Value paths are enumerated on `public` so a reparsed program is compared
-/// against the tree the map was extracted from: emission can canonicalize
-/// value forms (a boolean condition becomes a comparison), and positions only
-/// addressable in the reparsed tree hold no provenance by construction.
 fn mapped_positions(program: &Program, public: &Program) -> Vec<(String, Option<Span>)> {
     let mut positions = Vec::new();
     for (rule, public) in public.rules.iter().enumerate() {
@@ -220,9 +214,6 @@ fn wire_span(file: usize, line: u32, start: u32, end: u32) -> serde_json::Value 
 
 #[test]
 fn authored_entries_attach_identifier_and_nested_value_provenance() {
-    // A provider authors the entries directly: `name_span`, `event_name_span`,
-    // `identifier_span`, and `children` are optional members of the existing
-    // entries, and spans may address any file in the table.
     let artifact = serde_json::json!({
         "format": "workshop-rs/mapped-text-v1",
         "text": PROVENANCE_SOURCE,
@@ -398,9 +389,6 @@ fn nested_value_entries_are_validated_against_the_value_tree() {
         assert_eq!(mapped_positions(&target, &target), before);
     }
 
-    // Children beyond the applied value's tree are dropped rather than
-    // rejected: emission can canonicalize a value into a form with fewer
-    // children (a member access reparses as a variable read).
     let mut extra_child = base.clone();
     extra_child["spans"][argument_with_children]["children"]
         .as_array_mut()
@@ -439,8 +427,6 @@ fn nested_value_entries_are_validated_against_the_value_tree() {
 
 #[test]
 fn artifacts_without_identifier_or_children_members_apply_as_before() {
-    // An artifact produced before these members existed decodes and applies
-    // unchanged: coarse spans map and the finer positions report unmapped.
     fn strip_new_members(value: &mut serde_json::Value) {
         if let Some(object) = value.as_object_mut() {
             for member in [

@@ -1,14 +1,3 @@
-//! Matrix-surface emission closure scan (#87 AC-17).
-//!
-//! For every construct family on the matrix-listed supported
-//! surface, the native emitter's spelling must self-round-trip:
-//! parse(emit(x)) reparses and re-emits byte-identically. Each case
-//! below is a real `wright compile --profile compat` artifact of a
-//! minimal supported-surface program; the scan asserts the emitted
-//! spelling is a byte-identical fixed point of the ws parser/
-//! emitter. Oracle-canonical spellings pinned by repros are
-//! asserted in the emitter tests (AC-15/16).
-
 use super::internal;
 
 fn assert_closure(label: &str, artifact: &str) {

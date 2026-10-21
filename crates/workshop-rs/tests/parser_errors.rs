@@ -102,9 +102,6 @@ fn bare_and_non_enum_actions_as_conditions_still_name_the_action() {
 
 #[test]
 fn localized_action_spellings_report_the_action_as_well() {
-    // Some zh-CN action aliases exist only with a trailing space
-    // (`开始限制阈值 `); the value-position diagnostic resolves them the same
-    // way action-statement lookup does.
     let source = concat!(
         "rule (\"x\") {\n",
         "    event {\n",

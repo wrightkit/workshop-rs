@@ -1,13 +1,3 @@
-//! Shared number formatting for emission.
-//!
-//! [`format_number`] renders a Workshop number the way the pinned oracle
-//! does for computed values: integers print without a decimal point, and
-//! non-integers print the shortest round-trip representation truncated to 16
-//! significant digits (OverPy behavior; evidence: the pinned oracle
-//! snapshots), unless that truncation would discard a non-zero fractional
-//! component. Literal source spellings (e.g. `0.0`, `5.0`) are preserved by
-//! the frontends' number nodes and take precedence over this formatter.
-
 /// Format a float like the reference frontend: integers print without a
 /// decimal point, and non-integers print the shortest round-trip
 /// representation truncated to 16 significant digits (OverPy behavior;
@@ -57,8 +47,6 @@ pub fn format_setting_number(value: f64) -> String {
     format!("{value}")
 }
 
-/// Keep at most `max_digits` significant digits of a decimal string,
-/// truncating (not rounding) and expanding any exponent form.
 fn truncate_significant(text: &str, max_digits: usize) -> String {
     let (mantissa, exponent) = match text.find('e').or_else(|| text.find('E')) {
         Some(index) => {

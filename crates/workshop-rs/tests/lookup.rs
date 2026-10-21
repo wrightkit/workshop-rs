@@ -12,7 +12,6 @@ fn builtin_id<'m>(matches: &'m [LookupMatch], id: &str) -> &'m LookupMatch {
         .unwrap_or_else(|| panic!("lookup should match builtin '{id}': {matches:?}"))
 }
 
-/// The signature lookup reports for the structural entry `id`.
 fn structural_signature(catalog: &Catalog, locale: &Locale, id: &str) -> Signature {
     let matches = catalog.lookup(locale, id).expect("lookup answers");
     matches
@@ -131,10 +130,6 @@ fn signature_lists_params_defaults_and_inline_enum_members_once() {
 
 #[test]
 fn signature_params_report_localized_editor_display_names() {
-    // workshop-rs#498: `SignatureParam.display_name` carries the label the
-    // Workshop editor shows in the requested locale — the existing `wait`
-    // zh-CN labels 时间 / 等待行为 — while `name` keeps the semantic name
-    // and `default` keeps the omission default.
     let catalog = catalog();
     let matches = catalog.lookup(&zh(), "Wait").expect("lookup");
     let LookupMatch::Builtin {
@@ -156,14 +151,12 @@ fn signature_params_report_localized_editor_display_names() {
         signature.params[1].default.as_deref(),
         Some("Wait.IGNORE_CONDITION")
     );
-    // Signature text keeps rendering the semantic names, unchanged.
     assert!(
         signature.text.starts_with("等待(time:"),
         "{}",
         signature.text
     );
 
-    // The en-US lookup reports the en-US labels on the same positions.
     let matches = catalog.lookup(&en(), "Wait").expect("lookup");
     let LookupMatch::Builtin {
         signature: Some(signature),
@@ -178,7 +171,6 @@ fn signature_params_report_localized_editor_display_names() {
         Some("Wait Behavior")
     );
 
-    // A locale on the explicit gap list reports no display names.
     let de = Locale::new("de-DE");
     let matches = catalog.lookup(&de, "Wait").expect("lookup");
     let LookupMatch::Builtin {
@@ -193,9 +185,6 @@ fn signature_params_report_localized_editor_display_names() {
 
 #[test]
 fn indexed_player_variable_signature_lists_the_surface_parameters() {
-    // workshop-rs#442: the player-variable index actions declare their
-    // surface signature — including the `player` argument the source syntax
-    // requires — even though WIR folds `(player, variable)` into one value.
     let catalog = catalog();
     let matches = catalog
         .lookup(&en(), "Set Player Variable At Index")
@@ -217,11 +206,6 @@ fn indexed_player_variable_signature_lists_the_surface_parameters() {
 
 #[test]
 fn structural_constructs_report_their_call_signatures() {
-    // workshop-rs#496: the structural constructs that take arguments
-    // declare the signature of their `rule-content-v1` call, in argument
-    // order — `setGlobalVariable(variable, value)`,
-    // `forGlobalVariable(controlVariable, rangeStart, rangeStop, step)`,
-    // `if(condition)`.
     let catalog = catalog();
     let cases: &[(&str, &[(&str, &str)])] = &[
         (
@@ -254,7 +238,6 @@ fn structural_constructs_report_their_call_signatures() {
         assert_eq!(signature.required_params, expected.len());
         assert!(!signature.variadic);
     }
-    // The localized display name renders the signature's call head.
     let signature = structural_signature(&catalog, &zh(), "setGlobalVariable");
     assert_eq!(
         signature.text,
@@ -312,8 +295,6 @@ fn zero_argument_constructs_report_empty_signatures_and_keywords_none() {
 
 #[test]
 fn scoped_lookup_lists_a_structural_constructs_parameters() {
-    // workshop-rs#496: `lookup_within` scopes to a structural call construct
-    // the same way it scopes to an action.
     let catalog = catalog();
     let params = catalog
         .lookup_within(&zh(), "setGlobalVariable", None)
@@ -340,10 +321,6 @@ fn scoped_lookup_lists_a_structural_constructs_parameters() {
     assert_eq!(names, ["variable", "value"]);
     assert_eq!(positions, [0, 1]);
 
-    // `modifyGlobalVariable` is catalogued both as an action and as the
-    // `rule-content-v1` structural call; the established action scope wins,
-    // observable by its `value` parameter type (`Any`, where the structural
-    // entry declares `Object|Array`).
     let params = catalog
         .lookup_within(&en(), "modifyGlobalVariable", None)
         .expect("a scope");
@@ -526,8 +503,6 @@ fn preset_string_ids_resolve_to_localized_string_matches() {
     };
     assert_eq!(id, "goodbye");
     assert_eq!(display_name.as_deref(), Some("再见"));
-    // The coincidental enum member still matches; the preset-string match
-    // is added alongside it.
     assert!(
         matches.iter().any(|lookup| matches!(
             lookup,
@@ -554,8 +529,6 @@ fn every_preset_string_is_reachable_in_every_declared_locale() {
     let catalog = catalog();
     for locale in catalog.locales() {
         for entry in catalog.localized_strings() {
-            // An id lookup ranks the preset string first: nothing else can
-            // beat the exact canonical id.
             let matches = catalog
                 .lookup(locale, &entry.id)
                 .expect("a declared locale answers");
@@ -578,8 +551,6 @@ fn every_preset_string_is_reachable_in_every_declared_locale() {
                 "the display name is the spelling the emitter writes in {locale}"
             );
 
-            // Every reviewed spelling the parser accepts resolves back to
-            // the same identity.
             for spelling in entry.spellings(locale) {
                 let matches = catalog.lookup(locale, spelling).expect("lookup answers");
                 assert!(
@@ -614,9 +585,6 @@ fn unknown_action_spelling_carries_nearest_valid_candidates() {
     let error = parse_error(
         "rule (\"x\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Create HUD Txt(Null, Null, Null, Null, Left, 0, White, White, White, Visible To, Default Visibility);\n    }\n}\n",
     );
-    // The message itself names the candidates: consumers that only see the
-    // diagnostic text, such as a closed-schema wire diagnostic, still get
-    // them (wrightkit/workshop-rs#379).
     assert_eq!(
         error.to_string(),
         "unknown action spelling 'Create HUD Txt' for locale 'en-us' \
@@ -637,9 +605,6 @@ fn unknown_action_spelling_carries_nearest_valid_candidates() {
 
 #[test]
 fn unknown_spelling_candidates_cover_observed_near_spellings() {
-    // Observed misspelling shapes from the wright#482 agent benchmark: a
-    // dropped word, a camelCase guess written where a display name belongs,
-    // and a mistyped enum member.
     let cases = [
         (
             "rule (\"x\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Create HUD Txt(Null, Null, Null, Null, Left, 0, White, White, White, Visible To, Default Visibility);\n    }\n}\n",
@@ -684,9 +649,6 @@ fn unknown_spelling_candidates_follow_the_rejecting_locale() {
 
 #[test]
 fn unknown_spelling_candidates_are_deterministic_across_runs() {
-    // The candidate ranking is a stable sort over the accepted-spelling
-    // order: `Team 3` ties `Team 1`/`Team 2`, and repeated parses must report
-    // the same list and the same message.
     let source = "settings\n{\n\theroes\n\t{\n\t\tTeam 3\n\t\t{\n\t\t}\n\t}\n}\n";
     let baseline = parse_error(source);
     assert!(
@@ -774,8 +736,6 @@ fn scoped_lookup_lists_settings_enum_domain_members() {
 #[test]
 fn scoped_lookup_scores_settings_enum_members_in_the_requested_locale() {
     let catalog = catalog();
-    // The member spellings the locale table maps must match and surface:
-    // zh-CN "完成比赛后" is `mapRotation.afterAGame`'s localized spelling.
     let children = catalog
         .lookup_within(&zh(), "mapRotation", Some("完成比赛后"))
         .expect("the domain resolves under zh-CN");
@@ -829,8 +789,6 @@ fn scoped_lookup_lists_callable_parameters_in_call_order() {
     assert!(names.len() > 1);
 }
 
-/// workshop-rs#505: a parameter declared with an enum domain reports the
-/// domain and its accepted members through scoped lookup.
 #[test]
 fn scoped_lookup_reports_a_parameters_enum_domain_and_members() {
     let catalog = catalog();
@@ -948,9 +906,6 @@ fn scoped_lookup_lists_settings_children_segment_by_segment() {
 #[test]
 fn scoped_lookup_template_segments_accept_only_recognized_values() {
     let catalog = catalog();
-    // `heroes.general` is a literal path, not a `<team>` value: it lists
-    // only the general group's own leaf, uncontaminated by the template
-    // children `heroes.<team>` declares.
     let children = catalog
         .lookup_within(&en(), "heroes.general", None)
         .expect("a literal prefix resolves");
@@ -1012,9 +967,6 @@ fn scoped_lookup_rejects_unrecognized_template_values() {
 
 #[test]
 fn two_character_cjk_queries_substring_match_zh_display_names() {
-    // workshop-rs#497: scripts without word spacing carry a whole word in
-    // two characters, so token-prefix and substring matching start at two
-    // folded characters there instead of three.
     let catalog = catalog();
     let matches = catalog.lookup(&zh(), "阈值").expect("lookup answers");
     for expected in [
@@ -1024,8 +976,6 @@ fn two_character_cjk_queries_substring_match_zh_display_names() {
     ] {
         builtin_id(&matches, expected);
     }
-    // The exact zh-CN spelling and near spellings still outrank the
-    // substring guesses.
     let position = |id: &str| {
         matches
             .iter()
@@ -1046,9 +996,6 @@ fn two_character_cjk_queries_substring_match_zh_display_names() {
 
 #[test]
 fn short_queries_keep_their_previous_minimum_lengths() {
-    // workshop-rs#497: only the folded length floor differs by script — a
-    // one-character CJK query still resolves nothing below the near-match
-    // tier, and a two-letter ASCII query keeps the three-character minimum.
     let catalog = catalog();
     let matches = catalog.lookup(&zh(), "阈").expect("lookup answers");
     builtin_id(&matches, "getThrottle");
@@ -1163,10 +1110,6 @@ fn listed_entries_are_the_matches_lookup_returns() {
                 else {
                     panic!("a builtin kind lists builtins: {listed:?}");
                 };
-                // A query of the exact id can return another Builtin first:
-                // `modifyGlobalVariable` is declared under both Structural
-                // and Action. Compare against the Builtin match of the same
-                // kind and id rather than the top-ranked match.
                 let from_lookup = catalog
                     .lookup(&locale, id)
                     .expect("lookup answers")

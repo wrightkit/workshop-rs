@@ -163,10 +163,6 @@ impl EmitContext<'_> {
     }
 }
 
-/// Re-escape a decoded settings string the way the pinned oracle does: every
-/// decode the JSONC parser performed is re-escaped, so decoded values
-/// round-trip to the oracle's spelling (a `\n` in the inputhud description is
-/// emitted as the literal two-character sequence `\n`).
 pub(crate) fn escape_string(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {
@@ -182,10 +178,6 @@ pub(crate) fn escape_string(value: &str) -> String {
     out
 }
 
-/// Re-escape a decoded value string the way the pinned oracle does (#87):
-/// `\`, `"`, newline, and carriage return re-escape; tabs pass through raw
-/// (byte-measured oracle behavior: `a\tb` emits a real tab, `a\nb` emits the
-/// literal two-character `\n`).
 pub(crate) fn escape_value_string(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {
@@ -200,14 +192,6 @@ pub(crate) fn escape_value_string(value: &str) -> String {
     out
 }
 
-/// Split a decoded string per the oracle's long-string rule (#87): when the
-/// decoded length exceeds the Workshop 128-char limit, non-final segments
-/// hold exactly 125 decoded chars and are emitted with a `{0}` continuation
-/// placeholder (128 total text chars), chained as nested `Custom String`
-/// arguments; the final segment holds the remainder without a placeholder.
-/// Segment texts are re-escaped. Byte-measured basis: chunk sizes are
-/// counted on the decoded string (70 escaped newlines — 140 escaped chars,
-/// 70 decoded — emit unsplit; 129 decoded newlines split at 125 decoded).
 pub(crate) fn split_string(value: &str) -> Vec<String> {
     if value.chars().count() <= 128 {
         return vec![escape_value_string(value)];
@@ -227,11 +211,6 @@ pub(crate) fn split_string(value: &str) -> Vec<String> {
     segments
 }
 
-/// Emit the nested continuation chain
-/// `Custom String(seg0, Custom String(seg1, ...))`; segment texts are
-/// pre-escaped, non-final segments carry the `{0}` placeholder. Iterative:
-/// every segment except the first opens a `Custom String` level, then all
-/// levels close.
 pub(crate) fn emit_string_chain(spelling: &str, segments: &[String], out: &mut String) {
     let Some((first, rest)) = segments.split_first() else {
         return;
@@ -250,9 +229,6 @@ pub(crate) fn emit_string_chain(spelling: &str, segments: &[String], out: &mut S
     }
 }
 
-/// Render a constant format argument the way the oracle folds it: integers
-/// without decimals, non-integers with exactly two decimals (JS `toFixed(2)`
-/// rounding: `0.5` -> `0.50`, `0.125` -> `0.13`, #87).
 pub(crate) fn fold_number(value: f64) -> String {
     if value.fract() == 0.0 && value.abs() < 1e15 {
         format!("{}", value as i64)

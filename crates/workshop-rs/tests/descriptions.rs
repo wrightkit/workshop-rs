@@ -1,9 +1,3 @@
-//! Localized description coverage contract (#517): every catalog action,
-//! value, and parameter position resolves a description in each shipped
-//! locale or names an explicit entry in the dataset's `gaps` list. A
-//! requested locale without text falls back to the primary locale's text
-//! with `fallback` marked on the returned [`Description`].
-
 use std::collections::BTreeSet;
 
 use serde_json::Value;
@@ -14,8 +8,6 @@ use workshop_rs::lookup::LookupMatch;
 
 use crate::common::{catalog, en, zh};
 
-/// The gap keys the committed dataset declares for `locale`, split into
-/// entry-level ids and `(id, position)` parameter gaps.
 fn gaps(locale: &str) -> (BTreeSet<String>, BTreeSet<(String, usize)>) {
     let raw: Value = serde_json::from_str(DESCRIPTIONS_DATA).expect("descriptions data is JSON");
     let mut entries = BTreeSet::new();
@@ -102,7 +94,6 @@ fn gapped_positions_return_none_for_every_requested_locale() {
             "{id} parameter {position}"
         );
     }
-    // `customString`'s remaining positions carry text.
     assert!(
         catalog
             .param_description(Kind::Value, "customString", 1, &en())
@@ -202,8 +193,6 @@ fn descriptions_dataset_reports_version_digest_and_stages() {
     assert_ne!(catalog.descriptions_version(), "dev");
 }
 
-/// `data` mutated by `mutate` must still parse, but attaching it must fail
-/// with a message matching `expected`.
 fn rejected(mutate: impl FnOnce(&mut Value), expected: &str) {
     let mut catalog = catalog();
     let mut raw: Value =

@@ -179,10 +179,6 @@ fn map_lists_preserve_spaced_colons_in_map_names() {
     }
 }
 
-/// The pinned OverPy decompiler input `customGameSettings.txt` carries
-/// `Workshop Chamber 972777519512064577` under `enabled maps`: a
-/// variant-qualified element resolves to its map key plus the authored
-/// variant ids and emits the qualified spelling back.
 #[test]
 fn variant_qualified_map_list_elements_round_trip() {
     let catalog = catalog();
@@ -258,17 +254,12 @@ fn variant_qualified_map_list_elements_round_trip() {
     assert!(emitted.contains("Workshop Chamber 972777519512064577 972777519512068153"));
     internal::assert_reparse_equivalent(&program, &emitted);
 
-    // Localized emission keeps the authored qualifier: the zh-CN spelling
-    // resolves back to the same key and variant ids.
     let localized = emitter::emit_wir(&program, &catalog, &zh).expect("zh-CN map list");
     assert!(localized.contains("地图工坊室内 972777519512064577"));
     let reparsed = parser::parse_wir(&localized, &catalog, &zh).expect("zh-CN reparses");
     assert!(roundtrip::equivalent_wir(&program, &reparsed));
 }
 
-/// An element whose map part resolves to nothing stays an unknown map,
-/// qualifier or not; a malformed variant qualifier on a resolved map and a
-/// qualifier on a hero list each carry their own precise diagnostic.
 #[test]
 fn map_list_variant_diagnostics_are_precise() {
     use workshop_rs::settings::{Settings, SettingsListElement, SettingsNode, check_emission};
@@ -329,7 +320,6 @@ fn map_list_variant_diagnostics_are_precise() {
                 .contains(&format!("malformed map variant id '{variant}'")),
             "{variant:?}: {errors:?}"
         );
-        // Emission fails the same way (sibling-path agreement).
         let mut program = workshop_rs::Program::new();
         program.settings = Some(settings);
         let emitted = emitter::emit(&program, &catalog(), &en())
@@ -815,8 +805,6 @@ fn settings_schema_normalizes_concept_ids_and_group_targets() {
         .iter()
         .find(|definition| definition.path() == "gamemodes.general.heroLimit")
         .expect("general mode-group setting");
-    // `gamemodes.general` leaves only exist as inherited members under each
-    // mode — the target is a mode, not the global scope.
     assert_eq!(general.target_kind(), SettingTargetKind::Mode);
     assert_eq!(
         general
@@ -1322,8 +1310,6 @@ fn declared_modes_inherit_general_settings_entries() {
         span: None,
     };
 
-    // The opy-rs #411 reproducer shape: `enableKillCam` is a `general` leaf
-    // that every declared mode inherits.
     let settings = Settings {
         span: None,
         children: vec![
@@ -1365,8 +1351,6 @@ fn declared_modes_inherit_general_settings_entries() {
     let kill_cam = emitted.find("Kill Cam: Off").expect("Kill Cam: Off");
     assert!(deathmatch < kill_cam, "{emitted}");
 
-    // `elimination` inherits only the reviewed key subset: `enableKillCam`
-    // resolves, a non-inherited `general` leaf does not.
     let settings = Settings {
         span: None,
         children: vec![group(
@@ -1464,8 +1448,6 @@ fn check_emission_mirrors_emitter_acceptance() {
     );
 }
 
-/// workshop-rs#360 reproducer: the raw Workshop settings block where only the
-/// marked key and map spelling differ between the three reported cases.
 fn issue_360_source(key: &str, map: &str) -> String {
     format!(
         r#"settings
@@ -1524,8 +1506,6 @@ fn issue_360_exact_spellings_pass_check_and_compile() {
 
 #[test]
 fn issue_360_settings_names_match_case_insensitively() {
-    // The client accepts case variants (Deltinteger/OverPy decompilers match
-    // case-insensitively): `Enabled Maps` must not be rejected or warned.
     for (key, map) in [
         ("Enabled Maps", "Château Guillard"),
         ("ENABLED MAPS", "CHÂTEAU GUILLARD"),
@@ -1575,8 +1555,6 @@ fn issue_360_distant_and_ambiguous_spellings_suggest_nothing() {
             .all(|diagnostic| diagnostic.suggestion.is_none())
     );
 
-    // Ambiguous spelling: `Team 1` and `Team 2` tie on `Team X` in the
-    // heroes namespace, so no suggestion is emitted.
     let ambiguous = r#"settings
 {
     heroes
@@ -1765,9 +1743,6 @@ fn typed_uncatalogued_members_localize_catalogued_keys_only() {
 
 #[test]
 fn issue_412_catalogued_key_block_round_trips_as_written() {
-    // A block under a catalogued non-list key carries an undeclared value:
-    // the pinned source compilers emit this shape, so parse, check, and
-    // emit treat it as an opaque block under the key's display name.
     let source = r#"settings
 {
     lobby
@@ -1866,11 +1841,6 @@ fn issue_412_catalogued_key_block_emits_the_display_name() {
 
 #[test]
 fn issue_417_pass_through_groups_emit_verbatim_at_resolved_positions() {
-    // `SettingsNode::RawGroup` marks a non-scalar member as pass-through:
-    // the emitter writes the authored name and block verbatim at positions
-    // where a plain `Group` is name-resolved or kind-checked. Matches the
-    // pinned oracle's output for `heroes.allTeams.general` members and an
-    // inapplicable catalogued key.
     use workshop_rs::settings::{Settings, SettingsNode};
 
     let raw = |name: &str| SettingsNode::Raw {
@@ -2322,8 +2292,6 @@ fn typed_member_emission_keeps_missing_locale_mapping_and_fallback_reporting() {
 #[test]
 fn misspelled_declared_members_warn_with_the_nearest_spelling() {
     use workshop_rs::settings::DiagnosticSeverity;
-    // ws-rs#403 rows: an undeclared enum value near a declared member, and an
-    // undeclared list key near a declared key, stay accepted but warn.
     let enum_source = r#"settings
 {
     lobby

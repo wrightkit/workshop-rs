@@ -600,8 +600,6 @@ fn embedded_doctrine_is_an_official_source_only_hero() {
         assert_eq!(ability.name().value().get("en-US"), Some(en));
         assert_eq!(ability.name().value().get("zh-CN"), Some(zh_cn));
     }
-    // doctrine is absent from the pinned workshop-data export; every fact on
-    // the record is official-source-only.
     for source_record in doctrine.sources().iter().chain(doctrine.name().sources()) {
         assert_eq!(source_record.source, OFFICIAL_HERO_SOURCE);
     }
@@ -644,8 +642,6 @@ fn embedded_records_keep_pinned_source_metadata_on_every_fact() {
             if source_record.source == SOURCE {
                 assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-10-06"));
             } else {
-                // doctrine is absent from the pinned export; its hero-level
-                // records are official-source-only.
                 assert_eq!(hero.id().as_str(), "doctrine");
                 assert_eq!(source_record.source, OFFICIAL_HERO_SOURCE);
             }

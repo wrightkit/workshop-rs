@@ -1,17 +1,6 @@
-//! Catalog identity tests (ADR-0001 Decision 5): the machine-readable
-//! identities — implementation version, catalog version + content digest,
-//! locale coverage, target source — and the deliberate-change pinning of
-//! the committed dataset digest.
-
 use crate::common::zh;
 use workshop_rs::catalog::{Catalog, Locale};
 
-/// The pinned digest of the committed catalog dataset (version 0.1.14).
-///
-/// Any dataset change (entries, aliases, locale tables, provenance, target)
-/// changes the content digest, and this test fails until the pipeline
-/// (`workshop-catalog-gen build`) recomputes it and the pin is updated
-/// deliberately together with the data.
 const PINNED_CATALOG_DIGEST: &str =
     "eb7519fe02784d5163ba42e5fc0925be7f4ff955a2143070c53528bfc8d9711b";
 

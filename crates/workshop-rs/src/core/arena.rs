@@ -1,61 +1,41 @@
-//! Arena/index-based storage.
-//!
-//! An [`Arena`] is an append-only vector of nodes addressed by typed
-//! [`Id<T>`](crate::core::ids::Id) handles. Nodes are never moved after insertion,
-//! so IDs stay stable for the arena's lifetime. Lookup is bounds-checked and
-//! returns `Option`, so a dangling or out-of-range ID surfaces as a
-//! recoverable invariant error instead of a panic.
-
 use super::ids::Id;
 
-/// An append-only store of `T` nodes addressed by [`Id<T>`].
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(crate) struct Arena<T> {
     items: Vec<T>,
 }
 
 impl<T> Arena<T> {
-    /// An empty arena.
     pub(crate) const fn new() -> Self {
         Arena { items: Vec::new() }
     }
 
-    /// Append a node and return its stable ID.
     pub(crate) fn push(&mut self, value: T) -> Id<T> {
         let id = Id::from_index(self.items.len());
         self.items.push(value);
         id
     }
 
-    /// Borrow the node with the given ID, or `None` when the ID is out of
-    /// range (a dangling reference).
     pub(crate) fn get(&self, id: Id<T>) -> Option<&T> {
         self.items.get(id.index())
     }
 
-    /// Mutably borrow the node with the given ID, or `None` when the ID is
-    /// out of range.
     pub(crate) fn get_mut(&mut self, id: Id<T>) -> Option<&mut T> {
         self.items.get_mut(id.index())
     }
 
-    /// Iterate over all nodes in insertion order.
     pub(crate) fn iter(&self) -> impl Iterator<Item = &T> {
         self.items.iter()
     }
 
-    /// The number of nodes.
     pub(crate) fn len(&self) -> usize {
         self.items.len()
     }
 
-    /// Whether the arena is empty.
     pub(crate) fn is_empty(&self) -> bool {
         self.items.is_empty()
     }
 
-    /// True when `id` is within this arena's range (it may still refer to a
-    /// node; see [`get`](Arena::get)).
     pub(crate) fn contains(&self, id: Id<T>) -> bool {
         id.index() < self.items.len()
     }

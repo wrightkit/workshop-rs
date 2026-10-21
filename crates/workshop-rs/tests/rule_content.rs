@@ -1,9 +1,3 @@
-//! Contract tests for the `workshop-rs/rule-content-v1` structured export.
-//!
-//! Each node form in the published schema gets coverage here, and the
-//! variant table below fails to compile or to match when a `Value` or
-//! `Action` variant is added without a node form.
-
 use serde_json::{Value as JsonValue, json};
 use sha2::{Digest, Sha256};
 use workshop_rs::catalog::Kind;
@@ -61,10 +55,6 @@ fn assert_rejects(document: &JsonValue) {
     );
 }
 
-/// The `Value` shape the parser stores for a bare member spelling that
-/// matched more than one enum domain and no signature pinned: a
-/// `__ambiguous_enum` call carrying the authored spelling and every
-/// candidate's `Enum` identity.
 fn ambiguous_value(spelling: &str, candidates: &[(&str, &str)]) -> Value {
     Value::call(
         "__ambiguous_enum",
@@ -83,7 +73,6 @@ fn ambiguous_value(spelling: &str, candidates: &[(&str, &str)]) -> Value {
     )
 }
 
-/// One condition per `Value` node form the schema defines.
 fn node_forms_rule() -> Rule {
     Rule::new("node forms", Event::Global)
         .condition(Condition::new(Value::from(1.5)))
@@ -174,7 +163,6 @@ fn variable_and_subroutine_names_use_tagged_nodes() {
     );
 }
 
-/// One action per `Action` node form the schema defines.
 fn action_forms_rule() -> Rule {
     Rule::new("action forms", Event::Global)
         .action(Action::SetGlobalVariable {
@@ -350,8 +338,6 @@ fn every_action_form_appears_in_a_rendered_rule() {
     );
 }
 
-/// The structural catalog ids a `rule-content-v1` document can emit as a
-/// `{"call": id, "args": [...]}` node.
 const STRUCTURAL_CALL_IDS: &[&str] = &[
     "setGlobalVariable",
     "modifyGlobalVariable",
@@ -369,9 +355,6 @@ const STRUCTURAL_CALL_IDS: &[&str] = &[
 
 #[test]
 fn every_emitted_structural_call_matches_its_lookup_signature_arity() {
-    // workshop-rs#496: `Catalog::lookup` names the argument at each position
-    // of a `rule-content-v1` call, so a structural signature must declare
-    // exactly one parameter per emitted argument.
     let catalog = catalog();
     let content = content_of(&action_forms_rule());
     let mut covered = std::collections::BTreeSet::new();
@@ -411,9 +394,6 @@ fn every_emitted_structural_call_matches_its_lookup_signature_arity() {
     );
 }
 
-/// One hand-written en-US surface call per catalog action whose lookup
-/// signature folds surface parameters into a single `rule-content-v1`
-/// variable-target argument (workshop-rs#503).
 const FOLDED_TARGET_SOURCE: &str = r#"variables {
     global:
         0: probe_g
@@ -442,10 +422,6 @@ rule ("fold") {
 }
 "#;
 
-/// `(catalog id, emitted call id, emitted arg count)` in
-/// `FOLDED_TARGET_SOURCE` order — the arg counts are what the signature's
-/// fold facts must predict: each fold group contributes one argument where
-/// its first member sits.
 const FOLDED_TARGET_CALLS: &[(&str, &str, usize)] = &[
     ("setGlobalVariableAtIndex", "setGlobalVariableAtIndex", 3),
     ("setPlayerVariableAtIndex", "setPlayerVariableAtIndex", 3),
@@ -471,12 +447,6 @@ const FOLDED_TARGET_CALLS: &[(&str, &str, usize)] = &[
     ),
 ];
 
-/// The `globalVariable`/`playerVariable` node a signature's fold facts
-/// describe, built from the signature alone: every parameter declaring a
-/// `fold` supplies `args[arg]` of the folded call — a `Variable`-typed
-/// parameter as the tagged `{"variable": name}` node bound to the declared
-/// variable name, any other parameter as a value node (the fixture's
-/// `Event Player` renders as the `eventPlayer` call).
 fn folded_target(signature: &Signature) -> Option<JsonValue> {
     let mut call = None;
     let mut args: Vec<JsonValue> = Vec::new();
@@ -518,11 +488,6 @@ fn folded_target(signature: &Signature) -> Option<JsonValue> {
 
 #[test]
 fn folded_variable_target_signatures_describe_the_content_layout() {
-    // workshop-rs#503: `paramContent` fold facts must name every action
-    // whose surface parameters fold into one `rule-content-v1` variable
-    // target, and the folded argument must be derivable from the lookup
-    // signature alone — a consumer reconstructing the content argument
-    // layout needs no parse-path knowledge.
     let catalog = catalog();
     let mut folded: Vec<&str> = catalog
         .entries_of(Kind::Action)
@@ -573,8 +538,6 @@ fn folded_variable_target_signatures_describe_the_content_layout() {
             *arg_count,
             "{id}: the fold facts must predict the emitted argument count"
         );
-        // The folded target occupies the position of the group's first
-        // member — parameter 0 for every folded action.
         assert_eq!(
             args[0], target,
             "{id}: the signature's fold facts must derive the emitted target node"
@@ -686,10 +649,6 @@ fn modify_op_and_event_kind_catalog_ids_are_public() {
     );
 }
 
-/// The `(kind, entry id, parameter index)` positions whose `paramContent`
-/// `operations` fact lists the accepted modify-operator call ids —
-/// workshop-rs#504: the operand is a zero-argument `rule-content-v1`
-/// operator call, so these positions declare no enum domain.
 const OPERATION_FACT_POSITIONS: &[(Kind, &str, usize)] = &[
     (Kind::Action, "modifyGlobalVariable", 1),
     (Kind::Action, "modifyGlobalVariableAtIndex", 2),
@@ -735,8 +694,6 @@ fn modify_operations_are_operator_call_ids_not_enum_members() {
          parameters — a new operator-typed parameter needs coverage"
     );
 
-    // Every declared position lists exactly the `ModifyOp` catalog ids —
-    // the modify operators, never a comparison operator or another call.
     let modify_ops: Vec<&str> = {
         let mut ids = [
             ModifyOp::Add,
@@ -786,8 +743,6 @@ fn modify_operations_are_operator_call_ids_not_enum_members() {
     );
 }
 
-/// Rendered `rule-content-v1` node for one parsed source rule's first
-/// action.
 fn first_action_content(source: &str) -> JsonValue {
     let rule = parse_rule(source);
     let content = content_of(&rule);
@@ -797,10 +752,6 @@ fn first_action_content(source: &str) -> JsonValue {
 
 #[test]
 fn every_modify_operation_spelling_parses_emits_and_renders_its_call_id() {
-    // workshop-rs#504: the accepted operand spellings come from the lookup
-    // signature's `paramContent` `operations` fact, and every one parses,
-    // emits, reparses, and renders as a zero-argument call named by its
-    // catalog operator id — the consumer needs no enum domain.
     let catalog = catalog();
     for (action, surface) in [
         (
@@ -865,7 +816,6 @@ fn every_modify_operation_spelling_parses_emits_and_renders_its_call_id() {
     }
 }
 
-/// Both variable-read forms inside a comparison call.
 fn variable_reads_rule() -> Rule {
     Rule::new("reads", Event::Global).condition(Condition::new(Value::call(
         "==",
@@ -897,7 +847,6 @@ fn variable_reads_render_as_reserved_calls() {
     );
 }
 
-/// A parsed rule covering receiver-call values, enum domains, and `Null`.
 const REPEL_SOURCE: &str = r#"rule ("repel") {
     event {
         Ongoing - Each Player;
@@ -971,14 +920,11 @@ fn output_is_deterministic_and_flat() {
     let first = content_of(&program.rules[0]);
     let second = content_of(&program.rules[0]);
     assert_eq!(first, second);
-    // Index i in actions is Rule.actions[i]: the If body does not nest.
     assert_eq!(first["actions"].as_array().expect("actions").len(), 3);
 }
 
 #[test]
 fn every_value_variant_has_a_node_form() {
-    // Exhaustive over the public `Value` enum: a new variant that lacks a
-    // node form stops compiling here instead of rendering silently wrong.
     let forms = |value: &Value| match value {
         Value::Number(_) | Value::String(_) | Value::Bool(_) | Value::Null => "literal",
         Value::LocalizedString(_) => "localizedString",
@@ -1107,9 +1053,6 @@ fn parsed_program_rules_render_through_the_public_api() {
     );
 }
 
-/// The schema's reserved call ids: `memberAccess` as an `assignMember`
-/// target, the parser-preserved `rawWorkshopAction` residual, and an
-/// operator token used as a call.
 fn reserved_ids_rule() -> Rule {
     let member = Value::call(
         "memberAccess",
@@ -1134,10 +1077,6 @@ fn reserved_ids_rule() -> Rule {
 
 #[test]
 fn documented_reserved_ids_render_for_member_access_and_opaque_residuals() {
-    // `receiver.member[i]` renders as `memberAccess` — the target an
-    // `assignMember`/`modifyMember` action carries, and any member read
-    // position. `rawWorkshopAction` is the parser-preserved opaque action.
-    // An operator token used as a call renders as an arithmetic helper call.
     let content = content_of(&reserved_ids_rule());
     assert_eq!(
         content["conditions"][0]["value"],
@@ -1168,8 +1107,6 @@ fn documented_reserved_ids_render_for_member_access_and_opaque_residuals() {
 
 #[test]
 fn a_non_finite_number_never_reaches_the_document() {
-    // NaN/Infinity have no JSON literal; the format rejects them rather than
-    // serializing `null` or a non-standard token.
     for number in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
         let rule =
             Rule::new("non-finite", Event::Global).condition(Condition::new(Value::from(number)));
@@ -1189,11 +1126,6 @@ fn internal_sentinels_never_reach_the_document() {
     assert!(error.to_string().contains("__ambiguous_enum"), "{error}");
 }
 
-/// The ambiguous spellings of `practice-range` rules "Cover values 74" and
-/// "Cover enums 83", minimized (source: wrightkit/practice-range revision
-/// `6e5ecc6`, `generated/en-US/practice-range.ow`). `Set Global Variable`
-/// and `createIcon` pin no domain at these positions, so the bare `Up` and
-/// `Left` spellings stay ambiguous (#124, #201).
 const AMBIGUOUS_MEMBERS_SOURCE: &str = r#"variables {
     global:
         0: probe
@@ -1244,9 +1176,6 @@ fn a_preserved_ambiguous_member_renders_its_spelling_and_candidates() {
 
 #[test]
 fn a_context_pinned_ambiguous_member_renders_a_plain_enum_node() {
-    // The same `Left` spelling inside `Create Progress Bar HUD Text`
-    // resolves to `HudPosition.LEFT` because the signature pins the position
-    // parameter to the HudPosition domain (#124).
     let source = r#"rule ("pinned member") {
     event {
         Ongoing - Global;
@@ -1263,8 +1192,6 @@ fn a_context_pinned_ambiguous_member_renders_a_plain_enum_node() {
     );
 }
 
-/// Replace every `ambiguous` spelling with `null` so two locale documents
-/// compare on their canonical content alone.
 fn strip_ambiguous_spelling(node: &mut JsonValue) {
     match node {
         JsonValue::Object(map) => {
@@ -1293,8 +1220,6 @@ fn ambiguous_member_content_is_identical_across_locales_except_the_spelling() {
 
     let english_content = content_of(&english.rules[0]);
     let chinese_content = content_of(&chinese.rules[0]);
-    // The authored spelling is the one locale-dependent field: every
-    // candidate identity stays canonical.
     assert_eq!(
         english_content["actions"][0]["args"][1]["ambiguous"],
         json!("Up")
@@ -1335,8 +1260,6 @@ fn malformed_ambiguous_sentinels_fail_the_render() {
     }
 }
 
-/// All four chase actions: the player forms fold the `(player, variable)`
-/// pair into a `PlayerVariable` first argument under the global WIR name.
 const CHASE_SOURCE: &str = r#"variables {
     global:
         0: probe_g
@@ -1361,9 +1284,6 @@ rule ("chase") {
 
 #[test]
 fn player_variable_chases_emit_their_catalog_call_ids() {
-    // A chase whose target is a player variable is named by its own catalog
-    // id, like `setPlayerVariableAtIndex`; the folded `playerVariable`
-    // target stays the first argument. Global chases keep their ids.
     let catalog = catalog();
     let english = parser::parse(CHASE_SOURCE, &catalog, &en()).expect("en-US parses");
     let content = content_of(&english.rules[0]);
@@ -1404,7 +1324,6 @@ fn player_variable_chases_emit_their_catalog_call_ids() {
     assert_eq!(content_of(&chinese.rules[0]), content);
 }
 
-/// Every `call` id in the document, in traversal order.
 fn call_ids(node: &JsonValue, calls: &mut Vec<String>) {
     match node {
         JsonValue::Object(map) => {
@@ -1424,8 +1343,6 @@ fn call_ids(node: &JsonValue, calls: &mut Vec<String>) {
     }
 }
 
-/// The call ids the schema's `CallId` description reserves for constructs
-/// the catalog does not name.
 const RESERVED_CALL_IDS: &[&str] = &[
     GLOBAL_VARIABLE_CALL,
     PLAYER_VARIABLE_CALL,
@@ -1442,10 +1359,6 @@ const RESERVED_CALL_IDS: &[&str] = &[
 
 #[test]
 fn every_emitted_call_id_resolves_to_its_catalog_entry() {
-    // ADR-0024: every content call id is a public catalog id — a consumer
-    // labels a call by looking its id up. An id that resolves through
-    // `Catalog::lookup` to a different entry, or to nothing, means an
-    // internal name leaked into the document.
     let catalog = catalog();
     let english = en();
     let mut calls = Vec::new();
@@ -1481,10 +1394,6 @@ fn every_emitted_call_id_resolves_to_its_catalog_entry() {
     }
 }
 
-/// The pinned `practice-range` modes (provenance in
-/// `fixtures/practice-range/README.md`): generated coverage of every catalog
-/// action, value, operator, enum member, and event, so every `Value`/`Action`
-/// shape a real `Program` produces must reach a document.
 const PRACTICE_RANGE_MODES: &[(&str, &str, &str)] = &[
     (
         "en-US",
@@ -1498,7 +1407,6 @@ const PRACTICE_RANGE_MODES: &[(&str, &str, &str)] = &[
     ),
 ];
 
-/// Every `ambiguous` node key in a rendered document.
 fn count_ambiguous_nodes(node: &JsonValue) -> usize {
     match node {
         JsonValue::Object(map) => {
@@ -1512,9 +1420,6 @@ fn count_ambiguous_nodes(node: &JsonValue) -> usize {
 
 #[test]
 fn every_practice_range_rule_renders_a_valid_document() {
-    // `Rule::content` succeeds on every rule of a `Program` that parses and
-    // validates: rules "Cover values 74" and "Cover enums 83" carry the bare
-    // `Up`/`Down`/`Left`/`Right` members that previously failed the render.
     let validator = schema();
     for (locale_tag, file, sha256) in PRACTICE_RANGE_MODES {
         let path = fixture("practice-range", file);
@@ -1549,8 +1454,6 @@ fn every_practice_range_rule_renders_a_valid_document() {
             ambiguous_nodes > 0,
             "{file} must exercise the ambiguous node form"
         );
-        // The rules the Issue names: the bare `Up`/`Down`/`Left`/`Right`
-        // members that failed the render before this node form.
         for name in ["Cover values 74", "Cover enums 83"] {
             let rule = program
                 .rules

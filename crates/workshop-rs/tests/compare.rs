@@ -1,9 +1,3 @@
-//! Behavioral comparison (`compare::equivalent` / `compare::difference`):
-//! the Workshop→source-language reconstruction contract. Every allowed
-//! difference gets an equality case; every compared element gets a negative
-//! case; and strict `roundtrip::equivalent` must imply behavioral
-//! equivalence.
-
 use super::common;
 use workshop_rs::compare::{self, DeclarationTable, Difference, DifferenceKind, PathStep};
 use workshop_rs::{emitter, parser, roundtrip};
@@ -42,8 +36,6 @@ fn identical_programs_are_equivalent() {
     assert!(compare::equivalent(&program, &program));
     assert!(compare::difference(&program, &program).is_none());
 }
-
-// ── allowed differences ──────────────────────────────────────────────
 
 #[test]
 fn rule_names_do_not_matter() {
@@ -178,8 +170,6 @@ rule ("sub two") {
     actions { Set Global Variable(x, 2); }
 }
 "#;
-    // Subroutine rules may move relative to each other and past ordered
-    // rules; each still binds the same subroutine index.
     let second = r#"variables {
     global:
         0: x
@@ -328,8 +318,6 @@ rule(\"r\"){event{Ongoing - Global;}actions{Wait(1, Ignore Condition);}}
     assert_equivalent(&first, second);
 }
 
-// ── compared elements: each changed element must be a difference ─────
-
 #[test]
 fn settings_difference_is_reported() {
     let first = "settings { main { Description: \"first\" } }\n".to_owned()
@@ -360,8 +348,6 @@ fn declaration_table_index_sets_matter() {
 
 #[test]
 fn variable_index_binding_differs() {
-    // Same names, different name → index bindings: `a` is index 0 in the
-    // first program and index 1 in the second.
     let declarations = |order: &str| format!("variables {{\n    global:\n{order}}}\n");
     let body = rules_only("    actions { Set Global Variable(a, 1); }");
     let first = declarations("        0: a\n        1: b\n") + &body;
@@ -392,8 +378,6 @@ fn rule_order_matters() {
 
 #[test]
 fn initializer_rules_keep_their_position() {
-    // A Global Ongoing rule that initializes variables must not float: the
-    // relative order of non-subroutine rules is behavioral.
     let init = r#"rule ("init") {
     event { Ongoing - Global; }
     actions {
@@ -666,8 +650,6 @@ fn subroutine_rule_body_difference_is_reported() {
 
 #[test]
 fn a_subroutine_rule_is_not_an_ordered_rule() {
-    // A subroutine-event rule cannot stand in for a global rule: the
-    // effective ordered-rule lists differ.
     let subroutines = "subroutines {\n    0: setup\n}\n";
     let first = subroutines.to_owned()
         + "rule (\"s\") {\n    event { Subroutine; setup; }\n    actions { Wait(1, Ignore Condition); }\n}\n"
@@ -858,8 +840,6 @@ fn action_name_difference_is_reported() {
 
 #[test]
 fn difference_reports_positions_skipping_inert_rules() {
-    // A disabled and an empty rule occupy positions 0 and 1; the first
-    // effective difference lands on the rule positions themselves.
     let declarations = "variables {\n    global:\n        0: x\n}\n";
     let inert = "disabled rule (\"d\") {\n    event { Ongoing - Global; }\n    actions { Wait(1, Ignore Condition); }\n}\nrule (\"empty\") {\n    event { Ongoing - Global; }\n    actions { }\n}\n";
     let first =
@@ -927,14 +907,10 @@ fn member_access_spelling_binds_by_index() {
         );
         program
     };
-    // `memberAccess(player, "name")` resolves the name through its own
-    // program's table: same index, different name — equivalent.
     let variable_read = program("p", false);
     let member_read = program("renamed", true);
     assert!(compare::equivalent(&variable_read, &member_read));
     assert!(compare::equivalent(&member_read, &variable_read));
-    // …and different indices are a difference: both programs declare index
-    // set [0, 1], but the reads bind different ones.
     let mut variable_read = Program::default();
     variable_read
         .global_variables
@@ -977,8 +953,6 @@ fn member_access_spelling_binds_by_index() {
         }
     );
 }
-
-// ── the strict comparator implies the behavioral one ─────────────────
 
 #[test]
 fn strict_equivalence_implies_behavioral_equivalence() {

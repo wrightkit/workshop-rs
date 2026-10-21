@@ -97,9 +97,6 @@ fn scope_for(path: &[PathPart<'_>]) -> SettingScope {
 
 fn target_for(path: &[PathPart<'_>]) -> TargetPattern {
     match path {
-        // `gamemodes.general` leaves exist only as inherited members under
-        // each mode — there is no literal `general` group in source, so the
-        // target is a mode, not the global scope.
         [PathPart::Part("gamemodes"), PathPart::Part("general"), ..] => TargetPattern::Mode(None),
         [PathPart::Part("gamemodes"), PathPart::Part(mode), ..] => {
             TargetPattern::Mode(Some((*mode).to_string()))

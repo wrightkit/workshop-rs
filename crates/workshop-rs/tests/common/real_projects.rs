@@ -1,32 +1,18 @@
-//! Owner-controlled expectations for the pinned real-project Workshop corpus.
-//!
-//! This is a test-support contract, not a conformance result or evidence
-//! report. It contains only the current owner-defined input identities and
-//! admitted Workshop semantic gaps. Consumers can use it to select and
-//! validate the same inputs without maintaining a second expectation list.
-
 use workshop_rs::WorkshopError;
 use workshop_rs::rules::{IncompletenessKind, ResidualClassification, SemanticIssue};
 
-/// The schema version of [`REAL_PROJECT_EXPECTATION`].
 pub(crate) const REAL_PROJECT_EXPECTATION_SCHEMA_VERSION: u32 = 1;
 
-/// The stable identity of the pinned real-project source corpus.
 pub(crate) const REAL_PROJECT_CORPUS_ID: &str = "raw-workshop-real-projects/v1";
 
-/// The stage at which an admitted real-project gap is observed.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum RealProjectStage {
-    /// Canonical builtin references are validated after parsing.
     CanonicalValidation,
-    /// Canonical WIR is emitted back to Workshop text.
     Emission,
-    /// Source text is converted to the other supported locale.
     LocaleConversion,
 }
 
 impl RealProjectStage {
-    /// Return the stable machine-readable stage name.
     pub(crate) const fn as_str(self) -> &'static str {
         match self {
             Self::CanonicalValidation => "canonical-validation",
@@ -36,15 +22,12 @@ impl RealProjectStage {
     }
 }
 
-/// The Workshop error identity admitted for a real-project stage gap.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum RealProjectGapKind {
-    /// An action spelling is not present in the canonical Workshop catalog.
     UnknownAction,
 }
 
 impl RealProjectGapKind {
-    /// Return the stable machine-readable error kind name.
     pub(crate) const fn as_str(self) -> &'static str {
         match self {
             Self::UnknownAction => "action",
@@ -52,49 +35,32 @@ impl RealProjectGapKind {
     }
 }
 
-/// An admitted semantic residual for one real-project source case.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct RealProjectResidualExpectation {
-    /// The semantic issue kind reported by [`workshop_rs::rules::inspect`].
     pub(crate) kind: IncompletenessKind,
-    /// The locale-independent Workshop identity of the residual.
     pub(crate) identity: &'static str,
-    /// The owner-defined classification of the residual.
     pub(crate) classification: ResidualClassification,
 }
 
-/// An admitted Workshop error for one real-project processing stage.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct RealProjectGapExpectation {
-    /// The processing stage where the error is admitted.
     pub(crate) stage: RealProjectStage,
-    /// The structured Workshop error kind.
     pub(crate) kind: RealProjectGapKind,
-    /// The localized spelling or identity carried by the error.
     pub(crate) identity: &'static str,
-    /// The owner-defined classification corresponding to this gap.
     pub(crate) classification: ResidualClassification,
 }
 
-/// The pinned source identity and owner-defined expectation for one real-project case.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct RealProjectCaseExpectation {
-    /// Stable case identity.
     pub(crate) id: &'static str,
-    /// Source locale of the pinned Workshop input.
     pub(crate) locale: &'static str,
-    /// Crate-relative path to the pinned source input.
     pub(crate) source_fixture: &'static str,
-    /// SHA-256 digest of [`Self::source_fixture`].
     pub(crate) source_sha256: &'static str,
-    /// Semantic residuals admitted for this case at every inspection stage.
     pub(crate) residuals: &'static [RealProjectResidualExpectation],
-    /// Stage-specific Workshop errors admitted for this case.
     pub(crate) gaps: &'static [RealProjectGapExpectation],
 }
 
 impl RealProjectCaseExpectation {
-    /// Whether the inspected semantic issue is admitted for this case.
     pub(crate) fn admits_residual(&self, issue: &SemanticIssue) -> bool {
         self.residuals.iter().any(|expected| {
             expected.kind == issue.kind
@@ -103,7 +69,6 @@ impl RealProjectCaseExpectation {
         })
     }
 
-    /// Whether the error is an owner-admitted gap at the given stage.
     pub(crate) fn admits_gap(&self, stage: RealProjectStage, error: &WorkshopError) -> bool {
         self.gaps.iter().any(|expected| {
             expected.stage == stage
@@ -119,15 +84,10 @@ impl RealProjectCaseExpectation {
     }
 }
 
-/// The owner-controlled real-project expectation contract consumed by the
-/// harness and downstream conformance tests.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct RealProjectExpectation {
-    /// Contract schema version.
     pub(crate) schema_version: u32,
-    /// Stable identity of the source corpus.
     pub(crate) corpus_id: &'static str,
-    /// The complete current real-project case inventory and expectations.
     pub(crate) cases: &'static [RealProjectCaseExpectation],
 }
 
@@ -181,7 +141,6 @@ const DEFEND_GAPS: &[RealProjectGapExpectation] = &[
     },
 ];
 
-/// The single authoritative real-project case and expectation definition.
 pub(crate) const REAL_PROJECT_EXPECTATION: RealProjectExpectation = RealProjectExpectation {
     schema_version: REAL_PROJECT_EXPECTATION_SCHEMA_VERSION,
     corpus_id: REAL_PROJECT_CORPUS_ID,

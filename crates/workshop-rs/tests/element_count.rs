@@ -266,11 +266,6 @@ fn player_variable_targets_count_nontrivial_player_expressions() {
     assert_eq!(report.total, 11);
 }
 
-/// Workshop text compiled by pinned OverPy 9.7.10 with `#!debugElementCount`, and
-/// the total that compiler reports. On a production project OverPy's total is
-/// within 0.01% of the client's; each program here isolates one rule of the model. OverPy also closes the last `If`
-/// of a subroutine rule with an `End`, which the canonical emitter omits, so no case
-/// with such a rule is listed.
 const OVERPY_COUNTS: &[(&str, usize, &str)] = &[
     (
         "wait_number",
@@ -470,7 +465,6 @@ fn a_written_and_an_omitted_trailing_end_are_one_program_with_one_cost() {
     let written = parser::parse(&rule("End;"), &catalog, &locale).unwrap();
     let omitted = omitted.element_count(&catalog).unwrap().total;
     assert_eq!(omitted, written.element_count(&catalog).unwrap().total);
-    // rule 1 + If 1 + its condition 0 + Wait (1 + number 1 + behavior 0); no `End`
     assert_eq!(omitted, 4);
 }
 
@@ -488,10 +482,8 @@ fn only_the_last_action_of_a_rule_is_closed_without_end() {
             .unwrap()
             .total
     };
-    // the middle `If` and a nested last `If` keep their `End`
     assert_eq!(count("If(True); End; Wait(1, Ignore Condition);"), 5);
     assert_eq!(count("If(True); If(True); End; End;"), 4);
-    // a loop keeps its `End` even as the last action
     assert_eq!(count("While(True); End;"), 3);
 }
 

@@ -71,9 +71,6 @@ impl<'a> EmitContext<'a> {
         Ok(())
     }
 
-    /// Emit one `…;` condition line at `level`. Reference normalization:
-    /// comparison conditions render infix; other conditions render as
-    /// `value == True`. The `disabled` modifier prefixes the line.
     pub(crate) fn condition(&mut self, condition: &wir::Condition, level: usize) -> Result<()> {
         let condition_value = condition.value;
         let comparison = match self

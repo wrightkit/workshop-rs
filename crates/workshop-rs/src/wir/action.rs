@@ -73,9 +73,6 @@ pub(crate) enum Action {
         span: Option<Span>,
         target_span: Option<Span>,
     },
-    /// An action carrying the `disabled` modifier: the wrapped action stays
-    /// in the program but does not execute. For a control-flow group the
-    /// modifier applies to the group header; the body is unchanged.
     Disabled {
         action: ActionId,
         span: Option<Span>,

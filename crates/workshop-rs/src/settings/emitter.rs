@@ -243,9 +243,6 @@ impl EmitContext<'_> {
                     self.line(level, &format!("{display_name}: {value}"))
                 };
             }
-            // A block is carried as written: under an uncatalogued key
-            // verbatim, and under a catalogued key as an undeclared value
-            // with the key's display name (#412).
             (SettingsNode::Group { children, .. }, entry) => {
                 let block_name = match entry {
                     Some(entry) => self.member_display_name(&full, hero, entry)?,
@@ -344,10 +341,6 @@ impl EmitContext<'_> {
                 if let Some(name) = table::hero_setting_name(hero, key, self.locale.as_str()) {
                     name.to_string()
                 } else if let Some(slot) = table::ability_slot_for_path(full) {
-                    // A hero without a generated settings row has no reviewed
-                    // per-hero label: substitute the gameplay ability name
-                    // into the `%1$s` template the export carries (emitting
-                    // the template literally would produce unparseable `$`).
                     let ability =
                         self.gameplay_setting_name(hero, slot, &table::path_string(full))?;
                     match table::hero_key_template(key).or_else(|| {

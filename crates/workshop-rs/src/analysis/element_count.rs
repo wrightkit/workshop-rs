@@ -1,12 +1,3 @@
-//! Canonical Workshop element-count analysis.
-//!
-//! The calculator operates on the canonical public program, not source-language syntax or
-//! emitted text. Every occurrence of a component costs its base amount at any
-//! nesting depth, direct action and condition arguments cost one less, and
-//! every pair of hero literals in one direct argument adds one. The base costs
-//! and the block-closing rules are documented, with their evidence, in
-//! `docs/element-count.md`.
-
 use std::collections::HashMap;
 use std::fmt;
 
@@ -135,11 +126,7 @@ pub enum ElementCountError {
         reason: String,
     },
     /// The internal graph contains a recursive value or action reference.
-    Cycle {
-        kind: ElementNodeKind,
-        /// The opaque identity of the active node involved in the cycle.
-        id: usize,
-    },
+    Cycle { kind: ElementNodeKind, id: usize },
 }
 
 impl fmt::Display for ElementCountError {
@@ -379,9 +366,6 @@ impl Counter<'_> {
                 ..
             } => {
                 name = "if";
-                // `Else If` and `Else` are actions of their own; so is `End`. The
-                // canonical emitter closes the last action of a rule without its
-                // `End`, and only that one: nested and loop blocks keep theirs.
                 base += branches.len().saturating_sub(1)
                     + usize::from(else_body.is_some())
                     + usize::from(!rule_final);
@@ -471,8 +455,6 @@ impl Counter<'_> {
                         && takes_variable(self.catalog, Kind::Action, action_name));
                     self.push_action_value(&mut children, &mut heroes, *argument)?;
                 }
-                // An omitted argument is still a filled slot; its default is a
-                // direct argument, so it costs its own value minus one.
                 base = (base as isize
                     + omitted_default_cost(
                         self.program,
@@ -504,7 +486,6 @@ impl Counter<'_> {
         id: ValueId,
     ) -> Result<(), ElementCountError> {
         let counted = self.value(id, true)?;
-        // Pairs are counted within each direct argument, not across them.
         *heroes += counted.heroes / 2 * 2;
         children.push(counted.node);
         Ok(())
@@ -550,7 +531,6 @@ impl Counter<'_> {
                 self.value_node(node_id, "global variable", span, base, vec![], 0)
             }
             Value::PlayerVariable { player, .. } => {
-                // A named player variable is two direct arguments (player, name).
                 let base = if variable_name_arg { 0 } else { 2 };
                 self.value_children(node_id, "player variable", span, base, &[*player], None)
             }
@@ -583,10 +563,10 @@ impl Counter<'_> {
                     } else {
                         args.clone()
                     };
-                    let base = if wir::is_comparison_operator(name) {
-                        // The operator is a literal of its own.
-                        2
-                    } else if name == "array" || name == "evaluateOnce" {
+                    let base = if wir::is_comparison_operator(name)
+                        || name == "array"
+                        || name == "evaluateOnce"
+                    {
                         2
                     } else {
                         1
@@ -696,8 +676,6 @@ fn omitted_default_cost(
         .sum()
 }
 
-/// Enum constants the client spells as a value wrapping a literal (`Team(Team 1)`,
-/// `Hero(Ana)`, `Color(White)`, `Button(Reload)`, `Map(...)`) cost both nodes.
 fn literal_enum_cost(value_type: &str) -> usize {
     if matches!(value_type, "Team" | "Hero" | "Color" | "Button" | "Map") {
         2
@@ -706,8 +684,6 @@ fn literal_enum_cost(value_type: &str) -> usize {
     }
 }
 
-/// Whether WIR argument `index` of `args` names a variable instead of
-/// reading one, mapped through the entry's surface signature.
 fn variable_slot(
     program: &wir::Program,
     catalog: &Catalog,
@@ -726,8 +702,6 @@ fn variable_slot(
     })
 }
 
-/// Whether a call declares a parameter that names a variable; the player
-/// and the variable of a player variable are then one WIR argument.
 fn takes_variable(catalog: &Catalog, kind: Kind, name: &str) -> bool {
     catalog.entry(kind, name).is_some_and(|entry| {
         (0..entry.param_count()).any(|index| {
@@ -740,8 +714,6 @@ fn takes_variable(catalog: &Catalog, kind: Kind, name: &str) -> bool {
     })
 }
 
-/// The fixed adjustment the client applies to a Workshop setting value, whose
-/// category, name and bounds are literals that are not separate elements.
 fn workshop_setting_adjustment(name: &str) -> isize {
     match name {
         "workshopSettingInteger"

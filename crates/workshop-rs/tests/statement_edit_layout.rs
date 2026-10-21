@@ -1,7 +1,3 @@
-//! Layout and boundary tests for `Program::edit_statements` (workshop-rs#532):
-//! shared lines, line endings, indentation units, dangling annotations, and
-//! appending past a parser-synthesized `End`.
-
 use serde_json::json;
 use workshop_rs::rules::content::rule_content;
 use workshop_rs::rules::statement_edit::{
@@ -18,7 +14,6 @@ fn layout_conventions_are_kept() {
     let a = StatementList::Actions;
     let node = wait(9.0);
 
-    // Tab indentation and CRLF line endings.
     let crlf = BASE.replace("    ", "\t").replace('\n', "\r\n");
     let out = ok(
         &crlf,
@@ -37,8 +32,6 @@ fn layout_conventions_are_kept() {
         crlf.replace("\t\tWait(2, Ignore Condition); // tail\r\n", "")
     );
 
-    // Disabled statements: replace swaps the whole statement, modifier
-    // included; the export spells a disabled statement with "disabled".
     let source = BASE.replace(
         "Wait(2, Ignore Condition);",
         "Disabled Wait(2, Ignore Condition);",
@@ -53,7 +46,6 @@ fn layout_conventions_are_kept() {
     let out = ok(BASE, a, 1, StatementEdit::Replace(&disabled));
     assert_eq!(lists(&out, "en-US")["actions"][1], disabled);
 
-    // Control flow: a balanced group inserted before an existing statement.
     let group = [
         json!({"call": "if", "args": [true]}),
         wait(1.0),
@@ -99,7 +91,6 @@ fn delete_on_a_shared_line_takes_only_its_own_bytes() {
     let out = ok(&src, a, 0, StatementEdit::Delete);
     assert_eq!(out, actions_source(&format!("        \"next\" {}\n", w(2))));
 
-    // The section's closing brace keeps its line and indentation.
     let src = format!(
         "rule (\"r\") {{\n    event {{\n        Ongoing - Global;\n    }}\n    actions {{ {}\n        {} }}\n}}\n",
         w(1),
@@ -112,7 +103,6 @@ fn delete_on_a_shared_line_takes_only_its_own_bytes() {
     );
     assert_eq!(waits(&lists(&out, "en-US")), [1.0]);
 
-    // CRLF
     let src = src.replace('\n', "\r\n");
     let out = ok(&src, a, 0, StatementEdit::Delete);
     assert_eq!(waits(&lists(&out, "en-US")), [2.0]);
@@ -157,8 +147,6 @@ fn append_to_a_list_ending_in_an_unclosed_if() {
     let src = actions_source("        If(True);\n        Wait(1, Ignore Condition);\n");
     let before = lists(&src, "en-US")["actions"].clone();
     assert_eq!(before.as_array().unwrap().len(), 3, "synthesized End");
-    // Insert at len and at the synthesized End's own index both append
-    // after the last source statement; replace and delete are refused there.
     for index in [2, 3] {
         let out = ok(&src, a, index, StatementEdit::Insert(&[wait(7.0)]));
         let after = lists(&out, "en-US")["actions"].clone();
@@ -195,9 +183,6 @@ fn append_to_the_unclosed_if_rule_of_a_real_project() {
         .unwrap()
         .clone();
     let len = before.len();
-    // The source closes neither `If`: the model's two trailing `End`s are
-    // synthesized, so the source has `len - 2` statements and an append
-    // lands after the last of them, inside both `If` bodies.
     assert_eq!(len, 6);
     assert!(before[len - 2..].iter().all(|node| node["call"] == "end"));
     for index in [len - 2, len - 1, len] {
@@ -241,7 +226,6 @@ fn created_section_follows_the_source_indentation_unit() {
     );
     assert!(!out.contains("\t    "));
 
-    // A rule with no actions section and tab nesting taken from `event`.
     let bare = "rule (\"r\") {\n\tevent {\n\t\tOngoing - Global;\n\t}\n}\n";
     let out = ok(
         bare,
@@ -254,7 +238,6 @@ fn created_section_follows_the_source_indentation_unit() {
         "{out:?}"
     );
 
-    // Two-space nesting is kept; four spaces only when nothing is learnable.
     let two = "rule (\"r\") {\n  event {\n    Ongoing - Global;\n  }\n}\n";
     let out = ok(
         two,
@@ -267,7 +250,6 @@ fn created_section_follows_the_source_indentation_unit() {
         "{out:?}"
     );
 
-    // Appending into an empty existing section follows the same unit.
     let empty = "rule (\"r\") {\n\tevent {\n\t\tOngoing - Global;\n\t}\n\tactions {\n\t}\n}\n";
     let out = ok(
         empty,

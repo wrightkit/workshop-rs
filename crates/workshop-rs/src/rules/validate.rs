@@ -1,6 +1,3 @@
-//! Complete-program canonical validation orchestrated by the Workshop rule
-//! domain.
-
 use crate::catalog::Catalog;
 use crate::core::error::Result;
 use crate::wir;

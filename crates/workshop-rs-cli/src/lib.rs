@@ -20,8 +20,6 @@ pub mod conformance;
 mod corpus;
 pub mod live_capture;
 
-/// The default locale override for parsing when the input locale is not
-/// specified explicitly.
 const USAGE: &str = "\
 usage: workshop-rs-cli <command> [options]
 
@@ -83,8 +81,6 @@ pub fn run(args: Vec<String>) -> i32 {
     }
 }
 
-/// Parsed command arguments: positionals plus declared `--flag value` options
-/// and standalone `--switch` toggles.
 #[derive(Default)]
 struct CliOptions {
     positional: Vec<String>,
@@ -101,7 +97,6 @@ impl CliOptions {
         self.switches.contains(switch)
     }
 
-    /// Exactly `count` positional arguments mapped to paths.
     fn paths(&self, count: usize, missing: &str) -> Result<Vec<PathBuf>, String> {
         if self.positional.len() < count {
             return Err(missing.to_string());
@@ -117,8 +112,6 @@ impl CliOptions {
     }
 }
 
-/// Consume `args`, collecting declared `--flag value` pairs, declared
-/// `--switch` toggles, and positional arguments.
 fn parse_cli(args: Vec<String>, flags: &[&str], switches: &[&str]) -> Result<CliOptions, String> {
     let mut options = CliOptions::default();
     let mut args = args.into_iter();
@@ -137,7 +130,6 @@ fn parse_cli(args: Vec<String>, flags: &[&str], switches: &[&str]) -> Result<Cli
     Ok(options)
 }
 
-/// Unwrap a parsed-CLI result or a command result into a usage/failure exit.
 fn cli_options(args: Vec<String>, flags: &[&str], switches: &[&str]) -> Result<CliOptions, i32> {
     parse_cli(args, flags, switches).map_err(|error| usage_error(&error))
 }
@@ -151,8 +143,6 @@ fn read_file(path: &Path) -> Result<String, String> {
         .map_err(|error| format!("cannot read {}: {error}", path.display()))
 }
 
-/// Resolve the parse locale: an explicit override always wins; otherwise
-/// auto-detect with the documented confidence gate.
 fn resolve_parse_locale(
     input: &str,
     catalog: &Catalog,
@@ -263,9 +253,6 @@ fn convert_command(args: Vec<String>) -> i32 {
     }
 }
 
-/// Print settings warnings — accepted members that are close to a declared
-/// spelling and likely misspelled — to stderr so a command-line user sees
-/// them without the emission failing.
 fn report_settings_warnings(program: &Program) {
     for diagnostic in program.settings_diagnostics() {
         if diagnostic.severity == workshop_rs::settings::DiagnosticSeverity::Warning {
@@ -274,8 +261,6 @@ fn report_settings_warnings(program: &Program) {
     }
 }
 
-/// Report opted-in fallback usage on stderr so the fallback choice is
-/// visible in tooling output (ADR-0001 Decision 7).
 fn report_fallbacks(fallback_ids: &[String]) {
     if fallback_ids.is_empty() {
         return;
@@ -450,7 +435,6 @@ fn seasonal_diff_command(args: Vec<String>) -> i32 {
     0
 }
 
-/// Print a command failure and return exit code 1.
 fn fail(message: impl std::fmt::Display) -> i32 {
     eprintln!("workshop-rs-cli: {message}");
     1

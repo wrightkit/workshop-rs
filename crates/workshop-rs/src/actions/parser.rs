@@ -45,9 +45,6 @@ impl ParseContext<'_> {
         Ok(conditions)
     }
 
-    /// `player, name` — the leading arguments of the player-variable
-    /// assignment/chase forms: a player value and a variable name phrase.
-    /// Returns the player value, variable id, and the name span.
     fn player_variable_arg(&mut self) -> Result<(wir::ValueId, wir::PlayerVarId, Span)> {
         let player = self.value()?;
         self.expect(TokenKind::Comma, "expected ',' after player")?;
@@ -60,8 +57,6 @@ impl ParseContext<'_> {
         ))
     }
 
-    /// `name` — the single argument of the global-variable forms.
-    /// Returns the variable id and the name span.
     fn global_variable_arg(&mut self) -> Result<(wir::GlobalVarId, Span)> {
         let (name, name_start, name_end) = self.phrase()?;
         let variable = self.global_by_name(&name)?;
@@ -243,11 +238,6 @@ impl ParseContext<'_> {
         }
     }
 
-    /// An action-position spelling: the maximal word run, extended through
-    /// an adjacent `.`/`:`/`!` tail when the joined text resolves to a
-    /// declared action or structural entry (`Bekle:`, `Maks.`, #448). The
-    /// tail is consumed only when the whole joined spelling resolves, so a
-    /// `:`/`!` that belongs to syntax stays put.
     fn action_spelling(&mut self) -> Result<(String, Position, Position)> {
         let (phrase, start, end) = self.phrase()?;
         if let Some((joined, joined_end)) =
@@ -258,10 +248,6 @@ impl ParseContext<'_> {
         Ok((phrase, start, end))
     }
 
-    /// Consume the `disabled` modifier if the cursor spells it: the
-    /// structural keyword's catalog/fallback spellings (including multi-word
-    /// and dotted forms like tr `devre dışı` and pl `wył.`) or the settings
-    /// `tokens.disabled` name.
     pub(crate) fn consume_disabled(&mut self) -> bool {
         if self.keyword_prefix(&["disabled"]).is_some() {
             return true;
@@ -283,9 +269,6 @@ impl ParseContext<'_> {
         self.target.actions.push(Action::Disabled { action, span })
     }
 
-    /// The token count of an `eventPlayer` value spelling at the cursor when
-    /// it is followed by `.` — `Event Player` or any reviewed localized
-    /// alias (fr `Joueur exécutant`, tr `Etkinlik Oyuncusu`, zh `事件玩家`).
     fn event_player_spelling_len(&self) -> Option<usize> {
         let mut words = Vec::new();
         let mut offset = 0;
@@ -389,12 +372,6 @@ impl ParseContext<'_> {
         // resolve the word run before `.` against the value catalog rather
         // than matching individual words.
         let Some(event_player_len) = self.event_player_spelling_len() else {
-            // Object/member assignments use the same value grammar as member
-            // reads (`receiver.member` and `receiver.member[index]`). Keep
-            // this native member-assignment form distinct from catalog actions: the
-            // receiver and member are dynamic Workshop values, not a builtin
-            // identity. Global and Event Player assignments are handled by
-            // their dedicated variable paths above and below.
             if !matches!(
                 self.canonical_keyword(&first).as_str(),
                 "Event" | "event" | "Event Player"
@@ -731,10 +708,6 @@ impl ParseContext<'_> {
         Ok(self.target.actions.push(action))
     }
 
-    /// `For Player Variable(player, name, start, stop, step)` — the
-    /// reference's per-player loop form (parsed from pinned reference
-    /// evidence; the differential gate normalizes it to the declared global
-    /// form, #119).
     pub(crate) fn for_player_group(&mut self, start: Position) -> Result<wir::ActionId> {
         self.expect(
             TokenKind::LParen,
@@ -888,13 +861,6 @@ impl ParseContext<'_> {
                         .unknown_at("action", &phrase, start, end)
                         .with_candidates(candidates));
                 };
-                // The player-variable chase forms lay the variable out as
-                // `player, name` leading arguments (the pinned oracle's
-                // spelling, #110); the name is not a value, so the action is
-                // parsed like `Set Player Variable` and reconstructed as the
-                // canonical `chaseAtRate`/`chaseOverTime` call with a
-                // player-variable first argument (the shape the emitter
-                // dispatches on).
                 match action.id.as_str() {
                     "chasePlayerVariableAtRate" | "chasePlayerVariableOverTime" => {
                         self.expect(TokenKind::LParen, "expected '('")?;
@@ -910,10 +876,6 @@ impl ParseContext<'_> {
                                 .with_identifier(name_span),
                             ),
                         );
-                        // The remaining arguments sit at overall argument
-                        // indexes 2.. (player and name consumed indexes 0-1),
-                        // so the signature context resolves their expected
-                        // domains at the shifted positions.
                         let mut arg_index = 2usize;
                         loop {
                             match self.peek() {
@@ -1011,9 +973,6 @@ impl ParseContext<'_> {
 
     pub(crate) fn modify_op(&mut self) -> Result<ModifyOp> {
         let (phrase, start, end) = self.phrase()?;
-        // Operator spellings carry the same punctuation/trailing-space
-        // shapes as other catalog aliases (#448); an adjacent tail is part
-        // of the spelling only when the joined text resolves.
         let (phrase, end) = self
             .extend_entry_spelling(&phrase, end, &[Kind::Operator])
             .unwrap_or((phrase, end));

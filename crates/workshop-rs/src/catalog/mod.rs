@@ -29,7 +29,6 @@ use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::core::signatures::ExpectedDomain;
 
-/// The embedded catalog data.
 pub const CATALOG_DATA: &str = include_str!("data/catalog.json");
 
 /// A normalized Workshop client locale, e.g. `en-US`.
@@ -69,11 +68,8 @@ impl std::fmt::Display for Locale {
 pub enum Kind {
     /// A structural keyword (If, End, Set Global Variable, …).
     Structural = 0,
-    /// An action function.
     Action = 1,
-    /// A value function.
     Value = 2,
-    /// An event.
     Event = 3,
     /// An operator token (comparison operators).
     Operator = 4,
@@ -180,59 +176,18 @@ pub struct ParamContentFold {
 pub struct CatalogEntry {
     pub id: String,
     pub kind: Kind,
-    /// Whether `lookup` reports the entry's call signature and
-    /// `lookup_within` scopes to its parameters. Every action and value is
-    /// callable; a structural entry is callable only when the data declares
-    /// its parameter list (`"params": []` on the zero-argument `else`/`end`
-    /// constructs). Events, operators, and section keywords are not.
     pub(crate) callable: bool,
-    /// Parameter names, when the catalog documents them.
     pub(crate) params: Vec<String>,
-    /// Reviewed semantic names when they differ from the catalog parameters.
     pub(crate) param_names: Option<Vec<String>>,
-    /// Reviewed localized spellings for each parameter, parallel to `params`.
     pub(crate) param_aliases: Vec<HashMap<Locale, Vec<String>>>,
-    /// The localized parameter display name the Workshop editor shows for
-    /// each position, parallel to `params` — the catalog's own
-    /// `paramDisplayNames` section, separate from `paramAliases` (accepted
-    /// parse spellings) and `paramDefaults` (the value applied when an
-    /// argument is omitted). `None` at an index marks a position without a
-    /// source-confirmed name; such positions are recorded explicitly in
-    /// the catalog's `paramDisplayNameGaps` list.
     pub(crate) param_display_names: Vec<Option<HashMap<Locale, String>>>,
-    /// The canonical enum domain expected at each parameter position, when
-    /// the parameter takes an enumerated value (parallel to `params`).
-    /// `None` for non-enum parameters and for parameters whose accepted
-    /// values span multiple canonical domains. In particular, a filtered
-    /// rule event's `Player` parameter accepts `EventPlayer` members or
-    /// canonical `Hero` members; the WIR [`crate::wir::EventTarget`] carries
-    /// that union explicitly.
     pub(crate) param_domains: Vec<Option<String>>,
-    /// Default value per parameter position (parallel to `params`),
-    /// resolved when a call omits the argument. See the catalog data
-    /// provenance for the value syntax and source.
     pub(crate) param_defaults: Vec<Option<String>>,
-    /// Source-backed semantic type per parameter position. `None` means
-    /// the available sources do not establish a narrower type.
     pub(crate) param_types: Vec<Option<String>>,
-    /// Contextual literal substitutions per parameter position.
     pub(crate) param_coercions: Vec<Option<ParamCoercions>>,
-    /// `rule-content-v1` argument facts per parameter position (parallel to
-    /// `params`), declared where the surface parameter list and the content
-    /// argument list differ — folded variable targets and modify-operator
-    /// positions.
     pub(crate) param_content: Vec<Option<ParamContent>>,
-    /// Source-backed return type for Value entries. Actions must leave this
-    /// unset; an absent value remains unresolved.
     pub(crate) return_type: Option<String>,
-    /// Reevaluation coverage for the action's `*Reeval` parameter, keyed by
-    /// enum member id: which parameter positions the selected reevaluation
-    /// member keeps re-evaluating. `None` when the action has no `*Reeval`
-    /// parameter or coverage is not reviewed. Members absent from the map
-    /// are unknown, not empty — an empty vector is a reviewed "reevaluates
-    /// nothing" claim.
     pub(crate) reevaluation_coverage: Option<BTreeMap<String, Vec<usize>>>,
-    /// Whether the final declared parameter repeats for additional arguments.
     pub(crate) variadic: bool,
     pub(crate) aliases: HashMap<Locale, Vec<String>>,
 }
@@ -409,20 +364,10 @@ impl CatalogEntry {
         self.variadic
     }
 
-    /// Whether the surface signature's leading `(player, variable)`
-    /// parameters fold into one `PlayerVariable` WIR argument. The declared
-    /// shape is a `Player|Array` parameter directly followed by a `Variable`
-    /// parameter (`stopChasingPlayerVariable`, `chasePlayerVariableAtRate`,
-    /// `chasePlayerVariableOverTime`, `setPlayerVariableAtIndex`,
-    /// `modifyPlayerVariableAtIndex`).
     pub(crate) fn folds_player_variable_pair(&self) -> bool {
         self.param_type(0) == Some("Player|Array") && self.param_type(1) == Some("Variable")
     }
 
-    /// Whether `args`, a WIR argument list for this entry, actually carries
-    /// the folded pair: the signature is foldable and WIR arg 0 is a
-    /// `PlayerVariable` value. An unparseable or hand-built argument list
-    /// that never folded still positions its arguments one-to-one.
     pub(crate) fn wir_args_folded(
         &self,
         program: &crate::wir::Program,
@@ -437,12 +382,6 @@ impl CatalogEntry {
             )
     }
 
-    /// The surface parameter index that `args[wir_index]` supplies for this
-    /// entry's signature. Positions map one-to-one unless `args` carries the
-    /// folded `(player, variable)` pair ([`wir_args_folded`]): the folded
-    /// `PlayerVariable` then sits at the `Variable` position and supplies
-    /// the `Player` position through its inner `player` field, and every
-    /// later WIR argument maps to param `wir_index + 1`.
     pub(crate) fn wir_arg_param_index(
         &self,
         program: &crate::wir::Program,
@@ -557,20 +496,8 @@ pub struct CatalogIdentity {
 
 pub(crate) type MemberIndexMap = HashMap<String, HashMap<String, (usize, usize)>>;
 
-/// domain -> normalized member spelling -> member index, for
-/// `NormalizedIndex::enum_alias_to_member`.
 type EnumMemberAliasMap = HashMap<String, HashMap<String, Option<(usize, usize)>>>;
 
-/// Whitespace-collapsed secondary spelling indexes (#448).
-///
-/// Reviewed export spellings carry whitespace the lexer cannot reproduce
-/// inside a token stream — trailing spaces (`ヒーロー: `,
-/// `Élévation à une puissance `), leading spaces, and spacing variants the
-/// client itself normalizes (`66号公路`/`66 号公路`, `1팀`/`1 팀`). Every
-/// verbatim index is mirrored here keyed by [`normalize_spelling`]; the
-/// verbatim index is always consulted first, and a normalized key shared
-/// by distinct targets (`None` after a collision) resolves nothing rather
-/// than guessing.
 #[derive(Debug, Clone, Default)]
 pub(crate) struct NormalizedIndex {
     pub(crate) alias_to_entry: HashMap<Locale, [HashMap<String, Option<usize>>; Kind::NUM_KINDS]>,
@@ -580,8 +507,6 @@ pub(crate) struct NormalizedIndex {
     pub(crate) bare_member: HashMap<Locale, HashMap<String, Vec<(String, String)>>>,
 }
 
-/// The whitespace-collapsed comparison form of a catalog spelling: all
-/// Unicode whitespace removed, characters otherwise unchanged (#448).
 pub(crate) fn normalize_spelling(spelling: &str) -> Cow<'_, str> {
     if spelling.chars().any(char::is_whitespace) {
         Cow::Owned(spelling.chars().filter(|c| !c.is_whitespace()).collect())
@@ -590,8 +515,6 @@ pub(crate) fn normalize_spelling(spelling: &str) -> Cow<'_, str> {
     }
 }
 
-/// The unambiguous target of `spelling` in a normalized index: a key shared
-/// by distinct targets is stored as `None` and resolves nothing.
 fn lookup_normalized<'a, V>(
     index: &'a HashMap<String, Option<V>>,
     spelling: &str,
@@ -604,15 +527,10 @@ fn lookup_normalized<'a, V>(
 pub struct Catalog {
     detection_index: Option<detect::AliasIndex>,
     pub(crate) schema_version: u32,
-    /// The declared locales, normalized; the first one is the primary
-    /// locale and must be fully covered.
     pub(crate) locales: Vec<Locale>,
     pub(crate) target: TargetMeta,
     pub(crate) provenance: Provenance,
-    /// The catalog dataset version (ADR-0001 `catalog-version`).
     pub(crate) catalog_version: String,
-    /// The declared content digest (sha256 hex), verified at load when
-    /// present (ADR-0001 `catalog-version`).
     pub(crate) catalog_digest: Option<String>,
     pub(crate) entries: Vec<CatalogEntry>,
     pub(crate) localized_strings: Vec<LocalizedStringEntry>,
@@ -625,11 +543,7 @@ pub struct Catalog {
     pub(crate) enum_alias_to_domain: HashMap<Locale, HashMap<String, String>>,
     pub(crate) enum_alias_to_member: HashMap<Locale, MemberIndexMap>,
     pub(crate) bare_member_index: HashMap<Locale, HashMap<String, Vec<(String, String)>>>,
-    /// Whitespace-collapsed mirrors of the verbatim indexes; see
-    /// [`NormalizedIndex`].
     pub(crate) normalized: NormalizedIndex,
-    /// The attached localized description dataset (`descriptions.json`),
-    /// empty until [`Catalog::load_descriptions`] attaches one.
     pub(crate) descriptions: descriptions::Descriptions,
 }
 
@@ -795,7 +709,6 @@ impl Catalog {
         self.entries.len()
     }
 
-    /// The number of enum domains.
     pub fn enum_domains_count(&self) -> usize {
         self.enums.len()
     }
@@ -917,10 +830,6 @@ impl Catalog {
             .unwrap_or_default()
     }
 
-    /// The canonical ids and `locale` spellings of `kind` entries, for
-    /// nearest-candidate diagnostics that reject in the canonical space
-    /// (validation and emission, where the rejected name is an id or an
-    /// authored spelling).
     pub(crate) fn canonical_spellings<'a>(
         &'a self,
         kind: Kind,
@@ -932,10 +841,6 @@ impl Catalog {
         })
     }
 
-    /// The emitted form of `member_spelling` in `domain` under `locale`:
-    /// constructor-form domains (`Hero`, `Button`, `Color`, `Map`) write
-    /// `Domain(Member)` in every position and locale; every other domain
-    /// writes the member bare (docs/wrapper-forms.md).
     pub(crate) fn enum_member_form(
         &self,
         domain: &str,
@@ -953,8 +858,6 @@ impl Catalog {
         }
     }
 
-    /// The canonical ids and `locale` spellings of `domain` members, for
-    /// nearest-candidate diagnostics that reject in the canonical space.
     pub(crate) fn canonical_member_spellings<'a>(
         &'a self,
         domain: &'a str,
@@ -971,12 +874,6 @@ impl Catalog {
     }
 }
 
-/// The catalog is the canonical source of expected enum domains for the
-/// Workshop surface it documents: `expected_domain(catalog_id, arg_index)`
-/// answers the domain declared for that parameter position (e.g. `createHudText`
-/// argument 9 is `HudReeval`), so the Workshop parser can resolve bare enum
-/// members that are ambiguous across domains (e.g. `Visible To and String`).
-/// Positions without a documented domain answer `None`.
 impl ExpectedDomain for Catalog {
     fn expected_domain(&self, catalog_id: &str, arg_index: usize) -> Option<&str> {
         for kind in [Kind::Action, Kind::Value] {

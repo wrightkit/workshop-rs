@@ -45,8 +45,6 @@ jobs:
           if [[ "$version" == 0.* && "$PR_TITLE" =~ $breaking_title ]]; then
             echo "value=major" >> "$GITHUB_OUTPUT"
           elif echo "$PR_LABELS" | jq -e '.[] | select(.name == "semver-exception")' >/dev/null; then
-            # An owner-approved API break shipped outside a major release;
-            # see docs/release.md "Public API compatibility".
             echo "value=major" >> "$GITHUB_OUTPUT"
           else
             echo "value=" >> "$GITHUB_OUTPUT"

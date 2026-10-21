@@ -1,5 +1,3 @@
-//! Offline execution for real-project and regression test manifests.
-
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::path::Path;
@@ -165,7 +163,6 @@ pub(crate) fn run(manifest_path: &Path) -> Result<CorpusReport, String> {
     })
 }
 
-/// Per-case execution context shared by the result constructors.
 struct CaseContext<'a> {
     case: &'a CorpusCase,
     catalog: &'a Catalog,
@@ -194,7 +191,6 @@ impl CaseContext<'_> {
         }
     }
 
-    /// A regression/gap result whose expected artifact pins the manifest reference.
     fn non_match(&self, status: ConformanceStatus, reason: ConformanceReason) -> ConformanceResult {
         self.result(
             status,

@@ -1,9 +1,6 @@
 use crate::output::emitter::*;
 
 impl EmitContext<'_> {
-    /// Emit one rule action; `rule_final` marks the last action of the rule,
-    /// for which an `if`/`if-else` closes without the trailing `End;`
-    /// (the pinned oracle's spelling, #87).
     pub(crate) fn action(
         &mut self,
         id: wir::ActionId,
@@ -225,13 +222,6 @@ impl EmitContext<'_> {
                 self.out.insert_str(start + level * 4, &modifier);
             }
             wir::Action::Call { name, args, .. } => {
-                // The chase family dispatches on the first argument's
-                // variable kind, mirroring the pinned reference: a global
-                // variable emits the global form with the argument list
-                // unchanged; a player variable emits the player form with
-                // the receiver split into `player, name` leading arguments
-                // (the frontend guarantees a variable first argument,
-                // issue #110).
                 if matches!(name.as_str(), "chaseAtRate" | "chaseOverTime") {
                     let player_var = args.first().and_then(|id| {
                         self.program
@@ -295,8 +285,6 @@ impl EmitContext<'_> {
                         ),
                     );
                 }
-                // Native `.opy` action names map to canonical catalog ids at
-                // emission (presentation concern).
                 let canonical = match name.as_str() {
                     "createBeam" => Some("createBeamEffect"),
                     _ => None,

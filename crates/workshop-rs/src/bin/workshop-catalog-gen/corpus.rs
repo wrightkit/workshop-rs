@@ -31,9 +31,6 @@ impl Index {
         }
     }
 
-    /// Match an exact en-US spelling. The source identities must agree on
-    /// the zh-CN spelling so the existing corpus contract remains strict;
-    /// other locale aliases are merged independently below.
     fn match_spelling(&self, en: &str) -> Result<Vec<Candidate>, String> {
         let Some(candidates) = self.by_en.get(en) else {
             return Err("no exact en-US match in the export".to_string());
@@ -130,12 +127,6 @@ fn data_index_at(export: &Value, sections: &[&str]) -> Index {
     index
 }
 
-/// Resolve a user-confirmed legacy identity whose export wording differs
-/// from the canonical English spelling. The export entry is accepted only
-/// when its category, identity, GUID, and both locale values match the
-/// confirmed mapping.
-/// User-confirmed export identities keyed by `(kind, id)`: export key,
-/// category, export id, GUID, and en-US spelling.
 const CONFIRMED_IDENTITIES: &[(&str, &str, &str, &str, &str, &str, &str)] = &[
     (
         "action",
@@ -175,8 +166,6 @@ const CONFIRMED_IDENTITIES: &[(&str, &str, &str, &str, &str, &str, &str)] = &[
     ),
 ];
 
-/// Confirmed operator identities all share the `localizedStrings.{0} op {1}`
-/// export shape; only the operator glyph and GUID differ.
 const CONFIRMED_OPERATORS: &[(&str, &str)] = &[
     ("==", "00000000BFA3"),
     ("!=", "00000000BFA2"),
@@ -255,13 +244,9 @@ struct Exclusion {
     reason: String,
 }
 
-/// The declared settings surface projected from `settings::schema`.
 #[derive(Debug)]
 struct SettingsSurface {
     namespaces: Vec<(String, String)>,
-    /// `(surface id, en-US name)` of every rendering label. The
-    /// per-mode `enabled` members render no label (the mode header's
-    /// `disabled` prefix instead) and are excluded here.
     labels: Vec<(String, String)>,
     modes: Vec<(String, String)>,
     maps: Vec<(String, String)>,
@@ -425,7 +410,6 @@ fn lower_camel(value: &str) -> String {
     result
 }
 
-/// The corpus pipeline report lines.
 pub(crate) fn generate(
     catalog_data: &str,
     catalog_file: &Path,
@@ -672,9 +656,6 @@ pub(crate) fn generate(
     }))
 }
 
-/// Match one catalog identity's en-US aliases against `index`, falling back
-/// to the user-confirmed identity table, and record the outcome. Returns
-/// whether the identity matched.
 #[allow(clippy::too_many_arguments)]
 fn record_entry_match(
     export: &Value,
@@ -789,9 +770,6 @@ fn locale_aliases(
     (aliases, exclusions)
 }
 
-/// The en-US alias spellings of a catalog entry or enum member. A single
-/// string alias is a one-element list; an array lists alternative en-US
-/// spellings that are each eligible for exact export matching.
 fn en_aliases(entry: &Value) -> Result<Vec<&str>, String> {
     let alias = entry
         .get("aliases")
@@ -837,14 +815,8 @@ fn canonical_json(value: &Value) -> Result<String, String> {
     Ok(out)
 }
 
-/// A `(kind, id, locale, spelling)` alias candidate dropped over a conflict.
 type DroppedAlias = (String, String, String, String);
 
-/// Merge reviewed locale aliases into the catalog data. Existing aliases
-/// remain accepted aliases; no spelling is fabricated (ADR-0001). Also
-/// returns every dropped candidate so the manifest can record the drop in
-/// `localeExclusions` instead of listing a spelling the merged catalog never
-/// received.
 fn merge_localized_aliases(
     catalog: &Value,
     matches: &[Match],
@@ -1088,7 +1060,6 @@ fn set_alias(entry: &mut Value, locale: &str, spelling: &str) -> Result<(), Stri
     Ok(())
 }
 
-/// The machine-readable corpus manifest (ADR-0001 Decision 6).
 fn manifest(
     meta: &Value,
     matches: &[Match],
@@ -1408,10 +1379,6 @@ fn fill_locale_gaps(
     }
 }
 
-/// Resolve the two hero settings labels whose English surface expands a
-/// reviewed `%1$s` export template with the reviewed `Blizzard` hero
-/// spelling. The template, hero identity, GUIDs, and both locale values
-/// are checked before composing the locale label.
 fn confirmed_settings_identity_match(
     export: &Value,
     surface: &str,

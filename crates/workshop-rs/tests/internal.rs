@@ -1,7 +1,3 @@
-//! Shared helpers for the crate-internal test modules: they exercise the
-//! `pub(crate)` WIR parse/emit surface, so this file is compiled only as
-//! part of the library unit-test build (see `src/tests.rs`), never by the
-//! public-API `integration` target.
 #![allow(dead_code)]
 
 use workshop_rs::catalog::Locale;
@@ -44,9 +40,6 @@ pub(crate) fn try_emit_in(
     emitter::emit_wir(program, &common::catalog(), locale)
 }
 
-/// Emit -> reparse -> semantic-equivalence gate shared by emitter tests:
-/// the emitted text must reparse to a semantically equivalent program and
-/// re-emit to byte-identical text.
 pub(crate) fn assert_emit_round_trip(program: &wir::Program) -> String {
     let emitted = emit(program);
     let reparsed = parse(&emitted);

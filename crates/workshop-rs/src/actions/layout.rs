@@ -1,5 +1,3 @@
-//! Native Workshop layout queries for canonical actions.
-
 use crate::catalog::{Catalog, Locale};
 use crate::output::emitter::EmitContext;
 use crate::wir;

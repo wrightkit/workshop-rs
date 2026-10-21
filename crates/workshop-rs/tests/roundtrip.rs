@@ -4,9 +4,6 @@ use workshop_rs::roundtrip::{self, RoundTripRecord};
 
 #[test]
 fn every_corpus_fixture_round_trips_with_full_evidence() {
-    // Corpus text round-trips against the catalog context, which pins the
-    // expected enum domains from the canonical catalog signatures. Unpinned
-    // shared members retain all catalog-backed candidates for equivalence.
     for fixture_id in [
         "basic-rule",
         "control-flow",
@@ -188,11 +185,6 @@ fn unknown_builtin_fails_at_emit_stage() {
 
 #[test]
 fn emitter_chase_none_round_trips_through_the_catalog_context() {
-    // The emitter-produced `Chase Global Variable Over Time(..., None)`
-    // (bare `None` shared by ChaseTimeReeval/ChaseRateReeval/Invis) reparses
-    // to ChaseTimeReeval.NONE through the catalog context (canonical
-    // signature pins), and the round-tripped WIR is equivalent to the input
-    // WIR.
     let text = "variables { global: 0: g }\nrule (\"chase\") { event { Ongoing - Global; } actions { Chase Global Variable Over Time(Global.g, 0, 30, None); } }";
     let record = roundtrip::round_trip_with_context(text, &catalog(), &en(), &catalog());
     assert!(
@@ -205,8 +197,6 @@ fn emitter_chase_none_round_trips_through_the_catalog_context() {
 
 #[test]
 fn emitter_set_invisible_none_round_trips_through_the_catalog_context() {
-    // `Set Invisible(Event Player, None)` reparses to Invis.NONE via the
-    // member-function receiver offset and round-trips to equivalent WIR.
     let text = "rule (\"inv\") { event { Ongoing - Each Player; } actions { Set Invisible(Event Player, None); } }";
     let record = roundtrip::round_trip_with_context(text, &catalog(), &en(), &catalog());
     assert!(
@@ -219,9 +209,6 @@ fn emitter_set_invisible_none_round_trips_through_the_catalog_context() {
 
 #[test]
 fn emitter_chase_at_rate_none_round_trips_through_the_catalog_context() {
-    // The chase rate form emits `Chase Global Variable At Rate(..., None)`;
-    // the catalog id `chaseAtRate` pins the `ChaseRateReeval` domain, so the
-    // bare `None` reparses and round-trips to equivalent WIR.
     let text = "variables { global: 0: g }\nrule (\"chase\") { event { Ongoing - Global; } actions { Chase Global Variable At Rate(Global.g, 10, 2, None); } }";
     let record = roundtrip::round_trip_with_context(text, &catalog(), &en(), &catalog());
     assert!(
@@ -230,8 +217,6 @@ fn emitter_chase_at_rate_none_round_trips_through_the_catalog_context() {
         record.error
     );
     assert!(record.parse_ok && record.emit_ok && record.reparse_ok && record.equivalent);
-    // The player form follows the same path through its own catalog id at
-    // the shifted workshop-text positions.
     let text = "variables { player: 0: P }\nrule (\"chase\") { event { Ongoing - Each Player; } actions { Chase Player Variable At Rate(Event Player, P, 0, 1, None); } }";
     let record = roundtrip::round_trip_with_context(text, &catalog(), &en(), &catalog());
     assert!(
@@ -244,9 +229,6 @@ fn emitter_chase_at_rate_none_round_trips_through_the_catalog_context() {
 
 #[test]
 fn context_free_chase_none_is_preserved() {
-    // Without a signature pin the ambiguity remains structured: the same
-    // input through the plain (context-free) round-trip preserves all of its
-    // canonical candidates.
     let text = "variables { global: 0: g }\nrule (\"chase\") { event { Ongoing - Global; } actions { Chase Global Variable Over Time(Global.g, 0, 30, None); } }";
     let record = roundtrip::round_trip(text, &catalog(), &en());
     assert!(record.parse_ok && record.emit_ok && record.reparse_ok);

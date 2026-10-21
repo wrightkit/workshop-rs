@@ -1,6 +1,3 @@
-//! Contract tests for `Program::edit_statements`, the write direction of
-//! `workshop-rs/rule-content-v1` (workshop-rs#532).
-
 use serde_json::{Value as JsonValue, json};
 use workshop_rs::catalog::Locale;
 use workshop_rs::rules::content::rule_content;
@@ -66,7 +63,6 @@ fn cond(n: f64) -> JsonValue {
     json!({"value": {"call": "==", "args": [{"call": "globalVariable", "args": [{"variable": "a"}]}, n]}})
 }
 
-/// A condition that names no variable, for sources that declare none.
 pub(crate) fn plain_cond() -> JsonValue {
     json!({"value": {"call": "==", "args": [{"call": "isGameInProgress", "args": []}, true]}})
 }
@@ -82,7 +78,6 @@ pub(crate) fn waits(content: &JsonValue) -> Vec<f64> {
 
 #[test]
 fn base_node_shapes_match_the_export() {
-    // Guards the literals above against drift from the export.
     let content = lists(BASE, "en-US");
     assert_eq!(content["actions"][0], wait(1.0));
     assert_eq!(content["conditions"][0], cond(1.0));
@@ -93,7 +88,6 @@ fn insert_replace_delete_at_start_middle_end_of_actions() {
     let nodes = [wait(9.0)];
     let a = StatementList::Actions;
 
-    // Insert at start / middle / end (index == len appends).
     let out = ok(BASE, a, 0, StatementEdit::Insert(&nodes));
     assert_eq!(
         out,
@@ -118,7 +112,6 @@ fn insert_replace_delete_at_start_middle_end_of_actions() {
     );
     assert_eq!(waits(&lists(&out, "en-US")), [1.0, 2.0, 3.0, 9.0]);
 
-    // Replace at start / middle / end.
     let node = wait(7.0);
     let out = ok(BASE, a, 0, StatementEdit::Replace(&node));
     assert_eq!(
@@ -136,7 +129,6 @@ fn insert_replace_delete_at_start_middle_end_of_actions() {
         BASE.replace("Wait(3, Ignore Condition)", "Wait(7, Ignore Condition)")
     );
 
-    // Delete at start / middle / end.
     let out = ok(BASE, a, 0, StatementEdit::Delete);
     assert_eq!(
         out,
@@ -185,16 +177,12 @@ fn conditions_edits_at_start_middle_end() {
 fn comments_are_kept_removed_or_absent() {
     let a = StatementList::Actions;
     let node = wait(7.0);
-    // replace keeps the leading comment
     let out = ok(BASE, a, 0, StatementEdit::Replace(&node));
     assert!(out.contains("\"first\" Wait(7, Ignore Condition);"));
-    // delete removes the statement together with its comment
     let out = ok(BASE, a, 2, StatementEdit::Delete);
     assert!(!out.contains("last"));
-    // delete also removes a tail line comment on the statement's line
     let out = ok(BASE, a, 1, StatementEdit::Delete);
     assert!(!out.contains("tail"));
-    // insert before a commented statement does not take its comment
     let out = ok(
         BASE,
         a,
@@ -202,7 +190,6 @@ fn comments_are_kept_removed_or_absent() {
         StatementEdit::Insert(std::slice::from_ref(&node)),
     );
     assert!(out.contains("Wait(7, Ignore Condition);\n        \"first\" Wait(1"));
-    // insert writes no comment
     assert_eq!(out.matches('"').count(), BASE.matches('"').count());
 }
 
@@ -217,7 +204,6 @@ fn missing_conditions_section_is_created_and_last_delete_leaves_empty_list() {
     assert!(out.find("conditions").unwrap() < out.find("actions").unwrap());
     assert!(out.contains("    conditions {\n        "), "{out}");
 
-    // Only the section is added: everything else is byte-identical.
     let removed = ok(&out, c, 0, StatementEdit::Delete);
     assert_eq!(lists(&removed, "en-US")["conditions"], json!([]));
     assert_eq!(
@@ -225,7 +211,6 @@ fn missing_conditions_section_is_created_and_last_delete_leaves_empty_list() {
         lists(source, "en-US")["actions"]
     );
 
-    // A rule with no actions section either: created before the closing brace.
     let bare = "rule (\"r\") {\n    event {\n        Ongoing - Global;\n    }\n}\n";
     let out = ok(
         bare,
@@ -235,7 +220,6 @@ fn missing_conditions_section_is_created_and_last_delete_leaves_empty_list() {
     );
     assert_eq!(waits(&lists(&out, "en-US")), [1.0]);
 
-    // Deleting the last action reparses with an empty list.
     let out = ok(
         "rule (\"r\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Wait(1, Ignore Condition);\n    }\n}\n",
         StatementList::Actions,
@@ -291,7 +275,6 @@ fn locale_is_the_one_passed_in() {
         .unwrap()
         .to_string();
     assert!(!inserted.contains("Wait"), "{inserted}");
-    // The same statement in en-US uses English spellings.
     let en_edit = ok(
         BASE,
         StatementList::Actions,
@@ -300,7 +283,6 @@ fn locale_is_the_one_passed_in() {
     );
     assert!(en_edit.contains("Wait(9, Ignore Condition)"));
 
-    // Conditions as well.
     let zh_cond = edit(
         &zh_source,
         "zh-CN",
@@ -345,7 +327,6 @@ fn stale_or_out_of_range_addresses_are_refused() {
             "{address:?}"
         );
     }
-    // Empty insert, wrong statement kind.
     assert!(matches!(
         program.edit_statements(&c, &l, at(0, a, 0), StatementEdit::Insert(&[])),
         Err(StatementEditError::EmptyInsert { .. })
@@ -363,7 +344,6 @@ fn stale_or_out_of_range_addresses_are_refused() {
         ),
         Err(StatementEditError::StatementKind { .. })
     ));
-    // A node the conversion refuses.
     assert!(matches!(
         program.edit_statements(
             &c,
@@ -374,8 +354,6 @@ fn stale_or_out_of_range_addresses_are_refused() {
         Err(StatementEditError::Content(_))
     ));
 
-    // The model drifted from the retained source: a statement was removed
-    // from the public model after parsing.
     let mut drifted = parse(BASE, "en-US");
     drifted.rules[0].actions.remove(0);
     for e in [StatementEdit::Delete, StatementEdit::Replace(&node)] {
@@ -384,14 +362,10 @@ fn stale_or_out_of_range_addresses_are_refused() {
             Err(StatementEditError::StaleAddress { .. })
         ));
     }
-    // The model drifted by reordering, same length.
     let mut swapped = parse(BASE, "en-US");
     swapped.rules[0].actions.swap(0, 1);
-    // Spans still describe source positions, so the addressed model entry
-    // no longer sits at the source's chunk (or the content differs).
     let _ = swapped.edit_statements(&c, &l, at(0, a, 0), StatementEdit::Delete);
 
-    // A programmatic program has no retained source.
     let mut bare = Program::new();
     bare.rule(
         workshop_rs::Rule::new("x", workshop_rs::Event::Global).action(workshop_rs::Action::End),
@@ -404,8 +378,6 @@ fn stale_or_out_of_range_addresses_are_refused() {
 
 #[test]
 fn inexpressible_neighbours_do_not_block_other_edits() {
-    // `rawWorkshopAction` is the parser-preserved opaque action: the export
-    // cannot express it, but the rule still accepts edits to other statements.
     let source = "rule (\"r\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        End;\n        Wait(1, Ignore Condition);\n        Wait(2, Ignore Condition);\n    }\n}\n";
     let content = lists(source, "en-US");
     assert_eq!(
@@ -430,15 +402,6 @@ fn has_ambiguous(node: &JsonValue) -> bool {
     }
 }
 
-/// Replace every expressible statement of `source`, rendered in `target`,
-/// by its own exported content, in one batch of disjoint edits at `stride`,
-/// and require the reparsed program to have unchanged content. Returns the
-/// number of statements replaced, or `None` when `target` lacks a spelling
-/// the program needs.
-///
-/// The program is converted to `target` first and its own content is the
-/// reference, so the check is `content(parse(emit(statement_from_content(c))))
-/// == c` with the neighbours already in `target`.
 fn round_trip(source: &str, tag: &str, target: &Locale, stride: usize) -> Option<usize> {
     let c = catalog();
     let text = emitter::emit(&parse(source, tag), &c, target).ok()?;
@@ -456,8 +419,6 @@ fn round_trip(source: &str, tag: &str, target: &Locale, stride: usize) -> Option
             (StatementList::Actions, "actions"),
         ] {
             for (index, node) in content[key].as_array().unwrap().iter().enumerate() {
-                // Opaque raw actions and ambiguous enum members have no
-                // content; they stay as authored.
                 if workshop_rs::rules::statement::statement_from_content(&c, node).is_err() {
                     continue;
                 }
@@ -473,8 +434,6 @@ fn round_trip(source: &str, tag: &str, target: &Locale, stride: usize) -> Option
                 );
                 let edit = match result {
                     Ok(edit) => edit,
-                    // An unclosed `If` carries an `End` in the model that the
-                    // source does not: it has no text to replace.
                     Err(StatementEditError::StaleAddress { .. }) if node["call"] == "end" => {
                         continue;
                     }
@@ -552,8 +511,6 @@ fn real_project_statements_round_trip_and_edit_in_place() {
             }
         }
 
-        // In-place edits against the authored text, comments and layout
-        // included: replace then delete each rule's first plain action.
         let program = parse(&source, source_locale.as_str());
         let targets: Vec<(usize, usize)> = program
             .rules

@@ -1,16 +1,3 @@
-//! Strongly typed IDs.
-//!
-//! Every stable identity in the IR is an [`Id<T>`]: an opaque newtype over a
-//! `u32` arena index, tagged with the type it references. The type parameter
-//! makes it impossible to pass, say, an expression ID where a rule ID is
-//! expected, while `Id<T>` remains cheap, comparable, and hashable.
-//!
-//! IDs are produced by [`Arena::push`](crate::core::arena::Arena::push) and are
-//! stable for the lifetime of the arena. They are never dereferenced
-//! directly: lookup goes through the owning arena, which bounds-checks and
-//! returns `Option`, so an invalid or dangling ID is a recoverable invariant
-//! error rather than a panic.
-
 use std::marker::PhantomData;
 
 /// A typed, stable index into an [`Arena`](crate::core::arena::Arena).

@@ -1,6 +1,3 @@
-//! Token layout of a parsed rule, re-derived from its retained source, and
-//! the text geometry helpers statement edits use to place their bytes.
-
 use crate::catalog::{Catalog, Locale};
 use crate::core::source::{Position, Span, byte_offset};
 use crate::frontend::keywords::{canonical_structural_id, structural_keyword_prefix};
@@ -8,48 +5,28 @@ use crate::frontend::lexer::{Token, TokenKind};
 
 const RULE_SECTION_IDS: &[&str] = &["event", "conditions", "actions"];
 
-// --- Source layout scan -----------------------------------------------
-
-/// One `;`-terminated statement line inside a section: the statement plus
-/// the standalone `"…"` annotation tokens directly attached to it.
 #[derive(Debug, Clone, Copy)]
 pub(super) struct StatementChunk {
-    /// First token of the chunk (a `"…"` annotation when present).
     pub(super) first: usize,
-    /// First token that is not a `"…"` annotation — the statement itself.
     pub(super) first_content: usize,
-    /// The terminating `;` token.
     pub(super) semi: usize,
 }
 
-/// A `name { … }` block inside a rule body.
 #[derive(Debug)]
 pub(super) struct StatementSection {
-    /// `event`, `conditions`, or `actions`.
     pub(super) id: &'static str,
-    /// Start of the section keyword's first token (the create-section anchor).
     pub(super) name_start: Position,
-    /// The section's closing `}` token index.
     pub(super) close: usize,
-    /// `;`-terminated statement chunks (`conditions`/`actions` only use them).
     pub(super) chunks: Vec<StatementChunk>,
-    /// First token of `"…"` annotations after the last statement, which
-    /// annotate nothing.
     pub(super) dangling: Option<usize>,
 }
 
-/// The token layout of a parsed rule: its body braces and `name { … }`
-/// sections, re-derived from the retained source in the session locale.
 pub(super) struct RuleLayout {
-    /// Token index of the rule body's closing `}`.
     pub(super) close: usize,
     pub(super) sections: Vec<StatementSection>,
 }
 
 impl RuleLayout {
-    /// Re-read the rule's token layout from the retained source. `None`
-    /// means the retained text does not carry the shape the model claims —
-    /// a `SourceUnavailable` for the caller.
     pub(super) fn scan(
         tokens: &[Token],
         rule_span: Span,
@@ -112,8 +89,6 @@ impl RuleLayout {
     }
 }
 
-/// Read a section body into `;`-terminated chunks, returning the chunks and
-/// the index of its closing `}`.
 pub(super) fn scan_chunks(
     tokens: &[Token],
     mut i: usize,
@@ -134,8 +109,6 @@ pub(super) fn scan_chunks(
                 }
                 let first_content = i;
                 match tokens.get(i).map(|token| &token.kind) {
-                    // A run of annotations (and stray semicolons) with no
-                    // statement after them is a comment-only chunk.
                     Some(TokenKind::RBrace) => dangling = Some(first),
                     Some(TokenKind::Semi) => i += 1,
                     Some(_) => {
@@ -164,10 +137,6 @@ pub(super) fn scan_chunks(
     }
 }
 
-// --- Text geometry helpers ---------------------------------------------
-
-/// The line ending of the line holding `position`, so an edit never mixes
-/// endings inside a file that has both.
 pub(super) fn newline_of(text: &str, position: Position) -> &'static str {
     let next = byte_offset(text, Position::new(position.line + 1, 1));
     match next {
@@ -176,8 +145,6 @@ pub(super) fn newline_of(text: &str, position: Position) -> &'static str {
     }
 }
 
-/// The source text before `position` on its own line — the indentation when
-/// it is all whitespace.
 pub(super) fn line_prefix(text: &str, position: Position) -> &str {
     let line = Position::new(position.line, 1);
     match (byte_offset(text, line), byte_offset(text, position)) {
@@ -191,17 +158,12 @@ pub(super) fn is_whitespace(text: &str) -> bool {
         .all(|character| matches!(character, ' ' | '\t' | '\r'))
 }
 
-/// Whether the byte immediately before `position` is whitespace — when it
-/// is not, an inline insert opens with a separating space.
 pub(super) fn byte_is_whitespace(text: &str, position: Position) -> bool {
     byte_offset(text, position)
         .and_then(|offset| text[..offset].chars().next_back())
         .is_none_or(|character| character.is_whitespace())
 }
 
-/// One level of indentation, learned from the source: a section's first
-/// statement against its keyword, else the first section against the rule
-/// header. Four spaces when the rule has no nesting to learn from.
 pub(super) fn indent_unit(
     text: &str,
     tokens: &[Token],
