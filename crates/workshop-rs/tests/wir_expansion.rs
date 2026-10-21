@@ -1,7 +1,3 @@
-//! WIR expansion and canonical-identity tests (#31): the supported Workshop surface is
-//! representable in Workshop IR, and catalog-backed validation rejects
-//! unknown or locale-tainted builtin references deterministically.
-
 use super::common::{catalog, en};
 use super::internal;
 use workshop_rs::source::{Position, SourceFile, Span};

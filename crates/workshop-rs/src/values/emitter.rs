@@ -10,18 +10,9 @@ impl<'a> EmitContext<'a> {
         };
         match &node.value {
             wir::Value::Number { text, .. } => {
-                // Literal spellings carry through (the oracle preserves the
-                // source spelling, e.g. `0.0`; computed values carry the
-                // formatted spelling, #87).
                 out.push_str(text);
             }
             wir::Value::String(value) => {
-                // Value-position strings wrap in `Custom String("...")` with
-                // re-escaped content and long-string splitting, the pinned
-                // oracle's spelling (evidence: array elements, initializers,
-                // assignments, call arguments, comparisons — #87). The only
-                // bare string value is the `Custom String` text argument,
-                // handled in the call arm below.
                 self.emit_string_value(value, out)?;
             }
             wir::Value::LocalizedString(id) => {
@@ -36,7 +27,6 @@ impl<'a> EmitContext<'a> {
             wir::Value::Null => out.push_str(self.spelling(Kind::Value, "null")?),
             wir::Value::Array(elements) => {
                 if elements.is_empty() {
-                    // The canonical empty-array constant (reference emission).
                     out.push_str(self.spelling(Kind::Value, "emptyArray")?);
                 } else {
                     out.push_str(self.spelling(Kind::Value, "array")?);
@@ -134,7 +124,6 @@ impl<'a> EmitContext<'a> {
                     return Ok(());
                 }
                 if wir::is_comparison_operator(name) {
-                    // Canonical form: Compare(a, op, b).
                     if args.len() != 2 {
                         return Err(WorkshopError::malformed(
                             format!("comparison call '{name}' must have 2 args"),
@@ -149,8 +138,6 @@ impl<'a> EmitContext<'a> {
                     out.push(')');
                     return Ok(());
                 }
-                // Unary minus renders as Multiply(-1, x); the reference folds
-                // literal negation, handled by the compat constant-fold pass.
                 if name == "-" && args.len() == 1 {
                     out.push_str(self.spelling(Kind::Value, "multiply")?);
                     out.push_str("(-1, ");
@@ -158,7 +145,6 @@ impl<'a> EmitContext<'a> {
                     out.push(')');
                     return Ok(());
                 }
-                // `getAllPlayers()` is OverPy's All Players(All Teams).
                 if name == "getAllPlayers" && args.is_empty() {
                     out.push_str(self.spelling(Kind::Value, "allPlayers")?);
                     out.push('(');
@@ -166,10 +152,6 @@ impl<'a> EmitContext<'a> {
                     out.push(')');
                     return Ok(());
                 }
-                // Binary arithmetic operators and native `.opy` source names
-                // map to canonical catalog ids at emission (presentation
-                // concern; the compat pass folds constants to match the
-                // reference exactly).
                 let canonical = match name.as_str() {
                     "+" => Some("add"),
                     "-" => Some("subtract"),
@@ -202,16 +184,8 @@ impl<'a> EmitContext<'a> {
                     }
                     out.push(')');
                 } else if args.is_empty() {
-                    // Constants (e.g. Empty Array) emit as bare spellings.
                     out.push_str(spelling);
                 } else if is_custom_string {
-                    // `.format()` calls canonicalize: constant numeric
-                    // arguments fold into the substituted text, implicit
-                    // `{}` placeholders renumber to the oracle's explicit
-                    // form, and remaining variable arguments wrap (the
-                    // oracle spelling, #87). The canonical text feeds the
-                    // value-string path (re-escaping/splitting) when no
-                    // arguments remain.
                     match self.canonicalize_format_call(args)? {
                         Some((text, variable_args)) => {
                             if variable_args.is_empty() {
@@ -274,14 +248,6 @@ impl<'a> EmitContext<'a> {
         Ok(())
     }
 
-    /// Canonicalize a `Custom String`/`.format()` call (#87): constant
-    /// numeric arguments fold into the substituted text (the oracle's
-    /// spelling), implicit `{}` placeholders renumber positionally to the
-    /// explicit `{N}` form, and the remaining variable arguments are
-    /// returned in placeholder order. Returns `None` (rendered unchanged)
-    /// when nothing canonicalizes: explicit-only texts without constants,
-    /// texts mixing implicit and explicit placeholders (the oracle rejects
-    /// those), out-of-range placeholders, or non-String text arguments.
     pub(crate) fn canonicalize_format_call(
         &self,
         args: &[wir::ValueId],
@@ -296,8 +262,6 @@ impl<'a> EmitContext<'a> {
             return Ok(None);
         };
         let format_args = &args[1..];
-        // Classify the placeholders: implicit `{}` consumes the next
-        // argument, explicit `{N}` references argument N.
         let mut has_implicit = false;
         let mut has_explicit = false;
         let mut out_of_range = false;
@@ -315,7 +279,7 @@ impl<'a> EmitContext<'a> {
                     inner.push(next);
                 }
                 if !closed {
-                    break; // unterminated brace: literal text
+                    break;
                 }
                 if inner.is_empty() {
                     if cursor >= format_args.len() {
@@ -409,10 +373,6 @@ impl<'a> EmitContext<'a> {
         self.spelling(Kind::Operator, op.catalog_id())
     }
 
-    /// The localized spelling of a canonical builtin id, resolving through
-    /// the catalog: a dangling id is `Unknown`, an id without a target-locale
-    /// mapping is `MissingMapping` unless an opt-in fallback locale declares
-    /// one (recorded in [`EmitContext::fallback_ids`]).
     pub(crate) fn spelling(&mut self, kind: Kind, id: &str) -> Result<&'a str> {
         let Some(entry) = self.catalog.entry(kind, id) else {
             return Err(WorkshopError::unknown(
@@ -433,8 +393,6 @@ impl<'a> EmitContext<'a> {
         })
     }
 
-    /// Resolve a per-locale spelling: target locale first, then the opt-in
-    /// fallback (recorded in `fallback_ids`), else `MissingMapping`.
     fn localized(
         &mut self,
         kind: &'static str,
@@ -445,8 +403,6 @@ impl<'a> EmitContext<'a> {
         self.localized_with(kind, id, fallback_id, false, resolve)
     }
 
-    /// [`Self::localized`] for any resolved type; `dedup` records `fallback_id`
-    /// only once.
     pub(crate) fn localized_with<T>(
         &mut self,
         kind: &'static str,
@@ -667,8 +623,6 @@ impl<'a> EmitContext<'a> {
         )
     }
 
-    /// Render a value that must stay a bare string (the `Custom String` text
-    /// argument). Any non-string value falls back to the normal renderer.
     pub(crate) fn bare_string_value(&mut self, id: wir::ValueId, out: &mut String) -> Result<()> {
         let Some(node) = self.program.values.get(id) else {
             return Err(WorkshopError::malformed(
@@ -683,8 +637,6 @@ impl<'a> EmitContext<'a> {
         self.value(id, out)
     }
 
-    /// Emit a value-position string as `Custom String("...")`, splitting it
-    /// into a continuation chain when it exceeds the Workshop 128-char limit.
     pub(crate) fn emit_string_value(&mut self, value: &str, out: &mut String) -> Result<()> {
         let spelling = self.spelling(Kind::Value, "customString")?;
         let segments = split_string(value);

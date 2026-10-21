@@ -84,21 +84,15 @@ fn canonical_and_localized_parameter_spellings_resolve_by_position() {
 
 #[test]
 fn parameter_display_names_report_the_localized_editor_label() {
-    // workshop-rs#498: `paramDisplayNames` records the labels the Workshop
-    // editor renders per locale — separate from the semantic `paramNames`,
-    // the parse spellings in `paramAliases`, and `paramDefaults`.
     let catalog = catalog();
     let entry = catalog.entry(Kind::Action, "wait").expect("wait action");
     assert_eq!(entry.param_display_name(&en(), 0), Some("Time"));
     assert_eq!(entry.param_display_name(&en(), 1), Some("Wait Behavior"));
     assert_eq!(entry.param_display_name(&zh(), 0), Some("时间"));
     assert_eq!(entry.param_display_name(&zh(), 1), Some("等待行为"));
-    // Locales on the explicit gap list record no names.
     assert_eq!(entry.param_display_name(&Locale::new("de-DE"), 0), None);
     assert_eq!(entry.param_display_name(&zh(), 2), None);
 
-    // The issue's `magnitude` example: `startThrottleInDirection`'s third
-    // parameter is labeled Magnitude / 幅度.
     let throttle = catalog
         .entry(Kind::Action, "startThrottleInDirection")
         .expect("startThrottleInDirection action");
@@ -112,15 +106,11 @@ fn gap_listed_positions_keep_only_their_confirmed_names() {
     let compare = catalog
         .entry(Kind::Value, "compare")
         .expect("compare value");
-    // The zh-CN label for the middle operator dropdown is not documented,
-    // so `compare[1]` is on the gap list; the confirmed en-US name stays
-    // recorded.
     assert_eq!(compare.param_display_name(&en(), 1), Some("Comparison"));
     assert_eq!(compare.param_display_name(&zh(), 1), None);
     assert_eq!(compare.param_display_name(&en(), 0), Some("Value"));
     assert_eq!(compare.param_display_name(&zh(), 0), Some("值"));
 
-    // `magnitude[0]` is fully gapped: the sources conflict on both labels.
     let magnitude = catalog
         .entry(Kind::Value, "magnitude")
         .expect("magnitude value");
@@ -302,9 +292,6 @@ fn missing_primary_locale_alias_fails_validation() {
 
 #[test]
 fn partial_non_primary_locale_coverage_is_allowed() {
-    // ADR-0001 Decision 7: additional declared locales may be partially
-    // covered; missing mappings fail explicitly at conversion time, not at
-    // catalog validation.
     let partial = r#"{
         "schemaVersion": 1,
         "locales": ["en-US", "zh-CN"],
@@ -346,9 +333,6 @@ fn undeclared_locale_fails_validation() {
     assert!(error.to_string().contains("undeclared locale"));
 }
 
-/// A minimal catalog fixture declaring `wait` with two parameters, with
-/// the given `paramDisplayNames`/`paramDisplayNameGaps` fragments spliced
-/// in. `locales` declares en-US, zh-CN, and de-DE.
 fn display_name_fixture(names: &str, gaps: &str) -> String {
     format!(
         r#"{{
@@ -366,8 +350,6 @@ fn display_name_fixture(names: &str, gaps: &str) -> String {
 
 #[test]
 fn param_display_names_require_the_gap_list_to_match_coverage() {
-    // Every supported-locale-covered position stays off the gap list; the
-    // uncovered `kill[0]` and the partially covered `wait[1]` are gapped.
     let fixture = display_name_fixture(
         r#",
         "paramDisplayNames": {
@@ -393,8 +375,6 @@ fn param_display_names_require_the_gap_list_to_match_coverage() {
 
 #[test]
 fn param_display_names_without_the_gap_section_still_load() {
-    // Synthetic and older catalogs may omit `paramDisplayNameGaps`
-    // entirely; completeness is only enforced when it is declared.
     let fixture = display_name_fixture(
         r#",
         "paramDisplayNames": {
@@ -411,19 +391,13 @@ fn param_display_names_without_the_gap_section_still_load() {
 #[test]
 fn param_display_name_gaps_reject_bad_references() {
     for gaps in [
-        // An incomplete position missing from the list.
         r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["kill[0]"] }"#,
-        // A fully covered position must not be listed as a gap.
         r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["wait[0]", "wait[1]", "kill[0]"] }"#,
-        // Malformed `entryId[index]` syntax.
         r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["wait1", "wait[1]", "kill[0]"] }"#,
         r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["wait[x]", "wait[1]", "kill[0]"] }"#,
-        // Undeclared entry and out-of-range index.
         r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["noop[0]", "wait[1]", "kill[0]"] }"#,
         r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["wait[9]", "wait[1]", "kill[0]"] }"#,
-        // Duplicate position.
         r#""paramDisplayNameGaps": { "locales": ["de-DE"], "positions": ["wait[1]", "wait[1]", "kill[0]"] }"#,
-        // Undeclared and duplicated gap locales.
         r#""paramDisplayNameGaps": { "locales": ["fr-FR"], "positions": ["wait[1]", "kill[0]"] }"#,
         r#""paramDisplayNameGaps": { "locales": ["de-DE", "de-DE"], "positions": ["wait[1]", "kill[0]"] }"#,
     ] {
@@ -447,12 +421,9 @@ fn param_display_name_gaps_reject_bad_references() {
 #[test]
 fn param_display_names_reject_bad_records() {
     for names in [
-        // Undeclared entry.
         r#""paramDisplayNames": { "noop": { "0": { "en-US": "X" } } }"#,
-        // Non-numeric and out-of-range positions.
         r#""paramDisplayNames": { "wait": { "x": { "en-US": "X" } } }"#,
         r#""paramDisplayNames": { "wait": { "9": { "en-US": "X" } } }"#,
-        // Empty position map, undeclared locale, empty name.
         r#""paramDisplayNames": { "wait": { "0": {} } }"#,
         r#""paramDisplayNames": { "wait": { "0": { "fr-FR": "X" } } }"#,
         r#""paramDisplayNames": { "wait": { "0": { "en-US": "" } } }"#,
@@ -464,7 +435,6 @@ fn param_display_names_reject_bad_records() {
         );
     }
 
-    // A name may not be recorded for a locale listed as a gap locale.
     let fixture = display_name_fixture(
         r#",
         "paramDisplayNames": {
@@ -485,8 +455,6 @@ fn param_display_names_reject_bad_records() {
 
 #[test]
 fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
-    // The canonical param order (named-arg binding, probes P6/P6b) and
-    // en-US spellings are catalog-owned.
     let catalog = catalog();
 
     let effect = catalog
@@ -547,10 +515,6 @@ fn exercised_builtin_surface_resolves_with_canonical_params_and_spellings() {
 
 #[test]
 fn direction_values_declare_the_vector_return_type() {
-    // #495: the six unit-direction values are vectors, not arrays — the
-    // pinned workshop-data export types `Vector.UP` and the other direction
-    // constants as Direction (vector) returns, and the direction parameters
-    // they fill are typed `Vector`.
     let catalog = catalog();
     for id in ["up", "down", "left", "right", "forward", "backward"] {
         let entry = catalog
@@ -587,8 +551,6 @@ fn documented_action_and_value_signatures_are_inventory_entries() {
     let indexed = catalog
         .entry(Kind::Action, "setPlayerVariableAtIndex")
         .expect("indexed player-variable action");
-    // The catalog declares the surface signature; the `(player, variable)`
-    // pair is what the WIR argument list folds into one `PlayerVariable`.
     assert_eq!(indexed.params(), ["Player", "Variable", "Index", "Value"]);
     assert_eq!(indexed.param_type(0), Some("Player|Array"));
     assert_eq!(indexed.param_type(3), Some("Object|Array"));
@@ -693,8 +655,6 @@ fn exercised_enum_domains_resolve_members_to_canonical_identity() {
         catalog.resolve_enum_member("Hero", &en(), "D.Va"),
         Some(("Hero".to_string(), "DVA".to_string()))
     );
-    // Doctrine is an official-source-only member: absent from the pinned
-    // export, its aliases come from the official localized hero-detail pages.
     assert_eq!(
         catalog.resolve_enum_member("Hero", &zh(), "血律"),
         Some(("Hero".to_string(), "DOCTRINE".to_string()))
@@ -743,9 +703,6 @@ fn exercised_enum_domains_resolve_members_to_canonical_identity() {
         catalog.resolve_enum_member("Map", &en(), "Grímsvötn"),
         Some(("Map".to_string(), "GRIMSVOTN".to_string()))
     );
-    // The export carries only Grímsvötn's en-US spelling; the localized
-    // aliases are transcribed from the official localized Season 5
-    // announcement pages.
     assert_eq!(
         catalog.resolve_enum_member("Map", &zh(), "格里姆火山"),
         Some(("Map".to_string(), "GRIMSVOTN".to_string()))
@@ -760,18 +717,10 @@ fn exercised_enum_domains_resolve_members_to_canonical_identity() {
     );
 }
 
-/// Per-parameter reevaluation coverage (wright#562): each `*Reeval` action
-/// member resolves to the parameter positions it keeps re-evaluating. The
-/// data is pinned to the reviewed member-to-parameter map; positions are
-/// into `params`, and members that keep nothing live resolve to an empty
-/// coverage rather than `None`.
 #[test]
 fn reevaluation_coverage_is_per_parameter() {
     let catalog = catalog();
 
-    // `Create Beam Effect` under `COLOR` reevaluates only its Color input;
-    // `VISIBLE_TO_POSITION_AND_RADIUS` keeps Visible To + both positions
-    // live (the beam has no separate radius parameter).
     let beam = catalog
         .entry(Kind::Action, "createBeamEffect")
         .expect("createBeamEffect");
@@ -831,14 +780,6 @@ fn reevaluation_coverage_is_per_parameter() {
     assert_eq!(reeval_actions, 19);
 }
 
-/// workshop-rs#505: an enum-typed parameter declares its `paramDomains`
-/// entry so `lookup` attaches the domain's members and validation rejects
-/// enum literals from another domain at that position (ADR-0014). The
-/// declared semantic type's leading `paramTypes` alternative names the
-/// domain — `Hero|Array` is a Hero position, while `Vector` positions take
-/// any vector value (not just the direction constants) and unions led by a
-/// non-enum type such as `String|Array|EntityId|Color` are not enum
-/// positions, so neither kind names a `paramDomains` entry.
 #[test]
 fn enum_typed_parameters_declare_their_param_domain() {
     let catalog = catalog();

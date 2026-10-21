@@ -1,22 +1,9 @@
-//! Fixture-backed settings emission table (#86).
-//!
-//! SOURCE: observed from the pinned oracle 9.7.10 en-US output of the
-//! oracle-success settings programs (`compile.workshop` settings section of
-//! the committed snapshots pixelart/santa/broken-weapons/client-to-server,
-//! plus the parabola/crosshair/inputhud oracle runs) at OverPy commit
-//! `eea67ad`. This is observed-behavior data, not copied OverPy source
-//! (LICENSE-BOUNDARY policy). Additions to the table (e.g. the acquired
-//! candidate snapshots) are data-only.
-
 use serde::Deserialize;
 use serde_json::Value;
 use std::sync::OnceLock;
 
 use super::PathPart::{self, Hero, Part, Team};
 
-/// Locale-specific settings names generated from the reviewed Workshop data
-/// export. The projection contains every reviewed locale as data; adding a
-/// locale changes this file, not the parser or emitter architecture.
 const LOCALE_DATA: &str = include_str!("data/locales.json");
 
 fn locale_data() -> &'static Value {
@@ -26,11 +13,6 @@ fn locale_data() -> &'static Value {
     })
 }
 
-/// Resolve a settings display name from the generated locale corpus.
-///
-/// The English table names are intentionally not duplicated in the locale
-/// data. A missing entry means the target locale is not covered and callers
-/// must preserve the explicit missing-mapping contract.
 pub(crate) fn localized_name(locale: &str, section: &str, english: &str) -> Option<&'static str> {
     let data = locale_data();
     let aliases = data.get(section)?.get(english)?.as_object()?;
@@ -52,9 +34,7 @@ pub struct LocalizedSettingName {
     pub section: &'static str,
     /// The en-US display name this row localizes.
     pub english: &'static str,
-    /// The declaring locale.
     pub locale: &'static str,
-    /// The declared spelling.
     pub spelling: &'static str,
 }
 
@@ -101,30 +81,17 @@ pub fn localized_setting_names() -> &'static [LocalizedSettingName] {
     })
 }
 
-/// A leaf key kind: how a settings leaf renders and validates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum KeyKind {
-    /// A presence-only extension setting.
     Flag,
-    /// A quoted string (`Description: "..."`).
     String,
-    /// A boolean rendered `On`/`Off`.
     Bool,
-    /// A boolean rendered `Yes`/`No`.
     YesNo,
-    /// A boolean carrier rendered through a source-supported true-value enum
-    /// token. The false value remains unsupported until independently sourced.
     BoolEnum(&'static str),
-    /// A plain number.
     Number,
-    /// A number rendered with a `%` suffix (`Respawn Time Scalar: 30%`).
     Percent,
-    /// A string-valued enumeration with a per-domain member map
-    /// (`Enum(domain)`).
     Enum(&'static str),
-    /// A list of map names (`enabled maps`).
     ListMap,
-    /// A list of hero names (`enabled heroes`).
     ListHero,
 }
 
@@ -145,17 +112,6 @@ macro_rules! entry {
     };
 }
 
-/// The fixture-backed settings surface.
-///
-/// Slot sets (source-backed): teams {allTeams}, heroes {mei} config groups +
-/// the 10 ListHero names. `enabled: true` is not source-backed; it renders with
-/// no prefix. Keys outside this table (e.g. team1Slots, scoreToWin,
-/// gamemodeStartTrigger, spawnHealthPacks, healthPackRespawnTime%,
-/// abilityCooldown%, healingReceived%, primaryFireKb%, enableSpawningWithUlt,
-/// resetPlayersAfterGoalScored, scoreLeadToWin, gameLengthInSec,
-/// heroes.<team>.general, roleLimit under general, heroLimit under a named
-/// mode) are `settings-unknown-key` at validation (only source-backed in
-/// oracle-failing programs; corpus-bounded).
 pub(crate) static ENTRIES: &[TableEntry] = &[
     entry!(
         [Part("main"), Part("description")],
@@ -212,12 +168,6 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
         "Swap Teams After Match",
         KeyKind::YesNo
     ),
-    // gamemodes.<mode> — per-key subsets (exact-path entries, #86):
-    // enabledMaps under modes {assault, control, escort, hybrid, skirmish,
-    // ffa}; enabled/roleLimit/enableCompetitiveRules under {assault, control,
-    // escort, hybrid}; heroLimit/respawnTime%/enableHeroSwitching/
-    // enableRandomHeroes under general only (general is a literal group name,
-    // not a mode slot).
     entry!(
         [Part("gamemodes"), Part("assault"), Part("enabled")],
         "enabled",
@@ -480,8 +430,6 @@ const fn named(key: &'static str, name: &'static str) -> NameMap {
     NameMap { key, name }
 }
 
-/// Game-mode names (source-backed: assault, control, escort, hybrid, skirmish,
-/// ffa, tdm, general).
 pub(crate) static MODE_NAMES: &[NameMap] = &[
     named("assault", "Assault"),
     named("control", "Control"),
@@ -557,7 +505,6 @@ include!("data/generated_map_entries.rs");
 include!("data/generated_hero_entries.rs");
 include!("data/generated_mode_entries.rs");
 
-/// Team names inside `heroes` (source-backed: allTeams).
 pub(crate) static TEAM_NAMES: &[NameMap] = &[
     named("allTeams", "General"),
     named("team1", "Team 1"),
@@ -582,10 +529,6 @@ const fn enum_member(domain: &'static str, member: &'static str, name: &'static 
 include!("data/generated_entries.rs");
 include!("data/generated_hero_settings.rs");
 
-/// Fixture-owned canonical enum member names. Additional reviewed
-/// Workshop-data export members are retained through
-/// `projection_reconciliation.json`, which maps their source identities into
-/// these canonical domains without replacing fixture-backed display names.
 pub(crate) static ENUM_MEMBERS: &[EnumMember] = &[
     enum_member("mapRotation", "afterAGame", "After A Game"),
     enum_member("mapRotation", "afterMirrorMatch", "After A Mirror Match"),
@@ -621,27 +564,14 @@ pub(crate) static ENUM_MEMBERS: &[EnumMember] = &[
     enum_member("heroLimit", "2PerGame", "2 Per Game"),
 ];
 
-/// Look up a settings leaf entry by its exact path.
-///
-/// `gamemodes.<mode>` groups inherit the `gamemodes.general` leaf set: the
-/// pinned oracle's settings schema merges `general.values` into every declared
-/// mode, with `elimination` inheriting only [`ELIMINATION_GENERAL_KEYS`]
-/// (source: `computeCustomGameSettingsSchema` in the pinned 9.7.10 oracle).
-/// The fallback resolves to the same `general` table entry, so an inherited
-/// per-mode path shares that entry's canonical identity.
 pub(crate) fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
     exact_entry(path).or_else(|| mode_inherited_entry(path))
 }
 
 fn exact_entry(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
-    // Hash-bucket index over `entries()`: a path resolves to a small bucket
-    // verified by full slice equality instead of scanning the whole table.
     entry_bucket(path).find(|entry| entry.path == path)
 }
 
-/// The hash bucket entries sharing `path`'s hash occupy. The table is
-/// deduplicated by `path_string`, so distinct entries in one bucket differ
-/// in path and equality resolves to at most one entry.
 fn entry_bucket(path: &[PathPart<'_>]) -> impl Iterator<Item = &'static TableEntry> {
     static INDEX: OnceLock<std::collections::HashMap<u64, Vec<&'static TableEntry>>> =
         OnceLock::new();
@@ -666,8 +596,6 @@ fn path_hash(path: &[PathPart<'_>]) -> u64 {
     hasher.finish()
 }
 
-/// Mode keys with declared `gamemodes.<mode>` entries — the reviewed mode
-/// slots that inherit the `gamemodes.general` leaf set.
 fn declared_modes() -> &'static std::collections::HashSet<&'static str> {
     static MODES: OnceLock<std::collections::HashSet<&'static str>> = OnceLock::new();
     MODES.get_or_init(|| {
@@ -682,10 +610,6 @@ fn declared_modes() -> &'static std::collections::HashSet<&'static str> {
     })
 }
 
-/// Table entries that are direct children of `parent` — a parent-path hash
-/// bucket verified by prefix equality. Callers that previously scanned
-/// `entries()` for `path.len() == parent.len() + 1 && prefix == parent`
-/// share this index.
 pub(crate) fn child_entries(parent: &[PathPart<'_>]) -> Vec<&'static TableEntry> {
     static CHILDREN: OnceLock<std::collections::HashMap<u64, Vec<(usize, &'static TableEntry)>>> =
         OnceLock::new();
@@ -716,9 +640,6 @@ pub(crate) fn child_entries(parent: &[PathPart<'_>]) -> Vec<&'static TableEntry>
         .unwrap_or_default()
 }
 
-/// The `gamemodes.general` leaf keys `elimination` inherits (the pinned
-/// oracle's restricted copy list; every other declared mode inherits the full
-/// general set).
 static ELIMINATION_GENERAL_KEYS: &[&str] = &[
     "disabledMaps",
     "enableEnemyHealthBars",
@@ -749,8 +670,6 @@ pub(crate) fn mode_inherited_entry(path: &[PathPart<'_>]) -> Option<&'static Tab
     let inherits = if *mode == "elimination" {
         ELIMINATION_GENERAL_KEYS.contains(key)
     } else {
-        // A mode with declared entries is a reviewed mode slot and inherits
-        // the general leaf set.
         declared_modes().contains(mode)
     };
     if !inherits {
@@ -763,17 +682,10 @@ pub(crate) fn mode_inherited_entry(path: &[PathPart<'_>]) -> Option<&'static Tab
     ])
 }
 
-/// Iterate the reviewed settings inventory with the hand-written projection
-/// taking precedence over the generated export projection. Duplicate paths
-/// are represented once in the semantic catalog while the parser and emitter
-/// continue to use the same lookup table.
 pub(crate) fn entries() -> impl Iterator<Item = &'static TableEntry> {
     deduplicated_entries(ENTRIES.iter().chain(GENERATED_ENTRIES.iter()))
 }
 
-/// Iterate both catalog projections without applying effective lookup
-/// precedence. The semantic validator uses this to compare duplicate paths
-/// instead of allowing `entries()` to hide stale or conflicting data.
 pub(crate) fn raw_entries() -> impl Iterator<Item = ProjectedEntry> {
     ENTRIES
         .iter()
@@ -787,7 +699,6 @@ pub(crate) fn raw_entries() -> impl Iterator<Item = ProjectedEntry> {
         }))
 }
 
-/// One setting leaf before effective lookup resolves duplicated projections.
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct ProjectedEntry {
     pub(crate) source: ProjectionSource,
@@ -844,8 +755,6 @@ pub(crate) fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static st
 }
 
 pub(crate) fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static str> {
-    // A producer alias is the spelling pinned OverPy writes, so it is emitted
-    // in preference to the export label.
     hero_setting_aliases()
         .iter()
         .find(|alias| {
@@ -876,12 +785,6 @@ pub(crate) fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&
         })
 }
 
-/// Parse-side display match against every generated row for `(hero, key)`.
-/// Emission reads only the first row, but duplicate upstream rows carry
-/// additional reviewed spellings the parser must still accept. A producer
-/// alias shadows the export labels entirely: emission prefers the alias, so
-/// accepting a shadowed generated spelling would bind a display the emitter
-/// cannot reproduce.
 pub(crate) fn hero_setting_display_matches(
     hero: &str,
     key: &str,
@@ -898,9 +801,6 @@ pub(crate) fn hero_setting_display_matches(
         .any(|name| names_eq(name, display))
 }
 
-/// The `%1$s` composition template a hero-scoped leaf key carries: the
-/// generated export's placeholder form, which the emitter fills with the
-/// hero's gameplay ability name when no reviewed per-hero label exists.
 pub(crate) fn hero_key_template(key: &str) -> Option<&'static str> {
     GENERATED_ENTRIES
         .iter()
@@ -935,17 +835,12 @@ fn hero_setting_aliases() -> &'static [HeroSettingAlias] {
     })
 }
 
-/// Whether a reviewed producer alias exists for `(hero, key)` in `locale` —
-/// the alias shadows the export's generated labels and `%1$s` templates.
 pub(crate) fn hero_setting_has_alias(hero: &str, key: &str, locale: &str) -> bool {
     hero_setting_aliases().iter().any(|alias| {
         alias.hero == hero && alias.key == key && alias.locale.eq_ignore_ascii_case(locale)
     })
 }
 
-/// Reviewed producer aliases observed in the pinned AI-PVE artifact. These
-/// labels omit the export's `倍率` suffix or use the producer's shorter
-/// ability label, but identify the same canonical setting path.
 pub(crate) fn hero_setting_alias(hero: &str, key: &str, locale: &str, display: &str) -> bool {
     hero_setting_aliases().iter().any(|alias| {
         alias.hero == hero
@@ -955,10 +850,6 @@ pub(crate) fn hero_setting_alias(hero: &str, key: &str, locale: &str, display: &
     })
 }
 
-/// Boolean value spellings the Workshop client localizes inconsistently for
-/// one specific key: zh-CN writes `禁用` ("disabled") where the setting is an
-/// off switch. Position-specific on purpose; `禁用` is not a boolean spelling
-/// elsewhere.
 const BOOL_VALUE_ALIASES: &[(&str, &str, &str, bool)] =
     &[("enableSecondaryFire", "zh-CN", "禁用", false)];
 
@@ -977,13 +868,6 @@ fn name_in(maps: &[NameMap], key: &str) -> Option<&'static str> {
     maps.iter().find(|m| m.key == key).map(|m| m.name)
 }
 
-/// Settings-name comparison: the Workshop client matches setting keys and
-/// value spellings without regard to case (Deltinteger's `TextToElement`
-/// settings matcher is `caseSensitive: false`; the pinned oracle's
-/// decompiler lowercases both sides). Whitespace differences in a reviewed
-/// spelling (`66号公路`/`66 号公路`, `1팀`/`1 팀`, #448) are likewise
-/// insignificant. Accents remain significant: `Chateau Guillard` does not
-/// match `Château Guillard`.
 pub(crate) fn names_eq(left: &str, right: &str) -> bool {
     left == right
         || left.to_lowercase() == right.to_lowercase()
@@ -1013,19 +897,10 @@ pub(crate) fn enum_spellings(domain: &str) -> impl Iterator<Item = &'static str>
     enum_members(domain).map(|member| member.name)
 }
 
-/// Canonical `workshop_name` spellings of the leaf entries valid directly
-/// under `parent`, including the `gamemodes.general` leaves a mode inherits.
-/// Mirrors `lookup`/`mode_inherited_entry`: `elimination` inherits only
-/// [`ELIMINATION_GENERAL_KEYS`], other modes inherit the full set only when
-/// they have declared entries, and `general` itself has no fallback.
 pub(crate) fn key_spellings(parent: &[PathPart<'_>]) -> Vec<&'static str> {
     let mut spellings: Vec<&'static str> = child_entries(parent)
         .iter()
-        .filter(|entry| {
-            // `%1$s` placeholder names are emission templates, not
-            // spellings a source could carry.
-            !entry.workshop_name.contains("%1$s")
-        })
+        .filter(|entry| !entry.workshop_name.contains("%1$s"))
         .map(|entry| entry.workshop_name)
         .collect();
     let [PathPart::Part("gamemodes"), PathPart::Part(mode)] = parent else {
@@ -1110,9 +985,6 @@ pub(crate) fn path_string(path: &[PathPart<'_>]) -> String {
 mod tests {
     use super::*;
 
-    /// The pre-index linear scan kept as the resolution oracle: a path
-    /// resolves to the first deduplicated entry whose path equals it, with
-    /// the `gamemodes.<mode>` → `gamemodes.general` inheritance fallback.
     fn scan_exact(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
         entries().find(|entry| entry.path == path)
     }
@@ -1154,8 +1026,6 @@ mod tests {
         scan_exact(path).or_else(|| scan_mode_inherited(path))
     }
 
-    /// Every path the table itself declares — exact and inherited-mode
-    /// paths — plus paths that must not resolve agree with the scan oracle.
     #[test]
     fn index_matches_scan_for_every_table_path() {
         let mut checked = 0usize;
@@ -1167,8 +1037,6 @@ mod tests {
                 path_string(entry.path),
             );
             checked += 1;
-            // Inherited-mode projection: swap a `gamemodes.<mode>` segment
-            // for every other declared mode and for `elimination`.
             if let [
                 PathPart::Part("gamemodes"),
                 PathPart::Part(_),
@@ -1192,8 +1060,6 @@ mod tests {
             }
         }
 
-        // Paths that must not resolve: truncation, extension, unknown
-        // namespaces/keys, wrong slot kinds, and undeclared modes.
         let non_resolving: &[&[PathPart<'_>]] = &[
             &[],
             &[PathPart::Part("main")],
@@ -1222,8 +1088,6 @@ mod tests {
             );
             checked += 1;
         }
-        // Slot-kind mismatch: a table `heroes` path queried with `Part`
-        // where the table declares `Hero`/`Team` slots must not resolve.
         for entry in entries() {
             let mismatched: Vec<PathPart<'_>> = entry
                 .path
@@ -1247,8 +1111,6 @@ mod tests {
         assert!(checked > 500, "derived coverage was thin: {checked} paths");
     }
 
-    /// `key_spellings` keeps the scan's results for every table parent —
-    /// every proper prefix of every declared path, plus unrelated parents.
     #[test]
     fn key_spellings_match_scan_for_every_table_parent() {
         fn scan_key_spellings(parent: &[PathPart<'_>]) -> Vec<&'static str> {

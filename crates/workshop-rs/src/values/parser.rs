@@ -463,11 +463,6 @@ impl ParseContext<'_> {
         }
     }
 
-    /// Consume the longest run at the cursor that spells a reviewed catalog
-    /// value or bare enum member, covering interior `.`, `:`, `!` and
-    /// number-leading spellings (`Maks. Can`, `Resurrección:`, `0. Yuva`,
-    /// #448). Dots otherwise remain member-access syntax, and unresolved
-    /// spellings keep the existing diagnostic path.
     pub(crate) fn catalog_value_spelling(&mut self) -> Option<(String, Position, Position)> {
         let catalog = self.catalog;
         let locale = self.locale.clone();
@@ -479,9 +474,6 @@ impl ParseContext<'_> {
         })
     }
 
-    /// A consumed catalog value/member spelling continues as a call when
-    /// `(` follows (`Is Jumping(...)`, `ヒーロー:(...)`), else as a bare
-    /// member/constant (#448).
     fn catalog_value_call_or_member(
         &mut self,
         phrase: String,
@@ -507,19 +499,12 @@ impl ParseContext<'_> {
         start: Position,
         end: Position,
     ) -> Result<wir::ValueId> {
-        // A value function wins over an enum domain of the same spelling
-        // (e.g. `Vector(x, y, z)` is the value function; `Vector` as an enum
-        // domain only appears through bare members like `Up`).
         let prefer_enum = self.catalog.enum_domain("Hero").is_some()
             && (canonical_keyword(phrase) == "Hero"
                 || self.resolve_enum_domain_mixed(phrase) == Some("Hero"));
         if !prefer_enum && let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
             return self.value_call(entry, phrase, start, end);
         }
-        // An action spelling can collide with an enum domain (`Wait` is
-        // both). The enum reading only stands when the call actually parses
-        // as a single-member enum literal; otherwise the user wrote an action
-        // where a value or condition belongs (#340).
         let action_error = self.action_in_value_error(phrase, start, end);
         if let Some(domain_name) = self
             .resolve_enum_domain_mixed(phrase)
@@ -534,10 +519,6 @@ impl ParseContext<'_> {
                 (Ok(value), _) => Ok(value),
                 (Err(_), Some(error)) => Err(error),
                 (Err(enum_error), None) => {
-                    // A spelling shared by an enum domain and a value prefers
-                    // the enum form, but the value call still applies when
-                    // the call is not a single-member enum literal — zh-CN
-                    // emits `英雄(英雄(D.Va))` for `hero(Hero.DVA)` (#448).
                     if prefer_enum {
                         self.pos = saved;
                         if let Some(entry) = self.resolve_entry(Kind::Value, phrase)
@@ -577,8 +558,6 @@ impl ParseContext<'_> {
         )))
     }
 
-    /// A `name(args)` call for a resolved catalog value entry. Assumes the
-    /// `(` is next; parses the signature-pinned arguments (#448).
     fn value_call(
         &mut self,
         entry: &CatalogEntry,
@@ -588,9 +567,6 @@ impl ParseContext<'_> {
     ) -> Result<wir::ValueId> {
         self.expect(TokenKind::LParen, "expected '(' after value name")?;
         if entry.id == "compare" {
-            // Compare(a, op, b) -> Call(op, [a, b]). The operands are
-            // value positions, not signature-pinned arguments, so the
-            // enclosing expected domain must not leak in (#111).
             let left = self.value_in_domain(None)?;
             self.expect(TokenKind::Comma, "expected ',' after Compare operand")?;
             let (op, op_start, op_end) = match self.next() {
@@ -652,8 +628,6 @@ impl ParseContext<'_> {
         )))
     }
 
-    /// The diagnostic for a Workshop action used where a value or condition
-    /// is expected, when `phrase` names an action-position construct (#340).
     fn action_in_value_error(
         &self,
         phrase: &str,
@@ -727,22 +701,12 @@ impl ParseContext<'_> {
         start: Position,
         end: Position,
     ) -> Result<wir::ValueId> {
-        // Some enum members use a colon in their Workshop spelling (for
-        // example `Arrow: Up`). `phrase()` intentionally stops at the colon
-        // for ordinary identifiers, so complete the member only when a
-        // joined spelling resolves through the same member lookups
-        // `bare_member_resolved` uses; otherwise the colon stays where it was
-        // (conditional `a ? b : c`, named-argument separators).
         if !matches!(phrase, "None" | "无" | "True" | "真" | "False" | "假")
             && matches!(self.peek().map(|token| token.kind), Some(TokenKind::Colon))
         {
             let saved = self.pos;
             self.pos += 1;
             let (suffix, _, suffix_end) = self.phrase()?;
-            // Catalog spellings differ in colon spacing across locales
-            // (`Arrow: Up`, fr-FR `Soldat : 76`, ja-JP `矢印:下`); probe each
-            // joining so a declared spelling resolves regardless of how the
-            // source spaced the colon token.
             for joined in [
                 format!("{phrase}: {suffix}"),
                 format!("{phrase} : {suffix}"),
@@ -843,10 +807,6 @@ impl ParseContext<'_> {
                 Some(Span::new(self.file(), start, end)),
             )));
         }
-        // Event filter domains are resolved by the event parser and are not
-        // value-argument domains. Excluding them here keeps their spellings
-        // from making unrelated bare value arguments ambiguous (for example,
-        // `All` in `Set Invisible(..., All)`).
         let matches: Vec<(String, String)> = self
             .catalog
             .bare_member_matches(&self.locale, phrase)
@@ -863,10 +823,6 @@ impl ParseContext<'_> {
             )));
         }
         if matches.len() > 1 {
-            // #124: a bare spelling shared by several enum domains resolves
-            // to a canonical domain only when the enclosing call's signature
-            // pins one of the candidates. Otherwise preserve every candidate
-            // instead of fabricating a domain.
             if let Some(expected) = self.expected_domain {
                 let pinned: Vec<&(String, String)> = matches
                     .iter()
@@ -953,9 +909,6 @@ impl ParseContext<'_> {
         let mut arg_index = 0usize;
         let mut raw_modify_operator = false;
         loop {
-            // Indexed variable actions carry a project-local variable name,
-            // not a Workshop value expression. Resolve it through the symbol
-            // table so names such as `Brigitte` remain variable identities.
             if call_id == "string" && arg_index == 0 {
                 args.push(self.localized_string_argument()?);
             } else if matches!(
@@ -1032,9 +985,6 @@ impl ParseContext<'_> {
                     raw_modify_operator = self.modify_op().is_err();
                     self.pos = saved;
                 }
-                // Each argument is parsed with the domain its position expects
-                // per the enclosing call's canonical signature (#111); nested
-                // calls override the expectation for their own arguments.
                 let domain = self
                     .context
                     .expected_domain(call_id, arg_index)
@@ -1093,9 +1043,6 @@ impl ParseContext<'_> {
             return self.value();
         }
 
-        // A preset spelling may carry punctuation or a leading number
-        // (`ヒーロー: `, `Player 1`, #448); accept the longest declared
-        // spelling before falling back to the bare phrase.
         let catalog = self.catalog;
         let locale = self.locale.clone();
         if let Some((text, start, end)) = self.catalog_spelling(|spelling| {
@@ -1215,9 +1162,6 @@ impl ParseContext<'_> {
         ))
     }
     fn member_access(&mut self, receiver: wir::ValueId, name: String) -> Result<wir::ValueId> {
-        // A member access on the event player over a declared variable name
-        // is the player-variable read (`Event Player.score`, and its
-        // localized spellings that reach here through catalog resolution).
         if matches!(
             self.target.values.get(receiver),
             Some(ValueNode {

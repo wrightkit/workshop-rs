@@ -13,8 +13,6 @@ import hashlib
 import json
 from pathlib import Path
 
-# The inventory records the catalog's working locales: canonical en-US
-# spellings plus the zh-CN corpus translations.
 LOCALES = ("en-US", "zh-CN")
 
 
@@ -40,8 +38,6 @@ def labeled_record(aliases, source, identifier=None):
 
 def walk_labels(value, path, out):
     if isinstance(value, dict):
-        # A node may carry its own locale labels AND labeled children — record
-        # the labels, then keep descending so the subtree is not dropped.
         aliases = localized_aliases(value)
         if aliases:
             out.append(labeled_record(aliases, ".".join(path)))

@@ -652,9 +652,6 @@ fn localization_shard(catalog: &Catalog) -> Result<CensusShard, CensusError> {
         )
         .locale(ZH_CN),
     ];
-    // #448: every spelling the catalog declares for a locale gets a case
-    // written in that spelling, so an alias the frontend cannot represent
-    // shows up as an explicit result instead of never being exercised.
     let settings_index = SettingsSpellings::build();
     for locale in catalog.locales() {
         for kind in [
@@ -829,9 +826,6 @@ fn localized_member(catalog: &Catalog, domain: &str, member: &str, locale: &Loca
 }
 
 fn probe_filler(catalog: &Catalog, locale: &Locale, entry: &CatalogEntry, index: usize) -> String {
-    // A modify-operator parameter takes a zero-argument operator call —
-    // emit the first declared operation's spelling rather than a value
-    // filler (#504).
     if let Some(operation) = entry
         .param_content(index)
         .and_then(|content| content.operations.first())
@@ -861,8 +855,6 @@ fn probe_filler(catalog: &Catalog, locale: &Locale, entry: &CatalogEntry, index:
         Some("Variable") => "probe".to_string(),
         Some("Subroutine") | Some("Subroutines") => "probe".to_string(),
         Some("Bool") => localized_spelling(catalog, Kind::Value, locale, "true"),
-        // `Hero`-typed params take the member spelling bare; the enclosing
-        // `Hero(...)` call is the value under test or the entry's own name.
         Some("Hero") => {
             let member = catalog
                 .enum_domain("Hero")
@@ -871,8 +863,6 @@ fn probe_filler(catalog: &Catalog, locale: &Locale, entry: &CatalogEntry, index:
                 .unwrap_or("ANA");
             localized_member(catalog, "Hero", member, locale)
         }
-        // String params emit canonically as `Custom String("...")`, so the
-        // probe writes that form instead of a bare literal (#448).
         Some("String") => {
             let custom_string = localized_spelling(catalog, Kind::Value, locale, "customString");
             format!("{custom_string}(\"x\")")
@@ -912,10 +902,6 @@ fn probe_args(catalog: &Catalog, locale: &Locale, entry: &CatalogEntry) -> Strin
         .join(", ")
 }
 
-/// A probe rule written fully in `locale` (#448): every fixed token —
-/// section keywords, the header event, `Wait`, `If`, `End` — carries that
-/// locale's declared spelling so a cross-locale round trip compares the
-/// tested spelling rather than fallback noise in the boilerplate.
 fn probe_rule(catalog: &Catalog, locale: &Locale, actions: &str) -> String {
     let variables = localized_spelling(catalog, Kind::Structural, locale, "variables");
     let global = localized_spelling(catalog, Kind::Structural, locale, "global");
@@ -968,7 +954,6 @@ fn localized_probe(
             } else {
                 format!("{spelling}({});", probe_args(catalog, locale, entry))
             };
-            // `For * Variable` actions open a block that needs `End`.
             let call = if entry.id.starts_with("__for") {
                 let wait = localized_spelling(catalog, Kind::Action, locale, "wait");
                 let end = localized_spelling(catalog, Kind::Structural, locale, "end");
@@ -1055,7 +1040,6 @@ fn structural_spelling_probe(
             kw("actions"),
         ),
         "conditions" => {
-            // Conditions emit canonically in `a == b` comparison form.
             let equals = localized_spelling(catalog, Kind::Operator, locale, "==");
             format!(
                 "{} (\"c\") {{\n    {} {{\n        {ongoing_global};\n    }}\n    {spelling} {{\n        {true_} {equals} {true_};\n    }}\n    {} {{\n        {wait};\n    }}\n}}\n",
@@ -1237,9 +1221,6 @@ impl SettingsSpellings {
     }
 }
 
-/// A probe hero for `definition`'s `<hero>` slot: ability-scoped defs need
-/// a hero that owns the slot; prefer a hero whose emitted name equals the
-/// tested label so generic labels exercise the typed path (#448).
 fn settings_probe_hero(definition: &SettingDefinition, english: &str) -> Option<Option<String>> {
     if !definition.path().contains(".<hero>.") && !definition.path().ends_with(".<hero>") {
         return Some(None);
@@ -1261,9 +1242,6 @@ fn settings_probe_hero(definition: &SettingDefinition, english: &str) -> Option<
             .map(|hero| hero.id().as_str().to_string())
             .collect(),
     };
-    // Prefer a hero that actually renders the tested label (generic
-    // spellings are shadowed by hero-specific ability names), but any hero
-    // carrying the slot still writes the spelling verbatim.
     let mut matching = Vec::new();
     let mut any = Vec::new();
     for id in hero_ids {
@@ -1292,10 +1270,6 @@ fn settings_probe_hero(definition: &SettingDefinition, english: &str) -> Option<
     matching.into_iter().chain(any).next().map(Some)
 }
 
-/// Substitute the ability slot's localized name into a `%1$s` template
-/// spelling — the only form in which such a label can appear in source.
-/// Returns None when the definition is not hero-ability scoped or the hero
-/// has no ability name to substitute (#448).
 fn substitute_template(
     definition: &SettingDefinition,
     spelling: &str,
@@ -1379,8 +1353,6 @@ fn leaf_value(
                 .enum_members()
                 .next()
                 .map(|member| {
-                    // Settings members are declared under `enums`; the
-                    // boolean tokens (On/Off/Yes/No) live under `tokens`.
                     index
                         .lookup(locale.as_str(), "enums", member.english_name())
                         .or_else(|| index.lookup(locale.as_str(), "tokens", member.english_name()))
@@ -1624,8 +1596,6 @@ fn enum_probe(catalog: &Catalog, domain: &EnumDomain, member: &str) -> String {
     let member_spelling = catalog
         .enum_spelling(&domain.domain, &locale, member)
         .unwrap_or(member);
-    // Only the constructor-form domains parse `Domain(Member)`; every other
-    // domain writes the member bare (mirrors `Catalog::enum_member_form`).
     let operand = if CONSTRUCTOR_DOMAINS.contains(&domain.domain.as_str()) {
         format!("{domain_spelling}({member_spelling})")
     } else {
@@ -1828,13 +1798,6 @@ fn run_pipeline(
                 .map_err(|error| Fail::workshop(&error, to))
         };
 
-    // Some declared spellings are inherently ambiguous in a locale: zh-CN
-    // writes `下` for `down`, `Vector.DOWN`, and `Rounding.DOWN` alike, so a
-    // faithful conversion reparses to a preserved `__ambiguous_enum` rather
-    // than the resolved node. When the target program emits byte-identical
-    // canonical text, the client-observable surface is right and only the
-    // resolved-identity check is undecidable — report that explicitly as
-    // Inconclusive instead of a regression (#448).
     let surface_equivalent =
         |a: &workshop_rs::Program, b: &workshop_rs::Program, locale: &Locale| {
             let (Ok(x), Ok(y)) = (emit(a, locale), emit(b, locale)) else {
@@ -1879,9 +1842,6 @@ fn run_pipeline(
     }
     let back = convert_or(&converted.text, &target_locale, &source_locale)?;
     let back_program = parse(&back.text, &source_locale)?;
-    // Compare against the canonical emission, not the raw source: probes
-    // written in a non-canonical declared alias (#448) still must land on
-    // the same canonical program and surface form after a round trip.
     if !roundtrip::equivalent(&program, &back_program)
         || normalize_workshop(&back.text) != normalize_workshop(&emitted)
     {

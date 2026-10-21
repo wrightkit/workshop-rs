@@ -1,25 +1,7 @@
-//! `descriptions` — imports en-US action/value descriptions from the pinned
-//! `workshop-data` export into `descriptions.json`.
-//!
-//! The export's `data.actions`/`data.values` entries carry an en-US
-//! `description` map on the entry and on each `args` position — the
-//! in-game Workshop documentation text — matched to catalog entries by
-//! their exact en-US spelling through the export's `localized` index.
-//! Source text that violates the content rules (gameplay advice,
-//! source-language names, markup) is reduced to the reviewed text in
-//! [`REVIEWED_TEXT`]; positions with no usable source text become
-//! explicit `gaps` entries.
-
 use serde_json::{Map, Value};
 
 use super::*;
 
-/// Reviewed replacements for source text that violates the description
-/// content rules — `(catalog id, parameter position or entry-level, text)`.
-/// Each entry names the canonical Workshop surface form instead of the
-/// source's source-language spelling, or drops gameplay advice and
-/// markup from an otherwise factual text. Every rule must apply at
-/// generation time; an unused rule reports as stale.
 const REVIEWED_TEXT: &[(&str, Option<usize>, &str)] = &[
     (
         "createHudText",
@@ -146,15 +128,8 @@ const REVIEWED_TEXT: &[(&str, Option<usize>, &str)] = &[
     ),
 ];
 
-/// Source texts that are not descriptions at all and must become explicit
-/// gaps rather than imported text — `(catalog id, parameter position or
-/// entry-level)`. `customString`'s source description is a contributor
-/// credit (`"ty magzie for adding that"`), not a description of the value.
 const GAPPED_SOURCE: &[(&str, Option<usize>)] = &[("customString", None)];
 
-/// Import en-US descriptions from the pinned `workshop-data` export and
-/// write the canonical descriptions dataset (without a digest; `build`
-/// records it). Returns the report lines.
 pub(crate) fn generate(
     catalog_data: &str,
     out_path: &Path,
@@ -174,8 +149,6 @@ pub(crate) fn generate(
         .unwrap_or("<unknown>")
         .to_string();
 
-    // en-US spelling -> "section\0export id", over the actions/values
-    // localized rows.
     let mut by_en: HashMap<String, Vec<String>> = HashMap::new();
     for (key, entry) in export
         .get("localized")
@@ -426,9 +399,6 @@ pub(crate) fn generate(
     Ok(report)
 }
 
-/// The dataset version to write: keep the existing file's version across
-/// regenerations so a deliberate version bump survives the pipeline;
-/// `"0.1.0"` when the file does not declare one yet.
 fn dataset_version(out_path: &Path) -> String {
     std::fs::read_to_string(out_path)
         .ok()

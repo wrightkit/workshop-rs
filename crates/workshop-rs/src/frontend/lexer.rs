@@ -322,10 +322,6 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
     Ok(tokens)
 }
 
-/// Consume one word token: identifier characters, interior dashes, and
-/// localization markup sequences (`<en>`, `<br>`, `<hy>`), which the
-/// reviewed catalog carries verbatim inside member spellings such as
-/// `Meis Schneeball<hy>schlacht` and `<en>Orisa<en>` (#448).
 fn take_word(cursor: &mut Cursor) -> Token {
     let start = cursor.pos();
     let mut word = String::new();
@@ -355,9 +351,6 @@ fn take_word(cursor: &mut Cursor) -> Token {
     }
 }
 
-/// Whether the `<` at the cursor opens a markup-led word such as
-/// `<en>Orisa<en>` rather than a comparison operator: a `<tag>` sequence
-/// directly followed by a word character.
 fn starts_markup_word(cursor: &Cursor) -> bool {
     match markup_tag_len(cursor.rest) {
         Some(len) => cursor.rest[len..].chars().next().is_some_and(is_word_start),
@@ -365,8 +358,6 @@ fn starts_markup_word(cursor: &Cursor) -> bool {
     }
 }
 
-/// The byte length of a `<tag>` markup sequence at the start of `rest`
-/// (`<en>`, `<br>`, `<hy>`), or `None` when `rest` does not open one.
 fn markup_tag_len(rest: &str) -> Option<usize> {
     let inner = rest.strip_prefix('<')?;
     let close = inner.find('>')?;
@@ -429,8 +420,6 @@ mod tests {
             .collect()
     }
 
-    /// Catalog spellings carry locale punctuation the lexer must accept as
-    /// word content (#448): `¡`, `«»`, `「」`, `・`, `。`, `–`, `〈〉`.
     #[test]
     fn localized_punctuation_is_word_content() {
         for (spelling, expected) in [
@@ -453,8 +442,6 @@ mod tests {
         }
     }
 
-    /// Localization markup sequences (`<en>`, `<br>`, `<hy>`) stay inside
-    /// the word they interrupt or open (#448).
     #[test]
     fn markup_tags_join_their_word() {
         assert_eq!(
@@ -478,8 +465,6 @@ mod tests {
         );
     }
 
-    /// A `<` that does not open a `<tag>` sequence keeps its operator
-    /// reading, so `a < b` and `a<b` still lex as comparisons.
     #[test]
     fn less_than_still_lexes_as_operator() {
         for source in ["a < b", "a<b", "a<=b", "a <b "] {

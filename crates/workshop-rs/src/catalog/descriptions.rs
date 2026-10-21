@@ -30,7 +30,6 @@ pub const DESCRIPTIONS_DATA: &str = include_str!("data/descriptions.json");
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct Description {
-    /// The description text.
     pub text: String,
     /// The locale the text is written in — the requested locale, or the
     /// primary locale when the request fell back.
@@ -40,29 +39,18 @@ pub struct Description {
     pub fallback: bool,
 }
 
-/// The description data of one catalog entry: the entry description plus
-/// per-parameter descriptions, each a locale map.
 #[derive(Debug, Clone)]
 pub(crate) struct EntryDescriptions {
     pub(crate) description: HashMap<Locale, String>,
-    /// Parallel to `CatalogEntry::params`; `None` where the position has
-    /// no description.
     pub(crate) params: Vec<Option<HashMap<Locale, String>>>,
 }
 
-/// The validated description dataset attached to a [`Catalog`].
 #[derive(Debug, Clone, Default)]
 pub(crate) struct Descriptions {
-    /// The dataset version; `"dev"` when the data declares none.
     pub(crate) version: String,
-    /// The declared content digest (sha256 hex), when the data carries one.
     pub(crate) digest: Option<String>,
-    /// The locales the dataset ships text for.
     pub(crate) locales: Vec<Locale>,
-    /// Declared locales whose coverage is a pending future stage; they
-    /// carry no text and need no gap entries.
     pub(crate) pending: Vec<Locale>,
-    /// Entry index → description data.
     pub(crate) by_entry: HashMap<usize, EntryDescriptions>,
 }
 
@@ -70,10 +58,7 @@ pub(crate) struct Descriptions {
 #[serde(rename_all = "camelCase")]
 struct DescriptionsFile {
     schema_version: u32,
-    /// The locales this dataset ships text for.
     locales: Vec<String>,
-    /// Declared catalog locales whose description coverage is a pending
-    /// stage.
     #[serde(default)]
     pending_locales: Vec<String>,
     #[allow(dead_code)]
@@ -88,9 +73,6 @@ struct DescriptionsFile {
     gaps: BTreeMap<String, Vec<String>>,
 }
 
-/// Per-kind sections of `entries`; kinds without reviewed descriptions
-/// (structural constructs, events, operators, settings) are rejected so
-/// the file cannot silently carry undescribed-scope data.
 #[derive(Deserialize, Default)]
 #[serde(deny_unknown_fields)]
 struct DescriptionSections {
@@ -103,18 +85,12 @@ struct DescriptionSections {
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct EntryDescriptionsFile {
-    /// The entry's own description as a locale map.
     #[serde(default)]
     description: HashMap<String, String>,
-    /// Per-parameter descriptions as locale maps, parallel to the
-    /// entry's catalog parameter list; `null` marks a position with no
-    /// description.
     #[serde(default)]
     params: Option<Vec<Option<HashMap<String, String>>>>,
 }
 
-/// One declared coverage gap: `<id>` for an entry description, or
-/// `<id>.params[<index>]` for a parameter position.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Gap {
     Entry(String),
@@ -164,7 +140,6 @@ fn check_text(owner: &str, locale: &str, text: &str) -> Result<()> {
     Ok(())
 }
 
-/// Validate `file` against `catalog` into a [`Descriptions`] dataset.
 fn validated(catalog: &Catalog, file: DescriptionsFile) -> Result<Descriptions> {
     if file.schema_version != 1 {
         return Err(CatalogError::malformed(format!(
@@ -197,8 +172,6 @@ fn validated(catalog: &Catalog, file: DescriptionsFile) -> Result<Descriptions> 
     }
     let shipped = |locale: &Locale| locales.contains(locale);
 
-    // Parse the gap list: every key must name a real entry or parameter
-    // position, and every gap locale must be a shipped locale.
     let mut gaps: HashMap<Locale, Vec<Gap>> = HashMap::new();
     for (locale_str, keys) in &file.gaps {
         let locale = Locale::new(locale_str);
@@ -239,9 +212,6 @@ fn validated(catalog: &Catalog, file: DescriptionsFile) -> Result<Descriptions> 
         }
     }
 
-    // Attach entry descriptions: ids must exist, texts must be non-empty
-    // shipped-locale maps, and a declared params list must be parallel to
-    // the catalog parameter list.
     let mut by_entry: HashMap<usize, EntryDescriptions> = HashMap::new();
     for (kind, section) in [
         (Kind::Action, &file.entries.actions),
@@ -317,9 +287,6 @@ fn validated(catalog: &Catalog, file: DescriptionsFile) -> Result<Descriptions> 
         }
     }
 
-    // Coverage is explicit: for every shipped locale each action, each
-    // value, and every parameter position either carries text or names a
-    // gap — never both, never neither.
     for locale in &locales {
         let declared: Vec<&Gap> = gaps
             .get(locale)

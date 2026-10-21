@@ -168,9 +168,6 @@ impl<'a> ParseContext<'a> {
         })
     }
 
-    /// Read the maximal phrase of consecutive words and numbers, joined
-    /// exactly as written (`1팀`, `Team 2`, #448). Phrases may span lines
-    /// because long Workshop action arguments wrap mid-phrase.
     pub(crate) fn phrase(&mut self) -> Result<(String, Position, Position)> {
         let mut parts: Vec<(String, Position, Position)> = Vec::new();
         let (start, mut end) = match self.peek() {
@@ -211,9 +208,6 @@ impl<'a> ParseContext<'a> {
                     end = word_end;
                     self.pos += 1;
                 }
-                // Enum members embed numbers (`Team 2`, `Ability 2`); the
-                // lexer splits them from the word, so phrases join Number
-                // tokens too (#119 reference evidence).
                 Token {
                     kind: TokenKind::Number { text, .. },
                     start: number_start,
@@ -233,9 +227,6 @@ impl<'a> ParseContext<'a> {
         self.phrase_on_line_impl(false)
     }
 
-    /// Read a settings list element name: adjacent tokens stay joined and
-    /// `:` is part of the name, preserving localized spellings such as
-    /// `66号公路` and `Watchpoint: Gibraltar`.
     pub(crate) fn settings_list_name(&mut self) -> Result<(String, Position, Position)> {
         self.phrase_on_line_impl(true)
     }
@@ -299,10 +290,6 @@ impl<'a> ParseContext<'a> {
             end = word_end;
             self.pos += 1;
         }
-        // Adjacent fragments stay joined exactly as written (`1. Takım`,
-        // `500%`, `Watchpoint: Gibraltar`); the candidate/acceptance layer
-        // (`names_eq`, the catalog's normalized index) answers for
-        // whitespace-insensitive spellings (#448).
         Ok((join_as_written(&parts), start, end))
     }
 
@@ -336,10 +323,6 @@ impl<'a> ParseContext<'a> {
         Ok((phrase, start, end))
     }
 
-    /// The member phrase inside `Domain(...)` constructor spellings:
-    /// every token on the line joined exactly as written, so reviewed
-    /// member spellings keep their punctuation and spacing verbatim
-    /// (`Soldat : 76`, `<en>Orisa<en>`, `Orisa Dur! Bağlama Işını`, #448).
     pub(crate) fn enum_member_phrase(&mut self) -> Result<(String, Position, Position)> {
         let first = self
             .peek()
@@ -349,10 +332,6 @@ impl<'a> ParseContext<'a> {
         let mut end = first.end;
         let mut parts: Vec<(String, Position, Position)> = Vec::new();
         while let Some(token) = self.peek() {
-            // No declared member spelling contains `(`, so a paren after the
-            // member text belongs to surrounding syntax — the enum reading
-            // must fail so an identically-spelled value call can apply,
-            // e.g. `英雄(英雄(D.Va))` for `hero(Hero.DVA)` (#448).
             if token.start.line != line
                 || matches!(
                     token.kind,
@@ -371,11 +350,6 @@ impl<'a> ParseContext<'a> {
         Ok((join_as_written(&parts), start, end))
     }
 
-    /// Read a text line (tokens until `;`), joining tokens into the literal
-    /// text exactly as written, and consume the terminating `;`. Returns
-    /// the text and the span covering the line's content tokens. Adjacent
-    /// fragments stay joined (`0. Yuva`, `Dur!`); only a real source gap
-    /// inserts a space (#448).
     pub(crate) fn line_text(&mut self) -> Result<(String, Option<Span>)> {
         let mut parts: Vec<(String, Position, Position)> = Vec::new();
         let mut start = None;
@@ -416,14 +390,6 @@ impl<'a> ParseContext<'a> {
         ))
     }
 
-    /// The candidate spellings at `pos`, longest first: `(token_count,
-    /// text)` for every prefix of the spelling run. Words and numbers
-    /// always continue the run; `.`, `:`, and `!` (the `not` operator
-    /// spelling) continue it only when written adjacent to the preceding
-    /// fragment — `Resurrección:`, `Maks. Can`, `Orisa Dur! …` — so a
-    /// spaced `:` or `!` keeps its syntax role (`a ? b : c`, `! x`) (#448).
-    /// `attaches_to` seeds adjacency for the first token when the run
-    /// continues an already-consumed phrase.
     pub(crate) fn spelling_run(
         &self,
         pos: usize,
@@ -440,9 +406,6 @@ impl<'a> ParseContext<'a> {
                 TokenKind::Dot => ".",
                 TokenKind::Colon => ":",
                 TokenKind::Op(op) if op == "not" => "!",
-                // A spaced dash stays inside a member spelling (`Spray -
-                // Baixo`, `Busan - Centre-ville`); miss-only probes keep
-                // `x - y` arithmetic untouched.
                 TokenKind::Op(op) if op == "-" => "-",
                 _ => break,
             };
@@ -469,12 +432,6 @@ impl<'a> ParseContext<'a> {
             .collect()
     }
 
-    /// Consume the longest catalog spelling at the cursor accepted by
-    /// `accept` (a `resolve`-style lookup), covering spellings with
-    /// interior `.`, `:`, `!` or a leading number (`Maks. Can`,
-    /// `Hızlanma:`, `1. Kabiliyet`, #448). A single-token run is skipped:
-    /// a plain word or number keeps the ordinary phrase path. The cursor
-    /// is unchanged on a miss.
     pub(crate) fn catalog_spelling(
         &mut self,
         accept: impl Fn(&str) -> bool,
@@ -492,11 +449,6 @@ impl<'a> ParseContext<'a> {
         None
     }
 
-    /// Extend an already-consumed `phrase` through an adjacent `.`/`:`/`!`
-    /// tail plus any following words (`Forcer le nom de l’I.A.`,
-    /// `Bekle:`), when the joined text satisfies `accept` (#448). Consumes
-    /// the tail on a hit and returns the joined spelling and its end
-    /// position; the cursor is unchanged on a miss.
     pub(crate) fn extend_catalog_spelling(
         &mut self,
         phrase: &str,
@@ -546,10 +498,6 @@ impl<'a> ParseContext<'a> {
         spelling_token_len(&self.tokens, self.pos, spelling)
     }
 
-    /// Consume the longest structural keyword prefix among `ids` at the
-    /// cursor, returning its canonical id. Multi-word and dotted spellings
-    /// (tr `devre dışı`, pl `wył.`, fr `de joueur`) resolve like single-word
-    /// aliases; nothing is consumed on a miss.
     pub(crate) fn keyword_prefix(&mut self, ids: &[&str]) -> Option<String> {
         let mut best: Option<(String, usize)> = None;
         for id in ids {
@@ -792,9 +740,6 @@ pub(crate) fn canonical_keyword(keyword: &str) -> &str {
         .unwrap_or(keyword)
 }
 
-/// Join token fragments exactly as written: a real source gap inserts one
-/// space, adjacent fragments stay glued (`0.` + `Yuva` is `0. Yuva`, but
-/// `Dur` + `!` is `Dur!`, #448).
 pub(crate) fn join_as_written(parts: &[(String, Position, Position)]) -> String {
     let mut text = String::new();
     let mut prev_end: Option<Position> = None;

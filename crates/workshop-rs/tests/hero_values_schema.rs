@@ -1,5 +1,3 @@
-//! The hero-values-v1 schema accepts the example file and rejects each invalid example.
-
 use serde_json::Value;
 
 fn read(path: &str) -> Value {

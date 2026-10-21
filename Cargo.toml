@@ -18,27 +18,17 @@ unicode-ident = "1"
 unicode-normalization = "0.1"
 
 [workspace.lints.rust]
-# Unsafe operations inside an unsafe function still need an explicit block so
-# the unsafe surface and its invariants remain visible at the operation site.
 unsafe_op_in_unsafe_fn = "deny"
-# Public items in a private module are not part of a usable crate API.
 unreachable_pub = "deny"
 
 [workspace.lints.clippy]
-# These groups cover bug-prone findings without enabling broad style or
-# restriction policies; CI promotes the remaining warning-level checks.
 correctness = { level = "deny", priority = -1 }
 suspicious = { level = "deny", priority = -1 }
 perf = { level = "warn", priority = -1 }
-# These development/progress macros must not reach shipped code.
 dbg_macro = "deny"
 todo = "deny"
 unimplemented = "deny"
 
-# Reduce dependency artifact volume while retaining line-table diagnostics for
-# WrightKit code. See wrightkit/.github docs/rust-build-artifacts.md.
-# opt-level 1: the census and corpus tests are runtime-bound; at opt-level 0
-# `census --json` takes 282s, at 1 it takes 39s.
 [profile.dev]
 debug = 1
 opt-level = 1

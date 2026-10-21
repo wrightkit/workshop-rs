@@ -206,8 +206,6 @@ fn walk_modes<'a>(modes: &'a [SettingsNode], visit: &mut dyn FnMut(Visit<'a, '_>
         };
         let path = [PathPart::Part("gamemodes"), PathPart::Part(name)];
         for member in children {
-            // `enabled` bools are consumed by the mode header and never reach
-            // the emission table.
             if matches!(member, SettingsNode::Bool { name, .. } if name == "enabled") {
                 continue;
             }
@@ -345,9 +343,6 @@ fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<Set
     }
     match (node, table::lookup(&full)) {
         (SettingsNode::Raw { .. } | SettingsNode::RawValue { .. }, _) => return,
-        // Mirrors `settings_member`: a block is carried as written whether
-        // or not its key is catalogued; only its leaves must have a written
-        // form (#412).
         (SettingsNode::Group { children, .. } | SettingsNode::RawGroup { children, .. }, _) => {
             for child in children {
                 check_member(child, &[], errors);

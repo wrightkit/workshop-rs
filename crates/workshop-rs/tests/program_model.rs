@@ -53,14 +53,6 @@ fn file_source_attaches_to_registered_files() {
 
 #[test]
 fn applying_a_source_map_drops_stale_settings_spans() {
-    // The settings tree is carried into the program inertly: a source map
-    // holds no settings entries, so spans parsed against the emitted text
-    // cannot be re-anchored to the authored members the applied file table
-    // names. `SourceMap::apply` clears them; otherwise the stale positions
-    // fail `Program::validate` once a member retains shorter authored source
-    // (wrightkit/wright#583).
-    // Rules first so the stale settings span ends past the short authored
-    // text while the map-carried rule span stays in bounds.
     let workshop = "rule (\"tick\") {\n    event { Ongoing - Each Player; All; All; }\n    actions { Wait(1); }\n}\n\nsettings {\n    main {\n        Description: \"Streak race\"\n    }\n}\n";
     let mut reparsed = parser::parse(workshop, &catalog(), &en()).expect("parses");
     assert!(reparsed.settings.as_ref().is_some_and(|s| s.span.is_some()));
@@ -72,10 +64,6 @@ fn applying_a_source_map_drops_stale_settings_spans() {
     assert!(settings.span.is_none());
     assert!(settings.children.iter().all(|node| node.span().is_none()));
 
-    // Retain authored text that covers every map-carried span (the rule
-    // block at lines 1–4) but ends before the stale settings span
-    // (lines 6–9): the dropped settings span cannot fail validation
-    // (wrightkit/wright#583).
     let authored = workshop
         .lines()
         .take(5)
@@ -90,11 +78,6 @@ fn applying_a_source_map_drops_stale_settings_spans() {
 
 #[test]
 fn file_source_retention_prunes_spans_outside_the_text() {
-    // A provider map can record a span whose extent is not a position in the
-    // authored member — macro expansion attributes expanded text by shifting
-    // it onto the invocation site, so a recorded end column can run past the
-    // line (wrightkit/wright#583). Retaining the member's text clears such
-    // spans instead of letting them fail validation.
     let workshop = "rule (\"tick\") {\n    event { Ongoing - Each Player; All; All; }\n    actions { Wait(1); }\n}\n";
     let mut reparsed = parser::parse(workshop, &catalog(), &en()).expect("parses");
     SourceMap::extract(&reparsed)
@@ -115,10 +98,6 @@ fn file_source_retention_prunes_spans_outside_the_text() {
 
 #[test]
 fn file_source_retention_prunes_only_the_attached_file() {
-    // Provider-mapped programs attach each file's text in sequence (the
-    // documented consumer pattern): a span in a file whose source has not
-    // arrived yet cannot be judged and must survive every other file's
-    // attach (wrightkit/workshop-rs#410 regression).
     let workshop = "rule (\"tick\") {\n    event { Ongoing - Each Player; All; All; }\n    actions { Wait(1); }\n}\n";
     let mut program = parser::parse(workshop, &catalog(), &en()).expect("parses");
     SourceMap::extract(&program)
@@ -891,11 +870,6 @@ fn round_trip_equivalence_distinguishes_disabled_from_active() {
     ));
 }
 
-// Residual inspection is defined over the public canonical model and is
-// independent from structural validation (#365): residuals observable in a
-// program `validate` rejects must still be inventoried instead of projecting
-// an internal materialization failure to an empty report.
-
 #[test]
 fn semantic_issues_reports_residuals_when_control_flow_is_unterminated() {
     let catalog = catalog();
@@ -1046,8 +1020,6 @@ rule ("ordering") {
 
 #[test]
 fn empty_settings_member_does_not_consume_the_following_member() {
-    // A bare `name:` member is its own member with an empty value; the next
-    // line still parses as its own member (issue 402).
     let catalog = catalog();
     let locale = workshop_rs::catalog::Locale::new("en-US");
     let source = r#"settings

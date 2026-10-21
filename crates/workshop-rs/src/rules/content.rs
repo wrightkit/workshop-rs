@@ -97,7 +97,6 @@ fn event_node(event: &Event) -> JsonValue {
     JsonValue::Object(node)
 }
 
-/// The `EventTeam` filter id: the canonical `EventTeam` enum member id.
 fn team_id(team: EventTeam) -> &'static str {
     match team {
         EventTeam::All => "ALL",
@@ -106,8 +105,6 @@ fn team_id(team: EventTeam) -> &'static str {
     }
 }
 
-/// The `EventTarget` filter id: the canonical `EventPlayer` member id for
-/// `ALL`/`SLOT_n`, or the `Hero` member id for a hero target.
 fn target_id(target: &EventTarget) -> String {
     match target {
         EventTarget::All => "ALL".to_string(),
@@ -278,10 +275,6 @@ fn value_node(value: &Value) -> Result<JsonValue> {
     })
 }
 
-/// A preserved ambiguous enum member renders as the `ambiguous` node: the
-/// authored spelling plus the canonical `{enum, member}` identity of every
-/// candidate. The parser only preserves a member that matched more than one
-/// domain without a signature pin, so no domain is invented here.
 fn ambiguous_enum_node(args: &[Value]) -> Result<JsonValue> {
     let [Value::String(spelling), Value::Array(candidates)] = args else {
         return Err(WorkshopError::malformed(
@@ -308,11 +301,6 @@ fn ambiguous_enum_node(args: &[Value]) -> Result<JsonValue> {
     Ok(json!({ "ambiguous": spelling, "candidates": candidates }))
 }
 
-/// The catalog id a `Call` action is named by. The parser stores a
-/// player-variable chase under the global chase's WIR name; the document
-/// names it by its own catalog id, like the other folded player-variable
-/// actions (`setPlayerVariableAtIndex`, `stopChasingPlayerVariable`). The
-/// folded `playerVariable` target stays the first argument.
 fn chase_call_id<'a>(name: &'a str, args: &[Value]) -> &'a str {
     match (name, args.first()) {
         ("chaseAtRate", Some(Value::PlayerVariable { .. })) => "chasePlayerVariableAtRate",
@@ -336,16 +324,10 @@ fn subroutine_node(name: &str) -> JsonValue {
     json!({ "subroutine": name })
 }
 
-/// The modify operand is an operator call node with no arguments, matching
-/// how `ModifyOp` operands and comparison operators appear elsewhere.
 fn modify_op_node(op: ModifyOp) -> JsonValue {
     call_node(op.catalog_id(), Vec::new())
 }
 
-/// The `__ambiguous_enum` sentinel is a value construct; a call action can
-/// never legitimately carry it. An internal name in the action position has
-/// no form in `rule-content-v1`, so reject it instead of leaking it into the
-/// document.
 fn reject_sentinel(call: &str) -> Result<()> {
     if call == AMBIGUOUS_ENUM_CALL {
         return Err(WorkshopError::unsupported(

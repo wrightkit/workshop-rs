@@ -145,8 +145,6 @@ impl ParseContext<'_> {
         Ok(())
     }
 
-    /// A declaration index must be a whole u32: `as u32` alone truncates
-    /// fractions and saturates overflow, silently merging declarations.
     fn declaration_index(&mut self) -> Result<u32> {
         match self.next() {
             Some(Token {

@@ -130,52 +130,28 @@ pub enum StatementEditError {
     /// A statement node `statement_from_content` could not convert.
     Content(StatementContentError),
     /// `address.rule` indexes no rule of the program.
-    UnknownRule {
-        /// The out-of-range rule index.
-        rule: usize,
-    },
+    UnknownRule { rule: usize },
     /// `address.index` addresses no statement: past the end of the list, or
     /// into the synthesized tail a rule-final unclosed `if` group carries in
     /// the public model but not in the source.
     IndexOutOfRange {
-        /// The rule index.
         rule: usize,
-        /// The addressed list.
         list: StatementList,
-        /// The out-of-range statement index.
         index: usize,
     },
     /// A condition node was addressed at `actions`, or an action node at
     /// `conditions`.
-    StatementKind {
-        /// The rule index.
-        rule: usize,
-        /// The addressed list.
-        list: StatementList,
-    },
+    StatementKind { rule: usize, list: StatementList },
     /// `insert` was given an empty statement list.
-    EmptyInsert {
-        /// The rule index.
-        rule: usize,
-        /// The addressed list.
-        list: StatementList,
-    },
+    EmptyInsert { rule: usize, list: StatementList },
     /// The program carries no retained source for the addressed rule, or
     /// the retained text can no longer be read back.
-    SourceUnavailable {
-        /// The rule index.
-        rule: usize,
-    },
+    SourceUnavailable { rule: usize },
     /// The retained source does not match the public model at the addressed
     /// position: the statement count differs, the addressed index is a
     /// source-synthesized entry, or the statement recorded there no longer
     /// has the model's content.
-    StaleAddress {
-        /// The rule index.
-        rule: usize,
-        /// The addressed list.
-        list: StatementList,
-    },
+    StaleAddress { rule: usize, list: StatementList },
     /// Statement emission failed (for example a spelling missing in the
     /// requested locale, or a statement the Workshop grammar cannot carry).
     Emission(WorkshopError),
@@ -233,9 +209,6 @@ impl From<crate::source::SourceEditError> for StatementEditError {
 
 type Result<T> = std::result::Result<T, StatementEditError>;
 
-/// The structural keyword ids an actions chunk can open with. `else`/`else
-/// if`/`end` have no recorded span, so this is how their chunks verify the
-/// model entry kind at the addressed position.
 const ACTION_KEYWORD_IDS: &[&str] = &[
     "disabled",
     "if",
@@ -360,9 +333,6 @@ impl Program {
 
         match edit {
             StatementEdit::Insert(_) => {
-                // Past the last source chunk is the end of the section. With a
-                // synthesized trailing `End` that covers `index == len` and the
-                // `End`'s own index: both append after the last chunk.
                 if let Some(chunk) = section.chunks.get(address.index) {
                     self.verify_statement(
                         address,
@@ -406,9 +376,6 @@ impl Program {
         }
     }
 
-    /// The retained source ties the model entry at `address.index` to
-    /// `chunk`: span-bearing entries resolve through the recorded spans,
-    /// spanless `Else`/`End` markers through the chunk's leading keyword.
     fn verify_statement(
         &self,
         address: StatementAddress,
@@ -465,8 +432,6 @@ impl Program {
         }
     }
 
-    /// Insert `rows` on their own lines before `chunk` — or inline before
-    /// it when the chunk does not start its line.
     fn insert_before_chunk(
         &self,
         address: StatementAddress,
@@ -500,8 +465,6 @@ impl Program {
             .map_err(|error| wrap_edit_error(address, error))
     }
 
-    /// Append `rows` at the end of an existing (possibly empty) section,
-    /// before its closing `}`.
     #[allow(clippy::too_many_arguments)]
     fn insert_at_close(
         &self,
@@ -513,8 +476,6 @@ impl Program {
         text: &str,
         rule_span: Span,
     ) -> Result<crate::source::SourceEdit> {
-        // Annotations after the last statement have no statement to attach
-        // to: the new statement goes before them so it does not take them.
         let close = tokens[section.dangling.unwrap_or(section.close)].start;
         let newline = newline_of(text, close);
         let close_indent = line_prefix(text, close);
@@ -545,10 +506,6 @@ impl Program {
             .map_err(|error| wrap_edit_error(address, error))
     }
 
-    /// Insert into a rule whose section does not exist: create the section
-    /// immediately before `actions` when it exists, else before the rule's
-    /// closing `}`. Only reachable for an empty-list insert — any other
-    /// address was already refused as out of range or stale.
     #[allow(clippy::too_many_arguments)]
     fn insert_created_section(
         &self,
@@ -563,9 +520,6 @@ impl Program {
         text: &str,
         rule_span: Span,
     ) -> Result<crate::source::SourceEdit> {
-        // A section can only be absent together with its list: model
-        // statements with no section to hold them mean the model and the
-        // retained source disagree.
         if list_len != 0 || address.index != 0 || rows.is_empty() {
             return Err(if list_len == 0 {
                 StatementEditError::IndexOutOfRange {
@@ -588,8 +542,6 @@ impl Program {
             .map(|section| section.name_start)
             .unwrap_or_else(|| tokens[layout.close].start);
         let newline = newline_of(text, anchor);
-        // The section indent follows the sibling sections (or, for a rule
-        // with no sections at all, one level inside the closing brace).
         let section_indent = layout
             .sections
             .last()
@@ -622,8 +574,6 @@ impl Program {
             .map_err(|error| wrap_edit_error(address, error))
     }
 
-    /// Replace one statement's own tokens: `chunk.first_content`..`chunk.semi`
-    /// — leading `"…"` annotations stay where they are.
     fn replace_chunk(
         &self,
         address: StatementAddress,
@@ -638,11 +588,6 @@ impl Program {
             .map_err(|error| wrap_edit_error(address, error))
     }
 
-    /// Delete one chunk: leading annotations and the statement. A chunk
-    /// alone on its line takes the whole line, including a `//` tail
-    /// comment. A chunk that shares its line takes only its own bytes and
-    /// one adjacent whitespace run, so the other tokens, the indentation,
-    /// and a `//` comment after them stay.
     fn delete_chunk(
         &self,
         address: StatementAddress,
@@ -654,8 +599,6 @@ impl Program {
         let first = tokens[chunk.first].start;
         let semi_end = tokens[chunk.semi].end;
         let starts_line = is_whitespace(line_prefix(text, first));
-        // `//` comments are not tokens, so a later token on the same line
-        // means real content follows the statement.
         let next = tokens.get(chunk.semi + 1).map(|token| token.start);
         let content_follows = next.is_some_and(|next| next.line == semi_end.line);
         let (start, end) = match (starts_line, content_follows) {

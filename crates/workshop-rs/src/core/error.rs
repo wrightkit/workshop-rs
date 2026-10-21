@@ -1,5 +1,3 @@
-//! Structured errors for the Workshop language model.
-
 use crate::catalog::Locale;
 use crate::core::source::Span;
 
@@ -28,8 +26,6 @@ pub enum WorkshopError {
         kind: &'static str,
         spelling: String,
         locale: Locale,
-        /// The nearest accepted spellings for `spelling` in the rejecting
-        /// site's accepted space; empty when nothing was close.
         candidates: Vec<String>,
         span: Option<Span>,
     },
@@ -45,7 +41,6 @@ pub enum WorkshopError {
     /// they tell a nameless detection failure from a genuine rejection.
     NotDetected {
         kind: &'static str,
-        /// What evidence was missing and how to supply it explicitly.
         message: String,
         span: Option<Span>,
     },
@@ -72,7 +67,6 @@ pub enum WorkshopError {
 }
 
 impl WorkshopError {
-    /// A `Malformed` error.
     pub fn malformed(message: impl Into<String>, span: Option<Span>) -> Self {
         WorkshopError::Malformed {
             message: message.into(),
@@ -177,7 +171,6 @@ impl WorkshopError {
     }
 }
 
-/// Catalog-specific error.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub struct CatalogError {
@@ -201,7 +194,6 @@ impl CatalogError {
     }
 }
 
-/// A crate-wide result alias.
 pub(crate) type Result<T> = std::result::Result<T, WorkshopError>;
 
 impl std::fmt::Display for WorkshopError {

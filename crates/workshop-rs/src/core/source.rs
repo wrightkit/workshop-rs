@@ -1,9 +1,3 @@
-//! Source model: files, positions, and spans.
-//!
-//! Conventions: positions are 1-based, and a span is a half-open interval
-//! (`end` is exclusive). Spans carry a typed [`FileId`] instead of a raw file
-//! index.
-
 use std::{ops::Range, slice::Iter};
 
 use super::ids::Id;
@@ -196,7 +190,6 @@ pub struct SourceEdit {
 }
 
 impl SourceEdit {
-    /// Create a checked edit from an existing source buffer.
     pub(crate) fn from_source(
         source: &str,
         range: Range<usize>,
@@ -302,9 +295,6 @@ fn find_line_comments(source: &str) -> Vec<SourceComment> {
     comments
 }
 
-/// Resolve a 1-based line/column [`Position`] to a UTF-8 byte offset in
-/// `source` by scanning from the start. [`SourceDocument`] callers should
-/// prefer its line-indexed `byte_offset` instead.
 pub(crate) fn byte_offset(source: &str, position: Position) -> Option<usize> {
     if !position.is_valid() {
         return None;

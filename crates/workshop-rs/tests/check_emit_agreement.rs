@@ -1,22 +1,3 @@
-//! Agreement coverage for #459: whatever `check` accepts in the covered
-//! settings areas, `emit` must emit, and every member `check` rejects is one
-//! `emit` could not emit either. Every case runs the parse -> check -> emit
-//! pipeline and asserts the accept/reject outcome is identical at every
-//! reachable stage.
-//!
-//! Covered areas (the recurring sibling-path defect class of #451):
-//! - hero settings members: a member whose key derives from an ability slot
-//!   the hero provably lacks — with no reviewed per-hero label row — must be
-//!   rejected by `check` exactly as emission's missing-mapping failure
-//!   would reject it (#438);
-//! - catalogued versus uncatalogued keyed blocks: a `name { ... }` member
-//!   block is carried identically whether or not its key is declared at the
-//!   position it lands (#413, #424).
-//!
-//! Locale-name resolution failures are emission-only by contract (the
-//! `settings::check` module documents them as unprovable at check time), so
-//! emission runs in en-US where every reviewed spelling resolves.
-
 mod common;
 
 use common::{catalog, en};
@@ -80,9 +61,6 @@ fn run_source(source: &str) -> Outcome {
     }
 }
 
-/// One producer-built settings tree through check and emit. Parsing cannot
-/// produce every shape — `SettingsNode::RawGroup` is the producer-facing
-/// pass-through marker — so these cases construct the tree directly.
 fn run_tree(children: Vec<SettingsNode>) -> Outcome {
     let catalog = catalog();
     let en = en();
@@ -209,11 +187,6 @@ fn team(team: &str, children: Vec<SettingsNode>) -> SettingsNode {
     group(team, children)
 }
 
-/// #438: a hero member whose key derives from an ability slot the hero
-/// provably lacks — with no reviewed per-hero label row — is rejected by
-/// `check` with the same failure emission's missing mapping produces.
-/// Doctrine is the one hero the generated settings export carries no rows
-/// for, so its members resolve only through gameplay ability names.
 #[test]
 fn hero_members_without_a_spellable_slot_are_rejected_identically() {
     for member in [
@@ -253,9 +226,6 @@ fn hero_members_without_a_spellable_slot_are_rejected_identically() {
 
 #[test]
 fn hero_members_with_a_spellable_slot_are_accepted_identically() {
-    // Doctrine has no generated rows at all: its spellable members resolve
-    // through gameplay ability names (`ability1` -> "Invigorating Drones",
-    // `secondaryFire` -> "Infuse") or the shared label table.
     for (member, emitted_fragment) in [
         ("enableAbility1: Off", "Invigorating Drones: Off"),
         (
@@ -283,8 +253,6 @@ fn hero_members_with_a_spellable_slot_are_accepted_identically() {
         );
     }
 
-    // Ana lacks ability3 but the export carries a reviewed row: the check
-    // skips the slot guard exactly because emission resolves the row.
     assert_source(
         "ana/enableAbility3",
         &hero_source("ana", "enableAbility3: Off"),
@@ -295,8 +263,6 @@ fn hero_members_with_a_spellable_slot_are_accepted_identically() {
         &hero_source("ana", "enableAbility3 { leaf: 1 }"),
         Verdict::Accepted,
     );
-    // Ana's `enableSecondaryFire` row is an empty en-US label: check and
-    // emit both prefer the row and write the canonical key.
     let outcome = assert_source(
         "ana/Secondary Fire",
         &hero_source("ana", "Secondary Fire: Off"),
@@ -328,8 +294,7 @@ fn hero_members_with_a_spellable_slot_are_accepted_identically() {
 fn uncatalogued_hero_members_are_carried_identically() {
     for member in [
         "myCustomKey: 42",
-        "Ability 3: Off", // doctrine cannot substitute the %1$s template,
-        // so the authored spelling carries verbatim
+        "Ability 3: Off",
         "customBlock { leaf: 1 }",
     ] {
         let outcome = assert_source(
@@ -351,9 +316,6 @@ fn uncatalogued_hero_members_are_carried_identically() {
     }
 }
 
-/// #413: a braced member block is carried as written whether or not its key
-/// is catalogued at that position. Each pair asserts the catalogued-key and
-/// uncatalogued-key spellings take the same pipeline verdict.
 #[test]
 fn carried_blocks_treat_catalogued_and_uncatalogued_keys_consistently() {
     let pairs: &[(&str, &str, &str)] = &[

@@ -32,8 +32,6 @@ fn tolerant_error(actions: &str) -> workshop_rs::WorkshopError {
         .expect_err("expected a canonical rejection")
 }
 
-/// A catalog-unknown residual must not mask a later signature violation,
-/// regardless of source order (#372, `wrightkit/wright#501` review).
 #[test]
 fn residuals_do_not_mask_later_canonical_violations_in_either_order() {
     for actions in [
@@ -62,8 +60,6 @@ fn a_residual_alone_does_not_reject() {
 
 #[test]
 fn nested_known_violations_inside_residual_arguments_still_reject() {
-    // Unknown value call wrapping a slot-type-invalid known value (the
-    // `defend` corpus pattern: `Players On Hero` is Array, not Player).
     let error = tolerant_error(
         "Wait(sqrt(Ability Cooldown(Players On Hero(Hero(Mercy), Team 1), Button(Ability 2))));",
     );
@@ -73,9 +69,6 @@ fn nested_known_violations_inside_residual_arguments_still_reject() {
         "nested slot violation under a residual value: {error}"
     );
 
-    // Unknown action calls are not authored through raw source (the parser
-    // keeps statement-position spellings strict), so producer-shaped calls
-    // build the residual directly.
     let mut program = program("Wait(1);");
     program.rules[0].actions.push(Action::call(
         "producerExtension",

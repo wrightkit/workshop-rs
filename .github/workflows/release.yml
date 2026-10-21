@@ -1,8 +1,5 @@
 name: Release
 
-# Triggered by the version tag that release-plz pushes after merging
-# the release PR. Builds binaries for all supported targets, generates
-# the catalog identity artifact, and publishes a GitHub Release.
 on:
   push:
     tags:
@@ -11,7 +8,6 @@ on:
 permissions:
   contents: write
 
-# Never cancel an in-progress release; never start a duplicate for the same tag.
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false

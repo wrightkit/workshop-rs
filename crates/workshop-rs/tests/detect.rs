@@ -45,9 +45,6 @@ fn explicit_locale_override_bypasses_detection() {
 
 #[test]
 fn zero_marker_input_reports_a_detection_failure() {
-    // With no language markers nothing was resolved: the error must not
-    // name an arbitrary detection-ranking locale or a `'<none>'` spelling,
-    // and stays distinguishable from a rejected-name Unknown diagnostic.
     let error = detect::resolve_locale("0.11.0\n", &catalog(), None)
         .expect_err("no markers means detection failure");
     let workshop_rs::WorkshopError::NotDetected { kind, message, .. } = &error else {
@@ -86,7 +83,6 @@ fn detected_locale_parses_the_input() {
     assert!(!program.rules.is_empty());
 }
 
-// Pre-index detector retained as a differential oracle for the detection contract.
 fn reference_alias_matches(input: &str, catalog: &Catalog, locale: &Locale) -> usize {
     let mut matches = 0usize;
     for kind in [

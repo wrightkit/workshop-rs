@@ -127,7 +127,6 @@ fn event_target_name(target: &EventTarget) -> String {
     }
 }
 
-/// PascalCase spelling of a camelCase catalog id (`playerDied` -> `PlayerDied`).
 fn pascal(id: &str) -> String {
     let mut chars = id.chars();
     chars

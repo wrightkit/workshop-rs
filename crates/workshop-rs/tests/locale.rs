@@ -1,13 +1,3 @@
-//! Multi-locale mechanics tests (ADR-0001 Decisions 3, 7): canonical
-//! identities are locale-independent; locale tables are mappings; missing
-//! target-locale mappings fail explicitly by default; fallback is opt-in and
-//! visible; settings follow the same contract.
-//!
-//! The committed catalog includes the source-backed `zh-CN` corpus; its
-//! exact-match manifest is pinned separately in `tools/corpus/zh-cn-corpus.json`.
-//! This suite pins both successful corpus conversion and the fail-explicit
-//! behavior for an unsupported undeclared target locale.
-
 use workshop_rs::catalog::{Catalog, Kind, Locale};
 use workshop_rs::convert::{self, ConvertOptions};
 use workshop_rs::emitter::{self, EmitOptions};
@@ -413,9 +403,6 @@ fn settings_namespace_spellings_emit_and_reparse_in_zh_cn() {
     assert!(workshop_rs::roundtrip::equivalent_wir(&program, &reparsed));
 }
 
-/// A test-only catalog with a second declared locale carrying clearly
-/// synthetic spellings, to prove the full conversion machinery end-to-end
-/// without fabricating real zh-CN data.
 fn synthetic_catalog() -> Catalog {
     let json = r#"{
         "schemaVersion": 1,
@@ -505,8 +492,6 @@ fn conversion_round_trips_through_a_declared_non_primary_locale() {
 #[test]
 fn partial_coverage_fails_explicitly_only_for_unmapped_identities() {
     let catalog = synthetic_catalog();
-    // wait is mapped in xx-YY, but createHudText is not declared there: a
-    // program using only mapped ids converts; one using an unmapped id fails.
     let mapped =
         "rule (\"r\") { event { Ongoing - Global; } actions { Wait(1, Ignore Condition); } }";
     let out = convert::convert(
@@ -601,8 +586,6 @@ fn current_settings_inventory_resolves_extensions_and_hero_keys() {
     assert_no_raw(&program.settings.expect("settings").children);
 }
 
-/// The zh-CN client writes `禁用` for the secondary-fire switch; the spelling is
-/// accepted only at that key, not as a general boolean.
 #[test]
 fn zh_cn_secondary_fire_accepts_disabled_only_at_that_key() {
     let catalog = catalog();

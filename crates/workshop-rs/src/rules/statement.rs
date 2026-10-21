@@ -91,7 +91,6 @@ impl StatementContentError {
         }
     }
 
-    /// The offending node.
     pub fn node(&self) -> &JsonValue {
         match self {
             Self::UnknownId { node, .. }
@@ -197,7 +196,6 @@ fn child(path: &str, segment: impl fmt::Display) -> String {
 }
 
 impl Converter<'_> {
-    /// The node as an object, after rejecting span keys.
     fn object<'n>(&self, node: &'n JsonValue, path: &str) -> Result<&'n Map<String, JsonValue>> {
         let Some(object) = node.as_object() else {
             return Err(unrepresentable("expected a JSON object", path, node));
@@ -265,7 +263,6 @@ impl Converter<'_> {
         }))
     }
 
-    /// The `call` id and `args` list of a call node.
     fn call_parts<'n>(
         &self,
         object: &'n Map<String, JsonValue>,
@@ -450,8 +447,6 @@ impl Converter<'_> {
                 let entry = self.catalog.entry(Kind::Action, id).ok_or_else(unknown)?;
                 let values = self.values(args, path)?;
                 self.check_arity(entry, &values, node, path)?;
-                // The model keeps a player-variable chase under the global
-                // chase's name; the document names it by its own id.
                 let name = match (id, values.first()) {
                     ("chasePlayerVariableAtRate", Some(Value::PlayerVariable { .. })) => {
                         "chaseAtRate"
@@ -481,8 +476,6 @@ impl Converter<'_> {
         Ok(action)
     }
 
-    /// Check the argument count against a catalog signature, with the rule
-    /// canonical validation applies.
     fn check_arity(
         &self,
         entry: &CatalogEntry,
@@ -679,9 +672,6 @@ impl Converter<'_> {
             }
             _ => {
                 let values = self.values(args, path)?;
-                // A modify operand (`add`, `appendToArray`, …) shares its id
-                // with a value of the same name; with no arguments it is the
-                // operand.
                 let operand = args.is_empty() && wir::is_operation_helper(id);
                 if !operand && let Some(entry) = self.catalog.entry(Kind::Value, id) {
                     self.check_arity(entry, &values, node, path)?;
@@ -714,8 +704,6 @@ impl Converter<'_> {
             .collect()
     }
 
-    /// The model shape the parser gives a catalog value call: `array` and
-    /// `vector` have their own variants.
     fn shaped_call(&self, id: &str, mut values: Vec<Value>) -> Value {
         match (id, values.len()) {
             ("eventPlayer", 0) => Value::EventPlayer,
