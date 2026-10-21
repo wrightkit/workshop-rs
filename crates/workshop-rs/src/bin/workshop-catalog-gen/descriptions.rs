@@ -11,25 +11,23 @@
 //! [`REVIEWED_TEXT`]; positions with no usable source text become
 //! explicit `gaps` entries.
 //!
-//! zh-CN text comes from two cross-checked community sources, normalized
-//! in the `tools/descriptions/zh-source.json` artifact:
-//! - `owlCN`: the zh-CN Workshop client strings of the owl-CN editor
-//!   extension (`qaz075115961/owl-CN` `client/owl.js`), matched by the
-//!   entry's zh-CN spelling;
-//! - `owmod`: the docs.owmod.net Chinese manual (`GKD-OW/docs`
-//!   `manual/documents`), matched by the entry's en-US name.
+//! zh-CN text comes from the `tools/descriptions/zh-source.json`
+//! artifact's two cross-checked records: `byZhName` — the primary
+//! record — matched by the entry's zh-CN spelling, and `byEnName` — the
+//! secondary record — matched by its en-US name.
 //!
-//! Both sources are cleaned to the factual sentences they carry
-//! ([`clean_zh_source`]). Where they disagree, owl-CN arbitrates by
-//! default; positions where owl-CN contradicts the en-US semantics (wrong
-//! direction, unit, or element) are arbitrated to docs.owmod.net through
-//! [`ZH_USE_OWMOD`], and source defects in the chosen text are reduced
-//! through [`ZH_REVIEWED_TEXT`]. Source parameter lists that do not align
-//! 1:1 with the catalog's are bound explicitly through
-//! [`ZH_OWL_PARAM_MAP`]/[`ZH_OWMOD_PARAM_MAP`] — positional matching
-//! across a count mismatch is never assumed. Positions with no usable
-//! source text become explicit `gaps."zh-CN"` entries; no zh-CN text is
-//! translated or inferred.
+//! Both records are cleaned to the factual sentences they carry
+//! ([`clean_zh_source`]). Where they disagree, the primary record
+//! arbitrates by default; positions where it contradicts the en-US
+//! semantics (wrong direction, unit, or element) are arbitrated to the
+//! secondary record through [`ZH_USE_SECONDARY`], and source defects in
+//! the chosen text are reduced through [`ZH_REVIEWED_TEXT`]. Source
+//! parameter lists that do not align 1:1 with the catalog's are bound
+//! explicitly through
+//! [`ZH_PRIMARY_PARAM_MAP`]/[`ZH_SECONDARY_PARAM_MAP`] — positional
+//! matching across a count mismatch is never assumed. Positions with no
+//! usable source text become explicit `gaps."zh-CN"` entries; no zh-CN
+//! text is translated or inferred.
 
 use serde_json::{Map, Value};
 
@@ -196,108 +194,109 @@ const ZH_REVIEWED_TEXT: &[(&str, Option<usize>, &str)] = &[
     ),
 ];
 
-/// Positions where the two zh-CN sources disagree and the docs.owmod.net
-/// text is chosen because the owl-CN text contradicts the en-US semantics
-/// (a mistyped direction, unit, or element name, or a text belonging to a
-/// different element) — `(catalog id, parameter position or entry-level)`.
-/// Every rule must apply at generation time; an unused rule reports as
-/// stale. Every other disagreement resolves to owl-CN.
-const ZH_USE_OWMOD: &[(&str, Option<usize>)] = &[
-    // owl-CN describes the kill feed ("消灭提示") here instead of the
+/// Positions where the two zh-CN source records disagree and the
+/// secondary record's text is chosen because the primary record's text
+/// contradicts the en-US semantics (a mistyped direction, unit, or
+/// element name, or a text belonging to a different element) —
+/// `(catalog id, parameter position or entry-level)`. Every rule must
+/// apply at generation time; an unused rule reports as stale. Every
+/// other disagreement resolves to the primary record.
+const ZH_USE_SECONDARY: &[(&str, Option<usize>)] = &[
+    // The primary record describes the kill feed ("消灭提示") here instead of the
     // scoreboard.
     ("disableScoreboard", None),
-    // owl-CN reduces the comparison result to equality only.
+    // The primary record reduces the comparison result to equality only.
     ("compare", None),
-    // owl-CN's text ends with a stray "." artifact.
+    // The primary record's text ends with a stray "." artifact.
     ("and", None),
-    // owl-CN's "返回输入的布尔的相反值" drops the false-equivalence clause
+    // The primary record's "返回输入的布尔的相反值" drops the false-equivalence clause
     // the en-US text carries.
     ("not", None),
-    // owl-CN says "向左" (left) where the en-US text says "upward".
+    // The primary record says "向左" (left) where the en-US text says "upward".
     ("__yComponentOf__", None),
-    // owl-CN says "向左" (left) where the en-US text says "forward".
+    // The primary record says "向左" (left) where the en-US text says "forward".
     ("__zComponentOf__", None),
-    // owl-CN's "同进" is a typo of "同时" (simultaneously).
+    // The primary record's "同进" is a typo of "同时" (simultaneously).
     ("getFacingDirection", None),
-    // owl-CN describes horizontal speed where the en-US text describes
+    // The primary record describes horizontal speed where the en-US text describes
     // vertical speed.
     ("getVerticalSpeed", None),
-    // owl-CN describes the player closest to the reticle where the en-US
+    // The primary record describes the player closest to the reticle where the en-US
     // text describes players inside the view angle.
     ("getPlayersInViewAngle", None),
-    // owl-CN says "输出英雄" (damage heroes) where the en-US text says
+    // The primary record says "输出英雄" (damage heroes) where the en-US text says
     // support heroes.
     ("allSupportHeroes", None),
-    // owl-CN's text is truncated mid-sentence before the "-1" result.
+    // The primary record's text is truncated mid-sentence before the "-1" result.
     ("indexOfArrayValue", None),
-    // owl-CN uses "数列" (sequence) where every other zh-CN text and the
+    // The primary record uses "数列" (sequence) where every other zh-CN text and the
     // catalog's zh-CN names use "数组" (array).
     ("getPlayersOnHero", None),
     ("removeFromArray", Some(0)),
     ("removeFromArray", Some(1)),
-    // owl-CN's "赋值" clause reads as assignment where the en-US text
+    // The primary record's "赋值" clause reads as assignment where the en-US text
     // describes the value being evaluated.
     ("currentArrayElement", None),
-    // owl-CN mixes 弧度/度 where the en-US text fixes radians.
+    // The primary record mixes 弧度/度 where the en-US text fixes radians.
     ("tan", None),
     ("tan", Some(0)),
     ("sin", Some(0)),
-    // owl-CN describes the healing amount where the en-US text describes
+    // The primary record describes the healing amount where the en-US text describes
     // the damage amount.
     ("damage", Some(2)),
-    // owl-CN describes choosing heroes from a list where the en-US text
+    // The primary record describes choosing heroes from a list where the en-US text
     // describes preloading heroes.
     ("preloadHero", Some(1)),
-    // owl-CN drops "最大" (max) from the ammo amount the en-US text names.
+    // The primary record drops "最大" (max) from the ammo amount the en-US text names.
     ("setMaxAmmo", Some(1)),
-    // owl-CN narrows spectators to teamless spectators where the en-US
+    // The primary record narrows spectators to teamless spectators where the en-US
     // text says spectators.
     ("createHudText", Some(10)),
-    // owl-CN says "向后" (backward) where the en-US text says sideways.
+    // The primary record says "向后" (backward) where the en-US text says sideways.
     ("startForcingThrottle", Some(5)),
-    // owl-CN's "将家" is a typo of "玩家" (player).
+    // The primary record's "将家" is a typo of "玩家" (player).
     ("playEffect", Some(0)),
     ("createEffect", Some(0)),
-    // owl-CN's text belongs to input-direction/eye-position respectively —
+    // The primary record's text belongs to input-direction/eye-position respectively —
     // the two records' parameter texts are transposed.
     ("nearestWalkablePosition", Some(0)),
     ("getEyePosition", Some(0)),
-    // owl-CN says "最近" (nearest) where the en-US text says farthest.
+    // The primary record says "最近" (nearest) where the en-US text says farthest.
     ("getFarthestPlayer", Some(1)),
-    // owl-CN swaps the horizontal/vertical angle directions.
+    // The primary record swaps the horizontal/vertical angle directions.
     ("horizontalAngleFromDirection", Some(0)),
     ("verticalAngleFromDirection", Some(0)),
-    // owl-CN reads the angle endpoint generically where the en-US text
+    // The primary record reads the angle endpoint generically where the en-US text
     // names the angle's ending position.
     ("verticalAngleTowards", Some(1)),
-    // owl-CN drops "水平" (horizontal) from the facing angle.
+    // The primary record drops "水平" (horizontal) from the facing angle.
     ("getHorizontalFacingAngle", Some(0)),
 ];
 
-/// owl-CN parameter records whose parameter list does not align 1:1 with
-/// the catalog's — per catalog position, the owl-CN parameter index it
+/// Primary-record parameter lists that do not align 1:1 with
+/// the catalog's — per catalog position, the primary parameter index it
 /// draws from, or `None` for a position the source does not cover.
 /// Records with an empty parameter list contribute nothing and need no
 /// entry; a record with a nonzero count mismatch and no entry is an
 /// explicit error — positional guessing is never allowed.
-const ZH_OWL_PARAM_MAP: &[(&str, &[Option<usize>])] = &[
-    // owl-CN lists the two operand descriptions under the shared 值
+const ZH_PRIMARY_PARAM_MAP: &[(&str, &[Option<usize>])] = &[
+    // The primary record lists the two operand descriptions under the shared 值
     // label; the middle `comparison` position has no source text.
     ("compare", &[Some(0), None, Some(1)]),
-    // owl-CN's single parameter record carries the communication-type
+    // The primary record's single parameter record carries the communication-type
     // text under a 玩家 label; the player position has no source text.
     ("isCommunicating", &[None, Some(0)]),
 ];
 
-/// docs.owmod.net parameter lists that do not align 1:1 with the
-/// catalog's, same contract as [`ZH_OWL_PARAM_MAP`].
-const ZH_OWMOD_PARAM_MAP: &[(&str, &[Option<usize>])] = &[
+/// Secondary-record parameter lists that do not align 1:1 with the
+/// catalog's, same contract as [`ZH_PRIMARY_PARAM_MAP`].
+const ZH_SECONDARY_PARAM_MAP: &[(&str, &[Option<usize>])] = &[
     ("compare", &[Some(0), None, Some(1)]),
-    // The single owmod parameter text is a generic "function input" note
+    // The secondary record's single parameter text is a generic "function input" note
     // that cannot be attributed to numerator or denominator specifically.
     ("atan2", &[None, None]),
     ("atan2Deg", &[None, None]),
-    // owmod omits the trailing reevaluation position.
+    // The secondary record omits the trailing reevaluation position.
     ("addHealthPool", &[Some(0), Some(1), Some(2), Some(3), None]),
     (
         "createBeamEffect",
@@ -316,7 +315,7 @@ const ZH_OWMOD_PARAM_MAP: &[(&str, &[Option<usize>])] = &[
         "startForcingOutlineFor",
         &[Some(0), Some(1), Some(2), Some(3), None],
     ),
-    // owmod omits the in-world text color position and names the
+    // The secondary record omits the in-world text color position and names the
     // spectator position last.
     (
         "createInWorldText",
@@ -331,20 +330,19 @@ const ZH_OWMOD_PARAM_MAP: &[(&str, &[Option<usize>])] = &[
             Some(6),
         ],
     ),
-    // owmod documents only the team and view-angle positions.
+    // The secondary record documents only the team and view-angle positions.
     ("getPlayersInViewAngle", &[None, Some(0), Some(1)]),
-    // owmod omits the barriers position.
+    // The secondary record omits the barriers position.
     ("isInLoS", &[Some(0), Some(1), None]),
-    // owmod documents only the start and end positions.
+    // The secondary record documents only the start and end positions.
     ("raycastHitNormal", &[Some(0), Some(1), None, None, None]),
     ("raycastHitPlayer", &[Some(0), Some(1), None, None, None]),
     ("raycastHitPosition", &[Some(0), Some(1), None, None, None]),
-    // owmod documents only the rounding-direction position.
+    // The secondary record documents only the rounding-direction position.
     ("roundToInteger", &[None, Some(0)]),
 ];
 
-/// The default zh-CN source artifact, normalized from the pinned source
-/// checkouts; `--zh-source` overrides it.
+/// The default zh-CN source artifact; `--zh-source` overrides it.
 pub(crate) const DEFAULT_ZH_SOURCE: &str = "tools/descriptions/zh-source.json";
 
 /// Import en-US descriptions from the pinned `workshop-data` export and
@@ -426,41 +424,43 @@ pub(crate) fn generate(
                 *text
             })
     };
-    let mut used_owmod_rules: std::collections::HashSet<(&'static str, Option<usize>)> =
+    let mut used_secondary_rules: std::collections::HashSet<(&'static str, Option<usize>)> =
         std::collections::HashSet::new();
     let mut zh_disagreements: Vec<String> = Vec::new();
     let mut zh_resolve = |id: &str,
                           position: Option<usize>,
-                          owl: Option<&str>,
-                          owmod: Option<&str>|
+                          primary: Option<&str>,
+                          secondary: Option<&str>|
      -> Option<String> {
         if let Some(text) = zh_reviewed(id, position) {
             return Some(text.to_string());
         }
-        let owl_text = owl.map(clean_zh_source).filter(|text| !text.is_empty());
-        let owmod_text = owmod.map(clean_zh_source).filter(|text| !text.is_empty());
-        match (owl_text, owmod_text) {
-            (Some(owl), Some(owmod)) => {
-                if canon_zh_text(&owl) != canon_zh_text(&owmod) {
-                    if let Some(rule) = ZH_USE_OWMOD.iter().find(|(rule_id, rule_position)| {
+        let primary_text = primary.map(clean_zh_source).filter(|text| !text.is_empty());
+        let secondary_text = secondary
+            .map(clean_zh_source)
+            .filter(|text| !text.is_empty());
+        match (primary_text, secondary_text) {
+            (Some(primary), Some(secondary)) => {
+                if canon_zh_text(&primary) != canon_zh_text(&secondary) {
+                    if let Some(rule) = ZH_USE_SECONDARY.iter().find(|(rule_id, rule_position)| {
                         rule_id == &id && rule_position == &position
                     }) {
-                        used_owmod_rules.insert((rule.0, rule.1));
+                        used_secondary_rules.insert((rule.0, rule.1));
                         zh_disagreements.push(format!(
-                            "{id}{}: sources disagree, docs.owmod.net arbitrates per ZH_USE_OWMOD",
+                            "{id}{}: sources disagree, the secondary record arbitrates per ZH_USE_SECONDARY",
                             position.map_or_else(String::new, |p| format!(".params[{p}]"))
                         ));
-                        return Some(owmod);
+                        return Some(secondary);
                     }
                     zh_disagreements.push(format!(
-                        "{id}{}: sources disagree, owl-CN arbitrates (default)",
+                        "{id}{}: sources disagree, the primary record arbitrates (default)",
                         position.map_or_else(String::new, |p| format!(".params[{p}]"))
                     ));
                 }
-                Some(owl)
+                Some(primary)
             }
-            (Some(owl), None) => Some(owl),
-            (None, Some(owmod)) => Some(owmod),
+            (Some(primary), None) => Some(primary),
+            (None, Some(secondary)) => Some(secondary),
             (None, None) => None,
         }
     };
@@ -497,33 +497,33 @@ pub(crate) fn generate(
                 .and_then(Value::as_array)
                 .map_or(0, Vec::len);
 
-            // zh-CN source records: owl-CN by zh-CN spelling, docs.owmod.net
-            // by en-US name. Both indexes are normalized (whitespace and
-            // punctuation-free respectively).
-            let owl_record = zh_source.owl_by_name.get(&normalize_zh_name(&zh_name));
-            let owmod_record = zh_source.owmod_by_name.get(&normalize_en_name(&en));
-            if owl_record.is_none() && owmod_record.is_none() {
+            // zh-CN source records: `byZhName` by zh-CN spelling,
+            // `byEnName` by en-US name. Both indexes are normalized
+            // (whitespace and punctuation-free respectively).
+            let primary_record = zh_source.primary_by_name.get(&normalize_zh_name(&zh_name));
+            let secondary_record = zh_source.secondary_by_name.get(&normalize_en_name(&en));
+            if primary_record.is_none() && secondary_record.is_none() {
                 zh_unmatched.push(format!("{id} ({zh_name})"));
                 zh_gaps.push(id.clone());
                 zh_gaps.extend((0..params_len).map(|position| format!("{id}.params[{position}]")));
             }
-            let owl_params = match owl_record {
+            let primary_params = match primary_record {
                 Some(record) => zh_param_indexes(
                     &id,
                     params_len,
                     record.params.len(),
-                    ZH_OWL_PARAM_MAP,
-                    "owl-CN",
+                    ZH_PRIMARY_PARAM_MAP,
+                    "primary",
                 )?,
                 None => vec![None; params_len],
             };
-            let owmod_params = match owmod_record {
+            let secondary_params = match secondary_record {
                 Some(record) => zh_param_indexes(
                     &id,
                     params_len,
                     record.params.len(),
-                    ZH_OWMOD_PARAM_MAP,
-                    "docs.owmod.net",
+                    ZH_SECONDARY_PARAM_MAP,
+                    "secondary",
                 )?,
                 None => vec![None; params_len],
             };
@@ -568,8 +568,8 @@ pub(crate) fn generate(
             let zh_description = zh_resolve(
                 &id,
                 None,
-                owl_record.and_then(|record| record.description.as_deref()),
-                owmod_record.and_then(|record| record.description.as_deref()),
+                primary_record.and_then(|record| record.description.as_deref()),
+                secondary_record.and_then(|record| record.description.as_deref()),
             );
             let mut description = Map::new();
             match en_description {
@@ -586,7 +586,9 @@ pub(crate) fn generate(
                     zh_described += 1;
                     description.insert("zh-CN".to_string(), Value::String(text));
                 }
-                None if owl_record.is_some() || owmod_record.is_some() => zh_gaps.push(id.clone()),
+                None if primary_record.is_some() || secondary_record.is_some() => {
+                    zh_gaps.push(id.clone())
+                }
                 None => {}
             }
             if !description.is_empty() {
@@ -636,23 +638,27 @@ pub(crate) fn generate(
                             }
                             None => gaps.push(format!("{id}.params[{position}]")),
                         }
-                        let owl_text = owl_params[position].map(|index| {
-                            owl_record.expect("mapped indexes imply a record").params[index]
+                        let primary_text = primary_params[position].map(|index| {
+                            primary_record
+                                .expect("mapped indexes imply a record")
+                                .params[index]
                                 .description
                                 .as_str()
                         });
-                        let owmod_text = owmod_params[position].map(|index| {
-                            owmod_record.expect("mapped indexes imply a record").params[index]
+                        let secondary_text = secondary_params[position].map(|index| {
+                            secondary_record
+                                .expect("mapped indexes imply a record")
+                                .params[index]
                                 .description
                                 .as_str()
                         });
-                        match zh_resolve(&id, Some(position), owl_text, owmod_text) {
+                        match zh_resolve(&id, Some(position), primary_text, secondary_text) {
                             Some(text) => {
                                 has_text = true;
                                 zh_param_described += 1;
                                 texts.insert("zh-CN".to_string(), Value::String(text));
                             }
-                            None if owl_record.is_some() || owmod_record.is_some() => {
+                            None if primary_record.is_some() || secondary_record.is_some() => {
                                 zh_gaps.push(format!("{id}.params[{position}]"))
                             }
                             None => {}
@@ -688,10 +694,10 @@ pub(crate) fn generate(
             ));
         }
     }
-    for (rule_id, position) in ZH_USE_OWMOD {
-        if !used_owmod_rules.contains(&(*rule_id, *position)) {
+    for (rule_id, position) in ZH_USE_SECONDARY {
+        if !used_secondary_rules.contains(&(*rule_id, *position)) {
             return Err(format!(
-                "stale docs.owmod.net arbitration for '{rule_id}'{}: \
+                "stale secondary arbitration for '{rule_id}'{}: \
                  no disagreement was arbitrated",
                 position.map_or_else(String::new, |p| format!(" params[{p}]"))
             ));
@@ -730,16 +736,10 @@ pub(crate) fn generate(
                  workshop-data export at commit {commit} (in-game Workshop documentation \
                  text); reviewed reductions for source text violating the content rules are \
                  recorded in the importer's REVIEWED_TEXT table; zh-CN action/value and \
-                 parameter descriptions cross-checked from the owl-CN zh-CN Workshop client \
-                 strings ({owl_repo} client/owl.js at commit {owl_commit}) and the \
-                 docs.owmod.net Chinese manual ({owmod_repo} manual/documents at commit \
-                 {owmod_commit}); source disagreements arbitrate to \
-                 owl-CN except the importer's ZH_USE_OWMOD table, cleaned texts are recorded \
-                 verbatim and uncovered positions are explicit gaps",
-                owl_repo = zh_source.owl_repo,
-                owl_commit = zh_source.owl_commit,
-                owmod_repo = zh_source.owmod_repo,
-                owmod_commit = zh_source.owmod_commit,
+                 parameter descriptions cross-checked from the two records of the zh-CN \
+                 source artifact; source disagreements arbitrate to the zh-name-keyed \
+                 record except the importer's ZH_USE_SECONDARY table, cleaned texts are \
+                 recorded verbatim and uncovered positions are explicit gaps"
             ),
             "license": "MIT (in-game Workshop documentation text and community zh-CN reference text; provenance in docs/source-attribution/catalog.md)",
             "reviewed": true,
@@ -799,16 +799,11 @@ fn dataset_version(out_path: &Path) -> String {
 }
 
 /// The zh-CN source artifact (`tools/descriptions/zh-source.json`):
-/// owl-CN keyword records indexed by normalized zh-CN name, docs.owmod.net
-/// manual records indexed by normalized en-US name, and each source's
-/// pinned repository and commit for provenance.
+/// the `byZhName` record indexed by normalized zh-CN name and the
+/// `byEnName` record indexed by normalized en-US name.
 struct ZhSource {
-    owl_by_name: HashMap<String, ZhRecord>,
-    owmod_by_name: HashMap<String, ZhRecord>,
-    owl_repo: String,
-    owl_commit: String,
-    owmod_repo: String,
-    owmod_commit: String,
+    primary_by_name: HashMap<String, ZhRecord>,
+    secondary_by_name: HashMap<String, ZhRecord>,
 }
 
 /// One source record: the element description plus its parameter
@@ -830,22 +825,6 @@ fn load_zh_source(path: &Path) -> Result<ZhSource, String> {
         .map_err(|error| format!("cannot read zh-CN source {}: {error}", path.display()))?;
     let document: Value = serde_json::from_str(&text)
         .map_err(|error| format!("cannot parse zh-CN source {}: {error}", path.display()))?;
-    let pin = |name: &str| -> Result<(String, String), String> {
-        let source = document
-            .get("sources")
-            .and_then(|sources| sources.get(name))
-            .ok_or_else(|| format!("zh-CN source {} lacks a sources.{name} pin", path.display()))?;
-        let get = |key: &str| {
-            source
-                .get(key)
-                .and_then(Value::as_str)
-                .unwrap_or("<unknown>")
-                .to_string()
-        };
-        Ok((get("repo"), get("commit")))
-    };
-    let (owl_repo, owl_commit) = pin("owlCN")?;
-    let (owmod_repo, owmod_commit) = pin("owmod")?;
     let records =
         |name: &str, normalize: fn(&str) -> String| -> Result<HashMap<String, ZhRecord>, String> {
             let mut by_name = HashMap::new();
@@ -894,12 +873,8 @@ fn load_zh_source(path: &Path) -> Result<ZhSource, String> {
             Ok(by_name)
         };
     Ok(ZhSource {
-        owl_by_name: records("owlCN", normalize_zh_name)?,
-        owmod_by_name: records("owmod", normalize_en_name)?,
-        owl_repo,
-        owl_commit,
-        owmod_repo,
-        owmod_commit,
+        primary_by_name: records("byZhName", normalize_zh_name)?,
+        secondary_by_name: records("byEnName", normalize_en_name)?,
     })
 }
 
@@ -983,16 +958,16 @@ fn check_stale_param_maps(source: &ZhSource, catalog_json: &Value) -> Result<(),
         Ok(())
     };
     check(
-        &source.owl_by_name,
+        &source.primary_by_name,
         |entry| normalize_zh_name(&first_alias(entry, "zh-CN")),
-        ZH_OWL_PARAM_MAP,
-        "owl-CN",
+        ZH_PRIMARY_PARAM_MAP,
+        "primary",
     )?;
     check(
-        &source.owmod_by_name,
+        &source.secondary_by_name,
         |entry| normalize_en_name(&first_alias(entry, "en-US")),
-        ZH_OWMOD_PARAM_MAP,
-        "docs.owmod.net",
+        ZH_SECONDARY_PARAM_MAP,
+        "secondary",
     )?;
     Ok(())
 }
@@ -1014,13 +989,13 @@ fn first_alias(entry: &Value, locale: &str) -> String {
         .unwrap_or_default()
 }
 
-/// owl-CN keyword names occasionally carry spaces or full-width spaces;
-/// drop every whitespace character for matching.
+/// `byZhName` record names occasionally carry spaces or full-width
+/// spaces; drop every whitespace character for matching.
 fn normalize_zh_name(name: &str) -> String {
     name.chars().filter(|c| !c.is_whitespace()).collect()
 }
 
-/// docs.owmod.net headings carry the en-US element name; fold to
+/// `byEnName` record headings carry the en-US element name; fold to
 /// ASCII alphanumerics so spelling style ("Create HUD Text" vs
 /// "createHudText") does not matter.
 fn normalize_en_name(name: &str) -> String {
@@ -1041,11 +1016,11 @@ fn canon_zh_text(text: &str) -> String {
 }
 
 /// Reduce a zh-CN source text to the factual sentence(s) it carries:
-/// drop `~~struck~~` spans and `*` emphasis markers, repair owl-CN's
-/// systematically swapped curly quotes (`”文本“` → `“文本”`), drop the
-/// docs.owmod.net editor aside and leading source-bullet colon, and
-/// collapse whitespace. `"无"`/`"无描述"` markers and empty results yield
-/// no text.
+/// drop `~~struck~~` spans and `*` emphasis markers, repair the primary
+/// record's systematically swapped curly quotes (`”文本“` → `“文本”`),
+/// drop the secondary record's editor aside and leading source-bullet
+/// colon, and collapse whitespace. `"无"`/`"无描述"` markers and empty
+/// results yield no text.
 fn clean_zh_source(text: &str) -> String {
     let mut unstruck = String::with_capacity(text.len());
     let mut keep = true;

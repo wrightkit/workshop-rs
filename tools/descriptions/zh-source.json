@@ -1,5 +1,5 @@
 {
- "owlCN": {
+ "byZhName": {
   "X方向分量": {
    "description": "指定矢量在X方向上的分量，通常代表向左的量。",
    "params": [
@@ -5215,7 +5215,7 @@
    ]
   }
  },
- "owmod": {
+ "byEnName": {
   "Ability Charge": {
    "description": "一名玩家指定按键对应技能的充能次数.",
    "params": [
@@ -10315,20 +10315,6 @@
     }
    ],
    "zh": "Z方向分量"
-  }
- },
- "sources": {
-  "owlCN": {
-   "commit": "b169fef2fd0f77b43d2b1c320242afd1279e924d",
-   "path": "client/owl.js",
-   "repo": "https://github.com/qaz075115961/owl-CN",
-   "sha256": "de64df790a26644305aa5880959fad005fd8112e1c08f4b8081ec98be57de187"
-  },
-  "owmod": {
-   "commit": "9f399dab26f4d4800703b46ad2bcd1b4bbb4c085",
-   "path": "manual/documents",
-   "repo": "https://github.com/GKD-OW/docs",
-   "sha256": "6148dcf57a3e87558721512bea0ca1cf9cfeb2ddec06fd2b5ccf9900f0142893"
   }
  }
 }
