@@ -16,7 +16,7 @@ const DEFAULT_DESCRIPTIONS_FILE: &str = "crates/workshop-rs/src/catalog/data/des
 const EXPORT_ENV: &str = "WORKSHOP_DATA_EXPORT";
 
 fn usage() -> &'static str {
-    "usage: workshop-catalog-gen <check|build|corpus|descriptions> [--file catalog.json] [--descriptions descriptions.json] [--json] [--export PATH] [--out-dir tools/corpus] [--settings-out PATH]"
+    "usage: workshop-catalog-gen <check|build|corpus|descriptions> [--file catalog.json] [--descriptions descriptions.json] [--json] [--export PATH] [--zh-source PATH] [--out-dir tools/corpus] [--settings-out PATH]"
 }
 
 fn export_path(export: Option<PathBuf>) -> Result<PathBuf, String> {
@@ -47,6 +47,7 @@ fn main() -> ExitCode {
     let command = args.next();
     let mut file = PathBuf::from(DEFAULT_FILE);
     let mut descriptions_file = PathBuf::from(DEFAULT_DESCRIPTIONS_FILE);
+    let mut zh_source = PathBuf::from(descriptions::DEFAULT_ZH_SOURCE);
     let mut json = false;
     let mut export: Option<PathBuf> = None;
     let mut out_dir = PathBuf::from(DEFAULT_OUT_DIR);
@@ -55,6 +56,7 @@ fn main() -> ExitCode {
         match arg.as_str() {
             "--file" => file = flag_value(&mut args, "--file"),
             "--descriptions" => descriptions_file = flag_value(&mut args, "--descriptions"),
+            "--zh-source" => zh_source = flag_value(&mut args, "--zh-source"),
             "--export" => export = Some(flag_value(&mut args, "--export")),
             "--out-dir" => out_dir = flag_value(&mut args, "--out-dir"),
             "--settings-out" => settings_out = flag_value(&mut args, "--settings-out"),
@@ -255,7 +257,7 @@ fn main() -> ExitCode {
                     return ExitCode::from(2);
                 }
             };
-            match descriptions::generate(&content, &descriptions_file, &export_path) {
+            match descriptions::generate(&content, &descriptions_file, &export_path, &zh_source) {
                 Ok(report) => {
                     for line in report {
                         println!("{line}");
