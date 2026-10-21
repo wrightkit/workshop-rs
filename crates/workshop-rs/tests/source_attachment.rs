@@ -1,8 +1,9 @@
 mod common;
 
 use crate::common::{catalog, en};
+use workshop_rs::settings::SettingsNode;
 use workshop_rs::source::{FileId, Position, Span};
-use workshop_rs::{MappedText, Program, SourceMap, parser};
+use workshop_rs::{MappedText, Program, SourceMap, emitter, parser};
 
 const WORKSHOP_TEXT: &str = r#"variables {
     global:
@@ -85,6 +86,44 @@ fn provider_program(files: &[&str], spans: serde_json::Value) -> Program {
     let mut program = parser::parse(&decoded.text, &catalog(), &en()).expect("parses");
     decoded.map.apply(&mut program).expect("map applies");
     program
+}
+
+#[test]
+fn apply_drops_settings_spans_the_map_does_not_carry() {
+    let catalog = catalog();
+    let en = en();
+    let source = "settings { lobby { Match Voice Chat: Enabled } }\n\nrule (\"one\") {\n    event { Ongoing - Global; }\n    actions { Wait(1, Ignore Condition); }\n}\n";
+    let program = parser::parse(source, &catalog, &en).expect("parses");
+    let artifact = MappedText::new(
+        emitter::emit(&program, &catalog, &en).expect("emits"),
+        SourceMap::extract(&program),
+    );
+    let mut reparsed = parser::parse(&artifact.text, &catalog, &en).expect("reparses");
+    let settings = reparsed.settings.as_ref().expect("settings");
+    assert!(settings.span.is_some());
+    assert!(settings.children.iter().any(|node| node.span().is_some()));
+
+    artifact.map.apply(&mut reparsed).expect("applies");
+
+    fn assert_unmapped(nodes: &[SettingsNode]) {
+        for node in nodes {
+            assert!(node.span().is_none(), "{} kept a span", node.name());
+            match node {
+                SettingsNode::Workshop { children, .. }
+                | SettingsNode::Group { children, .. }
+                | SettingsNode::RawGroup { children, .. } => assert_unmapped(children),
+                SettingsNode::List { elements, .. } => {
+                    for element in elements {
+                        assert!(element.span.is_none());
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    let settings = reparsed.settings.as_ref().expect("settings survive");
+    assert!(settings.span.is_none());
+    assert_unmapped(&settings.children);
 }
 
 #[test]

@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 use unicode_normalization::UnicodeNormalization;
 use unicode_normalization::char::is_combining_mark;
 
@@ -43,6 +45,30 @@ pub(crate) fn edit_distance(left: &[char], right: &[char], max: usize) -> usize 
 
 pub(crate) fn max_distance(folded_len: usize) -> usize {
     if folded_len >= 6 { 2 } else { 1 }
+}
+
+const HANGUL_JAMO: RangeInclusive<char> = '\u{1100}'..='\u{11FF}';
+const HIRAGANA: RangeInclusive<char> = '\u{3040}'..='\u{309F}';
+const KATAKANA: RangeInclusive<char> = '\u{30A0}'..='\u{30FF}';
+const CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A: RangeInclusive<char> = '\u{3400}'..='\u{4DBF}';
+const CJK_UNIFIED_IDEOGRAPHS: RangeInclusive<char> = '\u{4E00}'..='\u{9FFF}';
+const HANGUL_SYLLABLES: RangeInclusive<char> = '\u{AC00}'..='\u{D7AF}';
+const CJK_COMPATIBILITY_IDEOGRAPHS: RangeInclusive<char> = '\u{F900}'..='\u{FAFF}';
+const HALFWIDTH_KATAKANA: RangeInclusive<char> = '\u{FF66}'..='\u{FF9D}';
+
+pub(crate) fn is_unspaced_script(character: char) -> bool {
+    [
+        HANGUL_JAMO,
+        HIRAGANA,
+        KATAKANA,
+        CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A,
+        CJK_UNIFIED_IDEOGRAPHS,
+        HANGUL_SYLLABLES,
+        CJK_COMPATIBILITY_IDEOGRAPHS,
+        HALFWIDTH_KATAKANA,
+    ]
+    .iter()
+    .any(|range| range.contains(&character))
 }
 
 pub(crate) fn suggest<'a>(
@@ -133,6 +159,16 @@ pub(crate) fn with_candidates_text(message: String, candidates: &[String]) -> St
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unspaced_scripts_cover_each_named_block() {
+        for character in ['ᄀ', 'あ', 'カ', '㐀', '一', '가', '\u{F900}', 'ﾊ'] {
+            assert!(is_unspaced_script(character), "{character}");
+        }
+        for character in ['a', '⺀', 'ힰ'] {
+            assert!(!is_unspaced_script(character), "{character}");
+        }
+    }
 
     #[test]
     fn accent_difference_suggests_canonical() {

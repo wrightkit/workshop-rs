@@ -481,10 +481,10 @@ impl SourceMap {
 
         program.files.clear();
         for path in &self.files {
-            program.add_file(SourceFile::new(path.clone()));
+            program.add_file(SourceFile::new(path));
         }
         if let Some(settings) = &mut program.settings {
-            settings.clear_spans();
+            settings.drop_unmapped_spans();
         }
         program.provenance = Some(Box::new(provenance));
         program.record_identities();
