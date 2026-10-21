@@ -808,7 +808,7 @@ impl PreparedQuery {
         let folded_chars: Vec<char> = folded.chars().collect();
         let loose_min_chars = if folded_chars
             .iter()
-            .any(|&character| is_unspaced_script(character))
+            .any(|&character| suggest::is_unspaced_script(character))
         {
             2
         } else {
@@ -875,20 +875,6 @@ impl PreparedQuery {
                     .any(|candidate| candidate.starts_with(token))
             })
     }
-}
-
-fn is_unspaced_script(character: char) -> bool {
-    matches!(
-        character,
-        '\u{1100}'..='\u{11FF}'
-            | '\u{3040}'..='\u{309F}'
-            | '\u{30A0}'..='\u{30FF}'
-            | '\u{3400}'..='\u{4DBF}'
-            | '\u{4E00}'..='\u{9FFF}'
-            | '\u{AC00}'..='\u{D7AF}'
-            | '\u{F900}'..='\u{FAFF}'
-            | '\u{FF66}'..='\u{FF9D}'
-    )
 }
 
 fn fold_candidate(candidate: &str) -> String {

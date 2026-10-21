@@ -150,16 +150,16 @@ impl SettingsListElement {
         self.variant.iter().flat_map(|variant| variant.split(' '))
     }
 
-    fn clear_span(&mut self) {
+    fn drop_unmapped_span(&mut self) {
         self.span = None;
     }
 }
 
 impl Settings {
-    pub(crate) fn clear_spans(&mut self) {
+    pub(crate) fn drop_unmapped_spans(&mut self) {
         self.span = None;
         for node in &mut self.children {
-            node.clear_spans();
+            node.drop_unmapped_spans();
         }
     }
 }
@@ -181,14 +181,14 @@ impl SettingsNode {
         }
     }
 
-    fn clear_spans(&mut self) {
+    fn drop_unmapped_spans(&mut self) {
         match self {
             SettingsNode::Workshop { children, span }
             | SettingsNode::Group { children, span, .. }
             | SettingsNode::RawGroup { children, span, .. } => {
                 *span = None;
                 for node in children {
-                    node.clear_spans();
+                    node.drop_unmapped_spans();
                 }
             }
             SettingsNode::Number { span, .. }
@@ -200,7 +200,7 @@ impl SettingsNode {
             SettingsNode::List { elements, span, .. } => {
                 *span = None;
                 for element in elements {
-                    element.clear_span();
+                    element.drop_unmapped_span();
                 }
             }
         }
