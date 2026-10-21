@@ -162,7 +162,7 @@ mod tests {
 
     #[test]
     fn unspaced_scripts_cover_each_named_block() {
-        for character in ['ᄀ', 'あ', 'カ', '㐀', '一', '가', '豈', 'ﾊ'] {
+        for character in ['ᄀ', 'あ', 'カ', '㐀', '一', '가', '\u{F900}', 'ﾊ'] {
             assert!(is_unspaced_script(character), "{character}");
         }
         for character in ['a', '⺀', 'ힰ'] {
