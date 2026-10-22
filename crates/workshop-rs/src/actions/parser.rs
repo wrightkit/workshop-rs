@@ -33,8 +33,13 @@ impl ParseContext<'_> {
                     }
                     let disabled = self.consume_disabled();
                     self.condition_pending = true;
+                    let start = self.peek().map(|token| token.start);
                     let value = self.value()?;
-                    self.expect_semi("expected ';' after condition")?;
+                    let end = self.expect_semi("expected ';' after condition")?;
+                    let span = start.map(|start| Span::new(self.file(), start, end));
+                    if let Some(node) = self.target.values.get_mut(value) {
+                        node.span = span;
+                    }
                     conditions.push(wir::Condition { value, disabled });
                 }
                 None => {
@@ -73,10 +78,8 @@ impl ParseContext<'_> {
             if stop == Stop::SectionClosed {
                 return Ok(all_actions);
             }
-            // Some exported Workshop artifacts retain an unmatched structural
-            // marker after source-side pruning. Preserve it as an opaque raw
-            // action so the source remains visible instead of silently
-            // discarding it or rejecting the whole project.
+            // Exports can retain an unmatched structural marker after
+            // pruning; keep it as an opaque raw action instead of dropping it.
             all_actions.push(self.opaque_action()?);
         }
     }
@@ -140,24 +143,20 @@ impl ParseContext<'_> {
                         end = reparsed.2;
                     }
                     match self.canonical_keyword(&phrase).as_str() {
-                        "end" => {
+                        stop @ ("end" | "elseIf" | "else") => {
                             self.pos = saved;
-                            return Ok((actions, Stop::End));
-                        }
-                        "elseIf" => {
-                            self.pos = saved;
-                            return Ok((actions, Stop::ElseIf));
-                        }
-                        "else" => {
-                            self.pos = saved;
-                            return Ok((actions, Stop::Else));
+                            let stop = match stop {
+                                "end" => Stop::End,
+                                "elseIf" => Stop::ElseIf,
+                                _ => Stop::Else,
+                            };
+                            return Ok((actions, stop));
                         }
                         "if" => actions.push(self.if_group(start)?),
                         "forGlobalVariable" => actions.push(self.for_group(start)?),
                         "forPlayerVariable" => actions.push(self.for_player_group(start)?),
                         "while" => actions.push(self.while_group(start)?),
-                        "Loop" => actions.push(self.action_call_from_phrase(phrase, start, end)?),
-                        "Loop If Condition Is True" => {
+                        "Loop" | "Loop If Condition Is True" => {
                             actions.push(self.action_call_from_phrase(phrase, start, end)?)
                         }
                         "Global" | "Event Player" => {
@@ -178,19 +177,15 @@ impl ParseContext<'_> {
                     kind: TokenKind::String(_),
                     ..
                 }) => {
-                    // Raw Workshop permits standalone quoted annotations in
-                    // generated action blocks. They are inert source text,
-                    // not executable actions.
+                    // Quoted annotations are inert source text, not actions.
                     self.pos += 1;
                 }
                 Some(Token {
                     kind: TokenKind::Number { .. },
                     ..
                 }) => {
-                    // A catalog action may open with a number (`1.
-                    // Kabiliyeti Etkinleştir`, #448); the spelled text must
-                    // resolve to a declared action or structural entry,
-                    // otherwise the member-assignment path applies.
+                    // A catalog action may open with a number (#448); the
+                    // text resolves to an action or falls to member assignment.
                     let saved = self.pos;
                     let (phrase, start, end) = self.action_spelling()?;
                     if self.resolve_entry(Kind::Action, &phrase).is_some()
@@ -337,9 +332,10 @@ impl ParseContext<'_> {
                     ))),
                 );
                 let value = self.value()?;
-                self.expect_semi("expected ';' after indexed assignment")?;
+                let end = self.expect_semi("expected ';' after indexed assignment")?;
+                let span = Span::new(self.file(), start, end);
                 return Ok(Some(self.indexed_assignment_action(
-                    true, target, index, operator, value, start,
+                    true, target, index, operator, value, span,
                 )));
             }
             let Some(operator) = self.assignment_operator()? else {
@@ -347,8 +343,8 @@ impl ParseContext<'_> {
             };
             let variable = self.global_by_name(&name)?;
             let value = self.value()?;
-            self.expect_semi("expected ';' after assignment")?;
-            let span = Some(Span::new(self.file(), start, self.previous_span().1));
+            let end = self.expect_semi("expected ';' after assignment")?;
+            let span = Some(Span::new(self.file(), start, end));
             let target_span = Some(Span::new(self.file(), name_start, target_end));
             return Ok(Some(self.target.actions.push(match operator {
                 AssignmentOperator::Set => Action::SetGlobalVariable {
@@ -367,10 +363,8 @@ impl ParseContext<'_> {
             })));
         }
 
-        // An Event Player receiver may carry any catalog spelling, including
-        // multi-word aliases (fr `Joueur exécutant`, tr `Etkinlik Oyuncusu`);
-        // resolve the word run before `.` against the value catalog rather
-        // than matching individual words.
+        // An Event Player receiver may use any catalog spelling, including
+        // multi-word aliases; resolve the word run before `.` as one phrase.
         let Some(event_player_len) = self.event_player_spelling_len() else {
             if !matches!(
                 self.canonical_keyword(&first).as_str(),
@@ -405,7 +399,7 @@ impl ParseContext<'_> {
                 )
             })?;
             let value = self.value()?;
-            self.expect_semi("expected ';' after indexed assignment")?;
+            let end = self.expect_semi("expected ';' after indexed assignment")?;
             let variable_value = self.target.values.push(
                 ValueNode::new(
                     Value::PlayerVariable {
@@ -420,21 +414,22 @@ impl ParseContext<'_> {
                     target_end,
                 ))),
             );
+            let span = Span::new(self.file(), start, end);
             return Ok(Some(self.indexed_assignment_action(
                 false,
                 variable_value,
                 index,
                 operator,
                 value,
-                start,
+                span,
             )));
         }
         let Some(operator) = self.assignment_operator()? else {
             return self.member_assignment_action(saved, start);
         };
         let value = self.value()?;
-        self.expect_semi("expected ';' after assignment")?;
-        let span = Some(Span::new(self.file(), start, self.previous_span().1));
+        let end = self.expect_semi("expected ';' after assignment")?;
+        let span = Some(Span::new(self.file(), start, end));
         let target_span = Some(Span::new(self.file(), target_start, target_end));
         Ok(Some(self.target.actions.push(match operator {
             AssignmentOperator::Set => Action::SetPlayerVariable {
@@ -470,7 +465,7 @@ impl ParseContext<'_> {
             return Ok(None);
         };
         let value = self.value()?;
-        self.expect_semi("expected ';' after member assignment")?;
+        let end = self.expect_semi("expected ';' after member assignment")?;
         let op = match operator {
             AssignmentOperator::Set => None,
             AssignmentOperator::Modify(op) => Some(op),
@@ -479,7 +474,7 @@ impl ParseContext<'_> {
             target,
             op,
             value,
-            span: Some(Span::new(self.file(), start, self.previous_span().1)),
+            span: Some(Span::new(self.file(), start, end)),
         })))
     }
 
@@ -490,7 +485,7 @@ impl ParseContext<'_> {
         index: wir::ValueId,
         operator: AssignmentOperator,
         value: wir::ValueId,
-        start: Position,
+        span: Span,
     ) -> wir::ActionId {
         let name = match &operator {
             AssignmentOperator::Set => {
@@ -530,7 +525,7 @@ impl ParseContext<'_> {
         self.target.actions.push(Action::Call {
             name: name.to_string(),
             args,
-            span: Some(Span::new(self.file(), start, self.previous_span().1)),
+            span: Some(span),
         })
     }
 
@@ -593,16 +588,19 @@ impl ParseContext<'_> {
             .peek()
             .map(|token| token.start)
             .unwrap_or(self.eof().start);
+        let mut end = start;
         while let Some(token) = self.peek() {
-            self.pos += 1;
             if matches!(token.kind, TokenKind::Semi) {
+                self.pos += 1;
                 break;
             }
+            end = token.end;
+            self.pos += 1;
         }
         Ok(self.target.actions.push(Action::Call {
             name: "rawWorkshopAction".to_string(),
             args: Vec::new(),
-            span: Some(Span::new(self.file(), start, self.previous_span().1)),
+            span: Some(Span::new(self.file(), start, end)),
         }))
     }
 
@@ -621,11 +619,12 @@ impl ParseContext<'_> {
         };
 
         let mut else_body = None;
+        let end_pos;
         loop {
             match stop {
                 Stop::End => {
                     self.consume_keyword("end")?;
-                    self.expect_semi("expected ';' after 'End'")?;
+                    end_pos = self.expect_semi("expected ';' after 'End'")?;
                     break;
                 }
                 Stop::ElseIf => {
@@ -652,15 +651,15 @@ impl ParseContext<'_> {
                     // #87). Rewind so the enclosing actions section consumes
                     // that `}` and the rule's own `}` stays intact.
                     self.pos -= 1;
+                    end_pos = self.previous_span().1;
                     break;
                 }
             }
         }
-        let end_span = self.previous_span();
         let action = Action::If {
             branches,
             else_body,
-            span: Some(Span::new(self.file(), start, end_span.1)),
+            span: Some(Span::new(self.file(), start, end_pos)),
         };
         Ok(self.target.actions.push(action))
     }
@@ -746,8 +745,8 @@ impl ParseContext<'_> {
             return Err(self.malformed(missing_end_message, self.previous()));
         }
         self.consume_keyword("end")?;
-        self.expect_semi("expected ';' after 'End'")?;
-        Ok((body, self.previous_span().1))
+        let end = self.expect_semi("expected ';' after 'End'")?;
+        Ok((body, end))
     }
 
     pub(crate) fn action_call_from_phrase(
@@ -774,9 +773,9 @@ impl ParseContext<'_> {
                         None
                     };
                     let value = self.value()?;
-                    self.expect(TokenKind::RParen, "expected ')'")?;
+                    let call_end = self.expect(TokenKind::RParen, "expected ')'")?;
                     self.expect_semi("expected ';'")?;
-                    let span = Some(Span::new(self.file(), start, end));
+                    let span = Some(Span::new(self.file(), start, call_end));
                     let target_span = Some(target_span);
                     Ok(self.target.actions.push(match op {
                         Some(op) => Action::ModifyGlobalVariable {
@@ -807,9 +806,9 @@ impl ParseContext<'_> {
                         None
                     };
                     let value = self.value()?;
-                    self.expect(TokenKind::RParen, "expected ')'")?;
+                    let call_end = self.expect(TokenKind::RParen, "expected ')'")?;
                     self.expect_semi("expected ';'")?;
-                    let span = Some(Span::new(self.file(), start, end));
+                    let span = Some(Span::new(self.file(), start, call_end));
                     let target_span = Some(target_span);
                     Ok(self.target.actions.push(match (op, modify) {
                         (Some(op), true) => Action::ModifyPlayerVariable {
@@ -838,11 +837,11 @@ impl ParseContext<'_> {
                         &name,
                         Some(Span::new(self.file(), name_start, name_end)),
                     )?;
-                    self.expect(TokenKind::RParen, "expected ')'")?;
+                    let call_end = self.expect(TokenKind::RParen, "expected ')'")?;
                     self.expect_semi("expected ';'")?;
                     Ok(self.target.actions.push(Action::CallSubroutine {
                         subroutine,
-                        span: Some(Span::new(self.file(), start, end)),
+                        span: Some(Span::new(self.file(), start, call_end)),
                         callee_span: Some(Span::new(self.file(), name_start, name_end)),
                     }))
                 }
@@ -896,7 +895,7 @@ impl ParseContext<'_> {
                             args.push(self.value_in_domain(domain)?);
                             arg_index += 1;
                         }
-                        self.expect(TokenKind::RParen, "expected ')'")?;
+                        let call_end = self.expect(TokenKind::RParen, "expected ')'")?;
                         self.expect_semi("expected ';' after action")?;
                         let canonical = if action.id == "chasePlayerVariableAtRate" {
                             "chaseAtRate"
@@ -906,7 +905,7 @@ impl ParseContext<'_> {
                         return Ok(self.target.actions.push(Action::Call {
                             name: canonical.to_string(),
                             args,
-                            span: Some(Span::new(self.file(), start, end)),
+                            span: Some(Span::new(self.file(), start, call_end)),
                         }));
                     }
                     "startRule" => {
@@ -919,7 +918,7 @@ impl ParseContext<'_> {
                         self.expect(TokenKind::Comma, "expected ',' after subroutine")?;
                         let domain = self.context.expected_domain(action.id.as_str(), 1);
                         let behavior = self.value_in_domain(domain)?;
-                        self.expect(TokenKind::RParen, "expected ')'")?;
+                        let call_end = self.expect(TokenKind::RParen, "expected ')'")?;
                         self.expect_semi("expected ';' after action")?;
                         let name_span = Some(Span::new(self.file(), name_start, name_end));
                         let subroutine_value = self.target.values.push(
@@ -929,13 +928,13 @@ impl ParseContext<'_> {
                         return Ok(self.target.actions.push(Action::Call {
                             name: action.id.clone(),
                             args: vec![subroutine_value, behavior],
-                            span: Some(Span::new(self.file(), start, end)),
+                            span: Some(Span::new(self.file(), start, call_end)),
                         }));
                     }
                     "stopChasingPlayerVariable" => {
                         self.expect(TokenKind::LParen, "expected '('")?;
                         let (player, variable, name_span) = self.player_variable_arg()?;
-                        self.expect(TokenKind::RParen, "expected ')'")?;
+                        let call_end = self.expect(TokenKind::RParen, "expected ')'")?;
                         self.expect_semi("expected ';' after action")?;
                         let player_variable = self.target.values.push(
                             ValueNode::new(Value::PlayerVariable { player, variable }, None)
@@ -944,28 +943,27 @@ impl ParseContext<'_> {
                         return Ok(self.target.actions.push(Action::Call {
                             name: action.id.clone(),
                             args: vec![player_variable],
-                            span: Some(Span::new(self.file(), start, end)),
+                            span: Some(Span::new(self.file(), start, call_end)),
                         }));
                     }
                     _ => {}
                 }
-                let args = if let Some(Token {
+                let (args, call_end) = if let Some(Token {
                     kind: TokenKind::LParen,
                     ..
                 }) = self.peek()
                 {
                     self.pos += 1;
                     let args = self.value_args(action.id.as_str())?;
-                    self.expect(TokenKind::RParen, "expected ')'")?;
-                    args
+                    (args, self.expect(TokenKind::RParen, "expected ')'")?)
                 } else {
-                    Vec::new()
+                    (Vec::new(), end)
                 };
                 self.expect_semi("expected ';' after action")?;
                 Ok(self.target.actions.push(Action::Call {
                     name: action.id.clone(),
                     args,
-                    span: Some(Span::new(self.file(), start, end)),
+                    span: Some(Span::new(self.file(), start, call_end)),
                 }))
             }
         }

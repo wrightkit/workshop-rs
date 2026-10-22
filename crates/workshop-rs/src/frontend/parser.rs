@@ -543,22 +543,25 @@ impl<'a> ParseContext<'a> {
         }
     }
 
-    pub(crate) fn expect(&mut self, kind: TokenKind, message: &str) -> Result<()> {
+    pub(crate) fn expect(&mut self, kind: TokenKind, message: &str) -> Result<Position> {
         match self.next() {
-            Some(token) if token.kind == kind => Ok(()),
+            Some(token) if token.kind == kind => Ok(token.end),
             Some(token) => Err(self.malformed(message, &token)),
             None => Err(self.malformed(message, self.eof())),
         }
     }
 
-    pub(crate) fn expect_semi(&mut self, message: &str) -> Result<()> {
+    /// Consume the statement-terminating `;` and return the position just
+    /// before it — the end of the statement's last token.
+    pub(crate) fn expect_semi(&mut self, message: &str) -> Result<Position> {
         match self.peek() {
             Some(Token {
                 kind: TokenKind::Semi,
                 ..
             }) => {
+                let end = self.previous_span().1;
                 self.pos += 1;
-                Ok(())
+                Ok(end)
             }
             Some(token) if token.start.line > self.previous().end.line => {
                 let end = self.previous().end;

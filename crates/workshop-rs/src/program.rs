@@ -263,13 +263,12 @@ impl Program {
     /// `file` is not a known file entry.
     ///
     /// Attaching text audits the provenance that belongs to this file: a
-    /// recorded span in `file` that does not resolve inside the retained
-    /// document is stale data — for a provider-mapped program it can describe
-    /// the pre-expansion token stream or a coordinate space the map no longer
-    /// owns — and is cleared so consumers see no span rather than a wrong
-    /// one, matching how `record_identities` retires displaced records
-    /// (wrightkit/wright#583). Spans recorded against other files are left
-    /// untouched; they are audited when their own source is attached.
+    /// recorded span that does not resolve inside the retained document is
+    /// stale — for a provider-mapped program it can describe the pre-expansion
+    /// token stream — and is cleared so consumers see no span rather than a
+    /// wrong one, matching how `record_identities` retires displaced records
+    /// (wrightkit/wright#583). Spans recorded against other files are audited
+    /// when their own source is attached.
     pub fn set_file_source(&mut self, file: FileId, source: impl Into<String>) -> bool {
         let Some(entry) = self.files.get_mut(file.index()) else {
             return false;
@@ -457,21 +456,22 @@ impl Program {
 
     /// Return the authored span of a public rule, when source metadata exists.
     ///
-    /// Attached mappings record the program shape and node content they were
-    /// attached to. Every span accessor returns `None` once the corresponding
-    /// public list has been inserted into or removed from, or once the node
-    /// at that position no longer has the content the mapping was attached
-    /// to — see "Shape and content guard" in `docs/source-preservation.md`.
+    /// Every span accessor returns `None` once the corresponding public list
+    /// is inserted into or removed from, or once the node's content no longer
+    /// matches the attachment — "Shape and content guard" in
+    /// `docs/source-preservation.md`.
     pub fn rule_span(&self, rule: usize) -> Option<crate::source::Span> {
         self.rule_provenance(rule)?.span
     }
 
-    /// Return the authored span of a public rule condition value.
+    /// Return the authored span of a public rule condition statement — the
+    /// whole expression; the terminating `;` is outside.
     pub fn condition_span(&self, rule: usize, condition: usize) -> Option<crate::source::Span> {
         self.condition_provenance(rule, condition)?.span
     }
 
-    /// Return the authored span of a public action in its linear rule order.
+    /// Return the authored span of a public action in its linear rule order —
+    /// the call head through the closing `)`; the terminating `;` is outside.
     pub fn action_span(&self, rule: usize, action: usize) -> Option<crate::source::Span> {
         self.action_provenance(rule, action)?.span
     }

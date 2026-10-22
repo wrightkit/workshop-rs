@@ -37,8 +37,12 @@ its contract is in [`compatibility-facades.md`](compatibility-facades.md).
 
 Parsed programs expose rule, condition, action, and direct action-argument
 spans through `Program::rule_span`, `Program::condition_span`,
-`Program::action_span`, and `Program::action_argument_span`. Identifier and
-nested-value provenance is exposed separately:
+`Program::action_span`, and `Program::action_argument_span`. A condition's
+statement span covers the whole condition expression, from its first token
+through its last; an action's statement span covers the statement from its
+head through its closing `)` or last token. In both cases the terminating
+`;` is outside the span. Identifier and nested-value provenance is exposed
+separately:
 
 - `Program::global_variable_name_span`, `Program::player_variable_name_span`,
   and `Program::subroutine_name_span` return the span of a declared name: the
