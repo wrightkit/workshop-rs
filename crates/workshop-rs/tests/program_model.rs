@@ -657,7 +657,7 @@ fn declaration_and_use_identifiers_slice_to_the_recorded_text() {
         span_text(&program, program.action_span(0, 11).unwrap())
             .starts_with("For Global Variable(cakePos, 0, 10, 1);")
     );
-    assert!(span_text(&program, program.action_span(0, 11).unwrap()).ends_with("End;"));
+    assert!(span_text(&program, program.action_span(0, 11).unwrap()).ends_with("End"));
     assert!(
         span_text(&program, program.action_span(0, 14).unwrap())
             .starts_with("For Player Variable(Event Player, playerScore, 0, 5, 1);")

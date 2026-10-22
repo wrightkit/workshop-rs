@@ -48,3 +48,5 @@ mod statement_edit;
 mod statement_edit_layout;
 #[path = "statement_from_content.rs"]
 mod statement_from_content;
+#[path = "statement_spans.rs"]
+mod statement_spans;
