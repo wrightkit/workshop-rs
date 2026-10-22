@@ -17,17 +17,23 @@ rule ("spans") {
     conditions {
         Add(Event Player.playerScore, Global.cakePos) > 0;
         Compare(Global.cakePos, ==, 0);
+        disabled Global.cakePos > 0;
     }
     actions {
         Set Global Variable(cakePos, 1);
         Global.cakePos = Vector(1, 2, 3);
         Event Player.playerScore = 5;
+        Global.cakePos += 1;
         Set Global Variable At Index(cakePos, 0, Add(1, 2));
         Global.cakePos[0] = 4;
         Call Subroutine(tick);
-        Set Global Variable(cakePos, Add(Event Player.playerScore, Multiply(2, 3)));
+        Set Global Variable(cakePos,
+            Add(Event Player.playerScore, Multiply(2, 3)));
         Abort;
         disabled Set Global Variable(cakePos, 0);
+        If(Global.cakePos > 0);
+            Abort;
+        End;
     }
 }
 "#;
@@ -45,6 +51,7 @@ fn condition_and_action_spans_cover_the_whole_statement() {
     for (condition, expected) in [
         (0, "Add(Event Player.playerScore, Global.cakePos) > 0"),
         (1, "Compare(Global.cakePos, ==, 0)"),
+        (2, "Global.cakePos > 0"),
     ] {
         let span = program.condition_span(0, condition).unwrap();
         assert_eq!(span_text(&program, span), expected, "condition {condition}");
@@ -55,15 +62,21 @@ fn condition_and_action_spans_cover_the_whole_statement() {
         (0, "Set Global Variable(cakePos, 1)"),
         (1, "Global.cakePos = Vector(1, 2, 3)"),
         (2, "Event Player.playerScore = 5"),
-        (3, "Set Global Variable At Index(cakePos, 0, Add(1, 2))"),
-        (4, "Global.cakePos[0] = 4"),
-        (5, "Call Subroutine(tick)"),
+        (3, "Global.cakePos += 1"),
+        (4, "Set Global Variable At Index(cakePos, 0, Add(1, 2))"),
+        (5, "Global.cakePos[0] = 4"),
+        (6, "Call Subroutine(tick)"),
         (
-            6,
-            "Set Global Variable(cakePos, Add(Event Player.playerScore, Multiply(2, 3)))",
+            7,
+            "Set Global Variable(cakePos,\n            Add(Event Player.playerScore, Multiply(2, 3)))",
         ),
-        (7, "Abort"),
-        (8, "Set Global Variable(cakePos, 0)"),
+        (8, "Abort"),
+        (9, "Set Global Variable(cakePos, 0)"),
+        (
+            10,
+            "If(Global.cakePos > 0);\n            Abort;\n        End",
+        ),
+        (11, "Abort"),
     ] {
         assert_eq!(
             span_text(&program, program.action_span(0, action).unwrap()),

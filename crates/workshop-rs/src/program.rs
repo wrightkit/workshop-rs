@@ -471,7 +471,7 @@ impl Program {
     }
 
     /// Return the authored span of a public action in its linear rule order —
-    /// the call head through the closing `)`; the terminating `;` is outside.
+    /// the statement through `)` or its last token; `;` is outside.
     pub fn action_span(&self, rule: usize, action: usize) -> Option<crate::source::Span> {
         self.action_provenance(rule, action)?.span
     }
