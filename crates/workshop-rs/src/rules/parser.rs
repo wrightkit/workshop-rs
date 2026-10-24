@@ -66,34 +66,7 @@ impl ParseContext<'_> {
                     ..
                 }) if self.keyword_prefix(&["global"]).is_some() => {
                     self.expect(TokenKind::Colon, "expected ':' after 'global'")?;
-                    while let Some(Token {
-                        kind: TokenKind::Number { .. },
-                        ..
-                    }) = self.peek()
-                    {
-                        let variable = self.variable_line()?;
-                        self.next_global_index =
-                            self.next_global_index.max(variable.index.saturating_add(1));
-                        if let Some(id) = self.globals.get(&variable.name).copied() {
-                            if is_forward_declaration(self.target.global_variables.get(id).unwrap())
-                            {
-                                *self.target.global_variables.get_mut(id).unwrap() = variable;
-                                continue;
-                            }
-                            return Err(self.malformed(
-                                &format!(
-                                    "duplicate variable declaration '{}'",
-                                    self.target.global_variables.get(id).unwrap().name
-                                ),
-                                self.previous(),
-                            ));
-                        }
-                        let id = self.target.global_variables.push(variable);
-                        self.globals.insert(
-                            self.target.global_variables.get(id).unwrap().name.clone(),
-                            id,
-                        );
-                    }
+                    self.variable_declaration_lines(true)?;
                     saw_section = true;
                 }
                 Some(Token {
@@ -101,34 +74,7 @@ impl ParseContext<'_> {
                     ..
                 }) if self.keyword_prefix(&["player"]).is_some() => {
                     self.expect(TokenKind::Colon, "expected ':' after 'player'")?;
-                    while let Some(Token {
-                        kind: TokenKind::Number { .. },
-                        ..
-                    }) = self.peek()
-                    {
-                        let variable = self.variable_line()?;
-                        self.next_player_index =
-                            self.next_player_index.max(variable.index.saturating_add(1));
-                        if let Some(id) = self.players.get(&variable.name).copied() {
-                            if is_forward_declaration(self.target.player_variables.get(id).unwrap())
-                            {
-                                *self.target.player_variables.get_mut(id).unwrap() = variable;
-                                continue;
-                            }
-                            return Err(self.malformed(
-                                &format!(
-                                    "duplicate variable declaration '{}'",
-                                    self.target.player_variables.get(id).unwrap().name
-                                ),
-                                self.previous(),
-                            ));
-                        }
-                        let id = self.target.player_variables.push(variable);
-                        self.players.insert(
-                            self.target.player_variables.get(id).unwrap().name.clone(),
-                            id,
-                        );
-                    }
+                    self.variable_declaration_lines(false)?;
                     saw_section = true;
                 }
                 Some(token) => {
@@ -141,6 +87,42 @@ impl ParseContext<'_> {
         }
         if !saw_section {
             return Err(self.malformed("variables section is empty", self.previous()));
+        }
+        Ok(())
+    }
+
+    /// The `index: name` lines of one `global:`/`player:` declaration block.
+    fn variable_declaration_lines(&mut self, global: bool) -> Result<()> {
+        while let Some(Token {
+            kind: TokenKind::Number { .. },
+            ..
+        }) = self.peek()
+        {
+            let variable = self.variable_line()?;
+            let next_index = if global {
+                &mut self.next_global_index
+            } else {
+                &mut self.next_player_index
+            };
+            *next_index = (*next_index).max(variable.index.saturating_add(1));
+            let (names, arena) = if global {
+                (&mut self.globals, &mut self.target.global_variables)
+            } else {
+                (&mut self.players, &mut self.target.player_variables)
+            };
+            if let Some(id) = names.get(&variable.name).copied() {
+                if is_forward_declaration(arena.get(id).unwrap()) {
+                    *arena.get_mut(id).unwrap() = variable;
+                    continue;
+                }
+                let duplicate = arena.get(id).unwrap().name.clone();
+                return Err(self.malformed(
+                    &format!("duplicate variable declaration '{duplicate}'"),
+                    self.previous(),
+                ));
+            }
+            let id = arena.push(variable);
+            names.insert(arena.get(id).unwrap().name.clone(), id);
         }
         Ok(())
     }

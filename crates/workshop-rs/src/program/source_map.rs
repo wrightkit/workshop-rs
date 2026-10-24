@@ -314,39 +314,24 @@ impl SourceMap {
                     index,
                     span,
                     name_span,
-                } => {
-                    let declaration = provenance
-                        .global_variables
-                        .get_mut(*index)
-                        .ok_or(SourceMapError::InvalidPosition)?;
-                    let mapped = self.declaration(*span, *name_span)?;
-                    if declaration.span.is_some() || declaration.name_span.is_some() {
-                        return Err(SourceMapError::DuplicateEntry);
-                    }
-                    *declaration = mapped;
                 }
-                MappedNode::PlayerVariable {
+                | MappedNode::PlayerVariable {
+                    index,
+                    span,
+                    name_span,
+                }
+                | MappedNode::Subroutine {
                     index,
                     span,
                     name_span,
                 } => {
-                    let declaration = provenance
-                        .player_variables
-                        .get_mut(*index)
-                        .ok_or(SourceMapError::InvalidPosition)?;
-                    let mapped = self.declaration(*span, *name_span)?;
-                    if declaration.span.is_some() || declaration.name_span.is_some() {
-                        return Err(SourceMapError::DuplicateEntry);
-                    }
-                    *declaration = mapped;
-                }
-                MappedNode::Subroutine {
-                    index,
-                    span,
-                    name_span,
-                } => {
-                    let declaration = provenance
-                        .subroutines
+                    let declarations = match node {
+                        MappedNode::GlobalVariable { .. } => &mut provenance.global_variables,
+                        MappedNode::PlayerVariable { .. } => &mut provenance.player_variables,
+                        MappedNode::Subroutine { .. } => &mut provenance.subroutines,
+                        _ => unreachable!(),
+                    };
+                    let declaration = declarations
                         .get_mut(*index)
                         .ok_or(SourceMapError::InvalidPosition)?;
                     let mapped = self.declaration(*span, *name_span)?;

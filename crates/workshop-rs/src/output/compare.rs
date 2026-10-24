@@ -460,269 +460,13 @@ fn action_difference(
             second: "missing",
         });
     };
+    if let (Some(first), Some(second)) = (variable_action(a, first), variable_action(b, second)) {
+        return variable_pair_difference(a, b, first, second, path);
+    }
+    if let (Some(first), Some(second)) = (for_loop(a, first), for_loop(b, second)) {
+        return for_loop_difference(a, b, first, second, path);
+    }
     match (first, second) {
-        (
-            wir::Action::SetGlobalVariable {
-                variable: first_variable,
-                value: first_value,
-                ..
-            },
-            wir::Action::SetGlobalVariable {
-                variable: second_variable,
-                value: second_value,
-                ..
-            },
-        ) => {
-            let difference = reference_difference(
-                global_index(a, *first_variable),
-                global_index(b, *second_variable),
-                DeclarationTable::GlobalVariables,
-            );
-            if difference.is_some() {
-                return difference;
-            }
-            argument_difference(a, b, path, 0, *first_value, *second_value)
-        }
-        (
-            wir::Action::ModifyGlobalVariable {
-                variable: first_variable,
-                op: first_op,
-                value: first_value,
-                ..
-            },
-            wir::Action::ModifyGlobalVariable {
-                variable: second_variable,
-                op: second_op,
-                value: second_value,
-                ..
-            },
-        ) => {
-            let difference = reference_difference(
-                global_index(a, *first_variable),
-                global_index(b, *second_variable),
-                DeclarationTable::GlobalVariables,
-            );
-            if difference.is_some() {
-                return difference;
-            }
-            if first_op != second_op {
-                return Some(DifferenceKind::Operation {
-                    first: first_op.catalog_id().to_string(),
-                    second: second_op.catalog_id().to_string(),
-                });
-            }
-            argument_difference(a, b, path, 0, *first_value, *second_value)
-        }
-        (
-            wir::Action::SetGlobalVariable {
-                variable: first_variable,
-                value: first_value,
-                ..
-            },
-            wir::Action::ModifyGlobalVariable {
-                variable: second_variable,
-                op: second_op,
-                value: second_value,
-                ..
-            },
-        ) => {
-            let first_index = global_index(a, *first_variable);
-            let second_index = global_index(b, *second_variable);
-            let difference =
-                reference_difference(first_index, second_index, DeclarationTable::GlobalVariables);
-            if difference.is_some() {
-                return difference;
-            }
-            self_modify_difference(
-                SelfModify {
-                    set_program: a,
-                    modify_program: b,
-                    set_is_first: true,
-                    target: ModifyTarget::Global { index: first_index },
-                    set_value: *first_value,
-                    op: *second_op,
-                    modify_value: *second_value,
-                },
-                path,
-            )
-        }
-        (
-            wir::Action::ModifyGlobalVariable {
-                variable: first_variable,
-                op: first_op,
-                value: first_value,
-                ..
-            },
-            wir::Action::SetGlobalVariable {
-                variable: second_variable,
-                value: second_value,
-                ..
-            },
-        ) => {
-            let first_index = global_index(a, *first_variable);
-            let second_index = global_index(b, *second_variable);
-            let difference =
-                reference_difference(first_index, second_index, DeclarationTable::GlobalVariables);
-            if difference.is_some() {
-                return difference;
-            }
-            self_modify_difference(
-                SelfModify {
-                    set_program: b,
-                    modify_program: a,
-                    set_is_first: false,
-                    target: ModifyTarget::Global { index: first_index },
-                    set_value: *second_value,
-                    op: *first_op,
-                    modify_value: *first_value,
-                },
-                path,
-            )
-        }
-        (
-            wir::Action::SetPlayerVariable {
-                player: first_player,
-                variable: first_variable,
-                value: first_value,
-                ..
-            },
-            wir::Action::SetPlayerVariable {
-                player: second_player,
-                variable: second_variable,
-                value: second_value,
-                ..
-            },
-        ) => {
-            if let Some(kind) = argument_difference(a, b, path, 0, *first_player, *second_player) {
-                return Some(kind);
-            }
-            let difference = reference_difference(
-                player_index(a, *first_variable),
-                player_index(b, *second_variable),
-                DeclarationTable::PlayerVariables,
-            );
-            if difference.is_some() {
-                return difference;
-            }
-            argument_difference(a, b, path, 1, *first_value, *second_value)
-        }
-        (
-            wir::Action::ModifyPlayerVariable {
-                player: first_player,
-                variable: first_variable,
-                op: first_op,
-                value: first_value,
-                ..
-            },
-            wir::Action::ModifyPlayerVariable {
-                player: second_player,
-                variable: second_variable,
-                op: second_op,
-                value: second_value,
-                ..
-            },
-        ) => {
-            if let Some(kind) = argument_difference(a, b, path, 0, *first_player, *second_player) {
-                return Some(kind);
-            }
-            let difference = reference_difference(
-                player_index(a, *first_variable),
-                player_index(b, *second_variable),
-                DeclarationTable::PlayerVariables,
-            );
-            if difference.is_some() {
-                return difference;
-            }
-            if first_op != second_op {
-                return Some(DifferenceKind::Operation {
-                    first: first_op.catalog_id().to_string(),
-                    second: second_op.catalog_id().to_string(),
-                });
-            }
-            argument_difference(a, b, path, 1, *first_value, *second_value)
-        }
-        (
-            wir::Action::SetPlayerVariable {
-                player: first_player,
-                variable: first_variable,
-                value: first_value,
-                ..
-            },
-            wir::Action::ModifyPlayerVariable {
-                player: second_player,
-                variable: second_variable,
-                op: second_op,
-                value: second_value,
-                ..
-            },
-        ) => {
-            if let Some(kind) = argument_difference(a, b, path, 0, *first_player, *second_player) {
-                return Some(kind);
-            }
-            let first_index = player_index(a, *first_variable);
-            let second_index = player_index(b, *second_variable);
-            let difference =
-                reference_difference(first_index, second_index, DeclarationTable::PlayerVariables);
-            if difference.is_some() {
-                return difference;
-            }
-            self_modify_difference(
-                SelfModify {
-                    set_program: a,
-                    modify_program: b,
-                    set_is_first: true,
-                    target: ModifyTarget::Player {
-                        index: first_index,
-                        player: *first_player,
-                    },
-                    set_value: *first_value,
-                    op: *second_op,
-                    modify_value: *second_value,
-                },
-                path,
-            )
-        }
-        (
-            wir::Action::ModifyPlayerVariable {
-                player: first_player,
-                variable: first_variable,
-                op: first_op,
-                value: first_value,
-                ..
-            },
-            wir::Action::SetPlayerVariable {
-                player: second_player,
-                variable: second_variable,
-                value: second_value,
-                ..
-            },
-        ) => {
-            if let Some(kind) = argument_difference(a, b, path, 0, *first_player, *second_player) {
-                return Some(kind);
-            }
-            let first_index = player_index(a, *first_variable);
-            let second_index = player_index(b, *second_variable);
-            let difference =
-                reference_difference(first_index, second_index, DeclarationTable::PlayerVariables);
-            if difference.is_some() {
-                return difference;
-            }
-            self_modify_difference(
-                SelfModify {
-                    set_program: b,
-                    modify_program: a,
-                    set_is_first: false,
-                    target: ModifyTarget::Player {
-                        index: first_index,
-                        player: *second_player,
-                    },
-                    set_value: *second_value,
-                    op: *first_op,
-                    modify_value: *first_value,
-                },
-                path,
-            )
-        }
         (
             wir::Action::AssignMember {
                 target: first_target,
@@ -833,101 +577,6 @@ fn action_difference(
             difference
         }
         (
-            wir::Action::ForGlobalVariable {
-                variable: first_variable,
-                start: first_start,
-                stop: first_stop,
-                step: first_step,
-                body: first_body,
-                ..
-            },
-            wir::Action::ForGlobalVariable {
-                variable: second_variable,
-                start: second_start,
-                stop: second_stop,
-                step: second_step,
-                body: second_body,
-                ..
-            },
-        ) => {
-            let difference = reference_difference(
-                global_index(a, *first_variable),
-                global_index(b, *second_variable),
-                DeclarationTable::GlobalVariables,
-            );
-            if difference.is_some() {
-                return difference;
-            }
-            for (index, (&first, &second)) in [
-                (first_start, second_start),
-                (first_stop, second_stop),
-                (first_step, second_step),
-            ]
-            .into_iter()
-            .enumerate()
-            {
-                if let Some(kind) = argument_difference(a, b, path, index, first, second) {
-                    return Some(kind);
-                }
-            }
-            path.push(PathStep::Body);
-            let difference = action_list_difference(a, b, first_body, second_body, path);
-            if difference.is_none() {
-                path.pop();
-            }
-            difference
-        }
-        (
-            wir::Action::ForPlayerVariable {
-                player: first_player,
-                variable: first_variable,
-                start: first_start,
-                stop: first_stop,
-                step: first_step,
-                body: first_body,
-                ..
-            },
-            wir::Action::ForPlayerVariable {
-                player: second_player,
-                variable: second_variable,
-                start: second_start,
-                stop: second_stop,
-                step: second_step,
-                body: second_body,
-                ..
-            },
-        ) => {
-            if let Some(kind) = argument_difference(a, b, path, 0, *first_player, *second_player) {
-                return Some(kind);
-            }
-            let difference = reference_difference(
-                player_index(a, *first_variable),
-                player_index(b, *second_variable),
-                DeclarationTable::PlayerVariables,
-            );
-            if difference.is_some() {
-                return difference;
-            }
-            for (index, (&first, &second)) in [
-                (first_start, second_start),
-                (first_stop, second_stop),
-                (first_step, second_step),
-            ]
-            .into_iter()
-            .enumerate()
-            {
-                if let Some(kind) = argument_difference(a, b, path, index + 1, first, second) {
-                    return Some(kind);
-                }
-            }
-            path.push(PathStep::Body);
-            let difference = action_list_difference(a, b, first_body, second_body, path);
-            if difference.is_none() {
-                path.pop();
-            }
-            difference
-        }
-        (
             wir::Action::Call {
                 name: first_name,
                 args: first_args,
@@ -988,6 +637,253 @@ fn argument_difference(
 ) -> Option<DifferenceKind> {
     path.push(PathStep::Value(index));
     let difference = value_difference(a, b, first, second, path);
+    if difference.is_none() {
+        path.pop();
+    }
+    difference
+}
+
+/// A `set*Variable`/`modify*Variable` action normalized to its compared parts;
+/// `op: None` is the `set` form.
+struct VariableAction {
+    shape: &'static str,
+    target: ModifyTarget,
+    op: Option<ModifyOp>,
+    value: wir::ValueId,
+}
+
+fn variable_action(program: &wir::Program, action: &wir::Action) -> Option<VariableAction> {
+    let (target, op, value) = match action {
+        wir::Action::SetGlobalVariable {
+            variable, value, ..
+        } => (
+            ModifyTarget::Global {
+                index: global_index(program, *variable),
+            },
+            None,
+            *value,
+        ),
+        wir::Action::ModifyGlobalVariable {
+            variable,
+            op,
+            value,
+            ..
+        } => (
+            ModifyTarget::Global {
+                index: global_index(program, *variable),
+            },
+            Some(*op),
+            *value,
+        ),
+        wir::Action::SetPlayerVariable {
+            player,
+            variable,
+            value,
+            ..
+        } => (
+            ModifyTarget::Player {
+                index: player_index(program, *variable),
+                player: *player,
+            },
+            None,
+            *value,
+        ),
+        wir::Action::ModifyPlayerVariable {
+            player,
+            variable,
+            op,
+            value,
+            ..
+        } => (
+            ModifyTarget::Player {
+                index: player_index(program, *variable),
+                player: *player,
+            },
+            Some(*op),
+            *value,
+        ),
+        _ => return None,
+    };
+    Some(VariableAction {
+        shape: action_shape(action),
+        target,
+        op,
+        value,
+    })
+}
+
+fn variable_pair_difference(
+    a: &wir::Program,
+    b: &wir::Program,
+    first: VariableAction,
+    second: VariableAction,
+    path: &mut Vec<PathStep>,
+) -> Option<DifferenceKind> {
+    let table = match (first.target, second.target) {
+        (ModifyTarget::Global { .. }, ModifyTarget::Global { .. }) => {
+            DeclarationTable::GlobalVariables
+        }
+        (
+            ModifyTarget::Player {
+                player: first_player,
+                ..
+            },
+            ModifyTarget::Player {
+                player: second_player,
+                ..
+            },
+        ) => {
+            if let Some(kind) = argument_difference(a, b, path, 0, first_player, second_player) {
+                return Some(kind);
+            }
+            DeclarationTable::PlayerVariables
+        }
+        _ => {
+            return Some(DifferenceKind::Shape {
+                first: first.shape,
+                second: second.shape,
+            });
+        }
+    };
+    let difference = reference_difference(first.target.index(), second.target.index(), table);
+    if difference.is_some() {
+        return difference;
+    }
+    match (first.op, second.op) {
+        (None, None) => argument_difference(
+            a,
+            b,
+            path,
+            first.target.value_step(),
+            first.value,
+            second.value,
+        ),
+        (Some(first_op), Some(second_op)) => {
+            if first_op != second_op {
+                return Some(DifferenceKind::Operation {
+                    first: first_op.catalog_id().to_string(),
+                    second: second_op.catalog_id().to_string(),
+                });
+            }
+            argument_difference(
+                a,
+                b,
+                path,
+                first.target.value_step(),
+                first.value,
+                second.value,
+            )
+        }
+        (None, Some(op)) => self_modify_difference(
+            SelfModify {
+                set_program: a,
+                modify_program: b,
+                set_is_first: true,
+                target: first.target,
+                set_value: first.value,
+                op,
+                modify_value: second.value,
+            },
+            path,
+        ),
+        (Some(op), None) => self_modify_difference(
+            SelfModify {
+                set_program: b,
+                modify_program: a,
+                set_is_first: false,
+                target: second.target,
+                set_value: second.value,
+                op,
+                modify_value: first.value,
+            },
+            path,
+        ),
+    }
+}
+
+/// A `for*Variable` action normalized to its compared parts.
+struct ForLoop<'p> {
+    shape: &'static str,
+    player: Option<wir::ValueId>,
+    index: u32,
+    bounds: [wir::ValueId; 3],
+    body: &'p [wir::ActionId],
+}
+
+fn for_loop<'p>(program: &'p wir::Program, action: &'p wir::Action) -> Option<ForLoop<'p>> {
+    let (player, index, bounds, body) = match action {
+        wir::Action::ForGlobalVariable {
+            variable,
+            start,
+            stop,
+            step,
+            body,
+            ..
+        } => (
+            None,
+            global_index(program, *variable),
+            [*start, *stop, *step],
+            &body[..],
+        ),
+        wir::Action::ForPlayerVariable {
+            player,
+            variable,
+            start,
+            stop,
+            step,
+            body,
+            ..
+        } => (
+            Some(*player),
+            player_index(program, *variable),
+            [*start, *stop, *step],
+            &body[..],
+        ),
+        _ => return None,
+    };
+    Some(ForLoop {
+        shape: action_shape(action),
+        player,
+        index,
+        bounds,
+        body,
+    })
+}
+
+fn for_loop_difference(
+    a: &wir::Program,
+    b: &wir::Program,
+    first: ForLoop<'_>,
+    second: ForLoop<'_>,
+    path: &mut Vec<PathStep>,
+) -> Option<DifferenceKind> {
+    let table = match (first.player, second.player) {
+        (None, None) => DeclarationTable::GlobalVariables,
+        (Some(first_player), Some(second_player)) => {
+            if let Some(kind) = argument_difference(a, b, path, 0, first_player, second_player) {
+                return Some(kind);
+            }
+            DeclarationTable::PlayerVariables
+        }
+        _ => {
+            return Some(DifferenceKind::Shape {
+                first: first.shape,
+                second: second.shape,
+            });
+        }
+    };
+    let difference = reference_difference(first.index, second.index, table);
+    if difference.is_some() {
+        return difference;
+    }
+    let bound_step = usize::from(first.player.is_some());
+    for (index, (&first, second)) in first.bounds.iter().zip(second.bounds).enumerate() {
+        if let Some(kind) = argument_difference(a, b, path, bound_step + index, first, second) {
+            return Some(kind);
+        }
+    }
+    path.push(PathStep::Body);
+    let difference = action_list_difference(a, b, first.body, second.body, path);
     if difference.is_none() {
         path.pop();
     }
@@ -1068,16 +964,25 @@ fn variable_read(
     }
 }
 
-fn self_modify_difference(
-    pair: SelfModify<'_>,
+/// Runs `f` with `path` extended; restores `path` when `f` finds no
+/// difference so callers see only the steps that locate a difference.
+fn traced(
     path: &mut Vec<PathStep>,
+    f: impl FnOnce(&mut Vec<PathStep>) -> Option<DifferenceKind>,
 ) -> Option<DifferenceKind> {
     let base = path.len();
-    let difference = self_modify_inner(pair, path);
+    let difference = f(path);
     if difference.is_none() {
         path.truncate(base);
     }
     difference
+}
+
+fn self_modify_difference(
+    pair: SelfModify<'_>,
+    path: &mut Vec<PathStep>,
+) -> Option<DifferenceKind> {
+    traced(path, |path| self_modify_inner(pair, path))
 }
 
 fn self_modify_inner(pair: SelfModify<'_>, path: &mut Vec<PathStep>) -> Option<DifferenceKind> {
@@ -1204,35 +1109,18 @@ fn value_difference(
                 })
             }
         }
-        (wir::Value::String(first), wir::Value::String(second)) => {
-            if first == second {
-                None
-            } else {
-                Some(DifferenceKind::Scalar {
-                    first: first.clone(),
-                    second: second.clone(),
-                })
-            }
-        }
-        (wir::Value::LocalizedString(first), wir::Value::LocalizedString(second)) => {
-            if first == second {
-                None
-            } else {
-                Some(DifferenceKind::Scalar {
-                    first: first.clone(),
-                    second: second.clone(),
-                })
-            }
+        (wir::Value::String(first), wir::Value::String(second))
+        | (wir::Value::LocalizedString(first), wir::Value::LocalizedString(second)) => {
+            (first != second).then(|| DifferenceKind::Scalar {
+                first: first.clone(),
+                second: second.clone(),
+            })
         }
         (wir::Value::Bool(first), wir::Value::Bool(second)) => {
-            if first == second {
-                None
-            } else {
-                Some(DifferenceKind::Scalar {
-                    first: first.to_string(),
-                    second: second.to_string(),
-                })
-            }
+            (first != second).then(|| DifferenceKind::Scalar {
+                first: first.to_string(),
+                second: second.to_string(),
+            })
         }
         (wir::Value::Null, wir::Value::Null) => None,
         (wir::Value::Array(first), wir::Value::Array(second)) => {
@@ -1285,16 +1173,12 @@ fn value_difference(
                 value_type: second_type,
                 value: second_value,
             },
-        ) => {
-            if first_type == second_type && first_value == second_value {
-                None
-            } else {
-                Some(DifferenceKind::Scalar {
-                    first: format!("{first_type}.{first_value}"),
-                    second: format!("{second_type}.{second_value}"),
-                })
+        ) => (first_type != second_type || first_value != second_value).then(|| {
+            DifferenceKind::Scalar {
+                first: format!("{first_type}.{first_value}"),
+                second: format!("{second_type}.{second_value}"),
             }
-        }
+        }),
         (wir::Value::GlobalVariable(first), wir::Value::GlobalVariable(second)) => {
             reference_difference(
                 global_index(a, *first),
@@ -1402,12 +1286,9 @@ fn member_access_difference(
     args: &[wir::ValueId],
     path: &mut Vec<PathStep>,
 ) -> Option<DifferenceKind> {
-    let base = path.len();
-    let difference = member_access_inner(a, b, variable_is_first, player, variable, args, path);
-    if difference.is_none() {
-        path.truncate(base);
-    }
-    difference
+    traced(path, |path| {
+        member_access_inner(a, b, variable_is_first, player, variable, args, path)
+    })
 }
 
 fn member_access_inner(
@@ -1463,12 +1344,9 @@ fn member_access_pair_difference(
     second_args: &[wir::ValueId],
     path: &mut Vec<PathStep>,
 ) -> Option<DifferenceKind> {
-    let base = path.len();
-    let difference = member_access_pair_inner(a, b, first_args, second_args, path);
-    if difference.is_none() {
-        path.truncate(base);
-    }
-    difference
+    traced(path, |path| {
+        member_access_pair_inner(a, b, first_args, second_args, path)
+    })
 }
 
 fn member_access_pair_inner(
