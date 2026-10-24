@@ -3,16 +3,7 @@ use crate::frontend::parser::*;
 
 impl ParseContext<'_> {
     pub(crate) fn resolve_enum_domain_mixed(&self, spelling: &str) -> Option<&str> {
-        self.catalog
-            .resolve_enum_domain(&self.locale, spelling)
-            .or_else(|| {
-                if self.locale != *self.catalog.primary_locale() {
-                    self.catalog
-                        .resolve_enum_domain(self.catalog.primary_locale(), spelling)
-                } else {
-                    None
-                }
-            })
+        self.or_primary(|locale| self.catalog.resolve_enum_domain(locale, spelling))
     }
 
     pub(crate) fn resolve_enum_member_mixed(
@@ -31,15 +22,13 @@ impl ParseContext<'_> {
                 })
             })
             .or_else(|| {
-                if self.locale != *self.catalog.primary_locale() {
+                self.or_primary(|locale| {
                     self.catalog.resolve_enum_member(
                         domain,
-                        self.catalog.primary_locale(),
+                        locale,
                         alternate.as_deref().unwrap_or(spelling),
                     )
-                } else {
-                    None
-                }
+                })
             })
     }
 
@@ -106,7 +95,7 @@ impl ParseContext<'_> {
                     continue;
                 }
                 let compound_assignment = matches!(
-                    self.peek_at(1).map(|token| token.kind),
+                    self.peek_kind_at(1),
                     Some(TokenKind::Op(equal)) if equal == "="
                 );
                 if !compound_assignment
@@ -305,65 +294,12 @@ impl ParseContext<'_> {
                 let (start, _) = self.span_here();
                 self.pos += 1;
                 if canonical_keyword(&word) == "Event Player" {
-                    let player = self.target.values.push(ValueNode::new(
-                        Value::EventPlayer,
-                        Some(Span::new(self.file(), start, self.previous_span().1)),
-                    ));
-                    if matches!(
-                        self.peek(),
-                        Some(Token {
-                            kind: TokenKind::Dot,
-                            ..
-                        })
-                    ) {
-                        self.pos += 1;
-                        let (name, name_start, name_end) = self.phrase()?;
-                        let variable = self.player_by_name(&name)?;
-                        return Ok(self.target.values.push(
-                            ValueNode::new(
-                                Value::PlayerVariable { player, variable },
-                                Some(Span::new(self.file(), name_start, name_end)),
-                            )
-                            .with_identifier(Some(Span::new(
-                                self.file(),
-                                name_start,
-                                name_end,
-                            ))),
-                        ));
-                    }
-                    return Ok(player);
+                    return self.event_player_value(start);
                 }
-                if canonical_keyword(&word) != "Event Player"
-                    && matches!(self.peek(), Some(Token { kind: TokenKind::Word(next), .. }) if matches!(canonical_keyword(&next), "Player" | "player"))
+                if matches!(self.peek(), Some(Token { kind: TokenKind::Word(next), .. }) if matches!(canonical_keyword(&next), "Player" | "player"))
                 {
                     self.pos += 1;
-                    let player = self.target.values.push(ValueNode::new(
-                        Value::EventPlayer,
-                        Some(Span::new(self.file(), start, self.previous_span().1)),
-                    ));
-                    if matches!(
-                        self.peek(),
-                        Some(Token {
-                            kind: TokenKind::Dot,
-                            ..
-                        })
-                    ) {
-                        self.pos += 1;
-                        let (name, name_start, name_end) = self.phrase()?;
-                        let variable = self.player_by_name(&name)?;
-                        return Ok(self.target.values.push(
-                            ValueNode::new(
-                                Value::PlayerVariable { player, variable },
-                                Some(Span::new(self.file(), name_start, name_end)),
-                            )
-                            .with_identifier(Some(Span::new(
-                                self.file(),
-                                name_start,
-                                name_end,
-                            ))),
-                        ));
-                    }
-                    return Ok(player);
+                    return self.event_player_value(start);
                 }
                 self.pos -= 1;
                 let (phrase, start, end) = self.phrase()?;
@@ -535,7 +471,7 @@ impl ParseContext<'_> {
         if let Some(error) = action_error {
             return Err(error);
         }
-        if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LParen)) {
+        if matches!(self.peek_kind_at(0), Some(TokenKind::LParen)) {
             self.pos += 1;
             self.call_stack.push(phrase.to_string());
             let args = self.opaque_value_args()?;
@@ -702,7 +638,7 @@ impl ParseContext<'_> {
         end: Position,
     ) -> Result<wir::ValueId> {
         if !matches!(phrase, "None" | "无" | "True" | "真" | "False" | "假")
-            && matches!(self.peek().map(|token| token.kind), Some(TokenKind::Colon))
+            && matches!(self.peek_kind_at(0), Some(TokenKind::Colon))
         {
             let saved = self.pos;
             self.pos += 1;
@@ -732,6 +668,41 @@ impl ParseContext<'_> {
         self.bare_member_resolved(phrase, start, end)
     }
 
+    /// An `EventPlayer` value just consumed; wraps it in a `PlayerVariable`
+    /// when a `.name` member access follows.
+    fn event_player_value(&mut self, start: Position) -> Result<wir::ValueId> {
+        let player = self.target.values.push(ValueNode::new(
+            Value::EventPlayer,
+            Some(Span::new(self.file(), start, self.previous_span().1)),
+        ));
+        if !matches!(self.peek_kind_at(0), Some(TokenKind::Dot)) {
+            return Ok(player);
+        }
+        self.pos += 1;
+        let (name, name_start, name_end) = self.phrase()?;
+        let variable = self.player_by_name(&name)?;
+        Ok(self.target.values.push(
+            ValueNode::new(
+                Value::PlayerVariable { player, variable },
+                Some(Span::new(self.file(), name_start, name_end)),
+            )
+            .with_identifier(Some(Span::new(self.file(), name_start, name_end))),
+        ))
+    }
+
+    fn push_enum(
+        &mut self,
+        value_type: String,
+        value: String,
+        start: Position,
+        end: Position,
+    ) -> wir::ValueId {
+        self.target.values.push(ValueNode::new(
+            Value::Enum { value_type, value },
+            Some(Span::new(self.file(), start, end)),
+        ))
+    }
+
     pub(crate) fn bare_member_resolved(
         &mut self,
         phrase: &str,
@@ -749,13 +720,7 @@ impl ParseContext<'_> {
                         | "EffectReeval"
                 ) =>
             {
-                return Ok(self.target.values.push(ValueNode::new(
-                    Value::Enum {
-                        value_type: expected.to_string(),
-                        value: "NONE".to_string(),
-                    },
-                    Some(Span::new(self.file(), start, end)),
-                )));
+                return Ok(self.push_enum(expected.to_string(), "NONE".to_string(), start, end));
             }
             _ => {}
         }
@@ -783,10 +748,7 @@ impl ParseContext<'_> {
             })
             .or_else(|| self.resolve_enum_member_mixed("Team", phrase));
         if let Some((value_type, value)) = member {
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::Enum { value_type, value },
-                Some(Span::new(self.file(), start, end)),
-            )));
+            return Ok(self.push_enum(value_type, value, start, end));
         }
         if self
             .call_stack
@@ -794,33 +756,22 @@ impl ParseContext<'_> {
             .is_some_and(|call| call == "createHudText")
             && let Some((value_type, value)) = self.resolve_enum_member_mixed("HudPosition", phrase)
         {
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::Enum { value_type, value },
-                Some(Span::new(self.file(), start, end)),
-            )));
+            return Ok(self.push_enum(value_type, value, start, end));
         }
         if matches!(self.expected_domain, Some("Position"))
             && let Some((value_type, value)) = self.resolve_enum_member_mixed("Vector", phrase)
         {
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::Enum { value_type, value },
-                Some(Span::new(self.file(), start, end)),
-            )));
+            return Ok(self.push_enum(value_type, value, start, end));
         }
-        let matches: Vec<(String, String)> = self
+        let mut matches: Vec<(String, String)> = self
             .catalog
             .bare_member_matches(&self.locale, phrase)
             .into_iter()
             .filter(|(domain, _)| domain != "EventTeam" && domain != "EventPlayer")
             .collect();
         if matches.len() == 1 {
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::Enum {
-                    value_type: matches[0].0.clone(),
-                    value: matches[0].1.clone(),
-                },
-                Some(Span::new(self.file(), start, end)),
-            )));
+            let (value_type, value) = matches.swap_remove(0);
+            return Ok(self.push_enum(value_type, value, start, end));
         }
         if matches.len() > 1 {
             if let Some(expected) = self.expected_domain {
@@ -829,13 +780,8 @@ impl ParseContext<'_> {
                     .filter(|(domain, _)| domain == expected)
                     .collect();
                 if pinned.len() == 1 {
-                    return Ok(self.target.values.push(ValueNode::new(
-                        Value::Enum {
-                            value_type: pinned[0].0.clone(),
-                            value: pinned[0].1.clone(),
-                        },
-                        Some(Span::new(self.file(), start, end)),
-                    )));
+                    let (value_type, value) = pinned[0].clone();
+                    return Ok(self.push_enum(value_type, value, start, end));
                 }
             }
             let spelling = self.target.values.push(ValueNode::new(
@@ -844,12 +790,7 @@ impl ParseContext<'_> {
             ));
             let candidates = matches
                 .into_iter()
-                .map(|(value_type, value)| {
-                    self.target.values.push(ValueNode::new(
-                        Value::Enum { value_type, value },
-                        Some(Span::new(self.file(), start, end)),
-                    ))
-                })
+                .map(|(value_type, value)| self.push_enum(value_type, value, start, end))
                 .collect();
             let candidates = self
                 .target
@@ -1121,7 +1062,7 @@ impl ParseContext<'_> {
 
     pub(crate) fn opaque_value_args(&mut self) -> Result<Vec<wir::ValueId>> {
         let mut args = Vec::new();
-        if matches!(self.peek().map(|token| token.kind), Some(TokenKind::RParen)) {
+        if matches!(self.peek_kind_at(0), Some(TokenKind::RParen)) {
             return Ok(args);
         }
         loop {

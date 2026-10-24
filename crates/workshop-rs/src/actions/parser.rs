@@ -277,10 +277,7 @@ impl ParseContext<'_> {
                 _ => return None,
             }
         }
-        if !matches!(
-            self.peek_at(offset).map(|token| token.kind),
-            Some(TokenKind::Dot)
-        ) {
+        if !matches!(self.peek_kind_at(offset), Some(TokenKind::Dot)) {
             return None;
         }
         self.resolve_entry(Kind::Value, &words.join(" "))
@@ -303,22 +300,8 @@ impl ParseContext<'_> {
             self.pos += 1;
             self.expect(TokenKind::Dot, "expected '.' after 'Global'")?;
             let (name, name_start, target_end) = self.phrase()?;
-            if matches!(
-                self.peek().map(|token| token.kind),
-                Some(TokenKind::LBracket)
-            ) {
-                self.pos += 1;
-                let index = self.value()?;
-                self.expect(
-                    TokenKind::RBracket,
-                    "expected ']' after global variable index",
-                )?;
-                let operator = self.assignment_operator()?.ok_or_else(|| {
-                    self.malformed(
-                        "expected assignment after global variable index",
-                        self.peek().as_ref().unwrap_or(self.eof()),
-                    )
-                })?;
+            if matches!(self.peek_kind_at(0), Some(TokenKind::LBracket)) {
+                let (index, operator) = self.indexed_assignment_parts("global")?;
                 let variable = self.global_by_name(&name)?;
                 let target = self.target.values.push(
                     ValueNode::new(
@@ -331,21 +314,14 @@ impl ParseContext<'_> {
                         target_end,
                     ))),
                 );
-                let value = self.value()?;
-                let end = self.expect_semi("expected ';' after indexed assignment")?;
-                let span = Span::new(self.file(), start, end);
-                return Ok(Some(self.indexed_assignment_action(
-                    true, target, index, operator, value, span,
-                )));
+                return self.finish_indexed_assignment(true, start, target, index, operator);
             }
             let Some(operator) = self.assignment_operator()? else {
                 return self.member_assignment_action(saved, start);
             };
             let variable = self.global_by_name(&name)?;
-            let value = self.value()?;
-            let end = self.expect_semi("expected ';' after assignment")?;
-            let span = Some(Span::new(self.file(), start, end));
-            let target_span = Some(Span::new(self.file(), name_start, target_end));
+            let (value, span, target_span) =
+                self.finish_assignment(start, name_start, target_end)?;
             return Ok(Some(self.target.actions.push(match operator {
                 AssignmentOperator::Set => Action::SetGlobalVariable {
                     variable,
@@ -382,25 +358,9 @@ impl ParseContext<'_> {
         self.expect(TokenKind::Dot, "expected '.' after 'Event Player'")?;
         let (name, target_start, target_end) = self.phrase()?;
         let variable = self.player_by_name(&name)?;
-        if matches!(
-            self.peek().map(|token| token.kind),
-            Some(TokenKind::LBracket)
-        ) {
-            self.pos += 1;
-            let index = self.value()?;
-            self.expect(
-                TokenKind::RBracket,
-                "expected ']' after player variable index",
-            )?;
-            let operator = self.assignment_operator()?.ok_or_else(|| {
-                self.malformed(
-                    "expected assignment after player variable index",
-                    self.peek().as_ref().unwrap_or(self.eof()),
-                )
-            })?;
-            let value = self.value()?;
-            let end = self.expect_semi("expected ';' after indexed assignment")?;
-            let variable_value = self.target.values.push(
+        if matches!(self.peek_kind_at(0), Some(TokenKind::LBracket)) {
+            let (index, operator) = self.indexed_assignment_parts("player")?;
+            let target = self.target.values.push(
                 ValueNode::new(
                     Value::PlayerVariable {
                         player: event_player,
@@ -414,23 +374,12 @@ impl ParseContext<'_> {
                     target_end,
                 ))),
             );
-            let span = Span::new(self.file(), start, end);
-            return Ok(Some(self.indexed_assignment_action(
-                false,
-                variable_value,
-                index,
-                operator,
-                value,
-                span,
-            )));
+            return self.finish_indexed_assignment(false, start, target, index, operator);
         }
         let Some(operator) = self.assignment_operator()? else {
             return self.member_assignment_action(saved, start);
         };
-        let value = self.value()?;
-        let end = self.expect_semi("expected ';' after assignment")?;
-        let span = Some(Span::new(self.file(), start, end));
-        let target_span = Some(Span::new(self.file(), target_start, target_end));
+        let (value, span, target_span) = self.finish_assignment(start, target_start, target_end)?;
         Ok(Some(self.target.actions.push(match operator {
             AssignmentOperator::Set => Action::SetPlayerVariable {
                 player: event_player,
@@ -448,6 +397,62 @@ impl ParseContext<'_> {
                 target_span,
             },
         })))
+    }
+
+    /// The `[ <index> ] <operator>` prologue of an indexed variable
+    /// assignment, after the variable name phrase.
+    fn indexed_assignment_parts(
+        &mut self,
+        scope: &str,
+    ) -> Result<(wir::ValueId, AssignmentOperator)> {
+        self.pos += 1;
+        let index = self.value()?;
+        self.expect(
+            TokenKind::RBracket,
+            &format!("expected ']' after {scope} variable index"),
+        )?;
+        let operator = self.assignment_operator()?.ok_or_else(|| {
+            self.malformed(
+                &format!("expected assignment after {scope} variable index"),
+                self.peek().as_ref().unwrap_or(self.eof()),
+            )
+        })?;
+        Ok((index, operator))
+    }
+
+    /// The `<value> ;` tail of an indexed variable assignment, producing the
+    /// `set*VariableAtIndex`/`modify*VariableAtIndex` call.
+    fn finish_indexed_assignment(
+        &mut self,
+        global: bool,
+        start: Position,
+        target: wir::ValueId,
+        index: wir::ValueId,
+        operator: AssignmentOperator,
+    ) -> Result<Option<wir::ActionId>> {
+        let value = self.value()?;
+        let end = self.expect_semi("expected ';' after indexed assignment")?;
+        let span = Span::new(self.file(), start, end);
+        Ok(Some(self.indexed_assignment_action(
+            global, target, index, operator, value, span,
+        )))
+    }
+
+    /// The `<value> ;` tail of a plain variable assignment, returning the
+    /// value with the statement and target spans.
+    fn finish_assignment(
+        &mut self,
+        start: Position,
+        name_start: Position,
+        target_end: Position,
+    ) -> Result<(wir::ValueId, Option<Span>, Option<Span>)> {
+        let value = self.value()?;
+        let end = self.expect_semi("expected ';' after assignment")?;
+        Ok((
+            value,
+            Some(Span::new(self.file(), start, end)),
+            Some(Span::new(self.file(), name_start, target_end)),
+        ))
     }
 
     pub(crate) fn member_assignment_action(
@@ -487,26 +492,15 @@ impl ParseContext<'_> {
         value: wir::ValueId,
         span: Span,
     ) -> wir::ActionId {
-        let name = match &operator {
-            AssignmentOperator::Set => {
-                if global {
-                    "setGlobalVariableAtIndex"
-                } else {
-                    "setPlayerVariableAtIndex"
-                }
-            }
-            AssignmentOperator::Modify(_) => {
-                if global {
-                    "modifyGlobalVariableAtIndex"
-                } else {
-                    "modifyPlayerVariableAtIndex"
-                }
-            }
+        let modify_op = match operator {
+            AssignmentOperator::Set => None,
+            AssignmentOperator::Modify(op) => Some(op),
         };
-        let (value, modify_op) = match operator {
-            AssignmentOperator::Set => (value, None),
-            AssignmentOperator::Modify(op) => (value, Some(op)),
-        };
+        let name = format!(
+            "{}{}VariableAtIndex",
+            if modify_op.is_some() { "modify" } else { "set" },
+            if global { "Global" } else { "Player" },
+        );
         let args = match modify_op {
             None => vec![variable, index, value],
             Some(op) => vec![
@@ -523,7 +517,7 @@ impl ParseContext<'_> {
             ],
         };
         self.target.actions.push(Action::Call {
-            name: name.to_string(),
+            name,
             args,
             span: Some(span),
         })
@@ -538,8 +532,7 @@ impl ParseContext<'_> {
                 "min" => ModifyOp::Min,
                 "max" => ModifyOp::Max,
                 _ => {
-                    if matches!(self.peek_at(1).map(|token| token.kind), Some(TokenKind::Op(equal)) if equal == "=")
-                    {
+                    if matches!(self.peek_kind_at(1), Some(TokenKind::Op(equal)) if equal == "=") {
                         return Err(WorkshopError::unsupported(
                             format!("unsupported assignment operator '{word}='"),
                             Some(Span::new(
@@ -552,8 +545,7 @@ impl ParseContext<'_> {
                     return Ok(None);
                 }
             };
-            if !matches!(self.peek_at(1).map(|token| token.kind), Some(TokenKind::Op(equal)) if equal == "=")
-            {
+            if !matches!(self.peek_kind_at(1), Some(TokenKind::Op(equal)) if equal == "=") {
                 return Ok(None);
             }
             self.pos += 2;
@@ -575,8 +567,7 @@ impl ParseContext<'_> {
             "%" => ModifyOp::Modulo,
             _ => return Ok(None),
         };
-        if !matches!(self.peek_at(1).map(|token| token.kind), Some(TokenKind::Op(equal)) if equal == "=")
-        {
+        if !matches!(self.peek_kind_at(1), Some(TokenKind::Op(equal)) if equal == "=") {
             return Ok(None);
         }
         self.pos += 2;
@@ -664,12 +655,12 @@ impl ParseContext<'_> {
         Ok(self.target.actions.push(action))
     }
 
-    pub(crate) fn for_group(&mut self, start: Position) -> Result<wir::ActionId> {
-        self.expect(
-            TokenKind::LParen,
-            "expected '(' after 'For Global Variable'",
-        )?;
-        let (variable, target_span) = self.global_variable_arg()?;
+    /// The `, <start>, <stop>, <step> ) ; <body> End` tail shared by the two
+    /// `for*Variable` statements; `name` is the statement's display name.
+    fn for_bounds_and_body(
+        &mut self,
+        name: &str,
+    ) -> Result<([wir::ValueId; 3], Vec<wir::ActionId>, Position)> {
         self.expect(TokenKind::Comma, "expected ',' after loop variable")?;
         let start_value = self.value()?;
         self.expect(TokenKind::Comma, "expected ',' after start")?;
@@ -677,9 +668,20 @@ impl ParseContext<'_> {
         self.expect(TokenKind::Comma, "expected ',' after stop")?;
         let step = self.value()?;
         self.expect(TokenKind::RParen, "expected ')' after For bounds")?;
-        self.expect_semi("expected ';' after For Global Variable")?;
+        self.expect_semi(&format!("expected ';' after {name}"))?;
         let (body, end) =
-            self.actions_until_matching_end("'For Global Variable' requires a matching 'End'")?;
+            self.actions_until_matching_end(&format!("'{name}' requires a matching 'End'"))?;
+        Ok(([start_value, stop, step], body, end))
+    }
+
+    pub(crate) fn for_group(&mut self, start: Position) -> Result<wir::ActionId> {
+        self.expect(
+            TokenKind::LParen,
+            "expected '(' after 'For Global Variable'",
+        )?;
+        let (variable, target_span) = self.global_variable_arg()?;
+        let ([start_value, stop, step], body, end) =
+            self.for_bounds_and_body("For Global Variable")?;
         let action = Action::ForGlobalVariable {
             variable,
             start: start_value,
@@ -713,16 +715,8 @@ impl ParseContext<'_> {
             "expected '(' after 'For Player Variable'",
         )?;
         let (player, variable, name_span) = self.player_variable_arg()?;
-        self.expect(TokenKind::Comma, "expected ',' after loop variable")?;
-        let start_value = self.value()?;
-        self.expect(TokenKind::Comma, "expected ',' after start")?;
-        let stop = self.value()?;
-        self.expect(TokenKind::Comma, "expected ',' after stop")?;
-        let step = self.value()?;
-        self.expect(TokenKind::RParen, "expected ')' after For bounds")?;
-        self.expect_semi("expected ';' after For Player Variable")?;
-        let (body, end) =
-            self.actions_until_matching_end("'For Player Variable' requires a matching 'End'")?;
+        let ([start_value, stop, step], body, end) =
+            self.for_bounds_and_body("For Player Variable")?;
         let action = Action::ForPlayerVariable {
             player,
             variable,
@@ -734,6 +728,24 @@ impl ParseContext<'_> {
             target_span: Some(name_span),
         };
         Ok(self.target.actions.push(action))
+    }
+
+    /// The `, <modify op>, <value> ) ;` tail of a `set/modify*Variable` call.
+    fn set_modify_value_tail(
+        &mut self,
+        modify: bool,
+    ) -> Result<(Option<ModifyOp>, wir::ValueId, Position)> {
+        let op = if modify {
+            let op = self.modify_op()?;
+            self.expect(TokenKind::Comma, "expected ',' after modify operator")?;
+            Some(op)
+        } else {
+            None
+        };
+        let value = self.value()?;
+        let call_end = self.expect(TokenKind::RParen, "expected ')'")?;
+        self.expect_semi("expected ';'")?;
+        Ok((op, value, call_end))
     }
 
     fn actions_until_matching_end(
@@ -765,16 +777,7 @@ impl ParseContext<'_> {
                     )?;
                     let (variable, target_span) = self.global_variable_arg()?;
                     self.expect(TokenKind::Comma, "expected ',' after variable")?;
-                    let op = if modify {
-                        let op = self.modify_op()?;
-                        self.expect(TokenKind::Comma, "expected ',' after modify operator")?;
-                        Some(op)
-                    } else {
-                        None
-                    };
-                    let value = self.value()?;
-                    let call_end = self.expect(TokenKind::RParen, "expected ')'")?;
-                    self.expect_semi("expected ';'")?;
+                    let (op, value, call_end) = self.set_modify_value_tail(modify)?;
                     let span = Some(Span::new(self.file(), start, call_end));
                     let target_span = Some(target_span);
                     Ok(self.target.actions.push(match op {
@@ -798,20 +801,11 @@ impl ParseContext<'_> {
                     self.expect(TokenKind::LParen, "expected '('")?;
                     let (player, variable, target_span) = self.player_variable_arg()?;
                     self.expect(TokenKind::Comma, "expected ',' after variable")?;
-                    let op = if modify {
-                        let op = self.modify_op()?;
-                        self.expect(TokenKind::Comma, "expected ',' after modify operator")?;
-                        Some(op)
-                    } else {
-                        None
-                    };
-                    let value = self.value()?;
-                    let call_end = self.expect(TokenKind::RParen, "expected ')'")?;
-                    self.expect_semi("expected ';'")?;
+                    let (op, value, call_end) = self.set_modify_value_tail(modify)?;
                     let span = Some(Span::new(self.file(), start, call_end));
                     let target_span = Some(target_span);
-                    Ok(self.target.actions.push(match (op, modify) {
-                        (Some(op), true) => Action::ModifyPlayerVariable {
+                    Ok(self.target.actions.push(match op {
+                        Some(op) => Action::ModifyPlayerVariable {
                             player,
                             variable,
                             op,
@@ -819,7 +813,7 @@ impl ParseContext<'_> {
                             span,
                             target_span,
                         },
-                        _ => Action::SetPlayerVariable {
+                        None => Action::SetPlayerVariable {
                             player,
                             variable,
                             value,

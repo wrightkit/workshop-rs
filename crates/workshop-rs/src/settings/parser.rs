@@ -8,12 +8,12 @@ impl ParseContext<'_> {
         }
         self.expect(TokenKind::LBrace, "expected '{' after 'settings'")?;
         let mut children = Vec::new();
-        while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+        while !matches!(self.peek_kind_at(0), Some(TokenKind::RBrace)) {
             let (display, child_start, _) = self.phrase()?;
             let canonical_display = self.canonical_keyword(&display);
             let name = ["main", "lobby", "modes", "heroes", "extensions", "workshop"]
                 .into_iter()
-                .find(|name| self.settings_namespace_matches(name, &display))
+                .find(|name| self.settings_name_matches("namespaces", name, &display))
                 .unwrap_or_else(|| match canonical_display.as_str() {
                     value
                         if value == "extensions"
@@ -80,7 +80,7 @@ impl ParseContext<'_> {
 
     pub(crate) fn settings_modes(&mut self, start: Position) -> Result<SettingsNode> {
         let mut children = Vec::new();
-        while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+        while !matches!(self.peek_kind_at(0), Some(TokenKind::RBrace)) {
             let mut disabled = false;
             if let Some(Token {
                 kind: TokenKind::Word(word),
@@ -149,7 +149,7 @@ impl ParseContext<'_> {
 
     pub(crate) fn settings_heroes(&mut self, start: Position) -> Result<SettingsNode> {
         let mut teams = Vec::new();
-        while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+        while !matches!(self.peek_kind_at(0), Some(TokenKind::RBrace)) {
             let (team_display, team_start, team_end) = self.phrase_on_line_with_colon()?;
             let team = self.resolve_settings_name(
                 table::TEAM_NAMES,
@@ -160,28 +160,18 @@ impl ParseContext<'_> {
             )?;
             self.expect(TokenKind::LBrace, "expected '{' after team settings group")?;
             let mut team_children = Vec::new();
-            while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+            while !matches!(self.peek_kind_at(0), Some(TokenKind::RBrace)) {
                 let (display, child_start, child_end) = self.phrase_on_line_with_colon()?;
-                if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace))
-                    && self
-                        .resolve_settings_name_extended(
-                            table::HERO_NAMES,
-                            table::GENERATED_HERO_NAMES,
-                            "heroes",
-                            &display,
-                            child_start,
-                            child_end,
-                        )
-                        .is_ok()
-                {
-                    let hero = self.resolve_settings_name_extended(
+                if matches!(self.peek_kind_at(0), Some(TokenKind::LBrace))
+                    && let Ok(hero) = self.resolve_settings_name_extended(
                         table::HERO_NAMES,
                         table::GENERATED_HERO_NAMES,
                         "heroes",
                         &display,
                         child_start,
                         child_end,
-                    )?;
+                    )
+                {
                     self.expect(TokenKind::LBrace, "expected '{' after hero settings group")?;
                     let children = self.settings_members(
                         &[PathPart::Part("heroes"), PathPart::Team, PathPart::Hero],
@@ -223,7 +213,7 @@ impl ParseContext<'_> {
         hero: Option<&str>,
     ) -> Result<Vec<SettingsNode>> {
         let mut children = Vec::new();
-        while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+        while !matches!(self.peek_kind_at(0), Some(TokenKind::RBrace)) {
             let (display, start, end) = self.phrase_on_line()?;
             children.push(self.settings_member_named(display, start, end, path, hero)?);
         }
@@ -284,7 +274,7 @@ impl ParseContext<'_> {
                 }
             }
             let checkpoint = self.pos;
-            let extended = match self.peek().map(|token| token.kind) {
+            let extended = match self.peek_kind_at(0) {
                 Some(TokenKind::Colon) => {
                     self.pos += 1;
                     self.phrase_on_line()
@@ -306,7 +296,7 @@ impl ParseContext<'_> {
             return Err(err);
         }
         self.pos = fallback_pos;
-        if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace)) {
+        if matches!(self.peek_kind_at(0), Some(TokenKind::LBrace)) {
             self.pos += 1;
             return self.settings_opaque_group(&fallback_display, start);
         }
@@ -322,14 +312,14 @@ impl ParseContext<'_> {
             Some(PathPart::Part(name)) => *name,
             _ => return Err(self.malformed("settings entry has no leaf key", self.previous())),
         };
-        if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace)) {
+        if matches!(self.peek_kind_at(0), Some(TokenKind::LBrace)) {
             if !matches!(entry.kind, KeyKind::ListMap | KeyKind::ListHero) {
                 self.pos += 1;
                 return self.settings_opaque_group(name, start);
             }
             self.expect(TokenKind::LBrace, "expected '{' after settings list")?;
             let mut elements = Vec::new();
-            while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+            while !matches!(self.peek_kind_at(0), Some(TokenKind::RBrace)) {
                 let (value, value_start, value_end) = self.settings_list_name()?;
                 let (canonical, variant) = match entry.kind {
                     KeyKind::ListMap => self.map_element_parts(&value, value_start, value_end),
@@ -494,9 +484,9 @@ impl ParseContext<'_> {
 
     pub(crate) fn settings_opaque_members(&mut self) -> Result<Vec<SettingsNode>> {
         let mut children = Vec::new();
-        while !matches!(self.peek().map(|token| token.kind), Some(TokenKind::RBrace)) {
+        while !matches!(self.peek_kind_at(0), Some(TokenKind::RBrace)) {
             let (display, start, _) = self.opaque_name_on_line()?;
-            if matches!(self.peek().map(|token| token.kind), Some(TokenKind::LBrace)) {
+            if matches!(self.peek_kind_at(0), Some(TokenKind::LBrace)) {
                 self.pos += 1;
                 children.push(self.settings_opaque_group(&display, start)?);
             } else {
@@ -536,47 +526,27 @@ impl ParseContext<'_> {
     }
 
     pub(crate) fn opaque_name_on_line(&mut self) -> Result<(String, Position, Position)> {
-        let first = self
-            .peek()
-            .ok_or_else(|| self.malformed("expected an identifier", self.eof()))?;
-        let start = first.start;
-        let line = first.start.line;
-        let mut end = first.end;
-        let mut parts = Vec::new();
-        while let Some(token) = self.peek() {
-            if token.start.line != line
-                || matches!(
-                    token.kind,
+        self.line_run_until(
+            |kind| {
+                matches!(
+                    kind,
                     TokenKind::Colon | TokenKind::LBrace | TokenKind::RBrace
                 )
-            {
-                break;
-            }
-            self.pos += 1;
-            end = token.end;
-            parts.push((raw_token_text(&token.kind), token.start, token.end));
-        }
-        if parts.is_empty() {
-            return Err(self.malformed("expected an identifier", &first));
-        }
-        Ok((join_as_written(&parts), start, end))
+            },
+            "expected an identifier",
+        )
     }
 
     pub(crate) fn raw_settings_line(&mut self, colon_line: u32) -> Result<String> {
-        let mut text = String::new();
-        let mut previous_end = None;
+        let mut parts = Vec::new();
         while let Some(token) = self.peek() {
             if token.start.line != colon_line || matches!(token.kind, TokenKind::RBrace) {
                 break;
             }
             self.pos += 1;
-            if previous_end.is_some_and(|end| end != token.start) {
-                text.push(' ');
-            }
-            text.push_str(&raw_token_text(&token.kind));
-            previous_end = Some(token.end);
+            parts.push((raw_token_text(&token.kind), token.start, token.end));
         }
-        Ok(text)
+        Ok(join_as_written(&parts))
     }
 
     pub(crate) fn settings_number(&mut self) -> Result<f64> {
@@ -607,12 +577,10 @@ impl ParseContext<'_> {
     fn settings_bool_for(&mut self, key: Option<&PathPart>) -> Result<bool> {
         if let Some(PathPart::Part(key)) = key {
             let locale = self.locale.as_str();
-            let alias =
-                self.spelling_run(self.pos, None)
-                    .into_iter()
-                    .find_map(|(count, display, _)| {
-                        table::bool_value_alias(key, locale, &display).map(|value| (count, value))
-                    });
+            let (text, run) = self.spelling_run(self.pos, None);
+            let alias = run.into_iter().find_map(|(count, len, _)| {
+                table::bool_value_alias(key, locale, &text[..len]).map(|value| (count, value))
+            });
             if let Some((count, value)) = alias {
                 self.pos += count;
                 return Ok(value);
@@ -633,8 +601,9 @@ impl ParseContext<'_> {
         // longest run prefix that resolves to a boolean token and leave
         // the rest for the next member (#448).
         let start = token.start;
-        let run = self.spelling_run(self.pos, None);
-        for (count, value, _) in &run {
+        let (text, run) = self.spelling_run(self.pos, None);
+        for &(count, len, _) in &run {
+            let value = &text[..len];
             if self.settings_name_matches("tokens", "On", value)
                 || self.settings_name_matches("tokens", "Yes", value)
             {
@@ -650,7 +619,7 @@ impl ParseContext<'_> {
         }
         let (value, end) = run
             .first()
-            .map(|(_, text, end)| (text.clone(), *end))
+            .map(|&(_, len, end)| (text[..len].to_string(), end))
             .unwrap_or_else(|| (raw_token_text(&token.kind), token.end));
         Err(self
             .unknown_at("setting boolean", &value, start, end)
@@ -685,8 +654,9 @@ impl ParseContext<'_> {
             .peek()
             .ok_or_else(|| self.malformed("expected a settings enum member", self.eof()))?;
         let start = token.start;
-        let run = self.spelling_run(self.pos, None);
-        for (count, display, _) in &run {
+        let (text, run) = self.spelling_run(self.pos, None);
+        for &(count, len, _) in &run {
+            let display = &text[..len];
             let member = table::ENUM_MEMBERS
                 .iter()
                 .chain(table::GENERATED_ENUM_MEMBERS.iter())
@@ -701,7 +671,7 @@ impl ParseContext<'_> {
         }
         let (display, end) = run
             .first()
-            .map(|(_, text, end)| (text.clone(), *end))
+            .map(|&(_, len, end)| (text[..len].to_string(), end))
             .unwrap_or_else(|| (raw_token_text(&token.kind), token.end));
         Err(self
             .unknown_at("settings enum", &display, start, end)
@@ -726,18 +696,7 @@ impl ParseContext<'_> {
         start: Position,
         end: Position,
     ) -> Result<&'static str> {
-        names
-            .iter()
-            .find(|candidate| self.settings_name_matches(section, candidate.name, display))
-            .map(|candidate| candidate.key)
-            .ok_or_else(|| {
-                self.unknown_at("setting", display, start, end)
-                    .with_candidates(self.settings_name_candidates(
-                        names.iter().map(|entry| entry.name),
-                        section,
-                        display,
-                    ))
-            })
+        self.resolve_settings_name_in(names.iter(), section, display, start, end)
     }
 
     pub(crate) fn resolve_settings_name_extended(
@@ -749,15 +708,31 @@ impl ParseContext<'_> {
         start: Position,
         end: Position,
     ) -> Result<&'static str> {
+        self.resolve_settings_name_in(
+            names.iter().chain(generated.iter()),
+            section,
+            display,
+            start,
+            end,
+        )
+    }
+
+    fn resolve_settings_name_in<'n>(
+        &self,
+        names: impl Iterator<Item = &'n table::NameMap> + Clone,
+        section: &str,
+        display: &str,
+        start: Position,
+        end: Position,
+    ) -> Result<&'static str> {
         names
-            .iter()
-            .chain(generated.iter())
+            .clone()
             .find(|candidate| self.settings_name_matches(section, candidate.name, display))
             .map(|candidate| candidate.key)
             .ok_or_else(|| {
                 self.unknown_at("setting", display, start, end)
                     .with_candidates(self.settings_name_candidates(
-                        names.iter().chain(generated.iter()).map(|entry| entry.name),
+                        names.map(|entry| entry.name),
                         section,
                         display,
                     ))
@@ -864,12 +839,6 @@ impl ParseContext<'_> {
             // Accept that source spelling for parsing, while emission
             // still fails explicitly if the target mapping is missing.
             || table::names_eq(display, english)
-    }
-
-    fn settings_namespace_matches(&self, name: &str, display: &str) -> bool {
-        table::localized_name(self.locale.as_str(), "namespaces", name)
-            .is_some_and(|localized| table::names_eq(localized, display))
-            || table::names_eq(display, name)
     }
 
     pub(crate) fn settings_span(&self, start: Position) -> Span {

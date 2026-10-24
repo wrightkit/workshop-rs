@@ -259,6 +259,29 @@ impl Catalog {
             }
         }
 
+        // Copies spellings that `normalize_spelling` rewrites into `norm`,
+        // collapsing collisions to `None`.
+        fn fill_map<T: PartialEq + Clone>(
+            map: &HashMap<String, T>,
+            norm: &mut HashMap<String, Option<T>>,
+        ) {
+            for (spelling, value) in map {
+                let key = normalize_spelling(spelling);
+                if key != spelling.as_str() {
+                    insert(norm, key.into_owned(), value.clone());
+                }
+            }
+        }
+
+        fn fill<T: PartialEq + Clone>(
+            source: &HashMap<Locale, HashMap<String, T>>,
+            target: &mut HashMap<Locale, HashMap<String, Option<T>>>,
+        ) {
+            for (locale, map) in source {
+                fill_map(map, target.entry(locale.clone()).or_default());
+            }
+        }
+
         let mut normalized = NormalizedIndex::default();
         for (locale, by_kind) in &self.alias_to_entry {
             let by_kind_norm = normalized
@@ -266,51 +289,24 @@ impl Catalog {
                 .entry(locale.clone())
                 .or_insert_with(|| std::array::from_fn(|_| HashMap::new()));
             for (kind_index, map) in by_kind.iter().enumerate() {
-                for (spelling, &entry_index) in map {
-                    let key = normalize_spelling(spelling);
-                    if key != spelling.as_str() {
-                        insert(&mut by_kind_norm[kind_index], key.into_owned(), entry_index);
-                    }
-                }
+                fill_map(map, &mut by_kind_norm[kind_index]);
             }
         }
-        for (locale, map) in &self.localized_string_alias {
-            let norm = normalized
-                .localized_string_alias
-                .entry(locale.clone())
-                .or_default();
-            for (spelling, &string_index) in map {
-                let key = normalize_spelling(spelling);
-                if key != spelling.as_str() {
-                    insert(norm, key.into_owned(), string_index);
-                }
-            }
-        }
-        for (locale, map) in &self.enum_alias_to_domain {
-            let norm = normalized
-                .enum_alias_to_domain
-                .entry(locale.clone())
-                .or_default();
-            for (spelling, domain) in map {
-                let key = normalize_spelling(spelling);
-                if key != spelling.as_str() {
-                    insert(norm, key.into_owned(), domain.clone());
-                }
-            }
-        }
+        fill(
+            &self.localized_string_alias,
+            &mut normalized.localized_string_alias,
+        );
+        fill(
+            &self.enum_alias_to_domain,
+            &mut normalized.enum_alias_to_domain,
+        );
         for (locale, domains) in &self.enum_alias_to_member {
             let norm = normalized
                 .enum_alias_to_member
                 .entry(locale.clone())
                 .or_default();
             for (domain, map) in domains {
-                let norm_map = norm.entry(domain.clone()).or_default();
-                for (spelling, &indexes) in map {
-                    let key = normalize_spelling(spelling);
-                    if key != spelling.as_str() {
-                        insert(norm_map, key.into_owned(), indexes);
-                    }
-                }
+                fill_map(map, norm.entry(domain.clone()).or_default());
             }
         }
         for (locale, map) in &self.bare_member_index {

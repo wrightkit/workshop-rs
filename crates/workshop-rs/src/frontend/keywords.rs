@@ -1,5 +1,5 @@
 use super::lexer::{Token, TokenKind};
-use super::parser::{canonical_keyword, structural_keyword_map};
+use super::parser::{canonical_keyword, resolve_with_primary, structural_keyword_map};
 use crate::catalog::{Catalog, Kind, Locale};
 use crate::settings::table;
 
@@ -28,14 +28,11 @@ pub(crate) fn canonical_structural_id(
     locale: &Locale,
     spelling: &str,
 ) -> String {
-    catalog
-        .resolve(Kind::Structural, locale, spelling)
-        .or_else(|| {
-            (locale != catalog.primary_locale())
-                .then(|| catalog.resolve(Kind::Structural, catalog.primary_locale(), spelling))?
-        })
-        .map(|entry| entry.id.clone())
-        .unwrap_or_else(|| canonical_keyword(spelling).to_string())
+    resolve_with_primary(catalog, locale, |locale| {
+        catalog.resolve(Kind::Structural, locale, spelling)
+    })
+    .map(|entry| entry.id.clone())
+    .unwrap_or_else(|| canonical_keyword(spelling).to_string())
 }
 
 pub(crate) fn spelling_token_len(tokens: &[Token], index: usize, spelling: &str) -> Option<usize> {

@@ -97,6 +97,22 @@ pub(crate) fn synthetic_span(position: Position) -> Span {
     Span::new(crate::core::ids::Id::from_index(0), position, position)
 }
 
+/// Runs `lookup` against `locale`, retrying with the catalog's primary
+/// locale when they differ.
+pub(crate) fn resolve_with_primary<T>(
+    catalog: &Catalog,
+    locale: &Locale,
+    lookup: impl Fn(&Locale) -> Option<T>,
+) -> Option<T> {
+    lookup(locale).or_else(|| {
+        if locale != catalog.primary_locale() {
+            lookup(catalog.primary_locale())
+        } else {
+            None
+        }
+    })
+}
+
 pub(crate) struct ParseContext<'a> {
     pub(crate) tokens: Vec<Token>,
     pub(crate) pos: usize,
@@ -134,21 +150,18 @@ impl<'a> ParseContext<'a> {
         self.with_domain(domain, |p| p.value())
     }
 
+    /// Runs `lookup` against the parse locale, retrying with the primary
+    /// locale when they differ.
+    pub(crate) fn or_primary<T>(&self, lookup: impl Fn(&Locale) -> Option<T>) -> Option<T> {
+        resolve_with_primary(self.catalog, &self.locale, lookup)
+    }
+
     pub(crate) fn resolve_entry(
         &self,
         kind: Kind,
         spelling: &str,
     ) -> Option<&'a crate::catalog::CatalogEntry> {
-        self.catalog
-            .resolve(kind, &self.locale, spelling)
-            .or_else(|| {
-                if self.locale != *self.catalog.primary_locale() {
-                    self.catalog
-                        .resolve(kind, self.catalog.primary_locale(), spelling)
-                } else {
-                    None
-                }
-            })
+        self.or_primary(|locale| self.catalog.resolve(kind, locale, spelling))
     }
 
     pub(crate) fn canonical_keyword(&self, spelling: &str) -> String {
@@ -156,40 +169,30 @@ impl<'a> ParseContext<'a> {
     }
 
     pub(crate) fn line_has_assignment(&self) -> bool {
-        let tokens: Vec<_> = self.tokens[self.pos..]
+        self.tokens[self.pos..]
             .iter()
             .take_while(|token| !matches!(token.kind, TokenKind::Semi | TokenKind::RBrace))
-            .collect();
-        tokens.iter().any(|token| {
-            matches!(&token.kind, TokenKind::Op(op) if matches!(op.as_str(), "=" | "+=" | "-=" | "*=" | "/=" | "%="))
-        }) || tokens.windows(2).any(|window| {
-            matches!(&window[0].kind, TokenKind::Word(_))
-                && matches!(&window[1].kind, TokenKind::Op(op) if op == "=")
-        })
+            .any(|token| {
+                matches!(&token.kind, TokenKind::Op(op) if matches!(op.as_str(), "=" | "+=" | "-=" | "*=" | "/=" | "%="))
+            })
+    }
+
+    /// The first token of a phrase: a `Word` or `Number` with its span.
+    fn phrase_seed(&mut self) -> Result<(String, Position, Position)> {
+        match self.peek() {
+            Some(Token {
+                kind: TokenKind::Word(text) | TokenKind::Number { text, .. },
+                start,
+                end,
+            }) => Ok((text.clone(), start, end)),
+            Some(token) => Err(self.malformed("expected an identifier", &token)),
+            None => Err(self.malformed("expected an identifier", self.eof())),
+        }
     }
 
     pub(crate) fn phrase(&mut self) -> Result<(String, Position, Position)> {
-        let mut parts: Vec<(String, Position, Position)> = Vec::new();
-        let (start, mut end) = match self.peek() {
-            Some(Token {
-                kind: TokenKind::Word(word),
-                start,
-                end,
-            }) => {
-                parts.push((word.clone(), start, end));
-                (start, end)
-            }
-            Some(Token {
-                kind: TokenKind::Number { text, .. },
-                start,
-                end,
-            }) => {
-                parts.push((text.clone(), start, end));
-                (start, end)
-            }
-            Some(token) => return Err(self.malformed("expected an identifier", &token)),
-            None => return Err(self.malformed("expected an identifier", self.eof())),
-        };
+        let (first, start, mut end) = self.phrase_seed()?;
+        let mut parts = vec![(first, start, end)];
         self.pos += 1;
         while let Some(token) = self.peek() {
             match token {
@@ -232,27 +235,9 @@ impl<'a> ParseContext<'a> {
     }
 
     fn phrase_on_line_impl(&mut self, list_name: bool) -> Result<(String, Position, Position)> {
-        let mut parts: Vec<(String, Position, Position)> = Vec::new();
-        let (start, mut end, line) = match self.peek() {
-            Some(Token {
-                kind: TokenKind::Word(word),
-                start,
-                end,
-            }) => {
-                parts.push((word.clone(), start, end));
-                (start, end, start.line)
-            }
-            Some(Token {
-                kind: TokenKind::Number { text, .. },
-                start,
-                end,
-            }) => {
-                parts.push((text.clone(), start, end));
-                (start, end, start.line)
-            }
-            Some(token) => return Err(self.malformed("expected an identifier", &token)),
-            None => return Err(self.malformed("expected an identifier", self.eof())),
-        };
+        let (first, start, mut end) = self.phrase_seed()?;
+        let line = start.line;
+        let mut parts = vec![(first, start, end)];
         self.pos += 1;
         while let Some(token) = self.peek() {
             let (text, word_start, word_end) = match token {
@@ -323,21 +308,22 @@ impl<'a> ParseContext<'a> {
         Ok((phrase, start, end))
     }
 
-    pub(crate) fn enum_member_phrase(&mut self) -> Result<(String, Position, Position)> {
+    /// Same-line tokens joined as written, stopping before a `stop` kind or
+    /// a line break. Errors with `message` when nothing is consumed.
+    pub(crate) fn line_run_until(
+        &mut self,
+        stop: impl Fn(&TokenKind) -> bool,
+        message: &'static str,
+    ) -> Result<(String, Position, Position)> {
         let first = self
             .peek()
-            .ok_or_else(|| self.malformed("expected an enum member", self.eof()))?;
+            .ok_or_else(|| self.malformed(message, self.eof()))?;
         let start = first.start;
         let line = first.start.line;
         let mut end = first.end;
         let mut parts: Vec<(String, Position, Position)> = Vec::new();
         while let Some(token) = self.peek() {
-            if token.start.line != line
-                || matches!(
-                    token.kind,
-                    TokenKind::RParen | TokenKind::Comma | TokenKind::LParen
-                )
-            {
+            if token.start.line != line || stop(&token.kind) {
                 break;
             }
             self.pos += 1;
@@ -345,9 +331,21 @@ impl<'a> ParseContext<'a> {
             parts.push((raw_token_text(&token.kind), token.start, token.end));
         }
         if parts.is_empty() {
-            return Err(self.malformed("expected an enum member", &first));
+            return Err(self.malformed(message, &first));
         }
         Ok((join_as_written(&parts), start, end))
+    }
+
+    pub(crate) fn enum_member_phrase(&mut self) -> Result<(String, Position, Position)> {
+        self.line_run_until(
+            |kind| {
+                matches!(
+                    kind,
+                    TokenKind::RParen | TokenKind::Comma | TokenKind::LParen
+                )
+            },
+            "expected an enum member",
+        )
     }
 
     pub(crate) fn line_text(&mut self) -> Result<(String, Option<Span>)> {
@@ -390,11 +388,13 @@ impl<'a> ParseContext<'a> {
         ))
     }
 
+    /// The token run from `pos` joined as one spelling text, with each
+    /// accepted prefix's `(token count, byte length, end)` — longest first.
     pub(crate) fn spelling_run(
         &self,
         pos: usize,
         attaches_to: Option<Position>,
-    ) -> Vec<(usize, String, Position)> {
+    ) -> (String, Vec<(usize, usize, Position)>) {
         let mut ends = Vec::new();
         let mut text = String::new();
         let mut index = pos;
@@ -423,13 +423,10 @@ impl<'a> ParseContext<'a> {
             text.push_str(fragment);
             prev_end = Some(token.end);
             index += 1;
-            ends.push((text.len(), token.end));
+            ends.push((index - pos, text.len(), token.end));
         }
-        ends.into_iter()
-            .enumerate()
-            .rev()
-            .map(|(i, (len, end))| (i + 1, text[..len].to_string(), end))
-            .collect()
+        ends.reverse();
+        (text, ends)
     }
 
     pub(crate) fn catalog_spelling(
@@ -437,13 +434,14 @@ impl<'a> ParseContext<'a> {
         accept: impl Fn(&str) -> bool,
     ) -> Option<(String, Position, Position)> {
         let start = self.tokens.get(self.pos)?.start;
-        for (count, text, end) in self.spelling_run(self.pos, None) {
+        let (text, ends) = self.spelling_run(self.pos, None);
+        for (count, len, end) in ends {
             if count < 2 {
                 break;
             }
-            if accept(&text) {
+            if accept(&text[..len]) {
                 self.pos += count;
-                return Some((text, start, end));
+                return Some((text[..len].to_string(), start, end));
             }
         }
         None
@@ -455,8 +453,9 @@ impl<'a> ParseContext<'a> {
         phrase_end: Position,
         accept: impl Fn(&str) -> bool,
     ) -> Option<(String, Position)> {
-        for (count, tail, end) in self.spelling_run(self.pos, Some(phrase_end)) {
-            let joined = format!("{phrase}{tail}");
+        let (text, ends) = self.spelling_run(self.pos, Some(phrase_end));
+        for (count, len, end) in ends {
+            let joined = format!("{phrase}{}", &text[..len]);
             if accept(&joined) {
                 self.pos += count;
                 return Some((joined, end));
@@ -473,11 +472,12 @@ impl<'a> ParseContext<'a> {
     ) -> Option<(String, Position)> {
         let catalog = self.catalog;
         let locale = self.locale.clone();
-        let primary = catalog.primary_locale();
         self.extend_catalog_spelling(phrase, phrase_end, |spelling| {
             kinds.iter().any(|kind| {
-                catalog.resolve(*kind, &locale, spelling).is_some()
-                    || (locale != *primary && catalog.resolve(*kind, primary, spelling).is_some())
+                resolve_with_primary(catalog, &locale, |locale| {
+                    catalog.resolve(*kind, locale, spelling)
+                })
+                .is_some()
             })
         })
     }
