@@ -5,48 +5,1493 @@
     {
       "id": "ana",
       "values": [
-        { "kind": "health", "pool": "health", "amount": 250 },
-        { "kind": "cooldown", "slot": "ability1", "seconds": 14 },
-        { "kind": "cooldown", "slot": "ability2", "seconds": 12 },
-        { "kind": "ultimateCost", "points": 2300 }
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 14
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2300
+        }
       ]
     },
     {
-      "id": "reinhardt",
+      "id": "anran",
       "values": [
-        { "kind": "health", "pool": "health", "amount": 250 },
-        { "kind": "health", "pool": "armor", "amount": 300 },
-        { "kind": "cooldown", "slot": "ability1", "seconds": 7 },
-        { "kind": "cooldown", "slot": "ability2", "seconds": 6 },
-        { "kind": "ultimateCost", "points": 1960 }
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 8
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 8
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2000
+        }
       ]
     },
     {
-      "id": "soldier",
+      "id": "ashe",
       "values": [
-        { "kind": "health", "pool": "health", "amount": 250 },
-        { "kind": "cooldown", "slot": "secondaryFire", "seconds": 6 },
-        { "kind": "cooldown", "slot": "ability2", "seconds": 15 },
-        { "kind": "ultimateCost", "points": 2750 }
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 10
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2450
+        }
       ]
     },
     {
-      "id": "mercy",
+      "id": "baptiste",
       "values": [
-        { "kind": "health", "pool": "health", "amount": 225 },
-        { "kind": "cooldown", "slot": "ability1", "seconds": 1.5 },
-        { "kind": "cooldown", "slot": "ability2", "seconds": 30 },
-        { "kind": "ultimateCost", "points": 2150 }
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 12
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 20
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2550
+        }
+      ]
+    },
+    {
+      "id": "bastion",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 100
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 8
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2050
+        }
+      ]
+    },
+    {
+      "id": "brigitte",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 175
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 75
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 4
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability3",
+          "seconds": 5
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2700
+        }
+      ]
+    },
+    {
+      "id": "cassidy",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1800
+        }
+      ]
+    },
+    {
+      "id": "dmon",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 275
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 1
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 5
+        }
+      ]
+    },
+    {
+      "id": "doctrine",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 8
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 14
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 8
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 3025
+        }
+      ]
+    },
+    {
+      "id": "domina",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 100
+        },
+        {
+          "kind": "health",
+          "pool": "shield",
+          "amount": 400
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 14
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 7
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 7
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2200
+        }
+      ]
+    },
+    {
+      "id": "doomfist",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 375
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 4
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 7
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 6.5
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1975
+        }
+      ]
+    },
+    {
+      "id": "dva",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 175
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 325
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 1
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 4
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 7
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1700
+        }
+      ]
+    },
+    {
+      "id": "echo",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 150
+        },
+        {
+          "kind": "health",
+          "pool": "shield",
+          "amount": 75
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 6
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 6
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 8
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1850
+        }
+      ]
+    },
+    {
+      "id": "emre",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 11
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 9
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2750
+        }
+      ]
+    },
+    {
+      "id": "freja",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 4.5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 10
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1750
+        }
+      ]
+    },
+    {
+      "id": "genji",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 8
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 8
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2125
+        }
+      ]
+    },
+    {
+      "id": "hanzo",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 12
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 8
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability3",
+          "seconds": 4
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1700
+        }
+      ]
+    },
+    {
+      "id": "hazard",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 275
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 5.5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2150
+        }
+      ]
+    },
+    {
+      "id": "illari",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 8
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 7
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2975
+        }
+      ]
+    },
+    {
+      "id": "jetpackCat",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 2
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2400
+        }
       ]
     },
     {
       "id": "junkerQueen",
       "values": [
-        { "kind": "health", "pool": "health", "amount": 375 },
-        { "kind": "cooldown", "slot": "secondaryFire", "seconds": 6 },
-        { "kind": "cooldown", "slot": "ability1", "seconds": 10 },
-        { "kind": "cooldown", "slot": "ability2", "seconds": 9 },
-        { "kind": "ultimateCost", "points": 2700 }
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 375
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 6
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 10
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 9
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2700
+        }
+      ]
+    },
+    {
+      "id": "junkrat",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 7
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 10
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2100
+        }
+      ]
+    },
+    {
+      "id": "juno",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 75
+        },
+        {
+          "kind": "health",
+          "pool": "shield",
+          "amount": 150
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 10
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 6
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 14
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2900
+        }
+      ]
+    },
+    {
+      "id": "kiriko",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 7
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 14
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2725
+        }
+      ]
+    },
+    {
+      "id": "lifeweaver",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 200
+        },
+        {
+          "kind": "health",
+          "pool": "shield",
+          "amount": 50
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 12
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 18
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2400
+        }
+      ]
+    },
+    {
+      "id": "lucio",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2900
+        }
+      ]
+    },
+    {
+      "id": "mauga",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 425
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 125
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 6
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2700
+        }
+      ]
+    },
+    {
+      "id": "mei",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 300
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 12
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1925
+        }
+      ]
+    },
+    {
+      "id": "mercy",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 1.5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 30
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2150
+        }
+      ]
+    },
+    {
+      "id": "mizuki",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 6
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 12
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 3100
+        }
+      ]
+    },
+    {
+      "id": "moira",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 6
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 8
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2700
+        }
+      ]
+    },
+    {
+      "id": "orisa",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 150
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 300
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 7
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 15.5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 8
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2150
+        }
+      ]
+    },
+    {
+      "id": "pharah",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 9
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 14
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 8
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2200
+        }
+      ]
+    },
+    {
+      "id": "ramattra",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 275
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 100
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 12
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 8
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 11
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2300
+        }
+      ]
+    },
+    {
+      "id": "reaper",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 275
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 8
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 10
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2050
+        }
+      ]
+    },
+    {
+      "id": "reinhardt",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 300
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 7
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 6
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1960
+        }
+      ]
+    },
+    {
+      "id": "roadhog",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 750
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 6
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 1.25
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2700
+        }
+      ]
+    },
+    {
+      "id": "shion",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 6
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 15
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2400
+        }
+      ]
+    },
+    {
+      "id": "sierra",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 10
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 11
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 7
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2350
+        }
+      ]
+    },
+    {
+      "id": "sigma",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 200
+        },
+        {
+          "kind": "health",
+          "pool": "shield",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 1
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 12
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 10
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2300
+        }
+      ]
+    },
+    {
+      "id": "sojourn",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 7
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 15
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2300
+        }
+      ]
+    },
+    {
+      "id": "soldier",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 6
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 15
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2750
+        }
+      ]
+    },
+    {
+      "id": "sombra",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 8
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 13
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 7.5
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 3100
+        }
+      ]
+    },
+    {
+      "id": "symmetra",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 125
+        },
+        {
+          "kind": "health",
+          "pool": "shield",
+          "amount": 150
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 10
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2025
+        }
+      ]
+    },
+    {
+      "id": "torbjorn",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 225
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 75
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 10
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2350
+        }
+      ]
+    },
+    {
+      "id": "tracer",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 175
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 3
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 12
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1375
+        }
+      ]
+    },
+    {
+      "id": "vendetta",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 200
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 75
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 0.5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 10
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 7
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2050
+        }
+      ]
+    },
+    {
+      "id": "venture",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 250
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 8
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 8
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1950
+        }
+      ]
+    },
+    {
+      "id": "widowmaker",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 10
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 15
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1400
+        }
+      ]
+    },
+    {
+      "id": "winston",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 275
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 200
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 10
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2525
+        }
+      ]
+    },
+    {
+      "id": "wreckingBall",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 300
+        },
+        {
+          "kind": "health",
+          "pool": "armor",
+          "amount": 125
+        },
+        {
+          "kind": "health",
+          "pool": "shield",
+          "amount": 150
+        },
+        {
+          "kind": "cooldown",
+          "slot": "secondaryFire",
+          "seconds": 5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 15
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability3",
+          "seconds": 8
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 1850
+        }
+      ]
+    },
+    {
+      "id": "wuyang",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 8
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 14
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2800
+        }
+      ]
+    },
+    {
+      "id": "zarya",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 175
+        },
+        {
+          "kind": "health",
+          "pool": "shield",
+          "amount": 225
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 12
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability2",
+          "seconds": 9
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2500
+        }
+      ]
+    },
+    {
+      "id": "zenyatta",
+      "values": [
+        {
+          "kind": "health",
+          "pool": "health",
+          "amount": 75
+        },
+        {
+          "kind": "health",
+          "pool": "shield",
+          "amount": 175
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2500
+        }
       ]
     }
   ]
