@@ -16,6 +16,10 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  workflow-lint:
+    name: Workflow lint
+    uses: wrightkit/.github/.github/workflows/actionlint.yml@main
+
   check:
     name: Rust (${{ matrix.toolchain }})
     strategy:
@@ -32,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Select compatibility release type
         id: release-type
         shell: bash
@@ -50,7 +54,7 @@ jobs:
             echo "value=" >> "$GITHUB_OUTPUT"
           fi
       - name: Check public API compatibility
-        uses: obi1kenobi/cargo-semver-checks-action@v2
+        uses: obi1kenobi/cargo-semver-checks-action@6b69fcf40e9b5fb17adeb57e4b6ecd020649a239 # v2.9
         with:
           package: workshop-rs,workshop-rs-cli
           release-type: ${{ steps.release-type.outputs.value }}
@@ -61,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Rust
         uses: wrightkit/.github/.github/actions/setup-rust@main
         with:
@@ -76,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Rust
         uses: wrightkit/.github/.github/actions/setup-rust@main
         with:
@@ -92,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up Rust
         uses: wrightkit/.github/.github/actions/setup-rust@main
         with:
@@ -164,7 +168,7 @@ jobs:
           exit "$overall_status"
       - name: Upload scenario data for agents
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: real-project-scenarios
           path: real-project-scenarios/
