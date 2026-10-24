@@ -308,7 +308,7 @@
         {
           "kind": "health",
           "pool": "health",
-          "amount": 175
+          "amount": 200
         },
         {
           "kind": "health",
@@ -1405,6 +1405,11 @@
           "kind": "cooldown",
           "slot": "secondaryFire",
           "seconds": 5
+        },
+        {
+          "kind": "cooldown",
+          "slot": "ability1",
+          "seconds": 0.4
         },
         {
           "kind": "cooldown",
