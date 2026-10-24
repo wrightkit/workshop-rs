@@ -13,6 +13,16 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      checks: read
+    with:
+      required-check-runs: >-
+        Rust (1.88.0) / Quality,
+        Rust (stable) / Quality,
+        Public API compatibility,
+        Catalog check,
+        WebAssembly build,
+        five real-project scenarios,
+        Workflow lint / Lint workflows
     secrets:
       github-token: ${{ secrets.GH_TOKEN }}
       cargo-registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
