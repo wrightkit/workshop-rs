@@ -3,13 +3,16 @@ name: Release
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+*"
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
   contents: write
 
+# Serialized across all tag pushes so an older tag cannot publish while a
+# newer release is in flight; the latest guard in github-release keeps a
+# queued/re-run older tag from regressing the latest marker.
 concurrency:
-  group: release-${{ github.ref }}
+  group: workshop-rs-release
   cancel-in-progress: false
 
 jobs:
@@ -30,6 +33,7 @@ jobs:
           - target: x86_64-pc-windows-msvc
             runner: windows-latest
     runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -38,7 +42,6 @@ jobs:
         with:
           toolchain: stable
           targets: ${{ matrix.target }}
-          cache-shared-key: release-${{ matrix.target }}
 
       - name: Build
         run: cargo build --locked --profile dist -p workshop-rs-cli --target ${{ matrix.target }}
@@ -82,6 +85,7 @@ jobs:
   catalog-identity:
     name: Catalog identity
     runs-on: ubuntu-22.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -89,7 +93,6 @@ jobs:
         uses: wrightkit/.github/.github/actions/setup-rust@main
         with:
           toolchain: stable
-          cache-shared-key: release-catalog
 
       - name: Generate catalog-identity.json
         run: cargo run --locked -p workshop-rs-cli -- version --json > catalog-identity.json
@@ -100,10 +103,16 @@ jobs:
           path: catalog-identity.json
           retention-days: 1
 
+  # Same-revision CI gate: deliberately inherited from release-plz — tags are
+  # created by the gated `release-plz` publish job, and this workflow is not a
+  # `release-plz-crates.yml` caller, so the shared `required-check-runs` input
+  # has no place to attach here (audit item deferred to the shared mechanism).
   github-release:
     name: GitHub Release
     needs: [build, catalog-identity]
     runs-on: ubuntu-22.04
+    timeout-minutes: 10
+    environment: release
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -118,7 +127,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
+          latest="$(gh release view --json tagName --jq .tagName || true)"
+          args=()
+          if [[ -n "$latest" ]] && \
+             [[ "$(printf '%s\n%s\n' "$latest" "${{ github.ref_name }}" | sort -V | tail -1)" != "${{ github.ref_name }}" ]]; then
+            echo "tag ${{ github.ref_name }} is older than latest release $latest; not marking latest"
+            args+=(--latest=false)
+          fi
           gh release create "${{ github.ref_name }}" \
             --title "${{ github.ref_name }}" \
             --generate-notes \
+            "${args[@]}" \
             artifacts/*
