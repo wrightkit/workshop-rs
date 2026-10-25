@@ -16,12 +16,18 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  # Edited/labeled/unlabeled only exist so semver-check re-reads the PR title
+  # and labels; every other job skips those events instead of re-running the
+  # full suite (catalog-check, wasm-check, real-project-scenarios skip via
+  # `needs: check`).
   workflow-lint:
     name: Workflow lint
+    if: github.event_name == 'push' || !contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action)
     uses: wrightkit/.github/.github/workflows/actionlint.yml@main
 
   check:
     name: Rust (${{ matrix.toolchain }})
+    if: github.event_name == 'push' || !contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action)
     strategy:
       fail-fast: false
       matrix:
