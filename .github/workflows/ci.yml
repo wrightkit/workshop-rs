@@ -59,6 +59,10 @@ jobs:
           package: workshop-rs,workshop-rs-cli
           release-type: ${{ steps.release-type.outputs.value }}
 
+  # Deliberate independent rebuild: rust-quality emits no consumable artifact,
+  # so catalog-gen compiles the workspace again under the same 1.88.0 identity.
+  # Consuming a producer artifact becomes an option only if the shared
+  # contract in `wrightkit/.github#126` is adopted (#574).
   catalog-check:
     name: Catalog check
     needs: check
@@ -90,6 +94,11 @@ jobs:
       - name: Check the parser and catalog library for WebAssembly
         run: cargo check --locked -p workshop-rs --lib --target wasm32-unknown-unknown
 
+  # Deliberate re-execution: `check`'s `cargo test --workspace --all-targets`
+  # covers the same pinned_real_projects filters, but this job isolates each
+  # scenario into its own log, a machine-readable results.tsv, and a step
+  # summary — per-scenario evidence and failure granularity a single
+  # aggregated test run cannot show (#574).
   real-project-scenarios:
     name: five real-project scenarios
     needs: check
