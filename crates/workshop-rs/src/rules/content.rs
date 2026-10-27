@@ -220,7 +220,11 @@ fn action_node(action: &Action, disabled: bool) -> Result<JsonValue> {
         Action::End => ("end", Vec::new()),
         Action::Disabled { action } => return action_node(action, true),
         Action::Call { name, args } => (
-            name.as_str(),
+            // A player-variable target under a global chase id renders the
+            // document's own section-exact id — the same model the emitter
+            // spells `Chase Player Variable …` for — so the produced node
+            // stays convertible.
+            chase_call_id(name, args),
             args.iter().map(value_node).collect::<Result<_>>()?,
         ),
     };
@@ -299,6 +303,14 @@ fn ambiguous_enum_node(args: &[Value]) -> Result<JsonValue> {
         })
         .collect::<Result<Vec<JsonValue>>>()?;
     Ok(json!({ "ambiguous": spelling, "candidates": candidates }))
+}
+
+fn chase_call_id<'a>(name: &'a str, args: &[Value]) -> &'a str {
+    match (name, args.first()) {
+        ("chaseAtRate", Some(Value::PlayerVariable { .. })) => "chasePlayerVariableAtRate",
+        ("chaseOverTime", Some(Value::PlayerVariable { .. })) => "chasePlayerVariableOverTime",
+        _ => name,
+    }
 }
 
 fn call_node(call: &str, args: Vec<JsonValue>) -> JsonValue {

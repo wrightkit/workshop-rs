@@ -59,14 +59,18 @@ Owner decision (2026-10-27), implemented here:
      document's own id: `chasePlayerVariableAtRate` /
      `chasePlayerVariableOverTime` convert to `Action::Call` under that id,
      never under the global chase's name, and the parser's folded form
-     canonicalizes to the same id. `value_call` tells a modify operand from
+     canonicalizes to the same id. A `chaseAtRate`/`chaseOverTime`
+     `Action::Call` built with a `playerVariable` first argument — a model
+     `Action::call` and the emitter still accept — renders the player id,
+     matching the emission of the same model, so the produced document
+     stays convertible. `value_call` tells a modify operand from
      a same-named value by section, not by argument count: an id that is a
      declared modify operation (`ModifyOp::from_catalog_id`) is an operand
      only when it carries no arguments, and the operand's id must be one
      the enclosing modify parameter's `paramContent.operations` accepts —
      an operation id the catalog declares as a `values` entry too is never
      read as a value call at an operand position, and vice versa.
-3. Existing accepted lookup and emission behavior stays unchanged: the
+3. Existing accepted lookup behavior stays unchanged: the
    `actions` answer still wins the unscoped `within` order, emitted text is
    byte-identical, and every existing catalog, lookup, parser, emission,
    and rule-content test keeps passing.
@@ -119,5 +123,11 @@ Owner decision (2026-10-27), implemented here:
 - Downstream consumers that pattern-match `chaseAtRate` to detect a player
   chase must match both global and player ids; the model no longer hides
   the distinction.
-- The catalog data file is unchanged; this is a code/contract change, not a
-  dataset change, so the content digest is unchanged.
+- The catalog gains `paramCoercions` on `chasePlayerVariableAtRate` /
+  `chasePlayerVariableOverTime` at the rate/duration parameter
+  (`falseAsNumber`/`trueAsNumber`), so client-accepted `False`/`True`
+  literals — the bastion.ow
+  `Chase Player Variable At Rate(Event Player, hack_timer, False, True, None)`
+  evidence — validate against the player's own entry now that the folded
+  call resolves that id. The content digest is rebuilt
+  (`1c31bdcb…` → `5eec00d3…`).
