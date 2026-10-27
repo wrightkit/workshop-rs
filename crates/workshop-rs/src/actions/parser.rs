@@ -891,13 +891,9 @@ impl ParseContext<'_> {
                         }
                         let call_end = self.expect(TokenKind::RParen, "expected ')'")?;
                         self.expect_semi("expected ';' after action")?;
-                        let canonical = if action.id == "chasePlayerVariableAtRate" {
-                            "chaseAtRate"
-                        } else {
-                            "chaseOverTime"
-                        };
+                        // The document's own id names the call (ADR-0019).
                         return Ok(self.target.actions.push(Action::Call {
-                            name: canonical.to_string(),
+                            name: action.id.clone(),
                             args,
                             span: Some(Span::new(self.file(), start, call_end)),
                         }));

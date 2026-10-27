@@ -561,10 +561,9 @@ impl Catalog {
                     ))
                 })?;
                 let param_counts = self
-                    .by_id
-                    .iter()
-                    .filter_map(|by_id| by_id.get(id))
-                    .map(|&entry_index| self.entries[entry_index].params.len())
+                    .display_name_entry_indices(id)
+                    .into_iter()
+                    .map(|entry_index| self.entries[entry_index].params.len())
                     .collect::<Vec<_>>();
                 if param_counts.is_empty() {
                     return Err(CatalogError::validation(format!(
@@ -585,12 +584,7 @@ impl Catalog {
         }
 
         for (id, positions) in names {
-            let entry_indices = self
-                .by_id
-                .iter()
-                .filter_map(|by_id| by_id.get(&id))
-                .copied()
-                .collect::<Vec<_>>();
+            let entry_indices = self.display_name_entry_indices(&id);
             if entry_indices.is_empty() {
                 return Err(CatalogError::validation(format!(
                     "param display names name undeclared entry '{id}'"
@@ -652,6 +646,11 @@ impl Catalog {
                 .filter(|locale| !gap_locales.contains(*locale))
                 .collect::<Vec<_>>();
             for entry in &self.entries {
+                if entry.kind != Kind::Structural
+                    && self.by_id[Kind::Structural.as_index()].contains_key(&entry.id)
+                {
+                    continue;
+                }
                 for index in 0..entry.params.len() {
                     let names = entry
                         .param_display_names
@@ -672,6 +671,23 @@ impl Catalog {
             }
         }
         Ok(())
+    }
+
+    /// The catalog entries a `paramDisplayNames` record or a
+    /// `paramDisplayNameGaps` position names: display-name data targets the
+    /// signature a `structural` declaration describes, so an id declared
+    /// under `structural` resolves to that entry, and an id declared only
+    /// outside `structural` resolves to every entry carrying it. An id no
+    /// entry declares returns an empty list and stays a load error.
+    fn display_name_entry_indices(&self, id: &str) -> Vec<usize> {
+        if let Some(&index) = self.by_id[Kind::Structural.as_index()].get(id) {
+            return vec![index];
+        }
+        self.by_id
+            .iter()
+            .filter_map(|by_id| by_id.get(id))
+            .copied()
+            .collect()
     }
 
     fn collect_aliases(

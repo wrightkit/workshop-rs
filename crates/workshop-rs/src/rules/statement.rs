@@ -447,30 +447,8 @@ impl Converter<'_> {
                 let entry = self.catalog.entry(Kind::Action, id).ok_or_else(unknown)?;
                 let values = self.values(args, path)?;
                 self.check_arity(entry, &values, node, path)?;
-                let name = match (id, values.first()) {
-                    ("chasePlayerVariableAtRate", Some(Value::PlayerVariable { .. })) => {
-                        "chaseAtRate"
-                    }
-                    ("chasePlayerVariableOverTime", Some(Value::PlayerVariable { .. })) => {
-                        "chaseOverTime"
-                    }
-                    ("chasePlayerVariableAtRate" | "chasePlayerVariableOverTime", _) => {
-                        return Err(unrepresentable(
-                            "a player-variable chase takes a playerVariable target",
-                            &arg_path(0),
-                            &args[0],
-                        ));
-                    }
-                    ("chaseAtRate" | "chaseOverTime", Some(Value::PlayerVariable { .. })) => {
-                        return Err(unrepresentable(
-                            "a playerVariable chase is named chasePlayerVariable…",
-                            path,
-                            node,
-                        ));
-                    }
-                    _ => id,
-                };
-                Action::call(name, values)
+                self.check_folded_target(entry, &values, node, path)?;
+                Action::call(id, values)
             }
         };
         Ok(action)
@@ -495,6 +473,38 @@ impl Converter<'_> {
                 path: path.to_string(),
                 node: node.clone(),
             });
+        }
+        Ok(())
+    }
+
+    /// The folded variable target a `rule-content-v1` call supplies must
+    /// be the fold the id declares: a `playerVariable` target belongs to
+    /// an entry whose `paramContent` declares a `playerVariable` fold, and
+    /// a `globalVariable`-folded entry takes a `globalVariable` target — a
+    /// `playerVariable` under it names the other entry's call, not this
+    /// one. Entries that declare no variable fold keep accepting any value
+    /// at the position.
+    fn check_folded_target(
+        &self,
+        entry: &CatalogEntry,
+        values: &[Value],
+        node: &JsonValue,
+        path: &str,
+    ) -> Result<()> {
+        let Some(fold) = entry
+            .param_content(0)
+            .and_then(|content| content.fold.as_ref())
+        else {
+            return Ok(());
+        };
+        let player_fold = fold.call == PLAYER_VARIABLE_CALL;
+        let player_target = matches!(values.first(), Some(Value::PlayerVariable { .. }));
+        if player_fold != player_target {
+            return Err(unrepresentable(
+                format!("'{}' takes a {} target", entry.id, fold.call),
+                &child(&child(path, "args"), 0),
+                node,
+            ));
         }
         Ok(())
     }
@@ -672,8 +682,30 @@ impl Converter<'_> {
             }
             _ => {
                 let values = self.values(args, path)?;
-                let operand = args.is_empty() && wir::is_operation_helper(id);
-                if !operand && let Some(entry) = self.catalog.entry(Kind::Value, id) {
+                if ModifyOp::from_catalog_id(id).is_some() {
+                    // A modify operation id names the operator section, not
+                    // a same-named `values` entry: a modify operand is a
+                    // zero-argument call node, so a document that gives the
+                    // id arguments is a value call of that id — and a
+                    // zero-argument call of the id is an operand, never the
+                    // value. The `paramContent.operations` fact decides
+                    // acceptance at the operand position.
+                    return if args.is_empty() {
+                        Ok(Value::Call {
+                            name: id.to_string(),
+                            args: Vec::new(),
+                        })
+                    } else {
+                        match self.catalog.entry(Kind::Value, id) {
+                            Some(entry) => {
+                                self.check_arity(entry, &values, node, path)?;
+                                Ok(self.shaped_call(id, values))
+                            }
+                            None => Err(count_error(0, Some(0))),
+                        }
+                    };
+                }
+                if let Some(entry) = self.catalog.entry(Kind::Value, id) {
                     self.check_arity(entry, &values, node, path)?;
                     return Ok(self.shaped_call(id, values));
                 }

@@ -1,7 +1,7 @@
 use serde_json::{Value as JsonValue, json};
 use workshop_rs::rules::content::rule_content;
 use workshop_rs::rules::statement::{Statement, StatementContentError, statement_from_content};
-use workshop_rs::{Event, Rule, emitter, parser};
+use workshop_rs::{Action, Event, ModifyOp, Rule, Value, emitter, parser};
 
 use crate::common::{catalog, corpus_text, fixture, locale};
 
@@ -203,6 +203,122 @@ fn unresolved_ambiguous_enum_is_refused_not_approximated() {
         StatementContentError::Unrepresentable { .. }
     ));
     assert_eq!(error.path(), "/value/args/2");
+}
+
+#[test]
+fn a_player_variable_chase_keeps_its_own_catalog_id() {
+    // ADR-0019: the document's `chasePlayerVariableAtRate` id names the
+    // player-variable chase entry; the model never aliases it to the
+    // global chase's name.
+    let catalog = catalog();
+    for (id, source_call) in [
+        (
+            "chasePlayerVariableAtRate",
+            "Chase Player Variable At Rate(Event Player, probe_p, 0, 1, None);",
+        ),
+        (
+            "chasePlayerVariableOverTime",
+            "Chase Player Variable Over Time(Event Player, probe_p, 0, 1, None);",
+        ),
+    ] {
+        let source = format!(
+            "variables {{\n    player:\n        0: probe_p\n}}\n\nrule (\"probe\") {{\n    event {{\n        Ongoing - Each Player;\n        All;\n        All;\n    }}\n    actions {{\n        {source_call}\n    }}\n}}\n"
+        );
+        let program = parser::parse(&source, &catalog, &crate::common::en()).expect("parses");
+        let content = rule_content(&program.rules[0]).expect("content renders");
+        let node = &content["actions"][0];
+        assert_eq!(node["call"], id, "the document names the player id");
+        let Statement::Action(Action::Call { name, args }) =
+            statement_from_content(&catalog, node).expect("converts")
+        else {
+            panic!("{id}: the statement is an action call");
+        };
+        assert_eq!(name, id);
+        assert!(
+            matches!(args.first(), Some(Value::PlayerVariable { .. })),
+            "{id}: the folded target is a playerVariable"
+        );
+        assert_eq!(
+            &content_of(Statement::Action(Action::Call {
+                name: name.clone(),
+                args: args.clone(),
+            })),
+            node,
+            "{id}: render -> convert -> render is stable"
+        );
+    }
+}
+
+#[test]
+fn chase_ids_are_section_exact() {
+    let player_target = json!({"call": "playerVariable", "args": [
+        {"call": "eventPlayer", "args": []}, {"variable": "v"}
+    ]});
+    // The global chase id with a playerVariable target is not the
+    // document's player chase: its `Variable` parameter rejects the
+    // folded pair instead of aliasing to the player id.
+    let wrong_target = json!({"call": "chaseAtRate", "args": [
+        player_target, 0.0, 1.0, {"enum": "ChaseRateReeval", "member": "NONE"}
+    ]});
+    assert!(
+        convert(&wrong_target).is_err(),
+        "chaseAtRate takes a global variable target"
+    );
+    // The player id with too few arguments is refused by its own
+    // signature (player, variable, destination, rate, reevaluation
+    // fold to target + 3 trailing args).
+    let short = json!({"call": "chasePlayerVariableAtRate", "args": [
+        player_target, 0.0
+    ]});
+    let error = error_of(short);
+    assert!(matches!(error, StatementContentError::ArgumentCount { .. }));
+}
+
+#[test]
+fn a_modify_operand_resolves_the_operator_section_not_the_same_named_value() {
+    // ADR-0019: `add` is declared under `values` and `operators`; an
+    // operand-position call resolves the operator section, so a
+    // zero-argument `add` node is an operand while `add(x)` is the value
+    // call.
+    let operand = json!({"call": "add", "args": []});
+    let statement = json!({"call": "modifyGlobalVariable", "args": [
+        {"variable": "x"}, operand, 1.0
+    ]});
+    let Statement::Action(Action::ModifyGlobalVariable { op, .. }) =
+        convert(&statement).expect("the modify action converts")
+    else {
+        panic!("the statement is a modify action");
+    };
+    assert_eq!(op, ModifyOp::Add);
+
+    // The same id with its declared arguments reads as the `values`
+    // entry, not an operand: `add(1, 2)` inside a condition is the value
+    // call.
+    let value_call = json!({"value": {"call": "add", "args": [1.0, 2.0]}});
+    let statement = convert(&value_call).expect("the value call converts");
+    let Statement::Condition(condition) = statement else {
+        panic!("the statement is a condition");
+    };
+    assert!(matches!(
+        condition.value,
+        Value::Call { ref name, .. } if name == "add"
+    ));
+    // A partial application is still refused: the `values` signature
+    // decides argument count, never the operand shape.
+    let partial = json!({"value": {"call": "add", "args": [1.0]}});
+    let error = error_of(partial);
+    assert!(matches!(error, StatementContentError::ArgumentCount { .. }));
+
+    // `removeFromArray` is a `values`-only id that names no ModifyOp: a
+    // zero-argument call of it is neither a valid value call (its
+    // signature takes two arguments) nor an operand.
+    let unapplied = json!({"call": "modifyGlobalVariable", "args": [
+        {"variable": "x"}, {"call": "removeFromArray", "args": []}, 1.0
+    ]});
+    assert!(
+        convert(&unapplied).is_err(),
+        "removeFromArray is not a modify operand"
+    );
 }
 
 #[test]

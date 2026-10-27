@@ -19,6 +19,8 @@ use crate::settings::{self, PathPart, SettingDefinition, SettingValueDomain, tab
 
 const INLINE_MEMBER_LIMIT: usize = 32;
 
+const CALLABLE_SCOPE_SECTIONS: [Kind; 3] = [Kind::Action, Kind::Value, Kind::Structural];
+
 /// One canonical construct matching a [`Catalog::lookup`] query.
 #[derive(Debug, Clone, PartialEq)]
 #[non_exhaustive]
@@ -306,18 +308,16 @@ impl Catalog {
     /// by `query` with the same matcher an unscoped [`Catalog::lookup`]
     /// uses.
     ///
-    /// `within` resolves in a fixed order: an enum domain (catalog or
-    /// settings-table), a callable — an action, a value, or a structural
-    /// construct — by id or `locale` spelling, then a settings path prefix.
-    /// Template segments (`<team>`, `<hero>`)
-    /// accept their own template spelling or a canonical team/hero key
-    /// the settings table recognizes — never an arbitrary value — so a
-    /// literal path stays literal (`heroes.general` lists only the
-    /// `general` group's children). With no `query`, or an
-    /// empty one, children keep the scope's own order — domain order for
-    /// members, call order for parameters, table order for settings — and
-    /// a non-empty query filters and ranks them by the same scoring an
-    /// unscoped lookup applies to its candidates.
+    /// `within` resolves in a fixed order: a catalog or settings-table
+    /// enum domain, a callable — an action, a value, or a structural
+    /// construct, in `CALLABLE_SCOPE_SECTIONS` order — by id or `locale`
+    /// spelling, then a settings path prefix. Template segments
+    /// (`<team>`, `<hero>`) accept their own spelling or a canonical
+    /// team/hero key the settings table recognizes — never an arbitrary
+    /// value — so a literal path stays literal (`heroes.general` lists
+    /// only the `general` group's children). With no query, children keep
+    /// the scope's own order (domain, call, table order); a query filters
+    /// and ranks them by the same scoring.
     ///
     /// `Err` reports a locale the catalog does not declare or a `within`
     /// naming no known scope; an empty result reports a scope whose
@@ -529,7 +529,7 @@ impl Catalog {
         value: &str,
         prepared: Option<&PreparedQuery>,
     ) -> Option<Vec<(u32, LookupMatch)>> {
-        let (entry, signature) = [Kind::Action, Kind::Value, Kind::Structural]
+        let (entry, signature) = CALLABLE_SCOPE_SECTIONS
             .into_iter()
             .filter_map(|kind| {
                 self.entry(kind, value)

@@ -5322,6 +5322,16 @@
         "zh-TW": "Chase Player Variable At Rate"
       },
       "id": "chasePlayerVariableAtRate",
+      "paramCoercions": [
+        null,
+        null,
+        null,
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        },
+        null
+      ],
       "paramContent": [
         {
           "fold": {
@@ -5394,6 +5404,16 @@
         "zh-TW": "Chase Player Variable Over Time"
       },
       "id": "chasePlayerVariableOverTime",
+      "paramCoercions": [
+        null,
+        null,
+        null,
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        },
+        null
+      ],
       "paramContent": [
         {
           "fold": {
@@ -8683,7 +8703,7 @@
       }
     }
   ],
-  "digest": "1c31bdcb7a738655c0ba69deba52c7d36d6d88226fef98d3d1a3ed9830374611",
+  "digest": "5eec00d3ed2a0d44d9cda745278dbb9435a8d7a817d41ea03022e2855aec2ecd",
   "enums": [
     {
       "domain": "Impulse",
