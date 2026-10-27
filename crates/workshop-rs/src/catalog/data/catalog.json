@@ -808,6 +808,7 @@
       ]
     },
     {
+      "actionReevaluatedParams": [],
       "aliases": {
         "de-DE": "Kill",
         "en-US": "Kill",
@@ -3265,6 +3266,9 @@
       ]
     },
     {
+      "actionReevaluatedParams": [
+        0
+      ],
       "aliases": {
         "de-DE": "Loop If",
         "en-US": "Loop If",
@@ -5621,6 +5625,9 @@
       ]
     },
     {
+      "actionReevaluatedParams": [
+        0
+      ],
       "aliases": {
         "de-DE": "Wait Until",
         "en-US": "Wait Until",
@@ -5691,6 +5698,7 @@
       ]
     },
     {
+      "actionReevaluatedParams": [],
       "aliases": {
         "de-DE": "Loop If Condition Is True",
         "en-US": "Loop If Condition Is True",
@@ -7731,6 +7739,7 @@
       ]
     },
     {
+      "actionReevaluatedParams": [],
       "aliases": {
         "de-DE": "Loop If Condition Is False",
         "en-US": "Loop If Condition Is False",
@@ -8674,7 +8683,7 @@
       }
     }
   ],
-  "digest": "eb7519fe02784d5163ba42e5fc0925be7f4ff955a2143070c53528bfc8d9711b",
+  "digest": "1c31bdcb7a738655c0ba69deba52c7d36d6d88226fef98d3d1a3ed9830374611",
   "enums": [
     {
       "domain": "Impulse",
@@ -26123,7 +26132,8 @@
       "structural call signatures for the rule-content-v1 constructs (setGlobalVariable, modifyGlobalVariable, setPlayerVariable, modifyPlayerVariable, forGlobalVariable, forPlayerVariable, if, elseIf, while, callSubroutine, and the zero-argument else/end) are transcribed from the pinned workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d; parameter order follows the emitted call's argument order, and Variable/Subroutine parameter types name the format's tagged {\"variable\"}/{\"subroutine\"} nodes",
       "the six direction value return types (up, down, left, right, forward, backward) are reconciled from workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d, which gives Vector.UP and the other direction constants a Direction (vector) return; the direction parameters they fill (for example startThrottleInDirection.direction) are typed Vector",
       "the 23 enum parameter domains declared for the enum-typed `paramTypes` positions — the `Team` parameters on `createDummyBot`, `allPlayers`, `getPlayersInRadius`, `oppositeTeamOf`, `numberOfPlayers`, `getPlayersOnHero`, `getSpawnPoints`, `isTeamOnOffense`, and `getPlayersInViewAngle`, the `Hero` parameters on `preloadHero`, `createDummyBot`, `setAllowedHeroes`, `hero`, `getPlayersOnHero`, and `createWorkshopSettingHero`, the `Button` parameters on `getAbilityCooldown`, `getAbilityResource`, and `getAbilityCharge`, and `hasStatus.status` (`Status`), `getPlayersInRadius.losCheck` (`LosCheck`), `worldVector.transformation` (`Transform`), `getHealthOfType.health` (`Health`), and `isCommunicating.type` (`Comms`) — are reconciled from the pinned workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d argument types; `Vector` positions accept any vector value and stay undeclared (workshop-rs#505)",
-      "paramDisplayNames record the parameter labels the Workshop editor shows, first stage covering en-US and zh-CN: en-US labels are transcribed from the structured Workshop.codes wiki articles (https://workshop.codes/wiki/articles/, accessed 2026-10), zh-CN labels are reconciled from the zh-CN Workshop client strings in the reviewed owl-CN data (https://github.com/qaz075115961/owl-CN, client/owl.js) and the docs.owmod.net Chinese manual, cross-checked against the per-entry parameter tables at https://overwatch.huijiwiki.com which pair each zh-CN label with its en-US label; positions whose labels conflict across sources or are not covered are listed in paramDisplayNameGaps (compare[1] zh-CN label not documented, magnitude[0] conflicting labels across sources) rather than guessed (wrightkit/workshop-rs#498); editor initial argument values are out of scope"
+      "paramDisplayNames record the parameter labels the Workshop editor shows, first stage covering en-US and zh-CN: en-US labels are transcribed from the structured Workshop.codes wiki articles (https://workshop.codes/wiki/articles/, accessed 2026-10), zh-CN labels are reconciled from the zh-CN Workshop client strings in the reviewed owl-CN data (https://github.com/qaz075115961/owl-CN, client/owl.js) and the docs.owmod.net Chinese manual, cross-checked against the per-entry parameter tables at https://overwatch.huijiwiki.com which pair each zh-CN label with its en-US label; positions whose labels conflict across sources or are not covered are listed in paramDisplayNameGaps (compare[1] zh-CN label not documented, magnitude[0] conflicting labels across sources) rather than guessed (wrightkit/workshop-rs#498); editor initial argument values are out of scope",
+      "element evaluation facts (workshop-rs#580) are reviewed per-entry data: nondeterministic marks the nine values whose result is not a function of their arguments alone (the random* family and the elapsed-time/server-load family), perElementParams records the positions a value evaluates once per array element with Current Array Element/Current Array Index rebound (filteredArray, isTrueForAll, isTrueForAny, mappedArray, sortedArray, every argument after the array source at index 0), and actionReevaluatedParams records the positions an action itself re-evaluates while running (waitUntil and loopIf argument 0; loopIfConditionIsTrue and __loopIfConditionIsFalse__ declare no parameters, so their coverage is the reviewed empty list); evidence is the pinned workshop-data export 5a7d0e294b8cad73b9701987bb584d0551d7fa4d argument descriptions ('evaluated for each element', 'if this value becomes true') and the client semantics these entries share; entries not yet reviewed report unknown (None), matching the reevaluationCoverage convention"
     ]
   },
   "schemaVersion": 1,
@@ -27215,6 +27225,7 @@
         "zh-TW": "Random Integer"
       },
       "id": "randomInteger",
+      "nondeterministic": true,
       "paramCoercions": [
         {
           "falseAsNumber": true,
@@ -27708,6 +27719,7 @@
         "zh-TW": "Total Time Elapsed"
       },
       "id": "getTotalTimeElapsed",
+      "nondeterministic": true,
       "paramTypes": [],
       "params": [],
       "returnType": "Number"
@@ -27731,6 +27743,7 @@
         "zh-TW": "Server Load Average"
       },
       "id": "getAverageServerLoad",
+      "nondeterministic": true,
       "paramTypes": [],
       "params": [],
       "returnType": "Number"
@@ -27754,6 +27767,7 @@
         "zh-TW": "Server Load Peak"
       },
       "id": "getPeakServerLoad",
+      "nondeterministic": true,
       "paramTypes": [],
       "params": [],
       "returnType": "Number"
@@ -27777,6 +27791,7 @@
         "zh-TW": "Server Load"
       },
       "id": "getServerLoad",
+      "nondeterministic": true,
       "paramTypes": [],
       "params": [],
       "returnType": "Number"
@@ -27965,6 +27980,7 @@
         "zh-TW": "Add"
       },
       "id": "add",
+      "nondeterministic": false,
       "paramCoercions": [
         {
           "trueAsNumber": true
@@ -27985,6 +28001,7 @@
         "a",
         "b"
       ],
+      "perElementParams": [],
       "returnType": "Number|Vector"
     },
     {
@@ -28723,6 +28740,9 @@
         "Array",
         "Map"
       ],
+      "perElementParams": [
+        1
+      ],
       "returnType": "Array"
     },
     {
@@ -28939,6 +28959,7 @@
         "zh-TW": "Random Real"
       },
       "id": "randomReal",
+      "nondeterministic": true,
       "paramNames": [
         "Min",
         "Max"
@@ -28972,6 +28993,7 @@
         "zh-TW": "Random Value In Array"
       },
       "id": "randomValueInArray",
+      "nondeterministic": true,
       "paramNames": [
         "array"
       ],
@@ -29002,6 +29024,7 @@
         "zh-TW": "Randomized Array"
       },
       "id": "randomizedArray",
+      "nondeterministic": true,
       "paramNames": [
         "array"
       ],
@@ -30152,6 +30175,9 @@
         "Array",
         "Condition"
       ],
+      "perElementParams": [
+        1
+      ],
       "returnType": "Array"
     },
     {
@@ -30184,6 +30210,9 @@
       "params": [
         "Array",
         "Sort"
+      ],
+      "perElementParams": [
+        1
       ],
       "returnType": "Array"
     },
@@ -30668,6 +30697,9 @@
       "params": [
         "Array",
         "Condition"
+      ],
+      "perElementParams": [
+        1
       ],
       "returnType": "Boolean"
     },
@@ -31654,6 +31686,9 @@
       "params": [
         "Array",
         "Condition"
+      ],
+      "perElementParams": [
+        1
       ],
       "returnType": "Boolean"
     },
@@ -33791,6 +33826,7 @@
         "zh-TW": "Match Time"
       },
       "id": "getMatchTime",
+      "nondeterministic": true,
       "paramDomains": [],
       "paramTypes": [],
       "params": [],
@@ -35080,5 +35116,5 @@
       "returnType": "Number"
     }
   ],
-  "version": "0.1.14"
+  "version": "0.1.15"
 }
