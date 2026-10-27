@@ -52,15 +52,8 @@ impl ParseContext<'_> {
             {
                 self.pos += 1;
                 let index = self.value()?;
-                let end = self.peek().map(|token| token.end).unwrap_or(start);
                 self.expect(TokenKind::RBracket, "expected ']' after array index")?;
-                value = self.target.values.push(ValueNode::new(
-                    Value::Call {
-                        name: "valueInArray".to_string(),
-                        args: vec![value, index],
-                    },
-                    Some(Span::new(self.file(), start, end)),
-                ));
+                value = self.index_into(value, index, start);
                 continue;
             }
             if matches!(

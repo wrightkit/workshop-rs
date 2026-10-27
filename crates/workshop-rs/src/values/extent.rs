@@ -44,10 +44,11 @@ impl ParseContext<'_> {
         self.with_extent(id, start)
     }
 
-    /// Rewrite an authored extent already recorded on `id`. Child extents
+    /// Widen an authored extent already recorded on `id`. Child extents
     /// recorded mid-parse never widen past their own authored tokens; once
     /// the enclosing expression closes, the last recorded extent is the full
-    /// authored text and stays the boundary for later widening.
+    /// authored text and stays the boundary for later widening — an update
+    /// that would narrow the recorded extent is ignored.
     pub(super) fn extend_extent(
         &mut self,
         id: wir::ValueId,
@@ -56,7 +57,14 @@ impl ParseContext<'_> {
     ) -> wir::ValueId {
         let file = self.file();
         if let Some(node) = self.target.values.get_mut(id) {
-            node.extent = Some(Span::new(file, start, end));
+            let narrowed = node.extent.is_some_and(|extent| {
+                extent.file == file
+                    && (start.line, start.col) >= (extent.start.line, extent.start.col)
+                    && (end.line, end.col) <= (extent.end.line, extent.end.col)
+            });
+            if !narrowed {
+                node.extent = Some(Span::new(file, start, end));
+            }
         }
         id
     }
@@ -72,6 +80,30 @@ impl ParseContext<'_> {
             .values
             .get(id)
             .and_then(|node| node.extent.or(node.span))
+    }
+
+    /// Push the `valueInArray(receiver, index)` node for a postfix
+    /// `receiver[index]` after `]` is consumed, recording an extent from
+    /// the receiver's first token through the `]`.
+    pub(super) fn index_into(
+        &mut self,
+        receiver: wir::ValueId,
+        index: wir::ValueId,
+        bracket_start: Position,
+    ) -> wir::ValueId {
+        let receiver_extent = self.extent_or_span(receiver);
+        let end = self.previous_span().1;
+        let node = ValueNode::new(
+            Value::Call {
+                name: "valueInArray".to_string(),
+                args: vec![receiver, index],
+            },
+            Some(Span::new(self.file(), bracket_start, end)),
+        );
+        match receiver_extent {
+            Some(extent) => self.push_extended(node, Span::new(self.file(), extent.start, end)),
+            None => self.target.values.push(node),
+        }
     }
 
     pub(crate) fn primary(&mut self) -> Result<wir::ValueId> {
@@ -269,10 +301,15 @@ impl ParseContext<'_> {
                 // receiver: `(Event Player).p` (#87). The postfix loop in
                 // `value()` has already consumed any `.member` inside the
                 // parens, so only the post-`)` member access remains.
+                // The inner node keeps its full extent: a parenthesized
+                // operand's authored text includes its enclosing parens,
+                // so extents computed from operand extents bound the whole
+                // authored sub-expression.
                 let (start, _) = self.span_here();
                 self.pos += 1;
                 let inner = self.value()?;
                 self.expect(TokenKind::RParen, "expected ')' after parenthesized value")?;
+                self.extend_extent(inner, start, self.previous_span().1);
                 if let Some(Token {
                     kind: TokenKind::Dot,
                     ..

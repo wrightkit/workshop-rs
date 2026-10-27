@@ -82,8 +82,10 @@ names a variable or subroutine: `Set`/`Modify` standard forms and infix
 `Global/Player Variable(name)`, `Event Player.name`, or a bare declared name.
 Positions with no recorded provenance return `None` rather than a neighboring
 or enclosing span. The extent accessors follow the same rule: raw parses
-record an extent for every value node they create, and a mapped or
-programmatically built position without one returns `None` — the accessor
+record an extent where the node span alone does not bound the authored
+sub-expression — infix operators, calls, array indexing, member access, and
+parenthesized values — and a mapped or programmatically built position
+without one returns `None` — the accessor
 falls back to the node span only when that span was itself recorded, never
 to a parent or sibling.
 
