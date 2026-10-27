@@ -8703,7 +8703,7 @@
       }
     }
   ],
-  "digest": "5eec00d3ed2a0d44d9cda745278dbb9435a8d7a817d41ea03022e2855aec2ecd",
+  "digest": "bd6ef06fdc2ea233c0c4bcdfc91307a7dc5e3ae1c4ee08611cd8304c0993b1e4",
   "enums": [
     {
       "domain": "Impulse",
@@ -21262,7 +21262,10 @@
   "events": [
     {
       "aliases": {
-        "en-US": "Player Took Knockback",
+        "en-US": [
+          "Player Took Knockback",
+          "Player Received Knockback"
+        ],
         "zh-CN": "玩家受到击退"
       },
       "id": "playerReceivedKnockback",
