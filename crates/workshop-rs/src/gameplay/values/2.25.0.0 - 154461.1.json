@@ -207,6 +207,10 @@
           "kind": "cooldown",
           "slot": "ability2",
           "seconds": 5
+        },
+        {
+          "kind": "ultimateCost",
+          "points": 2000
         }
       ]
     },
