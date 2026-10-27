@@ -2,7 +2,7 @@ use crate::common::zh;
 use workshop_rs::catalog::{Catalog, Locale};
 
 const PINNED_CATALOG_DIGEST: &str =
-    "eb7519fe02784d5163ba42e5fc0925be7f4ff955a2143070c53528bfc8d9711b";
+    "1c31bdcb7a738655c0ba69deba52c7d36d6d88226fef98d3d1a3ed9830374611";
 
 #[test]
 fn committed_catalog_digest_is_pinned() {
@@ -26,7 +26,7 @@ fn identity_reports_all_four_machine_readable_identities() {
     let catalog = Catalog::builtin().expect("built-in catalog");
     let identity = catalog.identity();
     assert_eq!(identity.implementation_version, env!("CARGO_PKG_VERSION"));
-    assert_eq!(identity.catalog_version, "0.1.14");
+    assert_eq!(identity.catalog_version, "0.1.15");
     assert_eq!(
         identity.catalog_digest.as_deref(),
         Some(PINNED_CATALOG_DIGEST)
