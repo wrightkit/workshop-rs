@@ -41,6 +41,7 @@ impl ParseContext<'_> {
 
     pub(crate) fn value(&mut self) -> Result<wir::ValueId> {
         let saved = self.claim_condition_pending();
+        let value_start = self.peek().map(|token| token.start);
         let mut value = self.primary()?;
         loop {
             if let Some(Token {
@@ -51,15 +52,8 @@ impl ParseContext<'_> {
             {
                 self.pos += 1;
                 let index = self.value()?;
-                let end = self.peek().map(|token| token.end).unwrap_or(start);
                 self.expect(TokenKind::RBracket, "expected ']' after array index")?;
-                value = self.target.values.push(ValueNode::new(
-                    Value::Call {
-                        name: "valueInArray".to_string(),
-                        args: vec![value, index],
-                    },
-                    Some(Span::new(self.file(), start, end)),
-                ));
+                value = self.index_into(value, index, start);
                 continue;
             }
             if matches!(
@@ -70,8 +64,8 @@ impl ParseContext<'_> {
                 })
             ) {
                 self.pos += 1;
-                let (name, _, _) = self.phrase()?;
-                value = self.member_access(value, name)?;
+                let (name, name_start, name_end) = self.phrase()?;
+                value = self.member_access(value, name, name_start, name_end)?;
                 continue;
             }
             if let Some(Token {
@@ -85,13 +79,21 @@ impl ParseContext<'_> {
                     let when_true = self.value()?;
                     self.expect(TokenKind::Colon, "expected ':' in conditional value")?;
                     let when_false = self.value()?;
-                    value = self.target.values.push(ValueNode::new(
+                    let (extent_start, extent_end) = (
+                        self.extent_or_span(value).map(|span| span.start),
+                        self.extent_or_span(when_false).map(|span| span.end),
+                    );
+                    let call = self.target.values.push(ValueNode::new(
                         Value::Call {
                             name: "ifThenElse".to_string(),
                             args: vec![value, when_true, when_false],
                         },
                         Some(Span::new(self.file(), start, end)),
                     ));
+                    value = match (extent_start, extent_end) {
+                        (Some(start), Some(end)) => self.extend_extent(call, start, end),
+                        _ => call,
+                    };
                     continue;
                 }
                 let compound_assignment = matches!(
@@ -115,288 +117,31 @@ impl ParseContext<'_> {
                         "%" => "modulo",
                         _ => op.as_str(),
                     };
-                    value = self.target.values.push(ValueNode::new(
+                    let (extent_start, extent_end) = (
+                        self.extent_or_span(value).map(|span| span.start),
+                        self.extent_or_span(right).map(|span| span.end),
+                    );
+                    let call = self.target.values.push(ValueNode::new(
                         Value::Call {
                             name: name.to_string(),
                             args: vec![value, right],
                         },
                         Some(Span::new(self.file(), start, end)),
                     ));
+                    value = match (extent_start, extent_end) {
+                        (Some(start), Some(end)) => self.extend_extent(call, start, end),
+                        _ => call,
+                    };
                     continue;
                 }
             }
             break;
         }
         self.in_condition = saved;
-        Ok(value)
-    }
-
-    pub(crate) fn primary(&mut self) -> Result<wir::ValueId> {
-        match self.peek() {
-            Some(Token {
-                kind: TokenKind::Op(op),
-                start,
-                ..
-            }) if op == "not" => {
-                self.pos += 1;
-                let saved_condition = std::mem::replace(&mut self.in_condition, false);
-                let value = self.primary();
-                self.in_condition = saved_condition;
-                let value = value?;
-                Ok(self.target.values.push(ValueNode::new(
-                    Value::Call {
-                        name: "not".to_string(),
-                        args: vec![value],
-                    },
-                    Some(Span::new(self.file(), start, self.previous_span().1)),
-                )))
-            }
-            Some(Token {
-                kind: TokenKind::Number { .. },
-                ..
-            }) => {
-                // A number may open a declared catalog spelling (`0. Yuva`,
-                // `1. Takım`, #448); only a recognized spelling is consumed.
-                if let Some((phrase, start, end)) = self.catalog_value_spelling() {
-                    return self.catalog_value_call_or_member(phrase, start, end);
-                }
-                let Some(Token {
-                    kind: TokenKind::Number { value, text },
-                    start,
-                    end,
-                }) = self.peek()
-                else {
-                    unreachable!("number arm entered on a non-number token")
-                };
-                let span = Some(Span::new(self.file(), start, end));
-                self.pos += 1;
-                Ok(self
-                    .target
-                    .values
-                    .push(ValueNode::new(Value::Number { value, text }, span)))
-            }
-            Some(Token {
-                kind: TokenKind::Op(op),
-                start,
-                ..
-            }) if op == "-" => {
-                if let Some(Token {
-                    kind: TokenKind::Number { value, text },
-                    end: number_end,
-                    ..
-                }) = self.peek_at(1)
-                {
-                    let span = Some(Span::new(self.file(), start, number_end));
-                    self.pos += 2;
-                    Ok(self.target.values.push(ValueNode::new(
-                        Value::Number {
-                            value: -value,
-                            text: format!("-{text}"),
-                        },
-                        span,
-                    )))
-                } else {
-                    Err(self.malformed("expected a number after '-'", &self.peek().unwrap()))
-                }
-            }
-            Some(Token {
-                kind: TokenKind::String(content),
-                start,
-                end,
-            }) => {
-                let span = Some(Span::new(self.file(), start, end));
-                self.pos += 1;
-                Ok(self
-                    .target
-                    .values
-                    .push(ValueNode::new(Value::String(content), span)))
-            }
-            Some(Token {
-                kind: TokenKind::Word(word),
-                ..
-            }) if matches!(word.as_str(), "Global" | "global")
-                || self.canonical_keyword(&word) == "global" =>
-            {
-                let (start, end) = self.span_here();
-                self.pos += 1;
-                // The reference's value spelling `Global Variable(name)`
-                // (#119 differential evidence); the OPY form `Global.name`
-                // stays supported.
-                if let Some(Token {
-                    kind: TokenKind::Word(next),
-                    ..
-                }) = self.peek()
-                    && (canonical_keyword(&next) == "Variable"
-                        || canonical_keyword(&next) == "variable")
-                {
-                    self.pos += 1;
-                    self.expect(TokenKind::LParen, "expected '(' after 'Global Variable'")?;
-                    let (name, name_start, name_end) = self.phrase()?;
-                    let variable = self.global_by_name(&name)?;
-                    self.expect(TokenKind::RParen, "expected ')' after Global Variable")?;
-                    let span = Some(Span::new(self.file(), start, end));
-                    return Ok(self.target.values.push(
-                        ValueNode::new(Value::GlobalVariable(variable), span)
-                            .with_identifier(Some(Span::new(self.file(), name_start, name_end))),
-                    ));
-                }
-                self.expect(TokenKind::Dot, "expected '.' after 'Global'")?;
-                let (name, name_start, name_end) = self.phrase()?;
-                let variable = self.global_by_name(&name)?;
-                let span = Some(Span::new(self.file(), start, end));
-                Ok(self.target.values.push(
-                    ValueNode::new(Value::GlobalVariable(variable), span)
-                        .with_identifier(Some(Span::new(self.file(), name_start, name_end))),
-                ))
-            }
-            Some(Token {
-                kind: TokenKind::Word(word),
-                ..
-            }) if matches!(canonical_keyword(&word), "Player" | "player")
-                && matches!(
-                    self.peek_at(1),
-                    Some(Token {
-                        kind: TokenKind::Word(next),
-                        ..
-                    }) if matches!(canonical_keyword(&next), "Variable" | "variable")
-                ) =>
-            {
-                // The reference's playervar-read spelling
-                // `Player Variable(player, name)` (#119 differential
-                // evidence).
-                let (start, end) = self.span_here();
-                self.pos += 1;
-                self.with_domain(None, |p| {
-                    p.consume_phrase("Variable")?;
-                    p.expect(TokenKind::LParen, "expected '(' after 'Player Variable'")?;
-                    let player = p.value()?;
-                    p.expect(TokenKind::Comma, "expected ',' after player")?;
-                    let (name, name_start, name_end) = p.phrase()?;
-                    let variable = p.player_by_name(&name)?;
-                    p.expect(TokenKind::RParen, "expected ')' after Player Variable")?;
-                    Ok(p.target.values.push(
-                        ValueNode::new(
-                            Value::PlayerVariable { player, variable },
-                            Some(Span::new(p.file(), start, end)),
-                        )
-                        .with_identifier(Some(Span::new(
-                            p.file(),
-                            name_start,
-                            name_end,
-                        ))),
-                    ))
-                })
-            }
-            Some(Token {
-                kind: TokenKind::Word(word),
-                ..
-            }) if matches!(canonical_keyword(&word), "Event" | "event" | "Event Player") => {
-                let (start, _) = self.span_here();
-                self.pos += 1;
-                if canonical_keyword(&word) == "Event Player" {
-                    return self.event_player_value(start);
-                }
-                if matches!(self.peek(), Some(Token { kind: TokenKind::Word(next), .. }) if matches!(canonical_keyword(&next), "Player" | "player"))
-                {
-                    self.pos += 1;
-                    return self.event_player_value(start);
-                }
-                self.pos -= 1;
-                let (phrase, start, end) = self.phrase()?;
-                if matches!(
-                    self.peek(),
-                    Some(Token {
-                        kind: TokenKind::LParen,
-                        ..
-                    })
-                ) {
-                    self.call_or_enum(&phrase, start, end)
-                } else {
-                    self.bare_member(&phrase, start, end)
-                }
-            }
-            Some(Token {
-                kind: TokenKind::LParen,
-                ..
-            }) => {
-                // The oracle's playervar-read spelling parenthesizes the
-                // receiver: `(Event Player).p` (#87). The postfix loop in
-                // `value()` has already consumed any `.member` inside the
-                // parens, so only the post-`)` member access remains.
-                self.pos += 1;
-                let inner = self.value()?;
-                self.expect(TokenKind::RParen, "expected ')' after parenthesized value")?;
-                if let Some(Token {
-                    kind: TokenKind::Dot,
-                    ..
-                }) = self.peek()
-                {
-                    self.pos += 1;
-                    let (name, name_start, name_end) = self.phrase()?;
-                    if matches!(
-                        self.target.values.get(inner),
-                        Some(ValueNode {
-                            value: Value::EventPlayer,
-                            ..
-                        })
-                    ) || self.players.contains_key(&name)
-                    {
-                        let variable = self.player_by_name(&name)?;
-                        Ok(self.target.values.push(
-                            ValueNode::new(
-                                Value::PlayerVariable {
-                                    player: inner,
-                                    variable,
-                                },
-                                None,
-                            )
-                            .with_identifier(Some(Span::new(
-                                self.file(),
-                                name_start,
-                                name_end,
-                            ))),
-                        ))
-                    } else {
-                        self.member_access(inner, name)
-                    }
-                } else {
-                    Ok(inner)
-                }
-            }
-            _ => {
-                if let Some((phrase, start, end)) = self.catalog_value_spelling() {
-                    return self.catalog_value_call_or_member(phrase, start, end);
-                }
-                let (phrase, start, end) = self.phrase()?;
-                let canonical_value = self
-                    .resolve_entry(Kind::Value, &phrase)
-                    .map(|entry| entry.id.as_str())
-                    .unwrap_or_else(|| canonical_keyword(&phrase));
-                match canonical_value {
-                    "true" => Ok(self.push_bool(true, start, end)),
-                    "false" => Ok(self.push_bool(false, start, end)),
-                    "eventPlayer" | "Event Player" => Ok(self.target.values.push(ValueNode::new(
-                        Value::EventPlayer,
-                        Some(Span::new(self.file(), start, end)),
-                    ))),
-                    "null" => Ok(self.target.values.push(ValueNode::new(
-                        Value::Null,
-                        Some(Span::new(self.file(), start, end)),
-                    ))),
-                    _ => {
-                        if let Some(Token {
-                            kind: TokenKind::LParen,
-                            ..
-                        }) = self.peek()
-                        {
-                            self.call_or_enum(&phrase, start, end)
-                        } else {
-                            self.bare_member(&phrase, start, end)
-                        }
-                    }
-                }
-            }
+        if let Some(start) = value_start {
+            self.extend_extent(value, start, self.previous_span().1);
         }
+        Ok(value)
     }
 
     pub(crate) fn catalog_value_spelling(&mut self) -> Option<(String, Position, Position)> {
@@ -410,7 +155,7 @@ impl ParseContext<'_> {
         })
     }
 
-    fn catalog_value_call_or_member(
+    pub(super) fn catalog_value_call_or_member(
         &mut self,
         phrase: String,
         start: Position,
@@ -477,21 +222,27 @@ impl ParseContext<'_> {
             let args = self.opaque_value_args()?;
             self.call_stack.pop();
             self.expect(TokenKind::RParen, "expected ')' after value call")?;
-            return Ok(self.target.values.push(ValueNode::new(
+            return Ok(self.push(
+                ValueNode::new(
+                    Value::Call {
+                        name: phrase.to_string(),
+                        args,
+                    },
+                    Some(Span::new(self.file(), start, end)),
+                ),
+                start,
+            ));
+        }
+        Ok(self.push(
+            ValueNode::new(
                 Value::Call {
                     name: phrase.to_string(),
-                    args,
+                    args: Vec::new(),
                 },
                 Some(Span::new(self.file(), start, end)),
-            )));
-        }
-        Ok(self.target.values.push(ValueNode::new(
-            Value::Call {
-                name: phrase.to_string(),
-                args: Vec::new(),
-            },
-            Some(Span::new(self.file(), start, end)),
-        )))
+            ),
+            start,
+        ))
     }
 
     fn value_call(
@@ -524,23 +275,29 @@ impl ParseContext<'_> {
             let right = self.value_in_domain(None)?;
             self.expect(TokenKind::RParen, "expected ')'")?;
             let span = Some(Span::new(self.file(), op_start, op_end));
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::Call {
-                    name: op,
-                    args: vec![left, right],
-                },
-                span,
-            )));
+            return Ok(self.push(
+                ValueNode::new(
+                    Value::Call {
+                        name: op,
+                        args: vec![left, right],
+                    },
+                    span,
+                ),
+                start,
+            ));
         }
         let args = self.value_args(entry.id.as_str())?;
         self.expect(TokenKind::RParen, "expected ')'")?;
-        Ok(self.target.values.push(ValueNode::new(
-            Value::Call {
-                name: entry.id.clone(),
-                args,
-            },
-            Some(Span::new(self.file(), start, end)),
-        )))
+        Ok(self.push(
+            ValueNode::new(
+                Value::Call {
+                    name: entry.id.clone(),
+                    args,
+                },
+                Some(Span::new(self.file(), start, end)),
+            ),
+            start,
+        ))
     }
 
     fn enum_call(
@@ -555,13 +312,16 @@ impl ParseContext<'_> {
             .resolve_enum_member_mixed(&domain.domain, &member_phrase)
             .unwrap_or_else(|| unresolved_enum_member(&domain.domain, &member_phrase));
         self.expect(TokenKind::RParen, "expected ')' after enum member")?;
-        Ok(self.target.values.push(ValueNode::new(
-            Value::Enum {
-                value_type: member.0,
-                value: member.1,
-            },
-            Some(Span::new(self.file(), start, end)),
-        )))
+        Ok(self.push(
+            ValueNode::new(
+                Value::Enum {
+                    value_type: member.0,
+                    value: member.1,
+                },
+                Some(Span::new(self.file(), start, end)),
+            ),
+            start,
+        ))
     }
 
     fn action_in_value_error(
@@ -670,7 +430,7 @@ impl ParseContext<'_> {
 
     /// An `EventPlayer` value just consumed; wraps it in a `PlayerVariable`
     /// when a `.name` member access follows.
-    fn event_player_value(&mut self, start: Position) -> Result<wir::ValueId> {
+    pub(super) fn event_player_value(&mut self, start: Position) -> Result<wir::ValueId> {
         let player = self.target.values.push(ValueNode::new(
             Value::EventPlayer,
             Some(Span::new(self.file(), start, self.previous_span().1)),
@@ -681,12 +441,11 @@ impl ParseContext<'_> {
         self.pos += 1;
         let (name, name_start, name_end) = self.phrase()?;
         let variable = self.player_by_name(&name)?;
-        Ok(self.target.values.push(
-            ValueNode::new(
-                Value::PlayerVariable { player, variable },
-                Some(Span::new(self.file(), name_start, name_end)),
-            )
-            .with_identifier(Some(Span::new(self.file(), name_start, name_end))),
+        let span = Some(Span::new(self.file(), name_start, name_end));
+        Ok(self.push_extended(
+            ValueNode::new(Value::PlayerVariable { player, variable }, span)
+                .with_identifier(Some(Span::new(self.file(), name_start, name_end))),
+            Span::new(self.file(), start, name_end),
         ))
     }
 
@@ -725,12 +484,13 @@ impl ParseContext<'_> {
             _ => {}
         }
         if let Some(variable) = self.globals.get(phrase).copied() {
-            return Ok(self.target.values.push(
+            return Ok(self.push(
                 ValueNode::new(
                     Value::GlobalVariable(variable),
                     Some(Span::new(self.file(), start, end)),
                 )
                 .with_identifier(Some(Span::new(self.file(), start, end))),
+                start,
             ));
         }
         let member = self
@@ -796,13 +556,16 @@ impl ParseContext<'_> {
                 .target
                 .values
                 .push(ValueNode::new(Value::Array(candidates), None));
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::Call {
-                    name: crate::wir::AMBIGUOUS_ENUM_CALL.to_string(),
-                    args: vec![spelling, candidates],
-                },
-                Some(Span::new(self.file(), start, end)),
-            )));
+            return Ok(self.push(
+                ValueNode::new(
+                    Value::Call {
+                        name: crate::wir::AMBIGUOUS_ENUM_CALL.to_string(),
+                        args: vec![spelling, candidates],
+                    },
+                    Some(Span::new(self.file(), start, end)),
+                ),
+                start,
+            ));
         }
         if let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
             if entry.id == "null" {
@@ -817,24 +580,30 @@ impl ParseContext<'_> {
                     Some(Span::new(self.file(), start, end)),
                 )));
             }
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::Call {
-                    name: entry.id.clone(),
-                    args: Vec::new(),
-                },
-                Some(Span::new(self.file(), start, end)),
-            )));
+            return Ok(self.push(
+                ValueNode::new(
+                    Value::Call {
+                        name: entry.id.clone(),
+                        args: Vec::new(),
+                    },
+                    Some(Span::new(self.file(), start, end)),
+                ),
+                start,
+            ));
         }
         if let Some(error) = self.action_in_value_error(phrase, start, end) {
             return Err(error);
         }
-        Ok(self.target.values.push(ValueNode::new(
-            Value::Call {
-                name: phrase.to_string(),
-                args: Vec::new(),
-            },
-            Some(Span::new(self.file(), start, end)),
-        )))
+        Ok(self.push(
+            ValueNode::new(
+                Value::Call {
+                    name: phrase.to_string(),
+                    args: Vec::new(),
+                },
+                Some(Span::new(self.file(), start, end)),
+            ),
+            start,
+        ))
     }
 
     pub(crate) fn value_args(&mut self, call_id: &str) -> Result<Vec<wir::ValueId>> {
@@ -1097,12 +866,18 @@ impl ParseContext<'_> {
         start: Position,
         end: Position,
     ) -> wir::ValueId {
-        self.target.values.push(ValueNode::new(
-            Value::Bool(value),
-            Some(Span::new(self.file(), start, end)),
-        ))
+        self.push(
+            ValueNode::new(Value::Bool(value), Some(Span::new(self.file(), start, end))),
+            start,
+        )
     }
-    fn member_access(&mut self, receiver: wir::ValueId, name: String) -> Result<wir::ValueId> {
+    pub(super) fn member_access(
+        &mut self,
+        receiver: wir::ValueId,
+        name: String,
+        name_start: Position,
+        name_end: Position,
+    ) -> Result<wir::ValueId> {
         if matches!(
             self.target.values.get(receiver),
             Some(ValueNode {
@@ -1112,13 +887,19 @@ impl ParseContext<'_> {
         ) && self.players.contains_key(&name)
         {
             let variable = self.player_by_name(&name)?;
-            return Ok(self.target.values.push(ValueNode::new(
-                Value::PlayerVariable {
-                    player: receiver,
-                    variable,
-                },
-                None,
-            )));
+            let extent = self
+                .extent_or_span(receiver)
+                .map(|span| Span::new(self.file(), span.start, name_end));
+            return Ok(self.push_extended(
+                ValueNode::new(
+                    Value::PlayerVariable {
+                        player: receiver,
+                        variable,
+                    },
+                    None,
+                ),
+                extent.unwrap_or_else(|| Span::new(self.file(), name_start, name_end)),
+            ));
         }
         let member = self
             .target
@@ -1136,13 +917,20 @@ impl ParseContext<'_> {
             args.push(self.value()?);
             self.expect(TokenKind::RBracket, "expected ']' after member index")?;
         }
-        Ok(self.target.values.push(ValueNode::new(
-            Value::Call {
-                name: "memberAccess".to_string(),
-                args,
-            },
-            None,
-        )))
+        let end = self.previous_span().1;
+        let extent = self
+            .extent_or_span(receiver)
+            .map(|span| Span::new(self.file(), span.start, end));
+        Ok(self.push_extended(
+            ValueNode::new(
+                Value::Call {
+                    name: "memberAccess".to_string(),
+                    args,
+                },
+                None,
+            ),
+            extent.unwrap_or_else(|| Span::new(self.file(), end, end)),
+        ))
     }
 }
 

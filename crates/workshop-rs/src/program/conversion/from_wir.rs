@@ -467,6 +467,7 @@ fn value_provenance(storage: &wir::Program, id: wir::ValueId) -> ValueProvenance
     };
     ValueProvenance {
         span: node.span,
+        extent: node.extent,
         identifier: node.identifier,
         children: wir_value_children(&node.value)
             .into_iter()

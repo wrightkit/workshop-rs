@@ -6,6 +6,7 @@
 
 mod arity;
 pub(crate) mod emitter;
+mod extent;
 pub(crate) mod parser;
 pub(crate) mod validate;
 

@@ -62,6 +62,17 @@ separately:
   argument, addressed by a path into the public `Value` tree. For a variable
   or subroutine reference the recorded identifier span is returned; other
   nodes return the span recorded for the node itself.
+- `Program::condition_value_extent` and
+  `Program::action_argument_value_extent` return the authored extent of the
+  value at the same path: from the first token of the sub-expression through
+  its last token. Infix operands and the closing `)` or `]` of calls,
+  arrays, and vectors are inside the extent, so the sliced source text is
+  exactly the authored sub-expression. This differs from the node and
+  identifier spans above: an infix operator's node span is the operator
+  token and a variable reference's identifier span is its name, while the
+  extent covers the whole expression either kind heads. Comments inside the
+  expression are interior trivia and stay inside the extent; comments after
+  its last token do not.
 
 Raw Workshop parses record the declared identifier at every position that
 names a variable or subroutine: `Set`/`Modify` standard forms and infix
@@ -70,7 +81,13 @@ names a variable or subroutine: `Set`/`Modify` standard forms and infix
 `... At Index` name arguments, and reads written as `Global.name`,
 `Global/Player Variable(name)`, `Event Player.name`, or a bare declared name.
 Positions with no recorded provenance return `None` rather than a neighboring
-or enclosing span.
+or enclosing span. The extent accessors follow the same rule: raw parses
+record an extent where the node span alone does not bound the authored
+sub-expression — infix operators, calls, array indexing, member access, and
+parenthesized values — and a mapped or programmatically built position
+without one returns `None` — the accessor
+falls back to the node span only when that span was itself recorded, never
+to a parent or sibling.
 
 Consumers that construct a program can attach rule, condition, action, and
 direct-argument spans with `Program::set_rule_span`,

@@ -9,6 +9,7 @@ use crate::settings::Settings;
 use crate::source::{FileId, SourceDocument, SourceFile, Span};
 
 mod conversion;
+mod extent;
 mod identity;
 pub(crate) mod shared;
 mod source_map;
@@ -83,6 +84,7 @@ impl SpanSlot for ValueProvenance {
     fn reseat(&mut self, identity: NodeIdentity) {
         if self.identity != identity {
             self.span = None;
+            self.extent = None;
             self.identifier = None;
         }
         self.identity = identity;
@@ -117,6 +119,7 @@ fn prune_spans_outside(
     }
     fn prune_value(record: &mut ValueProvenance, file: FileId, document: &SourceDocument) {
         prune_slot(&mut record.span, file, document);
+        prune_slot(&mut record.extent, file, document);
         prune_slot(&mut record.identifier, file, document);
         for child in &mut record.children {
             prune_value(child, file, document);
@@ -151,6 +154,8 @@ fn prune_spans_outside(
 #[derive(Debug, Clone, Default)]
 struct ValueProvenance {
     span: Option<Span>,
+    /// The authored extent: this value's first token through its last.
+    extent: Option<Span>,
     identifier: Option<Span>,
     identity: NodeIdentity,
     children: Vec<ValueProvenance>,
@@ -573,18 +578,6 @@ impl Program {
         record.identifier.or(record.span)
     }
 
-    fn condition_value_record(
-        &self,
-        rule: usize,
-        condition: usize,
-        path: &[usize],
-    ) -> Option<&ValueProvenance> {
-        let record = self.condition_record(rule, condition)?;
-        let value = &self.rules[rule].conditions[condition].value;
-        let identity = condition_identity(&self.rules[rule].conditions[condition]);
-        value_provenance_at(record, value, path, identity)
-    }
-
     pub(crate) fn condition_value_node_span(
         &self,
         rule: usize,
@@ -612,18 +605,6 @@ impl Program {
     ) -> Option<crate::source::Span> {
         let record = self.action_argument_value_record(rule, action, argument, path)?;
         record.identifier.or(record.span)
-    }
-
-    fn action_argument_value_record(
-        &self,
-        rule: usize,
-        action: usize,
-        argument: usize,
-        path: &[usize],
-    ) -> Option<&ValueProvenance> {
-        let record = self.argument_record(rule, action, argument)?;
-        let value = action_argument_values(&self.rules[rule].actions[action])[argument];
-        value_provenance_at(record, value, path, value_identity(value))
     }
 
     pub(crate) fn action_argument_value_node_span(

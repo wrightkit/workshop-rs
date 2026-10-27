@@ -191,6 +191,7 @@ fn check_value(program: &Program, id: super::ValueId) -> Result<(), IrError> {
         .get(id)
         .ok_or_else(|| dangling("value", id.index()))?;
     check_span(node.span, program)?;
+    check_span(node.extent, program)?;
     check_span(node.identifier, program)?;
     let value = &node.value;
     match value {
