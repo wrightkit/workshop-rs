@@ -191,6 +191,26 @@ fn all_player_events_parse_validate_emit_and_round_trip() {
 }
 
 #[test]
+fn received_knockback_event_spellings_parse_to_one_event_and_emit_took() {
+    let rule = |spelling: &str| {
+        format!(
+            "rule (\"knockback\") {{\n    event {{\n        {spelling};\n        All;\n        All;\n    }}\n    actions {{\n        Disable Inspector Recording;\n    }}\n}}\n"
+        )
+    };
+    let took = internal::parse(&rule("Player Took Knockback"));
+    let received = internal::parse(&rule("Player Received Knockback"));
+    assert!(roundtrip::equivalent_wir(&took, &received));
+
+    let emitted = internal::emit(&received);
+    assert!(emitted.contains("Player Took Knockback;"));
+    assert!(!emitted.contains("Player Received Knockback"));
+    assert!(roundtrip::equivalent_wir(
+        &received,
+        &internal::parse(&emitted)
+    ));
+}
+
+#[test]
 fn legacy_each_player_emits_all_filters_and_round_trips_in_supported_locales() {
     let catalog = catalog();
     let legacy = internal::parse(LEGACY_EACH_PLAYER);
