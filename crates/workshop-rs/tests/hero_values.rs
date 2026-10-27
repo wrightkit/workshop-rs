@@ -23,20 +23,16 @@ fn builtin_loads_the_pinned_version() {
 fn builtin_covers_every_gameplay_hero() {
     let values = hero_values::builtin(hero_values::CURRENT_VERSION).expect("pinned version loads");
     let gameplay = workshop_rs::gameplay::data::builtin_ref().expect("gameplay dataset loads");
-    // Heroes whose ultimate cost has no source the pinned file accepts.
-    let no_ultimate_cost: &[&str] = &["dmon"];
     for hero in gameplay.heroes() {
         let id = hero.id().as_str();
         assert!(
             values.health(id, HealthPool::Health).is_some(),
             "{id} has no `health` pool in the pinned file"
         );
-        if !no_ultimate_cost.contains(&id) {
-            assert!(
-                values.ultimate_cost(id).is_some(),
-                "{id} has no `ultimateCost` in the pinned file"
-            );
-        }
+        assert!(
+            values.ultimate_cost(id).is_some(),
+            "{id} has no `ultimateCost` in the pinned file"
+        );
     }
 }
 

@@ -11,6 +11,7 @@ Scope follows principle 9 of the goal document: technical facts about the Worksh
 1. **Pinned version: game client version `2.25.0.0 - 154461.1`.** It is the client version recorded in the athena probe captures (`client.version`, read from the client options menu). It is a client version, not a named patch or season. The `balanceVersion` field holds this string.
 2. **Value kinds in v1.** Health (pools `health`, `shield`, `armor`), cooldown (seconds, per ability slot) and ultimate cost (points). A new kind needs a schema change.
 3. **No per-value source or verification state.** A value is its kind and its number. The owner judged per-value evidence unnecessary overhead. Principle 9 is updated to match in wrightkit/.github#117.
+   Values come from public patch notes and the community wiki. One recorded exception applies to that source rule (owner decision, 2026-10-27): `dmon` `ultimateCost` = 2000 is taken from the non-English fan wikis because no allowed source states it.
 4. **One file per version.** A new version is a new file. Old files stay unchanged.
 5. **Location.** `crates/workshop-rs/src/gameplay/values/<version>.json`, next to the hero dataset. `catalog.json` is the language catalog and holds no hero data.
 6. **athena reads the data through a new public Rust module, `hero_values`**, not the raw file and not the gameplay catalog. The gameplay catalog requires a source on every stat. See "Reading the data".
