@@ -18,8 +18,8 @@ env:
 jobs:
   # Edited/labeled/unlabeled only exist so semver-check re-reads the PR title
   # and labels; every other job skips those events instead of re-running the
-  # full suite (catalog-check, wasm-check, real-project-scenarios skip via
-  # `needs: check`).
+  # full suite (catalog-gen-build, wasm-check, real-project-scenarios skip via
+  # `needs: check`, and catalog-check follows catalog-gen-build).
   workflow-lint:
     name: Workflow lint
     if: github.event_name == 'push' || !contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action)
@@ -65,12 +65,12 @@ jobs:
           package: workshop-rs,workshop-rs-cli
           release-type: ${{ steps.release-type.outputs.value }}
 
-  # Deliberate independent rebuild: rust-quality emits no consumable artifact,
-  # so catalog-gen compiles the workspace again under the same 1.88.0 identity.
-  # Consuming a producer artifact becomes an option only if the shared
-  # contract in `wrightkit/.github#126` is adopted (#574).
-  catalog-check:
-    name: Catalog check
+  # Consumer-side producer for the ubuntu/1.88.0/dev build identity
+  # (`wrightkit/.github#126`): rust-quality stays artifact-free, so this job
+  # builds the binary once and catalog-check downloads it instead of
+  # recompiling the workspace.
+  catalog-gen-build:
+    name: Build catalog generator
     needs: check
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -81,8 +81,31 @@ jobs:
         with:
           toolchain: 1.88.0
           cache-shared-key: quality
+      - name: Build catalog generator
+        run: cargo build --locked -p workshop-rs --bin workshop-catalog-gen
+      - name: Upload catalog generator artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: workshop-catalog-gen-linux-1.88.0-debug
+          path: target/debug/workshop-catalog-gen
+          if-no-files-found: error
+
+  catalog-check:
+    name: Catalog check
+    needs: catalog-gen-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Download catalog generator artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: workshop-catalog-gen-linux-1.88.0-debug
+          path: target/debug
+      - name: Prepare catalog generator executable
+        run: chmod +x target/debug/workshop-catalog-gen
       - name: Catalog check
-        run: cargo run --locked -p workshop-rs --bin workshop-catalog-gen -- check
+        run: target/debug/workshop-catalog-gen check
 
   wasm-check:
     name: WebAssembly build
