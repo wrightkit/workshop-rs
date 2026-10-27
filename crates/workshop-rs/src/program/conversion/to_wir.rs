@@ -504,6 +504,7 @@ fn apply_value_provenance(
         && let Some(node) = storage.values.get_mut(value)
     {
         node.span = source.span;
+        node.extent = source.extent;
         node.identifier = source.identifier;
     }
     let public_children = value_children(public);

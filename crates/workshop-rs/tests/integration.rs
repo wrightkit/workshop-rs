@@ -50,3 +50,5 @@ mod statement_edit_layout;
 mod statement_from_content;
 #[path = "statement_spans.rs"]
 mod statement_spans;
+#[path = "value_extents.rs"]
+mod value_extents;

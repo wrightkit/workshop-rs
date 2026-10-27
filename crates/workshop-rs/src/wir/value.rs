@@ -6,6 +6,10 @@ use super::{GlobalVarId, PlayerVarId, SubroutineId, ValueId};
 pub(crate) struct ValueNode {
     pub(crate) value: Value,
     pub(crate) span: Option<Span>,
+    /// The authored extent of the whole sub-expression this node heads: from
+    /// its first token through its last token, including infix operands and
+    /// closing delimiters. Recorded by raw parsing only.
+    pub(crate) extent: Option<Span>,
     pub(crate) identifier: Option<Span>,
 }
 
@@ -47,12 +51,19 @@ impl ValueNode {
         ValueNode {
             value,
             span,
+            extent: None,
             identifier: None,
         }
     }
 
     pub(crate) fn with_identifier(mut self, identifier: Option<Span>) -> Self {
         self.identifier = identifier;
+        self
+    }
+
+    /// Record the authored extent of this node's sub-expression.
+    pub(crate) fn with_extent(mut self, extent: Option<Span>) -> Self {
+        self.extent = extent;
         self
     }
 }
