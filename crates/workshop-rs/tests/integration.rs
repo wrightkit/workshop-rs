@@ -6,6 +6,8 @@ mod action_layout;
 mod canonical_residuals;
 #[path = "catalog.rs"]
 mod catalog;
+#[path = "catalog_eval_properties.rs"]
+mod catalog_eval_properties;
 #[path = "compare.rs"]
 mod compare;
 #[path = "corpus.rs"]

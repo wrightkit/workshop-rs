@@ -150,6 +150,25 @@ format's tagged `{"variable"}`/`{"subroutine"}` node (`Variable`,
 `Subroutine`). Zero-argument constructs (`else`, `end`) report an empty
 `params`.
 
+Beyond the per-parameter facts, `CatalogEntry` exposes the catalog's
+reviewed per-entry evaluation facts as `Option`s — `None` reports an
+unreviewed entry rather than a negative, consistent with
+`reevaluation_coverage`:
+
+- `nondeterministic()` — whether a value's result is not a function of
+  its arguments alone (`Some(true)` for the `random*` and
+  elapsed-time/server-load values, `Some(false)` for a reviewed
+  deterministic value);
+- `per_element_params()` — the positions a value evaluates once per
+  array element with `Current Array Element`/`Current Array Index`
+  rebound;
+- `action_reevaluated_params()` — the positions an action itself
+  re-evaluates while it runs (`waitUntil`/`loopIf` argument 0),
+  independent of its `*Reeval` enum-parameter coverage;
+- `param_default_enum_member(index)` — the declared default decoded as a
+  `(domain, member)` enum-member identity when `param_default` records
+  `Domain.MEMBER`, so consumers do not parse the default string.
+
 ## Descriptions
 
 Every action and value carries a localized description — the short
