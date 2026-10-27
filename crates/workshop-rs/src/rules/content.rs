@@ -220,6 +220,10 @@ fn action_node(action: &Action, disabled: bool) -> Result<JsonValue> {
         Action::End => ("end", Vec::new()),
         Action::Disabled { action } => return action_node(action, true),
         Action::Call { name, args } => (
+            // A player-variable target under a global chase id renders the
+            // document's own section-exact id — the same model the emitter
+            // spells `Chase Player Variable …` for — so the produced node
+            // stays convertible.
             chase_call_id(name, args),
             args.iter().map(value_node).collect::<Result<_>>()?,
         ),

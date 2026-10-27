@@ -217,3 +217,25 @@ fn evaluation_facts_reject_bad_records() {
         );
     }
 }
+
+#[test]
+fn param_display_names_target_the_structural_entry_of_a_dual_declared_id() {
+    // ADR-0019: `modifyGlobalVariable` is declared under both `structural`
+    // and `actions`; display-name data describes the structural signature,
+    // so records resolve that section, not every entry carrying the id.
+    let catalog = catalog();
+    let en = workshop_rs::catalog::Locale::new("en-US");
+    assert_eq!(
+        catalog
+            .entry(Kind::Structural, "modifyGlobalVariable")
+            .and_then(|entry| entry.param_display_name(&en, 0)),
+        Some("Variable")
+    );
+    assert_eq!(
+        catalog
+            .entry(Kind::Action, "modifyGlobalVariable")
+            .and_then(|entry| entry.param_display_name(&en, 0)),
+        None,
+        "the action entry of the id keeps no display-name record"
+    );
+}

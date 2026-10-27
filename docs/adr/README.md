@@ -37,6 +37,7 @@ ADR.
 - [ADR-0016: Catalog content stays outside the Rust public API](0016-catalog-content-outside-rust-api.md)
 - [ADR-0017: Mutation-validated source provenance records](0017-mutation-validated-source-provenance.md)
 - [ADR-0018: Residual-tolerant canonical validation entry point](0018-residual-tolerant-canonical-validation.md)
+- [ADR-0019: One catalog id may live in two sections; lookups name the section](0019-catalog-id-sections.md)
 
 ADR-0007 was originally committed with a duplicate `ADR-0002` identifier. The
 number was corrected to ADR-0007; the recorded gameplay decision is unchanged.

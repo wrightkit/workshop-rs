@@ -12,7 +12,8 @@
 use workshop_rs::catalog::{Catalog, CatalogEntry, Kind, Locale};
 use workshop_rs::lookup::LookupMatch;
 use workshop_rs::rules::content::rule_content;
-use workshop_rs::{Action, Condition, Event, Rule, Value, parser};
+use workshop_rs::rules::statement::{Statement, statement_from_content};
+use workshop_rs::{Action, Condition, Event, Program, Rule, Value, Variable, emitter, parser};
 
 use crate::common::{catalog, en};
 
@@ -197,4 +198,72 @@ fn every_folded_pair_call_has_surface_coverage() {
         "every entry folding a (player, variable) pair must have a \
          surface call in FOLDED_PAIR_CALLS"
     );
+}
+
+#[test]
+fn a_player_variable_chase_under_the_global_id_stays_convertible() {
+    // ADR-0019: `Action::call` and the emitter still accept a
+    // `chaseAtRate`/`chaseOverTime` call with a `playerVariable` first
+    // argument, so `rule_content` renders the document's own player id —
+    // the shape `statement_from_content` accepts — rather than a node
+    // naming a fold the target violates. The same model emits the player
+    // spelling and reparses to the same call id.
+    let catalog = catalog();
+    for (global_id, player_id, reeval) in [
+        (
+            "chaseAtRate",
+            "chasePlayerVariableAtRate",
+            "ChaseRateReeval",
+        ),
+        (
+            "chaseOverTime",
+            "chasePlayerVariableOverTime",
+            "ChaseTimeReeval",
+        ),
+    ] {
+        let action = Action::call(
+            global_id,
+            [
+                Value::player_variable(Value::EventPlayer, "v"),
+                Value::from(0.0),
+                Value::from(1.0),
+                Value::Enum {
+                    value_type: reeval.to_string(),
+                    value: "NONE".to_string(),
+                },
+            ],
+        );
+        let rule = Rule::new("chase", Event::Global).action(action.clone());
+        let content = rule_content(&rule).expect("rule content renders");
+        let node = &content["actions"][0];
+        assert_eq!(
+            node["call"], player_id,
+            "{global_id} with a playerVariable target renders the document's own id"
+        );
+        let Statement::Action(converted) =
+            statement_from_content(&catalog, node).expect("the rendered node converts")
+        else {
+            panic!("{player_id}: the statement is an action call");
+        };
+        let round_tripped = rule_content(&Rule::new("chase", Event::Global).action(converted))
+            .expect("rule content renders");
+        assert_eq!(
+            &round_tripped["actions"][0], node,
+            "{player_id}: render -> convert -> render is stable"
+        );
+
+        // Emit the same model: the emitter spells the player form and
+        // reparse stores the document's own id — the call the rendered
+        // node names.
+        let mut program = Program::new();
+        program.player_variable(Variable::with_index("v", 0));
+        program.rule(Rule::new("chase", Event::Global).action(action));
+        let text = emitter::emit(&program, &catalog, &en()).expect("emits");
+        let reparsed = parser::parse(&text, &catalog, &en()).expect("reparse");
+        let reparsed_content = rule_content(&reparsed.rules[0]).expect("rule content renders");
+        assert_eq!(
+            &reparsed_content["actions"][0], node,
+            "{global_id} emits the player spelling; reparse renders the same node"
+        );
+    }
 }

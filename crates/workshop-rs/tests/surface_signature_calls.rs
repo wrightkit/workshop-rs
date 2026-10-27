@@ -32,14 +32,14 @@ const DIVERGENT_SURFACE_CALLS: &[(&str, &str, usize, &str, usize)] = &[
         "chasePlayerVariableAtRate",
         "Chase Player Variable At Rate(Event Player, probe_p, 0, 1, None);",
         5,
-        "chaseAtRate",
+        "chasePlayerVariableAtRate",
         4,
     ),
     (
         "chasePlayerVariableOverTime",
         "Chase Player Variable Over Time(Event Player, probe_p, 0, 1, None);",
         5,
-        "chaseOverTime",
+        "chasePlayerVariableOverTime",
         4,
     ),
 ];
