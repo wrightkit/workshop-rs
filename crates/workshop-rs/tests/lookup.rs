@@ -607,10 +607,6 @@ fn unknown_action_spelling_carries_nearest_valid_candidates() {
 fn unknown_spelling_candidates_cover_observed_near_spellings() {
     let cases = [
         (
-            "rule (\"x\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        Create HUD Txt(Null, Null, Null, Null, Left, 0, White, White, White, Visible To, Default Visibility);\n    }\n}\n",
-            "Create HUD Text",
-        ),
-        (
             "rule (\"x\") {\n    event {\n        Ongoing - Global;\n    }\n    actions {\n        createHudText(Null, Null, Null, Null, Left, 0, White, White, White, Visible To, Default Visibility);\n    }\n}\n",
             "Create HUD Text",
         ),

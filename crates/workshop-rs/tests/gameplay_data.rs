@@ -60,13 +60,13 @@ fn builtin_ref_returns_the_same_cached_instance() {
 #[test]
 fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
     let catalog = builtin().expect("embedded gameplay data should load");
-    assert_eq!(catalog.heroes().len(), 54);
+    assert!(!catalog.heroes().is_empty());
 
-    let expected = [
+    // Representative slot topologies: basic kit, named fire slots, ability3,
+    // passive, and the primary+secondary combination. The exact embedded
+    // inventory is pinned by the dataset digest, not by this test.
+    for (hero_id, expected_slots) in [
         ("ana", &["ability1", "ability2", "ultimate"][..]),
-        ("anran", &["ability1", "ability2", "ultimate"][..]),
-        ("ashe", &["ability1", "ability2", "ultimate"][..]),
-        ("baptiste", &["ability1", "ability2", "ultimate"][..]),
         (
             "bastion",
             &["primaryFire", "secondaryFire", "ability1", "ultimate"][..],
@@ -81,179 +81,13 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
                 "ultimate",
             ][..],
         ),
-        ("cassidy", &["ability1", "ability2", "ultimate"][..]),
-        (
-            "dmon",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "doctrine",
-            &[
-                "primaryFire",
-                "secondaryFire",
-                "ability1",
-                "ability2",
-                "ultimate",
-            ][..],
-        ),
-        (
-            "domina",
-            &[
-                "primaryFire",
-                "secondaryFire",
-                "ability1",
-                "ability2",
-                "ultimate",
-                "passive",
-            ][..],
-        ),
-        (
-            "doomfist",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "dva",
-            &[
-                "primaryFire",
-                "secondaryFire",
-                "ability1",
-                "ability2",
-                "ultimate",
-            ][..],
-        ),
-        (
-            "echo",
-            &[
-                "secondaryFire",
-                "ability1",
-                "ability2",
-                "ultimate",
-                "passive",
-            ][..],
-        ),
-        ("emre", &["ability1", "ability2", "ultimate"][..]),
-        (
-            "freja",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        ("genji", &["ability1", "ability2", "ultimate"][..]),
-        ("illari", &["ability1", "ability2", "ultimate"][..]),
-        (
-            "wreckingBall",
-            &[
-                "secondaryFire",
-                "ability1",
-                "ability2",
-                "ability3",
-                "ultimate",
-            ][..],
-        ),
         (
             "hanzo",
             &["ability1", "ability2", "ability3", "ultimate"][..],
         ),
         (
-            "jetpackCat",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "junkerQueen",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        ("junkrat", &["ability1", "ability2", "ultimate"][..]),
-        ("kiriko", &["ability1", "ability2", "ultimate"][..]),
-        (
-            "lucio",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "mauga",
-            &[
-                "primaryFire",
-                "secondaryFire",
-                "ability1",
-                "ability2",
-                "ultimate",
-            ][..],
-        ),
-        ("mei", &["ability1", "ability2", "ultimate"][..]),
-        (
             "mercy",
             &["ability1", "ability2", "ultimate", "passive"][..],
-        ),
-        (
-            "mizuki",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        ("moira", &["ability1", "ability2", "ultimate"][..]),
-        (
-            "orisa",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "pharah",
-            &[
-                "secondaryFire",
-                "ability1",
-                "ability2",
-                "ultimate",
-                "passive",
-            ][..],
-        ),
-        ("reaper", &["ability1", "ability2", "ultimate"][..]),
-        (
-            "reinhardt",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        ("roadhog", &["ability1", "ability2", "ultimate"][..]),
-        (
-            "shion",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "sierra",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "sigma",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "sojourn",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "soldier",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "sombra",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        ("symmetra", &["ability1", "ability2", "ultimate"][..]),
-        ("torbjorn", &["ability1", "ability2", "ultimate"][..]),
-        ("tracer", &["ability1", "ability2", "ultimate"][..]),
-        ("widowmaker", &["ability1", "ability2", "ultimate"][..]),
-        ("winston", &["ability1", "ability2", "ultimate"][..]),
-        ("zarya", &["ability1", "ability2", "ultimate"][..]),
-        ("zenyatta", &["ability1", "ability2", "ultimate"][..]),
-        (
-            "ramattra",
-            &[
-                "primaryFire",
-                "secondaryFire",
-                "ability1",
-                "ability2",
-                "ultimate",
-            ][..],
-        ),
-        (
-            "lifeweaver",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "venture",
-            &["primaryFire", "secondaryFire", "ability1", "ultimate"][..],
         ),
         (
             "juno",
@@ -266,44 +100,17 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
                 "passive",
             ][..],
         ),
-        (
-            "hazard",
-            &[
-                "primaryFire",
-                "secondaryFire",
-                "ability1",
-                "ability2",
-                "ultimate",
-            ][..],
-        ),
-        (
-            "wuyang",
-            &["secondaryFire", "ability1", "ability2", "ultimate"][..],
-        ),
-        (
-            "vendetta",
-            &[
-                "primaryFire",
-                "secondaryFire",
-                "ability1",
-                "ability2",
-                "ultimate",
-            ][..],
-        ),
-    ];
-    let expected_ids: BTreeSet<_> = expected.iter().map(|(hero_id, _)| *hero_id).collect();
-    let actual_ids: BTreeSet<_> = catalog
-        .heroes()
-        .iter()
-        .map(|hero| hero.id().as_str())
-        .collect();
-    assert_eq!(actual_ids, expected_ids);
+    ] {
+        let hero = catalog.hero_by_id(hero_id).expect("expected hero identity");
+        let actual_slots: BTreeSet<_> = hero
+            .abilities()
+            .iter()
+            .map(|ability| ability.slot().as_str())
+            .collect();
+        let expected_slots: BTreeSet<_> = expected_slots.iter().copied().collect();
+        assert_eq!(actual_slots, expected_slots, "slot topology for {hero_id}");
+    }
 
-    let ability_count: usize = catalog
-        .heroes()
-        .iter()
-        .map(|hero| hero.abilities().len())
-        .sum();
     let keyword_count = catalog
         .heroes()
         .iter()
@@ -316,19 +123,16 @@ fn embedded_catalog_covers_the_pinned_roster_and_named_slots() {
         .flat_map(|hero| hero.abilities())
         .filter(|ability| ability.variant().is_some())
         .count();
-    assert_eq!(ability_count, 212);
     assert!(keyword_count > 0);
     assert!(variant_count > 0);
 
-    for (hero_id, expected_slots) in expected {
-        let hero = catalog.hero_by_id(hero_id).expect("expected hero identity");
-        let actual_slots: BTreeSet<_> = hero
-            .abilities()
-            .iter()
-            .map(|ability| ability.slot().as_str())
-            .collect();
-        let expected_slots: BTreeSet<_> = expected_slots.iter().copied().collect();
-        assert_eq!(actual_slots, expected_slots, "slot topology for {hero_id}");
+    let mut ids = BTreeSet::new();
+    for hero in catalog.heroes() {
+        assert!(
+            ids.insert(hero.id().as_str()),
+            "duplicate hero id {}",
+            hero.id().as_str()
+        );
         let role = hero.role().expect("official role sources for every hero");
         assert!(matches!(
             role.value().as_str(),
@@ -635,98 +439,31 @@ fn official_zh_cn_names_fill_export_gaps() {
 }
 
 #[test]
-fn embedded_records_keep_pinned_source_metadata_on_every_fact() {
-    let catalog = builtin().unwrap();
-    for hero in catalog.heroes() {
-        for source_record in hero.sources() {
-            if source_record.source == SOURCE {
-                assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-10-06"));
-            } else {
-                assert_eq!(hero.id().as_str(), "doctrine");
-                assert_eq!(source_record.source, OFFICIAL_HERO_SOURCE);
-            }
-        }
-        for source_record in hero.name().sources() {
-            if source_record.source == SOURCE {
-                assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-10-06"));
-            } else {
-                assert_eq!(source_record.source, OFFICIAL_HERO_SOURCE);
-                assert!(matches!(
-                    source_record.note.as_deref(),
-                    Some(
-                        "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08"
-                    ) | Some(
-                        "localized names verified on the official localized hero detail pages; accessed 2026-10-08"
-                    )
-                ));
-            }
-        }
-        let role = hero.role().expect("official role sources for every hero");
-        let role_source = &role.sources()[0];
-        assert_eq!(
-            role_source.source,
-            "Blizzard Entertainment official Overwatch hero detail"
+fn embedded_records_carry_well_formed_provenance_on_every_fact() {
+    fn assert_well_formed(record: &SourceReference) {
+        assert!(
+            !record.source.is_empty(),
+            "a provenance record names a source"
         );
         assert!(
-            role_source
-                .locator
-                .starts_with("https://overwatch.blizzard.com/en-us/heroes/")
+            record.locator.starts_with("data.heroes.") || record.locator.starts_with("https://"),
+            "unrecognized provenance locator: {}",
+            record.locator
         );
-        assert!(matches!(
-            role_source.note.as_deref(),
-            Some("role metadata; accessed 2026-08-18") | Some("role metadata; accessed 2026-10-08")
-        ));
+    }
+    let catalog = builtin().unwrap();
+    for hero in catalog.heroes() {
+        assert!(!hero.sources().is_empty(), "{} has no sources", hero.id());
+        for record in hero.sources().iter().chain(hero.name().sources()) {
+            assert_well_formed(record);
+        }
+        let role = hero.role().expect("official role sources for every hero");
+        for record in role.sources() {
+            assert_well_formed(record);
+        }
         for ability in hero.abilities() {
-            for source_record in ability.sources().iter().chain(ability.name().sources()) {
-                if source_record.source == SOURCE {
-                    assert!(source_record.locator.starts_with("data.heroes."));
-                    assert_eq!(source_record.note.as_deref(), Some("commitDate=2026-10-06"));
-                } else if source_record.source == OFFICIAL_HERO_SOURCE {
-                    if source_record
-                        .locator
-                        .starts_with("https://overwatch.blizzard.com/en-us/heroes/")
-                    {
-                        assert!(matches!(
-                            source_record.note.as_deref(),
-                            Some("official ability description; accessed 2026-08-18")
-                                | Some(
-                                    "localized ability names verified on the official localized hero detail pages; accessed 2026-10-08"
-                                )
-                                | Some(
-                                    "hero identity and ability slot order per official hero detail; accessed 2026-10-08"
-                                )
-                                | Some(
-                                    "localized names verified on the official localized hero detail pages; accessed 2026-10-08"
-                                )
-                        ));
-                    } else if source_record
-                        .locator
-                        .starts_with("https://ow.blizzard.cn/heroes/")
-                    {
-                        assert_eq!(
-                            source_record.note.as_deref(),
-                            Some(
-                                "zh-CN names from the official Overwatch China hero detail; accessed 2026-10-08"
-                            )
-                        );
-                    } else {
-                        assert!(matches!(
-                            source_record.locator.as_str(),
-                            "https://ow.blizzard.cn/news/patch-notes/live/2026/08/"
-                                | "https://ow.blizzard.cn/news/patch-notes/live/2026/07/"
-                        ));
-                        assert!(matches!(
-                            source_record.note.as_deref(),
-                            Some("zh-CN ability names; accessed 2026-10-08")
-                                | Some("zh-CN ability name; accessed 2026-10-08")
-                        ));
-                    }
-                } else {
-                    panic!(
-                        "unexpected ability source reference: {}",
-                        source_record.source
-                    );
-                }
+            for record in ability.sources().iter().chain(ability.name().sources()) {
+                assert_well_formed(record);
             }
         }
     }

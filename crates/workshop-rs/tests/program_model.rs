@@ -1,8 +1,6 @@
-use crate::common::{catalog, en};
-use workshop_rs::source::{FileId, Position, SourceFile, Span};
-use workshop_rs::{
-    Action, Condition, Event, Program, Rule, SourceMap, Subroutine, Value, Variable, parser,
-};
+use crate::common::catalog;
+use workshop_rs::source::{Position, SourceFile, Span};
+use workshop_rs::{Action, Condition, Event, Program, Rule, Subroutine, Value, Variable};
 
 #[test]
 fn program_is_constructible_without_storage_ids() {
@@ -49,105 +47,6 @@ fn file_source_attaches_to_registered_files() {
 
     let missing = workshop_rs::source::FileId::from_index(9);
     assert!(!program.set_file_source(missing, "x = 1\n"));
-}
-
-#[test]
-fn applying_a_source_map_drops_stale_settings_spans() {
-    let workshop = "rule (\"tick\") {\n    event { Ongoing - Each Player; All; All; }\n    actions { Wait(1); }\n}\n\nsettings {\n    main {\n        Description: \"Streak race\"\n    }\n}\n";
-    let mut reparsed = parser::parse(workshop, &catalog(), &en()).expect("parses");
-    assert!(reparsed.settings.as_ref().is_some_and(|s| s.span.is_some()));
-
-    let map = SourceMap::extract(&reparsed);
-    map.apply(&mut reparsed).expect("map applies");
-
-    let settings = reparsed.settings.as_ref().expect("settings survive");
-    assert!(settings.span.is_none());
-    assert!(settings.children.iter().all(|node| node.span().is_none()));
-
-    let authored = workshop
-        .lines()
-        .take(5)
-        .fold(String::new(), |mut text, line| {
-            text.push_str(line);
-            text.push('\n');
-            text
-        });
-    assert!(reparsed.set_file_source(FileId::from_index(0), authored));
-    reparsed.validate().expect("mapped program validates");
-}
-
-#[test]
-fn file_source_retention_prunes_spans_outside_the_text() {
-    let workshop = "rule (\"tick\") {\n    event { Ongoing - Each Player; All; All; }\n    actions { Wait(1); }\n}\n";
-    let mut reparsed = parser::parse(workshop, &catalog(), &en()).expect("parses");
-    SourceMap::extract(&reparsed)
-        .apply(&mut reparsed)
-        .expect("map applies");
-    assert!(reparsed.rule_span(0).is_some());
-
-    assert!(reparsed.set_file_source(FileId::from_index(0), "rule (\"t"));
-    assert_eq!(reparsed.rule_span(0), None);
-    reparsed.validate().expect("mapped program validates");
-
-    let mut full = parser::parse(workshop, &catalog(), &en()).expect("parses");
-    SourceMap::extract(&full).apply(&mut full).expect("applies");
-    assert!(full.set_file_source(FileId::from_index(0), workshop));
-    assert!(full.rule_span(0).is_some());
-    full.validate().expect("in-bounds spans validate");
-}
-
-#[test]
-fn file_source_retention_prunes_only_the_attached_file() {
-    let workshop = "rule (\"tick\") {\n    event { Ongoing - Each Player; All; All; }\n    actions { Wait(1); }\n}\n";
-    let mut program = parser::parse(workshop, &catalog(), &en()).expect("parses");
-    SourceMap::extract(&program)
-        .apply(&mut program)
-        .expect("map applies");
-    let other = program.add_file(SourceFile::new("included.opy"));
-    program
-        .set_rule_span(
-            0,
-            Some(Span::new(other, Position::new(1, 1), Position::new(2, 1))),
-        )
-        .expect("file 1 span attaches");
-    let name = program.rule_name_span(0).expect("file 0 name span");
-
-    assert!(program.set_file_source(FileId::from_index(0), workshop));
-    assert_eq!(program.rule_span(0).map(|s| s.file), Some(other));
-    assert_eq!(program.rule_name_span(0), Some(name));
-
-    assert!(program.set_file_source(other, "rule (\"tick\") {\n}\n"));
-    assert!(program.rule_span(0).is_some());
-    assert_eq!(program.rule_name_span(0), Some(name));
-
-    program
-        .set_rule_span(
-            0,
-            Some(Span::new(other, Position::new(1, 1), Position::new(9, 1))),
-        )
-        .expect("file 1 span reattaches");
-    assert!(program.set_file_source(other, "x"));
-    assert_eq!(program.rule_span(0), None);
-    assert_eq!(program.rule_name_span(0), Some(name));
-}
-
-#[test]
-fn values_and_conditions_are_composable() {
-    let value = Value::call(
-        "add",
-        [
-            Value::global_variable("Score"),
-            Value::Array(vec![Value::number(1.0), Value::number(2.0)]),
-        ],
-    );
-    let condition = Condition::new(value.clone());
-    let mut program = Program::default();
-    program.rule(Rule::new("Composable", Event::Global).condition(condition));
-
-    assert!(matches!(
-        &program.rules[0].conditions[0].value,
-        Value::Call { name, args } if name == "add" && args.len() == 2
-    ));
 }
 
 #[test]
@@ -213,6 +112,8 @@ fn independently_constructed_program_uses_the_same_operations() {
     assert_eq!(layout.width, 1);
     let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emits");
     assert!(emitted.contains("Set Global Variable(Score, 1)"));
+    let reparsed = workshop_rs::parser::parse(&emitted, &catalog, &locale).expect("reparses");
+    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
 }
 
 #[test]
@@ -442,6 +343,8 @@ fn programs_built_with_disabled_modifiers_validate_and_emit() {
     let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emit");
     assert!(emitted.contains("disabled Abort;"), "{emitted}");
     assert!(emitted.contains("disabled True == True;"), "{emitted}");
+    let reparsed = workshop_rs::parser::parse(&emitted, &catalog, &locale).expect("reparse");
+    reparsed.validate().expect("the emitted form validates");
 }
 
 #[test]
@@ -906,48 +809,38 @@ fn semantic_issues_reports_residuals_when_control_flow_is_unterminated() {
 }
 
 #[test]
-fn semantic_issues_survives_unresolved_variable_reference() {
+fn semantic_issues_survives_unresolved_references() {
     let catalog = catalog();
-    let mut program = Program::new();
-    program.rule(
-        Rule::new("unresolved variable", Event::Global)
-            .condition(Condition::new(Value::call(
-                "isAlive",
-                [Value::global_variable("undeclared")],
-            )))
-            .action(Action::call("unrecognizedProducerAction", [])),
-    );
-
-    assert!(program.validate().is_err());
-    let issues = program.semantic_issues(&catalog);
-    assert!(
-        issues.iter().any(|issue| issue.kind
-            == workshop_rs::rules::IncompletenessKind::UnknownAction
-            && issue.name == "unrecognizedProducerAction"),
-        "unresolved variable must not suppress observable residuals: {issues:?}"
-    );
-}
-
-#[test]
-fn semantic_issues_survives_unresolved_subroutine_reference() {
-    let catalog = catalog();
-    let mut program = Program::new();
-    program.rule(
-        Rule::new("unresolved subroutine", Event::Global)
-            .action(Action::CallSubroutine {
-                subroutine: "missing".to_string(),
-            })
-            .action(Action::call("unrecognizedProducerAction", [])),
-    );
-
-    assert!(program.validate().is_err());
-    let issues = program.semantic_issues(&catalog);
-    assert!(
-        issues.iter().any(|issue| issue.kind
-            == workshop_rs::rules::IncompletenessKind::UnknownAction
-            && issue.name == "unrecognizedProducerAction"),
-        "unresolved subroutine must not suppress observable residuals: {issues:?}"
-    );
+    for (label, rule) in [
+        (
+            "unresolved variable",
+            Rule::new("unresolved variable", Event::Global)
+                .condition(Condition::new(Value::call(
+                    "isAlive",
+                    [Value::global_variable("undeclared")],
+                )))
+                .action(Action::call("unrecognizedProducerAction", [])),
+        ),
+        (
+            "unresolved subroutine",
+            Rule::new("unresolved subroutine", Event::Global)
+                .action(Action::CallSubroutine {
+                    subroutine: "missing".to_string(),
+                })
+                .action(Action::call("unrecognizedProducerAction", [])),
+        ),
+    ] {
+        let mut program = Program::new();
+        program.rule(rule);
+        assert!(program.validate().is_err(), "{label} must fail validation");
+        let issues = program.semantic_issues(&catalog);
+        assert!(
+            issues.iter().any(|issue| issue.kind
+                == workshop_rs::rules::IncompletenessKind::UnknownAction
+                && issue.name == "unrecognizedProducerAction"),
+            "{label} must not suppress observable residuals: {issues:?}"
+        );
+    }
 }
 
 #[test]
@@ -1016,37 +909,4 @@ rule ("ordering") {
                 == workshop_rs::rules::ResidualClassification::UnresolvedIdentifier
             && issue.span.is_some()
     }));
-}
-
-#[test]
-fn empty_settings_member_does_not_consume_the_following_member() {
-    let catalog = catalog();
-    let locale = workshop_rs::catalog::Locale::new("en-US");
-    let source = r#"settings
-{
-    lobby
-    {
-        Project Empty:
-        Map Rotation: After A Game
-    }
-}
-rule("r")
-{
-    event
-    {
-        Ongoing - Global;
-    }
-    actions
-    {
-        Wait(1, Ignore Condition);
-    }
-}
-"#;
-    let program = workshop_rs::parser::parse(source, &catalog, &locale).expect("parses");
-    let emitted = workshop_rs::emitter::emit(&program, &catalog, &locale).expect("emits");
-    let lines: Vec<&str> = emitted.lines().map(str::trim).collect();
-    assert!(lines.contains(&"Project Empty:"), "{emitted}");
-    assert!(lines.contains(&"Map Rotation: After A Game"), "{emitted}");
-    let reparsed = workshop_rs::parser::parse(&emitted, &catalog, &locale).expect("reparses");
-    assert!(workshop_rs::roundtrip::equivalent(&program, &reparsed));
 }

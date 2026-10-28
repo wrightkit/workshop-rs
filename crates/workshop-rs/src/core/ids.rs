@@ -82,7 +82,6 @@ mod tests {
     use super::Id;
 
     struct File;
-    struct Rule;
 
     #[test]
     fn ids_are_cheap_copyable_and_comparable() {
@@ -94,14 +93,6 @@ mod tests {
         assert_eq!(a.index(), 3);
         assert!(a < c);
         assert_eq!(std::mem::size_of::<Id<File>>(), 4);
-    }
-
-    #[test]
-    fn id_types_are_not_interchangeable() {
-        let _file: Id<File> = Id::from_index(0);
-        let _rule: Id<Rule> = Id::from_index(0);
-        let _ = _file;
-        let _ = _rule;
     }
 
     #[test]

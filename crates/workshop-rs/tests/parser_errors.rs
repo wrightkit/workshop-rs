@@ -201,3 +201,23 @@ fn a_missing_rule_paren_keeps_its_existing_diagnostic() {
     let span = span.expect("source span");
     assert_eq!((span.start.line, span.start.col), (1, 6));
 }
+
+#[test]
+fn settings_name_errors_carry_a_span() {
+    let catalog = Catalog::builtin().expect("catalog");
+    let error = parser::parse_with_context(
+        "settings {\n    heroes {\n        Bogus Team {\n            Ana {\n                Ability 1: On\n            }\n        }\n    }\n}",
+        &catalog,
+        &en(),
+        &catalog,
+    )
+    .expect_err("an undeclared team name must be rejected");
+    let span = match &error {
+        WorkshopError::Unknown { span, .. } | WorkshopError::UnknownWithCandidates { span, .. } => {
+            span
+        }
+        _ => panic!("expected an unknown-spelling diagnostic, got {error}"),
+    };
+    let span = span.expect("the rejected spelling carries a span");
+    assert_eq!(span.start.line, 3);
+}

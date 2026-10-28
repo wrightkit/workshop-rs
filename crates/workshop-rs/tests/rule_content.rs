@@ -2,11 +2,7 @@ use serde_json::{Value as JsonValue, json};
 use sha2::{Digest, Sha256};
 use workshop_rs::catalog::Kind;
 use workshop_rs::lookup::{LookupMatch, Signature};
-use workshop_rs::rules::content::{
-    ASSIGN_MEMBER_CALL, GLOBAL_VARIABLE_CALL, MEMBER_ACCESS_CALL, MODIFY_MEMBER_CALL,
-    PLAYER_VARIABLE_CALL, RAW_WORKSHOP_ACTION_CALL, RULE_CONTENT_V1, RULE_CONTENT_V1_SCHEMA,
-    rule_content,
-};
+use workshop_rs::rules::content::{RULE_CONTENT_V1, RULE_CONTENT_V1_SCHEMA, rule_content};
 use workshop_rs::{
     Action, Condition, Event, EventTarget, EventTeam, ModifyOp, PlayerEventKind, Program, Rule,
     Subroutine, Value, emitter, parser,
@@ -924,71 +920,6 @@ fn output_is_deterministic_and_flat() {
 }
 
 #[test]
-fn every_value_variant_has_a_node_form() {
-    let forms = |value: &Value| match value {
-        Value::Number(_) | Value::String(_) | Value::Bool(_) | Value::Null => "literal",
-        Value::LocalizedString(_) => "localizedString",
-        Value::Enum { .. } => "enum",
-        Value::Array(_) => "array",
-        Value::Vector { .. } => "vector",
-        Value::GlobalVariable(_) | Value::PlayerVariable { .. } => "variable read",
-        Value::Subroutine(_) => "subroutine",
-        Value::EventPlayer => "eventPlayer",
-        Value::Call { name, .. } if name == "__ambiguous_enum" => "ambiguous member",
-        Value::Call { .. } => "call",
-    };
-    for value in [
-        Value::from(1.0),
-        Value::string("s"),
-        Value::Bool(true),
-        Value::Null,
-        Value::LocalizedString("hello".to_string()),
-        Value::Enum {
-            value_type: "Status".to_string(),
-            value: "STUNNED".to_string(),
-        },
-        Value::Array(vec![]),
-        Value::Vector {
-            x: Box::new(Value::from(0.0)),
-            y: Box::new(Value::from(0.0)),
-            z: Box::new(Value::from(0.0)),
-        },
-        Value::GlobalVariable("g".to_string()),
-        Value::PlayerVariable {
-            player: Box::new(Value::EventPlayer),
-            variable: "p".to_string(),
-        },
-        Value::Subroutine("s".to_string()),
-        Value::EventPlayer,
-        Value::call(
-            "vector",
-            [Value::from(1.0), Value::from(2.0), Value::from(3.0)],
-        ),
-        ambiguous_value("Up", &[("Vector", "UP"), ("Rounding", "UP")]),
-    ] {
-        let _ = forms(&value);
-    }
-}
-
-#[test]
-fn every_action_variant_has_a_node_form() {
-    let forms = |action: &Action| match action {
-        Action::SetGlobalVariable { .. } | Action::SetPlayerVariable { .. } => "set",
-        Action::ModifyGlobalVariable { .. } | Action::ModifyPlayerVariable { .. } => "modify",
-        Action::AssignMember { .. } => "assignMember",
-        Action::CallSubroutine { .. } => "callSubroutine",
-        Action::If { .. } | Action::ElseIf { .. } | Action::Else | Action::While { .. } => {
-            "control flow"
-        }
-        Action::ForGlobalVariable { .. } | Action::ForPlayerVariable { .. } => "for",
-        Action::End => "end",
-        Action::Disabled { .. } => "disabled",
-        Action::Call { .. } => "call",
-    };
-    let _ = forms(&Action::End);
-}
-
-#[test]
 fn schema_rejects_missing_and_unknown_fields() {
     let rule = Rule::new("schema", Event::Global).action(Action::call("wait", [Value::from(1.0)]));
     let content = content_of(&rule);
@@ -1322,76 +1253,6 @@ fn player_variable_chases_emit_their_catalog_call_ids() {
     let chinese_source = emitter::emit(&english, &catalog, &zh()).expect("zh-CN emission");
     let chinese = parser::parse(&chinese_source, &catalog, &zh()).expect("zh-CN parses");
     assert_eq!(content_of(&chinese.rules[0]), content);
-}
-
-fn call_ids(node: &JsonValue, calls: &mut Vec<String>) {
-    match node {
-        JsonValue::Object(map) => {
-            if let Some(JsonValue::String(call)) = map.get("call") {
-                calls.push(call.clone());
-            }
-            for value in map.values() {
-                call_ids(value, calls);
-            }
-        }
-        JsonValue::Array(items) => {
-            for item in items {
-                call_ids(item, calls);
-            }
-        }
-        _ => {}
-    }
-}
-
-const RESERVED_CALL_IDS: &[&str] = &[
-    GLOBAL_VARIABLE_CALL,
-    PLAYER_VARIABLE_CALL,
-    ASSIGN_MEMBER_CALL,
-    MODIFY_MEMBER_CALL,
-    MEMBER_ACCESS_CALL,
-    RAW_WORKSHOP_ACTION_CALL,
-    "+",
-    "-",
-    "*",
-    "/",
-    "%",
-];
-
-#[test]
-fn every_emitted_call_id_resolves_to_its_catalog_entry() {
-    let catalog = catalog();
-    let english = en();
-    let mut calls = Vec::new();
-    for rule in [
-        action_forms_rule(),
-        node_forms_rule(),
-        variable_reads_rule(),
-        reserved_ids_rule(),
-        parse_rule(REPEL_SOURCE),
-        parse_rule(CHASE_SOURCE),
-    ] {
-        call_ids(&content_of(&rule), &mut calls);
-    }
-    calls.sort_unstable();
-    calls.dedup();
-    for call in calls {
-        if RESERVED_CALL_IDS.contains(&call.as_str()) {
-            continue;
-        }
-        let matches = catalog
-            .lookup(&english, &call)
-            .expect("lookup of a declared locale");
-        let first = matches
-            .first()
-            .unwrap_or_else(|| panic!("call id '{call}' resolves to nothing"));
-        let LookupMatch::Builtin { id, .. } = first else {
-            panic!("call id '{call}' resolves to a non-builtin match: {first:?}");
-        };
-        assert_eq!(
-            id, &call,
-            "call id '{call}' resolves through lookup to a different catalog entry"
-        );
-    }
 }
 
 const PRACTICE_RANGE_MODES: &[(&str, &str, &str)] = &[

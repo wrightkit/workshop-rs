@@ -1,5 +1,5 @@
 use crate::common::zh;
-use workshop_rs::catalog::{Catalog, Locale};
+use workshop_rs::catalog::Catalog;
 
 const PINNED_CATALOG_DIGEST: &str =
     "bd6ef06fdc2ea233c0c4bcdfc91307a7dc5e3ae1c4ee08611cd8304c0993b1e4";
@@ -63,10 +63,10 @@ fn locale_coverage_is_exact_and_primary_is_complete() {
     assert!(zh.mapped > 0 && zh.mapped < zh.total);
     assert_eq!(zh.total, en.total);
     let all = catalog.locale_coverage_all();
-    assert_eq!(all.len(), 15);
+    assert_eq!(all.len(), catalog.locales().len());
     assert_eq!(all[0].locale, crate::common::en());
-    assert_eq!(all[14].locale, Locale::new("zh-TW"));
     assert!(all.iter().skip(1).all(|coverage| coverage.mapped > 0));
+    assert!(all.iter().all(|coverage| coverage.total == en.total));
 }
 
 #[test]

@@ -368,7 +368,7 @@ fn build_surface_program() -> wir::Program {
 }
 
 #[test]
-fn corpus_surface_is_representable_and_validates() {
+fn constructed_surface_program_is_representable_and_validates() {
     let program = build_surface_program();
     program.validate().expect("WIR is structurally valid");
     validate::validate_canonical_ids_wir(&program, &catalog()).expect("canonical ids resolve");
@@ -406,15 +406,6 @@ fn unknown_action_id_is_rejected_with_location() {
 #[test]
 fn unknown_enum_member_is_rejected() {
     let mut program = build_surface_program();
-    for node in program.values.iter() {
-        if let Value::Enum {
-            value_type, value, ..
-        } = &node.value
-            && value_type == "Color"
-        {
-            let _ = value;
-        }
-    }
     let color_id = program
         .values
         .iter()
@@ -435,13 +426,6 @@ fn unknown_enum_member_is_rejected() {
 #[test]
 fn unknown_value_id_is_rejected() {
     let mut program = build_surface_program();
-    for node in program.values.iter() {
-        if let Value::Call { name, .. } = &node.value
-            && name == "add"
-        {
-            let _ = name;
-        }
-    }
     let add_id = program
         .values
         .iter()
@@ -455,15 +439,6 @@ fn unknown_value_id_is_rejected() {
     let error =
         validate::validate_canonical_ids_wir(&program, &catalog()).expect_err("unknown value");
     assert!(error.to_string().contains("plus"), "{error}");
-}
-
-#[test]
-fn canonical_validation_is_locale_independent() {
-    let program = build_surface_program();
-    let _ = en();
-    validate::validate_canonical_ids_wir(&program, &catalog()).expect("valid");
-    let dump = program.dump();
-    assert!(!dump.contains("Disable Inspector Recording"));
 }
 
 #[test]

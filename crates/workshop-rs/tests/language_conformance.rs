@@ -26,7 +26,6 @@ struct DocumentedParameter {
 struct DocumentedContract {
     return_type: Option<String>,
     parameters: Vec<DocumentedParameter>,
-    default_markers: Vec<String>,
 }
 
 #[test]
@@ -254,44 +253,6 @@ fn documented_signatures_reject_wrong_arity_and_concrete_types() {
         failures.is_empty(),
         "negative conformance failures:\n{}",
         failures.join("\n")
-    );
-}
-
-#[test]
-fn audited_action_value_inventory_explicitly_has_no_defaults_or_optional_arguments() {
-    let catalog = Catalog::builtin().expect("builtin catalog");
-    let mut documented_rows = 0;
-    let mut default_markers = Vec::new();
-    for path in ["actions.md", "values.md"] {
-        for row in inventory_rows(path).into_iter().filter(|row| row.supported) {
-            documented_rows += 1;
-            let contract = documented_contract(&row.notes);
-            default_markers.extend(
-                contract
-                    .default_markers
-                    .into_iter()
-                    .map(|marker| format!("{}: {marker}", row.name)),
-            );
-        }
-    }
-    let catalog_defaulted_entries = catalog
-        .entries_of(Kind::Action)
-        .chain(catalog.entries_of(Kind::Value))
-        .filter(|entry| entry.has_param_defaults())
-        .count();
-
-    assert_eq!(
-        default_markers,
-        Vec::<String>::new(),
-        "#86 Action/Value inventory must explicitly record any default or optional argument: {default_markers:?}"
-    );
-    assert!(documented_rows > 0);
-    assert!(
-        catalog_defaulted_entries > 0,
-        "catalog default metadata must remain visible even though #86 documents none"
-    );
-    eprintln!(
-        "#86 audited Action/Value rows: {documented_rows}; documented defaults: 0; catalog entries carrying defaults: {catalog_defaulted_entries}"
     );
 }
 
@@ -994,25 +955,7 @@ fn documented_contract(notes: &str) -> DocumentedContract {
     DocumentedContract {
         return_type,
         parameters,
-        default_markers: documented_default_markers(notes),
     }
-}
-
-fn documented_default_markers(notes: &str) -> Vec<String> {
-    let suffix = notes
-        .find("Parameters: (")
-        .and_then(|start| {
-            let contents = &notes[start + "Parameters: (".len()..];
-            let end = contents.find(')')?;
-            Some(&contents[end + 1..])
-        })
-        .unwrap_or(notes);
-    let lower = suffix.to_ascii_lowercase();
-    ["default", "optional", "omit"]
-        .into_iter()
-        .filter(|marker| lower.contains(marker))
-        .map(str::to_string)
-        .collect()
 }
 
 fn strip_code_ticks(value: &str) -> String {

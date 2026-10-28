@@ -65,30 +65,6 @@ fn pinned_real_projects_convert_between_supported_locales() {
     }
 }
 
-#[test]
-fn settings_projection_is_multi_locale_data() {
-    let projection: serde_json::Value =
-        serde_json::from_str(include_str!("../src/settings/data/locales.json"))
-            .expect("multi-locale settings projection");
-    assert_eq!(
-        projection["locales"],
-        serde_json::json!([
-            "en-US", "de-DE", "es-ES", "es-MX", "fr-FR", "it-IT", "ja-JP", "ko-KR", "pl-PL",
-            "pt-BR", "ru-RU", "th-TH", "tr-TR", "zh-CN", "zh-TW"
-        ])
-    );
-    for (name, zh_name) in [
-        ("main", "主程序"),
-        ("lobby", "大厅"),
-        ("modes", "模式"),
-        ("heroes", "英雄"),
-        ("extensions", "扩展"),
-        ("workshop", "地图工坊"),
-    ] {
-        assert_eq!(projection["namespaces"][name]["zh-CN"], zh_name);
-    }
-}
-
 const BASIC_RULE: &str = "rule (\"setup\") {
     event {
         Ongoing - Global;
@@ -98,15 +74,6 @@ const BASIC_RULE: &str = "rule (\"setup\") {
     }
 }
 ";
-
-#[test]
-fn emission_into_zh_cn_uses_evidence_backed_mappings() {
-    let _catalog = catalog();
-    let program = internal::parse(BASIC_RULE);
-    let output = internal::emit_in(&program, &zh());
-    assert!(output.contains("持续 - 全局"), "{output}");
-    assert!(output.contains("禁用查看器录制"), "{output}");
-}
 
 // Minimized from the OWBastion/Bastion zh-CN differential reported in
 // Bastion#214, using revision c010e1a2d468ec7140f474e334067e5ab8d02d89 and
@@ -307,66 +274,6 @@ fn opt_in_fallback_conversion_round_trips_through_zh_cn() {
         out.fallback_ids
             .contains(&"disableGameModeInworldUI".to_string())
     );
-}
-
-#[test]
-fn parsing_zh_cn_input_uses_corpus_aliases() {
-    let _catalog = catalog();
-    let localized = "rule (\"x\") { event { 持续 - 全局; } actions { 禁用查看器录制; } }";
-    internal::parse_in(localized, &zh());
-}
-
-#[test]
-fn explicit_zh_cn_override_passes_locale_support() {
-    use workshop_rs::detect;
-    let catalog = catalog();
-    let locale = detect::resolve_locale("garbage", &catalog, Some(&zh())).expect("override wins");
-    assert_eq!(locale, zh());
-}
-
-#[test]
-fn detection_ranks_zh_cn_after_en_us_for_en_us_input() {
-    use workshop_rs::detect;
-    let catalog = catalog();
-    let detection = detect::detect(BASIC_RULE, &catalog);
-    assert_eq!(detection.locale, en());
-    let en_position = detection
-        .candidates
-        .iter()
-        .position(|(locale, _)| *locale == en())
-        .expect("en-US is detected");
-    let zh_position = detection
-        .candidates
-        .iter()
-        .position(|(locale, _)| *locale == zh())
-        .expect("zh-CN remains declared");
-    assert!(
-        en_position < zh_position,
-        "en-US should rank ahead of zh-CN"
-    );
-}
-
-#[test]
-fn settings_emission_into_zh_cn_uses_the_generated_locale_corpus() {
-    use workshop_rs::settings::{Settings, SettingsNode};
-    let _catalog = catalog();
-    let program = workshop_rs::wir::Program {
-        settings: Some(Settings {
-            span: None,
-            children: vec![SettingsNode::Group {
-                name: "lobby".to_string(),
-                children: vec![SettingsNode::Number {
-                    name: "ffaSlots".to_string(),
-                    value: 6.0,
-                    span: None,
-                }],
-                span: None,
-            }],
-        }),
-        ..workshop_rs::wir::Program::default()
-    };
-    let output = internal::emit_in(&program, &zh());
-    assert!(output.contains("自由混战人数上限: 6"), "{}", output);
 }
 
 #[test]

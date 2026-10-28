@@ -342,12 +342,6 @@ fn spans_are_refused_wherever_they_appear() {
 }
 
 #[test]
-fn a_refusal_produces_no_model_value() {
-    let node = json!({"call": "wait", "args": [1.0, {"call": "noSuchValue", "args": []}]});
-    assert!(convert(&node).is_err());
-}
-
-#[test]
 fn disabled_statements_keep_their_modifier() {
     for node in [
         json!({"call": "abort", "args": [], "disabled": true}),

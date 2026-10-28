@@ -26,8 +26,8 @@ mod gameplay_query;
 mod identity;
 #[path = "import_limits.rs"]
 mod import_limits;
-#[path = "issue448.rs"]
-mod issue448;
+#[path = "localized_spellings.rs"]
+mod localized_spellings;
 #[path = "lookup.rs"]
 mod lookup;
 #[path = "parser_errors.rs"]
@@ -36,8 +36,6 @@ mod parser_errors;
 mod pipeline;
 #[path = "program_model.rs"]
 mod program_model;
-#[path = "public_api.rs"]
-mod public_api;
 #[path = "real_projects.rs"]
 mod real_projects;
 #[path = "rule_content.rs"]
