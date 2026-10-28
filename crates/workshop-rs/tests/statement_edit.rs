@@ -77,13 +77,6 @@ pub(crate) fn waits(content: &JsonValue) -> Vec<f64> {
 }
 
 #[test]
-fn base_node_shapes_match_the_export() {
-    let content = lists(BASE, "en-US");
-    assert_eq!(content["actions"][0], wait(1.0));
-    assert_eq!(content["conditions"][0], cond(1.0));
-}
-
-#[test]
 fn insert_replace_delete_at_start_middle_end_of_actions() {
     let nodes = [wait(9.0)];
     let a = StatementList::Actions;

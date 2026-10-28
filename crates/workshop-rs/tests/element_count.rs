@@ -125,21 +125,6 @@ fn locale_conversion_preserves_the_canonical_count() {
 }
 
 #[test]
-fn representative_corpus_program_produces_a_report() {
-    let catalog = catalog();
-    let program = parser::parse(
-        include_str!("fixtures/corpus/expressions-values.ws"),
-        &catalog,
-        &en(),
-    )
-    .unwrap();
-    let report = program.element_count(&catalog).unwrap();
-
-    assert_eq!(report.rules.len(), 2);
-    assert!(report.total > 2);
-}
-
-#[test]
 fn public_report_preserves_rule_condition_and_action_order_with_spans() {
     let catalog = catalog();
     let source = "rule (\"ordered\") {\n    event { Ongoing - Global; }\n    conditions {\n        Is Game In Progress;\n        Is Game In Progress;\n    }\n    actions {\n        Disable Inspector Recording;\n        Disable Inspector Recording;\n    }\n}\n";

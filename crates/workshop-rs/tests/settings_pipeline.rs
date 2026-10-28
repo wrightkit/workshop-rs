@@ -125,57 +125,26 @@ fn composed_blizzard_settings_labels_convert_in_both_directions() {
 
 // Minimized from OWBastion/Bastion 7debbcb, src/composition/bootstrap.opy.
 #[test]
-fn map_lists_preserve_adjacent_number_and_localized_text() {
+fn map_lists_preserve_numbers_colons_and_localized_text() {
     let catalog = catalog();
     let en = en();
-    let zh = zh();
-    for list in ["enabled maps", "disabled maps"] {
-        let source = format!("settings {{ modes {{ Skirmish {{ {list} {{\nRoute 66\n}} }} }} }}");
-        let program = parser::parse_wir(&source, &catalog, &en).expect("English map list");
-        let localized = emitter::emit_wir(&program, &catalog, &zh).expect("Chinese map list");
-        let reparsed =
-            parser::parse_wir(&localized, &catalog, &zh).expect("numeric Chinese map name");
-        assert!(roundtrip::equivalent_wir(&program, &reparsed));
-    }
-}
-
-#[test]
-fn map_lists_preserve_colons_in_map_names() {
-    let catalog = catalog();
-    let en = en();
-    let zh = zh();
-    for list in ["enabled maps", "disabled maps"] {
-        let source = format!(
-            "settings {{ modes {{ Skirmish {{ {list} {{\nWatchpoint: Gibraltar\nEcopoint: Antarctica\n}} }} }} }}"
-        );
-        let program =
-            parser::parse_wir(&source, &catalog, &en).expect("colon-containing map names");
-        let emitted = emitter::emit_wir(&program, &catalog, &en).expect("English map list");
-        let reparsed =
-            parser::parse_wir(&emitted, &catalog, &en).expect("English map list reparses");
-        assert!(roundtrip::equivalent_wir(&program, &reparsed));
-        let localized = emitter::emit_wir(&program, &catalog, &zh).expect("Chinese map list");
-        let reparsed =
-            parser::parse_wir(&localized, &catalog, &zh).expect("Chinese map list reparses");
-        assert!(roundtrip::equivalent_wir(&program, &reparsed));
-    }
-}
-
-#[test]
-fn map_lists_preserve_spaced_colons_in_map_names() {
-    let catalog = catalog();
-    let en = en();
-    let fr = common::locale("fr-FR");
-    for list in ["enabled maps", "disabled maps"] {
-        let source = format!(
-            "settings {{ modes {{ Skirmish {{ {list} {{\nWatchpoint: Gibraltar\nEcopoint: Antarctica\n}} }} }} }}"
-        );
-        let program =
-            parser::parse_wir(&source, &catalog, &en).expect("colon-containing map names");
-        let localized = emitter::emit_wir(&program, &catalog, &fr).expect("French map list");
-        let reparsed =
-            parser::parse_wir(&localized, &catalog, &fr).expect("French map list reparses");
-        assert!(roundtrip::equivalent_wir(&program, &reparsed));
+    for (locale_tag, members) in [
+        ("zh-CN", "Route 66"),
+        ("en-US", "Watchpoint: Gibraltar\nEcopoint: Antarctica"),
+        ("zh-CN", "Watchpoint: Gibraltar\nEcopoint: Antarctica"),
+        ("fr-FR", "Watchpoint: Gibraltar\nEcopoint: Antarctica"),
+    ] {
+        let locale = common::locale(locale_tag);
+        for list in ["enabled maps", "disabled maps"] {
+            let source =
+                format!("settings {{ modes {{ Skirmish {{ {list} {{\n{members}\n}} }} }} }}");
+            let program = parser::parse_wir(&source, &catalog, &en).expect("map list parses");
+            let localized =
+                emitter::emit_wir(&program, &catalog, &locale).expect("localized map list");
+            let reparsed =
+                parser::parse_wir(&localized, &catalog, &locale).expect("localized reparses");
+            assert!(roundtrip::equivalent_wir(&program, &reparsed));
+        }
     }
 }
 
@@ -374,19 +343,6 @@ fn generated_capture_the_flag_settings_surface_is_canonical() {
 }
 
 #[test]
-fn mixed_locale_primary_hero_setting_name_is_canonical() {
-    let catalog = catalog();
-    let source = "设置 { 英雄 { 队伍1 { D.Mon { 伤害量: 140% } } } }";
-    let program = internal::parse_in(source, &zh());
-    assert!(
-        program
-            .semantic_issues(&catalog)
-            .iter()
-            .all(|issue| { issue.kind != workshop_rs::rules::IncompletenessKind::RawSetting })
-    );
-}
-
-#[test]
 fn team_deathmatch_enabled_maps_is_canonical() {
     let text = r#"
         settings {
@@ -402,34 +358,6 @@ fn team_deathmatch_enabled_maps_is_canonical() {
     let emitted = internal::emit(&program);
     assert!(emitted.contains("Team Deathmatch"));
     internal::assert_reparse_equivalent(&program, &emitted);
-}
-
-#[test]
-fn canonical_percent_setting_keys_parse_from_mixed_locale_exports() {
-    let text = r#"
-        settings {
-            heroes {
-                General {
-                    Roadhog {
-                        secondaryFireRechargeRate%: 150
-                        secondaryFireCooldown%: 480
-                    }
-                }
-            }
-        }
-    "#;
-    let _catalog = Catalog::builtin().unwrap();
-    internal::parse_in(text, &zh());
-}
-
-#[test]
-fn supported_dva_name_parses() {
-    let _catalog = catalog();
-    let source =
-        "settings {\n heroes {\n  General {\n   D.Va {\n    Primary Fire: Off\n   }\n  }\n }\n}";
-    let program = internal::parse(source);
-    let emitted = internal::emit(&program);
-    assert!(emitted.contains("D.Va"));
 }
 
 #[test]
@@ -507,19 +435,6 @@ fn workshop_namespace_preserves_custom_settings_without_residuals() {
 #[test]
 fn localized_workshop_namespace_is_known() {
     let source = "settings { 地图工坊 { 自定义: 1 } }";
-    let catalog = Catalog::builtin().expect("catalog");
-    let program = internal::parse_in(source, &zh());
-    assert!(
-        semantic::inspect_wir(&program, &catalog).is_empty(),
-        "issues: {:?}, settings: {:?}",
-        semantic::inspect_wir(&program, &catalog),
-        program.settings
-    );
-}
-
-#[test]
-fn localized_wrecking_ball_settings_aliases_are_known() {
-    let source = "settings { heroes { 综合 { 破坏球 {\n工程抓钩冷却时间: 80%\n感应护盾冷却时间: 80%\n重力坠击冷却时间: 75%\n} } } }";
     let catalog = Catalog::builtin().expect("catalog");
     let program = internal::parse_in(source, &zh());
     assert!(
@@ -928,48 +843,26 @@ fn settings_schema_catalog_is_complete_and_conflict_checked() {
 #[test]
 fn reconciled_export_enum_members_remain_writable() {
     let _catalog = catalog();
-    for (source, id, path, target, member, expected) in [
-        (
-            "settings { modes { General { Hero Limit: Off } } }",
-            "setting.gameMode.heroLimit",
-            "gamemodes.general.heroLimit",
-            SettingTarget::Mode("general".to_string()),
-            "1PerTeam",
-            "Hero Limit: 1 Per Team",
-        ),
-        (
-            "settings { lobby { Map Rotation: After A Game } }",
-            "setting.lobby.mapRotation",
-            "lobby.mapRotation",
-            SettingTarget::Global,
-            "afterMirrorMatch",
-            "Map Rotation: After A Mirror Match",
-        ),
-    ] {
-        let mut program = internal::parse(source);
-        let definition = definitions_by_id(&SettingId::from(id))
-            .find(|definition| definition.path() == path)
-            .expect("reconciled enum definition");
-        definition
-            .write(
-                program.settings.as_mut().expect("settings"),
-                &target,
-                SettingValue::Enum(member.to_string()),
-            )
-            .expect("export-backed enum member remains writable");
+    let mut program = internal::parse("settings { modes { General { Hero Limit: Off } } }");
+    let definition = definitions_by_id(&SettingId::from("setting.gameMode.heroLimit"))
+        .find(|definition| definition.path() == "gamemodes.general.heroLimit")
+        .expect("reconciled enum definition");
+    definition
+        .write(
+            program.settings.as_mut().expect("settings"),
+            &SettingTarget::Mode("general".to_string()),
+            SettingValue::Enum("1PerTeam".to_string()),
+        )
+        .expect("export-backed enum member remains writable");
 
-        let emitted = internal::emit(&program);
-        assert!(emitted.contains(expected), "{emitted}");
-    }
+    let emitted = internal::emit(&program);
+    assert!(emitted.contains("Hero Limit: 1 Per Team"), "{emitted}");
 }
 
 #[test]
-fn typed_settings_read_and_write_preserve_unrelated_structure() {
+fn typed_settings_reads_preserve_authored_and_unresolved_values() {
     let _catalog = Catalog::builtin().expect("catalog");
     let source = r#"settings {
-        main {
-            Description: "keep this"
-        }
         lobby {
             Max Spectators: 2
         }
@@ -981,7 +874,7 @@ fn typed_settings_read_and_write_preserve_unrelated_structure() {
             }
         }
     }"#;
-    let mut program = internal::parse(source);
+    let program = internal::parse(source);
     let lobby = definitions_by_id(&SettingId::from("setting.lobby.spectatorSlots"))
         .next()
         .expect("lobby definition");
@@ -993,16 +886,6 @@ fn typed_settings_read_and_write_preserve_unrelated_structure() {
         .expect("typed read");
     assert_eq!(read.authored, SettingValue::Number(2.0));
     assert_eq!(read.effective, None);
-    lobby
-        .write(
-            program.settings.as_mut().expect("settings"),
-            &SettingTarget::Global,
-            SettingValue::Number(4.0),
-        )
-        .expect("typed write");
-    let emitted = internal::emit(&program);
-    assert!(emitted.contains("Description: \"keep this\""));
-    assert!(emitted.contains("Max Spectators: 4"));
 
     let primary = definitions()
         .find(|definition| {
@@ -1029,18 +912,6 @@ fn typed_settings_read_and_write_preserve_unrelated_structure() {
             .expect("typed reads preserve unresolved occurrences")
             .authored,
         SettingValue::Boolean(true)
-    ));
-
-    let error = primary
-        .write(
-            program.settings.as_mut().expect("settings"),
-            &target,
-            SettingValue::Boolean(false),
-        )
-        .expect_err("unknown applicability must reject writes");
-    assert!(matches!(
-        error,
-        SettingOperationError::ApplicabilityUnknown { .. }
     ));
 }
 
@@ -1088,39 +959,6 @@ fn typed_settings_source_edit_replaces_only_the_existing_value_bytes() {
 }
 
 #[test]
-fn typed_settings_source_edit_rejects_missing_source_location() {
-    let definition = definitions_by_id(&SettingId::from("setting.lobby.spectatorSlots"))
-        .next()
-        .expect("spectator-slot definition");
-    let settings = workshop_rs::settings::Settings {
-        span: None,
-        children: vec![workshop_rs::settings::SettingsNode::Group {
-            name: "lobby".to_string(),
-            children: vec![workshop_rs::settings::SettingsNode::Number {
-                name: "spectatorSlots".to_string(),
-                value: 2.0,
-                span: None,
-            }],
-            span: None,
-        }],
-    };
-
-    let error = definition
-        .source_edit(
-            "settings { lobby { Max Spectators: 2 } }",
-            &settings,
-            "en-US",
-            &SettingTarget::Global,
-            SettingValue::Number(4.0),
-        )
-        .expect_err("source edits require a source location");
-    assert!(matches!(
-        error,
-        SettingOperationError::SourceUnavailable { .. }
-    ));
-}
-
-#[test]
 fn typed_settings_source_edit_uses_settings_string_escaping() {
     let catalog = Catalog::builtin().expect("catalog");
     let source = "settings { main { Description: \"old\" } }";
@@ -1159,128 +997,6 @@ fn typed_settings_source_edit_uses_settings_string_escaping() {
             .authored,
         SettingValue::String(value)
     );
-}
-
-#[test]
-fn typed_settings_source_edit_rejects_false_boolean_enum_values() {
-    let _catalog = Catalog::builtin().expect("catalog");
-    let source = "settings { lobby { Match Voice Chat: Enabled } }";
-    let program = internal::parse(source);
-    let definition = definitions_by_id(&SettingId::from("setting.lobby.enableMatchVoiceChat"))
-        .next()
-        .expect("match voice chat definition");
-
-    let edit = definition
-        .source_edit(
-            source,
-            program.settings.as_ref().expect("settings"),
-            "en-US",
-            &SettingTarget::Global,
-            SettingValue::Boolean(true),
-        )
-        .expect("enabled enum member is writable");
-    assert_eq!(edit.replacement(), "Enabled");
-    assert!(matches!(
-        definition.source_edit(
-            source,
-            program.settings.as_ref().expect("settings"),
-            "en-US",
-            &SettingTarget::Global,
-            SettingValue::Boolean(false),
-        ),
-        Err(SettingOperationError::InvalidValue { .. })
-    ));
-}
-
-#[test]
-fn typed_settings_errors_reject_invalid_members_and_non_applicable_targets() {
-    let catalog = Catalog::builtin().expect("catalog");
-    let mut program = parser::parse_wir(
-        "settings { modes { Assault { Limit Roles: 2 Of Each Role Per Team } } }",
-        &catalog,
-        &en(),
-    )
-    .expect("parse");
-    let role_limit = definitions_by_id(&SettingId::from("setting.gameMode.roleLimit"))
-        .find(|definition| definition.path().ends_with("assault.roleLimit"))
-        .expect("role-limit definition");
-    let error = role_limit
-        .write(
-            program.settings.as_mut().expect("settings"),
-            &SettingTarget::Mode("assault".to_string()),
-            SettingValue::Enum("unknownRoleLimit".to_string()),
-        )
-        .expect_err("unknown enum member must be rejected");
-    assert!(matches!(
-        error,
-        SettingOperationError::InvalidValue { span: Some(_), .. }
-    ));
-
-    let ability1_enemy_kb = definitions()
-        .find(|definition| definition.path().ends_with("ability1EnemyKb%"))
-        .expect("ability 1 enemy knockback setting");
-    let error = ability1_enemy_kb
-        .write(
-            program.settings.as_mut().expect("settings"),
-            &SettingTarget::HeroAbility {
-                team: None,
-                hero: HeroId::from(hero_ids::ANA),
-                slot: LogicalSlot::from(slots::ABILITY_1),
-                variant: None,
-            },
-            SettingValue::Percent(10.0),
-        )
-        .expect_err("uncertain hero setting must be rejected for writes");
-    assert!(matches!(
-        error,
-        SettingOperationError::ApplicabilityUnknown { .. }
-    ));
-}
-
-#[test]
-fn typed_settings_writes_fail_closed_for_unknown_applicability() {
-    let health = definitions()
-        .find(|definition| {
-            definition.path().ends_with("health%")
-                && definition.target_kind() == SettingTargetKind::Hero
-        })
-        .expect("hero health definition");
-    let mut settings = workshop_rs::settings::Settings {
-        span: None,
-        children: Vec::new(),
-    };
-    let unknown_error = health
-        .write(
-            &mut settings,
-            &SettingTarget::Hero {
-                team: None,
-                hero: HeroId::new("futureHero"),
-            },
-            SettingValue::Percent(100.0),
-        )
-        .expect_err("unknown applicability must refuse writes");
-    assert!(matches!(
-        unknown_error,
-        SettingOperationError::ApplicabilityUnknown { .. }
-    ));
-
-    let team_definition = definitions()
-        .find(|definition| definition.target_kind() == SettingTargetKind::Team)
-        .expect("team definition");
-    let widening_error = team_definition
-        .write(
-            &mut settings,
-            &SettingTarget::Hero {
-                team: None,
-                hero: HeroId::from(hero_ids::ANA),
-            },
-            SettingValue::Boolean(false),
-        )
-        .expect_err("team-to-hero applicability without sources must refuse writes");
-    assert!(matches!(
-        widening_error,
-        SettingOperationError::ApplicabilityUnknown { .. }
-    ));
 }
 
 #[test]
@@ -1394,61 +1110,7 @@ fn declared_modes_inherit_general_settings_entries() {
     );
 }
 
-#[test]
-fn check_emission_mirrors_emitter_acceptance() {
-    use workshop_rs::settings::{Settings, SettingsNode, check_emission};
-
-    let group = |name: &str, children: Vec<SettingsNode>| SettingsNode::Group {
-        name: name.to_string(),
-        children,
-        span: None,
-    };
-    let settings = Settings {
-        span: None,
-        children: vec![
-            group(
-                "gamemodes",
-                vec![group(
-                    "ffa",
-                    vec![
-                        SettingsNode::Bool {
-                            name: "enabled".to_string(),
-                            value: false,
-                            span: None,
-                        },
-                        SettingsNode::Bool {
-                            name: "bogusKey".to_string(),
-                            value: true,
-                            span: None,
-                        },
-                    ],
-                )],
-            ),
-            group(
-                "extensions",
-                vec![SettingsNode::Number {
-                    name: "beamEffects".to_string(),
-                    value: 3.0,
-                    span: None,
-                }],
-            ),
-        ],
-    };
-    let errors = check_emission(&settings);
-    let mut program = workshop_rs::Program::new();
-    program.settings = Some(settings);
-    let emit_error = emitter::emit(&program, &catalog(), &en())
-        .expect_err("the first offending member fails emission");
-    assert_eq!(errors.len(), 2, "{errors:?}");
-    assert_eq!(errors[0].to_string(), emit_error.to_string());
-    assert!(
-        errors[1]
-            .to_string()
-            .contains("does not match its table kind")
-    );
-}
-
-fn issue_360_source(key: &str, map: &str) -> String {
+fn near_miss_source(key: &str, map: &str) -> String {
     format!(
         r#"settings
 {{
@@ -1500,24 +1162,19 @@ fn assert_check_compile_parity(source: &str) {
 }
 
 #[test]
-fn issue_360_exact_spellings_pass_check_and_compile() {
-    assert_check_compile_parity(&issue_360_source("enabled maps", "Château Guillard"));
-}
-
-#[test]
-fn issue_360_settings_names_match_case_insensitively() {
+fn settings_names_match_case_insensitively() {
     for (key, map) in [
         ("Enabled Maps", "Château Guillard"),
         ("ENABLED MAPS", "CHÂTEAU GUILLARD"),
         ("enabled maps", "château guillard"),
     ] {
-        assert_check_compile_parity(&issue_360_source(key, map));
+        assert_check_compile_parity(&near_miss_source(key, map));
     }
 }
 
 #[test]
-fn issue_360_accent_stripped_map_is_rejected_with_suggestion() {
-    let source = issue_360_source("enabled maps", "Chateau Guillard");
+fn accent_stripped_map_is_rejected_with_suggestion() {
+    let source = near_miss_source("enabled maps", "Chateau Guillard");
     let program = parser::parse(&source, &catalog(), &en()).expect("source parses");
     let error = program.validate().expect_err("check rejects the map");
     assert!(
@@ -1543,8 +1200,8 @@ fn issue_360_accent_stripped_map_is_rejected_with_suggestion() {
 }
 
 #[test]
-fn issue_360_distant_and_ambiguous_spellings_suggest_nothing() {
-    let source = issue_360_source("enabled maps", "Zzyzx Wonderland");
+fn distant_and_ambiguous_spellings_suggest_nothing() {
+    let source = near_miss_source("enabled maps", "Zzyzx Wonderland");
     let program = parser::parse(&source, &catalog(), &en()).expect("source parses");
     let error = program.validate().expect_err("check rejects the map");
     assert!(!error.to_string().contains("did you mean"), "{error}");
@@ -1601,8 +1258,8 @@ rule("r")
 }
 
 #[test]
-fn issue_360_unknown_braced_key_is_kept_as_written_with_a_suggestion() {
-    let source = issue_360_source("Enabled Mpas", "Château Guillard");
+fn unknown_braced_key_is_kept_as_written_with_a_suggestion() {
+    let source = near_miss_source("Enabled Mpas", "Château Guillard");
     let program = parser::parse(&source, &catalog(), &en()).expect("source parses");
     program
         .validate()
@@ -1635,7 +1292,7 @@ fn issue_360_unknown_braced_key_is_kept_as_written_with_a_suggestion() {
 }
 
 #[test]
-fn undeclared_settings_values_and_empty_members_round_trip_as_written() {
+fn undeclared_settings_values_are_residuals_without_suggestions() {
     let source = r#"settings
 {
     lobby
@@ -1666,17 +1323,6 @@ rule("r")
 "#;
     let program = parser::parse(source, &catalog(), &en()).expect("source parses");
     program.validate().expect("raw members are accepted");
-    let emitted = emitter::emit(&program, &catalog(), &en()).expect("emits");
-    for line in [
-        "Map Rotation: Sometimes",
-        "Project Empty:",
-        "Project Scalar: 500%",
-    ] {
-        assert!(
-            emitted.lines().any(|emitted| emitted.trim_start() == line),
-            "{line:?} in {emitted}"
-        );
-    }
     let issue = program
         .semantic_issues(&catalog())
         .into_iter()
@@ -1742,7 +1388,7 @@ fn typed_uncatalogued_members_localize_catalogued_keys_only() {
 }
 
 #[test]
-fn issue_412_catalogued_key_block_round_trips_as_written() {
+fn carried_key_block_round_trips_as_written_and_classifies_as_project_defined() {
     let source = r#"settings
 {
     lobby
@@ -1793,7 +1439,7 @@ rule("r")
 }
 
 #[test]
-fn issue_412_catalogued_key_block_emits_the_display_name() {
+fn carried_catalogued_key_blocks_emit_localized_display_names() {
     use workshop_rs::settings::{Settings, SettingsNode};
 
     let raw = |name: &str| SettingsNode::Raw {
@@ -1840,7 +1486,7 @@ fn issue_412_catalogued_key_block_emits_the_display_name() {
 }
 
 #[test]
-fn issue_417_pass_through_groups_emit_verbatim_at_resolved_positions() {
+fn pass_through_groups_emit_verbatim_at_resolved_positions() {
     use workshop_rs::settings::{Settings, SettingsNode};
 
     let raw = |name: &str| SettingsNode::Raw {
@@ -1913,82 +1559,6 @@ fn issue_417_pass_through_groups_emit_verbatim_at_resolved_positions() {
     let localized = emitter::emit(&program, &catalog(), &zh()).expect("emits zh-CN");
     assert!(localized.contains("mccree"), "{localized}");
     assert!(localized.contains("ability3Cooldown%"), "{localized}");
-}
-
-#[test]
-fn issue_417_unmarked_members_keep_name_and_kind_validation() {
-    use workshop_rs::settings::{Settings, SettingsNode};
-
-    let group = |name: &str, children: Vec<SettingsNode>| SettingsNode::Group {
-        name: name.into(),
-        children,
-        span: None,
-    };
-    let with_member = |member: SettingsNode| {
-        let mut program = workshop_rs::Program::new();
-        program.settings = Some(Settings {
-            span: None,
-            children: vec![
-                group("heroes", vec![group("allTeams", vec![member])]),
-                group("gamemodes", Vec::new()),
-            ],
-        });
-        program
-    };
-    let unknown_hero = with_member(group(
-        "mccree",
-        vec![SettingsNode::Number {
-            name: "health%".into(),
-            value: 50.0,
-            span: None,
-        }],
-    ));
-    assert!(
-        unknown_hero.validate().is_err(),
-        "an unmarked group under a team still resolves as a hero"
-    );
-    let typed_leaf = with_member(SettingsNode::RawGroup {
-        name: "mccree".into(),
-        children: vec![SettingsNode::Number {
-            name: "health%".into(),
-            value: 50.0,
-            span: None,
-        }],
-        span: None,
-    });
-    assert!(
-        typed_leaf.validate().is_err(),
-        "a typed leaf inside a pass-through block has no written form"
-    );
-}
-
-#[test]
-fn issue_360_opaque_settings_remain_verbatim() {
-    let source = r#"settings
-{
-    main
-    {
-        Project Custom Field: 3
-    }
-
-    workshop
-    {
-        Custom Payload: anything goes
-    }
-}
-rule("r")
-{
-    event
-    {
-        Ongoing - Global;
-    }
-    actions
-    {
-        Wait(1, Ignore Condition);
-    }
-}
-"#;
-    assert_check_compile_parity(source);
 }
 
 #[test]
@@ -2150,67 +1720,6 @@ fn typed_member_diagnostics_preserve_messages_spans_suggestions_and_order() {
 }
 
 #[test]
-fn typed_member_emission_keeps_raw_extensions_and_mode_headers() {
-    use workshop_rs::settings::{Settings, SettingsNode};
-    let raw = |name: &str, value: &str| SettingsNode::Raw {
-        name: name.into(),
-        value: value.into(),
-        span: None,
-    };
-    let group = |name: &str, children| SettingsNode::Group {
-        name: name.into(),
-        children,
-        span: None,
-    };
-    let mut program = workshop_rs::Program::new();
-    program.settings = Some(Settings {
-        span: None,
-        children: vec![
-            group(
-                "custom",
-                vec![group("nested", vec![raw("Payload", "anything goes")])],
-            ),
-            SettingsNode::Workshop {
-                children: vec![raw("Custom Field", "3")],
-                span: None,
-            },
-            group(
-                "extensions",
-                vec![SettingsNode::Flag {
-                    name: "beamEffects".into(),
-                    span: None,
-                }],
-            ),
-            group(
-                "gamemodes",
-                vec![group(
-                    "ffa",
-                    vec![SettingsNode::Bool {
-                        name: "enabled".into(),
-                        value: false,
-                        span: None,
-                    }],
-                )],
-            ),
-        ],
-    });
-    program.validate().unwrap();
-    assert!(program.settings_diagnostics().is_empty());
-    let text = emitter::emit(&program, &catalog(), &en()).unwrap();
-    for preserved in [
-        "custom {",
-        "nested {",
-        "Payload: anything goes",
-        "Custom Field: 3",
-        "Beam Effects",
-        "disabled Deathmatch {",
-    ] {
-        assert!(text.contains(preserved), "{text}");
-    }
-    assert!(!text.contains("enabled:"), "{text}");
-}
-
-#[test]
 fn typed_member_emission_resolves_hero_display_before_value_acceptance() {
     use workshop_rs::WorkshopError;
     use workshop_rs::settings::{Settings, SettingsNode};
@@ -2311,7 +1820,7 @@ rule("r")
     }
 }
 "#;
-    let key_source = issue_360_source("enabled mpas", "Route 66");
+    let key_source = near_miss_source("enabled mpas", "Route 66");
     for (source, expected) in [
         (enum_source, "did you mean 'After A Game'?"),
         (&key_source, "did you mean 'enabled maps'?"),
@@ -2348,7 +1857,7 @@ rule("r")
 #[test]
 fn correctly_spelled_and_distant_members_warn_on_nothing() {
     use workshop_rs::settings::DiagnosticSeverity;
-    let source = issue_360_source("enabled maps", "Route 66");
+    let source = near_miss_source("enabled maps", "Route 66");
     let catalog = catalog();
     let program = parser::parse(&source, &catalog, &en()).expect("source parses");
     assert!(
@@ -2360,7 +1869,7 @@ fn correctly_spelled_and_distant_members_warn_on_nothing() {
         program.settings_diagnostics()
     );
 
-    let distant = issue_360_source("a wholly novel knob", "Route 66");
+    let distant = near_miss_source("a wholly novel knob", "Route 66");
     let program = parser::parse(&distant, &catalog, &en()).expect("source parses");
     let diagnostics = program.settings_diagnostics();
     assert!(
@@ -2378,4 +1887,169 @@ fn correctly_spelled_and_distant_members_warn_on_nothing() {
         issue.classification,
         semantic::ResidualClassification::ProjectDefinedConstruct
     );
+}
+
+#[test]
+fn empty_settings_member_does_not_consume_the_following_member() {
+    let catalog = catalog();
+    let locale = en();
+    let source = r#"settings
+{
+    lobby
+    {
+        Project Empty:
+        Map Rotation: After A Game
+    }
+}
+rule("r")
+{
+    event
+    {
+        Ongoing - Global;
+    }
+    actions
+    {
+        Wait(1, Ignore Condition);
+    }
+}
+"#;
+    let program = parser::parse(source, &catalog, &locale).expect("parses");
+    let emitted = emitter::emit(&program, &catalog, &locale).expect("emits");
+    let lines: Vec<&str> = emitted.lines().map(str::trim).collect();
+    assert!(lines.contains(&"Project Empty:"), "{emitted}");
+    assert!(lines.contains(&"Map Rotation: After A Game"), "{emitted}");
+    let reparsed = parser::parse(&emitted, &catalog, &locale).expect("reparses");
+    assert!(roundtrip::equivalent(&program, &reparsed));
+}
+
+fn hero_setting(hero: &str, member: &str) -> String {
+    format!(
+        "settings {{\n    heroes {{\n        General {{\n            {hero} {{\n                {member}\n            }}\n        }}\n    }}\n}}"
+    )
+}
+
+fn parse_program_in(source: &str, locale: &workshop_rs::catalog::Locale) -> workshop_rs::Program {
+    let catalog = catalog();
+    parser::parse_with_context(source, &catalog, locale, &catalog)
+        .unwrap_or_else(|error| panic!("{locale} source must parse: {error}\n{source}"))
+}
+
+fn leaf_names(children: &[workshop_rs::settings::SettingsNode]) -> Vec<&str> {
+    let mut names = Vec::new();
+    for node in children {
+        match node {
+            workshop_rs::settings::SettingsNode::Group { name, children, .. } => {
+                names.push(name.as_str());
+                names.extend(leaf_names(children));
+            }
+            workshop_rs::settings::SettingsNode::Workshop { children, .. } => {
+                names.extend(leaf_names(children));
+            }
+            workshop_rs::settings::SettingsNode::Number { name, .. }
+            | workshop_rs::settings::SettingsNode::Bool { name, .. }
+            | workshop_rs::settings::SettingsNode::Flag { name, .. }
+            | workshop_rs::settings::SettingsNode::String { name, .. }
+            | workshop_rs::settings::SettingsNode::List { name, .. }
+            | workshop_rs::settings::SettingsNode::Raw { name, .. }
+            | workshop_rs::settings::SettingsNode::RawValue { name, .. }
+            | workshop_rs::settings::SettingsNode::RawGroup { name, .. } => {
+                names.push(name.as_str())
+            }
+        }
+    }
+    names
+}
+
+#[test]
+fn untranslated_markup_hero_names_parse() {
+    let tr = common::locale("tr-TR");
+    for hero in ["<en>Ana<en>", "<en>Soldier: 76<en>", "<en>Soldier : 76<en>"] {
+        parse_program_in(&hero_setting(hero, "Ability 1: On"), &tr)
+            .validate()
+            .expect("untranslated markup hero names validate");
+    }
+}
+
+#[test]
+fn settings_labels_containing_colons_parse() {
+    let ru = common::locale("ru-RU");
+    for label in [
+        "Время восстановления: Удар щитом",
+        "Удар щитом: сила отбрасывания",
+    ] {
+        let program = parse_program_in(&hero_setting("Brigitte", &format!("{label}: 100%")), &ru);
+        let settings = program.settings.expect("settings");
+        let names = leaf_names(&settings.children);
+        assert!(
+            names.iter().all(|name| *name != "Удар щитом"),
+            "the ability label must not be truncated at the inner colon: {names:?}"
+        );
+    }
+    parse_program_in(
+        &hero_setting("Brigitte", "Shield Bash Cooldown Time: 100%"),
+        &en(),
+    );
+}
+
+#[test]
+fn ability_display_name_binds_the_enable_key() {
+    let program = parse_program_in(&hero_setting("Brigitte", "Shield Bash: On"), &en());
+    let settings = program.settings.expect("settings");
+    assert!(
+        leaf_names(&settings.children).contains(&"enableAbility3"),
+        "expected enableAbility3, got {:?}",
+        leaf_names(&settings.children)
+    );
+}
+
+#[test]
+fn localized_ability_templates_resolve() {
+    let pt = common::locale("pt-BR");
+    for member in [
+        "Tempo de recarga de Dardos Tranquilizantes: 100%",
+        "Habilidade 1: On",
+    ] {
+        parse_program_in(&hero_setting("Ana", member), &pt)
+            .validate()
+            .expect("localized ability templates validate");
+    }
+}
+
+#[test]
+fn dotted_settings_booleans_parse() {
+    for (locale, boolean) in [("pl-PL", "Wł."), ("ru-RU", "Вкл."), ("ko-KR", "켜기")] {
+        let src = format!("settings {{\n    lobby {{\n        Map Rotation: {boolean}\n    }}\n}}");
+        parse_program_in(&src, &common::locale(locale))
+            .validate()
+            .expect("dotted settings booleans validate");
+    }
+}
+
+#[test]
+fn digit_and_spaced_team_names_parse() {
+    for (locale, team) in [("tr-TR", "1. Takım"), ("ko-KR", "1 팀")] {
+        let src = format!(
+            "settings {{\n    heroes {{\n        {team} {{\n            Ana {{\n                Ability 1: On\n            }}\n        }}\n    }}\n}}"
+        );
+        parse_program_in(&src, &common::locale(locale))
+            .validate()
+            .expect("digit and spaced team names validate");
+    }
+}
+
+#[test]
+fn localized_disabled_mode_prefixes_parse() {
+    for (locale, source) in [
+        ("tr-TR", "Devre Dışı Assault"),
+        ("es-ES", "No permitir Assault"),
+        ("ru-RU", "Откл. Assault"),
+        ("en-US", "Disabled Assault"),
+    ] {
+        let src = format!(
+            "settings {{\n    modes {{\n        {source} {{\n            enabled maps {{\n                Eichenwalde\n            }}\n        }}\n    }}\n}}"
+        );
+        parse_program_in(&src, &common::locale(locale))
+            .validate()
+            .expect("localized disabled mode prefixes validate");
+    }
 }

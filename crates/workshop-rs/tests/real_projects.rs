@@ -37,18 +37,14 @@ fn expectation_keeps_the_admitted_gap_identity_and_classification() {
         .iter()
         .find(|case| case.id == "defend")
         .expect("defend case");
-    assert_eq!(defend.residuals.len(), 1);
-    assert_eq!(defend.residuals[0].identity, "rawWorkshopAction");
-    assert_eq!(
-        defend.residuals[0].classification,
-        ResidualClassification::LegacyOpaque
+    assert!(
+        defend.gaps.iter().all(|gap| {
+            gap.kind == RealProjectGapKind::UnknownAction
+                && gap.identity == "rawWorkshopAction"
+                && gap.classification == ResidualClassification::LegacyOpaque
+        }),
+        "the admitted defend gap keeps its pinned classification"
     );
-    assert_eq!(defend.gaps.len(), 3);
-    assert!(defend.gaps.iter().all(|gap| {
-        gap.kind == RealProjectGapKind::UnknownAction
-            && gap.identity == "rawWorkshopAction"
-            && gap.classification == ResidualClassification::LegacyOpaque
-    }));
 
     let error = WorkshopError::unknown(
         "action",

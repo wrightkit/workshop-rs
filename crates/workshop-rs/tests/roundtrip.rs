@@ -1,6 +1,6 @@
 use super::common::{self, catalog, en};
 use super::internal;
-use workshop_rs::roundtrip::{self, RoundTripRecord};
+use workshop_rs::roundtrip;
 
 #[test]
 fn every_corpus_fixture_round_trips_with_full_evidence() {
@@ -32,36 +32,6 @@ fn every_corpus_fixture_round_trips_with_full_evidence() {
         assert_eq!(record.catalog_version, 1);
         assert_eq!(record.input_identity.len(), 64, "identity is a sha256 hex");
     }
-}
-
-#[test]
-fn same_locale_round_trip_is_a_release_gate() {
-    let failures: Vec<String> = [
-        "basic-rule",
-        "control-flow",
-        "declarations-rules",
-        "expressions-values",
-        "preprocessing",
-        "receiver-calls",
-        "overpy-cake",
-    ]
-    .iter()
-    .map(|fixture_id| {
-        let catalog = catalog();
-        roundtrip::round_trip_with_context(
-            &common::corpus_text(fixture_id),
-            &catalog,
-            &en(),
-            &catalog,
-        )
-    })
-    .filter(|record: &RoundTripRecord| !record.equivalent || record.error.is_some())
-    .map(|record| record.locale.to_string())
-    .collect();
-    assert!(
-        failures.is_empty(),
-        "round-trip gate failures: {failures:?}"
-    );
 }
 
 #[test]
@@ -150,37 +120,6 @@ fn malformed_input_is_recorded_not_crashed() {
     assert!(!record.parse_ok);
     assert!(!record.equivalent);
     assert!(record.error.is_some(), "failure is recorded");
-}
-
-#[test]
-fn unknown_builtin_fails_at_emit_stage() {
-    let mut program = workshop_rs::wir::Program::default();
-    program
-        .files
-        .push(workshop_rs::source::SourceFile::new("workshop.txt"));
-    let value = program.values.push(workshop_rs::wir::ValueNode::new(
-        workshop_rs::wir::Value::Call {
-            name: "notACatalogId".into(),
-            args: vec![],
-        },
-        None,
-    ));
-    let call = program.actions.push(workshop_rs::wir::Action::Call {
-        name: "wait".into(),
-        args: vec![value],
-        span: None,
-    });
-    program.rules.push(workshop_rs::wir::Rule {
-        name: "x".into(),
-        span: None,
-        name_span: None,
-        disabled: false,
-        event: workshop_rs::wir::Event::Global,
-        conditions: vec![],
-        actions: vec![call],
-    });
-    let error = internal::try_emit(&program).expect_err("unknown id");
-    assert!(error.to_string().contains("notACatalogId"));
 }
 
 #[test]

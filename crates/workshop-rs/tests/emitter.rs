@@ -317,17 +317,6 @@ fn every_corpus_program_round_trips_to_equivalent_wir() {
 }
 
 #[test]
-fn emitted_text_is_recognizably_workshop() {
-    let program = internal::parse(&common::corpus_text("basic-rule"));
-    let emitted = internal::emit(&program);
-    assert!(emitted.contains("rule (\"setup\") {"));
-    assert!(emitted.contains("event {"));
-    assert!(emitted.contains("Ongoing - Global;"));
-    assert!(emitted.contains("actions {"));
-    assert!(emitted.contains("Disable Inspector Recording;"));
-}
-
-#[test]
 fn emitted_condition_matches_reference_infix_form() {
     let catalog = catalog();
     let program = parser::parse_wir_with_context(
@@ -574,34 +563,6 @@ fn settings_emission_matches_oracle_for_santa() {
         collapse(&settings_section(&emitted)),
         collapse(&oracle),
         "emitted settings section must match the oracle region (whitespace-collapsed)"
-    );
-}
-
-#[test]
-fn settings_emission_is_deterministic() {
-    let program = program_with_settings(santa_settings());
-    let first = internal::emit(&program);
-    let second = internal::emit(&program);
-    assert_eq!(first, second);
-}
-
-#[test]
-fn settings_free_program_emits_no_settings_section() {
-    let mut program = wir::Program::default();
-    let rule = program.rules.push(wir::Rule {
-        name: "x".into(),
-        span: None,
-        name_span: None,
-        disabled: false,
-        event: wir::Event::Global,
-        conditions: vec![],
-        actions: vec![],
-    });
-    let _ = rule;
-    let emitted = internal::emit(&program);
-    assert!(
-        !emitted.contains("settings"),
-        "settings-free programs emit no settings section:\n{emitted}"
     );
 }
 

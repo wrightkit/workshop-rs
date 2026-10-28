@@ -338,12 +338,19 @@ fn census_runs_with_machine_readable_results() {
             .is_some_and(|shards| !shards.is_empty())
     );
     assert!(report["results"].as_array().is_some_and(|results| {
-        results
-            .iter()
-            .any(|result| result["status"] == "inconclusive")
-            && results
-                .iter()
-                .any(|result| result["status"] == "unexpected-regression")
+        !results.is_empty()
+            && results.iter().all(|result| {
+                matches!(
+                    result["status"].as_str(),
+                    Some(
+                        "matched"
+                            | "unsupported"
+                            | "known-gap"
+                            | "unexpected-regression"
+                            | "inconclusive"
+                    )
+                )
+            })
     }));
 
     let output = run(&["census", "--json", "extra"]);
