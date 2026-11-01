@@ -3,30 +3,62 @@ name: CI
 on:
   push:
     branches: ["main"]
-    paths-ignore:
-      - "**/*.md"
-      - "docs/**"
   pull_request:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled]
-    paths-ignore:
-      - "**/*.md"
-      - "docs/**"
 
 env:
   CARGO_TERM_COLOR: always
 
+# A newer push to the same pull request supersedes the older run. Title and
+# label events use their own group so they cannot cancel a running suite.
+# Pushes to main never share a group, so each main commit keeps a complete run.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}-${{ contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action) && 'meta' || 'code' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  # Edited/labeled/unlabeled only exist so semver-check re-reads the PR title
-  # and labels; every other job skips those events instead of re-running the
-  # full suite (catalog-gen-build, wasm-check, real-project-scenarios skip via
-  # `needs: check`, and catalog-check follows catalog-gen-build).
+  # Skipped jobs still report their check names as passing, so a change that
+  # touches only documentation does not leave a required check pending.
+  # `full` is false for edited/labeled/unlabeled events, which only need
+  # semver-check to re-read the PR title and labels.
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      workflows: ${{ steps.filter.outputs.workflows }}
+      full: ${{ steps.filter.outputs.code == 'true' && (github.event_name == 'push' || !contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action)) }}
+    steps:
+      - name: Check out repository
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+            workflows:
+              - '.github/workflows/**'
+
   workflow-lint:
     name: Workflow lint
-    if: github.event_name == 'push' || !contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action)
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true' && (github.event_name == 'push' || !contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action))
     uses: wrightkit/.github/.github/workflows/actionlint.yml@main
 
   check:
     name: Rust (${{ matrix.toolchain }})
+    needs: changes
     if: github.event_name == 'push' || !contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action)
     strategy:
       fail-fast: false
@@ -36,9 +68,12 @@ jobs:
     with:
       toolchain: ${{ matrix.toolchain }}
       cache-shared-key: quality
+      skip: ${{ needs.changes.outputs.code != 'true' }}
 
   semver-check:
     name: Public API compatibility
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -71,7 +106,8 @@ jobs:
   # recompiling the workspace.
   catalog-gen-build:
     name: Build catalog generator
-    needs: check
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -109,7 +145,8 @@ jobs:
 
   wasm-check:
     name: WebAssembly build
-    needs: check
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -130,7 +167,8 @@ jobs:
   # aggregated test run cannot show (#574).
   real-project-scenarios:
     name: five real-project scenarios
-    needs: check
+    needs: changes
+    if: needs.changes.outputs.full == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
