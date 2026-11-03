@@ -3,7 +3,7 @@
 The Overwatch client enforces a global element budget of **32768** elements;
 see [`element-count.md`](element-count.md) for the canonical counting model.
 Beyond that budget, the client rejects some Workshop texts during import or
-paste for structural reasons that are **not yet established**. This document
+paste for structural reasons. This document
 records what is known, which candidate limits have been falsified, the probe
 corpus used to isolate the remaining candidates, and the protocol for turning
 a client observation into an established boundary.
@@ -94,16 +94,32 @@ zh-CN `Symmetra` event-player spelling is not in the catalog — an unrelated
 parser gap).
 
 The signature discriminates every measured artifact: both rejected builds
-carry it, no accepted build does. It is still a correlation over a small
-corpus — not an established limit — and it does not imply the client
-rejects the shape rather than some correlated property of these builds.
+carry it, no accepted build does. That corpus alone is a correlation and
+does not establish which property caused those builds to be rejected.
 `wright`'s `nested-binder-lambda` lint rule reports it as a
-`static-indicator` warning. The `arg-binder-lambda.ws` /
-`arg-binder-source.ws` probe pair isolates it at minimal scale for the
-client test protocol: if the lambda probe is rejected while the
-source-position control imports, nested binder scope is the trigger;
-if both import, the signature is falsified and the correlation was
-incidental.
+`static-indicator` warning. The minimal client probe pair establishes a
+nested-binder boundary for the tested shapes on client
+`2.25.0.1 - 154504.1`. It does not establish that every combination of the
+five binder values is rejected. A follow-up must decide whether to promote
+the lint from a static indicator.
+
+On 2026-11-04, an agent operated the zh-CN client through UU远程 at the
+owner's request. The inputs were emitted from the English fixtures with
+`wright 0.39.2`, using `compile --kind workshop --locale en-US --to zh-CN`.
+The emitter normalized the `True` condition to `True == True` in both
+inputs. Re-emitting each zh-CN input as en-US produced the same canonical
+text as emitting its original fixture as en-US. The observed results were:
+
+| Fixture | Original SHA-256 | Emitted zh-CN SHA-256 | Client result |
+| --- | --- | --- | --- |
+| `arg-binder-lambda.ws` | `9b10ae3dfd5ecc82fb3138f88fbc419e8f2588067401dcbbf09159a7e2ef5dd3` | `6f63ad84c53cfc24265c1549e3ad6b2b344700669fb3a2cb0a3c73f3fad0655e` | The rule appeared, but the client reported `错误：此脚本中某些值无法叠加至多于1层。` |
+| `arg-binder-source.ws` | `c0d7d09473b8f9a6395b4fef919915e9f78d843456a510f717d733fe3e0d264a` | `bfd36657511f9b4966b04748e73a2aef6e97b53e9cdde72adfd744e8a22fe059` | The rule appeared with the source-position nesting and no error was observed. |
+
+Both rules were pasted separately into an empty Workshop rule list. The
+editor displayed each rule's action. The lambda error is a rejection of the
+tested nested scope even though the editor retained and displayed the rule.
+The control imported without that error. This pair does not test runtime
+behavior or establish a general limit for other combinations.
 
 ## Real-world mitigations observed
 
@@ -190,11 +206,10 @@ The probes pin the discriminating experiment:
   is rejected, the trigger is content-specific — the `createInWorldText`
   action kind, its player-set filter values, or its localized string
   arguments — rather than aggregate shape.
-- `arg-binder-lambda.ws` carries one binder inside another binder's
-  per-element argument; `arg-binder-source.ws` carries the same two binder
-  calls through the source argument instead. The pair isolates nested
-  binder scope at minimal scale — if it separates accept from reject,
-  the nested-binder signature is the trigger.
+- `arg-binder-lambda.ws` carries a binder inside another binder's
+  per-element argument; `arg-binder-source.ws` nests binders through the
+  source argument instead. The client result above separates the tested
+  nested scope from the source-position control.
 
 ## Client test protocol
 
@@ -214,5 +229,5 @@ Client results are a manual evidence step (see
    bracket it on the same client version. Only then may `workshop-rs` expose
    it as a validation contract.
 
-Until such evidence exists, no threshold in this repository should be treated
-as an import boundary.
+Other candidates remain unestablished until such evidence exists. No scalar
+threshold in this repository should be treated as an import boundary.
