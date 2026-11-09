@@ -1,5 +1,12 @@
 use crate::output::emitter::*;
 
+fn next_format_placeholder<'a>(remaining: &mut &'a str) -> Option<(&'a str, &'a str)> {
+    let (prefix, after_open) = remaining.split_once('{')?;
+    let (inner, rest) = after_open.split_once('}')?;
+    *remaining = rest;
+    Some((prefix, inner))
+}
+
 impl<'a> EmitContext<'a> {
     pub(crate) fn value(&mut self, id: wir::ValueId, out: &mut String) -> Result<()> {
         let Some(node) = self.program.values.get(id) else {
@@ -266,35 +273,21 @@ impl<'a> EmitContext<'a> {
         let mut has_explicit = false;
         let mut out_of_range = false;
         let mut cursor = 0usize;
-        let mut chars = text.chars().peekable();
-        while let Some(ch) = chars.next() {
-            if ch == '{' {
-                let mut inner = String::new();
-                let mut closed = false;
-                for next in chars.by_ref() {
-                    if next == '}' {
-                        closed = true;
-                        break;
-                    }
-                    inner.push(next);
-                }
-                if !closed {
-                    break;
-                }
-                if inner.is_empty() {
-                    if cursor >= format_args.len() {
-                        out_of_range = true;
-                    }
-                    cursor += 1;
-                    has_implicit = true;
-                } else if inner.chars().all(|c| c.is_ascii_digit()) {
-                    match inner.parse::<usize>() {
-                        Ok(index) if index < format_args.len() => has_explicit = true,
-                        _ => out_of_range = true,
-                    }
-                } else {
+        let mut remaining = text.as_str();
+        while let Some((_, inner)) = next_format_placeholder(&mut remaining) {
+            if inner.is_empty() {
+                if cursor >= format_args.len() {
                     out_of_range = true;
                 }
+                cursor += 1;
+                has_implicit = true;
+            } else if inner.chars().all(|c| c.is_ascii_digit()) {
+                match inner.parse::<usize>() {
+                    Ok(index) if index < format_args.len() => has_explicit = true,
+                    _ => out_of_range = true,
+                }
+            } else {
+                out_of_range = true;
             }
         }
         if out_of_range || (has_implicit && has_explicit) {
@@ -316,56 +309,36 @@ impl<'a> EmitContext<'a> {
         let mut variable_args = Vec::new();
         let mut variable_index = 0usize;
         let mut cursor = 0usize;
-        let mut chars = text.chars().peekable();
-        while let Some(ch) = chars.next() {
-            if ch == '{' {
-                let mut inner = String::new();
-                let mut closed = false;
-                for next in chars.by_ref() {
-                    if next == '}' {
-                        closed = true;
-                        break;
-                    }
-                    inner.push(next);
-                }
-                if !closed {
-                    canonical.push('{');
-                    canonical.push_str(&inner);
-                    break;
-                }
-                let index = if inner.is_empty() {
-                    let index = cursor;
-                    cursor += 1;
-                    index
-                } else {
-                    match inner.parse::<usize>() {
-                        Ok(index) => index,
-                        Err(_) => {
-                            canonical.push('{');
-                            canonical.push_str(&inner);
-                            canonical.push('}');
-                            continue;
-                        }
-                    }
-                };
-                let Some(arg) = format_args.get(index).copied() else {
-                    canonical.push('{');
-                    canonical.push_str(&inner);
-                    canonical.push('}');
-                    continue;
-                };
-                let node = self.program.values.get(arg);
-                if let Some(wir::Value::Number { value, .. }) = node.map(|node| &node.value) {
-                    canonical.push_str(&fold_number(*value));
-                } else {
-                    write!(canonical, "{{{variable_index}}}").unwrap();
-                    variable_index += 1;
-                    variable_args.push(arg);
-                }
+        let mut remaining = text.as_str();
+        while let Some((prefix, inner)) = next_format_placeholder(&mut remaining) {
+            canonical.push_str(prefix);
+            let index = if inner.is_empty() {
+                let index = cursor;
+                cursor += 1;
+                index
             } else {
-                canonical.push(ch);
+                match inner.parse::<usize>() {
+                    Ok(index) => index,
+                    Err(_) => {
+                        write!(canonical, "{{{inner}}}").unwrap();
+                        continue;
+                    }
+                }
+            };
+            let Some(arg) = format_args.get(index).copied() else {
+                write!(canonical, "{{{inner}}}").unwrap();
+                continue;
+            };
+            let node = self.program.values.get(arg);
+            if let Some(wir::Value::Number { value, .. }) = node.map(|node| &node.value) {
+                canonical.push_str(&fold_number(*value));
+            } else {
+                write!(canonical, "{{{variable_index}}}").unwrap();
+                variable_index += 1;
+                variable_args.push(arg);
             }
         }
+        canonical.push_str(remaining);
         Ok(Some((canonical, variable_args)))
     }
 
