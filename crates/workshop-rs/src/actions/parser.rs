@@ -1,3 +1,5 @@
+mod variable_arguments;
+
 use crate::frontend::parser::*;
 
 impl ParseContext<'_> {
@@ -47,24 +49,6 @@ impl ParseContext<'_> {
             }
         }
         Ok(conditions)
-    }
-
-    fn player_variable_arg(&mut self) -> Result<(wir::ValueId, wir::PlayerVarId, Span)> {
-        let player = self.value()?;
-        self.expect(TokenKind::Comma, "expected ',' after player")?;
-        let (name, name_start, name_end) = self.phrase()?;
-        let variable = self.player_by_name(&name)?;
-        Ok((
-            player,
-            variable,
-            Span::new(self.file(), name_start, name_end),
-        ))
-    }
-
-    fn global_variable_arg(&mut self) -> Result<(wir::GlobalVarId, Span)> {
-        let (name, name_start, name_end) = self.phrase()?;
-        let variable = self.global_by_name(&name)?;
-        Ok((variable, Span::new(self.file(), name_start, name_end)))
     }
 
     pub(crate) fn actions_section(&mut self) -> Result<Vec<wir::ActionId>> {
@@ -350,12 +334,18 @@ impl ParseContext<'_> {
             return Ok(None);
         };
         self.pos += event_player_len;
-        let event_player = self.target.values.push(ValueNode::new(
-            Value::EventPlayer,
-            Some(Span::new(self.file(), start, self.previous_span().1)),
-        ));
+        let player_end = self.previous_span().1;
         self.expect(TokenKind::Dot, "expected '.' after 'Event Player'")?;
         let (name, target_start, target_end) = self.phrase()?;
+        if !matches!(self.peek_kind_at(0), Some(TokenKind::LBracket)) && !self.line_has_assignment()
+        {
+            self.pos = saved;
+            return Ok(None);
+        }
+        let event_player = self.target.values.push(ValueNode::new(
+            Value::EventPlayer,
+            Some(Span::new(self.file(), start, player_end)),
+        ));
         let variable = self.player_by_name(&name)?;
         if matches!(self.peek_kind_at(0), Some(TokenKind::LBracket)) {
             let (index, operator) = self.indexed_assignment_parts("player")?;

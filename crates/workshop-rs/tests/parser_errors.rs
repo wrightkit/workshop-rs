@@ -221,3 +221,15 @@ fn settings_name_errors_carry_a_span() {
     let span = span.expect("the rejected spelling carries a span");
     assert_eq!(span.start.line, 3);
 }
+
+#[test]
+fn raw_event_player_action_does_not_create_a_variable() {
+    let source = "rule(\"r\") { event { Ongoing - Global; } actions { Event Player.ghost; Set Player Variable(Event Player, actual, 1); } }";
+    let program = workshop_rs::parser::parse(source, &Catalog::builtin().unwrap(), &en()).unwrap();
+    assert_eq!(program.player_variables.len(), 1);
+    assert_eq!(program.player_variables[0].name, "actual");
+    assert_eq!(program.player_variables[0].index, Some(0));
+    assert!(
+        matches!(&program.rules[0].actions[0], workshop_rs::program::Action::Call { name, .. } if name == "rawWorkshopAction")
+    );
+}
