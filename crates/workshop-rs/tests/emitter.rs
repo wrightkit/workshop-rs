@@ -1,3 +1,6 @@
+#[path = "format_emitter.rs"]
+mod format_emitter;
+
 use workshop_rs::parser;
 use workshop_rs::wir;
 
@@ -892,68 +895,6 @@ fn split_and_reescaped_value_strings_round_trip_byte_identically() {
     assert_eq!(
         emitted, reemitted,
         "split and re-escaped spellings must be a byte-identical fixed point"
-    );
-}
-
-#[test]
-fn implicit_format_placeholders_renumber_to_the_oracle_form() {
-    let mut program = wir::Program::default();
-    let file = program
-        .files
-        .push(workshop_rs::source::SourceFile::new("workshop.txt"));
-    let text = program.values.push(workshop_rs::wir::ValueNode::new(
-        workshop_rs::wir::Value::String("v: {}".to_string()),
-        None,
-    ));
-    let variable = program.values.push(workshop_rs::wir::ValueNode::new(
-        workshop_rs::wir::Value::GlobalVariable(workshop_rs::core::ids::Id::from_index(0)),
-        None,
-    ));
-    let call = program.values.push(workshop_rs::wir::ValueNode::new(
-        workshop_rs::wir::Value::Call {
-            name: "format".to_string(),
-            args: vec![text, variable],
-        },
-        None,
-    ));
-    let action = program.actions.push(wir::Action::SetGlobalVariable {
-        variable: workshop_rs::core::ids::Id::from_index(1),
-        value: call,
-        span: None,
-        target_span: None,
-    });
-    program.global_variables.push(wir::WorkshopVariable {
-        name: "x".into(),
-        index: 0,
-        span: None,
-        name_span: None,
-    });
-    program.global_variables.push(wir::WorkshopVariable {
-        name: "z".into(),
-        index: 1,
-        span: None,
-        name_span: None,
-    });
-    program.rules.push(wir::Rule {
-        name: "r".into(),
-        span: None,
-        name_span: None,
-        disabled: false,
-        event: wir::Event::Global,
-        conditions: vec![],
-        actions: vec![action],
-    });
-    let _ = file;
-    let emitted = internal::emit(&program);
-    assert!(
-        emitted.contains("Set Global Variable(z, Custom String(\"v: {0}\", Global.x));"),
-        "implicit placeholders renumber to the oracle form: {emitted}"
-    );
-    let reparsed = internal::parse(&emitted);
-    let reemitted = internal::emit(&reparsed);
-    assert_eq!(
-        emitted, reemitted,
-        "renumbered format must be a byte-identical fixed point"
     );
 }
 
