@@ -32,9 +32,8 @@ impl ParseContext<'_> {
                         continue;
                     }
                     let disabled = self.consume_disabled();
-                    self.condition_pending = true;
                     let start = self.peek().map(|token| token.start);
-                    let value = self.value()?;
+                    let value = self.condition_value()?;
                     let end = self.expect_semi("expected ';' after condition")?;
                     let span = start.map(|start| Span::new(self.file(), start, end));
                     if let Some(node) = self.target.values.get_mut(value) {
@@ -597,8 +596,7 @@ impl ParseContext<'_> {
 
     pub(crate) fn if_group(&mut self, start: Position) -> Result<wir::ActionId> {
         self.expect(TokenKind::LParen, "expected '(' after 'If'")?;
-        self.condition_pending = true;
-        let condition = self.value()?;
+        let condition = self.condition_value()?;
         self.expect(TokenKind::RParen, "expected ')' after If condition")?;
         self.expect_semi("expected ';' after If condition")?;
 
@@ -621,8 +619,7 @@ impl ParseContext<'_> {
                 Stop::ElseIf => {
                     self.consume_keyword("elseIf")?;
                     self.expect(TokenKind::LParen, "expected '(' after 'Else If'")?;
-                    self.condition_pending = true;
-                    let condition = self.value()?;
+                    let condition = self.condition_value()?;
                     self.expect(TokenKind::RParen, "expected ')' after Else If condition")?;
                     self.expect_semi("expected ';' after Else If condition")?;
                     let (body, next) = self.actions_until_end()?;
@@ -696,8 +693,7 @@ impl ParseContext<'_> {
 
     pub(crate) fn while_group(&mut self, start: Position) -> Result<wir::ActionId> {
         self.expect(TokenKind::LParen, "expected '(' after 'While'")?;
-        self.condition_pending = true;
-        let condition = self.value()?;
+        let condition = self.condition_value()?;
         self.expect(TokenKind::RParen, "expected ')' after While condition")?;
         self.expect_semi("expected ';' after While condition")?;
         let (body, end) = self.actions_until_matching_end("'While' requires a matching 'End'")?;

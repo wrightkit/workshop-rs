@@ -1,3 +1,5 @@
+mod context;
+
 pub(crate) use std::collections::HashMap;
 use std::sync::OnceLock;
 
@@ -79,7 +81,6 @@ pub(crate) fn parse_wir_with_context(
         locale: locale.clone(),
         context,
         expected_domain: None,
-        condition_pending: false,
         in_condition: false,
         call_stack: Vec::new(),
         target: wir::Program::default(),
@@ -121,7 +122,6 @@ pub(crate) struct ParseContext<'a> {
     pub(crate) locale: Locale,
     pub(crate) context: &'a dyn ExpectedDomain,
     pub(crate) expected_domain: Option<&'a str>,
-    pub(crate) condition_pending: bool,
     pub(crate) in_condition: bool,
     pub(crate) call_stack: Vec<String>,
     pub(crate) target: wir::Program,
