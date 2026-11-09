@@ -1,5 +1,11 @@
 use super::*;
 
+#[derive(Clone, Copy)]
+pub(crate) struct Binding<T> {
+    pub(crate) id: T,
+    pub(crate) declared: bool,
+}
+
 impl ParseContext<'_> {
     pub(crate) fn condition_value(&mut self) -> Result<wir::ValueId> {
         self.value_with_condition(true)

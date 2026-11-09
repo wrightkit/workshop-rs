@@ -472,7 +472,7 @@ impl ParseContext<'_> {
             }
             _ => {}
         }
-        if let Some(variable) = self.globals.get(phrase).copied() {
+        if let Some(variable) = self.globals.get(phrase).map(|binding| binding.id) {
             return Ok(self.push(
                 ValueNode::new(
                     Value::GlobalVariable(variable),
@@ -640,7 +640,7 @@ impl ParseContext<'_> {
             {
                 let saved = self.pos;
                 let (name, start, end) = self.phrase()?;
-                if let Some(variable) = self.players.get(&name).copied() {
+                if let Some(variable) = self.players.get(&name).map(|binding| binding.id) {
                     let player = args[0];
                     args[0] = self.target.values.push(
                         ValueNode::new(

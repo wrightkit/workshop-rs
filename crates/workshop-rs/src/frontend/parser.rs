@@ -1,4 +1,5 @@
 mod context;
+pub(crate) use context::Binding;
 
 pub(crate) use std::collections::HashMap;
 use std::sync::OnceLock;
@@ -125,8 +126,8 @@ pub(crate) struct ParseContext<'a> {
     pub(crate) in_condition: bool,
     pub(crate) call_stack: Vec<String>,
     pub(crate) target: wir::Program,
-    pub(crate) globals: HashMap<String, wir::GlobalVarId>,
-    pub(crate) players: HashMap<String, wir::PlayerVarId>,
+    pub(crate) globals: HashMap<String, Binding<wir::GlobalVarId>>,
+    pub(crate) players: HashMap<String, Binding<wir::PlayerVarId>>,
     pub(crate) subroutines: HashMap<String, wir::SubroutineId>,
     pub(crate) next_global_index: u32,
     pub(crate) next_player_index: u32,

@@ -110,8 +110,10 @@ impl ParseContext<'_> {
             } else {
                 (&mut self.players, &mut self.target.player_variables)
             };
-            if let Some(id) = names.get(&variable.name).copied() {
-                if is_forward_declaration(arena.get(id).unwrap()) {
+            if let Some(binding) = names.get_mut(&variable.name) {
+                let id = binding.id;
+                if !binding.declared {
+                    binding.declared = true;
                     *arena.get_mut(id).unwrap() = variable;
                     continue;
                 }
@@ -122,7 +124,10 @@ impl ParseContext<'_> {
                 ));
             }
             let id = arena.push(variable);
-            names.insert(arena.get(id).unwrap().name.clone(), id);
+            names.insert(
+                arena.get(id).unwrap().name.clone(),
+                Binding { id, declared: true },
+            );
         }
         Ok(())
     }
@@ -279,8 +284,8 @@ impl ParseContext<'_> {
     }
 
     pub(crate) fn global_by_name(&mut self, name: &str) -> Result<wir::GlobalVarId> {
-        if let Some(id) = self.globals.get(name).copied() {
-            return Ok(id);
+        if let Some(binding) = self.globals.get(name) {
+            return Ok(binding.id);
         }
         let index = self.next_variable_index(false);
         let id = self.target.global_variables.push(wir::WorkshopVariable {
@@ -289,13 +294,19 @@ impl ParseContext<'_> {
             span: None,
             name_span: None,
         });
-        self.globals.insert(name.to_string(), id);
+        self.globals.insert(
+            name.to_string(),
+            Binding {
+                id,
+                declared: false,
+            },
+        );
         Ok(id)
     }
 
     pub(crate) fn player_by_name(&mut self, name: &str) -> Result<wir::PlayerVarId> {
-        if let Some(id) = self.players.get(name).copied() {
-            return Ok(id);
+        if let Some(binding) = self.players.get(name) {
+            return Ok(binding.id);
         }
         let index = self.next_variable_index(true);
         let id = self.target.player_variables.push(wir::WorkshopVariable {
@@ -304,7 +315,13 @@ impl ParseContext<'_> {
             span: None,
             name_span: None,
         });
-        self.players.insert(name.to_string(), id);
+        self.players.insert(
+            name.to_string(),
+            Binding {
+                id,
+                declared: false,
+            },
+        );
         Ok(id)
     }
 
@@ -360,8 +377,4 @@ impl ParseContext<'_> {
                 ))
         })
     }
-}
-
-fn is_forward_declaration(variable: &wir::WorkshopVariable) -> bool {
-    variable.span.is_none()
 }

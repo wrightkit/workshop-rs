@@ -112,6 +112,18 @@ fn forward_reference_binds_to_later_declaration() {
 }
 
 #[test]
+fn player_forward_reference_binds_to_later_declaration() {
+    let source = "rule(\"r\") { event { Ongoing - Global; } actions { Set Player Variable(Event Player, p, 1); Set Player Variable(Event Player, p, 2); } } variables { player: 7: p }";
+    let program = internal::parse(source);
+    let variables: Vec<_> = program.player_variables.iter().collect();
+    assert_eq!(variables.len(), 1);
+    assert_eq!(variables[0].index, 7);
+    assert!(variables[0].span.is_some());
+    internal::assert_emit_round_trip(&program);
+    assert!(internal::try_parse(&format!("{source} variables {{ player: 8: p }}")).is_err());
+}
+
+#[test]
 fn duplicate_variable_name_is_rejected() {
     assert!(
         internal::try_parse("variables\n{\n    global:\n        0: x\n        1: x\n}").is_err()
