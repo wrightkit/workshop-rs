@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use crate::catalog::{Catalog, Locale};
 use crate::core::error::{Result, WorkshopError};
 use crate::output::emitter::{EmitOptions, EmitOutput, emit_with_options_inner};
@@ -13,17 +15,21 @@ use super::Program;
 /// runs several of them on the same unchanged program calls
 /// [`Program::canonical`] once and uses the methods here, which give the same
 /// results without repeating the materialization.
+///
+/// The value borrows the [`Program`] it was built from, so the program cannot
+/// be mutated while the value is alive and every result reflects the current
+/// program.
 #[derive(Debug)]
-pub struct CanonicalProgram(wir::Program);
+pub struct CanonicalProgram<'a>(wir::Program, PhantomData<&'a Program>);
 
 impl Program {
     /// Materialize the canonical form used by validation and emission.
-    pub fn canonical(&self) -> Result<CanonicalProgram> {
-        self.to_wir().map(CanonicalProgram)
+    pub fn canonical(&self) -> Result<CanonicalProgram<'_>> {
+        self.to_wir().map(|wir| CanonicalProgram(wir, PhantomData))
     }
 }
 
-impl CanonicalProgram {
+impl CanonicalProgram<'_> {
     /// Same contract as [`Program::validate`].
     pub fn validate(&self) -> Result<()> {
         self.0

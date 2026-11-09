@@ -32,7 +32,8 @@ workshop_rs::validate::validate_canonical_ids(&program, &catalog)?;
 let emitted = emit(&program, &catalog, &locale)?;
 
 // Each call above materializes the program again. A caller that runs several
-// of them on the same unchanged program materializes it once instead.
+// of them on the same unchanged program materializes it once instead. `CanonicalProgram` borrows the program, so
+// the program cannot change while it is in use.
 let canonical = program.canonical()?;
 canonical.validate()?;
 canonical.validate_canonical_ids(&catalog)?;
