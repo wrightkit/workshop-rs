@@ -12,8 +12,7 @@ use crate::wir;
 /// parse time: an undeclared name allocates an implicit variable slot rather
 /// than failing validation.
 pub fn validate_canonical_ids(program: &crate::Program, catalog: &Catalog) -> Result<()> {
-    let storage = program.to_wir()?;
-    validate_wir(&storage, catalog, false)
+    program.canonical()?.validate_canonical_ids(catalog)
 }
 
 /// Same contract as [`validate_canonical_ids`], except that catalog-unknown
@@ -33,8 +32,9 @@ pub fn validate_canonical_ids_tolerating_residuals(
     program: &crate::Program,
     catalog: &Catalog,
 ) -> Result<()> {
-    let storage = program.to_wir()?;
-    validate_wir(&storage, catalog, true)
+    program
+        .canonical()?
+        .validate_canonical_ids_tolerating_residuals(catalog)
 }
 
 #[cfg(test)]

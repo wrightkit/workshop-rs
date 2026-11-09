@@ -52,8 +52,9 @@ pub fn emit_with_options(
     locale: &Locale,
     options: &EmitOptions,
 ) -> Result<EmitOutput> {
-    let storage = program.to_wir()?;
-    emit_with_options_inner(&storage, catalog, locale, options)
+    program
+        .canonical()?
+        .emit_with_options(catalog, locale, options)
 }
 
 #[cfg(test)]
@@ -66,7 +67,7 @@ pub(crate) fn emit_wir_with_options(
     emit_with_options_inner(program, catalog, locale, options)
 }
 
-fn emit_with_options_inner(
+pub(crate) fn emit_with_options_inner(
     program: &wir::Program,
     catalog: &Catalog,
     locale: &Locale,
