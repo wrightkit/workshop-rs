@@ -63,24 +63,17 @@ pub(crate) fn validate_action(
             crate::values::validate::validate_value(program, catalog, *target, tolerate_residuals)?;
             crate::values::validate::validate_value(program, catalog, *value, tolerate_residuals)?;
         }
-        wir::Action::If {
-            branches,
-            else_body,
-            ..
-        } => {
+        wir::Action::If { branches, .. } => {
             for branch in branches {
-                crate::values::validate::validate_value(
-                    program,
-                    catalog,
-                    branch.condition,
-                    tolerate_residuals,
-                )?;
-                for action in &branch.body {
-                    validate_action(program, catalog, *action, tolerate_residuals)?;
+                if let Some(condition) = branch.condition {
+                    crate::values::validate::validate_value(
+                        program,
+                        catalog,
+                        condition,
+                        tolerate_residuals,
+                    )?;
                 }
-            }
-            if let Some(else_body) = else_body {
-                for action in else_body {
+                for action in &branch.body {
                     validate_action(program, catalog, *action, tolerate_residuals)?;
                 }
             }

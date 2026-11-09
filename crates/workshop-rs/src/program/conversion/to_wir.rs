@@ -172,7 +172,13 @@ fn lower_actions(
             Action::If { condition } => {
                 *position += 1;
                 let mut branches = vec![wir::IfBranch {
-                    condition: wir_value(condition, storage, globals, players, subroutines)?,
+                    condition: Some(wir_value(
+                        condition,
+                        storage,
+                        globals,
+                        players,
+                        subroutines,
+                    )?),
                     body: Vec::new(),
                 }];
                 lower_actions(
@@ -184,10 +190,14 @@ fn lower_actions(
                     players,
                     subroutines,
                 )?;
-                while let Some(Action::ElseIf { condition }) = actions.get(*position) {
+                while matches!(
+                    actions.get(*position),
+                    Some(Action::ElseIf { .. } | Action::Else)
+                ) {
+                    let marker = &actions[*position];
                     let condition_record = provenance
                         .and_then(|records| records.get(*position))
-                        .and_then(|record| argument_value(record, &actions[*position], 0));
+                        .and_then(|record| argument_value(record, marker, 0));
                     *position += 1;
                     let mut body = Vec::new();
                     lower_actions(
@@ -199,37 +209,23 @@ fn lower_actions(
                         players,
                         subroutines,
                     )?;
-                    let lowered = wir_value(condition, storage, globals, players, subroutines)?;
-                    if let Some((record, value)) = condition_record {
-                        apply_value_provenance(
-                            storage,
-                            lowered,
-                            value,
-                            record,
-                            &std::convert::identity,
-                        );
-                    }
-                    branches.push(wir::IfBranch {
-                        condition: lowered,
-                        body,
-                    });
+                    let condition = if let Action::ElseIf { condition } = marker {
+                        let lowered = wir_value(condition, storage, globals, players, subroutines)?;
+                        if let Some((record, value)) = condition_record {
+                            apply_value_provenance(
+                                storage,
+                                lowered,
+                                value,
+                                record,
+                                &std::convert::identity,
+                            );
+                        }
+                        Some(lowered)
+                    } else {
+                        None
+                    };
+                    branches.push(wir::IfBranch { condition, body });
                 }
-                let else_body = if matches!(actions.get(*position), Some(Action::Else)) {
-                    *position += 1;
-                    let mut body = Vec::new();
-                    lower_actions(
-                        rows,
-                        position,
-                        &mut body,
-                        storage,
-                        globals,
-                        players,
-                        subroutines,
-                    )?;
-                    Some(body)
-                } else {
-                    None
-                };
                 if !matches!(actions.get(*position), Some(Action::End)) {
                     return Err(WorkshopError::malformed(
                         "control-flow action is missing End".to_string(),
@@ -239,7 +235,6 @@ fn lower_actions(
                 *position += 1;
                 output.push(storage.actions.push(wir::Action::If {
                     branches,
-                    else_body,
                     span: None,
                 }));
             }

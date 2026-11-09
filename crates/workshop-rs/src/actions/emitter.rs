@@ -88,24 +88,18 @@ impl EmitContext<'_> {
                 let keyword = self.spelling(Kind::Structural, "callSubroutine")?;
                 self.line(level, &format!("{keyword}({name});"))?;
             }
-            wir::Action::If {
-                branches,
-                else_body,
-                ..
-            } => {
+            wir::Action::If { branches, .. } => {
                 for (index, branch) in branches.iter().enumerate() {
-                    let condition = self.value_text(branch.condition)?;
-                    let keyword =
-                        self.spelling(Kind::Structural, if index == 0 { "if" } else { "elseIf" })?;
-                    self.line(level, &format!("{keyword}({condition});"))?;
-                    for action in &branch.body {
-                        self.action(*action, level + 1, false)?;
+                    if let Some(condition) = branch.condition {
+                        let condition = self.value_text(condition)?;
+                        let keyword = self
+                            .spelling(Kind::Structural, if index == 0 { "if" } else { "elseIf" })?;
+                        self.line(level, &format!("{keyword}({condition});"))?;
+                    } else {
+                        let keyword = self.spelling(Kind::Structural, "else")?;
+                        self.line(level, &format!("{keyword};"))?;
                     }
-                }
-                if let Some(else_body) = else_body {
-                    let keyword = self.spelling(Kind::Structural, "else")?;
-                    self.line(level, &format!("{keyword};"))?;
-                    for action in else_body {
+                    for action in &branch.body {
                         self.action(*action, level + 1, false)?;
                     }
                 }

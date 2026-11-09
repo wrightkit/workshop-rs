@@ -276,28 +276,18 @@ fn public_actions(
                 .name
                 .clone(),
         }),
-        wir::Action::If {
-            branches,
-            else_body,
-            ..
-        } => {
+        wir::Action::If { branches, .. } => {
             for (index, branch) in branches.iter().enumerate() {
-                output.push(if index == 0 {
-                    Action::If {
-                        condition: public_value(storage, branch.condition)?,
-                    }
-                } else {
-                    Action::ElseIf {
-                        condition: public_value(storage, branch.condition)?,
-                    }
+                output.push(match branch.condition {
+                    Some(condition) if index == 0 => Action::If {
+                        condition: public_value(storage, condition)?,
+                    },
+                    Some(condition) => Action::ElseIf {
+                        condition: public_value(storage, condition)?,
+                    },
+                    None => Action::Else,
                 });
                 for action in &branch.body {
-                    public_actions(storage, *action, output)?;
-                }
-            }
-            if let Some(body) = else_body {
-                output.push(Action::Else);
-                for action in body {
                     public_actions(storage, *action, output)?;
                 }
             }
@@ -412,31 +402,19 @@ fn public_action_provenance(
         });
     };
     match action {
-        wir::Action::If {
-            branches,
-            else_body,
-            ..
-        } => {
+        wir::Action::If { branches, .. } => {
             for (index, branch) in branches.iter().enumerate() {
+                let args = branch.condition.as_slice();
                 if index == 0 {
-                    push(output, &[branch.condition]);
+                    push(output, args);
                 } else {
-                    push_without_span(output, &[branch.condition]);
+                    push_without_span(output, args);
                 }
                 for action in &branch.body {
                     public_action_provenance(storage, *action, output)?;
                 }
-                if index + 1 == branches.len() && else_body.is_none() {
-                    push_without_span(output, &[]);
-                }
             }
-            if let Some(body) = else_body {
-                push_without_span(output, &[]);
-                for action in body {
-                    public_action_provenance(storage, *action, output)?;
-                }
-                push_without_span(output, &[]);
-            }
+            push_without_span(output, &[]);
         }
         wir::Action::While { body, .. }
         | wir::Action::ForGlobalVariable { body, .. }

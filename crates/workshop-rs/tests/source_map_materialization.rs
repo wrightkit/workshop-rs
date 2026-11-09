@@ -36,6 +36,10 @@ rule ("flow") {
             End;
         Else;
             Wait(unknownOuterElse());
+        Else;
+            Wait(unknownAnotherElse());
+        Else If(unknownAfterElse());
+            Wait(unknownAfter());
         End;
         Wait(unknownTail());
     }
@@ -58,16 +62,11 @@ rule ("flow") {
         panic!("disabled")
     };
     assert!(slice(*span).contains("If(unknownIf())"));
-    let wir::Action::If {
-        branches,
-        else_body: Some(outer_else),
-        ..
-    } = action(*inner)
-    else {
+    let wir::Action::If { branches, .. } = action(*inner) else {
         panic!("if")
     };
-    assert_eq!(value(branches[0].condition), "unknownIf");
-    assert_eq!(value(branches[1].condition), "unknownElseIf");
+    assert_eq!(value(branches[0].condition.unwrap()), "unknownIf");
+    assert_eq!(value(branches[1].condition.unwrap()), "unknownElseIf");
     let wir::Action::While {
         condition, body, ..
     } = action(branches[0].body[0])
@@ -105,22 +104,35 @@ rule ("flow") {
     );
     assert_eq!(value(action(body[0]).value_args()[0]), "unknownInner");
     let wir::Action::If {
-        branches: nested,
-        else_body: Some(nested_else),
-        ..
+        branches: nested, ..
     } = action(branches[1].body[0])
     else {
         panic!("nested if")
     };
-    assert_eq!(value(nested[0].condition), "unknownNested");
+    assert!(nested[1].condition.is_none());
+    assert!(branches[2].condition.is_none());
+    assert_eq!(value(nested[0].condition.unwrap()), "unknownNested");
     assert_eq!(
         value(action(nested[0].body[0]).value_args()[0]),
         "unknownThen"
     );
-    assert_eq!(value(action(nested_else[0]).value_args()[0]), "unknownElse");
     assert_eq!(
-        value(action(outer_else[0]).value_args()[0]),
+        value(action(nested[1].body[0]).value_args()[0]),
+        "unknownElse"
+    );
+    assert_eq!(
+        value(action(branches[2].body[0]).value_args()[0]),
         "unknownOuterElse"
+    );
+    assert!(branches[3].condition.is_none());
+    assert_eq!(
+        value(action(branches[3].body[0]).value_args()[0]),
+        "unknownAnotherElse"
+    );
+    assert_eq!(value(branches[4].condition.unwrap()), "unknownAfterElse");
+    assert_eq!(
+        value(action(branches[4].body[0]).value_args()[0]),
+        "unknownAfter"
     );
     assert_eq!(value(action(root[1]).value_args()[0]), "unknownTail");
 

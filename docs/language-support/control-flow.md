@@ -12,6 +12,10 @@
 | `Else` | ✅ Supported | Fallback conditional execution block: `Else;`. |
 | `End` | ✅ Supported | Terminates an `If`, `While`, or `For` block (including oracle-compatible implicit trailing `End`). |
 
+Raw Workshop parsing and emission preserve `Else` and `Else If` markers in their
+authored order, including repeated `Else` markers used by generated code.
+This describes structural preservation and makes no client-runtime claim.
+
 ## Loops & Iteration
 
 | Feature | Status | Notes |
