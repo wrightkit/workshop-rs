@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::super::identity::{NodeIdentity, action_identity, condition_identity, value_identity};
 use super::super::*;
-use super::{malformed_id, wir_value_children};
+use super::wir_value_children;
 use crate::core::error::{Result, WorkshopError};
 use crate::wir;
 
@@ -102,8 +102,12 @@ impl Program {
                 .collect::<Result<Vec<_>>>()?;
             let mut actions = Vec::new();
             let mut position = 0;
+            let provenance = self
+                .rule_record(rule_index)
+                .filter(|provenance| provenance.actions.len() == rule.actions.len())
+                .map(|provenance| provenance.actions.as_slice());
             lower_actions(
-                &rule.actions,
+                (&rule.actions, provenance),
                 &mut position,
                 &mut actions,
                 &mut storage,
@@ -111,19 +115,6 @@ impl Program {
                 &players,
                 &subroutines,
             )?;
-            if let Some(provenance) = self
-                .rule_record(rule_index)
-                .filter(|provenance| provenance.actions.len() == rule.actions.len())
-            {
-                let mut public_position = 0;
-                apply_action_provenance(
-                    &mut storage,
-                    &actions,
-                    &provenance.actions,
-                    &rule.actions,
-                    &mut public_position,
-                )?;
-            }
             if position != rule.actions.len() {
                 return Err(WorkshopError::malformed(
                     "unexpected control-flow terminator in rule actions".to_string(),
@@ -147,7 +138,7 @@ impl Program {
 }
 
 fn lower_actions(
-    actions: &[Action],
+    rows: (&[Action], Option<&[ActionProvenance]>),
     position: &mut usize,
     output: &mut Vec<wir::ActionId>,
     storage: &mut wir::Program,
@@ -155,8 +146,11 @@ fn lower_actions(
     players: &HashMap<String, wir::PlayerVarId>,
     subroutines: &HashMap<String, wir::SubroutineId>,
 ) -> Result<()> {
+    let (actions, provenance) = rows;
     while *position < actions.len() {
-        let (disabled, current) = match &actions[*position] {
+        let public = &actions[*position];
+        let record = provenance.and_then(|records| records.get(*position));
+        let (disabled, current) = match public {
             Action::Disabled { action } => (true, action.as_ref()),
             action => (false, action),
         };
@@ -180,7 +174,7 @@ fn lower_actions(
                     body: Vec::new(),
                 }];
                 lower_actions(
-                    actions,
+                    rows,
                     position,
                     &mut branches[0].body,
                     storage,
@@ -189,10 +183,13 @@ fn lower_actions(
                     subroutines,
                 )?;
                 while let Some(Action::ElseIf { condition }) = actions.get(*position) {
+                    let condition_record = provenance
+                        .and_then(|records| records.get(*position))
+                        .and_then(|record| argument_value(record, &actions[*position], 0));
                     *position += 1;
                     let mut body = Vec::new();
                     lower_actions(
-                        actions,
+                        rows,
                         position,
                         &mut body,
                         storage,
@@ -200,8 +197,18 @@ fn lower_actions(
                         players,
                         subroutines,
                     )?;
+                    let lowered = wir_value(condition, storage, globals, players, subroutines)?;
+                    if let Some((record, value)) = condition_record {
+                        apply_value_provenance(
+                            storage,
+                            lowered,
+                            value,
+                            record,
+                            value_identity(value),
+                        );
+                    }
                     branches.push(wir::IfBranch {
-                        condition: wir_value(condition, storage, globals, players, subroutines)?,
+                        condition: lowered,
                         body,
                     });
                 }
@@ -209,7 +216,7 @@ fn lower_actions(
                     *position += 1;
                     let mut body = Vec::new();
                     lower_actions(
-                        actions,
+                        rows,
                         position,
                         &mut body,
                         storage,
@@ -238,7 +245,7 @@ fn lower_actions(
                 *position += 1;
                 let mut body = Vec::new();
                 lower_actions(
-                    actions,
+                    rows,
                     position,
                     &mut body,
                     storage,
@@ -263,7 +270,7 @@ fn lower_actions(
                 *position += 1;
                 let mut body = Vec::new();
                 lower_actions(
-                    actions,
+                    rows,
                     position,
                     &mut body,
                     storage,
@@ -298,7 +305,7 @@ fn lower_actions(
                 *position += 1;
                 let mut body = Vec::new();
                 lower_actions(
-                    actions,
+                    rows,
                     position,
                     &mut body,
                     storage,
@@ -331,116 +338,21 @@ fn lower_actions(
                 output.push(lowered);
             }
         }
+        let lowered = *output.last().expect("a lowered action was just pushed");
+        apply_action_source(storage, lowered, public, record);
         if disabled {
             let action = output.pop().expect("a lowered action was just pushed");
             output.push(
-                storage
-                    .actions
-                    .push(wir::Action::Disabled { action, span: None }),
+                storage.actions.push(wir::Action::Disabled {
+                    action,
+                    span: record
+                        .filter(|record| record.identity == action_identity(public))
+                        .and_then(|record| record.span),
+                }),
             );
         }
     }
     Ok(())
-}
-
-fn apply_action_provenance(
-    storage: &mut wir::Program,
-    actions: &[wir::ActionId],
-    provenance: &[ActionProvenance],
-    public: &[Action],
-    position: &mut usize,
-) -> Result<()> {
-    for id in actions {
-        let action = storage
-            .actions
-            .get(*id)
-            .cloned()
-            .ok_or_else(|| malformed_id("action", id.index()))?;
-        match action {
-            wir::Action::If {
-                branches,
-                else_body,
-                ..
-            } => {
-                let record = provenance.get(*position);
-                let public_action = public.get(*position);
-                *position += 1;
-                if let Some(public_action) = public_action {
-                    apply_action_source(storage, *id, public_action, record);
-                }
-                for (branch_index, branch) in branches.iter().enumerate() {
-                    if branch_index > 0 {
-                        let record = provenance.get(*position);
-                        let condition = record.and_then(|record| {
-                            public
-                                .get(*position)
-                                .and_then(|action| argument_value(record, action, 0))
-                        });
-                        *position += 1;
-                        if let Some((record, value)) = condition {
-                            apply_value_provenance(
-                                storage,
-                                branch.condition,
-                                value,
-                                record,
-                                value_identity(value),
-                            );
-                        }
-                    }
-                    apply_action_provenance(storage, &branch.body, provenance, public, position)?;
-                }
-                if let Some(body) = else_body {
-                    *position += 1;
-                    apply_action_provenance(storage, &body, provenance, public, position)?;
-                }
-                *position += 1;
-            }
-            wir::Action::While { body, .. }
-            | wir::Action::ForGlobalVariable { body, .. }
-            | wir::Action::ForPlayerVariable { body, .. } => {
-                let record = provenance.get(*position);
-                let public_action = public.get(*position);
-                *position += 1;
-                if let Some(public_action) = public_action {
-                    apply_action_source(storage, *id, public_action, record);
-                }
-                apply_action_provenance(storage, &body, provenance, public, position)?;
-                *position += 1;
-            }
-            wir::Action::Disabled { action, .. } => {
-                let start = *position;
-                apply_action_provenance(storage, &[action], provenance, public, position)?;
-                let record = provenance.get(start);
-                if let Some(wir::Action::Disabled { span, .. }) = storage.actions.get_mut(*id) {
-                    *span = match record {
-                        Some(record) if row_matches(record, public, start) => record.span,
-                        _ => None,
-                    };
-                }
-            }
-            wir::Action::SetGlobalVariable { .. }
-            | wir::Action::ModifyGlobalVariable { .. }
-            | wir::Action::SetPlayerVariable { .. }
-            | wir::Action::ModifyPlayerVariable { .. }
-            | wir::Action::AssignMember { .. }
-            | wir::Action::CallSubroutine { .. }
-            | wir::Action::Call { .. } => {
-                let record = provenance.get(*position);
-                let public_action = public.get(*position);
-                *position += 1;
-                if let Some(public_action) = public_action {
-                    apply_action_source(storage, *id, public_action, record);
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
-fn row_matches(record: &ActionProvenance, public: &[Action], position: usize) -> bool {
-    public
-        .get(position)
-        .is_some_and(|action| record.identity == action_identity(action))
 }
 
 fn argument_value<'a>(
