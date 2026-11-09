@@ -1,3 +1,4 @@
+mod assignment_probe;
 mod variable_arguments;
 
 use crate::frontend::parser::*;
@@ -268,7 +269,7 @@ impl ParseContext<'_> {
             .map(|_| offset)
     }
 
-    pub(crate) fn try_assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
+    fn try_assignment_action_inner(&mut self) -> Result<Option<wir::ActionId>> {
         let saved = self.pos;
         let Some(Token {
             kind: TokenKind::Word(first),
@@ -337,11 +338,6 @@ impl ParseContext<'_> {
         let player_end = self.previous_span().1;
         self.expect(TokenKind::Dot, "expected '.' after 'Event Player'")?;
         let (name, target_start, target_end) = self.phrase()?;
-        if !matches!(self.peek_kind_at(0), Some(TokenKind::LBracket)) && !self.line_has_assignment()
-        {
-            self.pos = saved;
-            return Ok(None);
-        }
         let event_player = self.target.values.push(ValueNode::new(
             Value::EventPlayer,
             Some(Span::new(self.file(), start, player_end)),
@@ -444,7 +440,7 @@ impl ParseContext<'_> {
         ))
     }
 
-    pub(crate) fn member_assignment_action(
+    fn member_assignment_action_inner(
         &mut self,
         saved: usize,
         start: Position,

@@ -16,6 +16,10 @@ impl<T> Arena<T> {
         id
     }
 
+    pub(crate) fn truncate(&mut self, len: usize) {
+        self.items.truncate(len);
+    }
+
     pub(crate) fn get(&self, id: Id<T>) -> Option<&T> {
         self.items.get(id.index())
     }
