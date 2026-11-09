@@ -185,12 +185,11 @@ rule ("flow") {
     let mut changed = program.clone();
     let original = changed.rules[0].actions.last().unwrap().clone();
     changed.rules[0].actions.pop();
+    let reshaped = changed.to_wir().unwrap();
     assert!(
-        changed
-            .to_wir()
-            .unwrap()
+        reshaped
             .actions
-            .get(root[0])
+            .get(reshaped.rules.iter().next().unwrap().actions[0])
             .unwrap()
             .span()
             .is_none()
@@ -198,7 +197,11 @@ rule ("flow") {
     changed.rules[0].actions.push(original.clone());
     let restored = changed.to_wir().unwrap();
     assert_eq!(
-        restored.actions.get(root[0]).unwrap().span(),
+        restored
+            .actions
+            .get(restored.rules.iter().next().unwrap().actions[0])
+            .unwrap()
+            .span(),
         action(root[0]).span()
     );
     let Action::Call { args, .. } = changed.rules[0].actions.last_mut().unwrap() else {
@@ -232,12 +235,11 @@ rule ("flow") {
         action(root[0]).span()
     );
     *changed.rules[0].actions.last_mut().unwrap() = original;
+    let restored = changed.to_wir().unwrap();
     assert_eq!(
-        changed
-            .to_wir()
-            .unwrap()
+        restored
             .actions
-            .get(root[1])
+            .get(restored.rules.iter().next().unwrap().actions[1])
             .unwrap()
             .span(),
         action(root[1]).span()
