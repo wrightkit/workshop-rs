@@ -28,6 +28,8 @@ mod settings_aliases;
 mod settings_pipeline;
 #[path = "../tests/source_map.rs"]
 mod source_map;
+#[path = "../tests/source_map_materialization.rs"]
+mod source_map_materialization;
 #[path = "../tests/source_preservation.rs"]
 mod source_preservation;
 #[path = "../tests/wir_expansion.rs"]
