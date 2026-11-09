@@ -1,3 +1,6 @@
+mod assignment_probe;
+mod variable_arguments;
+
 use crate::frontend::parser::*;
 
 impl ParseContext<'_> {
@@ -32,9 +35,8 @@ impl ParseContext<'_> {
                         continue;
                     }
                     let disabled = self.consume_disabled();
-                    self.condition_pending = true;
                     let start = self.peek().map(|token| token.start);
-                    let value = self.value()?;
+                    let value = self.condition_value()?;
                     let end = self.expect_semi("expected ';' after condition")?;
                     let span = start.map(|start| Span::new(self.file(), start, end));
                     if let Some(node) = self.target.values.get_mut(value) {
@@ -48,24 +50,6 @@ impl ParseContext<'_> {
             }
         }
         Ok(conditions)
-    }
-
-    fn player_variable_arg(&mut self) -> Result<(wir::ValueId, wir::PlayerVarId, Span)> {
-        let player = self.value()?;
-        self.expect(TokenKind::Comma, "expected ',' after player")?;
-        let (name, name_start, name_end) = self.phrase()?;
-        let variable = self.player_by_name(&name)?;
-        Ok((
-            player,
-            variable,
-            Span::new(self.file(), name_start, name_end),
-        ))
-    }
-
-    fn global_variable_arg(&mut self) -> Result<(wir::GlobalVarId, Span)> {
-        let (name, name_start, name_end) = self.phrase()?;
-        let variable = self.global_by_name(&name)?;
-        Ok((variable, Span::new(self.file(), name_start, name_end)))
     }
 
     pub(crate) fn actions_section(&mut self) -> Result<Vec<wir::ActionId>> {
@@ -285,7 +269,7 @@ impl ParseContext<'_> {
             .map(|_| offset)
     }
 
-    pub(crate) fn try_assignment_action(&mut self) -> Result<Option<wir::ActionId>> {
+    fn try_assignment_action_inner(&mut self) -> Result<Option<wir::ActionId>> {
         let saved = self.pos;
         let Some(Token {
             kind: TokenKind::Word(first),
@@ -351,12 +335,13 @@ impl ParseContext<'_> {
             return Ok(None);
         };
         self.pos += event_player_len;
-        let event_player = self.target.values.push(ValueNode::new(
-            Value::EventPlayer,
-            Some(Span::new(self.file(), start, self.previous_span().1)),
-        ));
+        let player_end = self.previous_span().1;
         self.expect(TokenKind::Dot, "expected '.' after 'Event Player'")?;
         let (name, target_start, target_end) = self.phrase()?;
+        let event_player = self.target.values.push(ValueNode::new(
+            Value::EventPlayer,
+            Some(Span::new(self.file(), start, player_end)),
+        ));
         let variable = self.player_by_name(&name)?;
         if matches!(self.peek_kind_at(0), Some(TokenKind::LBracket)) {
             let (index, operator) = self.indexed_assignment_parts("player")?;
@@ -455,7 +440,7 @@ impl ParseContext<'_> {
         ))
     }
 
-    pub(crate) fn member_assignment_action(
+    fn member_assignment_action_inner(
         &mut self,
         saved: usize,
         start: Position,
@@ -597,8 +582,7 @@ impl ParseContext<'_> {
 
     pub(crate) fn if_group(&mut self, start: Position) -> Result<wir::ActionId> {
         self.expect(TokenKind::LParen, "expected '(' after 'If'")?;
-        self.condition_pending = true;
-        let condition = self.value()?;
+        let condition = self.condition_value()?;
         self.expect(TokenKind::RParen, "expected ')' after If condition")?;
         self.expect_semi("expected ';' after If condition")?;
 
@@ -621,8 +605,7 @@ impl ParseContext<'_> {
                 Stop::ElseIf => {
                     self.consume_keyword("elseIf")?;
                     self.expect(TokenKind::LParen, "expected '(' after 'Else If'")?;
-                    self.condition_pending = true;
-                    let condition = self.value()?;
+                    let condition = self.condition_value()?;
                     self.expect(TokenKind::RParen, "expected ')' after Else If condition")?;
                     self.expect_semi("expected ';' after Else If condition")?;
                     let (body, next) = self.actions_until_end()?;
@@ -696,8 +679,7 @@ impl ParseContext<'_> {
 
     pub(crate) fn while_group(&mut self, start: Position) -> Result<wir::ActionId> {
         self.expect(TokenKind::LParen, "expected '(' after 'While'")?;
-        self.condition_pending = true;
-        let condition = self.value()?;
+        let condition = self.condition_value()?;
         self.expect(TokenKind::RParen, "expected ')' after While condition")?;
         self.expect_semi("expected ';' after While condition")?;
         let (body, end) = self.actions_until_matching_end("'While' requires a matching 'End'")?;

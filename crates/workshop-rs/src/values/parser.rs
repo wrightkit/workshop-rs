@@ -32,15 +32,7 @@ impl ParseContext<'_> {
             })
     }
 
-    fn claim_condition_pending(&mut self) -> bool {
-        std::mem::replace(
-            &mut self.in_condition,
-            std::mem::take(&mut self.condition_pending),
-        )
-    }
-
-    pub(crate) fn value(&mut self) -> Result<wir::ValueId> {
-        let saved = self.claim_condition_pending();
+    pub(crate) fn value_inner(&mut self) -> Result<wir::ValueId> {
         let value_start = self.peek().map(|token| token.start);
         let mut value = self.primary()?;
         loop {
@@ -137,7 +129,6 @@ impl ParseContext<'_> {
             }
             break;
         }
-        self.in_condition = saved;
         if let Some(start) = value_start {
             self.extend_extent(value, start, self.previous_span().1);
         }
@@ -218,9 +209,7 @@ impl ParseContext<'_> {
         }
         if matches!(self.peek_kind_at(0), Some(TokenKind::LParen)) {
             self.pos += 1;
-            self.call_stack.push(phrase.to_string());
-            let args = self.opaque_value_args()?;
-            self.call_stack.pop();
+            let args = self.with_call(phrase, |p| p.opaque_value_args())?;
             self.expect(TokenKind::RParen, "expected ')' after value call")?;
             return Ok(self.push(
                 ValueNode::new(
@@ -483,7 +472,7 @@ impl ParseContext<'_> {
             }
             _ => {}
         }
-        if let Some(variable) = self.globals.get(phrase).copied() {
+        if let Some(variable) = self.globals.get(phrase).map(|binding| binding.id) {
             return Ok(self.push(
                 ValueNode::new(
                     Value::GlobalVariable(variable),
@@ -607,6 +596,10 @@ impl ParseContext<'_> {
     }
 
     pub(crate) fn value_args(&mut self, call_id: &str) -> Result<Vec<wir::ValueId>> {
+        self.with_call(call_id, |p| p.value_args_inner(call_id))
+    }
+
+    fn value_args_inner(&mut self, call_id: &str) -> Result<Vec<wir::ValueId>> {
         let mut args = Vec::new();
         if let Some(Token {
             kind: TokenKind::RParen,
@@ -615,7 +608,6 @@ impl ParseContext<'_> {
         {
             return Ok(args);
         }
-        self.call_stack.push(call_id.to_string());
         let mut arg_index = 0usize;
         let mut raw_modify_operator = false;
         loop {
@@ -648,7 +640,7 @@ impl ParseContext<'_> {
             {
                 let saved = self.pos;
                 let (name, start, end) = self.phrase()?;
-                if let Some(variable) = self.players.get(&name).copied() {
+                if let Some(variable) = self.players.get(&name).map(|binding| binding.id) {
                     let player = args[0];
                     args[0] = self.target.values.push(
                         ValueNode::new(
@@ -723,7 +715,6 @@ impl ParseContext<'_> {
                 _ => break,
             }
         }
-        self.call_stack.pop();
         Ok(args)
     }
 

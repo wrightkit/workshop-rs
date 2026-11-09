@@ -221,3 +221,32 @@ fn settings_name_errors_carry_a_span() {
     let span = span.expect("the rejected spelling carries a span");
     assert_eq!(span.start.line, 3);
 }
+
+#[test]
+fn raw_event_player_action_does_not_create_a_variable() {
+    for raw in ["Event Player.ghost;", "Event Player.ghost(1 = 1);"] {
+        let source = format!(
+            "rule(\"r\") {{ event {{ Ongoing - Global; }} actions {{ {raw} Set Player Variable(Event Player, actual, 1); }} }}"
+        );
+        let program =
+            workshop_rs::parser::parse(&source, &Catalog::builtin().unwrap(), &en()).unwrap();
+        assert_eq!(program.player_variables.len(), 1);
+        assert_eq!(program.player_variables[0].name, "actual");
+        assert_eq!(program.player_variables[0].index, Some(0));
+        assert!(
+            matches!(&program.rules[0].actions[0], workshop_rs::program::Action::Call { name, .. } if name == "rawWorkshopAction")
+        );
+    }
+}
+
+#[test]
+fn raw_global_action_does_not_create_a_variable() {
+    let source = "rule(\"r\") { event { Ongoing - Global; } actions { Global.ghost(1 = 1); Set Global Variable(actual, 1); } }";
+    let program = parser::parse(source, &Catalog::builtin().unwrap(), &en()).unwrap();
+    assert_eq!(program.global_variables.len(), 1);
+    assert_eq!(program.global_variables[0].name, "actual");
+    assert_eq!(program.global_variables[0].index, Some(0));
+    assert!(
+        matches!(&program.rules[0].actions[0], workshop_rs::program::Action::Call { name, .. } if name == "rawWorkshopAction")
+    );
+}
