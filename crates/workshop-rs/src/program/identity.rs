@@ -459,7 +459,7 @@ mod tests {
         let stdout = String::from_utf8_lossy(&output.stdout);
         let child = stdout
             .lines()
-            .find_map(|line| line.strip_prefix("IDENTITIES "))
+            .find_map(|line| line.split_once("IDENTITIES ").map(|(_, rest)| rest))
             .expect("child printed its identities");
         assert_eq!(child, format!("{:?}", fixed_identities()));
     }
