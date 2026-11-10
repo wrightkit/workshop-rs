@@ -1,6 +1,7 @@
-use ahash::AHasher;
 use std::fmt::Debug;
-use std::hash::Hasher;
+use std::hash::{BuildHasher, Hasher};
+
+use ahash::{AHasher, RandomState};
 
 use super::{
     Action, Condition, Event, EventTarget, EventTeam, ModifyOp, Program, ProgramProvenance, Rule,
@@ -9,8 +10,22 @@ use super::{
 
 pub(super) type NodeIdentity = u64;
 
+/// Fixed seeds (digits of pi) keep identities equal across runs and builds. ahash
+/// draws runtime-random keys in `Default` when a dependency enables `runtime-rng`
+/// (test builds do, through `jsonschema`), so the seeds are passed explicitly.
+const IDENTITY_SEEDS: RandomState = RandomState::with_seeds(
+    0x243f_6a88_85a3_08d3,
+    0x1319_8a2e_0370_7344,
+    0xa409_3822_299f_31d0,
+    0x082e_fa98_ec4e_6c89,
+);
+
+fn identity_hasher() -> AHasher {
+    IDENTITY_SEEDS.build_hasher()
+}
+
 pub(super) fn rule_identity(rule: &Rule) -> NodeIdentity {
-    let mut hasher = AHasher::default();
+    let mut hasher = identity_hasher();
     feed_str(&mut hasher, &rule.name);
     hasher.write_u8(rule.disabled as u8);
     feed_event(&mut hasher, &rule.event);
@@ -22,7 +37,7 @@ pub(super) fn condition_identity(condition: &Condition) -> NodeIdentity {
 }
 
 pub(super) fn condition_identity_from(condition: &Condition, value: NodeIdentity) -> NodeIdentity {
-    let mut hasher = AHasher::default();
+    let mut hasher = identity_hasher();
     hasher.write_u8(condition.disabled as u8);
     hasher.write_u64(value);
     hasher.finish()
@@ -37,7 +52,7 @@ pub(super) fn action_identity(action: &Action) -> NodeIdentity {
 }
 
 fn action_identity_from(action: &Action, arguments: &[NodeIdentity]) -> NodeIdentity {
-    let mut hasher = AHasher::default();
+    let mut hasher = identity_hasher();
     feed_action(&mut hasher, action);
     for &argument in arguments {
         hasher.write_u64(argument);
@@ -56,7 +71,7 @@ pub(super) fn value_identity(value: &Value) -> NodeIdentity {
 /// The identity of `value` given the identities of its children, so a caller
 /// that already walked the children does not hash each subtree again.
 pub(super) fn value_identity_from(value: &Value, children: &[NodeIdentity]) -> NodeIdentity {
-    let mut hasher = AHasher::default();
+    let mut hasher = identity_hasher();
     feed_value(&mut hasher, value);
     for &child in children {
         hasher.write_u64(child);
@@ -128,7 +143,7 @@ pub(super) fn declaration_identity(node: &impl Debug) -> NodeIdentity {
             Ok(())
         }
     }
-    let mut hasher = AHasher::default();
+    let mut hasher = identity_hasher();
     let mut sink = Sink(&mut hasher);
     std::fmt::write(&mut sink, format_args!("{node:?}")).expect("a hash sink never fails");
     hasher.finish()
@@ -289,7 +304,24 @@ mod tests {
     use std::collections::HashSet;
 
     use super::*;
+    use crate::catalog::Catalog;
     use crate::program::PlayerEventKind;
+    use crate::{detect, parser};
+
+    const KINDS: [PlayerEventKind; 11] = [
+        PlayerEventKind::DealtDamage,
+        PlayerEventKind::DealtFinalBlow,
+        PlayerEventKind::DealtHealing,
+        PlayerEventKind::DealtKnockback,
+        PlayerEventKind::Died,
+        PlayerEventKind::EarnedElimination,
+        PlayerEventKind::Joined,
+        PlayerEventKind::Left,
+        PlayerEventKind::ReceivedHealing,
+        PlayerEventKind::ReceivedKnockback,
+        PlayerEventKind::TookDamage,
+    ];
+    const TEAMS: [EventTeam; 3] = [EventTeam::All, EventTeam::Team1, EventTeam::Team2];
 
     fn rule(name: &str, disabled: bool, event: Event) -> Rule {
         let mut rule = Rule::new(name, event);
@@ -297,54 +329,96 @@ mod tests {
         rule
     }
 
-    fn filtered(team: EventTeam, target: EventTarget) -> Event {
-        Event::EachPlayerWithFilters { team, target }
+    fn targets() -> Vec<EventTarget> {
+        vec![
+            EventTarget::All,
+            EventTarget::Slot(0),
+            EventTarget::Slot(1),
+            EventTarget::Hero("ana".into()),
+            EventTarget::Hero(String::new()),
+        ]
+    }
+
+    /// Every `Event` shape: each player kind, team, and target combination.
+    fn every_event() -> Vec<Event> {
+        let mut events = vec![
+            Event::Global,
+            Event::EachPlayer,
+            Event::Subroutine("a".into()),
+            Event::Subroutine("b".into()),
+        ];
+        for team in TEAMS {
+            for target in targets() {
+                events.push(Event::EachPlayerWithFilters { team, target });
+            }
+        }
+        for kind in KINDS {
+            for team in TEAMS {
+                for target in targets() {
+                    events.push(Event::Player { kind, team, target });
+                }
+            }
+        }
+        events
+    }
+
+    fn identities(program: &Program) -> Vec<NodeIdentity> {
+        program
+            .rules
+            .iter()
+            .flat_map(|rule| {
+                std::iter::once(rule_identity(rule))
+                    .chain(rule.conditions.iter().map(condition_identity))
+                    .chain(rule.actions.iter().map(action_identity))
+            })
+            .collect()
     }
 
     #[test]
-    fn rule_identity_separates_every_declared_field() {
-        let rules = [
-            rule("r", false, Event::Global),
-            rule("r", true, Event::Global),
-            rule("s", false, Event::Global),
-            rule("r", false, Event::EachPlayer),
-            rule("r", false, filtered(EventTeam::All, EventTarget::All)),
-            rule("r", false, filtered(EventTeam::Team1, EventTarget::All)),
-            rule("r", false, filtered(EventTeam::All, EventTarget::Slot(1))),
-            rule("r", false, filtered(EventTeam::All, EventTarget::Slot(2))),
-            rule(
-                "r",
-                false,
-                filtered(EventTeam::All, EventTarget::Hero("ana".into())),
-            ),
-            rule(
-                "r",
-                false,
-                Event::Player {
-                    kind: PlayerEventKind::Died,
-                    team: EventTeam::All,
-                    target: EventTarget::All,
-                },
-            ),
-            rule(
-                "r",
-                false,
-                Event::Player {
-                    kind: PlayerEventKind::TookDamage,
-                    team: EventTeam::All,
-                    target: EventTarget::All,
-                },
-            ),
-            rule("r", false, Event::Subroutine("a".into())),
-            rule("r", false, Event::Subroutine("b".into())),
-            rule("ab", false, Event::Subroutine("c".into())),
-            rule("a", false, Event::Subroutine("bc".into())),
-        ];
+    fn rule_identity_separates_every_event_name_and_flag() {
+        let mut rules = Vec::new();
+        for name in ["r", "s"] {
+            for disabled in [false, true] {
+                for event in every_event() {
+                    rules.push(rule(name, disabled, event));
+                }
+            }
+        }
+        // Name and string-valued fields must not alias across their boundary.
+        rules.push(rule(
+            "a",
+            false,
+            Event::EachPlayerWithFilters {
+                team: EventTeam::Team1,
+                target: EventTarget::Hero("bc".into()),
+            },
+        ));
+        rules.push(rule(
+            "ab",
+            false,
+            Event::EachPlayerWithFilters {
+                team: EventTeam::Team1,
+                target: EventTarget::Hero("c".into()),
+            },
+        ));
+        rules.push(rule("a", false, Event::Subroutine("bc".into())));
+        rules.push(rule("ab", false, Event::Subroutine("c".into())));
         let identities: HashSet<_> = rules.iter().map(rule_identity).collect();
         assert_eq!(identities.len(), rules.len());
-        assert_eq!(
-            rule_identity(&rules[0]),
-            rule_identity(&rule("r", false, Event::Global))
-        );
+    }
+
+    #[test]
+    fn identities_repeat_within_a_process_and_across_rebuilt_programs() {
+        let event = rule("r", false, Event::Global);
+        assert_eq!(rule_identity(&event), rule_identity(&event));
+
+        let catalog = Catalog::builtin().expect("built-in catalog");
+        let input = include_str!("../../tests/fixtures/real-projects/bastion.ow");
+        let locale = detect::resolve_locale(input, &catalog, None).expect("locale");
+        let first = parser::parse_with_context(input, &catalog, &locale, &catalog).expect("parse");
+        let second = parser::parse_with_context(input, &catalog, &locale, &catalog).expect("parse");
+        let identities_first = identities(&first);
+        assert!(!identities_first.is_empty());
+        assert_eq!(identities_first, identities(&second));
     }
 }
