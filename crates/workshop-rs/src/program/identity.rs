@@ -14,26 +14,48 @@ pub(super) fn rule_identity(rule: &Rule) -> NodeIdentity {
 }
 
 pub(super) fn condition_identity(condition: &Condition) -> NodeIdentity {
+    condition_identity_from(condition, value_identity(&condition.value))
+}
+
+pub(super) fn condition_identity_from(condition: &Condition, value: NodeIdentity) -> NodeIdentity {
     let mut hasher = DefaultHasher::new();
     hasher.write_u8(condition.disabled as u8);
-    hasher.write_u64(value_identity(&condition.value));
+    hasher.write_u64(value);
     hasher.finish()
 }
 
 pub(super) fn action_identity(action: &Action) -> NodeIdentity {
+    let arguments = action_argument_values(action)
+        .into_iter()
+        .map(value_identity)
+        .collect::<Vec<_>>();
+    action_identity_from(action, &arguments)
+}
+
+fn action_identity_from(action: &Action, arguments: &[NodeIdentity]) -> NodeIdentity {
     let mut hasher = DefaultHasher::new();
     feed_action(&mut hasher, action);
-    for value in action_argument_values(action) {
-        hasher.write_u64(value_identity(value));
+    for &argument in arguments {
+        hasher.write_u64(argument);
     }
     hasher.finish()
 }
 
 pub(super) fn value_identity(value: &Value) -> NodeIdentity {
+    let children = value_children(value)
+        .into_iter()
+        .map(value_identity)
+        .collect::<Vec<_>>();
+    value_identity_from(value, &children)
+}
+
+/// The identity of `value` given the identities of its children, so a caller
+/// that already walked the children does not hash each subtree again.
+pub(super) fn value_identity_from(value: &Value, children: &[NodeIdentity]) -> NodeIdentity {
     let mut hasher = DefaultHasher::new();
     feed_value(&mut hasher, value);
-    for child in value_children(value) {
-        hasher.write_u64(value_identity(child));
+    for &child in children {
+        hasher.write_u64(child);
     }
     hasher.finish()
 }
@@ -59,31 +81,39 @@ pub(super) fn record_identities(provenance: &mut ProgramProvenance, program: &Pr
     for (record, rule) in provenance.rules.iter_mut().zip(&program.rules) {
         record.identity = rule_identity(rule);
         for (record, condition) in record.conditions.iter_mut().zip(&rule.conditions) {
-            record.identity = condition_identity(condition);
-            refresh_children(record, &condition.value);
+            let value = refresh_children(record, &condition.value);
+            record.identity = condition_identity_from(condition, value);
         }
         for (record, action) in record.actions.iter_mut().zip(&rule.actions) {
-            record.identity = action_identity(action);
-            for (argument, value) in record
-                .arguments
-                .iter_mut()
-                .zip(action_argument_values(action))
-            {
-                refresh_value(argument, value);
-            }
+            let arguments = action_argument_values(action)
+                .into_iter()
+                .enumerate()
+                .map(|(index, value)| match record.arguments.get_mut(index) {
+                    Some(argument) => refresh_value(argument, value),
+                    None => value_identity(value),
+                })
+                .collect::<Vec<_>>();
+            record.identity = action_identity_from(action, &arguments);
         }
     }
 }
 
-fn refresh_value(record: &mut ValueProvenance, value: &Value) {
-    record.identity = value_identity(value);
-    refresh_children(record, value);
+fn refresh_value(record: &mut ValueProvenance, value: &Value) -> NodeIdentity {
+    record.identity = refresh_children(record, value);
+    record.identity
 }
 
-fn refresh_children(record: &mut ValueProvenance, value: &Value) {
-    for (child, value) in record.children.iter_mut().zip(value_children(value)) {
-        refresh_value(child, value);
-    }
+/// Refresh the child records of `record` and return the identity of `value`.
+fn refresh_children(record: &mut ValueProvenance, value: &Value) -> NodeIdentity {
+    let children = value_children(value)
+        .into_iter()
+        .enumerate()
+        .map(|(index, child)| match record.children.get_mut(index) {
+            Some(record) => refresh_value(record, child),
+            None => value_identity(child),
+        })
+        .collect::<Vec<_>>();
+    value_identity_from(value, &children)
 }
 
 pub(super) fn declaration_identity(node: &impl Debug) -> NodeIdentity {

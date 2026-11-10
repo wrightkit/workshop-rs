@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use super::super::identity::{NodeIdentity, action_identity, condition_identity, value_identity};
+use super::super::identity::{
+    NodeIdentity, action_identity, condition_identity_from, value_identity, value_identity_from,
+};
 use super::super::*;
 use super::wir_value_children;
 use crate::core::error::{Result, WorkshopError};
@@ -90,7 +92,7 @@ impl Program {
                                 value,
                                 &condition.value,
                                 provenance,
-                                condition_identity(condition),
+                                &|value| condition_identity_from(condition, value),
                             );
                         }
                     })
@@ -204,7 +206,7 @@ fn lower_actions(
                             lowered,
                             value,
                             record,
-                            value_identity(value),
+                            &std::convert::identity,
                         );
                     }
                     branches.push(wir::IfBranch {
@@ -399,47 +401,55 @@ fn apply_action_source(
                 value,
                 public_value,
                 record,
-                value_identity(public_value),
+                &std::convert::identity,
             );
         }
     }
 }
 
+/// Copy source provenance onto the lowered value tree and return the identity
+/// of `public`, hashing each subtree once. `root` maps the root value identity
+/// to the identity its record stores (a condition record also hashes `disabled`).
 fn apply_value_provenance(
     storage: &mut wir::Program,
     value: wir::ValueId,
     public: &Value,
     source: &ValueProvenance,
-    root_identity: NodeIdentity,
-) {
-    if source.identity == root_identity
+    root: &dyn Fn(NodeIdentity) -> NodeIdentity,
+) -> NodeIdentity {
+    let public_children = value_children(public);
+    let lowered_children = if source.children.len() == public_children.len() {
+        storage
+            .values
+            .get(value)
+            .map(|node| wir_value_children(&node.value))
+            .unwrap_or_default()
+    } else {
+        Vec::new()
+    };
+    let children = public_children
+        .into_iter()
+        .enumerate()
+        .map(|(index, public_child)| match lowered_children.get(index) {
+            Some(&child) => apply_value_provenance(
+                storage,
+                child,
+                public_child,
+                &source.children[index],
+                &std::convert::identity,
+            ),
+            None => value_identity(public_child),
+        })
+        .collect::<Vec<_>>();
+    let identity = value_identity_from(public, &children);
+    if source.identity == root(identity)
         && let Some(node) = storage.values.get_mut(value)
     {
         node.span = source.span;
         node.extent = source.extent;
         node.identifier = source.identifier;
     }
-    let public_children = value_children(public);
-    if source.children.len() != public_children.len() {
-        return;
-    }
-    let Some(node) = storage.values.get(value) else {
-        return;
-    };
-    let children = wir_value_children(&node.value);
-    for ((child, public_child), source) in children
-        .into_iter()
-        .zip(public_children)
-        .zip(&source.children)
-    {
-        apply_value_provenance(
-            storage,
-            child,
-            public_child,
-            source,
-            value_identity(public_child),
-        );
-    }
+    identity
 }
 
 fn require_end(actions: &[Action], position: &mut usize) -> Result<()> {

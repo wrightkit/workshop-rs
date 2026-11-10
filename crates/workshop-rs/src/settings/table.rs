@@ -3,6 +3,7 @@ use serde_json::Value;
 use std::sync::OnceLock;
 
 use super::PathPart::{self, Hero, Part, Team};
+pub(crate) use super::names::names_eq;
 
 const LOCALE_DATA: &str = include_str!("data/locales.json");
 
@@ -866,13 +867,6 @@ pub(crate) fn bool_value_alias(key: &str, locale: &str, display: &str) -> Option
 
 fn name_in(maps: &[NameMap], key: &str) -> Option<&'static str> {
     maps.iter().find(|m| m.key == key).map(|m| m.name)
-}
-
-pub(crate) fn names_eq(left: &str, right: &str) -> bool {
-    left == right
-        || left.to_lowercase() == right.to_lowercase()
-        || crate::catalog::normalize_spelling(left).to_lowercase()
-            == crate::catalog::normalize_spelling(right).to_lowercase()
 }
 
 pub(crate) fn map_spellings() -> impl Iterator<Item = &'static str> {
