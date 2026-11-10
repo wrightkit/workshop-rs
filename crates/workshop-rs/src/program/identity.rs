@@ -1,16 +1,20 @@
-use std::collections::hash_map::DefaultHasher;
+use ahash::AHasher;
 use std::fmt::Debug;
 use std::hash::Hasher;
 
 use super::{
-    Action, Condition, ModifyOp, Program, ProgramProvenance, Rule, Value, ValueProvenance,
-    action_argument_values, value_children,
+    Action, Condition, Event, EventTarget, EventTeam, ModifyOp, Program, ProgramProvenance, Rule,
+    Value, ValueProvenance, action_argument_values, value_children,
 };
 
 pub(super) type NodeIdentity = u64;
 
 pub(super) fn rule_identity(rule: &Rule) -> NodeIdentity {
-    declaration_identity(&(&rule.name, rule.disabled, &rule.event))
+    let mut hasher = AHasher::default();
+    feed_str(&mut hasher, &rule.name);
+    hasher.write_u8(rule.disabled as u8);
+    feed_event(&mut hasher, &rule.event);
+    hasher.finish()
 }
 
 pub(super) fn condition_identity(condition: &Condition) -> NodeIdentity {
@@ -18,7 +22,7 @@ pub(super) fn condition_identity(condition: &Condition) -> NodeIdentity {
 }
 
 pub(super) fn condition_identity_from(condition: &Condition, value: NodeIdentity) -> NodeIdentity {
-    let mut hasher = DefaultHasher::new();
+    let mut hasher = AHasher::default();
     hasher.write_u8(condition.disabled as u8);
     hasher.write_u64(value);
     hasher.finish()
@@ -33,7 +37,7 @@ pub(super) fn action_identity(action: &Action) -> NodeIdentity {
 }
 
 fn action_identity_from(action: &Action, arguments: &[NodeIdentity]) -> NodeIdentity {
-    let mut hasher = DefaultHasher::new();
+    let mut hasher = AHasher::default();
     feed_action(&mut hasher, action);
     for &argument in arguments {
         hasher.write_u64(argument);
@@ -52,7 +56,7 @@ pub(super) fn value_identity(value: &Value) -> NodeIdentity {
 /// The identity of `value` given the identities of its children, so a caller
 /// that already walked the children does not hash each subtree again.
 pub(super) fn value_identity_from(value: &Value, children: &[NodeIdentity]) -> NodeIdentity {
-    let mut hasher = DefaultHasher::new();
+    let mut hasher = AHasher::default();
     feed_value(&mut hasher, value);
     for &child in children {
         hasher.write_u64(child);
@@ -117,14 +121,14 @@ fn refresh_children(record: &mut ValueProvenance, value: &Value) -> NodeIdentity
 }
 
 pub(super) fn declaration_identity(node: &impl Debug) -> NodeIdentity {
-    struct Sink<'a>(&'a mut DefaultHasher);
+    struct Sink<'a>(&'a mut AHasher);
     impl std::fmt::Write for Sink<'_> {
         fn write_str(&mut self, text: &str) -> std::fmt::Result {
             self.0.write(text.as_bytes());
             Ok(())
         }
     }
-    let mut hasher = DefaultHasher::new();
+    let mut hasher = AHasher::default();
     let mut sink = Sink(&mut hasher);
     std::fmt::write(&mut sink, format_args!("{node:?}")).expect("a hash sink never fails");
     hasher.finish()
@@ -194,6 +198,46 @@ fn feed_op(hasher: &mut impl Hasher, op: ModifyOp) {
     std::hash::Hash::hash(&std::mem::discriminant(&op), hasher);
 }
 
+fn feed_event(hasher: &mut impl Hasher, event: &Event) {
+    match event {
+        Event::Global => hasher.write_u8(0),
+        Event::EachPlayer => hasher.write_u8(1),
+        Event::EachPlayerWithFilters { team, target } => {
+            hasher.write_u8(2);
+            feed_team(hasher, *team);
+            feed_target(hasher, target);
+        }
+        Event::Player { kind, team, target } => {
+            hasher.write_u8(3);
+            hasher.write_u8(*kind as u8);
+            feed_team(hasher, *team);
+            feed_target(hasher, target);
+        }
+        Event::Subroutine(name) => {
+            hasher.write_u8(4);
+            feed_str(hasher, name);
+        }
+    }
+}
+
+fn feed_team(hasher: &mut impl Hasher, team: EventTeam) {
+    hasher.write_u8(team as u8);
+}
+
+fn feed_target(hasher: &mut impl Hasher, target: &EventTarget) {
+    match target {
+        EventTarget::All => hasher.write_u8(0),
+        EventTarget::Slot(slot) => {
+            hasher.write_u8(1);
+            hasher.write_u8(*slot);
+        }
+        EventTarget::Hero(hero) => {
+            hasher.write_u8(2);
+            feed_str(hasher, hero);
+        }
+    }
+}
+
 fn feed_value(hasher: &mut impl Hasher, value: &Value) {
     match value {
         Value::Number(number) => {
@@ -237,5 +281,70 @@ fn feed_value(hasher: &mut impl Hasher, value: &Value) {
             hasher.write_u8(12);
             feed_str(hasher, name);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashSet;
+
+    use super::*;
+    use crate::program::PlayerEventKind;
+
+    fn rule(name: &str, disabled: bool, event: Event) -> Rule {
+        let mut rule = Rule::new(name, event);
+        rule.disabled = disabled;
+        rule
+    }
+
+    fn filtered(team: EventTeam, target: EventTarget) -> Event {
+        Event::EachPlayerWithFilters { team, target }
+    }
+
+    #[test]
+    fn rule_identity_separates_every_declared_field() {
+        let rules = [
+            rule("r", false, Event::Global),
+            rule("r", true, Event::Global),
+            rule("s", false, Event::Global),
+            rule("r", false, Event::EachPlayer),
+            rule("r", false, filtered(EventTeam::All, EventTarget::All)),
+            rule("r", false, filtered(EventTeam::Team1, EventTarget::All)),
+            rule("r", false, filtered(EventTeam::All, EventTarget::Slot(1))),
+            rule("r", false, filtered(EventTeam::All, EventTarget::Slot(2))),
+            rule(
+                "r",
+                false,
+                filtered(EventTeam::All, EventTarget::Hero("ana".into())),
+            ),
+            rule(
+                "r",
+                false,
+                Event::Player {
+                    kind: PlayerEventKind::Died,
+                    team: EventTeam::All,
+                    target: EventTarget::All,
+                },
+            ),
+            rule(
+                "r",
+                false,
+                Event::Player {
+                    kind: PlayerEventKind::TookDamage,
+                    team: EventTeam::All,
+                    target: EventTarget::All,
+                },
+            ),
+            rule("r", false, Event::Subroutine("a".into())),
+            rule("r", false, Event::Subroutine("b".into())),
+            rule("ab", false, Event::Subroutine("c".into())),
+            rule("a", false, Event::Subroutine("bc".into())),
+        ];
+        let identities: HashSet<_> = rules.iter().map(rule_identity).collect();
+        assert_eq!(identities.len(), rules.len());
+        assert_eq!(
+            rule_identity(&rules[0]),
+            rule_identity(&rule("r", false, Event::Global))
+        );
     }
 }

@@ -18,6 +18,7 @@ serde_json.workspace = true
 sha2.workspace = true
 unicode-ident.workspace = true
 unicode-normalization.workspace = true
+ahash = { version = "0.8", default-features = false }
 
 [dev-dependencies]
 # The default `resolve-http`/`cli` features pull reqwest and clap into the
