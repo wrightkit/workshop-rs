@@ -8,11 +8,13 @@ use crate::core::error::WorkshopError;
 use crate::settings::Settings;
 use crate::source::{FileId, SourceDocument, SourceFile, Span};
 
+mod canonical;
 mod conversion;
 mod extent;
 mod identity;
 pub(crate) mod shared;
 mod source_map;
+pub use canonical::CanonicalProgram;
 pub use shared::{EventTarget, EventTeam, ModifyOp, PlayerEventKind};
 pub use source_map::{MAPPED_TEXT_V1, MappedText, SourceMap, SourceMapError, TEXT_V1};
 
@@ -635,16 +637,7 @@ impl Program {
     /// Settings are emission-checked too, so a program that would fail to
     /// emit fails validation the same way.
     pub fn validate(&self) -> std::result::Result<(), WorkshopError> {
-        let storage = self.to_wir()?;
-        storage
-            .validate()
-            .map_err(|error| WorkshopError::malformed(error.to_string(), error.span()))?;
-        if let Some(settings) = &self.settings
-            && let Some(error) = crate::settings::check_emission(settings).into_iter().next()
-        {
-            return Err(error);
-        }
-        Ok(())
+        self.canonical()?.validate()
     }
 
     /// Report every settings member the emission table rejects — plus, as
