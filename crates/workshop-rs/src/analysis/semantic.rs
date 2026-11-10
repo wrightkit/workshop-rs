@@ -249,22 +249,23 @@ fn inspect_action_values(
                 inspect_action_arguments(rule, index, &actions[index], program, catalog, issues);
                 *position += 1;
                 inspect_action_values(actions, position, true, rule, program, catalog, issues);
-                while matches!(actions.get(*position), Some(crate::Action::ElseIf { .. })) {
-                    let elseif = *position;
+                while matches!(
+                    actions.get(*position),
+                    Some(crate::Action::ElseIf { .. } | crate::Action::Else)
+                ) {
+                    let marker = *position;
                     *position += 1;
                     inspect_action_values(actions, position, true, rule, program, catalog, issues);
-                    inspect_action_arguments(
-                        rule,
-                        elseif,
-                        &actions[elseif],
-                        program,
-                        catalog,
-                        issues,
-                    );
-                }
-                if matches!(actions.get(*position), Some(crate::Action::Else)) {
-                    *position += 1;
-                    inspect_action_values(actions, position, true, rule, program, catalog, issues);
+                    if matches!(actions[marker], crate::Action::ElseIf { .. }) {
+                        inspect_action_arguments(
+                            rule,
+                            marker,
+                            &actions[marker],
+                            program,
+                            catalog,
+                            issues,
+                        );
+                    }
                 }
                 if matches!(actions.get(*position), Some(crate::Action::End)) {
                     *position += 1;

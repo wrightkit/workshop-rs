@@ -1,3 +1,5 @@
+mod branches;
+
 use crate::ModifyOp;
 use crate::core::format::format_number;
 use crate::wir;
@@ -37,20 +39,24 @@ pub enum PathStep {
     /// The n-th enabled action of the current action sequence — the rule's
     /// actions with each control-flow group folded into its header action
     /// (`If`, `While`, `For`), or a nested list entered through `Branch`,
-    /// `ElseBody`, or `Body`.
+    /// `ElseBody`, `ElseBranch`, or `Body`.
     Action(usize),
     /// The n-th value operand of an action — its value arguments in
-    /// declaration order (`If` carries one condition per branch) — or the
+    /// declaration order (`If` carries one condition per `If`/`Else If`
+    /// branch, excluding `Else`) — or the
     /// n-th child of a value: `Array` elements, `Call` arguments, `Vector`
     /// x/y/z, or a `PlayerVariable`'s player. For the `Set`/`Modify` spelling
     /// pair the steps index the `Set` value's call arguments; for a
     /// `PlayerVariable`/`memberAccess` pair `Value(1)` is the memberAccess's
     /// member operand.
     Value(usize),
-    /// The body of the n-th `if`/`else if` branch of an `If` action.
+    /// The body of the n-th `If`/`Else If` branch, excluding `Else` branches.
     Branch(usize),
     /// The `else` body of an `If` action.
     ElseBody,
+    /// The zero-based `Else` body within an If with multiple `Else` branches.
+    /// A single `Else` in both compared groups uses `ElseBody` instead.
+    ElseBranch(usize),
     /// The body of a `While` or `For` action.
     Body,
 }
@@ -507,51 +513,13 @@ fn action_difference(
         (
             wir::Action::If {
                 branches: first_branches,
-                else_body: first_else,
                 ..
             },
             wir::Action::If {
                 branches: second_branches,
-                else_body: second_else,
                 ..
             },
-        ) => {
-            if first_branches.len() != second_branches.len() {
-                return Some(DifferenceKind::Count {
-                    element: "branches",
-                    first: first_branches.len(),
-                    second: second_branches.len(),
-                });
-            }
-            for (index, (first, second)) in first_branches.iter().zip(second_branches).enumerate() {
-                path.push(PathStep::Value(index));
-                if let Some(kind) = value_difference(a, b, first.condition, second.condition, path)
-                {
-                    return Some(kind);
-                }
-                path.pop();
-                path.push(PathStep::Branch(index));
-                if let Some(kind) = action_list_difference(a, b, &first.body, &second.body, path) {
-                    return Some(kind);
-                }
-                path.pop();
-            }
-            match (first_else, second_else) {
-                (None, None) => None,
-                (Some(first), Some(second)) => {
-                    path.push(PathStep::ElseBody);
-                    let difference = action_list_difference(a, b, first, second, path);
-                    if difference.is_none() {
-                        path.pop();
-                    }
-                    difference
-                }
-                (first, second) => Some(DifferenceKind::Shape {
-                    first: if first.is_some() { "if/else" } else { "if" },
-                    second: if second.is_some() { "if/else" } else { "if" },
-                }),
-            }
-        }
+        ) => branches::branch_difference(a, b, first_branches, second_branches, path),
         (
             wir::Action::While {
                 condition: first_condition,

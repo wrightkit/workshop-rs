@@ -360,23 +360,14 @@ impl Counter<'_> {
             Action::CallSubroutine { .. } => {
                 name = "call subroutine";
             }
-            Action::If {
-                branches,
-                else_body,
-                ..
-            } => {
+            Action::If { branches, .. } => {
                 name = "if";
-                base += branches.len().saturating_sub(1)
-                    + usize::from(else_body.is_some())
-                    + usize::from(!rule_final);
+                base += branches.len().saturating_sub(1) + usize::from(!rule_final);
                 for branch in branches {
-                    self.push_action_value(&mut children, &mut heroes, branch.condition)?;
-                    for nested in &branch.body {
-                        children.push(self.action(*nested, false)?.node);
+                    if let Some(condition) = branch.condition {
+                        self.push_action_value(&mut children, &mut heroes, condition)?;
                     }
-                }
-                if let Some(body) = else_body {
-                    for nested in body {
+                    for nested in &branch.body {
                         children.push(self.action(*nested, false)?.node);
                     }
                 }

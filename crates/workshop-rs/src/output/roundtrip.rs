@@ -469,18 +469,9 @@ fn action_equivalent(
             wir::Action::CallSubroutine { subroutine: sa, .. },
             wir::Action::CallSubroutine { subroutine: sb, .. },
         ) => name_eq(a.subroutines.get(*sa), b.subroutines.get(*sb)),
-        (
-            wir::Action::If {
-                branches: ba,
-                else_body: ea,
-                ..
-            },
-            wir::Action::If {
-                branches: bb,
-                else_body: eb,
-                ..
-            },
-        ) => branches_equivalent(a, b, ba, bb) && bodies_equivalent(a, b, ea, eb),
+        (wir::Action::If { branches: ba, .. }, wir::Action::If { branches: bb, .. }) => {
+            branches_equivalent(a, b, ba, bb)
+        }
         (
             wir::Action::While {
                 condition: ca,
@@ -567,8 +558,11 @@ fn branches_equivalent(
 ) -> bool {
     left.len() == right.len()
         && left.iter().zip(right.iter()).all(|(la, rb)| {
-            value_equivalent(a, b, la.condition, rb.condition)
-                && actions_equivalent(a, b, &la.body, &rb.body)
+            (match (la.condition, rb.condition) {
+                (Some(left), Some(right)) => value_equivalent(a, b, left, right),
+                (None, None) => true,
+                _ => false,
+            }) && actions_equivalent(a, b, &la.body, &rb.body)
         })
 }
 
@@ -583,19 +577,6 @@ fn actions_equivalent(
             .iter()
             .zip(right.iter())
             .all(|(la, rb)| action_equivalent(a, b, *la, *rb))
-}
-
-fn bodies_equivalent(
-    a: &wir::Program,
-    b: &wir::Program,
-    left: &Option<Vec<wir::ActionId>>,
-    right: &Option<Vec<wir::ActionId>>,
-) -> bool {
-    match (left, right) {
-        (Some(la), Some(rb)) => actions_equivalent(a, b, la, rb),
-        (None, None) => true,
-        _ => false,
-    }
 }
 
 fn value_equivalent(

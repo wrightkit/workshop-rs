@@ -108,19 +108,22 @@ fn check_action(program: &Program, id: super::ActionId) -> Result<(), IrError> {
             }
             Ok(())
         }
-        Action::If {
-            branches,
-            else_body,
-            ..
-        } => {
-            for branch in branches {
-                check_value(program, branch.condition)?;
-                for action in &branch.body {
-                    check_action(program, *action)?;
-                }
+        Action::If { branches, span } => {
+            if branches
+                .first()
+                .is_none_or(|branch| branch.condition.is_none())
+            {
+                return Err(IrError::Invalid {
+                    code: "invalid-if-branches",
+                    message: "If requires an initial condition".to_string(),
+                    span: *span,
+                });
             }
-            if let Some(else_body) = else_body {
-                for action in else_body {
+            for branch in branches {
+                if let Some(condition) = branch.condition {
+                    check_value(program, condition)?;
+                }
+                for action in &branch.body {
                     check_action(program, *action)?;
                 }
             }

@@ -238,27 +238,21 @@ fn render_action(program: &Program, id: super::ActionId, out: &mut String, level
                 span_suffix(*span),
             ));
         }
-        Action::If {
-            branches,
-            else_body,
-            span,
-        } => {
+        Action::If { branches, span } => {
             out.push_str(&format!("{}if{}\n", indent(level), span_suffix(*span)));
             for (index, branch) in branches.iter().enumerate() {
-                out.push_str(&format!(
-                    "{}  {}condition ",
-                    indent(level),
-                    if index == 0 { "" } else { "elif " }
-                ));
-                render_value(program, branch.condition, out);
-                out.push('\n');
-                for action in &branch.body {
-                    render_action(program, *action, out, level + 2);
+                if let Some(condition) = branch.condition {
+                    out.push_str(&format!(
+                        "{}  {}condition ",
+                        indent(level),
+                        if index == 0 { "" } else { "elif " }
+                    ));
+                    render_value(program, condition, out);
+                    out.push('\n');
+                } else {
+                    out.push_str(&format!("{}  else\n", indent(level)));
                 }
-            }
-            if let Some(else_body) = else_body {
-                out.push_str(&format!("{}  else\n", indent(level)));
-                for action in else_body {
+                for action in &branch.body {
                     render_action(program, *action, out, level + 2);
                 }
             }

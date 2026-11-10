@@ -92,11 +92,7 @@ fn indexed_members_and_native_break_controls_have_one_canonical_contract() {
                 && matches!(program.values.get(args[0]).map(|node| &node.value), Some(Value::PlayerVariable { .. }))
     ));
 
-    let Action::If {
-        branches,
-        else_body: Some(else_body),
-        ..
-    } = program.actions.get(rule.actions[2]).expect("if action")
+    let Action::If { branches, .. } = program.actions.get(rule.actions[2]).expect("if action")
     else {
         panic!("expected an if with an else branch");
     };
@@ -131,7 +127,7 @@ fn indexed_members_and_native_break_controls_have_one_canonical_contract() {
         Some(Action::Call { name, args, .. }) if name == "continue" && args.is_empty()
     ));
     assert!(matches!(
-        program.actions.get(else_body[0]),
+        program.actions.get(branches[1].body[0]),
         Some(Action::Call { name, args, .. }) if name == "skip" && args.len() == 1
     ));
 
@@ -320,10 +316,9 @@ fn build_surface_program() -> wir::Program {
     let if_body = vec![wait];
     let if_action = program.actions.push(Action::If {
         branches: vec![wir::IfBranch {
-            condition: compare,
+            condition: Some(compare),
             body: if_body,
         }],
-        else_body: None,
         span: Some(s(4, 5, 8)),
     });
     let modify = program.actions.push(Action::ModifyGlobalVariable {
@@ -612,4 +607,22 @@ fn canonical_validation_returns_first_error_and_short_circuits() {
         args_error.to_string().contains("unknownArgOne"),
         "expected arg 1 error, got: {args_error}"
     );
+}
+
+#[test]
+fn invalid_if_without_initial_condition_is_rejected() {
+    let source = "rule(\"r\") { event { Ongoing - Global; } actions { If(True); End; } }";
+    for remove in [false, true] {
+        let mut program = internal::parse(source);
+        let id = program.rules.iter().next().unwrap().actions[0];
+        let Action::If { branches, .. } = program.actions.get_mut(id).unwrap() else {
+            panic!("expected if");
+        };
+        if remove {
+            branches.clear();
+        } else {
+            branches[0].condition = None;
+        }
+        assert!(program.validate().is_err());
+    }
 }

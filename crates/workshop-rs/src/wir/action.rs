@@ -46,7 +46,6 @@ pub(crate) enum Action {
     },
     If {
         branches: Vec<IfBranch>,
-        else_body: Option<Vec<ActionId>>,
         span: Option<Span>,
     },
     While {
@@ -154,7 +153,10 @@ impl Action {
             Action::SetPlayerVariable { player, value, .. }
             | Action::ModifyPlayerVariable { player, value, .. } => vec![*player, *value],
             Action::AssignMember { target, value, .. } => vec![*target, *value],
-            Action::If { branches, .. } => branches.iter().map(|branch| branch.condition).collect(),
+            Action::If { branches, .. } => branches
+                .iter()
+                .filter_map(|branch| branch.condition)
+                .collect(),
             Action::While { condition, .. } => vec![*condition],
             Action::ForGlobalVariable {
                 start, stop, step, ..
@@ -184,6 +186,6 @@ impl Action {
 
 #[derive(Debug, Clone)]
 pub(crate) struct IfBranch {
-    pub(crate) condition: ValueId,
+    pub(crate) condition: Option<ValueId>,
     pub(crate) body: Vec<ActionId>,
 }
