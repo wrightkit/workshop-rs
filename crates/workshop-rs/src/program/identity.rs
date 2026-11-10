@@ -421,4 +421,46 @@ mod tests {
         assert!(!identities_first.is_empty());
         assert_eq!(identities_first, identities(&second));
     }
+
+    /// Identities of a fixed set of rules and one value, in a stable order.
+    fn fixed_identities() -> Vec<NodeIdentity> {
+        let mut identities: Vec<NodeIdentity> = every_event()
+            .into_iter()
+            .map(|event| rule_identity(&rule("r", false, event)))
+            .collect();
+        identities.push(value_identity(&Value::String("ana".into())));
+        identities
+    }
+
+    /// Re-runs this test binary as a child process. Each process draws its own
+    /// ahash keys under `runtime-rng`, which test builds enable, so equal values
+    /// show that the explicit seeds, not the process, decide identities.
+    #[test]
+    fn identities_match_across_processes() {
+        const CHILD_MARKER: &str = "WORKSHOP_RS_IDENTITY_CHILD";
+        if std::env::var_os(CHILD_MARKER).is_some() {
+            println!("IDENTITIES {:?}", fixed_identities());
+            return;
+        }
+        let output = std::process::Command::new(std::env::current_exe().expect("test binary"))
+            .args([
+                "--exact",
+                "program::identity::tests::identities_match_across_processes",
+                "--nocapture",
+            ])
+            .env(CHILD_MARKER, "1")
+            .output()
+            .expect("spawn child test process");
+        assert!(
+            output.status.success(),
+            "child test failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let child = stdout
+            .lines()
+            .find_map(|line| line.strip_prefix("IDENTITIES "))
+            .expect("child printed its identities");
+        assert_eq!(child, format!("{:?}", fixed_identities()));
+    }
 }
