@@ -65,6 +65,10 @@ pub struct SourceDocument {
     text: String,
     comments: Vec<SourceComment>,
     line_starts: Vec<usize>,
+    /// Per line, the multi-byte characters as `(char index, cumulative extra
+    /// bytes through that character)`, so a column maps to a byte offset by
+    /// binary search. An empty entry means the line is pure ASCII.
+    multibyte: Vec<Vec<(usize, usize)>>,
 }
 
 impl SourceDocument {
@@ -72,9 +76,12 @@ impl SourceDocument {
     pub fn new(text: impl Into<String>) -> Self {
         let text = text.into();
         let comments = find_line_comments(&text);
+        let line_starts = line_starts(&text);
+        let multibyte = multibyte_chars(&text, &line_starts);
         Self {
             file: None,
-            line_starts: line_starts(&text),
+            line_starts,
+            multibyte,
             text,
             comments,
         }
@@ -324,37 +331,51 @@ fn line_starts(source: &str) -> Vec<usize> {
     starts
 }
 
+fn multibyte_chars(source: &str, line_starts: &[usize]) -> Vec<Vec<(usize, usize)>> {
+    let ends = line_starts.iter().skip(1).copied().chain([source.len()]);
+    line_starts
+        .iter()
+        .zip(ends)
+        .map(|(&start, end)| {
+            let line = &source[start..end];
+            let mut entries = Vec::new();
+            if !line.is_ascii() {
+                let mut extra = 0;
+                for (index, character) in line.chars().enumerate() {
+                    if character.len_utf8() > 1 {
+                        extra += character.len_utf8() - 1;
+                        entries.push((index, extra));
+                    }
+                }
+            }
+            entries
+        })
+        .collect()
+}
+
 impl SourceDocument {
     fn byte_offset(&self, position: Position) -> Option<usize> {
-        self.byte_offset_scan(position).0
-    }
-
-    fn byte_offset_scan(&self, position: Position) -> (Option<usize>, usize) {
         if !position.is_valid() {
-            return (None, 0);
+            return None;
         }
         let line_index = position.line as usize - 1;
-        let Some(&start) = self.line_starts.get(line_index) else {
-            return (None, 0);
-        };
+        let &start = self.line_starts.get(line_index)?;
         let end = self
             .line_starts
             .get(line_index + 1)
             .copied()
             .unwrap_or(self.text.len());
-        let mut scanned = 0;
-        let mut col = 1;
-        for (offset, character) in self.text[start..end].char_indices() {
-            scanned += character.len_utf8();
-            if col == position.col {
-                return (Some(start + offset), scanned);
-            }
-            if character == '\n' {
-                return (None, scanned);
-            }
-            col += 1;
+        let line = &self.text[start..end];
+        let multibyte = &self.multibyte[line_index];
+        let chars = line.len() - multibyte.last().map_or(0, |entry| entry.1);
+        let index = position.col as usize - 1;
+        if index < chars {
+            let before = multibyte.partition_point(|entry| entry.0 < index);
+            let extra = before.checked_sub(1).map_or(0, |i| multibyte[i].1);
+            Some(start + index + extra)
+        } else {
+            (index == chars && !line.ends_with('\n')).then_some(end)
         }
-        ((col == position.col).then_some(end), scanned)
     }
 }
 
@@ -495,37 +516,17 @@ mod tests {
 
     #[test]
     fn byte_offsets_match_full_document_scan() {
-        let text = "one\r\ntwo\nthree\nlast é\u{301}\n";
+        let text = "one\r\ntwo\nthree\nlast é\u{301}\n名é字x\n字";
         let document = SourceDocument::new(text);
-        for line in 0..=8 {
+        for line in 0..=9 {
             for col in 0..=12 {
                 let position = Position::new(line, col);
                 assert_eq!(
-                    document.byte_offset_scan(position).0,
+                    document.byte_offset(position),
                     naive_byte_offset(text, position),
                     "position {position:?}"
                 );
             }
         }
-    }
-
-    #[test]
-    fn byte_offsets_scan_only_the_addressed_line() {
-        let line = "xxxxxxxxxxxxxxxx\n";
-        let document = SourceDocument::new(line.repeat(1000));
-        let (_, scanned) = document.byte_offset_scan(Position::new(1000, 9));
-        assert_eq!(document.line_starts.len(), 1001);
-        assert!(
-            scanned <= line.len(),
-            "resolving a late position scanned {scanned} bytes, expected at most one line ({})",
-            line.len()
-        );
-        let (_, scanned) = document.byte_offset_scan(Position::new(999, 20));
-        assert!(
-            scanned <= line.len(),
-            "an overshot column scanned {scanned} bytes, expected at most one line ({})",
-            line.len()
-        );
-        assert!(document.byte_offset(Position::new(1002, 1)).is_none());
     }
 }
