@@ -11,6 +11,7 @@
 pub(crate) mod check;
 pub(crate) mod emitter;
 mod member;
+pub(crate) mod names;
 pub(crate) mod parser;
 
 pub(crate) mod reconciliation;
