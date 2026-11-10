@@ -30,7 +30,6 @@ jobs:
       pull-requests: read
     outputs:
       code: ${{ steps.filter.outputs.code }}
-      workflows: ${{ steps.filter.outputs.workflows }}
       full: ${{ steps.filter.outputs.code == 'true' && (github.event_name == 'push' || !contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action)) }}
     steps:
       - name: Check out repository
@@ -47,13 +46,9 @@ jobs:
               - '**'
               - '!**/*.md'
               - '!docs/**'
-            workflows:
-              - '.github/workflows/**'
 
   workflow-lint:
     name: Workflow lint
-    needs: changes
-    if: needs.changes.outputs.workflows == 'true' && (github.event_name == 'push' || !contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action))
     uses: wrightkit/.github/.github/workflows/actionlint.yml@main
 
   check:
