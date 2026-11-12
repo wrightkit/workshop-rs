@@ -22,13 +22,9 @@ This repository owns:
 - reviewed Workshop gameplay/catalog data and semantic query APIs;
 - Workshop conformance, corpus, and seasonal-client tests and source provenance.
 
-This repository does **not** own:
-
-- OverPy syntax, preprocessing, macros, source semantics, or reconstruction
-  (`opy-rs`);
-- DEL/OSTW syntax, project/runtime semantics, or reconstruction (`deltin-rs`);
-- Wright lint/analyze/agent/CI/LSP/orchestration behavior (`wright`);
-- LPP protocol semantics (`language-provider-protocol`).
+This repository does **not** own source-language syntax, semantics, or
+reconstruction (`opy-rs`, `deltin-rs`), Wright tooling behavior (`wright`), or
+LPP protocol semantics (`language-provider-protocol`).
 
 The durable dependency direction is consumer → Workshop core:
 
@@ -53,9 +49,7 @@ semantics.
 For substantive implementation work, resolve the relevant current contract from
 [`docs/architecture/README.md`](docs/architecture/README.md) before editing.
 Architecture Decision Records under `docs/adr/` are decision history, not proof
-of current implementation reality. If the Issue, current architecture contract,
-and source/tests disagree materially, stop and surface the mismatch rather than
-choosing a design by implementation convenience.
+of current implementation reality.
 
 The current Workshop core contract keeps canonical identities locale- and
 provider-independent and distinguishes declarative bulk facts from executable
