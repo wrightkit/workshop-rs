@@ -1,7 +1,7 @@
 {
   "coverage": {
     "enums": {
-      "matched": 106,
+      "matched": 107,
       "total": 117
     },
     "heroes": {
@@ -31,6 +31,28 @@
     "tokens": {
       "matched": 5,
       "total": 5
+    }
+  },
+  "enumMembers": {
+    "spawnHealthPacks.enabled": {
+      "de-DE": "Aktiviert",
+      "en-US": "Enabled",
+      "es-ES": "Permitir",
+      "es-MX": "Habilitado",
+      "fr-FR": "Activé",
+      "it-IT": "On",
+      "ja-JP": "有効",
+      "ko-KR": "활성화",
+      "pl-PL": "Wł.",
+      "pt-BR": "Habilitado",
+      "ru-RU": "Вкл.",
+      "sources": [
+        "customGameSettings.gamemodes.values.general.values.spawnHealthPacks.values.enabled"
+      ],
+      "th-TH": "เปิดใช้งานแล้ว",
+      "tr-TR": "Etkin",
+      "zh-CN": "开启",
+      "zh-TW": "啟用"
     }
   },
   "enums": {
@@ -2113,11 +2135,6 @@
       "en-US": "All",
       "reason": "ambiguous: export candidates disagree on zh-CN (constants.Invis.ALL, customGameSettings.gamemodes.values.control.values.setValidControlPoints.values.all, customGameSettings.gamemodes.values.controlAprilFools.values.setValidControlPoints.values.all, customGameSettings.gamemodes.values.ctf.values.flagCarrierAbilities.values.all, customGameSettings.gamemodes.values.skirmish.values.setValidControlPoints.values.all, customGameSettings.heroes.values.lifeweaver.values.weaponsEnabled.values.all, customGameSettings.heroes.values.mercy.values.weaponsEnabled.values.all, customGameSettings.heroes.values.torbjorn.values.weaponsEnabled.values.all)",
       "surface": "enum.setting_heroes_TEAM_HERO_weaponsEnabled.all"
-    },
-    {
-      "en-US": "Enabled",
-      "reason": "ambiguous: export candidates disagree on zh-CN (customGameSettings.gamemodes.values.general.values.spawnHealthPacks.values.enabled, other.customGameSettings.__enabled__)",
-      "surface": "enum.spawnHealthPacks.enabled"
     }
   ],
   "heroes": {

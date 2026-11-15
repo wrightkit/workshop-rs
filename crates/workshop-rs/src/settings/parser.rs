@@ -660,9 +660,9 @@ impl ParseContext<'_> {
             let member = table::ENUM_MEMBERS
                 .iter()
                 .chain(table::GENERATED_ENUM_MEMBERS.iter())
-                .find(|member| {
-                    member.domain == domain
-                        && self.settings_name_matches("enums", member.name, display)
+                .find(|m| {
+                    m.domain == domain
+                        && crate::settings::enum_members::matches(self.locale.as_str(), m, display)
                 });
             if let Some(member) = member {
                 self.pos += count;

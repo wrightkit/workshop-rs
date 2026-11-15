@@ -9,7 +9,7 @@ pub(crate) use super::names::names_eq;
 
 const LOCALE_DATA: &str = include_str!("data/locales.json");
 
-fn locale_data() -> &'static Value {
+pub(crate) fn locale_data() -> &'static Value {
     static DATA: OnceLock<Value> = OnceLock::new();
     DATA.get_or_init(|| {
         serde_json::from_str(LOCALE_DATA).expect("generated settings locale data is valid JSON")
