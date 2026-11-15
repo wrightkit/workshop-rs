@@ -192,7 +192,7 @@ rule (\"legacy-aliases\") {
         Ongoing - Global;
     }
     actions {
-        Stop Chasing Global Variable(Global.value);
+        Stop Chasing Global Variable(value);
         Start Forcing Player To Be Hero(Event Player, Hero(Ana));
         Stop Forcing Player To Be Hero(Event Player);
         Start Forcing Throttle(Event Player, 100, 100, 100, 100, 100, 100);
@@ -226,4 +226,77 @@ rule (\"legacy-aliases\") {
     .expect("native spellings convert back to en-US");
     assert_eq!(back_to_en.fallback_ids, Vec::<String>::new());
     assert_eq!(back_to_en.text.trim_end(), source.trim_end());
+}
+
+const GLOBAL_CHASE_PROGRAM: &str = r#"variables {
+    global:
+        0: Foo
+}
+
+rule("r") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        Chase Global Variable Over Time(Foo, 0, 5, None);
+        Chase Global Variable At Rate(Foo, Global.Foo, 1, None);
+        Stop Chasing Global Variable(Foo);
+    }
+}
+"#;
+
+#[test]
+fn global_chase_variable_argument_is_bare_in_every_locale() {
+    let catalog = catalog();
+    let same = convert::convert(
+        GLOBAL_CHASE_PROGRAM,
+        &catalog,
+        &en(),
+        &en(),
+        &ConvertOptions::default(),
+    )
+    .expect("en-US converts to en-US");
+    assert!(
+        same.text
+            .contains("Chase Global Variable Over Time(Foo, 0, 5, None);"),
+        "{}",
+        same.text
+    );
+    assert!(
+        same.text
+            .contains("Chase Global Variable At Rate(Foo, Global.Foo, 1, None);"),
+        "the target value keeps its expression form:\n{}",
+        same.text
+    );
+    assert!(
+        same.text.contains("Stop Chasing Global Variable(Foo);"),
+        "{}",
+        same.text
+    );
+
+    let to_zh = convert::convert(
+        GLOBAL_CHASE_PROGRAM,
+        &catalog,
+        &en(),
+        &zh(),
+        &ConvertOptions::default(),
+    )
+    .expect("en-US converts to zh-CN");
+    assert!(
+        to_zh.text.contains("持续追踪全局变量(Foo, 0, 5, 全部禁用)"),
+        "{}",
+        to_zh.text
+    );
+    assert!(!to_zh.text.contains("(全局.Foo,"), "{}", to_zh.text);
+
+    // The emitted text parses again and emits the same bytes.
+    let again = convert::convert(
+        &same.text,
+        &catalog,
+        &en(),
+        &en(),
+        &ConvertOptions::default(),
+    )
+    .expect("emitted text re-parses");
+    assert_eq!(again.text, same.text);
 }

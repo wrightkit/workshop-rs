@@ -184,7 +184,7 @@ fn context_chase_none_emission_is_a_fixed_point() {
     let first = internal::parse(text);
     let emitted = internal::emit(&first);
     assert!(
-        emitted.contains("Chase Global Variable Over Time(Global.g, 0, 30, None)"),
+        emitted.contains("Chase Global Variable Over Time(g, 0, 30, None)"),
         "emission preserves the bare None spelling:\n{emitted}"
     );
     let reparsed = internal::parse(&emitted);

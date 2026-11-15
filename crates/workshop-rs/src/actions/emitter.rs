@@ -248,9 +248,22 @@ impl EmitContext<'_> {
                     } else {
                         self.spelling(Kind::Action, name)?
                     };
-                    let mut args_text = String::new();
-                    self.args(args, &mut args_text)?;
-                    return self.line(level, &format!("{spelling}({args_text});"));
+                    // The client names a global chase target by its bare
+                    // variable name; later arguments are ordinary values.
+                    let mut parts = Vec::with_capacity(args.len());
+                    for (index, arg) in args.iter().enumerate() {
+                        let global = match self.program.values.get(*arg).map(|node| &node.value) {
+                            Some(wir::Value::GlobalVariable(variable)) if index == 0 => {
+                                Some(*variable)
+                            }
+                            _ => None,
+                        };
+                        parts.push(match global {
+                            Some(variable) => self.global_name(variable)?.to_string(),
+                            None => self.value_text(*arg)?,
+                        });
+                    }
+                    return self.line(level, &format!("{spelling}({});", parts.join(", ")));
                 }
                 if matches!(
                     name.as_str(),
@@ -347,9 +360,9 @@ impl EmitContext<'_> {
                             continue;
                         }
                         let variable_position = match name.as_str() {
-                            "setGlobalVariableAtIndex" | "modifyGlobalVariableAtIndex" => {
-                                index == 0
-                            }
+                            "setGlobalVariableAtIndex"
+                            | "modifyGlobalVariableAtIndex"
+                            | "stopChasingGlobalVariable" => index == 0,
                             "setPlayerVariableAtIndex" | "modifyPlayerVariableAtIndex" => {
                                 index == 1 && !player_pair_merged
                             }
