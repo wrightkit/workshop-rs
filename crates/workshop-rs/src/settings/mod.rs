@@ -10,6 +10,7 @@
 
 pub(crate) mod check;
 pub(crate) mod emitter;
+pub(crate) mod enum_members;
 mod inheritance;
 mod member;
 pub(crate) mod names;

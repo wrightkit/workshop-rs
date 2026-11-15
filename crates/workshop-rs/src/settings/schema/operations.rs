@@ -561,7 +561,7 @@ fn source_value_spelling(
                     span: None,
                 }
             })?;
-            localized("enums", english)
+            super::super::enum_members::source_spelling(locale, domain, "enabled", english, setting)
         }
         (SettingValueDomain::Boolean, KeyKind::BoolEnum(_), SettingValue::Boolean(false)) => {
             Err(bool_enum_false_unsupported(setting, None))
@@ -584,7 +584,7 @@ fn source_value_spelling(
                     span: None,
                 }
             })?;
-            localized("enums", english)
+            super::super::enum_members::source_spelling(locale, domain, &member, english, setting)
         }
         _ => Err(SettingOperationError::SourceUnavailable {
             setting: setting.clone(),

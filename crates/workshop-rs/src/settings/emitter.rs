@@ -268,8 +268,30 @@ impl EmitContext<'_> {
                 value,
                 english,
             } => {
-                let display =
-                    self.setting_name("enums", english, &format!("enum.{domain}.{value}"))?;
+                let en_us = Locale::new("en-US");
+                let display = if self.locale == en_us {
+                    english.to_string()
+                } else {
+                    self.localized_with(
+                        "setting",
+                        &format!("enum.{domain}.{value}"),
+                        "settings".to_string(),
+                        true,
+                        |locale| {
+                            if *locale == en_us {
+                                Some(english.to_string())
+                            } else {
+                                super::enum_members::localized(
+                                    locale.as_str(),
+                                    domain,
+                                    value,
+                                    english,
+                                )
+                                .map(str::to_string)
+                            }
+                        },
+                    )?
+                };
                 self.line(level, &format!("{display_name}: {display}"))?;
             }
             Member::Number(value) => self.line(

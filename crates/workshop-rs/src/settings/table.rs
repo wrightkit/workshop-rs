@@ -9,7 +9,7 @@ pub(crate) use super::names::names_eq;
 
 const LOCALE_DATA: &str = include_str!("data/locales.json");
 
-fn locale_data() -> &'static Value {
+pub(crate) fn locale_data() -> &'static Value {
     static DATA: OnceLock<Value> = OnceLock::new();
     DATA.get_or_init(|| {
         serde_json::from_str(LOCALE_DATA).expect("generated settings locale data is valid JSON")
@@ -32,8 +32,8 @@ pub(crate) fn localized_name(locale: &str, section: &str, english: &str) -> Opti
 /// A localized settings name declared by the reviewed locale data (#448).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct LocalizedSettingName {
-    /// The locale-data section the name belongs to (`namespaces`,
-    /// `labels`, `modes`, `heroes`, `maps`, `teams`, `tokens`, `enums`).
+    /// The locale-data section the name belongs to (`enums`, `enumMembers`,
+    /// `labels`, `heroes`, `maps`, `modes`, `namespaces`, `teams`, `tokens`).
     pub section: &'static str,
     /// The en-US display name this row localizes.
     pub english: &'static str,
@@ -80,7 +80,7 @@ pub fn localized_setting_names() -> &'static [LocalizedSettingName] {
                 }
             }
         }
-        names
+        [names, super::enum_members::names()].concat()
     })
 }
 

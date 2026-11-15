@@ -1,6 +1,9 @@
 use super::*;
 use serde_json::{Map, Value};
 
+mod enum_members;
+mod preserve;
+
 #[derive(Debug, Clone)]
 struct Candidate {
     key: String,
@@ -1183,6 +1186,7 @@ fn settings_corpus(
 
     let mut entries: Map<String, Value> = Map::new();
     let mut excluded: Vec<Value> = Vec::new();
+    let mut enum_members = Map::new();
     let mut coverage: Map<String, Value> = Map::new();
     for (section, surface_entries, index) in &mut sections {
         let mut matched = 0;
@@ -1212,11 +1216,18 @@ fn settings_corpus(
                             settings_entry(&candidates, export_en, &locales)?,
                         );
                     }
-                    None => excluded.push(serde_json::json!({
-                        "surface": surface_id,
-                        "en-US": en,
-                        "reason": reason,
-                    })),
+                    None => {
+                        let args = (*section, surface_id.as_str(), en.as_str());
+                        if enum_members::resolve(index, args, &locales, &mut enum_members)? {
+                            matched += 1;
+                        } else {
+                            excluded.push(serde_json::json!({
+                                "surface": surface_id,
+                                "en-US": en,
+                                "reason": reason,
+                            }));
+                        }
+                    }
                 },
             }
         }
@@ -1229,7 +1240,7 @@ fn settings_corpus(
     if let Ok(previous) = std::fs::read_to_string(settings_out)
         && let Ok(previous) = serde_json::from_str::<Value>(&previous)
     {
-        preserve_existing_settings(&mut entries, &previous);
+        preserve::preserve_existing_settings(&mut entries, &previous);
     }
 
     let mut labels = Map::new();
@@ -1279,6 +1290,7 @@ fn settings_corpus(
         "heroes": heroes_out,
         "teams": teams_out,
         "enums": enums_out,
+        "enumMembers": enum_members,
         "tokens": tokens_out,
         "excluded": excluded,
         "coverage": coverage,
@@ -1333,50 +1345,6 @@ fn settings_entry(
         );
     }
     Ok(Value::Object(aliases))
-}
-
-fn preserve_existing_settings(entries: &mut Map<String, Value>, previous: &Value) {
-    let mut previous_entries = Map::new();
-    for section in [
-        "namespaces",
-        "labels",
-        "modes",
-        "maps",
-        "heroes",
-        "teams",
-        "enums",
-        "tokens",
-    ] {
-        if let Some(section_entries) = previous.get(section).and_then(Value::as_object) {
-            for (name, entry) in section_entries {
-                previous_entries.insert(name.clone(), entry.clone());
-            }
-        }
-    }
-    for (name, previous_entry) in previous_entries {
-        let Some(current_entry) = entries.get_mut(&name) else {
-            continue;
-        };
-        let (Some(current), Some(previous)) =
-            (current_entry.as_object_mut(), previous_entry.as_object())
-        else {
-            continue;
-        };
-        fill_locale_gaps(current, previous);
-    }
-}
-
-fn fill_locale_gaps(
-    current: &mut serde_json::Map<String, Value>,
-    previous: &serde_json::Map<String, Value>,
-) {
-    for locale in ["en-US", "zh-CN"] {
-        if let Some(value) = previous.get(locale).and_then(Value::as_str) {
-            current
-                .entry(locale.to_string())
-                .or_insert_with(|| Value::String(value.to_string()));
-        }
-    }
 }
 
 fn confirmed_settings_identity_match(

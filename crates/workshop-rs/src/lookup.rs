@@ -498,8 +498,7 @@ impl Catalog {
                 if !seen.insert((member.domain().to_string(), member.id().to_string())) {
                     continue;
                 }
-                let localized =
-                    table::localized_name(locale.as_str(), "enums", member.english_name());
+                let localized = settings::enum_members::for_member(locale.as_str(), &member);
                 let qualified = format!("{}.{}", member.domain(), member.id());
                 members.push((
                     child_score(

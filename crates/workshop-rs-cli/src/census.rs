@@ -23,6 +23,8 @@ use workshop_rs::settings::{
 };
 use workshop_rs::{WorkshopError, convert, emitter, parser, roundtrip};
 
+mod enum_probe;
+
 #[derive(Clone, Copy)]
 enum CensusCapabilityKind {
     Variable,
@@ -1441,22 +1443,7 @@ fn localized_settings_probe(
                 .next()
                 .unwrap_or_else(|| "no probe context".to_string()))
         }
-        "enums" => {
-            let Some(defs) = index.by_member.get(english) else {
-                return Err(format!("no settings definition takes member {english:?}"));
-            };
-            let definition = &defs[0];
-            let hero = settings_probe_hero(definition, definition.presentation().english_name);
-            let label = index.name(loc, "labels", definition.presentation().english_name);
-            Ok(localized_settings_context(
-                catalog,
-                index,
-                locale,
-                definition,
-                &format!("{label}: {spelling}"),
-                hero.as_ref().and_then(|hero| hero.as_deref()),
-            ))
-        }
+        "enums" | "enumMembers" => enum_probe::probe(catalog, index, name, locale),
         other => Err(format!("unhandled settings section {other:?}")),
     }
 }
