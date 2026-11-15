@@ -53,3 +53,44 @@ fn pinned_hero_setting_names_emit_the_oracle_spellings() {
             .all(|issue| issue.kind != workshop_rs::rules::IncompletenessKind::RawSetting)
     );
 }
+
+/// workshop-rs#618: the pinned OverPy 9.7.17 table declares the tiebreaker and
+/// reveal-heroes keys for `general` and `elimination` only.
+#[test]
+fn general_tiebreaker_and_reveal_keys_emit_localized_names() {
+    let catalog = catalog();
+    let (en, zh) = (en(), zh());
+    let source = "settings { modes { General { \
+        Draw After Match Time Elapsed With No Tiebreaker: 300 \
+        Reveal Heroes: On \
+        Reveal Heroes After Match Time Elapsed: 25 \
+        Capture Objective Tiebreaker: Off \
+        Tiebreaker After Match Time Elapsed: 300 } } }";
+    let program = internal::parse_in(source, &en);
+    let emitted = internal::emit_in(&program, &zh);
+    for expected in [
+        "无目标点决胜机制时平局时限: 300",
+        "显示英雄位置: 开启",
+        "比赛开始后显示英雄位置时间: 25",
+        "目标点决胜机制: 关闭",
+        "目标点决胜机制激活时间: 300",
+    ] {
+        assert!(emitted.contains(expected), "{emitted} missing {expected}");
+    }
+    assert!(
+        program
+            .semantic_issues(&catalog)
+            .iter()
+            .all(|issue| issue.kind != workshop_rs::rules::IncompletenessKind::RawSetting)
+    );
+
+    let other_mode = "settings { modes { Team Deathmatch { Reveal Heroes: On } } }";
+    let program = internal::parse_in(other_mode, &en);
+    assert!(
+        program
+            .semantic_issues(&catalog)
+            .iter()
+            .any(|issue| issue.kind == workshop_rs::rules::IncompletenessKind::RawSetting),
+        "a mode other than general and elimination must not inherit the key"
+    );
+}

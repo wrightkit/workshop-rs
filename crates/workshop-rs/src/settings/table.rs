@@ -3,6 +3,8 @@ use serde_json::Value;
 use std::sync::OnceLock;
 
 use super::PathPart::{self, Hero, Part, Team};
+use super::inheritance::inherits_general_key;
+pub(crate) use super::inheritance::mode_inherited_entry;
 pub(crate) use super::names::names_eq;
 
 const LOCALE_DATA: &str = include_str!("data/locales.json");
@@ -365,6 +367,35 @@ pub(crate) static ENTRIES: &[TableEntry] = &[
         KeyKind::Enum("tankPassiveHealthBonus")
     ),
     entry!(
+        [Part("gamemodes"), Part("general"), Part("drawTime")],
+        "Draw After Match Time Elapsed With No Tiebreaker",
+        KeyKind::Number
+    ),
+    entry!(
+        [Part("gamemodes"), Part("general"), Part("enableWallhack")],
+        "Reveal Heroes",
+        KeyKind::Bool
+    ),
+    entry!(
+        [
+            Part("gamemodes"),
+            Part("general"),
+            Part("wallhackEnabledTime")
+        ],
+        "Reveal Heroes After Match Time Elapsed",
+        KeyKind::Number
+    ),
+    entry!(
+        [Part("gamemodes"), Part("general"), Part("enableTiebreaker")],
+        "Capture Objective Tiebreaker",
+        KeyKind::Bool
+    ),
+    entry!(
+        [Part("gamemodes"), Part("general"), Part("tiebreakerTime")],
+        "Tiebreaker After Match Time Elapsed",
+        KeyKind::Number
+    ),
+    entry!(
         [Part("gamemodes"), Part("general"), Part("spawnHealthPacks")],
         "Spawn Health Packs",
         KeyKind::Enum("spawnHealthPacks")
@@ -569,7 +600,7 @@ pub(crate) fn lookup(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
     exact_entry(path).or_else(|| mode_inherited_entry(path))
 }
 
-fn exact_entry(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
+pub(super) fn exact_entry(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
     entry_bucket(path).find(|entry| entry.path == path)
 }
 
@@ -597,7 +628,7 @@ fn path_hash(path: &[PathPart<'_>]) -> u64 {
     hasher.finish()
 }
 
-fn declared_modes() -> &'static std::collections::HashSet<&'static str> {
+pub(super) fn declared_modes() -> &'static std::collections::HashSet<&'static str> {
     static MODES: OnceLock<std::collections::HashSet<&'static str>> = OnceLock::new();
     MODES.get_or_init(|| {
         entries()
@@ -639,48 +670,6 @@ pub(crate) fn child_entries(parent: &[PathPart<'_>]) -> Vec<&'static TableEntry>
                 .collect()
         })
         .unwrap_or_default()
-}
-
-static ELIMINATION_GENERAL_KEYS: &[&str] = &[
-    "disabledMaps",
-    "enableEnemyHealthBars",
-    "enableKillCam",
-    "enableKillFeed",
-    "enableSkins",
-    "enabledMaps",
-    "gamemodeStartTrigger",
-    "healthPackRespawnTime%",
-    "perkEliminationCatchupLevelAmount%",
-    "perkGeneration%",
-    "spawnHealthPacks",
-    "teamOverlay",
-];
-
-pub(crate) fn mode_inherited_entry(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
-    let [
-        PathPart::Part("gamemodes"),
-        PathPart::Part(mode),
-        PathPart::Part(key),
-    ] = path
-    else {
-        return None;
-    };
-    if *mode == "general" {
-        return None;
-    }
-    let inherits = if *mode == "elimination" {
-        ELIMINATION_GENERAL_KEYS.contains(key)
-    } else {
-        declared_modes().contains(mode)
-    };
-    if !inherits {
-        return None;
-    }
-    exact_entry(&[
-        PathPart::Part("gamemodes"),
-        PathPart::Part("general"),
-        PathPart::Part(key),
-    ])
 }
 
 pub(crate) fn entries() -> impl Iterator<Item = &'static TableEntry> {
@@ -900,31 +889,17 @@ pub(crate) fn key_spellings(parent: &[PathPart<'_>]) -> Vec<&'static str> {
     let [PathPart::Part("gamemodes"), PathPart::Part(mode)] = parent else {
         return spellings;
     };
-    if *mode == "general" {
-        return spellings;
-    }
-    if *mode == "elimination" {
-        spellings.extend(
-            child_entries(&[PathPart::Part("gamemodes"), PathPart::Part("general")])
-                .iter()
-                .filter_map(|entry| {
-                    let PathPart::Part(key) = entry.path.last()? else {
-                        return None;
-                    };
-                    ELIMINATION_GENERAL_KEYS
-                        .contains(key)
-                        .then_some(entry.workshop_name)
-                }),
-        );
-    } else if declared_modes().contains(mode) {
-        spellings.extend(
-            child_entries(&[PathPart::Part("gamemodes"), PathPart::Part("general")])
-                .iter()
-                .filter_map(|entry| {
-                    (!entry.workshop_name.contains("%1$s")).then_some(entry.workshop_name)
-                }),
-        );
-    }
+    spellings.extend(
+        child_entries(&[PathPart::Part("gamemodes"), PathPart::Part("general")])
+            .iter()
+            .filter_map(|entry| {
+                let PathPart::Part(key) = entry.path.last()? else {
+                    return None;
+                };
+                (inherits_general_key(mode, key) && !entry.workshop_name.contains("%1$s"))
+                    .then_some(entry.workshop_name)
+            }),
+    );
     spellings
 }
 
@@ -978,6 +953,7 @@ pub(crate) fn path_string(path: &[PathPart<'_>]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::settings::inheritance::{ELIMINATION_GENERAL_KEYS, GENERAL_ONLY_KEYS};
 
     fn scan_exact(path: &[PathPart<'_>]) -> Option<&'static TableEntry> {
         entries().find(|entry| entry.path == path)
@@ -998,13 +974,14 @@ mod tests {
         let inherits = if *mode == "elimination" {
             ELIMINATION_GENERAL_KEYS.contains(key)
         } else {
-            entries().any(|entry| {
-                matches!(
-                    entry.path,
-                    [PathPart::Part("gamemodes"), PathPart::Part(declared), ..]
-                        if *declared == *mode
-                )
-            })
+            !GENERAL_ONLY_KEYS.contains(key)
+                && entries().any(|entry| {
+                    matches!(
+                        entry.path,
+                        [PathPart::Part("gamemodes"), PathPart::Part(declared), ..]
+                            if *declared == *mode
+                    )
+                })
         };
         if !inherits {
             return None;
@@ -1147,12 +1124,13 @@ mod tests {
                     let [
                         PathPart::Part("gamemodes"),
                         PathPart::Part("general"),
-                        PathPart::Part(_),
+                        PathPart::Part(key),
                     ] = entry.path
                     else {
                         return None;
                     };
-                    (!entry.workshop_name.contains("%1$s")).then_some(entry.workshop_name)
+                    (!GENERAL_ONLY_KEYS.contains(key) && !entry.workshop_name.contains("%1$s"))
+                        .then_some(entry.workshop_name)
                 }));
             }
             spellings
