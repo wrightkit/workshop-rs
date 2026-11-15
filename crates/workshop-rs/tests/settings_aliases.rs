@@ -160,3 +160,14 @@ fn spawn_health_packs_source_edit_writes_the_same_zh_cn_value_as_emit() {
     let edited = edit.apply(source).expect("edit applies");
     assert_eq!(edited, "设置 { 模式 { 综合 { 急救包刷新: 开启 } } }");
 }
+
+#[test]
+fn localized_setting_names_include_member_specific_rows() {
+    let names = workshop_rs::settings::localized_setting_names();
+    assert!(names.iter().any(|name| {
+        name.section == "enumMembers"
+            && name.english == "spawnHealthPacks.enabled"
+            && name.locale == "zh-CN"
+            && name.spelling == "开启"
+    }));
+}

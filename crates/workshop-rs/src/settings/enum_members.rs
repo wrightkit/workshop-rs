@@ -3,7 +3,7 @@
 //! `enumMembers` rows, keyed `<setting>.<member>`, take precedence.
 
 use super::schema::{SettingEnumMember, SettingId, SettingOperationError};
-use super::table;
+use super::table::{self, LocalizedSettingName};
 use serde_json::Value;
 
 /// The localized spelling of one enum member. Generated table domains
@@ -55,4 +55,29 @@ pub(crate) fn source_spelling(
             message: format!("missing enums locale mapping for '{english}' in {locale}"),
             span: None,
         })
+}
+
+/// The `enumMembers` rows as localized names: section `enumMembers`, with
+/// `english` set to the row key `<setting>.<member>`.
+pub(crate) fn names() -> Vec<LocalizedSettingName> {
+    let Some(rows) = table::locale_data()
+        .get("enumMembers")
+        .and_then(Value::as_object)
+    else {
+        return Vec::new();
+    };
+    let mut names = Vec::new();
+    for (english, row) in rows {
+        for (locale, value) in row.as_object().into_iter().flatten() {
+            if let Some(spelling) = value.as_str() {
+                names.push(LocalizedSettingName {
+                    section: "enumMembers",
+                    english,
+                    locale,
+                    spelling,
+                });
+            }
+        }
+    }
+    names
 }
