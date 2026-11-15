@@ -94,3 +94,20 @@ fn general_tiebreaker_and_reveal_keys_emit_localized_names() {
         "a mode other than general and elimination must not inherit the key"
     );
 }
+
+#[test]
+fn spawn_health_packs_label_converts_to_zh_cn_and_back() {
+    let source = "settings { modes { General { Spawn Health Packs: Enabled } } }";
+    let catalog = catalog();
+    let en = en();
+    let zh = zh();
+    let to_zh = workshop_rs::convert::convert(source, &catalog, &en, &zh, &Default::default())
+        .expect("spawn health packs converts to zh-CN");
+    assert!(to_zh.text.contains("急救包刷新"), "{}", to_zh.text);
+    assert!(!to_zh.text.contains("生成治疗包"));
+
+    let back = workshop_rs::convert::convert(&to_zh.text, &catalog, &zh, &en, &Default::default())
+        .expect("zh-CN spawn health packs converts back to en-US");
+    let squash = |text: &str| text.split_whitespace().collect::<String>();
+    assert_eq!(squash(&back.text), squash(source));
+}
