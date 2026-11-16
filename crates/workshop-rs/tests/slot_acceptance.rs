@@ -105,12 +105,45 @@ fn accepted_values_must_name_declared_values() {
     );
 }
 
+/// An accepted value follows its own arity rules: omitted trailing defaults
+/// are allowed. The catalog here is synthetic; it does not claim the client
+/// accepts `All Players` in this slot.
+#[test]
+fn an_accepted_value_may_omit_defaulted_arguments() {
+    let source = std::fs::read_to_string(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/catalog/data/catalog.json"),
+    )
+    .expect("catalog data is present");
+    let listed = "\"paramAcceptedValues\": [\n        [\n          \"add\"\n        ]";
+    assert!(source.contains(listed), "stringSlice lists add");
+    let patched = source.replace(
+        listed,
+        "\"paramAcceptedValues\": [\n        [\n          \"add\",\n          \"allPlayers\"\n        ]",
+    );
+    let custom = workshop_rs::catalog::Catalog::load(
+        &workshop_rs::catalog::build_canonical(&patched).expect("patched catalog builds"),
+    )
+    .expect("patched catalog loads");
+    for value in [
+        "String Slice(All Players(), 1, 2)",
+        "String Slice(All Players(All Teams), 1, 2)",
+    ] {
+        let program = parse_value(value, &custom);
+        validate::validate_canonical_ids(&program, &custom)
+            .unwrap_or_else(|error| panic!("{value} must validate: {error}"));
+    }
+}
+
 fn program_with(value: &str) -> workshop_rs::Program {
+    parse_value(value, &catalog())
+}
+
+fn parse_value(value: &str, catalog: &workshop_rs::catalog::Catalog) -> workshop_rs::Program {
     let source = format!(
         "variables {{\n    global:\n        0: probe\n        1: t\n}}\n\
          rule (\"r\") {{\n    event {{ Ongoing - Global; }}\n    actions {{\n        \
          Set Global Variable(probe, {value});\n    }}\n}}\n"
     );
-    parser::parse(&source, &catalog(), &en())
+    parser::parse(&source, catalog, &en())
         .unwrap_or_else(|error| panic!("{value} must parse: {error}"))
 }
