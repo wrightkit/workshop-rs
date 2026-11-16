@@ -105,9 +105,11 @@ fn accepted_values_must_name_declared_call_form_values() {
             .contains("accepts undeclared value 'victim'"),
         "{error}"
     );
-    let error = workshop_rs::catalog::Catalog::load(&catalog("eventPlayer"))
-        .expect_err("a value without a call form must fail");
-    assert!(error.to_string().contains("has no call form"), "{error}");
+    for shaped in ["eventPlayer", "true"] {
+        let error = workshop_rs::catalog::Catalog::load(&catalog(shaped))
+            .expect_err("a value without a call form must fail");
+        assert!(error.to_string().contains("has no call form"), "{error}");
+    }
 }
 
 /// An accepted value follows its own arity rules: omitted trailing defaults
