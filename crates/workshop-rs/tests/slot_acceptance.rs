@@ -1,6 +1,6 @@
-use workshop_rs::{parser, validate};
+use workshop_rs::{compare, parser, validate};
 
-use crate::common::{catalog, en, fixture_text};
+use crate::common::{catalog, en, fixture_text, zh};
 
 /// Each probe isolates one argument whose semantic type does not match the
 /// declared parameter type. Under ADR-0014 these stay rejected until a client
@@ -56,4 +56,29 @@ fn probe(name: &str) -> workshop_rs::Program {
     let text = fixture_text("slot-acceptance", name);
     parser::parse(&text, &catalog(), &en())
         .unwrap_or_else(|error| panic!("{name} must parse: {error}"))
+}
+
+/// The zh-CN files are what a zh-CN client pastes; each must be the same
+/// program as its en-US source.
+#[test]
+fn zh_cn_probes_match_their_en_us_sources() {
+    let names = REJECTED
+        .iter()
+        .map(|&(name, _)| name)
+        .chain(["control-string-slice-string.ws"]);
+    for name in names {
+        let zh_name = name.replace(".ws", ".zh-CN.ow");
+        let zh_program = parser::parse(
+            &fixture_text("slot-acceptance", &zh_name),
+            &catalog(),
+            &zh(),
+        )
+        .unwrap_or_else(|error| panic!("{zh_name} must parse: {error}"));
+        let en_program = probe(name);
+        assert!(
+            compare::equivalent(&en_program, &zh_program),
+            "{zh_name}: {:?}",
+            compare::difference(&en_program, &zh_program)
+        );
+    }
 }

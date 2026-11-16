@@ -6,12 +6,14 @@ value whose semantic type differs from the declared parameter type?
 rejects such a value until acceptance evidence exists. A client capture of
 one of these probes is that evidence.
 
-Each file is a complete raw en-US Workshop program. `combined.ws` holds every
-form in one rule and logs each value to the Inspector; the other files hold
-one form each, so a rejected paste points at a single form.
-`tests/slot_acceptance.rs` pins the current `workshop-rs` result: the control
-validates and every other probe is rejected. Passing the probes through the client is a manual step and is
-**not** asserted anywhere in this repository.
+Each `.ws` file is a complete raw en-US Workshop program, and the
+`.zh-CN.ow` file of the same name is the same program for a zh-CN client.
+`combined.ws` holds every form in one rule and logs each value to the
+Inspector; the other files hold one form each, so a rejected paste points at a
+single form. `tests/slot_acceptance.rs` pins the current `workshop-rs` result:
+the control validates, every other probe is rejected, and each zh-CN file is
+equivalent to its en-US source. Passing the probes through the client is a
+manual step and is **not** asserted anywhere in this repository.
 
 ## Probe inventory
 
@@ -31,8 +33,9 @@ Follow the client test protocol in
 [`docs/import-limits.md`](../../../../../docs/import-limits.md#client-test-protocol),
 with these result rules:
 
-1. Paste `combined.ws` into an empty Workshop. The client checks the whole
-   paste, so one rejected form rejects all of them.
+1. Paste `combined.ws` (`combined.zh-CN.ow` for a zh-CN client) into an empty
+   Workshop. The client checks the whole paste, so one rejected form rejects
+   all of them.
    - If the client keeps the rule, copy the Workshop text back out unedited,
      start the game, and save the Inspector log through the `SA done` line.
      Each form whose exported value is unchanged is accepted; the log shows

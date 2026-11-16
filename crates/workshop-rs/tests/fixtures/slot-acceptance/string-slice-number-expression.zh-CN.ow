@@ -1,0 +1,14 @@
+变量 {
+    全局:
+        0: probe
+        1: t
+}
+
+规则 ("slot acceptance: string-slice-number-expression") {
+    事件 {
+        持续 - 全局;
+    }
+    动作 {
+        设置全局变量(probe, 截取字符串(加(余数(全局.t, 60), 100), 1, 2));
+    }
+}
