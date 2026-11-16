@@ -8703,7 +8703,7 @@
       }
     }
   ],
-  "digest": "bd6ef06fdc2ea233c0c4bcdfc91307a7dc5e3ae1c4ee08611cd8304c0993b1e4",
+  "digest": "5dcbe9d01084f98c471913feb06a8296e36e46e927765e4282bf84b35158d670",
   "enums": [
     {
       "domain": "Impulse",
@@ -28864,6 +28864,11 @@
         "zh-TW": "String Slice"
       },
       "id": "stringSlice",
+      "paramAcceptedValues": [
+        [
+          "add"
+        ]
+      ],
       "paramCoercions": [
         {
           "emptyArrayAsString": true
@@ -28877,7 +28882,7 @@
         "count"
       ],
       "paramTypes": [
-        "String",
+        "String|Player",
         "Number",
         "Number|Boolean"
       ],
@@ -29274,7 +29279,7 @@
         "value"
       ],
       "paramTypes": [
-        "Number"
+        "Number|Player"
       ],
       "params": [
         "value"

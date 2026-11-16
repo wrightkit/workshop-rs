@@ -1,0 +1,5 @@
+[00:00:01] SA1 control=bc
+[00:00:01] SA3 number_expression=07
+[00:00:01] SA5 player=
+[00:00:01] SA6 square_root_player=0
+[00:00:01] SA done

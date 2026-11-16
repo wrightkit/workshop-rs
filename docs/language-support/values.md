@@ -227,12 +227,12 @@ This document inventories canonical Workshop values and expressions in `workshop
 | `Spawn Points` | ✅ Supported | Returns: `Array`; Parameters: (Team: Team). |
 | `Speed Of` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player). |
 | `Speed Of In Direction` | ✅ Supported | Returns: `Number`; Parameters: (Player: Player, Direction: Vector). |
-| `Square Root` | ✅ Supported | Returns: `Number`; Parameters: (value: Number). |
+| `Square Root` | ✅ Supported | Returns: `Number`; Parameters: (value: Number|Player). |
 | `String` | ✅ Supported | Returns: `String`; Parameters: (String: String, {0}: Object|Array, {1}: Object|Array, {2}: Object|Array). `Custom String` remains supported. |
 | `String Contains` | ✅ Supported | Returns: `Boolean`; Parameters: (String: String, String: String). |
 | `String Length` | ✅ Supported | Returns: `Number`; Parameters: (String: String). |
 | `String Replace` | ✅ Supported | Returns: `String`; Parameters: (String: String|Array, Search: String|Array, Replacement: String|Array|EntityId). |
-| `String Slice` | ✅ Supported | Returns: `String`; Parameters: (String: String, Start Index: Number, Count: Number|Boolean). |
+| `String Slice` | ✅ Supported | Returns: `String`; Parameters: (String: String|Player, Start Index: Number, Count: Number|Boolean). |
 | `String Split` | ✅ Supported | Returns: `Array`; Parameters: (String: String|Array|EntityId|Color, Separator: String|Array). |
 | `Subtract` | ✅ Supported | Returns: `Number|Vector`; Parameters: (a: Number|Boolean|Vector, b: Number|Boolean|Vector). |
 | `Tangent From Degrees` | ✅ Supported | Returns: `Number`; Parameters: (Number: Number). |
