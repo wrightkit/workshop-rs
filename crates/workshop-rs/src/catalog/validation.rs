@@ -96,6 +96,13 @@ impl Catalog {
                         entry.id
                     )));
                 }
+                if crate::wir::SHAPED_VALUE_IDS.contains(&value.as_str()) {
+                    return Err(CatalogError::validation(format!(
+                        "{} '{}' accepts '{value}', which has no call form",
+                        entry.kind.as_str(),
+                        entry.id
+                    )));
+                }
             }
             for domain in entry.param_domains.iter().flatten() {
                 if !self.enum_by_domain.contains_key(domain) {

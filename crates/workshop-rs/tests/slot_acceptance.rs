@@ -78,7 +78,7 @@ fn parse(name: &str, locale: &workshop_rs::catalog::Locale) -> workshop_rs::Prog
 }
 
 #[test]
-fn accepted_values_must_name_declared_values() {
+fn accepted_values_must_name_declared_call_form_values() {
     let catalog = |accepted: &str| {
         format!(
             r#"{{
@@ -88,6 +88,7 @@ fn accepted_values_must_name_declared_values() {
         "provenance": {{ "generator": "g", "generatorVersion": "0", "source": "s", "license": "l", "reviewed": true }},
         "values": [
             {{ "id": "hostPlayer", "aliases": {{ "en-US": "Host Player" }}, "params": [], "returnType": "Player" }},
+            {{ "id": "eventPlayer", "aliases": {{ "en-US": "Event Player" }}, "params": [], "returnType": "Player" }},
             {{ "id": "squareRoot", "aliases": {{ "en-US": "Square Root" }}, "params": ["Value"],
                "paramTypes": ["Number"], "paramAcceptedValues": [["{accepted}"]], "returnType": "Number" }}
         ]
@@ -95,14 +96,17 @@ fn accepted_values_must_name_declared_values() {
         )
     };
     workshop_rs::catalog::Catalog::load(&catalog("hostPlayer")).expect("a declared value loads");
-    let error = workshop_rs::catalog::Catalog::load(&catalog("eventPlayer"))
+    let error = workshop_rs::catalog::Catalog::load(&catalog("victim"))
         .expect_err("an undeclared value must fail");
     assert!(
         error
             .to_string()
-            .contains("accepts undeclared value 'eventPlayer'"),
+            .contains("accepts undeclared value 'victim'"),
         "{error}"
     );
+    let error = workshop_rs::catalog::Catalog::load(&catalog("eventPlayer"))
+        .expect_err("a value without a call form must fail");
+    assert!(error.to_string().contains("has no call form"), "{error}");
 }
 
 /// An accepted value follows its own arity rules: omitted trailing defaults

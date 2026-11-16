@@ -250,7 +250,9 @@ impl CatalogEntry {
 
     /// Values whose result the client accepts at an argument position although
     /// their return type differs from the declared parameter type. Each entry
-    /// is backed by a recorded client capture (ADR-0014).
+    /// is backed by a recorded client capture (ADR-0014). Only values in call
+    /// form qualify. Like every per-parameter list, a variadic entry's last
+    /// list applies to the repeated parameters.
     pub fn param_accepted_values(&self, index: usize) -> &[String] {
         param_at(&self.param_accepted_values, index, self.variadic).map_or(&[], Vec::as_slice)
     }
