@@ -31,7 +31,7 @@ is the same program as its en-US source.
 
 ## Results
 
-zh-CN client, 2026-11-16. The client version was not recorded.
+zh-CN client, version 2.25.1.0-155284.1, 2026-11-16.
 
 | Round | Form | Client |
 | --- | --- | --- |
