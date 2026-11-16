@@ -1,8 +1,10 @@
-use serde::Deserialize;
 use serde_json::Value;
 use std::sync::OnceLock;
 
 use super::PathPart::{self, Hero, Part, Team};
+pub(crate) use super::hero_names::{
+    hero_setting_alias, hero_setting_display_matches, hero_setting_has_alias, hero_setting_name,
+};
 use super::inheritance::inherits_general_key;
 pub(crate) use super::inheritance::mode_inherited_entry;
 pub(crate) use super::names::names_eq;
@@ -559,7 +561,6 @@ const fn enum_member(domain: &'static str, member: &'static str, name: &'static 
 }
 
 include!("data/generated_entries.rs");
-include!("data/generated_hero_settings.rs");
 
 pub(crate) static ENUM_MEMBERS: &[EnumMember] = &[
     enum_member("mapRotation", "afterAGame", "After A Game"),
@@ -744,53 +745,6 @@ pub(crate) fn ability_slot_for_path(path: &[PathPart<'_>]) -> Option<&'static st
     }
 }
 
-pub(crate) fn hero_setting_name(hero: &str, key: &str, locale: &str) -> Option<&'static str> {
-    hero_setting_aliases()
-        .iter()
-        .find(|alias| {
-            alias.hero == hero && alias.key == key && alias.locale.eq_ignore_ascii_case(locale)
-        })
-        .map(|alias| alias.display.as_str())
-        .or_else(|| {
-            GENERATED_HERO_SETTING_NAMES
-                .iter()
-                .find(|entry| entry.hero == hero && entry.key == key)
-                .and_then(|entry| entry.localized(locale))
-        })
-        .or_else(|| {
-            if locale.eq_ignore_ascii_case("en-US") {
-                GENERATED_HERO_SETTING_NAMES
-                    .iter()
-                    .find(|entry| entry.hero == hero && entry.key == key)
-                    .filter(|entry| {
-                        entry.locales.iter().any(|(known, value)| {
-                            known.eq_ignore_ascii_case(locale)
-                                && (value.trim().is_empty() || value.starts_with(' '))
-                        })
-                    })
-                    .map(|entry| entry.key)
-            } else {
-                None
-            }
-        })
-}
-
-pub(crate) fn hero_setting_display_matches(
-    hero: &str,
-    key: &str,
-    locale: &str,
-    display: &str,
-) -> bool {
-    if hero_setting_has_alias(hero, key, locale) {
-        return false;
-    }
-    GENERATED_HERO_SETTING_NAMES
-        .iter()
-        .filter(|entry| entry.hero == hero && entry.key == key)
-        .filter_map(|entry| entry.localized(locale))
-        .any(|name| names_eq(name, display))
-}
-
 pub(crate) fn hero_key_template(key: &str) -> Option<&'static str> {
     GENERATED_ENTRIES
         .iter()
@@ -807,37 +761,6 @@ pub(crate) fn hero_key_template(key: &str) -> Option<&'static str> {
         })
         .map(|entry| entry.workshop_name)
         .filter(|name| name.contains("%1$s"))
-}
-
-#[derive(Deserialize)]
-struct HeroSettingAlias {
-    hero: String,
-    key: String,
-    locale: String,
-    display: String,
-}
-
-fn hero_setting_aliases() -> &'static [HeroSettingAlias] {
-    static ALIASES: OnceLock<Vec<HeroSettingAlias>> = OnceLock::new();
-    ALIASES.get_or_init(|| {
-        serde_json::from_str(include_str!("data/hero_setting_aliases.json"))
-            .expect("hero setting alias data is valid JSON")
-    })
-}
-
-pub(crate) fn hero_setting_has_alias(hero: &str, key: &str, locale: &str) -> bool {
-    hero_setting_aliases().iter().any(|alias| {
-        alias.hero == hero && alias.key == key && alias.locale.eq_ignore_ascii_case(locale)
-    })
-}
-
-pub(crate) fn hero_setting_alias(hero: &str, key: &str, locale: &str, display: &str) -> bool {
-    hero_setting_aliases().iter().any(|alias| {
-        alias.hero == hero
-            && alias.key == key
-            && alias.locale.eq_ignore_ascii_case(locale)
-            && names_eq(&alias.display, display)
-    })
 }
 
 const BOOL_VALUE_ALIASES: &[(&str, &str, &str, bool)] =
