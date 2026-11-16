@@ -174,8 +174,10 @@ committed together.
   change.
 * `catalog-digest`: sha256 of the canonical (sorted-key) serialization of the
   dataset content excluding the self-referential `digest` field; recomputed
-  by `workshop-catalog-gen build` and verified at load and by the pinned
-  digest test (`tests/identity.rs`).
+  by `workshop-catalog-gen build` and verified by `workshop-catalog-gen check`
+  and the pinned digest test (`tests/identity.rs`). `Catalog::load` verifies
+  the digest of a supplied dataset; the embedded dataset is fixed at compile
+  time, so `Catalog::builtin_ref` does not recompute it on each process start.
 * `locale-coverage`: declared locales with per-locale mapped/total counts.
 * `target-source`: recorded in the dataset `target` record.
 

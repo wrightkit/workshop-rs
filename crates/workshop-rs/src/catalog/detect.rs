@@ -26,8 +26,7 @@ pub const MIN_MATCHES: usize = 2;
 pub fn detect(input: &str, catalog: &Catalog) -> Detection {
     let counts = catalog
         .detection_index
-        .as_ref()
-        .expect("validated catalog")
+        .get_or_init(|| AliasIndex::build(catalog))
         .counts(input, catalog.locales().len());
     let mut candidates: Vec<(Locale, usize)> = catalog
         .locales()
@@ -106,7 +105,7 @@ pub(super) struct AliasIndex {
 }
 
 impl AliasIndex {
-    pub(super) fn build(catalog: &Catalog) -> std::result::Result<Self, aho_corasick::BuildError> {
+    fn build(catalog: &Catalog) -> Self {
         let mut patterns = Vec::new();
         let mut by_spelling = HashMap::new();
         let mut locale_indices: Vec<Vec<usize>> = Vec::new();
@@ -156,10 +155,12 @@ impl AliasIndex {
                 locale_indices[pattern].push(locale_index);
             }
         }
-        Ok(Self {
-            matcher: AhoCorasick::new(patterns)?,
+        Self {
+            // Construction fails only when the automaton exceeds its state
+            // or pattern ID limits, far above any catalog's alias count.
+            matcher: AhoCorasick::new(patterns).expect("catalog aliases fit the matcher limits"),
             locale_indices,
-        })
+        }
     }
 
     fn counts(&self, input: &str, locale_count: usize) -> Vec<usize> {
