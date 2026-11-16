@@ -89,6 +89,7 @@ fn accepted_values_must_name_declared_call_form_values() {
         "values": [
             {{ "id": "hostPlayer", "aliases": {{ "en-US": "Host Player" }}, "params": [], "returnType": "Player" }},
             {{ "id": "eventPlayer", "aliases": {{ "en-US": "Event Player" }}, "params": [], "returnType": "Player" }},
+            {{ "id": "true", "aliases": {{ "en-US": "True" }}, "params": [], "returnType": "Boolean" }},
             {{ "id": "squareRoot", "aliases": {{ "en-US": "Square Root" }}, "params": ["Value"],
                "paramTypes": ["Number"], "paramAcceptedValues": [["{accepted}"]], "returnType": "Number" }}
         ]
