@@ -326,6 +326,14 @@ fn rejected(mutate: impl FnOnce(&mut Value), expected: &str) {
 }
 
 #[test]
+fn embedded_descriptions_match_their_declared_digest() {
+    let mut catalog = catalog();
+    catalog
+        .load_descriptions(DESCRIPTIONS_DATA)
+        .expect("the embedded descriptions match their declared digest");
+}
+
+#[test]
 fn digest_mismatch_fails_verified_load() {
     let mut catalog = catalog();
     let tampered = DESCRIPTIONS_DATA.replacen("Creates hud text", "Creates hud text!", 1);

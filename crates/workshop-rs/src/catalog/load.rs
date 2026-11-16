@@ -164,7 +164,7 @@ impl Catalog {
         }
 
         let mut catalog = Catalog {
-            detection_index: None,
+            detection_index: OnceLock::new(),
             schema_version: file.schema_version,
             locales,
             target: file.target,
@@ -224,10 +224,6 @@ impl Catalog {
         catalog.build_normalized_index();
         catalog.validate_param_domains()?;
         catalog.validate_param_content()?;
-        catalog.detection_index =
-            Some(super::detect::AliasIndex::build(&catalog).map_err(|error| {
-                CatalogError::validation(format!("locale detection index: {error}"))
-            })?);
         Ok(catalog)
     }
 
@@ -238,12 +234,16 @@ impl Catalog {
 
     /// The built-in catalog, parsed and indexed once per process. The
     /// embedded description dataset (`descriptions.json`) is attached and
-    /// verified with it.
+    /// validated with it.
+    ///
+    /// The embedded datasets are fixed at compile time, so their content
+    /// digests are verified by the test suite and `workshop-catalog-gen
+    /// check` instead of on every process start.
     pub fn builtin_ref() -> std::result::Result<&'static Catalog, &'static WorkshopError> {
         static DATA: OnceLock<Result<Catalog>> = OnceLock::new();
         match DATA.get_or_init(|| {
-            let mut catalog = Self::load(CATALOG_DATA)?;
-            catalog.load_descriptions(super::descriptions::DESCRIPTIONS_DATA)?;
+            let mut catalog = Self::load_unverified(CATALOG_DATA)?;
+            catalog.load_descriptions_unverified(super::descriptions::DESCRIPTIONS_DATA)?;
             Ok(catalog)
         }) {
             Ok(catalog) => Ok(catalog),

@@ -302,7 +302,10 @@ fn lookup_normalized<'a, V>(
 /// The validated canonical Workshop catalog.
 #[derive(Debug, Clone)]
 pub struct Catalog {
-    detection_index: Option<detect::AliasIndex>,
+    /// Built on the first [`detect::detect`] call: most callers pass an
+    /// explicit locale and never need it, and it is the largest share of
+    /// catalog load time.
+    detection_index: std::sync::OnceLock<detect::AliasIndex>,
     pub(crate) schema_version: u32,
     pub(crate) locales: Vec<Locale>,
     pub(crate) target: TargetMeta,
