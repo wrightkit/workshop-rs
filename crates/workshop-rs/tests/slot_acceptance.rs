@@ -24,6 +24,10 @@ const REJECTED: &[(&str, &str)] = &[
         "'stringSlice' argument 1 must have semantic type 'String', got Player",
     ),
     (
+        "combined.ws",
+        "'stringSlice' argument 1 must have semantic type 'String', got Number",
+    ),
+    (
         "square-root-player.ws",
         "'squareRoot' argument 1 must have semantic type 'Number', got Player",
     ),
