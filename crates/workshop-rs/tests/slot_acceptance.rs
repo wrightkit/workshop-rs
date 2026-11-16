@@ -33,15 +33,18 @@ const CLIENT_EXPORTS: &[&str] = &[
 #[test]
 fn validation_agrees_with_the_client_on_every_probed_form() {
     for &(value, accepted) in CLIENT_RESULTS {
-        let source = format!(
-            "variables {{\n    global:\n        0: probe\n        1: t\n}}\n\
-             rule (\"r\") {{\n    event {{ Ongoing - Global; }}\n    actions {{\n        \
-             Set Global Variable(probe, {value});\n    }}\n}}\n"
-        );
-        let program = parser::parse(&source, &catalog(), &en())
-            .unwrap_or_else(|error| panic!("{value} must parse: {error}"));
-        let result = validate::validate_canonical_ids(&program, &catalog());
+        let result = validate::validate_canonical_ids(&program_with(value), &catalog());
         assert_eq!(result.is_ok(), accepted, "{value}: {result:?}");
+    }
+}
+
+/// `Add()` and bare `Add` parse as the zero-argument operation helper, not as
+/// the `Add` value the client accepted; they stay rejected.
+#[test]
+fn the_add_operation_helper_is_not_an_accepted_value() {
+    for value in ["String Slice(Add(), 1, 2)", "String Slice(Add, 1, 2)"] {
+        let result = validate::validate_canonical_ids(&program_with(value), &catalog());
+        assert!(result.is_err(), "{value} must be rejected");
     }
 }
 
@@ -100,4 +103,14 @@ fn accepted_values_must_name_declared_values() {
             .contains("accepts undeclared value 'eventPlayer'"),
         "{error}"
     );
+}
+
+fn program_with(value: &str) -> workshop_rs::Program {
+    let source = format!(
+        "variables {{\n    global:\n        0: probe\n        1: t\n}}\n\
+         rule (\"r\") {{\n    event {{ Ongoing - Global; }}\n    actions {{\n        \
+         Set Global Variable(probe, {value});\n    }}\n}}\n"
+    );
+    parser::parse(&source, &catalog(), &en())
+        .unwrap_or_else(|error| panic!("{value} must parse: {error}"))
 }

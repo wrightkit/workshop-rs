@@ -259,7 +259,7 @@ fn validate_call_argument(
     if let Some(expected) = entry.param_type(index)
         && !value_matches_type(program, catalog, arg_id, expected)
         && !contextual_value_matches(entry, index, program, arg_id, expected)
-        && !accepted_value_matches(entry, index, program, arg_id)
+        && !accepted_value_matches(entry, index, program, catalog, arg_id)
     {
         let actual = value_type_name(program, catalog, arg_id);
         return Err(WorkshopError::unsupported(
@@ -328,16 +328,23 @@ fn validate_call_argument(
     Ok(())
 }
 
+/// A call to a value the catalog accepts at this position. The call must
+/// match that value's own signature: the zero-argument `add` operation helper
+/// shares the id but is not an `Add` value.
 fn accepted_value_matches(
     entry: &crate::catalog::CatalogEntry,
     index: usize,
     program: &wir::Program,
+    catalog: &Catalog,
     value_id: wir::ValueId,
 ) -> bool {
     matches!(
         program.values.get(value_id),
-        Some(wir::ValueNode { value: wir::Value::Call { name, .. }, .. })
+        Some(wir::ValueNode { value: wir::Value::Call { name, args }, .. })
             if entry.param_accepted_values(index).contains(name)
+                && catalog
+                    .entry(Kind::Value, name)
+                    .is_some_and(|value| value.params.len() == args.len())
     )
 }
 
