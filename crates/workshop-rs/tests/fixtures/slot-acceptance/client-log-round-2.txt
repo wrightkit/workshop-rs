@@ -1,0 +1,4 @@
+[00:00:01] SB1 control=bc
+[00:00:01] SB4 add_literals=00
+[00:00:01] SB5 variable=
+[00:00:01]

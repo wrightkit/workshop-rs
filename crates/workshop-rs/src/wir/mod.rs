@@ -26,6 +26,18 @@ pub(crate) type ValueId = Id<ValueNode>;
 
 pub(crate) const AMBIGUOUS_ENUM_CALL: &str = "__ambiguous_enum";
 
+/// Catalog values that WIR does not represent as a `Value::Call` named by
+/// their id: dedicated variants, and `compare`, which is named by its operator.
+pub(crate) const SHAPED_VALUE_IDS: [&str; 7] = [
+    "true",
+    "false",
+    "null",
+    "eventPlayer",
+    "array",
+    "vector",
+    "compare",
+];
+
 pub(crate) fn is_canonical_helper(name: &str) -> bool {
     matches!(name, "memberAccess" | "+" | "-" | "*" | "/" | "%") || is_operation_helper(name)
 }

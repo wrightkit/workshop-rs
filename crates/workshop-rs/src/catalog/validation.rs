@@ -24,6 +24,7 @@ impl Catalog {
                 ("param defaults", entry.param_defaults.len()),
                 ("param types", entry.param_types.len()),
                 ("param coercions", entry.param_coercions.len()),
+                ("param accepted values", entry.param_accepted_values.len()),
                 ("param content facts", entry.param_content.len()),
             ] {
                 if count > entry.params.len() {
@@ -85,6 +86,22 @@ impl Catalog {
                             )));
                         }
                     }
+                }
+            }
+            for value in entry.param_accepted_values.iter().flatten() {
+                if self.entry(Kind::Value, value).is_none() {
+                    return Err(CatalogError::validation(format!(
+                        "{} '{}' accepts undeclared value '{value}'",
+                        entry.kind.as_str(),
+                        entry.id
+                    )));
+                }
+                if crate::wir::SHAPED_VALUE_IDS.contains(&value.as_str()) {
+                    return Err(CatalogError::validation(format!(
+                        "{} '{}' accepts '{value}', which has no call form",
+                        entry.kind.as_str(),
+                        entry.id
+                    )));
                 }
             }
             for domain in entry.param_domains.iter().flatten() {

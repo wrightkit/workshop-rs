@@ -42,6 +42,8 @@ mod real_projects;
 mod rule_content;
 #[path = "rule_content_call_ids.rs"]
 mod rule_content_call_ids;
+#[path = "slot_acceptance.rs"]
+mod slot_acceptance;
 #[path = "statement_edit.rs"]
 mod statement_edit;
 #[path = "statement_edit_layout.rs"]

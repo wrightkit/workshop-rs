@@ -72,6 +72,8 @@ struct EntryFile {
     #[serde(default)]
     param_coercions: Vec<Option<ParamCoercions>>,
     #[serde(default)]
+    param_accepted_values: Vec<Vec<String>>,
+    #[serde(default)]
     param_content: Vec<Option<ParamContent>>,
     #[serde(default)]
     return_type: Option<String>,
@@ -402,6 +404,7 @@ impl Catalog {
             param_defaults: item.param_defaults,
             param_types: item.param_types,
             param_coercions: item.param_coercions,
+            param_accepted_values: item.param_accepted_values,
             param_content: item.param_content,
             return_type: item.return_type,
             reevaluation_coverage: item.reevaluation_coverage,

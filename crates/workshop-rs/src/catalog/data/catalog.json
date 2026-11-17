@@ -8703,7 +8703,7 @@
       }
     }
   ],
-  "digest": "bd6ef06fdc2ea233c0c4bcdfc91307a7dc5e3ae1c4ee08611cd8304c0993b1e4",
+  "digest": "48222a214e592838211de0b1e46b1b849225df96ff1dfa5615d1d646fa091e1f",
   "enums": [
     {
       "domain": "Impulse",
@@ -26121,7 +26121,7 @@
     "generatorVersion": "0.1.0",
     "license": "MIT (WrightKit-authored data, ownership transfer to workshop-rs per wright#136 direction; see docs/provenance.md)",
     "reviewed": true,
-    "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); rule-event identities and EventTeam/EventPlayer filter aliases are transcribed from the user-provided workshop-data export and its Workshop event annotations, cross-checked against documented raw Workshop event forms; migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; declared-locale action/value/event/enum aliases for the 15-locale Workshop set are generated from the user-provided workshop-data JSON, while the separately declared Wait parameter labels are documented below; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; the exact-match corpus and its exclusions are pinned separately in tools/corpus/zh-cn-corpus.json",
+    "source": "en-US spellings transcribed from the compatibility corpus workshop snapshots and the M5 support matrix; squareRoot spelling from the Workshop emission surface for .opy sqrt(); receiver-call action/value spellings (setMoveSpeed, isAlive, getPosition, getHealth, teleport, setMaxHealth, setHealth, setAimSpeed, setGravity, setDamageDealt, setDamageReceived, setUltCharge) from the pinned en-US emission surface for .opy eventPlayer.<method>(...) forms, evidenced by the synthetic/receiver-calls corpus fixture (#104); ChaseTimeReeval and ChaseRateReeval member spellings (None, Destination and Duration, Destination and Rate) reference-validated against the pinned enum blocks and emission (#105); chaseOverTime (Chase Global Variable Over Time), isGameInProgress (Is Game In Progress), getPlayersInRadius (Players Within Radius), worldVector (World Vector Of), getThrottle (Throttle Of), setInvisibility (Set Invisible) with the Invis domain, setStatusEffect (Set Status) with the Status domain, the Transform domain, and the LosCheck domain transcribed from the en-US emission surface for the OPY semantic manifest probes (#109); chaseAtRate (Chase Global Variable At Rate), chasePlayerVariableAtRate (Chase Player Variable At Rate), and chasePlayerVariableOverTime (Chase Player Variable Over Time) transcribed from the en-US emission surface for the chase keyword-argument probes (#110); OSTW exercised builtin params/spellings and enum domain/member data transcribed from pinned reference probe emissions and the protect-ban entry-point reachable closure (#118); rule-event identities and EventTeam/EventPlayer filter aliases are transcribed from the user-provided workshop-data export and its Workshop event annotations, cross-checked against documented raw Workshop event forms; migrated to workshop-rs from the Wright-authored catalog on 2026-08-16 as the canonical Workshop catalog; the chase-family expected enum domains migrate the Wright-authored semantic manifest probe data (#109/#110) into the canonical catalog so the standalone core resolves the shared bare None member without any Wright tooling dependency; declared-locale action/value/event/enum aliases for the 15-locale Workshop set are generated from the user-provided workshop-data JSON, while the separately declared Wait parameter labels are documented below; confirmed identity/GUID mappings cover global stop-chasing, force hero/throttle, Set Player Allowed Heroes, the four bare comparison symbols, and three enum aliases; legacy/provider syntax sugar is intentionally outside the declared catalog surface; the exact-match corpus and its exclusions are pinned separately in tools/corpus/zh-cn-corpus.json; the stringSlice and squareRoot argument-1 Player unions and the stringSlice paramAcceptedValues add fact come from zh-CN client captures (client 2.25.1.0-155284.1) recorded in crates/workshop-rs/tests/fixtures/slot-acceptance",
     "sourceNotes": [
       "paramContent operations facts name the rule-content-v1 modify operator call ids a parameter accepts (the zero-argument call nodes {\"call\": \"add\", \"args\": []} and siblings); the Operation enum domain and its paramDomains claims are removed because the operand is an operator call id, not an enum member (workshop-rs#504)",
       "per-parameter rule-content-v1 facts (paramContent) describe the structured document layout where a surface parameter list folds into fewer content arguments: fold names the reserved globalVariable/playerVariable target call and the argument index the parameter supplies; the member's node form follows its declared parameter type (a Variable parameter supplies the tagged {\"variable\"} node); the shapes match the rule-content-v1 schema's reserved calls and the emitter contract in rules/content.rs (workshop-rs#503)",
@@ -28864,6 +28864,11 @@
         "zh-TW": "String Slice"
       },
       "id": "stringSlice",
+      "paramAcceptedValues": [
+        [
+          "add"
+        ]
+      ],
       "paramCoercions": [
         {
           "emptyArrayAsString": true
@@ -28877,7 +28882,7 @@
         "count"
       ],
       "paramTypes": [
-        "String",
+        "String|Player",
         "Number",
         "Number|Boolean"
       ],
@@ -29274,7 +29279,7 @@
         "value"
       ],
       "paramTypes": [
-        "Number"
+        "Number|Player"
       ],
       "params": [
         "value"
@@ -35139,5 +35144,5 @@
       "returnType": "Number"
     }
   ],
-  "version": "0.1.15"
+  "version": "0.1.16"
 }

@@ -4,7 +4,7 @@
 //! The structs here are the loaded form of an `actions`/`values`/`structural`
 //! catalog object: the signature surface (`params`, `paramNames`,
 //! `paramAliases`, `paramDomains`, `paramDefaults`, `paramTypes`,
-//! `paramCoercions`, `paramContent`), the reviewed evaluation facts
+//! `paramCoercions`, `paramAcceptedValues`, `paramContent`), the reviewed evaluation facts
 //! (`reevaluationCoverage`, `nondeterministic`, `perElementParams`,
 //! `actionReevaluatedParams`), and the localized spellings that resolve the
 //! entry. Unknown or unreviewed facts stay `None` so consumers can tell them
@@ -28,6 +28,7 @@ pub struct CatalogEntry {
     pub(crate) param_defaults: Vec<Option<String>>,
     pub(crate) param_types: Vec<Option<String>>,
     pub(crate) param_coercions: Vec<Option<ParamCoercions>>,
+    pub(crate) param_accepted_values: Vec<Vec<String>>,
     pub(crate) param_content: Vec<Option<ParamContent>>,
     pub(crate) return_type: Option<String>,
     pub(crate) reevaluation_coverage: Option<BTreeMap<String, Vec<usize>>>,
@@ -245,6 +246,15 @@ impl CatalogEntry {
     /// The contextual literal substitutions for an argument position.
     pub fn param_coercions(&self, index: usize) -> Option<&ParamCoercions> {
         param_at(&self.param_coercions, index, self.variadic).and_then(Option::as_ref)
+    }
+
+    /// Values whose result the client accepts at an argument position although
+    /// their return type differs from the declared parameter type. Each entry
+    /// is backed by a recorded client capture (ADR-0014). Only values in call
+    /// form qualify. Like every per-parameter list, a variadic entry's last
+    /// list applies to the repeated parameters.
+    pub fn param_accepted_values(&self, index: usize) -> &[String] {
+        param_at(&self.param_accepted_values, index, self.variadic).map_or(&[], Vec::as_slice)
     }
 
     /// The `rule-content-v1` facts for an argument position: how the
