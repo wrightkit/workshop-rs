@@ -157,6 +157,22 @@ impl WorkshopError {
         }
     }
 
+    /// This error with `fallback` attached when it records no span, so a
+    /// failure inside an unmapped node points at its nearest mapped ancestor.
+    pub(crate) fn or_span(mut self, fallback: Option<Span>) -> Self {
+        if let WorkshopError::Unknown { span, .. }
+        | WorkshopError::UnknownWithCandidates { span, .. }
+        | WorkshopError::NotDetected { span, .. }
+        | WorkshopError::Malformed { span, .. }
+        | WorkshopError::Warning { span, .. }
+        | WorkshopError::Unsupported { span, .. } = &mut self
+            && span.is_none()
+        {
+            *span = fallback;
+        }
+        self
+    }
+
     /// The source span attached to this error, when recorded.
     pub fn span(&self) -> Option<Span> {
         match self {

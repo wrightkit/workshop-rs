@@ -17,6 +17,17 @@ pub(crate) fn validate_value(
     let Some(node) = program.values.get(value_id) else {
         return Ok(());
     };
+    validate_value_node(program, catalog, value_id, node, tolerate_residuals)
+        .map_err(|error| error.or_span(node.span))
+}
+
+fn validate_value_node(
+    program: &wir::Program,
+    catalog: &Catalog,
+    value_id: wir::ValueId,
+    node: &wir::ValueNode,
+    tolerate_residuals: bool,
+) -> Result<()> {
     match &node.value {
         wir::Value::Call { name, args } => {
             if name == wir::AMBIGUOUS_ENUM_CALL {

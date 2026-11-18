@@ -53,13 +53,15 @@ pub(crate) fn validate_wir(
             continue;
         };
         crate::events::validate::validate_event(&rule_data.event, rule_data.span, catalog)?;
+        let in_rule = |error: crate::WorkshopError| error.or_span(rule_data.span);
         for action in &rule_data.actions {
             crate::actions::validate::validate_action(
                 program,
                 catalog,
                 *action,
                 tolerate_residuals,
-            )?;
+            )
+            .map_err(in_rule)?;
         }
         for condition in &rule_data.conditions {
             crate::values::validate::validate_value(
@@ -67,7 +69,8 @@ pub(crate) fn validate_wir(
                 catalog,
                 condition.value,
                 tolerate_residuals,
-            )?;
+            )
+            .map_err(in_rule)?;
         }
     }
     Ok(())
