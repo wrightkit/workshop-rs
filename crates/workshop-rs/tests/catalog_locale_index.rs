@@ -48,3 +48,28 @@ fn every_declared_spelling_resolves_back_in_every_locale() {
         }
     }
 }
+
+#[test]
+fn enum_domain_name_collisions_are_rejected_in_either_order() {
+    let load = |first: &str, second: &str| {
+        Catalog::load(&format!(
+            r#"{{
+            "schemaVersion": 1,
+            "locales": ["en-US"],
+            "target": {{ "game": "g", "format": "f", "surface": "s" }},
+            "provenance": {{ "generator": "g", "generatorVersion": "0", "source": "s", "license": "l", "reviewed": true }},
+            "enums": [{first}, {second}]
+        }}"#
+        ))
+    };
+    let x_with_alias = r#"{ "domain": "X", "aliases": { "en-US": "Xa" }, "members": [] }"#;
+    let x_plain = r#"{ "domain": "X", "members": [] }"#;
+    let y_claims_x = r#"{ "domain": "Y", "aliases": { "en-US": "X" }, "members": [] }"#;
+    for (first, second) in [(x_with_alias, y_claims_x), (y_claims_x, x_plain)] {
+        let error = load(first, second).expect_err("a domain alias equal to another domain name");
+        assert!(
+            error.to_string().contains("duplicate enum domain alias"),
+            "{error}"
+        );
+    }
+}

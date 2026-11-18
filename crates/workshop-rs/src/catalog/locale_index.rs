@@ -99,7 +99,13 @@ impl LocaleIndex {
             }
         }
         for (domain_index, domain) in catalog.enums.iter().enumerate() {
+            // The primary locale also maps every domain's own name; that entry
+            // is registered after the declared aliases, whatever their order.
+            let primary = position == 0;
             for spelling in domain.aliases.get(locale).into_iter().flatten() {
+                if primary && *spelling == domain.domain {
+                    continue;
+                }
                 register(
                     &mut index.enum_alias_to_domain,
                     spelling,
@@ -111,6 +117,23 @@ impl LocaleIndex {
                         )
                     },
                 )?;
+            }
+            if primary {
+                let spelling = &domain.domain;
+                match index.enum_alias_to_domain.get(spelling) {
+                    Some(existing) if *existing == domain.domain => {}
+                    Some(existing) => {
+                        return Err(CatalogError::validation(format!(
+                            "duplicate enum domain alias '{spelling}' for '{existing}' and '{}' in locale '{locale}'",
+                            domain.domain
+                        )));
+                    }
+                    None => {
+                        index
+                            .enum_alias_to_domain
+                            .insert(spelling.clone(), domain.domain.clone());
+                    }
+                }
             }
             let members = index
                 .enum_alias_to_member
