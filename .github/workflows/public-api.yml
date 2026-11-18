@@ -2,19 +2,18 @@ name: Public API compatibility
 
 # This check reads the PR title and labels, so it also runs on title and label
 # events. It is a separate workflow because branch protection reads a required
-# check from the newest check suite of the workflow that reports it: a
-# metadata-only run inside CI would hide the Rust results of the code run on
-# the same head. Here every run executes the complete check for the current
-# head and metadata, so a newer run may cancel an older one.
+# check from the newest result for the head commit: a metadata-only run inside
+# CI would hide the Rust results of the code run on the same head.
+#
+# The workflow has no concurrency group on purpose. Title and label events can
+# arrive in the same second, and a cancelled run can then become the newest
+# result and block the merge although an older run passed. Every run executes
+# the complete check for the current head and metadata.
 on:
   push:
     branches: ["main"]
   pull_request:
     types: [opened, synchronize, reopened, edited, labeled, unlabeled]
-
-concurrency:
-  group: public-api-${{ github.event.pull_request.number || github.sha }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   changes:
