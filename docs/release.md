@@ -2,7 +2,7 @@
 
 `workshop-rs` keeps crate publication and binary distribution deliberately simple and separate.
 
-- The release agent decides when to release, commits the version, and pushes the single canonical `vX.Y.Z` tag. There is no Release PR.
+- A release is a committed version and a pushed `vX.Y.Z` tag, the same for a maintainer and for an agent. Whoever completes a requirement decides whether the default branch now holds a releasable change. There is no Release PR and no scheduled release job.
 - A repository-owned tag workflow checks the release gate, publishes the crates to crates.io, builds `workshop-rs-cli` for the supported targets, packages the binaries, generates checksums and `catalog-identity.json`, then creates the GitHub Release once the complete artifact set is ready.
 
 The repository follows the WrightKit [release engineering standard](https://github.com/wrightkit/.github/blob/main/docs/release-engineering.md). This document records only the repo-local contract.
@@ -36,16 +36,23 @@ The tag workflow serializes all tag pushes on one `workshop-rs-release` concurre
 
 ## Normal release flow
 
-A crates.io package is published from its committed `Cargo.toml`, and the compatibility gate compares that version with the latest published release. The committed version must therefore equal the version released. The release agent releases when the default branch has commits since the last tag that change released behavior and the required checks are green on its head. It chooses the next `MAJOR.MINOR.PATCH` from the Conventional Commits since the last tag and from `cargo semver-checks` against the latest published release (a breaking change needs a major version, or a minor version while the crate is `0.x`; `feat` needs a minor version; other released changes need a patch version). It then:
+A crates.io package is published from its committed `Cargo.toml`, and the compatibility gate compares that version with the latest published release. The committed version must therefore equal the version released. Release when the default branch has commits since the last tag that change released behavior and the required checks are green on its head. Choose the next `MAJOR.MINOR.PATCH` from the Conventional Commits since the last tag and from `cargo semver-checks` against the latest published release (a breaking change needs a major version, or a minor version while the crate is `0.x`; `feat` needs a minor version; other released changes need a patch version). Then:
 
 1. commits `chore(release): vX.Y.Z` to the default branch, which updates the workspace version, the `workshop-rs` requirement in `workshop-rs-cli`, and `Cargo.lock`, and pushes it;
-2. waits until the required checks are green on that commit and pushes the `vX.Y.Z` tag to it. The agent pushes the tag with its own credential, not the workflow `GITHUB_TOKEN`, so the push starts the release workflow.
+2. tags that commit and pushes the tag:
+
+```sh
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+Push the tag with a user or app credential, not the workflow `GITHUB_TOKEN`, so the push starts the release workflow. The release gate waits for the required checks on the tagged commit.
 
 The tag starts the release workflow:
 
 ```text
 vX.Y.Z
-  -> release gate: tag matches the workspace version, commit is on the default branch, required checks passed
+  -> release gate: tag matches the workspace version, checks on the commit passed
   -> publish both crates to crates.io
   -> build workshop-rs-cli for five targets
   -> package .tar.gz / .zip archives
@@ -126,8 +133,8 @@ Before 1.0, the job treats a `0.x` package as a major compatibility transition
 only when the pull request title uses a Conventional Commit breaking marker
 such as `refactor!: ...`. This permits an approved API-hardening issue to
 remove accidental public implementation details while the feature branch
-remains at the published version; the release agent then chooses the next `0.x`
-compatibility line. Ordinary `0.x` pull requests keep the default release-type
+remains at the published version; the next `0.x` compatibility line is chosen
+when releasing. Ordinary `0.x` pull requests keep the default release-type
 inference, so the gate continues detecting accidental breaking changes. Once
 the package reaches 1.0, the job derives the normal release type and blocks
 intentional breaking changes unless the corresponding major version release
@@ -159,7 +166,7 @@ Do not describe a migration as production-proven solely because its PR CI is gre
 ## Release procedure
 
 1. Merge normal changes through PRs using the repository's commit conventions.
-2. The release agent commits the version, waits for green checks, and pushes the tag as described in [Normal release flow](#normal-release-flow).
+2. Release as described in [Normal release flow](#normal-release-flow).
 3. Approve the protected `release` environment if required. Both `publish-crates` and `github-release` use it, so approval can be requested twice.
 4. Confirm that the tag workflow publishes the crates, builds all five targets, and creates the GitHub Release with the complete artifact set.
 
