@@ -42,7 +42,7 @@ A crates.io package is published from its committed `Cargo.toml`, and the compat
 2. tags that commit and pushes the tag:
 
 ```sh
-git tag vX.Y.Z
+git tag -a vX.Y.Z -m vX.Y.Z
 git push origin vX.Y.Z
 ```
 
