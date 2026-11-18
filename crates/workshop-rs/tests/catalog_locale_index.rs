@@ -76,6 +76,11 @@ fn enum_domain_name_collisions_are_rejected_in_either_order() {
     let x_repeats_itself =
         r#"{ "domain": "X", "aliases": { "en-US": ["X", "X"] }, "members": [] }"#;
     let x_names_itself = r#"{ "domain": "X", "aliases": { "en-US": ["X"] }, "members": [] }"#;
-    load(x_repeats_itself, x_plain).expect_err("a domain alias repeated within its own list");
+    let error =
+        load(x_repeats_itself, y_plain).expect_err("a domain alias repeated within its own list");
+    assert!(
+        error.to_string().contains("duplicate enum domain alias"),
+        "{error}"
+    );
     load(x_names_itself, y_plain).expect("a domain may list its own name once");
 }
