@@ -39,7 +39,7 @@ The tag workflow serializes all tag pushes on one `workshop-rs-release` concurre
 A crates.io package is published from its committed `Cargo.toml`, and the compatibility gate compares that version with the latest published release. The committed version must therefore equal the version released. The release agent releases when the default branch has commits since the last tag that change released behavior and the required checks are green on its head. It chooses the next `MAJOR.MINOR.PATCH` from the Conventional Commits since the last tag and from `cargo semver-checks` against the latest published release (a breaking change needs a major version, or a minor version while the crate is `0.x`; `feat` needs a minor version; other released changes need a patch version). It then:
 
 1. commits `chore(release): vX.Y.Z` to the default branch, which updates the workspace version, the `workshop-rs` requirement in `workshop-rs-cli`, and `Cargo.lock`, and pushes it;
-2. waits until the required checks are green on that commit and pushes the annotated `vX.Y.Z` tag to it.
+2. waits until the required checks are green on that commit and pushes the `vX.Y.Z` tag to it. The agent pushes the tag with its own credential, not the workflow `GITHUB_TOKEN`, so the push starts the release workflow.
 
 The tag starts the release workflow:
 
@@ -141,6 +141,8 @@ checks the change as a major transition instead of blocking it. The label
 is the approval record; the pull request documents why the exception was
 granted.
 
+On a push to `main` the pull request title and labels do not exist, so the `semver-exception` label and the breaking-title rule do not apply to the release commit. A release that ships an approved break must therefore carry the version the break needs (a major version, or a minor version while the crate is `0.x`); an approved break in a minor version of a stable crate needs a maintainer decision before the tag. The release gate counts a skipped check as passing.
+
 Those checks do not prove external publication behavior. A material release-topology change is considered established only after at least one real release completes the declared production path:
 
 ```text
@@ -158,7 +160,7 @@ Do not describe a migration as production-proven solely because its PR CI is gre
 
 1. Merge normal changes through PRs using the repository's commit conventions.
 2. The release agent commits the version, waits for green checks, and pushes the tag as described in [Normal release flow](#normal-release-flow).
-3. Approve the protected `release` environment if required.
+3. Approve the protected `release` environment if required. Both `publish-crates` and `github-release` use it, so approval can be requested twice.
 4. Confirm that the tag workflow publishes the crates, builds all five targets, and creates the GitHub Release with the complete artifact set.
 
 For routine releases, do not run `cargo publish`, create replacement tags, or create a GitHub Release before the tag workflow has completed its required artifacts.

@@ -74,13 +74,18 @@ jobs:
             sleep 30
             keep=()
             for name in "${pending[@]}"; do
-              out="$(gh api --method GET "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" \
+              if ! out="$(gh api --method GET "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" \
                 -f "check_name=$name" \
-                --jq '(.check_runs | sort_by(.id) | last) // {status: "missing", conclusion: ""} | "\(.status) \(.conclusion // "-")"')"
+                --jq '(.check_runs | sort_by(.id) | last) // {status: "missing", conclusion: ""} | "\(.status) \(.conclusion // "-")"' 2>&1)"; then
+                echo "check-runs API call failed for '$name': $out" >&2
+                exit 1
+              fi
               status="${out%% *}"
               conclusion="${out#* }"
               if [ "$status" = completed ]; then
-                if [ "$conclusion" != success ]; then
+                # CI skips jobs that a commit's paths do not need; a skipped
+                # check reports `skipped` and counts as passing.
+                if [ "$conclusion" != success ] && [ "$conclusion" != skipped ]; then
                   echo "FAIL $name concluded '$conclusion'" >&2
                   exit 1
                 fi
@@ -108,6 +113,9 @@ jobs:
         uses: wrightkit/.github/.github/actions/setup-rust@main
         with:
           toolchain: stable
+
+      - name: Verify publishable packages
+        run: cargo publish --workspace --locked --dry-run
 
       - name: Publish workspace crates
         env:
