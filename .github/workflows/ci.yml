@@ -3,24 +3,26 @@ name: CI
 on:
   push:
     branches: ["main"]
+  # Title and label events are deliberately absent. Branch protection reads a
+  # required check from the newest check suite of the workflow that reports it,
+  # so a metadata-only run of this workflow would hide the Rust results of the
+  # code run on the same head. Checks that read the PR title or labels live in
+  # public-api.yml.
   pull_request:
-    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+    types: [opened, synchronize, reopened]
 
 env:
   CARGO_TERM_COLOR: always
 
-# A newer push to the same pull request supersedes the older run. Title and
-# label events use their own group so they cannot cancel a running suite.
+# A newer push to the same pull request supersedes the older run.
 # Pushes to main never share a group, so each main commit keeps a complete run.
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.sha }}-${{ contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action) && 'meta' || 'code' }}
+  group: ci-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   # Skipped jobs still report their check names as passing, so a change that
   # touches only documentation does not leave a required check pending.
-  # `full` is false for edited/labeled/unlabeled events, which only need
-  # semver-check to re-read the PR title and labels.
   changes:
     name: Detect changes
     runs-on: ubuntu-latest
@@ -30,7 +32,6 @@ jobs:
       pull-requests: read
     outputs:
       code: ${{ steps.filter.outputs.code }}
-      full: ${{ steps.filter.outputs.code == 'true' && (github.event_name == 'push' || !contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action)) }}
     steps:
       - name: Check out repository
         if: github.event_name != 'pull_request'
@@ -54,7 +55,6 @@ jobs:
   check:
     name: Rust (${{ matrix.toolchain }})
     needs: changes
-    if: github.event_name == 'push' || !contains(fromJSON('["edited","labeled","unlabeled"]'), github.event.action)
     strategy:
       fail-fast: false
       matrix:
@@ -65,36 +65,6 @@ jobs:
       cache-shared-key: quality
       skip: ${{ needs.changes.outputs.code != 'true' }}
 
-  semver-check:
-    name: Public API compatibility
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Select compatibility release type
-        id: release-type
-        shell: bash
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_LABELS: ${{ toJson(github.event.pull_request.labels) }}
-        run: |
-          version="$(awk -F'"' '$1 ~ /^version = / { print $2; exit }' Cargo.toml)"
-          breaking_title='^[[:alnum:]][[:alnum:].-]*(\([^)]*\))?!:'
-          if [[ "$version" == 0.* && "$PR_TITLE" =~ $breaking_title ]]; then
-            echo "value=major" >> "$GITHUB_OUTPUT"
-          elif echo "$PR_LABELS" | jq -e '.[] | select(.name == "semver-exception")' >/dev/null; then
-            echo "value=major" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Check public API compatibility
-        uses: obi1kenobi/cargo-semver-checks-action@6b69fcf40e9b5fb17adeb57e4b6ecd020649a239 # v2.9
-        with:
-          package: workshop-rs,workshop-rs-cli
-          release-type: ${{ steps.release-type.outputs.value }}
-
   # Consumer-side producer for the ubuntu/1.88.0/dev build identity
   # (`wrightkit/.github#126`): rust-quality stays artifact-free, so this job
   # builds the binary once and catalog-check downloads it instead of
@@ -102,7 +72,7 @@ jobs:
   catalog-gen-build:
     name: Build catalog generator
     needs: changes
-    if: needs.changes.outputs.full == 'true'
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -141,7 +111,7 @@ jobs:
   wasm-check:
     name: WebAssembly build
     needs: changes
-    if: needs.changes.outputs.full == 'true'
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -163,7 +133,7 @@ jobs:
   real-project-scenarios:
     name: five real-project scenarios
     needs: changes
-    if: needs.changes.outputs.full == 'true'
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

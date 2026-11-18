@@ -1,0 +1,73 @@
+name: Public API compatibility
+
+# This check reads the PR title and labels, so it also runs on title and label
+# events. It is a separate workflow because branch protection reads a required
+# check from the newest check suite of the workflow that reports it: a
+# metadata-only run inside CI would hide the Rust results of the code run on
+# the same head. Here every run executes the complete check for the current
+# head and metadata, so a newer run may cancel an older one.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    types: [opened, synchronize, reopened, edited, labeled, unlabeled]
+
+concurrency:
+  group: public-api-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - name: Check out repository
+        if: github.event_name != 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Filter paths
+        id: filter
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+
+  semver-check:
+    name: Public API compatibility
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Select compatibility release type
+        id: release-type
+        shell: bash
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_LABELS: ${{ toJson(github.event.pull_request.labels) }}
+        run: |
+          version="$(awk -F'"' '$1 ~ /^version = / { print $2; exit }' Cargo.toml)"
+          breaking_title='^[[:alnum:]][[:alnum:].-]*(\([^)]*\))?!:'
+          if [[ "$version" == 0.* && "$PR_TITLE" =~ $breaking_title ]]; then
+            echo "value=major" >> "$GITHUB_OUTPUT"
+          elif echo "$PR_LABELS" | jq -e '.[] | select(.name == "semver-exception")' >/dev/null; then
+            echo "value=major" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check public API compatibility
+        uses: obi1kenobi/cargo-semver-checks-action@6b69fcf40e9b5fb17adeb57e4b6ecd020649a239 # v2.9
+        with:
+          package: workshop-rs,workshop-rs-cli
+          release-type: ${{ steps.release-type.outputs.value }}
