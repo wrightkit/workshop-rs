@@ -10,7 +10,8 @@
 //! entry. Unknown or unreviewed facts stay `None` so consumers can tell them
 //! apart from a reviewed negative.
 
-use std::collections::{BTreeMap, HashMap};
+use crate::fast_hash::HashMap;
+use std::collections::BTreeMap;
 
 use super::{Kind, Locale, ParamCoercions, ParamContent};
 

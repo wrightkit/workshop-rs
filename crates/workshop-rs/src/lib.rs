@@ -34,6 +34,7 @@ pub mod detect;
 pub mod emitter;
 mod error;
 pub mod events;
+mod fast_hash;
 pub mod format;
 mod frontend;
 pub mod gameplay;

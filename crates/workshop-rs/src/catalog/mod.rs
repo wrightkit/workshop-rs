@@ -23,8 +23,8 @@ pub mod descriptions;
 pub mod detect;
 mod entry;
 
+use crate::fast_hash::HashMap;
 use std::borrow::Cow;
-use std::collections::HashMap;
 
 use serde::{Deserialize, Deserializer, Serialize};
 

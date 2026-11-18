@@ -1,4 +1,5 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use crate::fast_hash::HashMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::OnceLock;
 
 use serde::Deserialize;
@@ -177,13 +178,13 @@ impl Catalog {
             localized_strings: Vec::new(),
             enums: Vec::new(),
             by_id: Default::default(),
-            alias_to_entry: HashMap::new(),
-            localized_string_by_id: HashMap::new(),
-            localized_string_alias: HashMap::new(),
-            enum_by_domain: HashMap::new(),
-            enum_alias_to_domain: HashMap::new(),
-            enum_alias_to_member: HashMap::new(),
-            bare_member_index: HashMap::new(),
+            alias_to_entry: HashMap::default(),
+            localized_string_by_id: HashMap::default(),
+            localized_string_alias: HashMap::default(),
+            enum_by_domain: HashMap::default(),
+            enum_alias_to_domain: HashMap::default(),
+            enum_alias_to_member: HashMap::default(),
+            bare_member_index: HashMap::default(),
             normalized: NormalizedIndex::default(),
             descriptions: Default::default(),
         };
@@ -295,7 +296,7 @@ impl Catalog {
             let by_kind_norm = normalized
                 .alias_to_entry
                 .entry(locale.clone())
-                .or_insert_with(|| std::array::from_fn(|_| HashMap::new()));
+                .or_insert_with(|| std::array::from_fn(|_| HashMap::default()));
             for (kind_index, map) in by_kind.iter().enumerate() {
                 fill_map(map, &mut by_kind_norm[kind_index]);
             }
@@ -599,7 +600,7 @@ impl Catalog {
                         "'{id}' param display name position '{position}' is not a zero-based index"
                     ))
                 })?;
-                let mut recorded = HashMap::new();
+                let mut recorded = HashMap::default();
                 for (name_locale, name) in map {
                     let locale = Locale::new(&name_locale);
                     if !self.locales.contains(&locale) {
@@ -701,7 +702,7 @@ impl Catalog {
         require_primary: bool,
         mut register: impl FnMut(&mut Self, &Locale, &str) -> Result<()>,
     ) -> Result<HashMap<Locale, Vec<String>>> {
-        let mut collected = HashMap::new();
+        let mut collected = HashMap::default();
         for (locale_str, alias_file) in aliases {
             let locale = Locale::new(&locale_str);
             if !self.locales.contains(&locale) {
