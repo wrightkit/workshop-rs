@@ -11,6 +11,16 @@ pub(crate) fn validate_action(
     let Some(action) = program.actions.get(action_id) else {
         return Ok(());
     };
+    validate_action_node(program, catalog, action, tolerate_residuals)
+        .map_err(|error| error.or_span(action.span()))
+}
+
+fn validate_action_node(
+    program: &wir::Program,
+    catalog: &Catalog,
+    action: &wir::Action,
+    tolerate_residuals: bool,
+) -> Result<()> {
     match action {
         wir::Action::Call { name, args, span } => {
             if let Some(entry) = catalog.entry(Kind::Action, name) {
