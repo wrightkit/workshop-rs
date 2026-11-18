@@ -8,6 +8,7 @@ mod canonical_residuals;
 mod catalog;
 #[path = "catalog_eval_properties.rs"]
 mod catalog_eval_properties;
+mod catalog_locale_index;
 #[path = "compare.rs"]
 mod compare;
 #[path = "corpus.rs"]

@@ -8,8 +8,7 @@ use crate::core::error::{CatalogError, Result, WorkshopError};
 
 use super::{
     CATALOG_DATA, Catalog, CatalogEntry, EnumDomain, EnumMember, Kind, Locale,
-    LocalizedStringEntry, NormalizedIndex, ParamCoercions, ParamContent, Provenance, TargetMeta,
-    normalize_spelling,
+    LocalizedStringEntry, ParamCoercions, ParamContent, Provenance, TargetMeta,
 };
 
 #[derive(Deserialize)]
@@ -151,6 +150,14 @@ impl Catalog {
     /// Parse and validate catalog data without digest verification. Used by
     /// the catalog pipeline so a stale digest can be repaired by `build`.
     pub fn load_unverified(json: &str) -> Result<Catalog> {
+        let catalog = Self::parse(json)?;
+        catalog.validate_locale_indexes()?;
+        Ok(catalog)
+    }
+
+    /// Parse catalog data without building or validating the per-locale
+    /// lookup indexes.
+    fn parse(json: &str) -> Result<Catalog> {
         let file: CatalogFile = serde_json::from_str(json)
             .map_err(|error| CatalogError::malformed(format!("catalog data: {error}")))?;
         if file.schema_version != 1 {
@@ -166,6 +173,7 @@ impl Catalog {
             ));
         }
 
+        let locales_len = locales.len();
         let mut catalog = Catalog {
             detection_index: OnceLock::new(),
             schema_version: file.schema_version,
@@ -177,15 +185,10 @@ impl Catalog {
             entries: Vec::new(),
             localized_strings: Vec::new(),
             enums: Vec::new(),
+            locale_indexes: (0..locales_len).map(|_| OnceLock::new()).collect(),
             by_id: Default::default(),
-            alias_to_entry: HashMap::default(),
             localized_string_by_id: HashMap::default(),
-            localized_string_alias: HashMap::default(),
             enum_by_domain: HashMap::default(),
-            enum_alias_to_domain: HashMap::default(),
-            enum_alias_to_member: HashMap::default(),
-            bare_member_index: HashMap::default(),
-            normalized: NormalizedIndex::default(),
             descriptions: Default::default(),
         };
 
@@ -209,22 +212,6 @@ impl Catalog {
         }
         catalog
             .insert_param_display_names(file.param_display_names, file.param_display_name_gaps)?;
-        for domain in &catalog.enums {
-            for member in &domain.members {
-                for (locale, spellings) in &member.aliases {
-                    for spelling in spellings {
-                        catalog
-                            .bare_member_index
-                            .entry(locale.clone())
-                            .or_default()
-                            .entry(spelling.clone())
-                            .or_default()
-                            .push((domain.domain.clone(), member.member.clone()));
-                    }
-                }
-            }
-        }
-        catalog.build_normalized_index();
         catalog.validate_param_domains()?;
         catalog.validate_param_content()?;
         Ok(catalog)
@@ -245,7 +232,7 @@ impl Catalog {
     pub fn builtin_ref() -> std::result::Result<&'static Catalog, &'static WorkshopError> {
         static DATA: OnceLock<Result<Catalog>> = OnceLock::new();
         match DATA.get_or_init(|| {
-            let mut catalog = Self::load_unverified(CATALOG_DATA)?;
+            let mut catalog = Self::parse(CATALOG_DATA)?;
             catalog.load_descriptions_unverified(super::descriptions::DESCRIPTIONS_DATA)?;
             Ok(catalog)
         }) {
@@ -253,88 +240,6 @@ impl Catalog {
             Err(error) => Err(error),
         }
     }
-    fn build_normalized_index(&mut self) {
-        fn insert<T: PartialEq + Clone>(
-            map: &mut HashMap<String, Option<T>>,
-            key: String,
-            value: T,
-        ) {
-            match map.get_mut(&key) {
-                Some(slot) if *slot != Some(value.clone()) => *slot = None,
-                Some(_) => {}
-                None => {
-                    map.insert(key, Some(value));
-                }
-            }
-        }
-
-        // Copies spellings that `normalize_spelling` rewrites into `norm`,
-        // collapsing collisions to `None`.
-        fn fill_map<T: PartialEq + Clone>(
-            map: &HashMap<String, T>,
-            norm: &mut HashMap<String, Option<T>>,
-        ) {
-            for (spelling, value) in map {
-                let key = normalize_spelling(spelling);
-                if key != spelling.as_str() {
-                    insert(norm, key.into_owned(), value.clone());
-                }
-            }
-        }
-
-        fn fill<T: PartialEq + Clone>(
-            source: &HashMap<Locale, HashMap<String, T>>,
-            target: &mut HashMap<Locale, HashMap<String, Option<T>>>,
-        ) {
-            for (locale, map) in source {
-                fill_map(map, target.entry(locale.clone()).or_default());
-            }
-        }
-
-        let mut normalized = NormalizedIndex::default();
-        for (locale, by_kind) in &self.alias_to_entry {
-            let by_kind_norm = normalized
-                .alias_to_entry
-                .entry(locale.clone())
-                .or_insert_with(|| std::array::from_fn(|_| HashMap::default()));
-            for (kind_index, map) in by_kind.iter().enumerate() {
-                fill_map(map, &mut by_kind_norm[kind_index]);
-            }
-        }
-        fill(
-            &self.localized_string_alias,
-            &mut normalized.localized_string_alias,
-        );
-        fill(
-            &self.enum_alias_to_domain,
-            &mut normalized.enum_alias_to_domain,
-        );
-        for (locale, domains) in &self.enum_alias_to_member {
-            let norm = normalized
-                .enum_alias_to_member
-                .entry(locale.clone())
-                .or_default();
-            for (domain, map) in domains {
-                fill_map(map, norm.entry(domain.clone()).or_default());
-            }
-        }
-        for (locale, map) in &self.bare_member_index {
-            let norm = normalized.bare_member.entry(locale.clone()).or_default();
-            for (spelling, matches) in map {
-                let key = normalize_spelling(spelling);
-                if key != spelling.as_str() {
-                    let merged = norm.entry(key.into_owned()).or_default();
-                    for pair in matches {
-                        if !merged.contains(pair) {
-                            merged.push(pair.clone());
-                        }
-                    }
-                }
-            }
-        }
-        self.normalized = normalized;
-    }
-
     fn insert_entry(&mut self, kind: Kind, item: EntryFile) -> Result<()> {
         let index = self.entries.len();
         let aliases = self.collect_aliases(
@@ -342,17 +247,6 @@ impl Catalog {
             &format!("entry '{}'", item.id),
             item.aliases,
             true,
-            |catalog, locale, spelling| {
-                let locale_map = catalog.alias_to_entry.entry(locale.clone()).or_default();
-                if locale_map[kind.as_index()].contains_key(spelling) {
-                    return Err(CatalogError::validation(format!(
-                        "duplicate {} alias '{spelling}' for locale '{locale}'",
-                        kind.as_str()
-                    )));
-                }
-                locale_map[kind.as_index()].insert(spelling.to_string(), index);
-                Ok(())
-            },
         )?;
         if self.by_id[kind.as_index()].contains_key(&item.id) {
             return Err(CatalogError::validation(format!(
@@ -431,19 +325,6 @@ impl Catalog {
             &format!("localized string '{}'", item.id),
             item.aliases,
             true,
-            |catalog, locale, spelling| {
-                let locale_map = catalog
-                    .localized_string_alias
-                    .entry(locale.clone())
-                    .or_default();
-                if locale_map.contains_key(spelling) {
-                    return Err(CatalogError::validation(format!(
-                        "duplicate localized string alias '{spelling}' for locale '{locale}'"
-                    )));
-                }
-                locale_map.insert(spelling.to_string(), index);
-                Ok(())
-            },
         )?;
         self.localized_string_by_id.insert(item.id.clone(), index);
         self.localized_strings.push(LocalizedStringEntry {
@@ -467,52 +348,17 @@ impl Catalog {
             &format!("enum domain '{}'", domain.domain),
             domain.aliases,
             false,
-            |catalog, locale, spelling| {
-                let locale_map = catalog
-                    .enum_alias_to_domain
-                    .entry(locale.clone())
-                    .or_default();
-                if let Some(existing) = locale_map.get(spelling) {
-                    return Err(CatalogError::validation(format!(
-                        "duplicate enum domain alias '{spelling}' for '{existing}' and '{}' in locale '{locale}'",
-                        domain.domain
-                    )));
-                }
-                locale_map.insert(spelling.to_string(), domain.domain.clone());
-                Ok(())
-            },
         )?;
         domain_aliases
-            .entry(primary.clone())
+            .entry(primary)
             .or_insert_with(|| vec![domain.domain.clone()]);
-        self.enum_alias_to_domain
-            .entry(primary.clone())
-            .or_default()
-            .entry(domain.domain.clone())
-            .or_insert_with(|| domain.domain.clone());
         let mut members = Vec::new();
-        for (member_index, member) in domain.members.into_iter().enumerate() {
+        for member in domain.members {
             let aliases = self.collect_aliases(
                 &member.id,
                 &format!("enum {}::{}", domain.domain, member.id),
                 member.aliases,
                 true,
-                |catalog, locale, spelling| {
-                    let domain_map = catalog
-                        .enum_alias_to_member
-                        .entry(locale.clone())
-                        .or_default()
-                        .entry(domain.domain.clone())
-                        .or_default();
-                    if domain_map.contains_key(spelling) {
-                        return Err(CatalogError::validation(format!(
-                            "duplicate enum alias '{spelling}' in '{}' for locale '{locale}'",
-                            domain.domain
-                        )));
-                    }
-                    domain_map.insert(spelling.to_string(), (domain_index, member_index));
-                    Ok(())
-                },
             )?;
             members.push(EnumMember {
                 member: member.id,
@@ -695,12 +541,11 @@ impl Catalog {
     }
 
     fn collect_aliases(
-        &mut self,
+        &self,
         id: &str,
         label: &str,
         aliases: HashMap<String, AliasFile>,
         require_primary: bool,
-        mut register: impl FnMut(&mut Self, &Locale, &str) -> Result<()>,
     ) -> Result<HashMap<Locale, Vec<String>>> {
         let mut collected = HashMap::default();
         for (locale_str, alias_file) in aliases {
@@ -711,9 +556,6 @@ impl Catalog {
                 )));
             }
             let spellings = alias_file.into_spellings(id, locale.as_str())?;
-            for spelling in &spellings {
-                register(self, &locale, spelling)?;
-            }
             collected.insert(locale, spellings);
         }
         let primary = &self.locales[0];

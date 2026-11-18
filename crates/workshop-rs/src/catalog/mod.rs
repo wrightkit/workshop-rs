@@ -22,6 +22,7 @@
 pub mod descriptions;
 pub mod detect;
 mod entry;
+mod locale_index;
 
 use crate::fast_hash::HashMap;
 use std::borrow::Cow;
@@ -271,32 +272,12 @@ pub struct CatalogIdentity {
     pub provenance: Provenance,
 }
 
-pub(crate) type MemberIndexMap = HashMap<String, HashMap<String, (usize, usize)>>;
-
-type EnumMemberAliasMap = HashMap<String, HashMap<String, Option<(usize, usize)>>>;
-
-#[derive(Debug, Clone, Default)]
-pub(crate) struct NormalizedIndex {
-    pub(crate) alias_to_entry: HashMap<Locale, [HashMap<String, Option<usize>>; Kind::NUM_KINDS]>,
-    pub(crate) localized_string_alias: HashMap<Locale, HashMap<String, Option<usize>>>,
-    pub(crate) enum_alias_to_domain: HashMap<Locale, HashMap<String, Option<String>>>,
-    pub(crate) enum_alias_to_member: HashMap<Locale, EnumMemberAliasMap>,
-    pub(crate) bare_member: HashMap<Locale, HashMap<String, Vec<(String, String)>>>,
-}
-
 pub(crate) fn normalize_spelling(spelling: &str) -> Cow<'_, str> {
     if spelling.chars().any(char::is_whitespace) {
         Cow::Owned(spelling.chars().filter(|c| !c.is_whitespace()).collect())
     } else {
         Cow::Borrowed(spelling)
     }
-}
-
-fn lookup_normalized<'a, V>(
-    index: &'a HashMap<String, Option<V>>,
-    spelling: &str,
-) -> Option<&'a V> {
-    index.get(normalize_spelling(spelling).as_ref())?.as_ref()
 }
 
 /// The validated canonical Workshop catalog.
@@ -316,14 +297,11 @@ pub struct Catalog {
     pub(crate) localized_strings: Vec<LocalizedStringEntry>,
     pub(crate) enums: Vec<EnumDomain>,
     pub(crate) by_id: [HashMap<String, usize>; Kind::NUM_KINDS],
-    pub(crate) alias_to_entry: HashMap<Locale, [HashMap<String, usize>; Kind::NUM_KINDS]>,
     pub(crate) localized_string_by_id: HashMap<String, usize>,
-    pub(crate) localized_string_alias: HashMap<Locale, HashMap<String, usize>>,
     pub(crate) enum_by_domain: HashMap<String, usize>,
-    pub(crate) enum_alias_to_domain: HashMap<Locale, HashMap<String, String>>,
-    pub(crate) enum_alias_to_member: HashMap<Locale, MemberIndexMap>,
-    pub(crate) bare_member_index: HashMap<Locale, HashMap<String, Vec<(String, String)>>>,
-    pub(crate) normalized: NormalizedIndex,
+    /// One lazily built reverse-lookup index per declared locale, in
+    /// `locales` order.
+    locale_indexes: Vec<std::sync::OnceLock<locale_index::LocaleIndex>>,
     pub(crate) descriptions: descriptions::Descriptions,
 }
 
@@ -436,14 +414,8 @@ impl Catalog {
     /// answers a spelling whose declared form carries unwritable
     /// whitespace (`ヒーロー: `, `Élévation à une puissance `, #448).
     pub fn resolve(&self, kind: Kind, locale: &Locale, spelling: &str) -> Option<&CatalogEntry> {
-        self.alias_to_entry
-            .get(locale)
-            .and_then(|by_kind| by_kind[kind.as_index()].get(spelling))
-            .map(|i| &self.entries[*i])
-            .or_else(|| {
-                let index = &self.normalized.alias_to_entry.get(locale)?[kind.as_index()];
-                lookup_normalized(index, spelling).map(|i| &self.entries[*i])
-            })
+        let index = self.locale_index(locale)?.entry(kind, spelling)?;
+        Some(&self.entries[index])
     }
 
     /// The localized spelling of a canonical builtin id.
@@ -462,14 +434,8 @@ impl Catalog {
         locale: &Locale,
         spelling: &str,
     ) -> Option<&LocalizedStringEntry> {
-        self.localized_string_alias
-            .get(locale)
-            .and_then(|map| map.get(spelling))
-            .map(|index| &self.localized_strings[*index])
-            .or_else(|| {
-                let index = self.normalized.localized_string_alias.get(locale)?;
-                lookup_normalized(index, spelling).map(|i| &self.localized_strings[*i])
-            })
+        let index = self.locale_index(locale)?.localized_string(spelling)?;
+        Some(&self.localized_strings[index])
     }
 
     /// Resolve the emitted spelling of a localized preset identity.
@@ -504,16 +470,7 @@ impl Catalog {
         self.enum_by_domain
             .get_key_value(spelling)
             .map(|(domain, _)| domain.as_str())
-            .or_else(|| {
-                self.enum_alias_to_domain
-                    .get(locale)
-                    .and_then(|map| map.get(spelling))
-                    .map(String::as_str)
-            })
-            .or_else(|| {
-                let index = self.normalized.enum_alias_to_domain.get(locale)?;
-                lookup_normalized(index, spelling).map(String::as_str)
-            })
+            .or_else(|| self.locale_index(locale)?.enum_domain(spelling))
     }
 
     /// Every enum domain, in catalog order.
@@ -528,21 +485,8 @@ impl Catalog {
         locale: &Locale,
         spelling: &str,
     ) -> Option<(String, String)> {
-        let indexes = self
-            .enum_alias_to_member
-            .get(locale)?
-            .get(domain)?
-            .get(spelling)
-            .copied()
-            .or_else(|| {
-                let index = self
-                    .normalized
-                    .enum_alias_to_member
-                    .get(locale)?
-                    .get(domain)?;
-                lookup_normalized(index, spelling).copied()
-            })?;
-        let (domain_index, member_index) = indexes;
+        let (domain_index, member_index) =
+            self.locale_index(locale)?.enum_member(domain, spelling)?;
         Some((
             domain.to_string(),
             self.enums[domain_index].members[member_index]
@@ -596,18 +540,9 @@ impl Catalog {
     /// a given spelling. The verbatim index answers first; a spelling that
     /// differs only in whitespace falls back to the collapsed index (#448).
     pub fn bare_member_matches(&self, locale: &Locale, spelling: &str) -> Vec<(String, String)> {
-        if let Some(matches) = self
-            .bare_member_index
-            .get(locale)
-            .and_then(|map| map.get(spelling))
-        {
-            return matches.clone();
-        }
-        self.normalized
-            .bare_member
-            .get(locale)
-            .and_then(|map| map.get(normalize_spelling(spelling).as_ref()))
-            .cloned()
+        self.locale_index(locale)
+            .and_then(|index| index.bare_member(spelling))
+            .map(<[_]>::to_vec)
             .unwrap_or_default()
     }
 
