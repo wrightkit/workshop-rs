@@ -6,7 +6,7 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
-  contents: write
+  contents: read
 
 # Serialized across all tag pushes so an older tag cannot publish while a
 # newer release is in flight; the latest guard in github-release keeps a
@@ -16,8 +16,107 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The tag is the only release gate: it must name a commit of the default
+  # branch whose workspace version equals the tag, and the same revision must
+  # have passed CI before anything is published.
+  release-gate:
+    name: Release gate
+    runs-on: ubuntu-22.04
+    timeout-minutes: 100
+    permissions:
+      contents: read
+      checks: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Verify tag identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          version="$(awk -F'"' '$1 ~ /^version = / { print $2; exit }' Cargo.toml)"
+          if [[ "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "tag $GITHUB_REF_NAME does not match workspace version $version" >&2
+            exit 1
+          fi
+          relation="$(gh api "repos/$GITHUB_REPOSITORY/compare/$DEFAULT_BRANCH...$GITHUB_SHA" --jq '.status')"
+          if [[ "$relation" != identical && "$relation" != behind ]]; then
+            echo "tag $GITHUB_REF_NAME points to $GITHUB_SHA, which is not in $DEFAULT_BRANCH history ($relation)" >&2
+            exit 1
+          fi
+
+      - name: Wait for release-revision CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUIRED_CHECK_RUNS: >-
+            Rust (1.88.0) / Quality,
+            Rust (stable) / Quality,
+            Public API compatibility,
+            Catalog check,
+            WebAssembly build,
+            five real-project scenarios,
+            Workflow lint / Lint workflows
+        run: |
+          set -euo pipefail
+          deadline=$(( SECONDS + 5400 ))
+          pending=()
+          IFS=',' read -r -a names <<< "$REQUIRED_CHECK_RUNS"
+          for raw in "${names[@]}"; do
+            name="$(echo "$raw" | xargs)"
+            [ -n "$name" ] && pending+=("$name")
+          done
+          while [ "${#pending[@]}" -gt 0 ]; do
+            if [ "$SECONDS" -ge "$deadline" ]; then
+              printf 'Timed out waiting for: %s\n' "${pending[@]}" >&2
+              exit 1
+            fi
+            sleep 30
+            keep=()
+            for name in "${pending[@]}"; do
+              out="$(gh api --method GET "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" \
+                -f "check_name=$name" \
+                --jq '(.check_runs | sort_by(.id) | last) // {status: "missing", conclusion: ""} | "\(.status) \(.conclusion // "-")"')"
+              status="${out%% *}"
+              conclusion="${out#* }"
+              if [ "$status" = completed ]; then
+                if [ "$conclusion" != success ]; then
+                  echo "FAIL $name concluded '$conclusion'" >&2
+                  exit 1
+                fi
+                echo "PASS $name"
+              else
+                echo "WAIT $name ($status)"
+                keep+=("$name")
+              fi
+            done
+            pending=("${keep[@]}")
+          done
+
+  publish-crates:
+    name: Publish crates
+    needs: release-gate
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    environment: release
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Rust
+        uses: wrightkit/.github/.github/actions/setup-rust@main
+        with:
+          toolchain: stable
+
+      - name: Publish workspace crates
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --workspace --locked
+
   build:
     name: Build (${{ matrix.target }})
+    needs: release-gate
     strategy:
       fail-fast: false
       matrix:
@@ -84,6 +183,7 @@ jobs:
 
   catalog-identity:
     name: Catalog identity
+    needs: release-gate
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     steps:
@@ -103,16 +203,14 @@ jobs:
           path: catalog-identity.json
           retention-days: 1
 
-  # Same-revision CI gate: deliberately inherited from release-plz — tags are
-  # created by the gated `release-plz` publish job, and this workflow is not a
-  # `release-plz-crates.yml` caller, so the shared `required-check-runs` input
-  # has no place to attach here (audit item deferred to the shared mechanism).
   github-release:
     name: GitHub Release
-    needs: [build, catalog-identity]
+    needs: [publish-crates, build, catalog-identity]
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     environment: release
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
