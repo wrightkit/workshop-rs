@@ -103,9 +103,6 @@ impl LocaleIndex {
             // is registered after the declared aliases, whatever their order.
             let primary = position == 0;
             for spelling in domain.aliases.get(locale).into_iter().flatten() {
-                if primary && *spelling == domain.domain {
-                    continue;
-                }
                 register(
                     &mut index.enum_alias_to_domain,
                     spelling,

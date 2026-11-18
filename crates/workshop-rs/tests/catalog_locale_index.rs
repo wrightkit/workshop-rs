@@ -64,6 +64,7 @@ fn enum_domain_name_collisions_are_rejected_in_either_order() {
     };
     let x_with_alias = r#"{ "domain": "X", "aliases": { "en-US": "Xa" }, "members": [] }"#;
     let x_plain = r#"{ "domain": "X", "members": [] }"#;
+    let y_plain = r#"{ "domain": "Y", "members": [] }"#;
     let y_claims_x = r#"{ "domain": "Y", "aliases": { "en-US": "X" }, "members": [] }"#;
     for (first, second) in [(x_with_alias, y_claims_x), (y_claims_x, x_plain)] {
         let error = load(first, second).expect_err("a domain alias equal to another domain name");
@@ -72,4 +73,9 @@ fn enum_domain_name_collisions_are_rejected_in_either_order() {
             "{error}"
         );
     }
+    let x_repeats_itself =
+        r#"{ "domain": "X", "aliases": { "en-US": ["X", "X"] }, "members": [] }"#;
+    let x_names_itself = r#"{ "domain": "X", "aliases": { "en-US": ["X"] }, "members": [] }"#;
+    load(x_repeats_itself, x_plain).expect_err("a domain alias repeated within its own list");
+    load(x_names_itself, y_plain).expect("a domain may list its own name once");
 }
