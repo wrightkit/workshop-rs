@@ -6,7 +6,7 @@ on:
       - "v[0-9]+.[0-9]+.[0-9]+"
 
 permissions:
-  contents: write
+  contents: read
 
 # Serialized across all tag pushes so an older tag cannot publish while a
 # newer release is in flight; the latest guard in github-release keeps a
@@ -16,8 +16,56 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Pushing the tag is the whole release action, for a maintainer or an agent.
+  # The gate only refuses a tag whose revision has not passed CI or whose
+  # version differs from the committed workspace version.
+  release-gate:
+    name: Release gate
+    runs-on: ubuntu-22.04
+    timeout-minutes: 100
+    permissions:
+      contents: read
+      checks: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Match the tag to the workspace version
+        run: test "$GITHUB_REF_NAME" = "v$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')"
+
+      - name: Wait for CI on the tagged revision
+        uses: lewagon/wait-on-check-action@369769072fe522a3a8a85c03c96af1e5242a1994 # v1.9.1
+        with:
+          ref: ${{ github.sha }}
+          running-workflow-name: Release gate
+          repo-token: ${{ github.token }}
+
+  publish-crates:
+    name: Publish crates
+    needs: release-gate
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    environment: release
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Rust
+        uses: wrightkit/.github/.github/actions/setup-rust@main
+        with:
+          toolchain: stable
+
+      - name: Verify publishable packages
+        run: cargo publish --workspace --locked --dry-run
+
+      - name: Publish workspace crates
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --workspace --locked
+
   build:
     name: Build (${{ matrix.target }})
+    needs: release-gate
     strategy:
       fail-fast: false
       matrix:
@@ -84,6 +132,7 @@ jobs:
 
   catalog-identity:
     name: Catalog identity
+    needs: release-gate
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     steps:
@@ -103,16 +152,14 @@ jobs:
           path: catalog-identity.json
           retention-days: 1
 
-  # Same-revision CI gate: deliberately inherited from release-plz — tags are
-  # created by the gated `release-plz` publish job, and this workflow is not a
-  # `release-plz-crates.yml` caller, so the shared `required-check-runs` input
-  # has no place to attach here (audit item deferred to the shared mechanism).
   github-release:
     name: GitHub Release
-    needs: [build, catalog-identity]
+    needs: [publish-crates, build, catalog-identity]
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     environment: release
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 

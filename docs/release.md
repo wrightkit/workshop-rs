@@ -2,8 +2,8 @@
 
 `workshop-rs` keeps crate publication and binary distribution deliberately simple and separate.
 
-- `release-plz` owns Release PR maintenance, crates.io publication, and the single canonical `vX.Y.Z` tag.
-- A repository-owned tag workflow builds `workshop-rs-cli` for the supported targets, packages the binaries, generates checksums and `catalog-identity.json`, then creates the GitHub Release once the complete artifact set is ready.
+- A release is a committed version and a pushed `vX.Y.Z` tag, the same for a maintainer and for an agent. Whoever completes a requirement decides whether the default branch now holds a releasable change. There is no Release PR and no scheduled release job.
+- A repository-owned tag workflow checks the release gate, publishes the crates to crates.io, builds `workshop-rs-cli` for the supported targets, packages the binaries, generates checksums and `catalog-identity.json`, then creates the GitHub Release once the complete artifact set is ready.
 
 The repository follows the WrightKit [release engineering standard](https://github.com/wrightkit/.github/blob/main/docs/release-engineering.md). This document records only the repo-local contract.
 
@@ -20,15 +20,9 @@ The workspace crates share one version group:
 vX.Y.Z
 ```
 
-`release-plz` does not create the GitHub Release. The tag is the only normal trigger for binary distribution.
+The tag is the only normal trigger for crates.io publication and binary distribution.
 
 ## Repository configuration
-
-### GitHub automation token
-
-`release-plz` uses `GH_TOKEN` for Release PR and tag operations.
-
-A dedicated token is intentional here because the tag pushed by release automation must trigger the separate tag-based `Release` workflow. Do not replace it with the workflow-provided `GITHUB_TOKEN` without re-validating event propagation.
 
 ### crates.io token
 
@@ -38,21 +32,28 @@ Moving to crates.io Trusted Publishing / OIDC is a separate credential migration
 
 ### Concurrency
 
-The release-plz publication job uses a stable concurrency group with `cancel-in-progress: false`. A newer push to `main` must not cancel an in-progress registry publication.
-
 The tag workflow serializes all tag pushes on one `workshop-rs-release` concurrency group and does not cancel an in-progress release, so an older tag cannot publish while a newer release is in flight. A queued or manually re-run older tag additionally publishes with `--latest=false` when it sorts below the current latest release, keeping a stale tag from regressing the latest marker.
 
 ## Normal release flow
 
-Normal pushes to `main` run two release-plz jobs:
+A crates.io package is published from its committed `Cargo.toml`, and the compatibility gate compares that version with the latest published release. The committed version must therefore equal the version released. Release when the default branch has commits since the last tag that change released behavior and the required checks are green on its head. Choose the next `MAJOR.MINOR.PATCH` from the Conventional Commits since the last tag and from `cargo semver-checks` against the latest published release (a breaking change needs a major version, or a minor version while the crate is `0.x`; `feat` needs a minor version; other released changes need a patch version). Then:
 
-1. `release-plz release` publishes any releasable workspace versions to crates.io and creates the canonical `vX.Y.Z` tag.
-2. `release-plz release-pr` creates or refreshes the next Release PR.
+1. commits `chore(release): vX.Y.Z` to the default branch, which updates the workspace version, the `workshop-rs` requirement in `workshop-rs-cli`, and `Cargo.lock`, and pushes it;
+2. tags that commit and pushes the tag:
 
-The tag triggers the repository-owned binary workflow:
+```sh
+git tag -a vX.Y.Z -m vX.Y.Z
+git push origin vX.Y.Z
+```
+
+Push the tag with a user or app credential, not the workflow `GITHUB_TOKEN`, so the push starts the release workflow. The release gate waits for the required checks on the tagged commit.
+
+The tag starts the release workflow:
 
 ```text
 vX.Y.Z
+  -> release gate: tag matches the workspace version, checks on the commit passed
+  -> publish both crates to crates.io
   -> build workshop-rs-cli for five targets
   -> package .tar.gz / .zip archives
   -> generate one SHA-256 file per archive
@@ -62,24 +63,6 @@ vX.Y.Z
 ```
 
 There is no normal draft/published GitHub Release state machine. Build outputs remain GitHub Actions artifacts until all required jobs succeed; the GitHub Release is created only at the final publication boundary.
-
-## First stable API release
-
-The public API freeze and required downstream verification recorded in #252
-are complete. The first stable release therefore sets the shared `workshop-rs`
-version group to `1.0.0` in a dedicated release PR. A breaking change on a
-`0.x` crate normally advances the pre-1.0 minor line (for example, `0.11.0` to
-`0.12.0`), following [release-plz's major semver bump
-rule](https://release-plz.ieni.dev/docs/semver-check), so the stable API
-transition needs this one-time exact version target.
-
-Merging the version PR starts the existing main-branch release-plz workflow,
-which publishes both crates and pushes `v1.0.0`. The tag then starts the binary
-workflow described above. This PR selects the release version; crates.io
-publication, tag creation, and GitHub Release creation remain owned by the
-existing automation. After `1.0.0`, release-plz continues to manage ordinary
-version updates and the compatibility check uses the latest published
-release as its baseline.
 
 ## Binary targets
 
@@ -120,10 +103,10 @@ This is not an organization-wide rule against release generators. A generated wo
 
 crates.io, Git tags, Actions artifacts, and GitHub Releases are separate external states. They are not treated as one atomic transaction.
 
-- If crates.io publication fails, inspect the failed package and rerun the release-plz publication path after correcting the actual cause. Already-published versions should not be republished under a different version merely to repair distribution.
+- If crates.io publication fails, inspect the failed package and rerun the tag workflow after correcting the actual cause. Already-published versions should not be republished under a different version merely to repair distribution.
 - If the canonical tag exists and the binary workflow fails before GitHub Release creation, fix the build/workflow problem and rerun the tag workflow.
 - If an unusual partial GitHub Release state exists, recover it explicitly as a maintainer operation. Do not add a permanent draft/rewrite/reconstruction state machine to every normal release solely for rare recovery cases.
-- Do not infer completion from the Release PR or tag alone. The declared release is complete only when the expected registry publications, canonical tag, binary artifacts, and GitHub Release have been observed.
+- Do not infer completion from the tag alone. The declared release is complete only when the expected registry publications, canonical tag, binary artifacts, and GitHub Release have been observed.
 
 ## Validation expectations
 
@@ -150,8 +133,8 @@ Before 1.0, the job treats a `0.x` package as a major compatibility transition
 only when the pull request title uses a Conventional Commit breaking marker
 such as `refactor!: ...`. This permits an approved API-hardening issue to
 remove accidental public implementation details while the feature branch
-remains at the published version; release-plz then proposes the next `0.x`
-compatibility line. Ordinary `0.x` pull requests keep the default release-type
+remains at the published version; the next `0.x` compatibility line is chosen
+when releasing. Ordinary `0.x` pull requests keep the default release-type
 inference, so the gate continues detecting accidental breaking changes. Once
 the package reaches 1.0, the job derives the normal release type and blocks
 intentional breaking changes unless the corresponding major version release
@@ -165,12 +148,14 @@ checks the change as a major transition instead of blocking it. The label
 is the approval record; the pull request documents why the exception was
 granted.
 
+On a push to `main` the pull request title and labels do not exist, so the `semver-exception` label and the breaking-title rule do not apply to the release commit. A release that ships an approved break must therefore carry the version the break needs (a major version, or a minor version while the crate is `0.x`); an approved break in a minor version of a stable crate needs a maintainer decision before the tag. The release gate counts a skipped check as passing.
+
 Those checks do not prove external publication behavior. A material release-topology change is considered established only after at least one real release completes the declared production path:
 
 ```text
-Release PR
-  -> crates.io
+release commit
   -> vX.Y.Z
+  -> crates.io
   -> five platform builds
   -> checksums + catalog identity
   -> GitHub Release
@@ -178,13 +163,11 @@ Release PR
 
 Do not describe a migration as production-proven solely because its PR CI is green.
 
-## Maintainer procedure
+## Release procedure
 
 1. Merge normal changes through PRs using the repository's commit conventions.
-2. Review the automatically maintained Release PR and its normal CI checks.
-3. Merge the Release PR when the version is ready.
-4. Approve the protected `release` environment if required.
-5. Confirm that release-plz publishes the crates and pushes the canonical tag.
-6. Confirm that the tag workflow builds all five targets and creates the GitHub Release with the complete artifact set.
+2. Release as described in [Normal release flow](#normal-release-flow).
+3. Approve the protected `release` environment if required. Both `publish-crates` and `github-release` use it, so approval can be requested twice.
+4. Confirm that the tag workflow publishes the crates, builds all five targets, and creates the GitHub Release with the complete artifact set.
 
-For routine releases, maintainers should not manually bump versions, run `cargo publish`, create replacement tags, or create a GitHub Release before the tag workflow has completed its required artifacts.
+For routine releases, do not run `cargo publish`, create replacement tags, or create a GitHub Release before the tag workflow has completed its required artifacts.

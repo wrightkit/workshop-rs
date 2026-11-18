@@ -217,5 +217,5 @@ and after 1.0:
   section describing the observable difference;
 - `fix` is reserved for changes that qualify as a patch under the rules above.
 
-release-plz derives a minor release from `feat`, so these titles also select
-the right version.
+A `feat` title calls for a minor release, so these titles also select the right
+version.
