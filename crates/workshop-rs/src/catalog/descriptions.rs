@@ -14,7 +14,8 @@
 //! `pendingLocales` is an announced future stage — it carries no text and
 //! needs no per-entry gaps.
 
-use std::collections::{BTreeMap, HashMap};
+use crate::fast_hash::HashMap;
+use std::collections::BTreeMap;
 
 use serde::Deserialize;
 
@@ -172,7 +173,7 @@ fn validated(catalog: &Catalog, file: DescriptionsFile) -> Result<Descriptions> 
     }
     let shipped = |locale: &Locale| locales.contains(locale);
 
-    let mut gaps: HashMap<Locale, Vec<Gap>> = HashMap::new();
+    let mut gaps: HashMap<Locale, Vec<Gap>> = HashMap::default();
     for (locale_str, keys) in &file.gaps {
         let locale = Locale::new(locale_str);
         if !shipped(&locale) {
@@ -212,7 +213,7 @@ fn validated(catalog: &Catalog, file: DescriptionsFile) -> Result<Descriptions> 
         }
     }
 
-    let mut by_entry: HashMap<usize, EntryDescriptions> = HashMap::new();
+    let mut by_entry: HashMap<usize, EntryDescriptions> = HashMap::default();
     for (kind, section) in [
         (Kind::Action, &file.entries.actions),
         (Kind::Value, &file.entries.values),
@@ -225,7 +226,7 @@ fn validated(catalog: &Catalog, file: DescriptionsFile) -> Result<Descriptions> 
                 ))
             })?;
             let entry = &catalog.entries[index];
-            let mut description = HashMap::new();
+            let mut description = HashMap::default();
             for (locale_str, text) in &entry_file.description {
                 let locale = Locale::new(locale_str);
                 if !shipped(&locale) {
@@ -248,7 +249,7 @@ fn validated(catalog: &Catalog, file: DescriptionsFile) -> Result<Descriptions> 
                     )));
                 }
                 for (position, param_file) in param_files.iter().enumerate() {
-                    let mut texts = HashMap::new();
+                    let mut texts = HashMap::default();
                     if let Some(param_file) = param_file {
                         if param_file.is_empty() {
                             return Err(CatalogError::validation(format!(

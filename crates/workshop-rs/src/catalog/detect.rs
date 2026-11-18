@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use crate::fast_hash::HashMap;
 
 use aho_corasick::AhoCorasick;
 
@@ -107,7 +107,7 @@ pub(super) struct AliasIndex {
 impl AliasIndex {
     fn build(catalog: &Catalog) -> Self {
         let mut patterns = Vec::new();
-        let mut by_spelling = HashMap::new();
+        let mut by_spelling = HashMap::default();
         let mut locale_indices: Vec<Vec<usize>> = Vec::new();
         for (locale_index, locale) in catalog.locales().iter().enumerate() {
             let spellings = catalog
