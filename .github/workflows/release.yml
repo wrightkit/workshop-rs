@@ -36,12 +36,15 @@ jobs:
         uses: lewagon/wait-on-check-action@369769072fe522a3a8a85c03c96af1e5242a1994 # v1.9.1
         with:
           ref: ${{ github.sha }}
+          # A filter makes the action fail when no matching check exists, so a
+          # tag on a commit without CI cannot pass the gate.
+          check-regexp: ^(Rust|Public API|Catalog|WebAssembly|five real|Workflow lint)
           running-workflow-name: Release gate
           repo-token: ${{ github.token }}
 
   publish-crates:
     name: Publish crates
-    needs: release-gate
+    needs: [release-gate, build, catalog-identity]
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     environment: release

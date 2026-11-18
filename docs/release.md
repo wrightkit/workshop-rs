@@ -53,12 +53,12 @@ The tag starts the release workflow:
 ```text
 vX.Y.Z
   -> release gate: tag matches the workspace version, checks on the commit passed
-  -> publish both crates to crates.io
   -> build workshop-rs-cli for five targets
   -> package .tar.gz / .zip archives
   -> generate one SHA-256 file per archive
   -> generate catalog-identity.json
   -> collect all GitHub Actions artifacts
+  -> publish both crates to crates.io
   -> create the public GitHub Release with the complete artifact set
 ```
 
@@ -103,7 +103,7 @@ This is not an organization-wide rule against release generators. A generated wo
 
 crates.io, Git tags, Actions artifacts, and GitHub Releases are separate external states. They are not treated as one atomic transaction.
 
-- If crates.io publication fails, inspect the failed package and rerun the tag workflow after correcting the actual cause. Already-published versions should not be republished under a different version merely to repair distribution.
+- Crates are published after the builds, so a build failure leaves nothing on crates.io and a rerun of the tag workflow is enough. If crates.io publication fails, inspect the failed package and rerun the tag workflow after correcting the actual cause. Cargo refuses a version that is already on crates.io, so if `workshop-rs` was published and `workshop-rs-cli` was not, publish the remaining crate by hand (`cargo publish -p workshop-rs-cli --locked`) and rerun the workflow only for the remaining jobs. Already-published versions should not be republished under a different version merely to repair distribution.
 - If the canonical tag exists and the binary workflow fails before GitHub Release creation, fix the build/workflow problem and rerun the tag workflow.
 - If an unusual partial GitHub Release state exists, recover it explicitly as a maintainer operation. Do not add a permanent draft/rewrite/reconstruction state machine to every normal release solely for rare recovery cases.
 - Do not infer completion from the tag alone. The declared release is complete only when the expected registry publications, canonical tag, binary artifacts, and GitHub Release have been observed.
