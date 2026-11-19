@@ -195,14 +195,10 @@ fn load_rejects_unknown_and_missing_kinds() {
 #[test]
 fn load_rejects_schema_shape_violations() {
     for values in [
-        // an unknown pool
         r#"{"kind":"health","pool":"barrier","amount":1}"#,
-        // a field another kind owns
         r#"{"kind":"health","pool":"health","amount":1,"slot":"ability1"}"#,
-        // a missing required field
         r#"{"kind":"cooldown","slot":"ability1"}"#,
         r#"{"kind":"ultimateCost"}"#,
-        // an empty slot or variant
         r#"{"kind":"cooldown","slot":"","seconds":1}"#,
         r#"{"kind":"cooldown","slot":"ability1","variant":"","seconds":1}"#,
     ] {

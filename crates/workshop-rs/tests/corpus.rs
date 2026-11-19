@@ -289,7 +289,6 @@ fn global_chase_variable_argument_is_bare_in_every_locale() {
     );
     assert!(!to_zh.text.contains("(全局.Foo,"), "{}", to_zh.text);
 
-    // The emitted text parses again and emits the same bytes.
     let again = convert::convert(
         &same.text,
         &catalog,
