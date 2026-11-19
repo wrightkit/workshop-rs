@@ -73,33 +73,27 @@ pub(crate) fn uncatalogued_members(settings: &Settings) -> Vec<UncataloguedMembe
     walk(settings, &mut |visit| match visit {
         Visit::Rejected(_) => {}
         Visit::Member(node, path) => {
+            if !matches!(
+                node,
+                SettingsNode::Raw { .. }
+                    | SettingsNode::RawValue { .. }
+                    | SettingsNode::Group { .. }
+                    | SettingsNode::RawGroup { .. }
+            ) {
+                return;
+            }
             let mut full = path.to_vec();
             full.push(PathPart::Part(node.name()));
-            let catalogued = table::lookup(&full);
-            let member = match (node, catalogued) {
-                (
-                    SettingsNode::Raw { .. }
-                    | SettingsNode::Group { .. }
-                    | SettingsNode::RawGroup { .. },
-                    _,
-                ) => UncataloguedMember {
-                    name: node.name(),
-                    span: node.span(),
-                    suggestion: carried_suggestion(node, path),
-                },
-                (SettingsNode::RawValue { value, .. }, Some(_)) => UncataloguedMember {
-                    name: value,
-                    span: node.span(),
-                    suggestion: carried_suggestion(node, path),
-                },
-                (SettingsNode::RawValue { .. }, None) => UncataloguedMember {
-                    name: node.name(),
-                    span: node.span(),
-                    suggestion: carried_suggestion(node, path),
-                },
-                _ => return,
+            let entry = table::lookup(&full);
+            let name = match (node, entry) {
+                (SettingsNode::RawValue { value, .. }, Some(_)) => value,
+                _ => node.name(),
             };
-            members.push(member);
+            members.push(UncataloguedMember {
+                name,
+                span: node.span(),
+                suggestion: carried_suggestion(node, path, entry),
+            });
         }
         Visit::OpaqueLeaf(node @ (SettingsNode::Raw { .. } | SettingsNode::RawValue { .. })) => {
             members.push(UncataloguedMember {
@@ -113,10 +107,12 @@ pub(crate) fn uncatalogued_members(settings: &Settings) -> Vec<UncataloguedMembe
     members
 }
 
-pub(crate) fn carried_suggestion(node: &SettingsNode, path: &[PathPart<'_>]) -> Option<String> {
-    let mut full = path.to_vec();
-    full.push(PathPart::Part(node.name()));
-    match (node, table::lookup(&full)) {
+fn carried_suggestion(
+    node: &SettingsNode,
+    path: &[PathPart<'_>],
+    entry: Option<&table::TableEntry>,
+) -> Option<String> {
+    match (node, entry) {
         (SettingsNode::Raw { .. }, _)
         | (SettingsNode::Group { .. } | SettingsNode::RawGroup { .. }, None) => {
             suggest::suggest(node.name(), table::key_spellings(path).into_iter())
@@ -337,13 +333,13 @@ fn check_member(node: &SettingsNode, path: &[PathPart<'_>], errors: &mut Vec<Set
     let mut full = path.to_vec();
     full.push(PathPart::Part(name));
     if !path.is_empty()
-        && let Some(spelling) = carried_suggestion(node, path)
+        && let Some(spelling) = carried_suggestion(node, path, table::lookup(&full))
     {
         errors.push(warn_near_miss(node, path, spelling));
     }
-    match (node, table::lookup(&full)) {
-        (SettingsNode::Raw { .. } | SettingsNode::RawValue { .. }, _) => return,
-        (SettingsNode::Group { children, .. } | SettingsNode::RawGroup { children, .. }, _) => {
+    match node {
+        SettingsNode::Raw { .. } | SettingsNode::RawValue { .. } => return,
+        SettingsNode::Group { children, .. } | SettingsNode::RawGroup { children, .. } => {
             for child in children {
                 check_member(child, &[], errors);
             }

@@ -354,11 +354,7 @@ impl Catalog {
             implementation_version: Self::implementation_version().to_string(),
             catalog_version: self.catalog_version.clone(),
             catalog_digest: self.catalog_digest.clone(),
-            locale_coverage: self
-                .locales
-                .iter()
-                .map(|locale| self.locale_coverage(locale))
-                .collect(),
+            locale_coverage: self.locale_coverage_all(),
             target: self.target.clone(),
             provenance: self.provenance.clone(),
         }

@@ -4,9 +4,9 @@ use crate::core::error::Result;
 use crate::wir;
 
 impl Program {
-    pub(crate) fn from_wir(storage: wir::Program) -> Result<Self> {
+    pub(crate) fn from_wir(mut storage: wir::Program) -> Result<Self> {
         let mut program = Self {
-            settings: storage.settings.clone(),
+            settings: storage.settings.take(),
             global_variables: storage
                 .global_variables
                 .iter()

@@ -170,7 +170,7 @@ fn all_player_events_parse_validate_emit_and_round_trip() {
         ]
     );
     assert!(matches!(
-        program.rules.get(wir::RuleId::from_index(0)).unwrap().event,
+        program.rules.iter().next().unwrap().event,
         wir::Event::EachPlayerWithFilters {
             team: EventTeam::Team1,
             target: EventTarget::Slot(3),
@@ -215,10 +215,7 @@ fn legacy_each_player_emits_all_filters_and_round_trips_in_supported_locales() {
     let catalog = catalog();
     let legacy = internal::parse(LEGACY_EACH_PLAYER);
     assert!(matches!(
-        legacy
-            .rules
-            .get(wir::RuleId::from_index(0))
-            .map(|rule| &rule.event),
+        legacy.rules.iter().next().map(|rule| &rule.event),
         Some(wir::Event::EachPlayer)
     ));
     legacy.validate().expect("legacy event validates");
@@ -227,10 +224,7 @@ fn legacy_each_player_emits_all_filters_and_round_trips_in_supported_locales() {
 
     let explicit = internal::parse(EXPLICIT_EACH_PLAYER);
     assert!(matches!(
-        explicit
-            .rules
-            .get(wir::RuleId::from_index(0))
-            .map(|rule| &rule.event),
+        explicit.rules.iter().next().map(|rule| &rule.event),
         Some(wir::Event::EachPlayerWithFilters {
             team: EventTeam::All,
             target: EventTarget::All,

@@ -848,7 +848,7 @@ fn current_loop_action_resolves_to_canonical_generic_wir() {
     let catalog = catalog();
     let source = r#"rule ("loop") { event { Ongoing - Global; } actions { Loop; } }"#;
     let program = internal::parse(source);
-    let rule = program.rules.get(wir::RuleId::from_index(0)).expect("rule");
+    let rule = program.rules.iter().next().expect("rule");
     let action = program.actions.get(rule.actions[0]).expect("action");
     assert!(matches!(
         action,

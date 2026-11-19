@@ -78,14 +78,15 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
     let mut tokens = Vec::new();
 
     while let Some(ch) = cursor.peek() {
-        match ch {
+        let start = cursor.pos();
+        let kind = match ch {
             ' ' | '\t' | '\r' | '\n' | '\u{FEFF}' => {
                 cursor.advance();
+                continue;
             }
             '(' | ')' | ',' | ';' | '{' | '}' | ':' | '.' | '[' | ']' | '?' | '-' => {
-                let start = cursor.pos();
                 cursor.advance();
-                let kind = match ch {
+                match ch {
                     '(' => TokenKind::LParen,
                     ')' => TokenKind::RParen,
                     ',' => TokenKind::Comma,
@@ -97,15 +98,9 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                     '[' => TokenKind::LBracket,
                     ']' => TokenKind::RBracket,
                     other => TokenKind::Op(other.to_string()),
-                };
-                tokens.push(Token {
-                    kind,
-                    start,
-                    end: cursor.pos(),
-                });
+                }
             }
             '"' => {
-                let start = cursor.pos();
                 cursor.advance();
                 let mut content = String::new();
                 let mut closed = false;
@@ -142,14 +137,9 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                         position: start,
                     });
                 }
-                tokens.push(Token {
-                    kind: TokenKind::String(content),
-                    start,
-                    end: cursor.pos(),
-                });
+                TokenKind::String(content)
             }
             '0'..='9' => {
-                let start = cursor.pos();
                 let mut text = String::new();
                 let value = if ch == '0' && cursor.peek_at(1) == Some('X') {
                     text.push(cursor.advance().unwrap());
@@ -188,70 +178,7 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                         position: start,
                     })?
                 };
-                tokens.push(Token {
-                    kind: TokenKind::Number { value, text },
-                    start,
-                    end: cursor.pos(),
-                });
-            }
-            '=' => {
-                let start = cursor.pos();
-                cursor.advance();
-                if cursor.peek() == Some('=') {
-                    cursor.advance();
-                    tokens.push(Token {
-                        kind: TokenKind::Op("==".to_string()),
-                        start,
-                        end: cursor.pos(),
-                    });
-                } else {
-                    tokens.push(Token {
-                        kind: TokenKind::Op("=".to_string()),
-                        start,
-                        end: cursor.pos(),
-                    });
-                }
-            }
-            '!' => {
-                let start = cursor.pos();
-                cursor.advance();
-                if cursor.peek() == Some('=') {
-                    cursor.advance();
-                    tokens.push(Token {
-                        kind: TokenKind::Op("!=".to_string()),
-                        start,
-                        end: cursor.pos(),
-                    });
-                } else {
-                    tokens.push(Token {
-                        kind: TokenKind::Op("not".to_string()),
-                        start,
-                        end: cursor.pos(),
-                    });
-                }
-            }
-            '&' | '|' => {
-                let start = cursor.pos();
-                let operator = cursor.advance().unwrap();
-                if cursor.peek() == Some(operator) {
-                    cursor.advance();
-                    tokens.push(Token {
-                        kind: TokenKind::Op(if operator == '&' {
-                            "and".to_string()
-                        } else {
-                            "or".to_string()
-                        }),
-                        start,
-                        end: cursor.pos(),
-                    });
-                } else {
-                    return Err(LexError {
-                        message: format!(
-                            "unexpected '{operator}'; expected '{operator}{operator}'"
-                        ),
-                        position: start,
-                    });
-                }
+                TokenKind::Number { value, text }
             }
             '<' if starts_markup_word(&cursor)
                 || (markup_tag_len(cursor.rest).is_some()
@@ -261,24 +188,30 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                     })) =>
             {
                 tokens.push(take_word(&mut cursor));
+                continue;
             }
-            '<' | '>' => {
-                let start = cursor.pos();
-                let op = cursor.advance().unwrap();
-                if cursor.peek() == Some('=') {
+            '=' | '!' | '<' | '>' => {
+                cursor.advance();
+                let spelling = if cursor.peek() == Some('=') {
                     cursor.advance();
-                    tokens.push(Token {
-                        kind: TokenKind::Op(format!("{op}=")),
-                        start,
-                        end: cursor.pos(),
-                    });
+                    format!("{ch}=")
+                } else if ch == '!' {
+                    "not".to_string()
                 } else {
-                    tokens.push(Token {
-                        kind: TokenKind::Op(op.to_string()),
-                        start,
-                        end: cursor.pos(),
+                    ch.to_string()
+                };
+                TokenKind::Op(spelling)
+            }
+            '&' | '|' => {
+                cursor.advance();
+                if cursor.peek() != Some(ch) {
+                    return Err(LexError {
+                        message: format!("unexpected '{ch}'; expected '{ch}{ch}'"),
+                        position: start,
                     });
                 }
+                cursor.advance();
+                TokenKind::Op(if ch == '&' { "and" } else { "or" }.to_string())
             }
             '+' | '*' | '/' | '%' => {
                 if ch == '/' && cursor.peek_at(1) == Some('/') {
@@ -293,24 +226,25 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                     }
                     continue;
                 }
-                let start = cursor.pos();
-                let op = cursor.advance().unwrap();
-                tokens.push(Token {
-                    kind: TokenKind::Op(op.to_string()),
-                    start,
-                    end: cursor.pos(),
-                });
+                cursor.advance();
+                TokenKind::Op(ch.to_string())
             }
             c if is_word_start(c) => {
                 tokens.push(take_word(&mut cursor));
+                continue;
             }
             other => {
                 return Err(LexError {
                     message: format!("unexpected character '{other}'"),
-                    position: cursor.pos(),
+                    position: start,
                 });
             }
-        }
+        };
+        tokens.push(Token {
+            kind,
+            start,
+            end: cursor.pos(),
+        });
     }
 
     let end = cursor.pos();
