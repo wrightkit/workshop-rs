@@ -339,7 +339,6 @@ mod tests {
         ]
     }
 
-    /// Every `Event` shape: each player kind, team, and target combination.
     fn every_event() -> Vec<Event> {
         let mut events = vec![
             Event::Global,

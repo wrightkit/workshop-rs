@@ -178,7 +178,6 @@ impl<'a> ParseContext<'a> {
             })
     }
 
-    /// The first token of a phrase: a `Word` or `Number` with its span.
     fn phrase_seed(&mut self) -> Result<(String, Position, Position)> {
         match self.peek() {
             Some(Token {

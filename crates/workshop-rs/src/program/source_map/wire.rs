@@ -40,9 +40,6 @@ impl MappedText {
     /// Decoding checks the format and structure only; [`SourceMap::apply`]
     /// validates the mapping against the program it is applied to.
     pub fn from_json(json: &str) -> Result<Self, SourceMapError> {
-        // Decode the full artifact in one pass; only a failed or foreign
-        // document is read again to tell an unsupported format apart from
-        // a malformed one.
         let artifact = match serde_json::from_str::<Artifact>(json) {
             Ok(artifact) if artifact.format == MAPPED_TEXT_V1 => artifact,
             Ok(artifact) => return Err(SourceMapError::UnsupportedFormat(artifact.format)),

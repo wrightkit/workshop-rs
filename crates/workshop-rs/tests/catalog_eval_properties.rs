@@ -185,11 +185,9 @@ fn evaluation_facts_reject_bad_records() {
         )
     };
     for (entry_kind, fact) in [
-        // Evaluation facts on the wrong entry kind.
         ("actions", r#", "nondeterministic": true"#),
         ("actions", r#", "perElementParams": [0]"#),
         ("values", r#", "actionReevaluatedParams": [0]"#),
-        // Positions out of range or duplicated.
         ("actions", r#", "actionReevaluatedParams": [1]"#),
         ("actions", r#", "actionReevaluatedParams": [0, 0]"#),
         ("values", r#", "perElementParams": [9]"#),
