@@ -1,10 +1,9 @@
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::path::Path;
 
 use super::conformance::{
     CONFORMANCE_SCHEMA_VERSION, Comparison, ConformanceReason, ConformanceResult,
-    ConformanceStatus, Equivalence, FeatureId, ReasonCode, TestArtifact, is_sha256_digest,
+    ConformanceStatus, Equivalence, FeatureId, ReasonCode, TestArtifact, is_sha256_digest, sha256,
 };
 use workshop_rs::catalog::{Catalog, CatalogIdentity, Locale};
 use workshop_rs::{parser, validate};
@@ -144,11 +143,11 @@ pub(crate) fn run(manifest_path: &Path) -> Result<CorpusReport, String> {
             &input,
             &catalog,
             &locale,
-            case.source.clone(),
+            &catalog_identity,
             expected,
         )?;
         result
-            .validate_against(&catalog)
+            .validate_with_identity(&catalog, &catalog_identity)
             .map_err(|error| format!("case {} produced invalid result: {error}", case.id))?;
         summary.record(result.status);
         results.push(result);
@@ -165,9 +164,8 @@ pub(crate) fn run(manifest_path: &Path) -> Result<CorpusReport, String> {
 
 struct CaseContext<'a> {
     case: &'a CorpusCase,
-    catalog: &'a Catalog,
+    catalog_identity: &'a CatalogIdentity,
     locale: &'a Locale,
-    source: TestArtifact,
     expected: TestArtifact,
 }
 
@@ -184,8 +182,8 @@ impl CaseContext<'_> {
             features: self.case.features.clone(),
             status,
             comparison,
-            source: self.source.clone(),
-            catalog: self.catalog.identity(),
+            source: self.case.source.clone(),
+            catalog: self.catalog_identity.clone(),
             locale: Some(self.locale.clone()),
             reason: Some(reason),
         }
@@ -220,14 +218,13 @@ fn execute_case(
     input: &str,
     catalog: &Catalog,
     locale: &Locale,
-    source: TestArtifact,
+    catalog_identity: &CatalogIdentity,
     expected: TestArtifact,
 ) -> Result<ConformanceResult, String> {
     let ctx = CaseContext {
         case,
-        catalog,
+        catalog_identity,
         locale,
-        source,
         expected,
     };
     let parsed = parser::parse_with_context(input, catalog, locale, catalog);
@@ -278,11 +275,6 @@ fn execute_case(
             }
         }
     }
-}
-
-fn sha256(value: &str) -> String {
-    let digest = Sha256::digest(value.as_bytes());
-    format!("{digest:x}")
 }
 
 fn validate_source_artifact(
@@ -368,7 +360,7 @@ mod tests {
             include_str!("../../workshop-rs/tests/fixtures/corpus/basic-rule.ws"),
             &catalog,
             &locale,
-            case.source.clone(),
+            &catalog.identity(),
             artifact("deliberately divergent reference", 'b'),
         )
         .expect("test input executes");

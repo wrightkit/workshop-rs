@@ -160,11 +160,16 @@ fn parse_file(
         (Err(error), _) | (_, Err(error)) => return Err(error),
     };
     let locale = resolve_parse_locale(&input, &catalog, explicit_locale)?;
-    let program = parser::parse_with_context(&input, &catalog, &locale, &catalog)
-        .map_err(|error| error.to_string())?;
-    validate::validate_canonical_ids(&program, &catalog)
-        .map_err(|error| format!("canonical identity validation failed: {error}"))?;
+    let program = parse_program(&input, &catalog, &locale)?;
     Ok((catalog, locale, program))
+}
+
+fn parse_program(input: &str, catalog: &Catalog, locale: &Locale) -> Result<Program, String> {
+    let program = parser::parse_with_context(input, catalog, locale, catalog)
+        .map_err(|error| error.to_string())?;
+    validate::validate_canonical_ids(&program, catalog)
+        .map_err(|error| format!("canonical identity validation failed: {error}"))?;
+    Ok(program)
 }
 
 fn parse_command(args: Vec<String>) -> i32 {
@@ -202,16 +207,12 @@ fn emit_command(args: Vec<String>) -> i32 {
         Err(error) => return fail(error),
     };
     report_settings_warnings(&program);
-    let mut emit_options = EmitOptions::default();
-    emit_options.fallback_locale = options.locale("--fallback-locale");
-    match emitter::emit_with_options(&program, &catalog, &locale, &emit_options) {
-        Ok(output) => {
-            report_fallbacks(&output.fallback_ids);
-            print!("{}", output.text);
-            0
-        }
-        Err(error) => fail(error),
-    }
+    emit_program(
+        &program,
+        &catalog,
+        &locale,
+        options.locale("--fallback-locale"),
+    )
 }
 
 fn convert_command(args: Vec<String>) -> i32 {
@@ -230,20 +231,22 @@ fn convert_command(args: Vec<String>) -> i32 {
         (Ok(catalog), Ok(input)) => (catalog, input),
         (Err(error), _) | (_, Err(error)) => return fail(error),
     };
-    let program = parser::parse_with_context(&input, &catalog, &from, &catalog)
-        .map_err(|error| error.to_string())
-        .and_then(|program| {
-            validate::validate_canonical_ids(&program, &catalog)
-                .map_err(|error| format!("canonical identity validation failed: {error}"))?;
-            Ok(program)
-        });
-    let program = match program {
+    let program = match parse_program(&input, &catalog, &from) {
         Ok(program) => program,
         Err(error) => return fail(error),
     };
-    let mut emit_options = EmitOptions::default();
-    emit_options.fallback_locale = options.locale("--fallback-locale");
-    match emitter::emit_with_options(&program, &catalog, &to, &emit_options) {
+    emit_program(&program, &catalog, &to, options.locale("--fallback-locale"))
+}
+
+fn emit_program(
+    program: &Program,
+    catalog: &Catalog,
+    locale: &Locale,
+    fallback_locale: Option<Locale>,
+) -> i32 {
+    let mut options = EmitOptions::default();
+    options.fallback_locale = fallback_locale;
+    match emitter::emit_with_options(program, catalog, locale, &options) {
         Ok(output) => {
             report_fallbacks(&output.fallback_ids);
             print!("{}", output.text);
