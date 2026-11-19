@@ -45,7 +45,7 @@ fn collapse<T: PartialEq + Clone>(source: &HashMap<String, T>, target: &mut Coll
             continue;
         }
         match target.get_mut(key.as_ref()) {
-            Some(slot) if *slot != Some(value.clone()) => *slot = None,
+            Some(slot) if slot.as_ref() != Some(value) => *slot = None,
             Some(_) => {}
             None => {
                 target.insert(key.into_owned(), Some(value.clone()));

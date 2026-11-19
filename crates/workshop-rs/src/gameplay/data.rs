@@ -23,30 +23,25 @@ struct GameplaySchema {
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct GameplayFile {
-    schema_version: u32,
     identity: GameplayDatasetIdentity,
     heroes: Vec<Hero>,
 }
 
-fn probe_schema_version(json: &str) -> Result<u32, GameplayDataError> {
+fn check_schema_version(json: &str) -> Result<(), GameplayDataError> {
     let schema: GameplaySchema = serde_json::from_str(json)
         .map_err(|error| GameplayDataError::Malformed(error.to_string()))?;
     if schema.schema_version != SCHEMA_VERSION {
         return Err(GameplayDataError::UnsupportedSchema(schema.schema_version));
     }
-    Ok(schema.schema_version)
+    Ok(())
 }
 
 /// Load and validate a gameplay dataset from its JSON representation.
 pub fn load(json: &str) -> Result<GameplayCatalog, GameplayDataError> {
-    let schema_version = probe_schema_version(json)?;
+    check_schema_version(json)?;
 
     let file: GameplayFile = serde_json::from_str(json)
         .map_err(|error| GameplayDataError::Malformed(error.to_string()))?;
-    if file.schema_version != schema_version {
-        return Err(GameplayDataError::UnsupportedSchema(file.schema_version));
-    }
-
     let computed = content_digest(json)?;
     if file.identity.digest != computed {
         return Err(GameplayDataError::DigestMismatch {

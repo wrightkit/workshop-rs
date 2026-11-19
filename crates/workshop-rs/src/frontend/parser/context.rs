@@ -27,9 +27,9 @@ impl ParseContext<'_> {
         call_id: &str,
         f: impl FnOnce(&mut Self) -> Result<T>,
     ) -> Result<T> {
-        self.call_stack.push(call_id.to_string());
+        let saved = std::mem::replace(&mut self.in_hud_text_call, call_id == "createHudText");
         let result = f(self);
-        self.call_stack.pop();
+        self.in_hud_text_call = saved;
         result
     }
 }

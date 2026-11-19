@@ -20,7 +20,6 @@ use crate::core::source::SourceFile;
 pub(crate) type GlobalVarId = Id<WorkshopVariable>;
 pub(crate) type PlayerVarId = Id<WorkshopVariable>;
 pub(crate) type SubroutineId = Id<WorkshopSubroutine>;
-pub(crate) type RuleId = Id<Rule>;
 pub(crate) type ActionId = Id<Action>;
 pub(crate) type ValueId = Id<ValueNode>;
 

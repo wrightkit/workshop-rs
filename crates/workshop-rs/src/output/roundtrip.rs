@@ -96,64 +96,38 @@ pub(crate) fn equivalent_wir(a: &wir::Program, b: &wir::Program) -> bool {
     if !settings_equivalent(a.settings.as_ref(), b.settings.as_ref()) {
         return false;
     }
-    let globals_a: Vec<_> = a
+    fn declaration(variable: &wir::WorkshopVariable) -> (&str, u32) {
+        (variable.name.as_str(), variable.index)
+    }
+
+    if !a
         .global_variables
         .iter()
-        .map(|v| (v.name.as_str(), v.index))
-        .collect();
-    let globals_b: Vec<_> = b
-        .global_variables
-        .iter()
-        .map(|v| (v.name.as_str(), v.index))
-        .collect();
-    if globals_a != globals_b {
+        .map(declaration)
+        .eq(b.global_variables.iter().map(declaration))
+        || !a
+            .player_variables
+            .iter()
+            .map(declaration)
+            .eq(b.player_variables.iter().map(declaration))
+        || !a
+            .subroutines
+            .iter()
+            .map(|s| (s.name.as_str(), s.index))
+            .eq(b.subroutines.iter().map(|s| (s.name.as_str(), s.index)))
+    {
         return false;
     }
-    let players_a: Vec<_> = a
-        .player_variables
-        .iter()
-        .map(|v| (v.name.as_str(), v.index))
-        .collect();
-    let players_b: Vec<_> = b
-        .player_variables
-        .iter()
-        .map(|v| (v.name.as_str(), v.index))
-        .collect();
-    if players_a != players_b {
-        return false;
-    }
-    let subs_a: Vec<_> = a
-        .subroutines
-        .iter()
-        .map(|s| (s.name.as_str(), s.index))
-        .collect();
-    let subs_b: Vec<_> = b
-        .subroutines
-        .iter()
-        .map(|s| (s.name.as_str(), s.index))
-        .collect();
-    if subs_a != subs_b {
-        return false;
-    }
-    let rules_a: Vec<_> = a
-        .rules
-        .iter()
-        .filter(|rule| !rule.actions.is_empty())
-        .collect();
-    let rules_b: Vec<_> = b
-        .rules
-        .iter()
-        .filter(|rule| !rule.actions.is_empty())
-        .collect();
-    if rules_a.len() != rules_b.len() {
-        return false;
-    }
-    for (rule_a, rule_b) in rules_a.into_iter().zip(rules_b) {
+    let mut rules_b = b.rules.iter().filter(|rule| !rule.actions.is_empty());
+    for rule_a in a.rules.iter().filter(|rule| !rule.actions.is_empty()) {
+        let Some(rule_b) = rules_b.next() else {
+            return false;
+        };
         if !rule_equivalent(a, b, rule_a, rule_b) {
             return false;
         }
     }
-    true
+    rules_b.next().is_none()
 }
 
 pub(crate) fn settings_equivalent(

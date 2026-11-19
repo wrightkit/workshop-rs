@@ -1,6 +1,7 @@
 //! Public contracts for Workshop test results.
 
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::collections::HashSet;
 
 use workshop_rs::catalog::{Catalog, CatalogIdentity, Kind, Locale};
@@ -309,8 +310,16 @@ impl ConformanceResult {
     }
 
     pub fn validate_against(&self, catalog: &Catalog) -> Result<(), ConformanceError> {
+        self.validate_with_identity(catalog, &catalog.identity())
+    }
+
+    pub(crate) fn validate_with_identity(
+        &self,
+        catalog: &Catalog,
+        identity: &CatalogIdentity,
+    ) -> Result<(), ConformanceError> {
         self.validate()?;
-        if self.catalog != catalog.identity() {
+        if &self.catalog != identity {
             return Err(ConformanceError::invalid(
                 "catalog",
                 "must match the catalog supplied to validate_against",
@@ -507,6 +516,10 @@ fn validate_non_empty(field: &str, value: &str) -> Result<(), ConformanceError> 
     } else {
         Ok(())
     }
+}
+
+pub(crate) fn sha256(value: &str) -> String {
+    format!("{:x}", Sha256::digest(value.as_bytes()))
 }
 
 pub(crate) fn is_sha256_digest(value: &str) -> bool {

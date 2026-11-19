@@ -42,7 +42,7 @@ use serde_json::Value as JsonValue;
 
 use crate::catalog::{Catalog, Locale};
 use crate::core::error::WorkshopError;
-use crate::core::source::{Position, Span};
+use crate::core::source::{Position, SourceDocument, Span};
 use crate::frontend::keywords::structural_keyword_prefix;
 use crate::frontend::lexer::{Token, tokenize};
 use crate::program::{Action, Program};
@@ -298,8 +298,7 @@ impl Program {
         let document = self
             .source(rule_span.file)
             .ok_or(StatementEditError::SourceUnavailable { rule: address.rule })?;
-        let text = document.text();
-        let tokens = tokenize(text)
+        let tokens = tokenize(document.text())
             .map_err(|_| StatementEditError::SourceUnavailable { rule: address.rule })?;
         let layout = RuleLayout::scan(&tokens, rule_span, catalog, locale)
             .ok_or(StatementEditError::SourceUnavailable { rule: address.rule })?;
@@ -309,9 +308,10 @@ impl Program {
             .iter()
             .find(|section| section.id == address.list.section_id());
         let Some(section) = section else {
-            let unit = indent_unit(text, &tokens, &layout, rule_span);
+            let unit = indent_unit(document, &tokens, &layout, rule_span);
             return self.insert_created_section(
-                catalog, locale, address, list_len, &rows, &unit, &tokens, &layout, text, rule_span,
+                catalog, locale, address, list_len, &rows, &unit, &tokens, &layout, document,
+                rule_span,
             );
         };
 
@@ -331,48 +331,29 @@ impl Program {
             });
         }
 
-        match edit {
-            StatementEdit::Insert(_) => {
-                if let Some(chunk) = section.chunks.get(address.index) {
-                    self.verify_statement(
-                        address,
-                        *chunk,
-                        &tokens,
-                        catalog,
-                        locale,
-                        rule_span.file,
-                    )?;
-                    self.insert_before_chunk(address, &rows, *chunk, &tokens, text, rule_span)
-                } else {
-                    let unit = indent_unit(text, &tokens, &layout, rule_span);
-                    self.insert_at_close(address, &rows, &unit, section, &tokens, text, rule_span)
-                }
+        let chunk = section.chunks.get(address.index).copied();
+        if let Some(chunk) = chunk {
+            self.verify_statement(address, chunk, &tokens, catalog, locale, rule_span.file)?;
+        }
+        match (edit, chunk) {
+            (StatementEdit::Insert(_), Some(chunk)) => {
+                self.insert_before_chunk(address, &rows, chunk, &tokens, document, rule_span)
             }
-            StatementEdit::Replace(_) => {
-                let chunk =
-                    section
-                        .chunks
-                        .get(address.index)
-                        .ok_or(StatementEditError::StaleAddress {
-                            rule: address.rule,
-                            list: address.list,
-                        })?;
-                self.verify_statement(address, *chunk, &tokens, catalog, locale, rule_span.file)?;
+            (StatementEdit::Insert(_), None) => {
+                let unit = indent_unit(document, &tokens, &layout, rule_span);
+                self.insert_at_close(address, &rows, &unit, section, &tokens, document, rule_span)
+            }
+            (StatementEdit::Replace(_), Some(chunk)) => {
                 let row = rows.first().expect("replace emits one row");
-                self.replace_chunk(address, row, *chunk, &tokens, rule_span)
+                self.replace_chunk(address, row, chunk, &tokens, rule_span)
             }
-            StatementEdit::Delete => {
-                let chunk =
-                    section
-                        .chunks
-                        .get(address.index)
-                        .ok_or(StatementEditError::StaleAddress {
-                            rule: address.rule,
-                            list: address.list,
-                        })?;
-                self.verify_statement(address, *chunk, &tokens, catalog, locale, rule_span.file)?;
-                self.delete_chunk(address, *chunk, &tokens, text, rule_span)
+            (StatementEdit::Delete, Some(chunk)) => {
+                self.delete_chunk(address, chunk, &tokens, document, rule_span)
             }
+            (_, None) => Err(StatementEditError::StaleAddress {
+                rule: address.rule,
+                list: address.list,
+            }),
         }
     }
 
@@ -438,13 +419,13 @@ impl Program {
         rows: &[String],
         chunk: StatementChunk,
         tokens: &[Token],
-        text: &str,
+        document: &SourceDocument,
         rule_span: Span,
     ) -> Result<crate::source::SourceEdit> {
         let anchor = tokens[chunk.first].start;
-        let newline = newline_of(text, anchor);
+        let newline = newline_of(document, anchor);
         let line_start = Position::new(anchor.line, 1);
-        let indent = line_prefix(text, anchor);
+        let indent = line_prefix(document, anchor);
         let (position, replacement) = if is_whitespace(indent) {
             let mut replacement = String::new();
             for row in rows {
@@ -454,7 +435,7 @@ impl Program {
             }
             (line_start, replacement)
         } else {
-            let left = if byte_is_whitespace(text, anchor) {
+            let left = if byte_is_whitespace(document, anchor) {
                 ""
             } else {
                 " "
@@ -473,17 +454,17 @@ impl Program {
         unit: &str,
         section: &StatementSection,
         tokens: &[Token],
-        text: &str,
+        document: &SourceDocument,
         rule_span: Span,
     ) -> Result<crate::source::SourceEdit> {
         let close = tokens[section.dangling.unwrap_or(section.close)].start;
-        let newline = newline_of(text, close);
-        let close_indent = line_prefix(text, close);
+        let newline = newline_of(document, close);
+        let close_indent = line_prefix(document, close);
         let (position, replacement) = if is_whitespace(close_indent) {
             let indent = section
                 .chunks
                 .last()
-                .map(|chunk| line_prefix(text, tokens[chunk.first].start))
+                .map(|chunk| line_prefix(document, tokens[chunk.first].start))
                 .filter(|prefix| is_whitespace(prefix))
                 .map(str::to_string)
                 .unwrap_or_else(|| format!("{close_indent}{unit}"));
@@ -495,7 +476,7 @@ impl Program {
             }
             (Position::new(close.line, 1), replacement)
         } else {
-            let left = if byte_is_whitespace(text, close) {
+            let left = if byte_is_whitespace(document, close) {
                 ""
             } else {
                 " "
@@ -517,7 +498,7 @@ impl Program {
         unit: &str,
         tokens: &[Token],
         layout: &RuleLayout,
-        text: &str,
+        document: &SourceDocument,
         rule_span: Span,
     ) -> Result<crate::source::SourceEdit> {
         if list_len != 0 || address.index != 0 || rows.is_empty() {
@@ -541,14 +522,14 @@ impl Program {
             .find(|section| section.id == "actions")
             .map(|section| section.name_start)
             .unwrap_or_else(|| tokens[layout.close].start);
-        let newline = newline_of(text, anchor);
+        let newline = newline_of(document, anchor);
         let section_indent = layout
             .sections
             .last()
-            .map(|section| line_prefix(text, section.name_start))
+            .map(|section| line_prefix(document, section.name_start))
             .filter(|prefix| is_whitespace(prefix))
             .map(str::to_string);
-        let anchor_indent = line_prefix(text, anchor);
+        let anchor_indent = line_prefix(document, anchor);
         let (position, replacement) = if is_whitespace(anchor_indent) {
             let indent = section_indent.unwrap_or_else(|| format!("{anchor_indent}{unit}"));
             let statement_indent = format!("{indent}{unit}");
@@ -563,7 +544,7 @@ impl Program {
             replacement.push_str(newline);
             (Position::new(anchor.line, 1), replacement)
         } else {
-            let left = if byte_is_whitespace(text, anchor) {
+            let left = if byte_is_whitespace(document, anchor) {
                 ""
             } else {
                 " "
@@ -593,12 +574,13 @@ impl Program {
         address: StatementAddress,
         chunk: StatementChunk,
         tokens: &[Token],
-        text: &str,
+        document: &SourceDocument,
         rule_span: Span,
     ) -> Result<crate::source::SourceEdit> {
         let first = tokens[chunk.first].start;
         let semi_end = tokens[chunk.semi].end;
-        let starts_line = is_whitespace(line_prefix(text, first));
+        let prefix = line_prefix(document, first);
+        let starts_line = is_whitespace(prefix);
         let next = tokens.get(chunk.semi + 1).map(|token| token.start);
         let content_follows = next.is_some_and(|next| next.line == semi_end.line);
         let (start, end) = match (starts_line, content_follows) {
@@ -608,7 +590,7 @@ impl Program {
             ),
             (_, true) => (first, next.expect("content follows")),
             (false, false) => {
-                let blanks = line_prefix(text, first)
+                let blanks = prefix
                     .chars()
                     .rev()
                     .take_while(|character| matches!(character, ' ' | '\t'))

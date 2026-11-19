@@ -354,7 +354,7 @@ fn multibyte_chars(source: &str, line_starts: &[usize]) -> Vec<Vec<(usize, usize
 }
 
 impl SourceDocument {
-    fn byte_offset(&self, position: Position) -> Option<usize> {
+    pub(crate) fn byte_offset(&self, position: Position) -> Option<usize> {
         if !position.is_valid() {
             return None;
         }

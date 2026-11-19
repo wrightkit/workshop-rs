@@ -47,11 +47,7 @@ pub(crate) fn validate_wir(
     catalog: &Catalog,
     tolerate_residuals: bool,
 ) -> Result<()> {
-    for (index, _) in program.rules.iter().enumerate() {
-        let rule = wir::RuleId::from_index(index);
-        let Some(rule_data) = program.rules.get(rule) else {
-            continue;
-        };
+    for rule_data in program.rules.iter() {
         crate::events::validate::validate_event(&rule_data.event, rule_data.span, catalog)?;
         let in_rule = |error: crate::WorkshopError| error.or_span(rule_data.span);
         for action in &rule_data.actions {

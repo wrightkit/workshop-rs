@@ -1,5 +1,5 @@
 use crate::catalog::{Catalog, Locale};
-use crate::core::source::{Position, Span, byte_offset};
+use crate::core::source::{Position, SourceDocument, Span};
 use crate::frontend::keywords::{canonical_structural_id, structural_keyword_prefix};
 use crate::frontend::lexer::{Token, TokenKind};
 
@@ -33,22 +33,15 @@ impl RuleLayout {
         catalog: &Catalog,
         locale: &Locale,
     ) -> Option<Self> {
-        let window: Vec<usize> = tokens
-            .iter()
-            .enumerate()
-            .filter(|(_, token)| {
-                (token.start.line, token.start.col) < (token.end.line, token.end.col)
-                    && (token.start.line, token.start.col)
-                        >= (rule_span.start.line, rule_span.start.col)
-                    && (token.end.line, token.end.col) <= (rule_span.end.line, rule_span.end.col)
-            })
-            .map(|(index, _)| index)
-            .collect();
-        let open = *window
-            .iter()
-            .find(|&&index| matches!(tokens[index].kind, TokenKind::LBrace))?;
-        let close = *window.last()?;
-        if !matches!(tokens[close].kind, TokenKind::RBrace) {
+        let mut window = tokens.iter().enumerate().filter(|(_, token)| {
+            (token.start.line, token.start.col) < (token.end.line, token.end.col)
+                && (token.start.line, token.start.col)
+                    >= (rule_span.start.line, rule_span.start.col)
+                && (token.end.line, token.end.col) <= (rule_span.end.line, rule_span.end.col)
+        });
+        let (open, _) = window.find(|(_, token)| matches!(token.kind, TokenKind::LBrace))?;
+        let (close, last) = window.next_back()?;
+        if !matches!(last.kind, TokenKind::RBrace) {
             return None;
         }
         let mut sections = Vec::new();
@@ -137,18 +130,18 @@ pub(super) fn scan_chunks(
     }
 }
 
-pub(super) fn newline_of(text: &str, position: Position) -> &'static str {
-    let next = byte_offset(text, Position::new(position.line + 1, 1));
+pub(super) fn newline_of(document: &SourceDocument, position: Position) -> &'static str {
+    let next = document.byte_offset(Position::new(position.line + 1, 1));
     match next {
-        Some(offset) if text[..offset].ends_with("\r\n") => "\r\n",
+        Some(offset) if document.text()[..offset].ends_with("\r\n") => "\r\n",
         _ => "\n",
     }
 }
 
-pub(super) fn line_prefix(text: &str, position: Position) -> &str {
+pub(super) fn line_prefix(document: &SourceDocument, position: Position) -> &str {
     let line = Position::new(position.line, 1);
-    match (byte_offset(text, line), byte_offset(text, position)) {
-        (Some(start), Some(end)) if start <= end => &text[start..end],
+    match (document.byte_offset(line), document.byte_offset(position)) {
+        (Some(start), Some(end)) if start <= end => &document.text()[start..end],
         _ => "",
     }
 }
@@ -158,14 +151,15 @@ pub(super) fn is_whitespace(text: &str) -> bool {
         .all(|character| matches!(character, ' ' | '\t' | '\r'))
 }
 
-pub(super) fn byte_is_whitespace(text: &str, position: Position) -> bool {
-    byte_offset(text, position)
-        .and_then(|offset| text[..offset].chars().next_back())
+pub(super) fn byte_is_whitespace(document: &SourceDocument, position: Position) -> bool {
+    document
+        .byte_offset(position)
+        .and_then(|offset| document.text()[..offset].chars().next_back())
         .is_none_or(|character| character.is_whitespace())
 }
 
 pub(super) fn indent_unit(
-    text: &str,
+    document: &SourceDocument,
     tokens: &[Token],
     layout: &RuleLayout,
     rule_span: Span,
@@ -183,15 +177,15 @@ pub(super) fn indent_unit(
         .find_map(|section| {
             let chunk = section.chunks.first()?;
             unit_of(
-                line_prefix(text, section.name_start),
-                line_prefix(text, tokens[chunk.first].start),
+                line_prefix(document, section.name_start),
+                line_prefix(document, tokens[chunk.first].start),
             )
         })
         .or_else(|| {
             let section = layout.sections.first()?;
             unit_of(
-                line_prefix(text, rule_span.start),
-                line_prefix(text, section.name_start),
+                line_prefix(document, rule_span.start),
+                line_prefix(document, section.name_start),
             )
         })
         .unwrap_or_else(|| "    ".to_string())

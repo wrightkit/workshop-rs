@@ -499,10 +499,7 @@ impl ParseContext<'_> {
         if let Some((value_type, value)) = member {
             return Ok(self.push_enum(value_type, value, start, end));
         }
-        if self
-            .call_stack
-            .last()
-            .is_some_and(|call| call == "createHudText")
+        if self.in_hud_text_call
             && let Some((value_type, value)) = self.resolve_enum_member_mixed("HudPosition", phrase)
         {
             return Ok(self.push_enum(value_type, value, start, end));

@@ -8,14 +8,13 @@
 use std::collections::{HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
 use crate::conformance::{
     CONFORMANCE_SCHEMA_VERSION, Comparison, ConformanceReason, ConformanceResult,
     ConformanceStatus, Equivalence, FeatureId, FeatureKind, FeatureNamespace, ReasonCode,
-    TestArtifact, is_sha256_digest,
+    TestArtifact, is_sha256_digest, sha256,
 };
-use workshop_rs::catalog::{Catalog, CatalogEntry, EnumDomain, Kind, Locale};
+use workshop_rs::catalog::{Catalog, CatalogEntry, CatalogIdentity, EnumDomain, Kind, Locale};
 use workshop_rs::gameplay::{self, HeroId};
 use workshop_rs::settings::{
     self as settings_schema, SettingDefinition, SettingTarget, SettingTargetKind,
@@ -309,11 +308,11 @@ impl Census {
             .map(std::num::NonZero::get)
             .unwrap_or(1)
             .min(cases.len().max(1));
+        let identity = catalog.identity();
+        let run =
+            |&(shard_id, case): &(&str, &CensusCase)| run_case(case, shard_id, catalog, &identity);
         let results: Vec<ConformanceResult> = if workers <= 1 {
-            cases
-                .iter()
-                .map(|(shard_id, case)| run_case(case, shard_id, catalog))
-                .collect()
+            cases.iter().map(run).collect()
         } else {
             let next = std::sync::atomic::AtomicUsize::new(0);
             std::thread::scope(|scope| {
@@ -323,10 +322,10 @@ impl Census {
                             let mut worker_results = Vec::new();
                             loop {
                                 let index = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-                                let Some((shard_id, case)) = cases.get(index) else {
+                                let Some(case) = cases.get(index) else {
                                     break;
                                 };
-                                worker_results.push(run_case(case, shard_id, catalog));
+                                worker_results.push(run(case));
                             }
                             worker_results
                         })
@@ -343,7 +342,7 @@ impl Census {
         CensusReport {
             schema_version: CENSUS_SCHEMA_VERSION,
             conformance_schema_version: CONFORMANCE_SCHEMA_VERSION,
-            catalog: catalog.identity(),
+            catalog: identity,
             census: self.identity(),
             results,
         }
@@ -378,7 +377,7 @@ impl Census {
 pub struct CensusReport {
     pub schema_version: u32,
     pub conformance_schema_version: u32,
-    pub catalog: workshop_rs::catalog::CatalogIdentity,
+    pub catalog: CatalogIdentity,
     pub census: CensusIdentity,
     pub results: Vec<ConformanceResult>,
 }
@@ -421,7 +420,7 @@ impl CensusReport {
         }
         for result in &self.results {
             result
-                .validate_against(catalog)
+                .validate_with_identity(catalog, &self.catalog)
                 .map_err(|error| CensusError::new(error.to_string()))?;
             let matching_shards = self
                 .census
@@ -1673,7 +1672,12 @@ fn catalog_enum_spelling(catalog: &Catalog, domain: &str, key: &str) -> Option<S
         .map(str::to_string)
 }
 
-fn run_case(case: &CensusCase, shard_id: &str, catalog: &Catalog) -> ConformanceResult {
+fn run_case(
+    case: &CensusCase,
+    shard_id: &str,
+    catalog: &Catalog,
+    identity: &CatalogIdentity,
+) -> ConformanceResult {
     let source = artifact(
         format!("census/{shard_id}/{}.ws", case.case_id),
         &case.source,
@@ -1685,7 +1689,7 @@ fn run_case(case: &CensusCase, shard_id: &str, catalog: &Catalog) -> Conformance
         status,
         comparison,
         source: source.clone(),
-        catalog: catalog.identity(),
+        catalog: identity.clone(),
         locale,
         reason,
     };
@@ -1948,12 +1952,6 @@ fn reference_artifact(case: &CensusCase, content: &str) -> TestArtifact {
     }
 }
 
-fn sha256(content: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(content.as_bytes());
-    format!("{:x}", hasher.finalize())
-}
-
 fn normalize_workshop(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
@@ -2121,33 +2119,5 @@ mod tests {
             .validate_against(&catalog)
             .expect_err("report identity must carry a SHA-256 digest");
         assert!(error.to_string().contains("SHA-256"));
-    }
-}
-
-#[cfg(test)]
-mod probe_debug {
-    use super::*;
-
-    #[test]
-    fn dump_failing_localization_probes() {
-        let catalog = Catalog::builtin().unwrap();
-        let census = Census::builtin(&catalog).unwrap();
-        let wanted = [
-            "localization/es-mx/value/hero/0",
-            "localization/fr-fr/value/hero/0",
-        ];
-        for case in census.cases() {
-            if !wanted.contains(&case.case_id.as_str()) {
-                continue;
-            }
-            println!("==== {} ====", case.case_id);
-            println!("{}", case.source);
-            let result = run_case(case, "localization", &catalog);
-            println!(
-                "-> {:?} {:?}",
-                result.status,
-                result.reason.map(|r| r.detail)
-            );
-        }
     }
 }

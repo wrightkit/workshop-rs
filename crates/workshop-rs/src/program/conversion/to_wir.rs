@@ -167,7 +167,7 @@ fn lower_actions(
                 None,
             ));
         }
-        match current {
+        let lowered = match current {
             Action::ElseIf { .. } | Action::Else | Action::End => return Ok(()),
             Action::If { condition } => {
                 *position += 1;
@@ -226,17 +226,11 @@ fn lower_actions(
                     };
                     branches.push(wir::IfBranch { condition, body });
                 }
-                if !matches!(actions.get(*position), Some(Action::End)) {
-                    return Err(WorkshopError::malformed(
-                        "control-flow action is missing End".to_string(),
-                        None,
-                    ));
-                }
-                *position += 1;
-                output.push(storage.actions.push(wir::Action::If {
+                require_end(actions, position)?;
+                storage.actions.push(wir::Action::If {
                     branches,
                     span: None,
-                }));
+                })
             }
             Action::While { condition } => {
                 *position += 1;
@@ -252,11 +246,11 @@ fn lower_actions(
                 )?;
                 require_end(actions, position)?;
                 let condition = wir_value(condition, storage, globals, players, subroutines)?;
-                output.push(storage.actions.push(wir::Action::While {
+                storage.actions.push(wir::Action::While {
                     condition,
                     body,
                     span: None,
-                }));
+                })
             }
             Action::ForGlobalVariable {
                 variable,
@@ -282,7 +276,7 @@ fn lower_actions(
                 let start = wir_value(start, storage, globals, players, subroutines)?;
                 let stop = wir_value(stop, storage, globals, players, subroutines)?;
                 let step = wir_value(step, storage, globals, players, subroutines)?;
-                output.push(storage.actions.push(wir::Action::ForGlobalVariable {
+                storage.actions.push(wir::Action::ForGlobalVariable {
                     variable,
                     start,
                     stop,
@@ -290,7 +284,7 @@ fn lower_actions(
                     body,
                     span: None,
                     target_span: None,
-                }));
+                })
             }
             Action::ForPlayerVariable {
                 player,
@@ -318,7 +312,7 @@ fn lower_actions(
                 let start = wir_value(start, storage, globals, players, subroutines)?;
                 let stop = wir_value(stop, storage, globals, players, subroutines)?;
                 let step = wir_value(step, storage, globals, players, subroutines)?;
-                output.push(storage.actions.push(wir::Action::ForPlayerVariable {
+                storage.actions.push(wir::Action::ForPlayerVariable {
                     player,
                     variable,
                     start,
@@ -327,27 +321,25 @@ fn lower_actions(
                     body,
                     span: None,
                     target_span: None,
-                }));
+                })
             }
             action => {
                 *position += 1;
-                let lowered = wir_action(action, storage, globals, players, subroutines)?;
-                output.push(lowered);
+                wir_action(action, storage, globals, players, subroutines)?
             }
-        }
-        let lowered = *output.last().expect("a lowered action was just pushed");
+        };
         apply_action_source(storage, lowered, public, record);
-        if disabled {
-            let action = output.pop().expect("a lowered action was just pushed");
-            output.push(
-                storage.actions.push(wir::Action::Disabled {
-                    action,
-                    span: record
-                        .filter(|record| record.identity == action_identity(public))
-                        .and_then(|record| record.span),
-                }),
-            );
-        }
+        let lowered = if disabled {
+            storage.actions.push(wir::Action::Disabled {
+                action: lowered,
+                span: record
+                    .filter(|record| record.identity == action_identity(public))
+                    .and_then(|record| record.span),
+            })
+        } else {
+            lowered
+        };
+        output.push(lowered);
     }
     Ok(())
 }
@@ -384,21 +376,27 @@ fn apply_action_source(
             *identifier = source.identifier;
         }
     }
+    let public_values = action_argument_values(public);
+    if source.arguments.len() != public_values.len() {
+        return;
+    }
     let value_ids = storage
         .actions
         .get(id)
         .map(wir::Action::value_args)
         .unwrap_or_default();
-    for (argument, value) in value_ids.into_iter().enumerate() {
-        if let Some((record, public_value)) = argument_value(source, public, argument) {
-            apply_value_provenance(
-                storage,
-                value,
-                public_value,
-                record,
-                &std::convert::identity,
-            );
-        }
+    for ((value, public_value), record) in value_ids
+        .into_iter()
+        .zip(public_values)
+        .zip(&source.arguments)
+    {
+        apply_value_provenance(
+            storage,
+            value,
+            public_value,
+            record,
+            &std::convert::identity,
+        );
     }
 }
 
