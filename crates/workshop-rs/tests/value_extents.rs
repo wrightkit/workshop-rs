@@ -86,19 +86,15 @@ fn condition_value_extents_cover_the_authored_subexpression() {
     let catalog = catalog();
     let program = parser::parse(SOURCE, &catalog, &en()).expect("parses");
 
-    // literal
     assert_eq!(condition_extent(&program, 0, &[]), "1 == 1");
     assert_eq!(condition_extent(&program, 0, &[0]), "1");
     assert_eq!(condition_extent(&program, 0, &[1]), "1");
-    // call with arguments
     assert_eq!(condition_extent(&program, 1, &[]), "Add(1, 2) > 0");
     assert_eq!(condition_extent(&program, 1, &[0]), "Add(1, 2)");
     assert_eq!(condition_extent(&program, 1, &[0, 0]), "1");
     assert_eq!(condition_extent(&program, 1, &[0, 1]), "2");
     assert_eq!(condition_extent(&program, 1, &[1]), "0");
-    // call without arguments
     assert_eq!(condition_extent(&program, 2, &[]), "True");
-    // nested call
     assert_eq!(
         condition_extent(&program, 3, &[0]),
         "Add(Multiply(2, 3), 4)"
@@ -107,7 +103,6 @@ fn condition_value_extents_cover_the_authored_subexpression() {
     assert_eq!(condition_extent(&program, 3, &[0, 0, 0]), "2");
     assert_eq!(condition_extent(&program, 3, &[0, 0, 1]), "3");
     assert_eq!(condition_extent(&program, 3, &[0, 1]), "4");
-    // infix binary
     assert_eq!(
         condition_extent(&program, 4, &[0]),
         "Global.g + Event Player.p"
@@ -115,15 +110,12 @@ fn condition_value_extents_cover_the_authored_subexpression() {
     assert_eq!(condition_extent(&program, 4, &[0, 0]), "Global.g");
     assert_eq!(condition_extent(&program, 4, &[0, 1]), "Event Player.p");
     assert_eq!(condition_extent(&program, 4, &[0, 1, 0]), "Event Player");
-    // infix unary
     assert_eq!(condition_extent(&program, 5, &[]), "!Global.g");
     assert_eq!(condition_extent(&program, 5, &[0]), "Global.g");
-    // array inside a call
     assert_eq!(condition_extent(&program, 6, &[0]), "Count Of(Array(1, 2))");
     assert_eq!(condition_extent(&program, 6, &[0, 0]), "Array(1, 2)");
     assert_eq!(condition_extent(&program, 6, &[0, 0, 0]), "1");
     assert_eq!(condition_extent(&program, 6, &[0, 0, 1]), "2");
-    // vectors
     assert_eq!(
         condition_extent(&program, 7, &[]),
         "Distance Between(Vector(1, 2, 3), Vector(4, 5, 6)) > 0"
@@ -136,11 +128,8 @@ fn condition_value_extents_cover_the_authored_subexpression() {
     assert_eq!(condition_extent(&program, 7, &[0, 0, 0]), "1");
     assert_eq!(condition_extent(&program, 7, &[0, 0, 2]), "3");
     assert_eq!(condition_extent(&program, 7, &[0, 1]), "Vector(4, 5, 6)");
-    // player-variable read
     assert_eq!(condition_extent(&program, 8, &[0]), "Event Player.p");
-    // Global.name
     assert_eq!(condition_extent(&program, 9, &[0]), "Global.g");
-    // conditional `? :` inside a parenthesized infix operand
     assert_eq!(
         condition_extent(&program, 10, &[]),
         "(Global.g > 0 ? 1 : 2) == 1"
