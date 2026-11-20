@@ -722,7 +722,7 @@ rule ("r") {
 }
 
 #[test]
-fn constant_format_calls_fold_to_the_substituted_text() {
+fn numeric_format_calls_keep_their_arguments() {
     let mut program = wir::Program::default();
     let file = program
         .files
@@ -738,7 +738,7 @@ fn constant_format_calls_fold_to_the_substituted_text() {
         },
         None,
     ));
-    let folded = program.values.push(workshop_rs::wir::ValueNode::new(
+    let format = program.values.push(workshop_rs::wir::ValueNode::new(
         workshop_rs::wir::Value::Call {
             name: "format".to_string(),
             args: vec![text, three],
@@ -747,7 +747,7 @@ fn constant_format_calls_fold_to_the_substituted_text() {
     ));
     let action = program.actions.push(wir::Action::SetGlobalVariable {
         variable: workshop_rs::core::ids::Id::from_index(0),
-        value: folded,
+        value: format,
         span: None,
         target_span: None,
     });
@@ -769,19 +769,19 @@ fn constant_format_calls_fold_to_the_substituted_text() {
     let _ = file;
     let emitted = internal::emit(&program);
     assert!(
-        emitted.contains("Set Global Variable(y, Custom String(\"value: 3\"));"),
-        "constant format folds to the substituted text: {emitted}"
+        emitted.contains("Set Global Variable(y, Custom String(\"value: {0}\", 3));"),
+        "numeric format: {emitted}"
     );
     let reparsed = internal::parse(&emitted);
     let reemitted = internal::emit(&reparsed);
     assert_eq!(
         emitted, reemitted,
-        "folded format must be a byte-identical fixed point"
+        "numeric format must be a byte-identical fixed point"
     );
 }
 
 #[test]
-fn constant_float_format_arguments_use_two_decimals() {
+fn floating_point_format_arguments_keep_their_value() {
     let mut program = wir::Program::default();
     let file = program
         .files
@@ -797,7 +797,7 @@ fn constant_float_format_arguments_use_two_decimals() {
         },
         None,
     ));
-    let folded = program.values.push(workshop_rs::wir::ValueNode::new(
+    let format = program.values.push(workshop_rs::wir::ValueNode::new(
         workshop_rs::wir::Value::Call {
             name: "format".to_string(),
             args: vec![text, half],
@@ -806,7 +806,7 @@ fn constant_float_format_arguments_use_two_decimals() {
     ));
     let action = program.actions.push(wir::Action::SetGlobalVariable {
         variable: workshop_rs::core::ids::Id::from_index(0),
-        value: folded,
+        value: format,
         span: None,
         target_span: None,
     });
@@ -828,8 +828,8 @@ fn constant_float_format_arguments_use_two_decimals() {
     let _ = file;
     let emitted = internal::emit(&program);
     assert!(
-        emitted.contains("Set Global Variable(y, Custom String(\"v: 0.50\"));"),
-        "0.5 folds to 0.50 (toFixed(2)): {emitted}"
+        emitted.contains("Set Global Variable(y, Custom String(\"v: {0}\", 0.5));"),
+        "numeric argument retains its value: {emitted}"
     );
 }
 
@@ -899,7 +899,7 @@ fn split_and_reescaped_value_strings_round_trip_byte_identically() {
 }
 
 #[test]
-fn partial_constant_format_folds_and_renumbers() {
+fn numeric_and_variable_format_arguments_are_renumbered() {
     let mut program = wir::Program::default();
     let file = program
         .files
@@ -956,8 +956,8 @@ fn partial_constant_format_folds_and_renumbers() {
     let _ = file;
     let emitted = internal::emit(&program);
     assert!(
-        emitted.contains("Set Global Variable(z, Custom String(\"3 {0}\", Global.x));"),
-        "the constant folds and the variable placeholder renumbers: {emitted}"
+        emitted.contains("Set Global Variable(z, Custom String(\"{0} {1}\", 3, Global.x));"),
+        "both arguments remain after placeholder renumbering: {emitted}"
     );
 }
 

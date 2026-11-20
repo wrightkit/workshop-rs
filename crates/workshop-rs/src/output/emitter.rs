@@ -229,14 +229,3 @@ pub(crate) fn emit_string_chain(spelling: &str, segments: &[String], out: &mut S
         out.push(')');
     }
 }
-
-pub(crate) fn fold_number(value: f64) -> String {
-    if value.fract() == 0.0 && value.abs() < 1e15 {
-        format!("{}", value as i64)
-    } else {
-        let scaled = (value * 100.0).round();
-        let sign = if scaled < 0.0 { "-" } else { "" };
-        let scaled = scaled.abs() as i64;
-        format!("{sign}{}.{:02}", scaled / 100, scaled % 100)
-    }
-}
