@@ -293,16 +293,11 @@ impl<'a> EmitContext<'a> {
         if out_of_range || (has_implicit && has_explicit) {
             return Ok(None);
         }
-        let mut any_constant = false;
-        for id in format_args {
-            let Some(node) = self.program.values.get(*id) else {
-                return Ok(None);
-            };
-            if matches!(node.value, wir::Value::Number { .. }) {
-                any_constant = true;
-            }
-        }
-        if !has_implicit && !any_constant {
+        if !has_implicit
+            || format_args
+                .iter()
+                .any(|id| self.program.values.get(*id).is_none())
+        {
             return Ok(None);
         }
         let mut canonical = String::with_capacity(text.len());
@@ -329,14 +324,9 @@ impl<'a> EmitContext<'a> {
                 write!(canonical, "{{{inner}}}").unwrap();
                 continue;
             };
-            let node = self.program.values.get(arg);
-            if let Some(wir::Value::Number { value, .. }) = node.map(|node| &node.value) {
-                canonical.push_str(&fold_number(*value));
-            } else {
-                write!(canonical, "{{{variable_index}}}").unwrap();
-                variable_index += 1;
-                variable_args.push(arg);
-            }
+            write!(canonical, "{{{variable_index}}}").unwrap();
+            variable_index += 1;
+            variable_args.push(arg);
         }
         canonical.push_str(remaining);
         Ok(Some((canonical, variable_args)))
