@@ -107,6 +107,8 @@ struct EnumFile {
 struct MemberFile {
     id: String,
     aliases: HashMap<String, AliasFile>,
+    #[serde(default)]
+    variants: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -363,6 +365,7 @@ impl Catalog {
             members.push(EnumMember {
                 member: member.id,
                 aliases,
+                variants: member.variants,
             });
         }
         self.enum_by_domain

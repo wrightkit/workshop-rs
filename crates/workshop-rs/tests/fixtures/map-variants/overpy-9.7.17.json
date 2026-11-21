@@ -1,0 +1,603 @@
+[
+  {
+    "key": "aatlis",
+    "enUS": "Aatlis",
+    "variants": {
+      "default": "972777519512068153"
+    }
+  },
+  {
+    "key": "ayutthaya",
+    "enUS": "Ayutthaya",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "antarcticPeninsula",
+    "enUS": "Antarctic Peninsula",
+    "variants": {
+      "morning": "972777519512068154",
+      "night": "972777519512068153"
+    }
+  },
+  {
+    "key": "arenaVictoriae",
+    "enUS": "Arena Victoriae",
+    "variants": {
+      "sunset": "972777519512068292",
+      "night": "972777519512068153"
+    }
+  },
+  {
+    "key": "gogadoro",
+    "enUS": "Gogadoro",
+    "variants": {
+      "night": "972777519512068153",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "redwoodDam",
+    "enUS": "Redwood Dam",
+    "variants": {
+      "morning": "972777519512068154",
+      "sunset": "972777519512068292"
+    }
+  },
+  {
+    "key": "placeLacroix",
+    "enUS": "Place Lacroix",
+    "variants": {
+      "morning": "972777519512055904",
+      "sunset": "972777519512068292"
+    }
+  },
+  {
+    "key": "blackForest",
+    "enUS": "Black Forest",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "blackForestWinter",
+    "enUS": "Black Forest Winter",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "blizzWorld",
+    "enUS": "Blizzard World",
+    "variants": {
+      "morning": "972777519512068154",
+      "overcast": "972777519512068194",
+      "night": "972777519512068153"
+    }
+  },
+  {
+    "key": "blizzWorldWinter",
+    "enUS": "Blizzard World Winter",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "busan",
+    "enUS": "Busan",
+    "variants": {
+      "night": "972777519512068153",
+      "morning": "972777519512068154",
+      "overcast": "972777519512068194"
+    }
+  },
+  {
+    "key": "busanDowntownLny",
+    "enUS": "Busan Downtown Lunar New Year",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "busanSanctuaryLny",
+    "enUS": "Busan Sanctuary Lunar New Year",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "castillo",
+    "enUS": "Castillo",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "chateauGuillard",
+    "enUS": "Château Guillard",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "chateauGuillardHalloween",
+    "enUS": "Château Guillard Halloween",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "circuitRoyal",
+    "enUS": "Circuit Royal",
+    "variants": {
+      "night": "972777519512068153",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "colosseo",
+    "enUS": "Colosseo",
+    "variants": {
+      "evening": "972777519512068292",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "dorado",
+    "enUS": "Dorado",
+    "variants": {
+      "night": "972777519512068153",
+      "evening": "972777519512068292"
+    }
+  },
+  {
+    "key": "ecopointAntarctica",
+    "enUS": "Ecopoint: Antarctica",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "ecopointAntarcticaWinter",
+    "enUS": "Ecopoint: Antarctica Winter",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "eichenwalde",
+    "enUS": "Eichenwalde",
+    "variants": {
+      "evening": "972777519512068292",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "eichenwaldeHalloween",
+    "enUS": "Eichenwalde Halloween",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "esperanca",
+    "enUS": "Esperança",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "hanamura",
+    "enUS": "Hanamura",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "hanamuraWinter",
+    "enUS": "Hanamura Winter",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "hanaoka",
+    "enUS": "Hanaoka",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "havana",
+    "enUS": "Havana",
+    "variants": {
+      "night": "972777519512068153",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "hollywood",
+    "enUS": "Hollywood",
+    "variants": {
+      "night": "972777519512068153",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "hollywoodHalloween",
+    "enUS": "Hollywood Halloween",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "horizonLunarColony",
+    "enUS": "Horizon Lunar Colony",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "ilios",
+    "enUS": "Ilios",
+    "variants": {
+      "evening": "972777519512068292",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "iliosLighthouse",
+    "enUS": "Ilios Lighthouse",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "iliosRuins",
+    "enUS": "Ilios Ruins",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "iliosWell",
+    "enUS": "Ilios Well",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "junkertown",
+    "enUS": "Junkertown",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "kanezaka",
+    "enUS": "Kanezaka",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "kingsRow",
+    "enUS": "King's Row",
+    "variants": {
+      "night": "972777519512068153",
+      "evening": "972777519512068292"
+    }
+  },
+  {
+    "key": "kingsRowWinter",
+    "enUS": "King's Row Winter",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "lijiangControlCenter",
+    "enUS": "Lijiang Control Center",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "lijiangControlCenterLny",
+    "enUS": "Lijiang Control Center Lunar New Year",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "lijiangGarden",
+    "enUS": "Lijiang Garden",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "lijiangGardenLny",
+    "enUS": "Lijiang Garden Lunar New Year",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "lijiangNightMarket",
+    "enUS": "Lijiang Night Market",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "lijiangNightMarketLny",
+    "enUS": "Lijiang Night Market Lunar New Year",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "lijiangTower",
+    "enUS": "Lijiang Tower",
+    "variants": {
+      "night": "972777519512068153",
+      "dawn": "972777519512068197"
+    }
+  },
+  {
+    "key": "lijiangTowerLny",
+    "enUS": "Lijiang Tower Lunar New Year",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "malevento",
+    "enUS": "Malevento",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "midtown",
+    "enUS": "Midtown",
+    "variants": {
+      "morning": "972777519512068154",
+      "night": "972777519512068153"
+    }
+  },
+  {
+    "key": "necropolis",
+    "enUS": "Necropolis",
+    "variants": {
+      "default": "972777519512068153"
+    }
+  },
+  {
+    "key": "nepal",
+    "enUS": "Nepal",
+    "variants": {
+      "dawn": "972777519512068292",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "nepalSanctum",
+    "enUS": "Nepal Sanctum",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "nepalShrine",
+    "enUS": "Nepal Shrine",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "nepalVillage",
+    "enUS": "Nepal Village",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "newJunkCity",
+    "enUS": "New Junk City",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "newQueenStreet",
+    "enUS": "New Queen Street",
+    "variants": {
+      "dawn": "972777519512068197",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "numbani",
+    "enUS": "Numbani",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "oasis",
+    "enUS": "Oasis",
+    "variants": {
+      "night": "972777519512068153",
+      "evening": "972777519512068292",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "oasisCityCenter",
+    "enUS": "Oasis City Center",
+    "variants": {
+      "default": "972777519512068292"
+    }
+  },
+  {
+    "key": "oasisGardens",
+    "enUS": "Oasis Gardens",
+    "variants": {
+      "default": "972777519512068292"
+    }
+  },
+  {
+    "key": "oasisUniversity",
+    "enUS": "Oasis University",
+    "variants": {
+      "default": "972777519512068292"
+    }
+  },
+  {
+    "key": "paraiso",
+    "enUS": "Paraíso",
+    "variants": {
+      "evening": "972777519512068292",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "paris",
+    "enUS": "Paris",
+    "variants": {
+      "default": "972777519512068292"
+    }
+  },
+  {
+    "key": "petra",
+    "enUS": "Petra",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "practiceRange",
+    "enUS": "Practice Range",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "rialto",
+    "enUS": "Rialto",
+    "variants": {
+      "evening": "972777519512068292",
+      "morning": "972777519512068154"
+    }
+  },
+  {
+    "key": "route66",
+    "enUS": "Route 66",
+    "variants": {
+      "night": "972777519512068153",
+      "morning": "972777519512068154",
+      "overcast": "972777519512068194"
+    }
+  },
+  {
+    "key": "runasapi",
+    "enUS": "Runasapi",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "samoa",
+    "enUS": "Samoa",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "shambaliMonastery",
+    "enUS": "Shambali Monastery",
+    "variants": {
+      "default": "972777519512068153"
+    }
+  },
+  {
+    "key": "suravasa",
+    "enUS": "Suravasa",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "templeOfAnubis",
+    "enUS": "Temple of Anubis",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "throneOfAnubis",
+    "enUS": "Throne of Anubis",
+    "variants": {
+      "default": "972777519512068154"
+    }
+  },
+  {
+    "key": "volskaya",
+    "enUS": "Volskaya Industries",
+    "variants": {
+      "default": "972777519512068292"
+    }
+  },
+  {
+    "key": "watchpointGibraltar",
+    "enUS": "Watchpoint: Gibraltar",
+    "variants": {
+      "default": "972777519512099996"
+    }
+  },
+  {
+    "key": "workshopChamber",
+    "enUS": "Workshop Chamber",
+    "variants": {
+      "default": "972777519512064577"
+    }
+  },
+  {
+    "key": "workshopExpanse",
+    "enUS": "Workshop Expanse",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "workshopExpanseNight",
+    "enUS": "Workshop Expanse Night",
+    "variants": {
+      "default": "972777519512064577"
+    }
+  },
+  {
+    "key": "workshopGreenScreen",
+    "enUS": "Workshop Green Screen",
+    "variants": {
+      "default": "972777519512064580"
+    }
+  },
+  {
+    "key": "workshopIsland",
+    "enUS": "Workshop Island",
+    "variants": {
+      "default": "972777519512063901"
+    }
+  },
+  {
+    "key": "workshopIslandNight",
+    "enUS": "Workshop Island Night",
+    "variants": {
+      "default": "972777519512064579"
+    }
+  }
+]

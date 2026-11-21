@@ -26,6 +26,7 @@ mod locale_index;
 
 use crate::fast_hash::HashMap;
 use std::borrow::Cow;
+use std::collections::BTreeMap;
 
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -181,6 +182,7 @@ use entry::{spelling, spellings_for};
 pub struct EnumMember {
     pub member: String,
     pub(crate) aliases: HashMap<Locale, Vec<String>>,
+    pub(crate) variants: BTreeMap<String, String>,
 }
 
 impl EnumMember {
@@ -489,6 +491,20 @@ impl Catalog {
                 .member
                 .clone(),
         ))
+    }
+
+    /// The id of a named variant of a map, for example
+    /// `map_variant_id("ANTARCTIC_PENINSULA", "morning")`. `map` is a canonical
+    /// `Map` member id and `variant` a variant name; `None` when the map or
+    /// the variant is unknown.
+    pub fn map_variant_id(&self, map: &str, variant: &str) -> Option<&str> {
+        self.enum_domain("Map")?
+            .members
+            .iter()
+            .find(|candidate| candidate.member == map)?
+            .variants
+            .get(variant)
+            .map(String::as_str)
     }
 
     /// The localized spelling of a canonical enum member.
