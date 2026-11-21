@@ -171,3 +171,59 @@ fn localized_setting_names_include_member_specific_rows() {
             && name.spelling == "开启"
     }));
 }
+
+fn leaf_keys(program: &crate::wir::Program) -> Vec<(String, String)> {
+    use workshop_rs::settings::SettingsNode;
+    fn walk(nodes: &[SettingsNode], hero: &str, out: &mut Vec<(String, String)>) {
+        for node in nodes {
+            match node {
+                SettingsNode::Group { name, children, .. } => walk(children, name, out),
+                SettingsNode::Number { name, .. } | SettingsNode::Bool { name, .. } => {
+                    out.push((hero.to_owned(), name.clone()));
+                }
+                _ => {}
+            }
+        }
+    }
+    let mut out = Vec::new();
+    walk(
+        &program.settings.as_ref().expect("settings").children,
+        "",
+        &mut out,
+    );
+    out
+}
+
+/// workshop-rs#636: the labels the game exports for these heroes resolve to
+/// the key the pinned OverPy 9.7.17 schema declares for the hero, in both
+/// locales. Brigitte's Shield Bash is `shieldBashCooldown%`; the duplicate
+/// `ability3Cooldown%` entry is gone.
+#[test]
+fn exported_hero_setting_labels_resolve_to_the_hero_keys() {
+    let (en, zh) = (en(), zh());
+    let source = "settings { heroes { Team 1 { Brigitte { Shield Bash Cooldown Time: 400% } } \
+        Team 2 { Mauga { Infinite Ultimate Duration: On } \
+        Sojourn { Ultimate Duration: 200% } \
+        Kiriko { No Ammunition Requirement: On } } } }";
+    let expected = [
+        ("brigitte", "shieldBashCooldown%"),
+        ("mauga", "enableInfiniteUlt"),
+        ("sojourn", "ultDuration%"),
+        ("kiriko", "enableInfiniteAmmo"),
+    ]
+    .map(|(hero, key)| (hero.to_owned(), key.to_owned()));
+    let in_en = internal::parse_in(source, &en);
+    assert_eq!(leaf_keys(&in_en), expected);
+    let zh_text = internal::emit_in(&in_en, &zh);
+    for label in [
+        "能量盾击冷却时间: 400%",
+        "终极技能持续时间无限: 开启",
+        "终极技能持续时间: 200%",
+        "无需装弹: 开启",
+    ] {
+        assert!(zh_text.contains(label), "{zh_text} missing {label}");
+    }
+    let in_zh = internal::parse_in(&zh_text, &zh);
+    assert_eq!(leaf_keys(&in_zh), expected);
+    assert!(roundtrip::equivalent_wir(&in_en, &in_zh));
+}

@@ -14,6 +14,7 @@ pub(crate) mod enum_members;
 mod hero_names;
 mod inheritance;
 mod member;
+mod name_matching;
 pub(crate) mod names;
 pub(crate) mod parser;
 
