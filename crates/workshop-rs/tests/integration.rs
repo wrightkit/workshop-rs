@@ -31,6 +31,7 @@ mod import_limits;
 mod localized_spellings;
 #[path = "lookup.rs"]
 mod lookup;
+mod map_variants;
 #[path = "parser_errors.rs"]
 mod parser_errors;
 #[path = "pipeline.rs"]
