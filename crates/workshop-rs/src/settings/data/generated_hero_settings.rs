@@ -109,7 +109,6 @@ pub(crate) static GENERATED_HERO_SETTING_NAMES: &[GeneratedHeroSettingName] = &[
     hero_setting("brigitte", "ability1Kb%", &[("en-US", "Whip Shot Knockback Scalar"), ("zh-CN", "流星飞锤击退距离")]),
     hero_setting("brigitte", "ability1Cooldown%", &[("en-US", "Whip Shot Cooldown Time"), ("zh-CN", "流星飞锤冷却时间")]),
     hero_setting("brigitte", "ability2Cooldown%", &[("en-US", "Repair Pack Cooldown Time"), ("zh-CN", "恢复包冷却时间")]),
-    hero_setting("brigitte", "ability3Cooldown%", &[("en-US", "Shield Bash Cooldown Time"), ("zh-CN", "能量盾击冷却时间")]),
     hero_setting("brigitte", "enableAbility1", &[("en-US", "Whip Shot"), ("zh-CN", "流星飞锤")]),
     hero_setting("brigitte", "enableAbility2", &[("en-US", "Repair Pack"), ("zh-CN", "恢复包")]),
     hero_setting("brigitte", "enableAbility3", &[("en-US", "Shield Bash"), ("zh-CN", "能量盾击")]),
