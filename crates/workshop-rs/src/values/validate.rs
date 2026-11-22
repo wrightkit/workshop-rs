@@ -269,7 +269,7 @@ fn validate_call_argument(
 ) -> Result<()> {
     if let Some(expected) = entry.param_type(index)
         && !value_matches_type(program, catalog, arg_id, expected)
-        && !contextual_value_matches(entry, index, program, arg_id, expected)
+        && !contextual_value_matches(entry, index, program, catalog, arg_id, expected)
         && !accepted_value_matches(entry, index, program, catalog, arg_id)
     {
         let actual = value_type_name(program, catalog, arg_id);
@@ -367,6 +367,7 @@ fn contextual_value_matches(
     entry: &crate::catalog::CatalogEntry,
     index: usize,
     program: &wir::Program,
+    catalog: &Catalog,
     value_id: wir::ValueId,
     expected: &str,
 ) -> bool {
@@ -382,6 +383,12 @@ fn contextual_value_matches(
     let expected_string = expected
         .split('|')
         .any(|alternative| matches!(alternative, "String" | "Text"));
+    let expected_vector = expected
+        .split('|')
+        .any(|alternative| alternative == "Vector");
+    if coercions.player_as_vector && expected_vector && yields_player(program, catalog, value_id) {
+        return true;
+    }
     match &node.value {
         wir::Value::Bool(false) => coercions.false_as_number && expected_number,
         wir::Value::Bool(true) => coercions.true_as_number && expected_number,
@@ -407,6 +414,17 @@ fn contextual_value_matches(
         wir::Value::Array(elements) => {
             coercions.empty_array_as_string && expected_string && elements.is_empty()
         }
+        _ => false,
+    }
+}
+
+fn yields_player(program: &wir::Program, catalog: &Catalog, value_id: wir::ValueId) -> bool {
+    match program.values.get(value_id).map(|node| &node.value) {
+        Some(wir::Value::EventPlayer) => true,
+        Some(wir::Value::Call { name, .. }) => catalog
+            .entry(Kind::Value, name)
+            .and_then(|entry| entry.return_type())
+            .is_some_and(|return_type| return_type.split('|').all(|part| part == "Player")),
         _ => false,
     }
 }

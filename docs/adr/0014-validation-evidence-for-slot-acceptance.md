@@ -143,8 +143,13 @@ Acceptance is per parameter through catalog facts. It never widens a slot type.
   expression never uses these facts, because they apply to literals only.
 - **Class B: a Boolean literal in a `Vector|Player` parameter.** Accepted
   through a per-parameter fact in a later sub-issue of #644.
-- **Class C: a Player where a `Vector` is expected.** Accepted through
-  per-parameter or per-operator facts in a later sub-issue of #644.
+- **Class C: a Player where a `Vector` is expected.** Accepted through the
+  per-parameter `playerAsVector` coercion (#651), for the slots where the
+  9.7.17 oracle writes a Player verbatim: the `add`, `subtract`, `multiply`
+  and `divide` operands, `raycastHitPosition` argument 1,
+  `nearestWalkablePosition` argument 1 and `isInViewAngle` argument 2. A Player
+  in a `Vector` slot without the fact stays rejected. The result type of an
+  arithmetic expression stays `Number|Vector`, so it fills a `Vector` slot.
 
 No live-client evidence exists for classes A, B, and C. The acceptance rests
 on the pinned OverPy output only, and wrightkit/workshop-rs#21 tracks the
