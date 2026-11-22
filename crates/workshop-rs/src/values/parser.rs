@@ -580,14 +580,13 @@ impl ParseContext<'_> {
         if let Some(error) = self.action_in_value_error(phrase, start, end) {
             return Err(error);
         }
+        reject_exponent_without_mantissa(phrase, start)?;
+        let unresolved = Value::Call {
+            name: phrase.to_string(),
+            args: Vec::new(),
+        };
         Ok(self.push(
-            ValueNode::new(
-                Value::Call {
-                    name: phrase.to_string(),
-                    args: Vec::new(),
-                },
-                Some(Span::new(self.file(), start, end)),
-            ),
+            ValueNode::new(unresolved, Some(Span::new(self.file(), start, end))),
             start,
         ))
     }

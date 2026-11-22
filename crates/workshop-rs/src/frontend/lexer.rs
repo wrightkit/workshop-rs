@@ -32,6 +32,21 @@ pub(crate) struct LexError {
     pub(crate) position: Position,
 }
 
+impl LexError {
+    fn invalid_number(text: &str, position: Position) -> Self {
+        Self {
+            message: format!("invalid number '{text}'"),
+            position,
+        }
+    }
+
+    pub(crate) fn missing_mantissa(text: &str, position: Position) -> Option<Self> {
+        let exponent = text.strip_prefix(['e', 'E'])?;
+        (!exponent.is_empty() && exponent.bytes().all(|b| b.is_ascii_digit()))
+            .then(|| Self::invalid_number(text, position))
+    }
+}
+
 struct Cursor<'a> {
     rest: &'a str,
     line: u32,
@@ -154,17 +169,11 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                         }
                     }
                     if digit_count == 0 {
-                        return Err(LexError {
-                            message: format!("invalid number '{text}'"),
-                            position: start,
-                        });
+                        return Err(LexError::invalid_number(&text, start));
                     }
                     u64::from_str_radix(&text[2..], 16)
                         .map(|value| value as f64)
-                        .map_err(|_| LexError {
-                            message: format!("invalid number '{text}'"),
-                            position: start,
-                        })?
+                        .map_err(|_| LexError::invalid_number(&text, start))?
                 } else {
                     while let Some(c) = cursor.peek() {
                         if c.is_ascii_digit() || c == '.' {
@@ -173,10 +182,19 @@ pub(crate) fn tokenize(input: &str) -> Result<Vec<Token>, LexError> {
                             break;
                         }
                     }
-                    text.parse().map_err(|_| LexError {
-                        message: format!("invalid number '{text}'"),
-                        position: start,
-                    })?
+                    if matches!(cursor.peek(), Some('e' | 'E'))
+                        && !cursor.peek_at(1).is_some_and(is_word_start)
+                    {
+                        text.push(cursor.advance().unwrap());
+                        if matches!(cursor.peek(), Some('+' | '-')) {
+                            text.push(cursor.advance().unwrap());
+                        }
+                        while matches!(cursor.peek(), Some('0'..='9')) {
+                            text.push(cursor.advance().unwrap());
+                        }
+                    }
+                    text.parse()
+                        .map_err(|_| LexError::invalid_number(&text, start))?
                 };
                 TokenKind::Number { value, text }
             }

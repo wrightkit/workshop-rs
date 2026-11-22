@@ -1,5 +1,76 @@
-use super::common::catalog;
-use workshop_rs::{Action, Event, Program, Rule, Value, Variable};
+use super::common::{catalog, en};
+use workshop_rs::{Action, Event, Program, Rule, Value, Variable, compare, emitter, parser};
+
+#[test]
+fn exponent_literals_match_decimal_values_and_roundtrip() {
+    let catalog = catalog();
+    let locale = en();
+    let parse_wait = |literal| {
+        let source = format!(
+            r#"rule ("exponents") {{ event {{ Ongoing - Global; }} actions {{ Wait({literal}, Ignore Condition); }} }}"#
+        );
+        parser::parse(&source, &catalog, &locale)
+            .unwrap_or_else(|error| panic!("Wait({literal}, Ignore Condition) must parse: {error}"))
+    };
+
+    for (literal, decimal) in [
+        ("1e20", "100000000000000000000"),
+        ("1E5", "100000"),
+        ("1.5e-7", "0.00000015"),
+        ("2e+3", "2000"),
+        ("1e8", "100000000"),
+    ] {
+        let expected = parse_wait(decimal);
+        let program = parse_wait(literal);
+        assert!(
+            compare::equivalent(&expected, &program),
+            "{literal}: {:?}",
+            compare::difference(&expected, &program)
+        );
+
+        let emitted = emitter::emit(&program, &catalog, &locale).expect("exponent program emits");
+        let reparsed = parser::parse(&emitted, &catalog, &locale).expect("emitted program parses");
+        assert!(
+            compare::equivalent(&expected, &reparsed),
+            "{literal} after emission: {:?}",
+            compare::difference(&expected, &reparsed)
+        );
+    }
+}
+
+#[test]
+fn overpy_exponent_spellings_match_decimal_values() {
+    // OverPy 9.7.17, gitHead ec763c1d245aa5485ef61af5b2bda4975bce4877.
+    let reference = r#"variables {
+    global:
+        0: a
+}
+
+rule ("exponent literals") {
+    event {
+        Ongoing - Global;
+    }
+    actions {
+        Set Global Variable(a, 1e21);
+        Set Global Variable(a, 1E5);
+        Set Global Variable(a, Custom String("value: {0}", 1e20));
+    }
+}
+"#;
+    let decimal = reference
+        .replace("1e21", "1000000000000000000000")
+        .replace("1E5", "100000")
+        .replace("1e20", "100000000000000000000");
+    let catalog = catalog();
+    let locale = en();
+    let oracle = parser::parse(reference, &catalog, &locale).expect("oracle output parses");
+    let expected = parser::parse(&decimal, &catalog, &locale).expect("decimal equivalent parses");
+    assert!(
+        compare::equivalent(&expected, &oracle),
+        "{:?}",
+        compare::difference(&expected, &oracle)
+    );
+}
 
 #[test]
 fn computed_number_emission_matches_pinned_overpy_program() {
