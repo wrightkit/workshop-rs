@@ -32,6 +32,7 @@ mod localized_spellings;
 #[path = "lookup.rs"]
 mod lookup;
 mod map_variants;
+mod number_emitter;
 #[path = "parser_errors.rs"]
 mod parser_errors;
 #[path = "pipeline.rs"]

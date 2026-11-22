@@ -1,13 +1,5 @@
-/// Format a float like the reference frontend: integers print without a
-/// decimal point, and non-integers print the shortest round-trip
-/// representation truncated to 16 significant digits (OverPy behavior;
-/// evidence: the pinned oracle snapshots). A non-integer keeps its shortest
-/// representation when truncation would make the emitted value integral.
-/// Non-finite values take the reference's `String(n)` spellings `Infinity`,
-/// `-Infinity`, and `NaN` (pinned OverPy 9.7.10 emission for `log(0)` and
-/// `log(-1)` folds; #358). These spellings are emission-only: without Workshop
-/// client-acceptance evidence the canonical grammar admits no non-finite
-/// literal, and `wir` validation rejects non-finite number values.
+/// Format a Workshop number to 15 fractional digits unless truncation makes it integral;
+/// `Infinity`, `-Infinity`, and `NaN` are emission-only spellings.
 pub fn format_number(value: f64) -> String {
     if !value.is_finite() {
         return if value.is_nan() {
@@ -26,11 +18,16 @@ pub fn format_number(value: f64) -> String {
         return format!("{}", value as i64);
     }
     let shortest = format!("{value}");
-    let truncated = truncate_significant(&shortest, 16);
-    if value.fract() != 0.0
-        && truncated
-            .parse::<f64>()
-            .is_ok_and(|formatted| formatted.fract() == 0.0)
+    if value.fract() == 0.0 {
+        return truncate_significant(&shortest, 16);
+    }
+    let mut truncated = shortest.clone();
+    if let Some(point) = truncated.find('.') {
+        truncated.truncate(point + 16);
+    }
+    if truncated
+        .parse::<f64>()
+        .is_ok_and(|formatted| formatted.fract() == 0.0)
     {
         shortest
     } else {
@@ -105,6 +102,10 @@ mod tests {
         assert_eq!(format_number(0.0), "0");
         assert_eq!(format_number(100.0), "100");
         assert_eq!(format_number(-3.0), "-3");
+        assert_eq!(
+            format_number(100_000_000_000_000_032.0),
+            "100000000000000000"
+        );
     }
 
     #[test]
@@ -114,6 +115,23 @@ mod tests {
         assert_eq!(format_number(0.016), "0.016");
         assert_eq!(format_number(0.125), "0.125");
         assert_eq!(format_number(1.5), "1.5");
+    }
+
+    #[test]
+    fn non_integer_precision_matches_pinned_overpy() {
+        // OverPy 9.7.17, gitHead ec763c1d245aa5485ef61af5b2bda4975bce4877.
+        for (value, expected) in [
+            (100.01666666666667, "100.01666666666667"),
+            (100.0 / 3.0, "33.333333333333336"),
+            (1_000_000.0 / 7.0, "142857.14285714287"),
+            (12.345678901234567, "12.345678901234567"),
+            (9.999_999_999_999_998, "9.999999999999998"),
+            (1.2345678901234567, "1.234567890123456"),
+            (0.012345678901234567, "0.012345678901234"),
+            (-12.345678901234567, "-12.345678901234567"),
+        ] {
+            assert_eq!(format_number(value), expected, "input {value}");
+        }
     }
 
     #[test]
@@ -132,5 +150,10 @@ mod tests {
 
         assert_eq!(text, "1.0000000000000004");
         assert_eq!(text.parse::<f64>(), Ok(value));
+        assert_eq!(format_number(0.000_000_000_000_000_4), "0.0000000000000004");
+        assert_eq!(
+            format_number(-0.000_000_000_000_000_4),
+            "-0.0000000000000004"
+        );
     }
 }
