@@ -65,6 +65,43 @@ fn oracle_boolean_literals_in_number_slots_validate_and_roundtrip() {
 }
 
 #[test]
+fn oracle_player_positions_validate_and_roundtrip() {
+    let catalog = catalog();
+    let locale = en();
+    let reference = fixture_text("slot-acceptance", "player-positions.en-US.ws");
+    let expected = parser::parse(&reference, &catalog, &locale).expect("oracle output parses");
+    validate::validate_canonical_ids(&expected, &catalog).expect("oracle output validates");
+    let emitted = emitter::emit(&expected, &catalog, &locale).expect("oracle program emits");
+    let actual = parser::parse(&emitted, &catalog, &locale).expect("emitted output parses");
+    assert!(
+        compare::equivalent(&expected, &actual),
+        "{:?}",
+        compare::difference(&expected, &actual)
+    );
+}
+
+#[test]
+fn an_arithmetic_result_with_a_player_operand_fills_a_vector_slot() {
+    let catalog = catalog();
+    let program = parse_value("Distance Between(Subtract(Event Player, Up), Up)", &catalog);
+    validate::validate_canonical_ids(&program, &catalog).expect("Subtract result is a position");
+}
+
+#[test]
+fn a_player_in_a_vector_slot_without_the_fact_is_rejected() {
+    let catalog = catalog();
+    let program = parse_value("Normalize(Event Player)", &catalog);
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("an unlisted Vector slot rejects a Player");
+    assert!(
+        error
+            .to_string()
+            .contains("'normalize' argument 1 must have semantic type 'Vector', got Player"),
+        "{error}"
+    );
+}
+
+#[test]
 fn boolean_literals_still_require_a_number_slot_fact() {
     let catalog = catalog();
     for literal in ["False", "True"] {
