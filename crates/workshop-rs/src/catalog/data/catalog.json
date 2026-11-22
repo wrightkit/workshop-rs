@@ -1498,6 +1498,15 @@
         "zh-TW": "Start Damage Modification"
       },
       "id": "startDamageModification",
+      "paramCoercions": [
+        null,
+        null,
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        },
+        null
+      ],
       "paramDomains": [
         null,
         null,
@@ -2403,6 +2412,13 @@
         "zh-TW": "Set Knockback Received"
       },
       "id": "setKnockbackReceived",
+      "paramCoercions": [
+        null,
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        }
+      ],
       "paramDomains": [
         null,
         null
@@ -4811,6 +4827,16 @@
         "zh-TW": "Play Effect"
       },
       "id": "playEffect",
+      "paramCoercions": [
+        null,
+        null,
+        null,
+        null,
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        }
+      ],
       "paramDomains": [
         null,
         "DynamicEffect",
@@ -4891,6 +4917,13 @@
         "zh-TW": "Set Damage Dealt"
       },
       "id": "setDamageDealt",
+      "paramCoercions": [
+        null,
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        }
+      ],
       "paramNames": [
         "player",
         "damageDealtPercent"
@@ -4923,6 +4956,13 @@
         "zh-TW": "Set Damage Received"
       },
       "id": "setDamageReceived",
+      "paramCoercions": [
+        null,
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        }
+      ],
       "paramNames": [
         "player",
         "damageReceivedPercent"
@@ -6417,6 +6457,17 @@
         "zh-TW": "Start Throttle In Direction"
       },
       "id": "startThrottleInDirection",
+      "paramCoercions": [
+        null,
+        null,
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        },
+        null,
+        null,
+        null
+      ],
       "paramDomains": [
         null,
         "Vector",
@@ -8703,7 +8754,7 @@
       }
     }
   ],
-  "digest": "2ee8c0d4a355b413ab01e35528ff8d04b69cbae56632f7505871dd5bac1e18c4",
+  "digest": "b60b6fe9bf510dc1b4238062b495523be7db1f9f7682896f520721f4e46c900b",
   "enums": [
     {
       "domain": "Impulse",
@@ -30761,6 +30812,16 @@
         "zh-TW": "Direction From Angles"
       },
       "id": "directionFromAngles",
+      "paramCoercions": [
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        },
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        }
+      ],
       "paramNames": [
         "horizontalAngle",
         "verticalAngle"
@@ -30877,6 +30938,24 @@
         "zh-TW": "Custom Color"
       },
       "id": "customColor",
+      "paramCoercions": [
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        },
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        },
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        },
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        }
+      ],
       "paramNames": [
         "Red",
         "Green",
@@ -31910,6 +31989,14 @@
         "zh-TW": "Is In View Angle"
       },
       "id": "isInViewAngle",
+      "paramCoercions": [
+        null,
+        null,
+        {
+          "falseAsNumber": true,
+          "trueAsNumber": true
+        }
+      ],
       "paramNames": [
         "player",
         "location",

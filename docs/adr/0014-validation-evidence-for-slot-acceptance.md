@@ -127,3 +127,25 @@ Two properties of the upstream compilers matter:
   OverPy structural behavior.
 - A client capture can later confirm, tighten, or relax any of these facts
   without changing the contract.
+
+## Amendment: OverPy-written forms outside the declared slot type (#644)
+
+The pinned OverPy 9.7.17 writes three forms that a declared slot type rejects.
+The owner decided on 2026-11-22 to accept all three classes. The pinned OverPy
+is the authority for these forms, so `wright compile` converges on its output.
+Acceptance is per parameter through catalog facts. It never widens a slot type.
+
+- **Class A: a Boolean literal in a `Number` parameter.** Accepted through the
+  per-parameter `falseAsNumber` and `trueAsNumber` coercions (#649). A parameter
+  receives the facts only when the 9.7.17 oracle writes the literal verbatim,
+  and each parameter is verified by canonical comparison of the oracle output.
+  A Boolean literal in a parameter without the facts stays rejected. A Boolean
+  expression never uses these facts, because they apply to literals only.
+- **Class B: a Boolean literal in a `Vector|Player` parameter.** Accepted
+  through a per-parameter fact in a later sub-issue of #644.
+- **Class C: a Player where a `Vector` is expected.** Accepted through
+  per-parameter or per-operator facts in a later sub-issue of #644.
+
+No live-client evidence exists for classes A, B, and C. The acceptance rests
+on the pinned OverPy output only, and wrightkit/workshop-rs#21 tracks the
+client check. A client capture that rejects a form removes its fact.
