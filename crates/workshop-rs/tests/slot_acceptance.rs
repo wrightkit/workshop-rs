@@ -1,4 +1,4 @@
-use workshop_rs::{compare, parser, validate};
+use workshop_rs::{compare, emitter, parser, validate};
 
 use crate::common::{catalog, en, fixture_text, zh};
 
@@ -46,6 +46,52 @@ fn the_add_operation_helper_is_not_an_accepted_value() {
         let result = validate::validate_canonical_ids(&program_with(value), &catalog());
         assert!(result.is_err(), "{value} must be rejected");
     }
+}
+
+#[test]
+fn oracle_boolean_literals_in_number_slots_validate_and_roundtrip() {
+    let catalog = catalog();
+    let locale = en();
+    let reference = fixture_text("slot-acceptance", "number-booleans.en-US.ws");
+    let expected = parser::parse(&reference, &catalog, &locale).expect("oracle output parses");
+    validate::validate_canonical_ids(&expected, &catalog).expect("oracle output validates");
+    let emitted = emitter::emit(&expected, &catalog, &locale).expect("oracle program emits");
+    let actual = parser::parse(&emitted, &catalog, &locale).expect("emitted output parses");
+    assert!(
+        compare::equivalent(&expected, &actual),
+        "{:?}",
+        compare::difference(&expected, &actual)
+    );
+}
+
+#[test]
+fn boolean_literals_still_require_a_number_slot_fact() {
+    let catalog = catalog();
+    for literal in ["False", "True"] {
+        let program = parse_value(&format!("Absolute Value({literal})"), &catalog);
+        let error = validate::validate_canonical_ids(&program, &catalog)
+            .expect_err("an unlisted Number slot rejects a Boolean literal");
+        assert!(
+            error.to_string().contains(
+                "'absoluteValue' argument 1 must have semantic type 'Number', got Boolean"
+            ),
+            "{error}"
+        );
+    }
+}
+
+#[test]
+fn boolean_expressions_do_not_use_number_slot_literal_facts() {
+    let catalog = catalog();
+    let program = parse_value("Direction From Angles(Is Game In Progress, 90)", &catalog);
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("a Boolean expression cannot use a literal coercion");
+    assert!(
+        error.to_string().contains(
+            "'directionFromAngles' argument 1 must have semantic type 'Number', got Boolean"
+        ),
+        "{error}"
+    );
 }
 
 #[test]
