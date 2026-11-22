@@ -606,7 +606,6 @@ impl ParseContext<'_> {
             return Ok(args);
         }
         let mut arg_index = 0usize;
-        let mut raw_modify_operator = false;
         loop {
             if call_id == "string" && arg_index == 0 {
                 args.push(self.localized_string_argument()?);
@@ -656,12 +655,11 @@ impl ParseContext<'_> {
                     args.push(self.value_in_domain(domain)?);
                 }
             } else if matches!(
-                call_id,
-                "modifyGlobalVariableAtIndex" | "modifyPlayerVariableAtIndex"
+                (call_id, arg_index),
+                ("modifyGlobalVariableAtIndex", 2) | ("modifyPlayerVariableAtIndex", 3)
             ) && {
-                let operator_position = arg_index == 2 || arg_index == 3 && raw_modify_operator;
                 let saved = self.pos;
-                let is_operator = operator_position && self.modify_op().is_ok();
+                let is_operator = self.modify_op().is_ok();
                 self.pos = saved;
                 is_operator
             } {
@@ -675,15 +673,6 @@ impl ParseContext<'_> {
                     None,
                 )));
             } else {
-                if matches!(
-                    call_id,
-                    "modifyGlobalVariableAtIndex" | "modifyPlayerVariableAtIndex"
-                ) && arg_index == 2
-                {
-                    let saved = self.pos;
-                    raw_modify_operator = self.modify_op().is_err();
-                    self.pos = saved;
-                }
                 let domain = self
                     .context
                     .expected_domain(call_id, arg_index)
