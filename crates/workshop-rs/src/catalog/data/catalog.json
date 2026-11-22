@@ -8754,7 +8754,7 @@
       }
     }
   ],
-  "digest": "b60b6fe9bf510dc1b4238062b495523be7db1f9f7682896f520721f4e46c900b",
+  "digest": "62c8e3dd5549c61beb2e6f2888b9f99a6be8949320db8b8b0e0af36f6f898b7f",
   "enums": [
     {
       "domain": "Impulse",
@@ -27542,6 +27542,11 @@
         "zh-TW": "Nearest Walkable Position"
       },
       "id": "nearestWalkablePosition",
+      "paramCoercions": [
+        {
+          "playerAsVector": true
+        }
+      ],
       "paramNames": [
         "position"
       ],
@@ -27851,6 +27856,15 @@
         "zh-TW": "Ray Cast Hit Position"
       },
       "id": "raycastHitPosition",
+      "paramCoercions": [
+        {
+          "playerAsVector": true
+        },
+        null,
+        null,
+        null,
+        null
+      ],
       "paramNames": [
         "startPos",
         "endPos",
@@ -28333,6 +28347,7 @@
           "trueAsNumber": true
         },
         {
+          "playerAsVector": true,
           "trueAsNumber": true
         }
       ],
@@ -28529,9 +28544,11 @@
       "paramCoercions": [
         {
           "falseAsNumber": true,
+          "playerAsVector": true,
           "trueAsNumber": true
         },
         {
+          "playerAsVector": true,
           "trueAsNumber": true
         }
       ],
@@ -28568,6 +28585,12 @@
         "zh-TW": "Multiply"
       },
       "id": "multiply",
+      "paramCoercions": [
+        null,
+        {
+          "playerAsVector": true
+        }
+      ],
       "paramNames": [
         "value",
         "value"
@@ -28603,9 +28626,12 @@
       "id": "divide",
       "paramCoercions": [
         {
+          "playerAsVector": true,
           "trueAsNumber": true
         },
-        null
+        {
+          "playerAsVector": true
+        }
       ],
       "paramNames": [
         "value",
@@ -31991,7 +32017,9 @@
       "id": "isInViewAngle",
       "paramCoercions": [
         null,
-        null,
+        {
+          "playerAsVector": true
+        },
         {
           "falseAsNumber": true,
           "trueAsNumber": true

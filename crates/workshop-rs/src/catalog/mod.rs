@@ -127,6 +127,10 @@ pub struct ParamCoercions {
     /// Accept `Empty Array` as an empty string.
     #[serde(default)]
     pub empty_array_as_string: bool,
+    /// Accept a `Player` value where a `Vector` is expected; Workshop reads
+    /// it as the player's position.
+    #[serde(default)]
+    pub player_as_vector: bool,
 }
 
 /// `rule-content-v1` facts for one parameter position, declared when the

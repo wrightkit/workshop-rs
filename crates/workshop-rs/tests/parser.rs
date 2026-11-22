@@ -780,19 +780,15 @@ fn player_typed_values_validate_uniformly_across_wir_kinds() {
         let program = internal::parse(&source);
         validate::validate_canonical_ids_wir(&program, &catalog)
             .unwrap_or_else(|error| panic!("Play Effect position must accept {player}: {error}"));
+        // #651: the pinned OverPy writes a Player verbatim as the second
+        // `multiply` operand, so the slot carries the playerAsVector fact.
         let call = format!("Multiply(2, {player})");
         let source = format!(
             r#"rule ("multiply") {{ event {{ Ongoing - Global; }} actions {{ Set Global Variable(probe, {call}); }} }}"#
         );
         let program = internal::parse(&source);
-        let error = validate::validate_canonical_ids_wir(&program, &catalog)
-            .expect_err("multiply parameter 1 has no bare-Player acceptance evidence");
-        assert!(
-            error
-                .to_string()
-                .contains("must have semantic type 'Number|Boolean|Vector'"),
-            "{call}: {error}"
-        );
+        validate::validate_canonical_ids_wir(&program, &catalog)
+            .unwrap_or_else(|error| panic!("{call} must validate: {error}"));
         let source = format!(
             r#"rule ("component") {{ event {{ Ongoing - Global; }} actions {{ Set Global Variable(probe, X Component Of({player})); }} }}"#
         );
