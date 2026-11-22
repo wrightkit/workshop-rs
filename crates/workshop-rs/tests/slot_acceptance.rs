@@ -132,6 +132,58 @@ fn boolean_expressions_do_not_use_number_slot_literal_facts() {
 }
 
 #[test]
+fn oracle_boolean_literals_in_position_slots_validate_and_roundtrip() {
+    let catalog = catalog();
+    let locale = en();
+    let reference = fixture_text("slot-acceptance", "position-booleans.en-US.ws");
+    let expected = parser::parse(&reference, &catalog, &locale).expect("oracle output parses");
+    validate::validate_canonical_ids(&expected, &catalog).expect("oracle output validates");
+    let emitted = emitter::emit(&expected, &catalog, &locale).expect("oracle program emits");
+    let actual = parser::parse(&emitted, &catalog, &locale).expect("emitted output parses");
+    assert!(
+        compare::equivalent(&expected, &actual),
+        "{:?}",
+        compare::difference(&expected, &actual)
+    );
+}
+
+#[test]
+fn boolean_literals_still_require_a_position_slot_fact() {
+    let catalog = catalog();
+    for literal in ["False", "True"] {
+        let program = parse_value(
+            &format!("Dot Product({literal}, Vector(1, 2, 3))"),
+            &catalog,
+        );
+        let error = validate::validate_canonical_ids(&program, &catalog)
+            .expect_err("an unlisted Vector slot rejects a Boolean literal");
+        assert!(
+            error
+                .to_string()
+                .contains("argument 1 must have semantic type"),
+            "{error}"
+        );
+    }
+}
+
+#[test]
+fn boolean_expressions_do_not_use_position_slot_literal_facts() {
+    let catalog = catalog();
+    let program = parse_value(
+        "Closest Player To(Is Game In Progress, All Teams)",
+        &catalog,
+    );
+    let error = validate::validate_canonical_ids(&program, &catalog)
+        .expect_err("a Boolean expression cannot use a literal coercion");
+    assert!(
+        error
+            .to_string()
+            .contains("'getClosestPlayer' argument 1 must have semantic type"),
+        "{error}"
+    );
+}
+
+#[test]
 fn client_exported_programs_validate() {
     for name in CLIENT_EXPORTS {
         let program = parse(name, &zh());

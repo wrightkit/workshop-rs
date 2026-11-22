@@ -380,6 +380,9 @@ fn contextual_value_matches(
     let expected_number = expected
         .split('|')
         .any(|alternative| matches!(alternative, "Number" | "Any" | "Unknown"));
+    let expected_position = expected
+        .split('|')
+        .any(|alternative| matches!(alternative, "Vector" | "Player"));
     let expected_string = expected
         .split('|')
         .any(|alternative| matches!(alternative, "String" | "Text"));
@@ -390,8 +393,14 @@ fn contextual_value_matches(
         return true;
     }
     match &node.value {
-        wir::Value::Bool(false) => coercions.false_as_number && expected_number,
-        wir::Value::Bool(true) => coercions.true_as_number && expected_number,
+        wir::Value::Bool(false) => {
+            (coercions.false_as_number && expected_number)
+                || (coercions.false_as_position && expected_position)
+        }
+        wir::Value::Bool(true) => {
+            (coercions.true_as_number && expected_number)
+                || (coercions.true_as_position && expected_position)
+        }
         wir::Value::Number { value, .. } => coercions.zero_as_null && *value == 0.0,
         wir::Value::Vector { x, y, z } => {
             coercions.null_vector_as_null

@@ -118,6 +118,12 @@ pub struct ParamCoercions {
     /// Accept `True` as numeric one.
     #[serde(default)]
     pub true_as_number: bool,
+    /// Accept `False` where a `Vector|Player` position is expected.
+    #[serde(default)]
+    pub false_as_position: bool,
+    /// Accept `True` where a `Vector|Player` position is expected.
+    #[serde(default)]
+    pub true_as_position: bool,
     /// Accept numeric zero as `Null`.
     #[serde(default)]
     pub zero_as_null: bool,
