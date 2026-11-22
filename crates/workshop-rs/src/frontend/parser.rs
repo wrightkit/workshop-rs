@@ -15,6 +15,7 @@ pub(crate) use crate::wir::{
 };
 
 use super::keywords::{canonical_structural_id, spelling_token_len, structural_spellings};
+use super::lexer::LexError;
 pub(crate) use super::lexer::{Token, TokenKind, tokenize};
 pub(crate) use crate::catalog::{Catalog, Kind, Locale};
 pub(crate) use crate::core::error::{Result, WorkshopError};
@@ -71,9 +72,7 @@ pub(crate) fn parse_wir_with_context(
     locale: &Locale,
     context: &dyn ExpectedDomain,
 ) -> Result<wir::Program> {
-    let tokens = tokenize(input).map_err(|error| {
-        WorkshopError::malformed(error.message, Some(synthetic_span(error.position)))
-    })?;
+    let tokens = tokenize(input).map_err(lexical_error)?;
     ParseContext {
         tokens,
         pos: 0,
@@ -93,6 +92,17 @@ pub(crate) fn parse_wir_with_context(
         structural_spellings: HashMap::new(),
     }
     .program()
+}
+
+pub(crate) fn reject_exponent_without_mantissa(text: &str, start: Position) -> Result<()> {
+    match LexError::missing_mantissa(text, start) {
+        Some(error) => Err(lexical_error(error)),
+        None => Ok(()),
+    }
+}
+
+fn lexical_error(error: LexError) -> WorkshopError {
+    WorkshopError::malformed(error.message, Some(synthetic_span(error.position)))
 }
 
 pub(crate) fn synthetic_span(position: Position) -> Span {

@@ -6,7 +6,7 @@
 
 | Feature | Status | Notes |
 | --- | --- | --- |
-| Raw Workshop parsing | ✅ Supported | Parses raw text into syntax trees with source location spans. |
+| Raw Workshop parsing | ✅ Supported | Parses raw text into syntax trees with source location spans. Decimal numbers may use `e` or `E` followed by an optional sign and at least one digit. This input support is for compatibility with compiler output. |
 | Semantic validation | ✅ Supported | Validates arity, parameter types, enum domains, and variable/subroutine declarations. |
 | Deterministic code emission | ✅ Supported | Formats and emits canonical Workshop code deterministically for supported locales. |
 | Workshop language conversion | ✅ Supported | Bidirectional conversion across the 15 declared client locales, with explicit missing-mapping errors and recorded opt-in fallback. |

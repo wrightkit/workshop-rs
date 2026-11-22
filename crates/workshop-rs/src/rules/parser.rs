@@ -39,6 +39,7 @@ impl ParseContext<'_> {
                     self.rule(true, rule_start)?;
                 }
                 _ => {
+                    reject_exponent_without_mantissa(&word, rule_start)?;
                     return Err(self
                         .unknown("top-level section", &word)
                         .with_candidates(self.section_candidates(&word, TOP_LEVEL_SECTIONS)));

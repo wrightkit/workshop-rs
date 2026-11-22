@@ -8,7 +8,7 @@ fn malformed_number_literals_are_reported_by_the_public_parser() {
     let catalog = Catalog::builtin().expect("catalog");
     let locale = en();
 
-    for source in ["0X", "1.2.3"] {
+    for source in ["0X", "1.2.3", "e5"] {
         let error = parser::parse(source, &catalog, &locale).expect_err("invalid number");
         let WorkshopError::Malformed { message, span, .. } = error else {
             panic!("invalid number should be a malformed Workshop diagnostic");
@@ -16,6 +16,35 @@ fn malformed_number_literals_are_reported_by_the_public_parser() {
         assert_eq!(message, format!("invalid number '{source}'"));
         assert_eq!(span.expect("source span").start.col, 1);
     }
+}
+
+#[test]
+fn malformed_exponents_are_reported_as_invalid_numbers() {
+    let catalog = super::common::catalog();
+    let locale = en();
+    let prefix = "rule (\"r\") { event { Ongoing - Global; } actions { Wait(";
+    for literal in ["1e", "1e+", "1E-", "e5", "E5"] {
+        let source = format!("{prefix}{literal}, Ignore Condition); }} }}");
+        let error = parser::parse(&source, &catalog, &locale)
+            .expect_err("malformed exponent should not parse");
+        let WorkshopError::Malformed { message, span } = error else {
+            panic!("{literal}: expected an invalid number diagnostic, got {error}");
+        };
+        assert_eq!(message, format!("invalid number '{literal}'"));
+        assert_eq!(
+            span.expect("source span").start.col as usize,
+            prefix.len() + 1
+        );
+    }
+}
+
+#[test]
+fn an_exponent_shaped_variable_name_still_parses_as_a_variable() {
+    let source = r#"variables { global: 0: e5 }
+rule ("r") { event { Ongoing - Global; } actions { Wait(e5, Ignore Condition); } }"#;
+    let catalog = super::common::catalog();
+    let program = parser::parse(source, &catalog, &en()).expect("e5 is a declared variable");
+    workshop_rs::validate::validate_canonical_ids(&program, &catalog).expect("e5 resolves");
 }
 
 fn parse_error(source: &str) -> WorkshopError {
