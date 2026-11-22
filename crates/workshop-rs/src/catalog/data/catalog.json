@@ -203,6 +203,17 @@
         "zh-TW": "Create Icon"
       },
       "id": "createIcon",
+      "paramCoercions": [
+        null,
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        },
+        null,
+        null,
+        null,
+        null
+      ],
       "paramDomains": [
         null,
         null,
@@ -4831,7 +4842,10 @@
         null,
         null,
         null,
-        null,
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        },
         {
           "falseAsNumber": true,
           "trueAsNumber": true
@@ -5891,7 +5905,10 @@
         null,
         null,
         null,
-        null,
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        },
         {
           "falseAsNumber": true,
           "trueAsNumber": true
@@ -5989,7 +6006,9 @@
           "zeroAsNull": true
         },
         {
-          "nullVectorAsNull": true
+          "falseAsPosition": true,
+          "nullVectorAsNull": true,
+          "trueAsPosition": true
         },
         {
           "falseAsNumber": true,
@@ -6119,6 +6138,21 @@
         "zh-TW": "Create Progress Bar In-World Text"
       },
       "id": "createProgressBarInWorldText",
+      "paramCoercions": [
+        null,
+        null,
+        null,
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        },
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
       "paramDomains": [
         null,
         null,
@@ -8679,6 +8713,18 @@
         "zh-TW": "創造拋射物效果"
       },
       "id": "createProjectileEffect",
+      "paramCoercions": [
+        null,
+        null,
+        null,
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        },
+        null,
+        null,
+        null
+      ],
       "paramDomains": [
         null,
         "Projectile",
@@ -8754,7 +8800,7 @@
       }
     }
   ],
-  "digest": "b60b6fe9bf510dc1b4238062b495523be7db1f9f7682896f520721f4e46c900b",
+  "digest": "f5bf0c5635eb7fbf85fd571c51cf498c994900ebd566efbc6b9f0f4b8a9b9606",
   "enums": [
     {
       "domain": "Impulse",
@@ -27501,6 +27547,17 @@
         "zh-TW": "Is In Line of Sight"
       },
       "id": "isInLoS",
+      "paramCoercions": [
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        },
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        },
+        null
+      ],
       "paramDomains": [
         null,
         null,
@@ -27683,6 +27740,16 @@
         "zh-TW": "Distance Between"
       },
       "id": "distance",
+      "paramCoercions": [
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        },
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        }
+      ],
       "paramNames": [
         "startPos",
         "endPos"
@@ -28493,6 +28560,16 @@
         "zh-TW": "Direction Towards"
       },
       "id": "directionTowards",
+      "paramCoercions": [
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        },
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        }
+      ],
       "paramNames": [
         "startPos",
         "endPos"
@@ -29916,6 +29993,15 @@
         "zh-TW": "Players Within Radius"
       },
       "id": "getPlayersInRadius",
+      "paramCoercions": [
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        },
+        null,
+        null,
+        null
+      ],
       "paramDomains": [
         null,
         null,
@@ -33840,6 +33926,13 @@
         "zh-TW": "Closest Player To"
       },
       "id": "getClosestPlayer",
+      "paramCoercions": [
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        },
+        null
+      ],
       "paramDomains": [
         null,
         "Team"
@@ -34734,6 +34827,13 @@
         "zh-TW": "Horizontal Angle Towards"
       },
       "id": "horizontalAngleTowards",
+      "paramCoercions": [
+        null,
+        {
+          "falseAsPosition": true,
+          "trueAsPosition": true
+        }
+      ],
       "paramDomains": [
         null,
         null

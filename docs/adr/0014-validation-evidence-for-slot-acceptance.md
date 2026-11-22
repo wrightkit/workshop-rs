@@ -142,7 +142,15 @@ Acceptance is per parameter through catalog facts. It never widens a slot type.
   A Boolean literal in a parameter without the facts stays rejected. A Boolean
   expression never uses these facts, because they apply to literals only.
 - **Class B: a Boolean literal in a `Vector|Player` parameter.** Accepted
-  through a per-parameter fact in a later sub-issue of #644.
+  through the per-parameter `falseAsPosition` and `trueAsPosition` coercions
+  (#650). The facts are set on the fifteen `Vector|Player` positions where the
+  9.7.17 oracle writes the literal verbatim: `createEffect`, `playEffect`,
+  `createIcon`, `createInWorldText`, `createProgressBarInWorldText` and
+  `createProjectileEffect` position; `isInLoS` (1-2), `distance` (1-2),
+  `directionTowards` (1-2), `getPlayersInRadius` (1), `getClosestPlayer` (1)
+  and `horizontalAngleTowards` (2). `add` and `multiply` already list Boolean.
+  Each position is verified by canonical comparison of the oracle output. A
+  `Vector`-only parameter and a Boolean expression stay rejected.
 - **Class C: a Player where a `Vector` is expected.** Accepted through
   per-parameter or per-operator facts in a later sub-issue of #644.
 

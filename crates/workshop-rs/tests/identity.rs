@@ -2,7 +2,7 @@ use crate::common::zh;
 use workshop_rs::catalog::Catalog;
 
 const PINNED_CATALOG_DIGEST: &str =
-    "b60b6fe9bf510dc1b4238062b495523be7db1f9f7682896f520721f4e46c900b";
+    "f5bf0c5635eb7fbf85fd571c51cf498c994900ebd566efbc6b9f0f4b8a9b9606";
 
 #[test]
 fn committed_catalog_digest_is_pinned() {
