@@ -35,23 +35,7 @@ fn validate_value_node(
             }
             if is_known_call_name(catalog, name, args.len()) {
                 if name == "memberAccess" {
-                    if !(2..=3).contains(&args.len()) {
-                        return Err(WorkshopError::malformed(
-                            "memberAccess expects two or three arguments".to_string(),
-                            node.span,
-                        ));
-                    } else if !matches!(
-                        program.values.get(args[1]),
-                        Some(wir::ValueNode {
-                            value: wir::Value::String(_),
-                            ..
-                        })
-                    ) {
-                        return Err(WorkshopError::malformed(
-                            "memberAccess member must be a string".to_string(),
-                            node.span,
-                        ));
-                    }
+                    super::member_access_parts(program, args, node.span)?;
                 } else if !wir::is_canonical_helper_call(name, args.len())
                     && let Some(entry) = catalog.entry(Kind::Value, name)
                 {

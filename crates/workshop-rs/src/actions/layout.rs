@@ -1,6 +1,5 @@
 use crate::catalog::{Catalog, Locale};
 use crate::output::emitter::EmitContext;
-use crate::wir;
 
 /// The number of native Workshop actions emitted by a canonical Program action
 /// sequence.
@@ -30,23 +29,6 @@ impl std::fmt::Display for ActionLayoutError {
 }
 
 impl std::error::Error for ActionLayoutError {}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum WIRActionLayoutError {
-    InvalidWIR(crate::wir::error::IrError),
-    Emission(crate::WorkshopError),
-}
-
-impl std::fmt::Display for WIRActionLayoutError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::InvalidWIR(error) => write!(f, "invalid WIR: {error}"),
-            Self::Emission(error) => write!(f, "action layout emission failed: {error}"),
-        }
-    }
-}
-
-impl std::error::Error for WIRActionLayoutError {}
 
 /// Query the native Workshop action width of a validated public action sequence.
 ///
@@ -81,25 +63,13 @@ pub fn action_width(
             None,
         ))
     })?;
-    action_width_wir(&storage, catalog, locale, &rule.actions).map_err(|error| match error {
-        WIRActionLayoutError::InvalidWIR(error) => ActionLayoutError::InvalidProgram {
-            message: error.to_string(),
-        },
-        WIRActionLayoutError::Emission(error) => ActionLayoutError::Emission(error),
-    })
-}
-
-fn action_width_wir(
-    program: &wir::Program,
-    catalog: &Catalog,
-    locale: &Locale,
-    actions: &[wir::ActionId],
-) -> std::result::Result<ActionLayout, WIRActionLayoutError> {
-    program
+    storage
         .validate()
-        .map_err(WIRActionLayoutError::InvalidWIR)?;
+        .map_err(|error| ActionLayoutError::InvalidProgram {
+            message: error.to_string(),
+        })?;
     let mut emitter = EmitContext {
-        program,
+        program: &storage,
         catalog,
         locale: locale.clone(),
         fallback: None,
@@ -107,10 +77,10 @@ fn action_width_wir(
         out: String::new(),
         line_count: 0,
     };
-    for action in actions {
+    for action in &rule.actions {
         emitter
             .action(*action, 0, false)
-            .map_err(WIRActionLayoutError::Emission)?;
+            .map_err(ActionLayoutError::Emission)?;
     }
     Ok(ActionLayout {
         width: emitter.line_count,

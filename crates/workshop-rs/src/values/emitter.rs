@@ -94,38 +94,24 @@ impl<'a> EmitContext<'a> {
             }
             wir::Value::Call { name, args } => {
                 if name == "memberAccess" {
-                    if args.len() < 2 || args.len() > 3 {
-                        return Err(WorkshopError::malformed(
-                            "memberAccess expects two or three arguments".to_string(),
-                            node.span,
-                        ));
-                    }
-                    let Some(wir::ValueNode {
-                        value: wir::Value::String(member),
-                        ..
-                    }) = self.program.values.get(args[1])
-                    else {
-                        return Err(WorkshopError::malformed(
-                            "memberAccess member must be a string".to_string(),
-                            node.span,
-                        ));
-                    };
+                    let (receiver, member, index) =
+                        super::member_access_parts(self.program, args, node.span)?;
                     let bare_event_player = self
                         .program
                         .values
-                        .get(args[0])
+                        .get(receiver)
                         .is_some_and(|node| matches!(node.value, wir::Value::EventPlayer));
                     if !bare_event_player {
                         out.push('(');
                     }
-                    self.value(args[0], out)?;
+                    self.value(receiver, out)?;
                     if !bare_event_player {
                         out.push(')');
                     }
                     write!(out, ".{member}").unwrap();
-                    if let Some(index) = args.get(2) {
+                    if let Some(index) = index {
                         out.push('[');
-                        self.value(*index, out)?;
+                        self.value(index, out)?;
                         out.push(']');
                     }
                     return Ok(());

@@ -207,7 +207,7 @@ impl ParseContext<'_> {
                     self.pos += 1;
                     self.expect(TokenKind::LParen, "expected '(' after 'Global Variable'")?;
                     let (name, name_start, name_end) = self.phrase()?;
-                    let variable = self.global_by_name(&name)?;
+                    let variable = self.global_by_name(&name);
                     self.expect(TokenKind::RParen, "expected ')' after Global Variable")?;
                     let span = Some(Span::new(self.file(), start, end));
                     return Ok(self.push(
@@ -218,7 +218,7 @@ impl ParseContext<'_> {
                 }
                 self.expect(TokenKind::Dot, "expected '.' after 'Global'")?;
                 let (name, name_start, name_end) = self.phrase()?;
-                let variable = self.global_by_name(&name)?;
+                let variable = self.global_by_name(&name);
                 let span = Some(Span::new(self.file(), start, end));
                 Ok(self.push(
                     ValueNode::new(Value::GlobalVariable(variable), span)
@@ -249,7 +249,7 @@ impl ParseContext<'_> {
                     let player = p.value()?;
                     p.expect(TokenKind::Comma, "expected ',' after player")?;
                     let (name, name_start, name_end) = p.phrase()?;
-                    let variable = p.player_by_name(&name)?;
+                    let variable = p.player_by_name(&name);
                     p.expect(TokenKind::RParen, "expected ')' after Player Variable")?;
                     let id = p.target.values.push(
                         ValueNode::new(
@@ -325,7 +325,7 @@ impl ParseContext<'_> {
                         })
                     ) || self.players.contains_key(&name)
                     {
-                        let variable = self.player_by_name(&name)?;
+                        let variable = self.player_by_name(&name);
                         let name_span = Some(Span::new(self.file(), name_start, name_end));
                         Ok(self.push_extended(
                             ValueNode::new(

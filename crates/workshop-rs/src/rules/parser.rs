@@ -1,3 +1,4 @@
+use crate::core::{arena::Arena, ids::Id};
 use crate::frontend::parser::*;
 
 const TOP_LEVEL_SECTIONS: &[&str] = &["settings", "variables", "subroutines", "rule", "disabled"];
@@ -5,10 +6,8 @@ const RULE_SECTIONS: &[&str] = &["event", "conditions", "actions"];
 
 impl ParseContext<'_> {
     pub(crate) fn program(mut self) -> Result<wir::Program> {
-        let file = self
-            .target
+        self.target
             .add_file(SourceFile::with_source("workshop.txt", self.source));
-        let _ = file;
 
         loop {
             let word = match self.peek() {
@@ -284,58 +283,22 @@ impl ParseContext<'_> {
         Ok(())
     }
 
-    pub(crate) fn global_by_name(&mut self, name: &str) -> Result<wir::GlobalVarId> {
-        if let Some(binding) = self.globals.get(name) {
-            return Ok(binding.id);
-        }
-        let index = self.next_variable_index(false);
-        let id = self.target.global_variables.push(wir::WorkshopVariable {
-            name: name.to_string(),
-            index,
-            span: None,
-            name_span: None,
-        });
-        self.globals.insert(
-            name.to_string(),
-            Binding {
-                id,
-                declared: false,
-            },
-        );
-        Ok(id)
+    pub(crate) fn global_by_name(&mut self, name: &str) -> wir::GlobalVarId {
+        bind_variable(
+            name,
+            &mut self.globals,
+            &mut self.target.global_variables,
+            &mut self.next_global_index,
+        )
     }
 
-    pub(crate) fn player_by_name(&mut self, name: &str) -> Result<wir::PlayerVarId> {
-        if let Some(binding) = self.players.get(name) {
-            return Ok(binding.id);
-        }
-        let index = self.next_variable_index(true);
-        let id = self.target.player_variables.push(wir::WorkshopVariable {
-            name: name.to_string(),
-            index,
-            span: None,
-            name_span: None,
-        });
-        self.players.insert(
-            name.to_string(),
-            Binding {
-                id,
-                declared: false,
-            },
-        );
-        Ok(id)
-    }
-
-    pub(crate) fn next_variable_index(&mut self, player: bool) -> u32 {
-        if player {
-            let index = self.next_player_index;
-            self.next_player_index = self.next_player_index.saturating_add(1);
-            index
-        } else {
-            let index = self.next_global_index;
-            self.next_global_index = self.next_global_index.saturating_add(1);
-            index
-        }
+    pub(crate) fn player_by_name(&mut self, name: &str) -> wir::PlayerVarId {
+        bind_variable(
+            name,
+            &mut self.players,
+            &mut self.target.player_variables,
+            &mut self.next_player_index,
+        )
     }
 
     fn section_candidates(&self, spelling: &str, ids: &[&str]) -> Vec<String> {
@@ -378,4 +341,30 @@ impl ParseContext<'_> {
                 ))
         })
     }
+}
+
+fn bind_variable(
+    name: &str,
+    bindings: &mut HashMap<String, Binding<Id<wir::WorkshopVariable>>>,
+    variables: &mut Arena<wir::WorkshopVariable>,
+    next_index: &mut u32,
+) -> Id<wir::WorkshopVariable> {
+    if let Some(binding) = bindings.get(name) {
+        return binding.id;
+    }
+    let id = variables.push(wir::WorkshopVariable {
+        name: name.to_string(),
+        index: *next_index,
+        span: None,
+        name_span: None,
+    });
+    *next_index = next_index.saturating_add(1);
+    bindings.insert(
+        name.to_string(),
+        Binding {
+            id,
+            declared: false,
+        },
+    );
+    id
 }

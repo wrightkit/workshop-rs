@@ -76,7 +76,7 @@ impl LiveCapture {
             ));
         }
         validate_census(&self.census)?;
-        validate_artifact("rawArtifact", &self.raw_artifact, true)?;
+        validate_raw_artifact(&self.raw_artifact)?;
         if self.results.is_empty() {
             return Err(invalid(
                 "results must contain at least one conformance result",
@@ -86,7 +86,7 @@ impl LiveCapture {
         let mut case_ids = HashSet::with_capacity(self.results.len());
         for (index, result) in self.results.iter().enumerate() {
             let validation = match catalog {
-                Some(catalog) => result.validate_against(catalog),
+                Some(catalog) => result.validate_with_identity(catalog, &self.catalog),
                 None => result.validate(),
             };
             validation.map_err(|error| invalid(format!("results[{index}]: {error}")))?;
@@ -422,27 +422,20 @@ fn validate_census(census: &CensusIdentity) -> Result<(), LiveCaptureError> {
     Ok(())
 }
 
-fn validate_artifact(
-    field: &str,
-    artifact: &TestArtifact,
-    require_pin: bool,
-) -> Result<(), LiveCaptureError> {
-    validate_name(&format!("{field}.name"), &artifact.name)?;
-    if require_pin {
-        validate_name(
-            &format!("{field}.revision"),
-            artifact.revision.as_deref().unwrap_or_default(),
-        )?;
-        validate_name(
-            &format!("{field}.path"),
-            artifact.path.as_deref().unwrap_or_default(),
-        )?;
-        validate_sha256(
-            &format!("{field}.sha256"),
-            artifact.sha256.as_deref().unwrap_or_default(),
-        )?;
-    }
-    Ok(())
+fn validate_raw_artifact(artifact: &TestArtifact) -> Result<(), LiveCaptureError> {
+    validate_name("rawArtifact.name", &artifact.name)?;
+    validate_name(
+        "rawArtifact.revision",
+        artifact.revision.as_deref().unwrap_or_default(),
+    )?;
+    validate_name(
+        "rawArtifact.path",
+        artifact.path.as_deref().unwrap_or_default(),
+    )?;
+    validate_sha256(
+        "rawArtifact.sha256",
+        artifact.sha256.as_deref().unwrap_or_default(),
+    )
 }
 
 fn validate_sha256(field: &str, digest: &str) -> Result<(), LiveCaptureError> {

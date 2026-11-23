@@ -587,15 +587,19 @@ pub fn canonicalize(json: &str) -> Result<String> {
 /// canonicalize, and (re)write the `digest` field. Byte-idempotent, so the
 /// committed dataset and its digest are reproducible from the data file.
 pub fn build_canonical(json: &str) -> Result<String> {
-    let mut value: serde_json::Value = serde_json::from_str(json)
+    let value = serde_json::from_str(json)
         .map_err(|error| CatalogError::malformed(format!("catalog data: {error}")))?;
-    let digest = content_digest(json)?;
+    let output = pretty_json_with_digest(value)?;
+    Catalog::load(&output)?;
+    Ok(output)
+}
+
+pub(super) fn pretty_json_with_digest(mut value: serde_json::Value) -> Result<String> {
+    let digest = digest_value(&mut value)?;
     if let Some(object) = value.as_object_mut() {
         object.insert("digest".to_string(), serde_json::Value::String(digest));
     }
-    let output = pretty_json(&value)?;
-    Catalog::load(&output)?;
-    Ok(output)
+    pretty_json(&value)
 }
 
 /// The deterministic content digest of catalog data: sha256 of the canonical
@@ -605,10 +609,14 @@ pub fn build_canonical(json: &str) -> Result<String> {
 pub fn content_digest(json: &str) -> Result<String> {
     let mut value: serde_json::Value = serde_json::from_str(json)
         .map_err(|error| CatalogError::malformed(format!("catalog data: {error}")))?;
+    digest_value(&mut value)
+}
+
+fn digest_value(value: &mut serde_json::Value) -> Result<String> {
     if let Some(object) = value.as_object_mut() {
         object.remove("digest");
     }
-    let canonical = pretty_json(&value)?;
+    let canonical = pretty_json(value)?;
     use sha2::{Digest, Sha256};
     let mut hasher = Sha256::new();
     hasher.update(canonical.trim_end().as_bytes());

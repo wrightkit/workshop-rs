@@ -39,6 +39,9 @@ fn member_access_has_a_canonical_shape_contract() {
     });
     let error =
         validate::validate_canonical_ids_wir(&program, &catalog).expect_err("invalid memberAccess");
+    let emission_error =
+        internal::try_emit(&program).expect_err("cannot emit invalid memberAccess");
+    assert_eq!(emission_error, error);
     assert!(
         error
             .to_string()
