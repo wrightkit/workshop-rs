@@ -41,6 +41,7 @@ def walk_labels(value, path, out):
         aliases = localized_aliases(value)
         if aliases:
             out.append(labeled_record(aliases, ".".join(path)))
+            return
         for key, child in value.items():
             if key not in LOCALES:
                 walk_labels(child, (*path, key), out)

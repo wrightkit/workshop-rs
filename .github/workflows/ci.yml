@@ -135,6 +135,8 @@ jobs:
           path: target/debug
       - name: Prepare catalog generator executable
         run: chmod +x target/debug/workshop-catalog-gen
+      - name: Settings inventory generator tests
+        run: python3 -I -B -m unittest discover -s tools/settings -p 'test_*.py' -v
       - name: Catalog check
         run: target/debug/workshop-catalog-gen check
 
