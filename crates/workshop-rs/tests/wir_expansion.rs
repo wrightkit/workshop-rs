@@ -318,8 +318,10 @@ fn build_surface_program() -> wir::Program {
         branches: vec![wir::IfBranch {
             condition: Some(compare),
             body: if_body,
+            marker_span: None,
         }],
         span: Some(s(4, 5, 8)),
+        end_marker_span: None,
     });
     let modify = program.actions.push(Action::ModifyGlobalVariable {
         variable: index,
@@ -348,6 +350,7 @@ fn build_surface_program() -> wir::Program {
         body: vec![if_action, modify, beam],
         span: Some(s(3, 5, 31)),
         target_span: Some(s(3, 5, 10)),
+        end_marker_span: None,
     });
 
     program.rules.push(wir::Rule {

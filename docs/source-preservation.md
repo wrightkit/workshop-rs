@@ -49,6 +49,13 @@ separately:
   attached identifier span when a source-language provider supplies one,
   otherwise the recorded declaration span, which raw parses record as the
   name itself.
+- `Program::action_marker_span(rule, action)` returns the span of the authored
+  `If`, `Else If`, `Else`, or `End` keyword at that position in `Rule::actions`,
+  including the full spelling and any whitespace between its words. It
+  excludes arguments, the `disabled` prefix, and the terminating `;`. Use
+  `SourceDocument::byte_range` to locate the exact bytes in the retained input.
+  This provenance comes from raw parsing and is absent for other actions,
+  implicit `End` actions, and positions without matching provenance.
 - `Program::action_identifier_span` returns the span recorded for the
   variable or subroutine an action names — a set/modify/for target or a
   `Call Subroutine` callee. Indexed `... Variable At Index` writes are calls

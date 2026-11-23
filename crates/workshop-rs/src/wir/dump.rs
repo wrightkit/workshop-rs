@@ -238,7 +238,7 @@ fn render_action(program: &Program, id: super::ActionId, out: &mut String, level
                 span_suffix(*span),
             ));
         }
-        Action::If { branches, span } => {
+        Action::If { branches, span, .. } => {
             out.push_str(&format!("{}if{}\n", indent(level), span_suffix(*span)));
             for (index, branch) in branches.iter().enumerate() {
                 if let Some(condition) = branch.condition {
@@ -261,6 +261,7 @@ fn render_action(program: &Program, id: super::ActionId, out: &mut String, level
             condition,
             body,
             span,
+            ..
         } => {
             out.push_str(&format!("{}while ", indent(level)));
             render_value(program, *condition, out);

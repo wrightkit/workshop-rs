@@ -180,6 +180,7 @@ fn lower_actions(
                         subroutines,
                     )?),
                     body: Vec::new(),
+                    marker_span: None,
                 }];
                 lower_actions(
                     rows,
@@ -224,12 +225,17 @@ fn lower_actions(
                     } else {
                         None
                     };
-                    branches.push(wir::IfBranch { condition, body });
+                    branches.push(wir::IfBranch {
+                        condition,
+                        body,
+                        marker_span: None,
+                    });
                 }
                 require_end(actions, position)?;
                 storage.actions.push(wir::Action::If {
                     branches,
                     span: None,
+                    end_marker_span: None,
                 })
             }
             Action::While { condition } => {
@@ -250,6 +256,7 @@ fn lower_actions(
                     condition,
                     body,
                     span: None,
+                    end_marker_span: None,
                 })
             }
             Action::ForGlobalVariable {
@@ -284,6 +291,7 @@ fn lower_actions(
                     body,
                     span: None,
                     target_span: None,
+                    end_marker_span: None,
                 })
             }
             Action::ForPlayerVariable {
@@ -321,6 +329,7 @@ fn lower_actions(
                     body,
                     span: None,
                     target_span: None,
+                    end_marker_span: None,
                 })
             }
             action => {

@@ -70,6 +70,7 @@ impl RuleProvenance {
 struct ActionProvenance {
     span: Option<Span>,
     identifier: Option<Span>,
+    marker_span: Option<Span>,
     identity: NodeIdentity,
     arguments: Vec<ValueProvenance>,
 }
@@ -101,6 +102,7 @@ impl SpanSlot for ActionProvenance {
         if self.identity != identity {
             self.span = None;
             self.identifier = None;
+            self.marker_span = None;
         }
         self.identity = identity;
     }
@@ -146,6 +148,7 @@ fn prune_spans_outside(
         for action in &mut rule.actions {
             prune_slot(&mut action.span, file, document);
             prune_slot(&mut action.identifier, file, document);
+            prune_slot(&mut action.marker_span, file, document);
             for argument in &mut action.arguments {
                 prune_value(argument, file, document);
             }
@@ -834,27 +837,6 @@ impl Program {
         identity::record_identities(&mut provenance, self);
         self.provenance = Some(provenance);
     }
-}
-
-fn value_provenance_at<'a>(
-    record: &'a ValueProvenance,
-    value: &'a Value,
-    path: &[usize],
-    root_identity: NodeIdentity,
-) -> Option<&'a ValueProvenance> {
-    let mut record = record;
-    let mut value = value;
-    let mut identity = root_identity;
-    for &index in path {
-        let children = value_children(value);
-        if record.children.len() != children.len() {
-            return None;
-        }
-        record = record.children.get(index)?;
-        value = children[index];
-        identity = value_identity(value);
-    }
-    (record.identity == identity).then_some(record)
 }
 
 fn fit<T: Default>(items: &mut Vec<T>, len: usize) {
