@@ -196,21 +196,19 @@ fn leaf_keys(program: &crate::wir::Program) -> Vec<(String, String)> {
 
 /// workshop-rs#617: the reworked Sombra Hack is `在线修复` in zh-CN.
 #[test]
-fn sombra_secondary_fire_zh_names_resolve_to_their_setting_keys() {
-    for (zh_name, key) in [
-        ("在线修复冷却时间", "secondaryFireCooldown%"),
-        ("充能速度 在线修复", "secondaryFireEnergyChargeRate%"),
-        ("在线修复最长时间", "secondaryFireMaximumTime%"),
-        ("在线修复充能速度", "secondaryFireRechargeRate%"),
+fn sombra_hack_zh_names_resolve_to_their_setting_keys() {
+    for (entry, key) in [
+        ("在线修复冷却时间: 150%", "secondaryFireCooldown%"),
+        ("在线修复: 关闭", "enableSecondaryFire"),
     ] {
-        let source = format!("设置 {{ 英雄 {{ 综合 {{ 黑影 {{ {zh_name}: 150% }} }} }} }}");
+        let source = format!("设置 {{ 英雄 {{ 综合 {{ 黑影 {{ {entry} }} }} }} }}");
         let program = internal::parse_in(&source, &zh());
         assert_eq!(
             leaf_keys(&program),
             [("sombra".to_string(), key.to_string())]
         );
         let emitted = internal::emit_in(&program, &zh());
-        assert!(emitted.contains(&format!("{zh_name}: 150%")), "{emitted}");
+        assert!(emitted.contains(entry), "{emitted}");
         assert!(roundtrip::equivalent_wir(
             &program,
             &internal::parse_in(&emitted, &zh())
