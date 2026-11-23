@@ -175,7 +175,7 @@ impl ParseContext<'_> {
             && (canonical_keyword(phrase) == "Hero"
                 || self.resolve_enum_domain_mixed(phrase) == Some("Hero"));
         if !prefer_enum && let Some(entry) = self.resolve_entry(Kind::Value, phrase) {
-            return self.value_call(entry, phrase, start, end);
+            return self.value_call(entry, start, end);
         }
         let action_error = self.action_in_value_error(phrase, start, end);
         if let Some(domain_name) = self
@@ -194,7 +194,7 @@ impl ParseContext<'_> {
                     if prefer_enum {
                         self.pos = saved;
                         if let Some(entry) = self.resolve_entry(Kind::Value, phrase)
-                            && let Ok(value) = self.value_call(entry, phrase, start, end)
+                            && let Ok(value) = self.value_call(entry, start, end)
                         {
                             return Ok(value);
                         }
@@ -237,7 +237,6 @@ impl ParseContext<'_> {
     fn value_call(
         &mut self,
         entry: &CatalogEntry,
-        _phrase: &str,
         start: Position,
         end: Position,
     ) -> Result<wir::ValueId> {
@@ -429,7 +428,7 @@ impl ParseContext<'_> {
         }
         self.pos += 1;
         let (name, name_start, name_end) = self.phrase()?;
-        let variable = self.player_by_name(&name)?;
+        let variable = self.player_by_name(&name);
         let span = Some(Span::new(self.file(), name_start, name_end));
         Ok(self.push_extended(
             ValueNode::new(Value::PlayerVariable { player, variable }, span)
@@ -614,7 +613,7 @@ impl ParseContext<'_> {
             ) && arg_index == 0
             {
                 let (name, start, end) = self.phrase()?;
-                let variable = self.global_by_name(&name)?;
+                let variable = self.global_by_name(&name);
                 args.push(
                     self.target.values.push(
                         ValueNode::new(
@@ -656,13 +655,14 @@ impl ParseContext<'_> {
             } else if matches!(
                 (call_id, arg_index),
                 ("modifyGlobalVariableAtIndex", 2) | ("modifyPlayerVariableAtIndex", 3)
-            ) && {
+            ) && let Some(operator) = {
                 let saved = self.pos;
-                let is_operator = self.modify_op().is_ok();
-                self.pos = saved;
-                is_operator
+                let parsed = self.modify_op().ok();
+                if parsed.is_none() {
+                    self.pos = saved;
+                }
+                parsed
             } {
-                let operator = self.modify_op()?;
                 let name = operator.catalog_id();
                 args.push(self.target.values.push(ValueNode::new(
                     Value::Call {
@@ -862,7 +862,7 @@ impl ParseContext<'_> {
             })
         ) && self.players.contains_key(&name)
         {
-            let variable = self.player_by_name(&name)?;
+            let variable = self.player_by_name(&name);
             let extent = self
                 .extent_or_span(receiver)
                 .map(|span| Span::new(self.file(), span.start, name_end));

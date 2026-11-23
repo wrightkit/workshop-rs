@@ -21,7 +21,7 @@ use serde::Deserialize;
 
 use crate::core::error::{CatalogError, Result};
 
-use super::load::pretty_json;
+use super::load::{pretty_json, pretty_json_with_digest};
 use super::{Catalog, Kind, Locale, Provenance, content_digest};
 
 /// The embedded description data, next to [`super::CATALOG_DATA`].
@@ -62,8 +62,8 @@ struct DescriptionsFile {
     locales: Vec<String>,
     #[serde(default)]
     pending_locales: Vec<String>,
-    #[allow(dead_code)]
-    provenance: Provenance,
+    #[serde(rename = "provenance")]
+    _provenance: Provenance,
     #[serde(default)]
     version: Option<String>,
     #[serde(default)]
@@ -446,13 +446,9 @@ pub fn canonicalize_descriptions(catalog: &Catalog, json: &str) -> Result<String
 /// validate against `catalog`, canonicalize, and (re)write the `digest`
 /// field. Byte-idempotent, mirroring [`super::build_canonical`].
 pub fn build_canonical_descriptions(catalog: &Catalog, json: &str) -> Result<String> {
-    let mut value: serde_json::Value = serde_json::from_str(json)
+    let value = serde_json::from_str(json)
         .map_err(|error| CatalogError::malformed(format!("descriptions data: {error}")))?;
-    let digest = content_digest(json)?;
-    if let Some(object) = value.as_object_mut() {
-        object.insert("digest".to_string(), serde_json::Value::String(digest));
-    }
-    let output = pretty_json(&value)?;
+    let output = pretty_json_with_digest(value)?;
     let file = parse_file(&output)?;
     verify_digest(&output, &file)?;
     validated(catalog, file)?;

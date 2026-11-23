@@ -216,114 +216,15 @@ impl EmitContext<'_> {
                 self.out.insert_str(start + level * 4, &modifier);
             }
             wir::Action::Call { name, args, .. } => {
-                if matches!(name.as_str(), "chaseAtRate" | "chaseOverTime") {
-                    let player_var = args.first().and_then(|id| {
-                        self.program
-                            .values
-                            .get(*id)
-                            .and_then(|node| match &node.value {
-                                wir::Value::PlayerVariable { player, variable } => {
-                                    Some((*player, *variable))
-                                }
-                                _ => None,
-                            })
-                    });
-                    let spelling = if let Some((player, variable)) = player_var {
-                        // A player-variable target under a global chase id
-                        // spells the player form the client requires; the
-                        // document's own id needs no spelling swap.
-                        let id = if name == "chaseAtRate" {
-                            "chasePlayerVariableAtRate"
-                        } else {
-                            "chasePlayerVariableOverTime"
-                        };
-                        let spelling = self.spelling(Kind::Action, id)?;
-                        let text = self.value_text(player)?;
-                        let mut parts = vec![text, self.player_name(variable)?.to_string()];
-                        for arg in args.iter().skip(1) {
-                            let part = self.value_text(*arg)?;
-                            parts.push(part);
-                        }
-                        return self.line(level, &format!("{spelling}({});", parts.join(", ")));
-                    } else {
-                        self.spelling(Kind::Action, name)?
-                    };
-                    // The client names a global chase target by its bare
-                    // variable name; later arguments are ordinary values.
-                    let mut parts = Vec::with_capacity(args.len());
-                    for (index, arg) in args.iter().enumerate() {
-                        let global = match self.program.values.get(*arg).map(|node| &node.value) {
-                            Some(wir::Value::GlobalVariable(variable)) if index == 0 => {
-                                Some(*variable)
-                            }
-                            _ => None,
-                        };
-                        parts.push(match global {
-                            Some(variable) => self.global_name(variable)?.to_string(),
-                            None => self.value_text(*arg)?,
-                        });
-                    }
-                    return self.line(level, &format!("{spelling}({});", parts.join(", ")));
-                }
                 if matches!(
                     name.as_str(),
-                    "chasePlayerVariableAtRate" | "chasePlayerVariableOverTime"
+                    "chaseAtRate"
+                        | "chaseOverTime"
+                        | "chasePlayerVariableAtRate"
+                        | "chasePlayerVariableOverTime"
+                        | "stopChasingPlayerVariable"
                 ) {
-                    // `Chase Player Variable At Rate(player, name, …)`: the
-                    // folded `playerVariable` receiver splits into `player,
-                    // name` leading arguments (the pinned oracle's
-                    // spelling).
-                    let Some((player, variable)) = args.first().and_then(|id| {
-                        self.program
-                            .values
-                            .get(*id)
-                            .and_then(|node| match &node.value {
-                                wir::Value::PlayerVariable { player, variable } => {
-                                    Some((*player, *variable))
-                                }
-                                _ => None,
-                            })
-                    }) else {
-                        return Err(WorkshopError::malformed(
-                            format!("'{name}' requires a player variable target"),
-                            None,
-                        ));
-                    };
-                    let spelling = self.spelling(Kind::Action, name)?;
-                    let text = self.value_text(player)?;
-                    let mut parts = vec![text, self.player_name(variable)?.to_string()];
-                    for arg in args.iter().skip(1) {
-                        let part = self.value_text(*arg)?;
-                        parts.push(part);
-                    }
-                    return self.line(level, &format!("{spelling}({});", parts.join(", ")));
-                }
-                if name == "stopChasingPlayerVariable" {
-                    let Some((player, variable)) = args.first().and_then(|id| {
-                        self.program
-                            .values
-                            .get(*id)
-                            .and_then(|node| match &node.value {
-                                wir::Value::PlayerVariable { player, variable } => {
-                                    Some((*player, *variable))
-                                }
-                                _ => None,
-                            })
-                    }) else {
-                        return Err(WorkshopError::malformed(
-                            "Stop Chasing Player Variable requires a player variable",
-                            None,
-                        ));
-                    };
-                    let spelling = self.spelling(Kind::Action, name)?;
-                    let player_text = self.value_text(player)?;
-                    return self.line(
-                        level,
-                        &format!(
-                            "{spelling}({player_text}, {});",
-                            self.player_name(variable)?
-                        ),
-                    );
+                    return self.emit_chase(name, args, level);
                 }
                 let canonical = match name.as_str() {
                     "createBeam" => Some("createBeamEffect"),
@@ -414,6 +315,51 @@ impl EmitContext<'_> {
             }
         }
         Ok(())
+    }
+
+    fn emit_chase(&mut self, name: &str, args: &[wir::ValueId], level: usize) -> Result<()> {
+        let target = args
+            .first()
+            .and_then(|id| self.program.values.get(*id))
+            .map(|node| &node.value);
+        let player_target = matches!(target, Some(wir::Value::PlayerVariable { .. }));
+        let id = match (name, player_target) {
+            ("chaseAtRate", true) => "chasePlayerVariableAtRate",
+            ("chaseOverTime", true) => "chasePlayerVariableOverTime",
+            ("chasePlayerVariableAtRate" | "chasePlayerVariableOverTime", false) => {
+                return Err(WorkshopError::malformed(
+                    format!("'{name}' requires a player variable target"),
+                    None,
+                ));
+            }
+            ("stopChasingPlayerVariable", false) => {
+                return Err(WorkshopError::malformed(
+                    "Stop Chasing Player Variable requires a player variable",
+                    None,
+                ));
+            }
+            _ => name,
+        };
+        let spelling = self.spelling(Kind::Action, id)?;
+        let mut text = String::new();
+        let tail = match target {
+            Some(wir::Value::PlayerVariable { player, variable }) => {
+                self.emit_variable_pair(*player, *variable, &mut text)?;
+                &args[1..]
+            }
+            Some(wir::Value::GlobalVariable(variable)) => {
+                text.push_str(self.global_name(*variable)?);
+                &args[1..]
+            }
+            _ => args,
+        };
+        if name != "stopChasingPlayerVariable" && !tail.is_empty() {
+            if tail.len() < args.len() {
+                text.push_str(", ");
+            }
+            self.args(tail, &mut text)?;
+        }
+        self.line(level, &format!("{spelling}({text});"))
     }
 
     fn emit_variable_pair(

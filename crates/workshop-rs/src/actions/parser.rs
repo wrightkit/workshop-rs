@@ -288,7 +288,7 @@ impl ParseContext<'_> {
             let (name, name_start, target_end) = self.phrase()?;
             if matches!(self.peek_kind_at(0), Some(TokenKind::LBracket)) {
                 let (index, operator) = self.indexed_assignment_parts("global")?;
-                let variable = self.global_by_name(&name)?;
+                let variable = self.global_by_name(&name);
                 let target = self.target.values.push(
                     ValueNode::new(
                         Value::GlobalVariable(variable),
@@ -305,7 +305,7 @@ impl ParseContext<'_> {
             let Some(operator) = self.assignment_operator()? else {
                 return self.member_assignment_action(saved, start);
             };
-            let variable = self.global_by_name(&name)?;
+            let variable = self.global_by_name(&name);
             let (value, span, target_span) =
                 self.finish_assignment(start, name_start, target_end)?;
             return Ok(Some(self.target.actions.push(match operator {
@@ -344,7 +344,7 @@ impl ParseContext<'_> {
             Value::EventPlayer,
             Some(Span::new(self.file(), start, player_end)),
         ));
-        let variable = self.player_by_name(&name)?;
+        let variable = self.player_by_name(&name);
         if matches!(self.peek_kind_at(0), Some(TokenKind::LBracket)) {
             let (index, operator) = self.indexed_assignment_parts("player")?;
             let target = self.target.values.push(

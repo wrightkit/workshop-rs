@@ -50,9 +50,6 @@ impl RuleLayout {
             match &tokens[i].kind {
                 TokenKind::Word(word) => {
                     let id = canonical_structural_id(catalog, locale, word);
-                    if !RULE_SECTION_IDS.contains(&id.as_str()) {
-                        return None;
-                    }
                     let id = RULE_SECTION_IDS
                         .iter()
                         .find(|known| **known == id)
