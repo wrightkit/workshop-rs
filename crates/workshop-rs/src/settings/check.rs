@@ -62,6 +62,23 @@ pub fn check_emission(settings: &Settings) -> Vec<WorkshopError> {
         .collect()
 }
 
+pub(crate) fn check_numeric_bounds(settings: &Settings) -> Option<WorkshopError> {
+    let mut error = None;
+    walk(settings, &mut |visit| {
+        if error.is_some() {
+            return;
+        }
+        if let Visit::Member(node, path) = visit {
+            let mut full = path.to_vec();
+            full.push(PathPart::Part(node.name()));
+            if let Some(entry) = table::lookup(&full) {
+                error = member::bounds_error(node, entry).map(|diagnostic| diagnostic.error);
+            }
+        }
+    });
+    error
+}
+
 pub(crate) struct UncataloguedMember<'a> {
     pub(crate) name: &'a str,
     pub(crate) span: Option<crate::source::Span>,

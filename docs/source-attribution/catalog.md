@@ -119,6 +119,19 @@ Wrecking Ball cooldown labels are pinned from the reacquired AI-PVE and Bastion
 artifacts described by `crates/workshop-rs/tests/fixtures/real-projects/provenance.json`; they are source-preserving
 custom data or producer aliases, not new builtin gameplay identities.
 
+## Settings input bounds
+
+The hand-maintained `crates/workshop-rs/src/settings/data/input_bounds.json`
+records reviewed, inclusive import bounds by canonical settings path. Its
+Movement Speed minimum of 50% comes from the user-reported client import in
+[wright#1128](https://github.com/wrightkit/wright/issues/1128): 45% was
+rejected and 50% imported. The pinned `workshop-data` export supplies the
+setting identity and percent type, but no numeric bounds. Input bounds are
+separate from effective-value clamping; the report establishes rejection, not
+clamping. An absent bound is not enforced and does not establish client
+acceptance of arbitrary values. The bounds file is an independent source, so
+regenerating the export-derived settings inventory does not overwrite it.
+
 ## Description data (`crates/workshop-rs/src/catalog/data/descriptions.json`)
 
 The descriptions dataset is WrightKit-reviewed and holds the localized

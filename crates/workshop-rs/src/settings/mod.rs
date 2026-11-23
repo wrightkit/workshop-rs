@@ -8,6 +8,7 @@
 //! Extracted from the Wright-authored `wright-ir` crate; see
 //! [`docs/provenance.md`](https://github.com/wrightkit/workshop-rs/blob/main/docs/provenance.md).
 
+mod bounds;
 pub(crate) mod check;
 pub(crate) mod emitter;
 pub(crate) mod enum_members;
