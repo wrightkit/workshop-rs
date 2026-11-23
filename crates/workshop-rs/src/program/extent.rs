@@ -1,10 +1,13 @@
-//! Authored-extent accessors for values nested in conditions and action
-//! arguments. See `docs/source-preservation.md`.
-
-use super::identity::{condition_identity, value_identity};
-use super::{Program, ValueProvenance, action_argument_values, value_provenance_at};
+use super::identity::{NodeIdentity, condition_identity, value_identity};
+use super::{Program, Value, ValueProvenance, action_argument_values, value_children};
 
 impl Program {
+    /// Return the authored `If`, `Else If`, `Else`, or `End` keyword span for
+    /// an action in linear rule order, or `None` without matching provenance.
+    pub fn action_marker_span(&self, rule: usize, action: usize) -> Option<crate::source::Span> {
+        self.action_provenance(rule, action)?.marker_span
+    }
+
     pub(super) fn condition_value_record(
         &self,
         rule: usize,
@@ -72,4 +75,25 @@ impl Program {
         let record = self.action_argument_value_record(rule, action, argument, path)?;
         record.extent.or(record.span)
     }
+}
+
+fn value_provenance_at<'a>(
+    record: &'a ValueProvenance,
+    value: &'a Value,
+    path: &[usize],
+    root_identity: NodeIdentity,
+) -> Option<&'a ValueProvenance> {
+    let mut record = record;
+    let mut value = value;
+    let mut identity = root_identity;
+    for &index in path {
+        let children = value_children(value);
+        if record.children.len() != children.len() {
+            return None;
+        }
+        record = record.children.get(index)?;
+        value = children[index];
+        identity = value_identity(value);
+    }
+    (record.identity == identity).then_some(record)
 }

@@ -1,52 +1,37 @@
 use super::*;
 
 impl ParseContext<'_> {
-    pub(crate) fn if_group(&mut self, start: Position) -> Result<wir::ActionId> {
+    pub(super) fn if_group(&mut self, if_marker: Span) -> Result<wir::ActionId> {
         self.expect(TokenKind::LParen, "expected '(' after 'If'")?;
-        let condition = self.condition_value()?;
+        let mut condition = Some(self.condition_value()?);
         self.expect(TokenKind::RParen, "expected ')' after If condition")?;
         self.expect_semi("expected ';' after If condition")?;
 
+        let mut marker = if_marker;
         let mut branches = Vec::new();
-        let mut stop = {
+        let (end_marker_span, end) = loop {
             let (body, stop) = self.actions_until_end()?;
             branches.push(wir::IfBranch {
-                condition: Some(condition),
+                condition,
                 body,
+                marker_span: Some(marker),
             });
-            stop
-        };
-
-        let end_pos;
-        loop {
             match stop {
                 Stop::End => {
-                    self.consume_keyword("end")?;
-                    end_pos = self.expect_semi("expected ';' after 'End'")?;
-                    break;
+                    let end = self.consume_end_marker()?;
+                    break (Some(end), end.end);
                 }
                 Stop::ElseIf => {
-                    self.consume_keyword("elseIf")?;
+                    marker = self.consume_keyword("elseIf")?;
                     self.expect(TokenKind::LParen, "expected '(' after 'Else If'")?;
-                    let condition = self.condition_value()?;
+                    condition = Some(self.condition_value()?);
                     self.expect(TokenKind::RParen, "expected ')' after Else If condition")?;
                     self.expect_semi("expected ';' after Else If condition")?;
-                    let (body, next) = self.actions_until_end()?;
-                    branches.push(wir::IfBranch {
-                        condition: Some(condition),
-                        body,
-                    });
-                    stop = next;
                 }
                 Stop::Else => {
-                    self.consume_keyword("else")?;
+                    marker = self.consume_keyword("else")?;
+                    condition = None;
                     self.expect_semi("expected ';' after 'Else'")?;
-                    let (body, next) = self.actions_until_end()?;
-                    branches.push(wir::IfBranch {
-                        condition: None,
-                        body,
-                    });
-                    stop = next;
                 }
                 Stop::SectionClosed => {
                     // The oracle closes a rule-final if/if-else with the
@@ -54,15 +39,32 @@ impl ParseContext<'_> {
                     // #87). Rewind so the enclosing actions section consumes
                     // that `}` and the rule's own `}` stays intact.
                     self.pos -= 1;
-                    end_pos = self.previous_span().1;
-                    break;
+                    break (None, self.previous_span().1);
                 }
             }
-        }
+        };
         let action = Action::If {
             branches,
-            span: Some(Span::new(self.file(), start, end_pos)),
+            span: Some(Span::new(self.file(), if_marker.start, end)),
+            end_marker_span,
         };
         Ok(self.target.actions.push(action))
+    }
+
+    pub(super) fn actions_until_matching_end(
+        &mut self,
+        missing_end_message: &str,
+    ) -> Result<(Vec<wir::ActionId>, Span)> {
+        let (body, stop) = self.actions_until_end()?;
+        if stop != Stop::End {
+            return Err(self.malformed(missing_end_message, self.previous()));
+        }
+        Ok((body, self.consume_end_marker()?))
+    }
+
+    fn consume_end_marker(&mut self) -> Result<Span> {
+        let marker = self.consume_keyword("end")?;
+        self.expect_semi("expected ';' after 'End'")?;
+        Ok(marker)
     }
 }

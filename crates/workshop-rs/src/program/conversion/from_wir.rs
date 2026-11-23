@@ -395,38 +395,48 @@ fn public_action_provenance(
             ..ActionProvenance::default()
         });
     };
-    let push_without_span = |output: &mut Vec<ActionProvenance>, arguments: &[wir::ValueId]| {
-        output.push(ActionProvenance {
-            arguments: map_args(arguments),
-            ..ActionProvenance::default()
-        });
-    };
-    match action {
-        wir::Action::If { branches, .. } => {
+    let end_marker_span = match action {
+        wir::Action::If {
+            branches,
+            span,
+            end_marker_span,
+        } => {
             for (index, branch) in branches.iter().enumerate() {
-                let args = branch.condition.as_slice();
-                if index == 0 {
-                    push(output, args);
-                } else {
-                    push_without_span(output, args);
-                }
+                output.push(ActionProvenance {
+                    span: if index == 0 { *span } else { None },
+                    marker_span: branch.marker_span,
+                    arguments: map_args(branch.condition.as_slice()),
+                    ..ActionProvenance::default()
+                });
                 for action in &branch.body {
                     public_action_provenance(storage, *action, output)?;
                 }
             }
-            push_without_span(output, &[]);
+            *end_marker_span
         }
-        wir::Action::While { body, .. }
-        | wir::Action::ForGlobalVariable { body, .. }
-        | wir::Action::ForPlayerVariable { body, .. } => {
+        wir::Action::While {
+            body,
+            end_marker_span,
+            ..
+        }
+        | wir::Action::ForGlobalVariable {
+            body,
+            end_marker_span,
+            ..
+        }
+        | wir::Action::ForPlayerVariable {
+            body,
+            end_marker_span,
+            ..
+        } => {
             push(output, &action.value_args());
             for action in body {
                 public_action_provenance(storage, *action, output)?;
             }
-            push_without_span(output, &[]);
+            *end_marker_span
         }
         wir::Action::Disabled { action, .. } => {
-            public_action_provenance(storage, *action, output)?;
+            return public_action_provenance(storage, *action, output);
         }
         wir::Action::SetGlobalVariable { .. }
         | wir::Action::ModifyGlobalVariable { .. }
@@ -434,8 +444,15 @@ fn public_action_provenance(
         | wir::Action::ModifyPlayerVariable { .. }
         | wir::Action::AssignMember { .. }
         | wir::Action::CallSubroutine { .. }
-        | wir::Action::Call { .. } => push(output, &action.value_args()),
-    }
+        | wir::Action::Call { .. } => {
+            push(output, &action.value_args());
+            return Ok(());
+        }
+    };
+    output.push(ActionProvenance {
+        marker_span: end_marker_span,
+        ..ActionProvenance::default()
+    });
     Ok(())
 }
 

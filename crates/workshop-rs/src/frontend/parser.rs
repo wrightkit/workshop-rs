@@ -532,9 +532,14 @@ impl<'a> ParseContext<'a> {
         }
     }
 
-    pub(crate) fn consume_keyword(&mut self, id: &str) -> Result<()> {
+    pub(crate) fn consume_keyword(&mut self, id: &str) -> Result<Span> {
+        let start = self.pos;
         if self.keyword_prefix(&[id]).is_some() {
-            return Ok(());
+            return Ok(Span::new(
+                self.file(),
+                self.tokens[start].start,
+                self.previous().end,
+            ));
         }
         match self.peek() {
             Some(token) => Err(self.malformed(&format!("expected '{id}'"), &token)),

@@ -108,7 +108,7 @@ fn check_action(program: &Program, id: super::ActionId) -> Result<(), IrError> {
             }
             Ok(())
         }
-        Action::If { branches, span } => {
+        Action::If { branches, span, .. } => {
             if branches
                 .first()
                 .is_none_or(|branch| branch.condition.is_none())

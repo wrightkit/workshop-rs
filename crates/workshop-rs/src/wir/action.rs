@@ -47,11 +47,13 @@ pub(crate) enum Action {
     If {
         branches: Vec<IfBranch>,
         span: Option<Span>,
+        end_marker_span: Option<Span>,
     },
     While {
         condition: ValueId,
         body: Vec<ActionId>,
         span: Option<Span>,
+        end_marker_span: Option<Span>,
     },
     ForGlobalVariable {
         variable: GlobalVarId,
@@ -61,6 +63,7 @@ pub(crate) enum Action {
         body: Vec<ActionId>,
         span: Option<Span>,
         target_span: Option<Span>,
+        end_marker_span: Option<Span>,
     },
     ForPlayerVariable {
         player: ValueId,
@@ -71,6 +74,7 @@ pub(crate) enum Action {
         body: Vec<ActionId>,
         span: Option<Span>,
         target_span: Option<Span>,
+        end_marker_span: Option<Span>,
     },
     Disabled {
         action: ActionId,
@@ -188,4 +192,5 @@ impl Action {
 pub(crate) struct IfBranch {
     pub(crate) condition: Option<ValueId>,
     pub(crate) body: Vec<ActionId>,
+    pub(crate) marker_span: Option<Span>,
 }

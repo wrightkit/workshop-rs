@@ -1,5 +1,5 @@
 mod assignment_probe;
-mod if_group;
+mod control_flow;
 mod variable_arguments;
 
 use crate::frontend::parser::*;
@@ -104,7 +104,8 @@ impl ParseContext<'_> {
                                     continue;
                                 }
                                 "if" => {
-                                    let group = self.if_group(self.previous_span().0)?;
+                                    let group =
+                                        self.if_group(Span::new(self.file(), start, end))?;
                                     actions.push(self.disabled_action(group));
                                     continue;
                                 }
@@ -137,7 +138,7 @@ impl ParseContext<'_> {
                             };
                             return Ok((actions, stop));
                         }
-                        "if" => actions.push(self.if_group(start)?),
+                        "if" => actions.push(self.if_group(Span::new(self.file(), start, end))?),
                         "forGlobalVariable" => actions.push(self.for_group(start)?),
                         "forPlayerVariable" => actions.push(self.for_player_group(start)?),
                         "while" => actions.push(self.while_group(start)?),
@@ -586,7 +587,7 @@ impl ParseContext<'_> {
     fn for_bounds_and_body(
         &mut self,
         name: &str,
-    ) -> Result<([wir::ValueId; 3], Vec<wir::ActionId>, Position)> {
+    ) -> Result<([wir::ValueId; 3], Vec<wir::ActionId>, Span)> {
         self.expect(TokenKind::Comma, "expected ',' after loop variable")?;
         let start_value = self.value()?;
         self.expect(TokenKind::Comma, "expected ',' after start")?;
@@ -606,7 +607,7 @@ impl ParseContext<'_> {
             "expected '(' after 'For Global Variable'",
         )?;
         let (variable, target_span) = self.global_variable_arg()?;
-        let ([start_value, stop, step], body, end) =
+        let ([start_value, stop, step], body, end_marker) =
             self.for_bounds_and_body("For Global Variable")?;
         let action = Action::ForGlobalVariable {
             variable,
@@ -614,8 +615,9 @@ impl ParseContext<'_> {
             stop,
             step,
             body,
-            span: Some(Span::new(self.file(), start, end)),
+            span: Some(Span::new(self.file(), start, end_marker.end)),
             target_span: Some(target_span),
+            end_marker_span: Some(end_marker),
         };
         Ok(self.target.actions.push(action))
     }
@@ -625,11 +627,13 @@ impl ParseContext<'_> {
         let condition = self.condition_value()?;
         self.expect(TokenKind::RParen, "expected ')' after While condition")?;
         self.expect_semi("expected ';' after While condition")?;
-        let (body, end) = self.actions_until_matching_end("'While' requires a matching 'End'")?;
+        let (body, end_marker) =
+            self.actions_until_matching_end("'While' requires a matching 'End'")?;
         let action = Action::While {
             condition,
             body,
-            span: Some(Span::new(self.file(), start, end)),
+            span: Some(Span::new(self.file(), start, end_marker.end)),
+            end_marker_span: Some(end_marker),
         };
         Ok(self.target.actions.push(action))
     }
@@ -640,7 +644,7 @@ impl ParseContext<'_> {
             "expected '(' after 'For Player Variable'",
         )?;
         let (player, variable, name_span) = self.player_variable_arg()?;
-        let ([start_value, stop, step], body, end) =
+        let ([start_value, stop, step], body, end_marker) =
             self.for_bounds_and_body("For Player Variable")?;
         let action = Action::ForPlayerVariable {
             player,
@@ -649,8 +653,9 @@ impl ParseContext<'_> {
             stop,
             step,
             body,
-            span: Some(Span::new(self.file(), start, end)),
+            span: Some(Span::new(self.file(), start, end_marker.end)),
             target_span: Some(name_span),
+            end_marker_span: Some(end_marker),
         };
         Ok(self.target.actions.push(action))
     }
@@ -671,19 +676,6 @@ impl ParseContext<'_> {
         let call_end = self.expect(TokenKind::RParen, "expected ')'")?;
         self.expect_semi("expected ';'")?;
         Ok((op, value, call_end))
-    }
-
-    fn actions_until_matching_end(
-        &mut self,
-        missing_end_message: &str,
-    ) -> Result<(Vec<wir::ActionId>, Position)> {
-        let (body, stop) = self.actions_until_end()?;
-        if stop != Stop::End {
-            return Err(self.malformed(missing_end_message, self.previous()));
-        }
-        self.consume_keyword("end")?;
-        let end = self.expect_semi("expected ';' after 'End'")?;
-        Ok((body, end))
     }
 
     pub(crate) fn action_call_from_phrase(
