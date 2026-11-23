@@ -6,7 +6,7 @@ provide it explicitly and commit only the generated projection and its
 provenance. Example:
 
 ```sh
-python3 tools/settings/generate_inventory.py \
+python3 -I tools/settings/generate_inventory.py \
   --export ../workshop-data/workshop-data.json \
   --output crates/workshop-rs/src/settings/data/inventory.json
 cargo run -p workshop-rs --bin workshop-catalog-gen --locked -- check \
@@ -15,10 +15,18 @@ cargo run -p workshop-rs --bin workshop-catalog-gen --locked -- check \
 
 The inventory records the export commit, input SHA-256, counts, and source
 paths. The generator rejects an unexpected source commit and duplicate
-English identities in each exported category. Missing locale mappings remain
-explicit in `locales.json`; they are not filled with guessed translations.
-Adding a reviewed locale is a data regeneration change: the projection
-declares its locale set and each entry carries the available locale aliases.
+localized aliases in each exported category or among settings groups. Nested
+settings labels are scoped to their parent and are not group aliases. Missing
+locale mappings remain explicit in `locales.json`; they are not filled with
+guessed translations. Adding a reviewed locale is a data regeneration change:
+the projection declares its locale set and each entry carries the available
+locale aliases.
+
+CI runs generator tests with a synthetic export to check regeneration and
+alias conflicts. It cannot compare the committed inventory with the pinned
+export because the export is not redistributed. To check that comparison
+locally, generate an inventory to a temporary path and compare it byte for byte
+with the committed `inventory.json`.
 
 Reviewed numeric import bounds are maintained separately in
 `crates/workshop-rs/src/settings/data/input_bounds.json`, keyed by the settings
