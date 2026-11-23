@@ -2,6 +2,7 @@ use crate::core::error::WorkshopError;
 use crate::core::suggest;
 use crate::source::Span;
 
+use super::bounds;
 use super::check::{DiagnosticSeverity, SettingsDiagnostic};
 use super::table::{self, KeyKind, TableEntry};
 use super::{PathPart, SettingsListElement, SettingsNode};
@@ -122,6 +123,9 @@ pub(super) fn accept<'a>(
     node: &'a SettingsNode,
     entry: &TableEntry,
 ) -> Result<Member<'a>, Box<SettingsDiagnostic>> {
+    if let Some(diagnostic) = bounds_error(node, entry) {
+        return Err(diagnostic);
+    }
     let name = node.name();
     Ok(match (node, entry.kind) {
         (SettingsNode::Flag { .. }, KeyKind::Flag) => Member::Flag,
@@ -190,6 +194,20 @@ pub(super) fn accept<'a>(
             )));
         }
     })
+}
+
+pub(super) fn bounds_error(
+    node: &SettingsNode,
+    entry: &TableEntry,
+) -> Option<Box<SettingsDiagnostic>> {
+    let SettingsNode::Number { value, .. } = node else {
+        return None;
+    };
+    if !value.is_finite() || !matches!(entry.kind, KeyKind::Number | KeyKind::Percent) {
+        return None;
+    }
+    let path = table::path_string(entry.path);
+    bounds::violation(&path, *value).map(|message| Box::new(rejected(node.span(), message, None)))
 }
 
 pub(super) fn rejected(

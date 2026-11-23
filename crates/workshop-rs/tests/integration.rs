@@ -45,6 +45,7 @@ mod real_projects;
 mod rule_content;
 #[path = "rule_content_call_ids.rs"]
 mod rule_content_call_ids;
+mod settings_numeric_bounds;
 #[path = "slot_acceptance.rs"]
 mod slot_acceptance;
 #[path = "statement_edit.rs"]

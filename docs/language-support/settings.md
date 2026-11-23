@@ -25,7 +25,7 @@ value carrier; the catalog does not regenerate or discard unknown settings.
 ```rust
 use workshop_rs::gameplay::{hero_ids, slots, HeroId, LogicalSlot};
 use workshop_rs::settings::{
-    definitions_by_id, Applicability, SettingId, SettingTarget,
+    definitions_by_id, definition, Applicability, PathPart, SettingId, SettingTarget,
     SettingTargetKind, SettingValueDomain, TeamId,
 };
 
@@ -68,6 +68,15 @@ let health = definitions_by_id(&SettingId::from("setting.hero.health"))
     .next()
     .expect("canonical hero setting");
 assert!(matches!(health.domain(), SettingValueDomain::Percent(_)));
+let movement = definition(&[
+    PathPart::Part("heroes"),
+    PathPart::Team,
+    PathPart::Hero,
+    PathPart::Part("movementSpeed%"),
+]).expect("per-hero movement speed setting");
+let bounds = movement.input_bounds().expect("reviewed input bound");
+assert_eq!(bounds.min(), Some(50.0));
+assert_eq!(bounds.max(), None);
 assert!(health
     .applicability(&SettingTarget::Hero {
         team: None,
@@ -78,9 +87,11 @@ assert!(health
 
 Hero and ability display names are presentation data only. Consumers use the
 canonical concept and `SettingTarget`; localized aliases remain parser/emitter
-resolution details. Numeric bounds remain unknown until reviewed Workshop
-source records establish them; `SettingValueDomain::effective_number` exposes a
-clamped effective value only for a definition carrying such source records.
+resolution details. `SettingDefinition::input_bounds` exposes reviewed,
+inclusive numeric import bounds independently of `SettingValueDomain`'s
+source-backed effective clamping. Validation rejects values outside a known
+input bound. A setting without a listed bound is unbounded by this validation;
+its client limits are unknown, not evidence that every value is valid.
 
 `SettingDefinition::read` and `write` operate on existing occurrences. A
 write changes only the typed leaf value, preserving its span and all unrelated

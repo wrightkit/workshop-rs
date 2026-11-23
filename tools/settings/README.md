@@ -19,3 +19,10 @@ English identities in each exported category. Missing locale mappings remain
 explicit in `locales.json`; they are not filled with guessed translations.
 Adding a reviewed locale is a data regeneration change: the projection
 declares its locale set and each entry carries the available locale aliases.
+
+Reviewed numeric import bounds are maintained separately in
+`crates/workshop-rs/src/settings/data/input_bounds.json`, keyed by the settings
+projection's canonical paths. Add a record with `min` and/or `max` only when
+client evidence establishes the inclusive bound, document its provenance in
+`docs/source-attribution/catalog.md`, and run the catalog check above. The
+export inventory generator does not write this file.

@@ -1,0 +1,6 @@
+[
+  {
+    "path": "heroes.<team>.<hero>.movementSpeed%",
+    "min": 50.0
+  }
+]

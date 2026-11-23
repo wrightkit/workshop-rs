@@ -8,7 +8,8 @@ use crate::wir;
 ///
 /// Calls must supply every declared parameter that carries no catalog default;
 /// a trailing parameter with a declared default (for example `Wait`'s
-/// `waitBehavior`) is optional and may be omitted. Variable names are bound at
+/// `waitBehavior`) is optional and may be omitted. Source-backed numeric
+/// settings input bounds are also enforced. Variable names are bound at
 /// parse time: an undeclared name allocates an implicit variable slot rather
 /// than failing validation.
 pub fn validate_canonical_ids(program: &crate::Program, catalog: &Catalog) -> Result<()> {
@@ -47,6 +48,11 @@ pub(crate) fn validate_wir(
     catalog: &Catalog,
     tolerate_residuals: bool,
 ) -> Result<()> {
+    if let Some(settings) = &program.settings
+        && let Some(error) = crate::settings::check::check_numeric_bounds(settings)
+    {
+        return Err(error);
+    }
     for rule_data in program.rules.iter() {
         crate::events::validate::validate_event(&rule_data.event, rule_data.span, catalog)?;
         let in_rule = |error: crate::WorkshopError| error.or_span(rule_data.span);
