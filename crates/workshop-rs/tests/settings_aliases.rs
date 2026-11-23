@@ -194,6 +194,28 @@ fn leaf_keys(program: &crate::wir::Program) -> Vec<(String, String)> {
     out
 }
 
+/// workshop-rs#617: the reworked Sombra Hack is `在线修复` in zh-CN.
+#[test]
+fn sombra_hack_zh_names_resolve_to_their_setting_keys() {
+    for (entry, key) in [
+        ("在线修复冷却时间: 150%", "secondaryFireCooldown%"),
+        ("在线修复: 关闭", "enableSecondaryFire"),
+    ] {
+        let source = format!("设置 {{ 英雄 {{ 综合 {{ 黑影 {{ {entry} }} }} }} }}");
+        let program = internal::parse_in(&source, &zh());
+        assert_eq!(
+            leaf_keys(&program),
+            [("sombra".to_string(), key.to_string())]
+        );
+        let emitted = internal::emit_in(&program, &zh());
+        assert!(emitted.contains(entry), "{emitted}");
+        assert!(roundtrip::equivalent_wir(
+            &program,
+            &internal::parse_in(&emitted, &zh())
+        ));
+    }
+}
+
 /// workshop-rs#636: the labels the game exports for these heroes resolve to
 /// the key the pinned OverPy 9.7.17 schema declares for the hero, in both
 /// locales. Brigitte's Shield Bash is `shieldBashCooldown%`; the duplicate

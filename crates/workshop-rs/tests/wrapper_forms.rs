@@ -169,8 +169,11 @@ fn overpy_generated_projects_keep_wrapper_counts_and_add_no_tokens() {
             "{} wrapper call counts changed",
             case.id
         );
+        // The fixture records the pre-rework Sombra Hack name; emission writes
+        // the reworked name (workshop-rs#617).
         let added: Vec<_> = tokens(&emitted)
             .difference(&tokens(&source))
+            .filter(|token| token.as_str() != "在线修复冷却时间")
             .cloned()
             .collect();
         assert!(
